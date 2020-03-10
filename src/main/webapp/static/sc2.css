@@ -1,0 +1,154 @@
+/*-
+ * =========================LICENSE_START=========================
+ * SC2 Ladder Generator
+ * %%
+ * Copyright (C) 2020 Oleksandr Masniuk
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * =========================LICENSE_END=========================
+ */
+html
+{
+    margin-left: calc(100vw - 100%);
+}
+
+body
+{
+    text-align: center;
+    font-size: 15px;
+}
+
+table, ul, dl, .modal
+{
+    text-align: initial;
+}
+
+h1
+{
+    font-size: 1.5rem;
+}
+
+h2
+{
+    font-size: 1.4rem;
+}
+
+h3
+{
+    font-size: 1.3rem;
+}
+
+h4
+{
+    font-size: 1.1rem;
+}
+
+#status-generating-fullscreen
+{
+    left: 0;
+    top: 0;
+    z-index: 9999;
+    cursor: wait;
+    transition: visibility 200ms, opacity 200ms;
+    opacity: 1;
+}
+
+#status-generating-fullscreen.invisible
+{
+    opacity: 0;
+}
+
+.table td, .table td *
+{
+    vertical-align: middle;
+}
+
+.table td:not(.complex), .table th
+{
+    text-align: center;
+}
+
+.table .cell-main
+{
+    width: 100%;
+}
+
+.chartable
+{
+    display: none;
+}
+
+.table-image, .form-icon
+{
+    height: 1.2em;
+}
+
+.table-image-long, .form-icon-long
+{
+    height: 1.0em;
+}
+
+.table-image-additional
+{
+    height: 0.7em;
+}
+
+.table-image-square, .form-icon
+{
+    width: 1.2em;
+}
+
+.race-percentage:after
+{
+    content: "/";
+}
+
+.c-divider:after
+{
+    content: " | ";
+}
+
+.race-percentage:last-child:after,
+.c-divider:last-child:after
+{
+    content: "";
+}
+
+.c-dropdown:after
+{
+    display: inline-block;
+    margin-left: .255em;
+    vertical-align: .255em;
+    content: "";
+
+    border-right: .3em solid transparent;
+    border-bottom: 0;
+    border-left: .3em solid transparent;
+    border-top: 0;
+    border-bottom: .3em solid;
+}
+
+.c-dropdown.collapsed:after
+{
+    border-top: .3em solid;
+    border-bottom: 0;
+}
+
+.c-divider-hr
+{
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+    border: 0;
+    border-top: 1px solid rgba(0,0,0,.1);
+}

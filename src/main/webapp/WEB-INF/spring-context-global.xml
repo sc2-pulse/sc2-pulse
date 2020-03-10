@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================LICENSE_START=========================
+  SC2 Ladder Generator
+  %%
+  Copyright (C) 2020 Oleksandr Masniuk
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  =========================LICENSE_END=========================
+  -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns:p="http://www.springframework.org/schema/p"
+    xmlns:context="http://www.springframework.org/schema/context"
+    xmlns:mvc="http://www.springframework.org/schema/mvc"
+    xmlns:jee="http://www.springframework.org/schema/jee"
+    xmlns:cache="http://www.springframework.org/schema/cache"
+    xmlns:task="http://www.springframework.org/schema/task"
+    xsi:schemaLocation="
+        http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/mvc
+        http://www.springframework.org/schema/mvc/spring-mvc.xsd
+        http://www.springframework.org/schema/jee
+        http://www.springframework.org/schema/jee/spring-jee.xsd
+        http://www.springframework.org/schema/cache
+        http://www.springframework.org/schema/cache/spring-cache.xsd
+        http://www.springframework.org/schema/task
+        http://www.springframework.org/schema/task/spring-task.xsd"
+>
+
+    <mvc:annotation-driven/>
+    <cache:annotation-driven/>
+    <context:annotation-config/>
+    <bean class="com.nephest.battlenet.sc2.config.ApplicationConfig"/>
+    <bean id="cacheManager" class="org.springframework.cache.support.SimpleCacheManager">
+        <property name="caches">
+            <set>
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="search-seasons"/>
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="search-season-last"/>
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="search-ladder"/>
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="search-ladder-stats"/>
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="search-ladder-league-bounds"/>
+                <bean class="org.springframework.cache.concurrent.ConcurrentMapCacheFactoryBean" p:name="search-ladder-season"/>
+            </set>
+        </property>
+    </bean>
+    <!-- Application container config -->
+    <!--
+    <jee:jndi-lookup id="sc2StatsDataSource" jndi-name="java:/jdbc/sc2Stats"/>
+    <bean id="txManager" class="org.springframework.transaction.jta.JtaTransactionManager" />
+    -->
+    <!-- Web container config -->
+    <jee:jndi-lookup id="sc2StatsDataSource" jndi-name="jdbc/sc2Stats"/>
+    <bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="sc2StatsDataSource"/>
+    </bean>
+
+    <task:annotation-driven scheduler="bgJobsScheduler"/>
+    <task:scheduler id="bgJobsScheduler" pool-size="3"/>
+    <task:scheduled-tasks>
+        <task:scheduled ref="accountDAO" method="removeExpiredByPrivacy" cron="45 6 0 * * *"/>
+        <task:scheduled ref="statsService" method="updateCurrent" cron="0 0 3 * * *"/>
+        <task:scheduled ref="statsService" method="updateAll" cron="0 0 5 * * SAT"/>
+    </task:scheduled-tasks>
+
+</beans>

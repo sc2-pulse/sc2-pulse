@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================LICENSE_START=========================
+  SC2 Ladder Generator
+  %%
+  Copyright (C) 2020 Oleksandr Masniuk
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  =========================LICENSE_END=========================
+  -->
+
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="56px" height="56px"
+    viewBox="0 0 56 56"
+>
+    <desc>Starcraft2 Gold League</desc>
+    <defs>
+        <polygon id="chevron" points="0,0 28,16 56,0 56,12 28,28 0,12" fill="#ffd700"/>
+    </defs>
+    <use xlink:href="#chevron"/>
+    <use xlink:href="#chevron" y="14"/>
+    <use xlink:href="#chevron" y="28"/>
+</svg>
+
+

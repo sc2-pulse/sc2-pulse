@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================LICENSE_START=========================
+  SC2 Ladder Generator
+  %%
+  Copyright (C) 2020 Oleksandr Masniuk
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  =========================LICENSE_END=========================
+  -->
+
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+    xmlns:xlink="http://www.w3.org/1999/xlink"
+    version="1.1"
+    width="24px" height="24px"
+    viewBox="-0.5 -0.5 9 7"
+>
+    <desc>Starcraft2 League Tier 3</desc>
+    <defs>
+        <polyline id="line1" points="0,0 8,0" stroke-width="1px" stroke="#d73545" fill="none"/>
+        <polyline id="line2" points="0,0 0,6" stroke-width="1px" stroke="#d73545" fill="none"/>
+    </defs>
+    <use xlink:href="#line1"/>
+    <use xlink:href="#line1" y="6"/>
+    <use xlink:href="#line2" x="2"/>
+    <use xlink:href="#line2" x="4"/>
+    <use xlink:href="#line2" x="6"/>
+</svg>

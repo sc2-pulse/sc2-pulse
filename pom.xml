@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <groupId>com.nephest.battlenet.sc2</groupId>
+  <artifactId>sc2-webapp</artifactId>
+  <version>1.0-SNAPSHOT</version>
+  <packaging>war</packaging>
+
+  <name>SC2 Ladder Generator</name>
+  <url>https://www.nephest.com/sc2/</url>
+
+    <organization>
+        <name>Oleksandr Masniuk</name>
+        <url>https://nephest.com</url>
+    </organization>
+
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License, Version 3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.en.html</url>
+            <comments>
+                The GNU Affero General Public License is a free,
+                copyleft license for software and other kinds of works.
+            </comments>
+        </license>
+    </licenses>
+    <inceptionYear>2020</inceptionYear>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <maven.compiler.source>1.8</maven.compiler.source>
+    <maven.compiler.target>1.8</maven.compiler.target>
+  </properties>
+
+  <dependencies>
+    <dependency>
+        <groupId>javax</groupId>
+        <artifactId>javaee-api</artifactId>
+        <version>8.0.1-b5</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>5.5.1</version>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.mockito</groupId>
+        <artifactId>mockito-core</artifactId>
+        <version>2.28.2</version>
+        <scope>test</scope>
+    </dependency>
+
+    <!-- Application container config -->
+    <!--
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.10.0</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webmvc</artifactId>
+        <version>5.2.0.RELEASE</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webflux</artifactId>
+        <version>5.2.0.RELEASE</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jdbc</artifactId>
+        <version>5.2.0.RELEASE</version>
+    </dependency>
+
+    <dependency>
+        <groupId>io.projectreactor.netty</groupId>
+        <artifactId>reactor-netty</artifactId>
+        <version>0.9.0.RELEASE</version>
+    </dependency>
+    -->
+
+    <!-- Web container config -->
+    <dependency>
+        <groupId>com.fasterxml.jackson.core</groupId>
+        <artifactId>jackson-databind</artifactId>
+        <version>2.10.0</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webmvc</artifactId>
+        <version>5.2.0.RELEASE</version>
+         <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-webflux</artifactId>
+        <version>5.2.0.RELEASE</version>
+         <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>org.springframework</groupId>
+        <artifactId>spring-jdbc</artifactId>
+        <version>5.2.0.RELEASE</version>
+         <scope>provided</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>io.projectreactor.netty</groupId>
+        <artifactId>reactor-netty</artifactId>
+        <version>0.9.0.RELEASE</version>
+         <scope>provided</scope>
+    </dependency>
+  </dependencies>
+  <build>
+    <finalName>sc2-webapp</finalName>
+    <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
+      <plugins>
+        <plugin>
+          <artifactId>maven-clean-plugin</artifactId>
+          <version>3.1.0</version>
+        </plugin>
+        <!-- see http://maven.apache.org/ref/current/maven-core/default-bindings.html#Plugin_bindings_for_war_packaging -->
+        <plugin>
+          <artifactId>maven-resources-plugin</artifactId>
+          <version>3.0.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-compiler-plugin</artifactId>
+          <version>3.8.0</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-surefire-plugin</artifactId>
+          <version>2.22.1</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-war-plugin</artifactId>
+          <version>3.2.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-install-plugin</artifactId>
+          <version>2.5.2</version>
+        </plugin>
+        <plugin>
+          <artifactId>maven-deploy-plugin</artifactId>
+          <version>2.8.2</version>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+    <plugins>
+        <plugin>
+            <artifactId>maven-antrun-plugin</artifactId>
+            <version>1.8</version>
+            <executions>
+                <execution>
+                    <phase>prepare-package</phase>
+                    <goals><goal>run</goal></goals>
+                </execution>
+            </executions>
+            <configuration>
+                <target>
+                    <java classname="com.google.javascript.jscomp.CommandLineRunner" fork="true">
+                        <classpath>
+                            <path refid="maven.plugin.classpath"/>
+                        </classpath>
+                        <arg line="--compilation_level SIMPLE_OPTIMIZATIONS --language_in ECMASCRIPT_2018 --js ${basedir}/src/main/js/sc2-restful.js --js_output_file ${basedir}/target/sc2-webapp/static/sc2-restful.min.js"/>
+                    </java>
+                </target>
+            </configuration>
+            <dependencies>
+                <dependency>
+                    <groupId>com.google.javascript</groupId>
+                    <artifactId>closure-compiler</artifactId>
+                    <version>v20200204</version>
+                </dependency>
+            </dependencies>
+        </plugin>
+        <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>license-maven-plugin</artifactId>
+            <version>2.0.0</version>
+            <configuration>
+                <licenseName>agpl_v3</licenseName>
+                <generateBundle>true</generateBundle>
+                <force>true</force>
+                <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
+                <processStartTag>=========================LICENSE_START=========================</processStartTag>
+                <processEndTag>=========================LICENSE_END=========================</processEndTag>
+            </configuration>
+            <executions>
+                <execution>
+                    <phase>generate-resources</phase>
+                    <goals><goal>update-project-license</goal></goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+    <resources>
+            <resource>
+                <filtering>false</filtering>
+                <directory>${basedir}/target/generated-sources/license/</directory>
+            </resource>
+            <resource>
+                <filtering>false</filtering>
+                <targetPath>src/</targetPath>
+                <directory>${basedir}/src/</directory>
+                <includes>
+                    <include>**/*.java</include>
+                    <include>**/*.js</include>
+                    <include>**/*.css</include>
+                </includes>
+            </resource>
+        </resources>
+  </build>
+</project>

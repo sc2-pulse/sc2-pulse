@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================LICENSE_START=========================
+  SC2 Ladder Generator
+  %%
+  Copyright (C) 2020 Oleksandr Masniuk
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  =========================LICENSE_END=========================
+  -->
+
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="900" height="600" viewBox="-36 -24 72 48">
+<title>Flag of South Korea</title>
+<rect fill="#fff" x="-36" y="-24" width="72" height="48"/>
+<g transform="rotate(-56.3099325)"><!--arctan(-3/2)-->
+<g id="b2"><path id="b" d="M-6-25H6M-6-22H6M-6-19H6" stroke="#000" stroke-width="2"/>
+<use xlink:href="#b" y="44"/></g>
+<path stroke="#fff" stroke-width="1" d="M0,17v10"/>
+<circle fill="#cd2e3a" r="12"/>
+<path fill="#0047a0" d="M0-12A6,6 0 0 0 0,0A6,6 0 0 1 0,12A12,12 0 0,1 0-12Z"/></g>
+<g transform="rotate(-123.6900675)"><use xlink:href="#b2"/>
+<path stroke="#fff" stroke-width="1" d="M0-23.5v3M0,17v3.5M0,23.5v3"/></g></svg>

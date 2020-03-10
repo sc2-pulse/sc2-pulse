@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<!--
+  =========================LICENSE_START=========================
+  SC2 Ladder Generator
+  %%
+  Copyright (C) 2020 Oleksandr Masniuk
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  =========================LICENSE_END=========================
+  -->
+
+<html lang="en">
+<head>
+    <title>SC2 Ladder Generator</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content="Flexible StarCraft&reg;2 ladder generator for any team format"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"/>
+    <link rel="stylesheet" href="static/sc2.css"/>
+    <link rel="icon" type="image/png" sizes="128x128" href="static/icon/misc/favicon-128.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="static/icon/misc/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="static/icon/misc/favicon-16.png" />
+</head>
+<body>
+    <section class="container">
+        <nav>
+            <ul id="main-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                <li class="nav-item">
+                    <a
+                        id="generator-tab"
+                        class="nav-link active"
+                        data-toggle="pill"
+                        href="#generator"
+                        role="tab"
+                        aria-controls="generator"
+                        aria-selected="true"
+                    >
+                        Generator
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                        id="search-tab"
+                        class="nav-link"
+                        data-toggle="pill"
+                        href="#search"
+                        role="tab"
+                        aria-controls="search"
+                        aria-selected="false"
+                    >
+                        Search
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                        id="about-tab"
+                        class="nav-link"
+                        data-toggle="pill"
+                        href="#about"
+                        role="tab"
+                        aria-controls="about"
+                        aria-selected="false"
+                    >
+                        About
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <h1 class="text-dark">SC2 Ladder generator</h1>
+        <div class="c-divider-hr"></div>
+        <div class="tab-content">
+        <section id="about" class="tab-pane fade">
+            <h2>What is this site?</h2>
+            <p>
+                SC2 ladder generator aims to give consistent information across
+                all team formats and race combinations.<br/>
+                SC2 ladder generator features:
+                <div class="d-flex justify-content-center">
+                    <ul>
+                        <li>flexible ladder generation</li>
+                        <li>all MMR seasons</li>
+                        <li>all team types</li>
+                        <li>all regions</li>
+                        <li>full race info</li>
+                        <li>season meta info</li>
+                        <li>player history</li>
+                    </ul>
+                </div>
+            <!--/p-->
+            <p>
+                This site is using <a href="https://develop.battle.net/" target="_blank" rel="noopener noreferrer">Battle.net API</a>. I am not affiliated with
+                Blizzard Entertainment&reg; in any way, shape or form. This is not an official Blizzard site.
+            </p>
+        </section>
+        <section id="search" class="tab-pane fade">
+            <h2>Find player by name</h2>
+            <form id="form-search" class="form-inline justify-content-center">
+                <label class="sr-only" for="search-player-name">Name</label>
+                <input type="text" class="form-control mb-3" id="search-player-name" name="name" placeholder="Name" required="required"/>
+                <button class="btn btn-primary mb-3" type="submit">
+                    <span>Find</span>
+                </button>
+            </form>
+            <div id="search-result-all" class="d-none">
+                <div class="table-responsive">
+                    <table id="search-table" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">Region</th>
+                                <th scope="col">Highest League</th>
+                                <th scope="col">Highest Rating</th>
+                                <th scope="col">Player</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        <section id="generator" class="tab-pane fade show active">
+        <h2><a id="generator-collapse" class="c-dropdown" href="#form-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-ladder">Generator</a></h2>
+        <form id="form-ladder" class="collapse show" data-scroll-to="generator-collapse">
+            <div class="form-row">
+                <div class="col-md-4 mb-3">
+                    <select id="season-picker" class="form-control" name="season"></select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <select id="team-format-picker" class="form-control" name="queue">
+                        <option value="LOTV_1V1" selected="selected">1V1</option>
+                        <option value="LOTV_2V2">2V2</option>
+                        <option value="LOTV_3V3">3V3</option>
+                        <option value="LOTV_4V4">4V4</option>
+                        <option value="LOTV_ARCHON">Archon</option>
+                    </select>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <select id="team-type-picker" class="form-control" name="team-type">
+                        <option value="ARRANGED" selected="selected">Arranged</option>
+                        <option value="RANDOM">Random</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check form-check-inline">
+                    <input id="form-us" type="checkbox" name="us" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-us">
+                        <img
+                            class="form-icon-long"
+                            src="static/icon/flag/us.svg"
+                            alt="US" title="US"
+                        />
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="form-eu" type="checkbox" name="eu" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-eu">
+                        <img
+                            class="form-icon-long"
+                            src="static/icon/flag/eu.svg"
+                            alt="EU" title="EU"
+                        />
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="form-kr" type="checkbox" name="kr" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-kr">
+                        <img
+                            class="form-icon-long"
+                            src="static/icon/flag/kr.svg"
+                            alt="KR" title="KR"
+                        />
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="form-cn" type="checkbox" name="cn" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-cn">
+                        <img
+                            class="form-icon-long"
+                            src="static/icon/flag/cn.svg"
+                            alt="CN" title="CN"
+                        />
+                    </label>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <div class="form-check form-check-inline">
+                    <input id="form-bro" type="checkbox" name="bro" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-bro">
+                        <img
+                            class="form-icon"
+                            src="static/icon/league/bronze.svg"
+                            alt="Bronze" title="Bronze"
+                        />
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="form-sil" type="checkbox" name="sil" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-sil">
+                        <img
+                            class="form-icon"
+                            src="static/icon/league/silver.svg"
+                            alt="Silver" title="Silver"
+                        />
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="form-gol" type="checkbox" name="gol" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-gol">
+                        <img
+                            class="form-icon"
+                            src="static/icon/league/gold.svg"
+                            alt="Gold" title="Gold"
+                        />
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="form-pla" type="checkbox" name="pla" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-pla">
+                        <img
+                            class="form-icon"
+                            src="static/icon/league/platinum.svg"
+                            alt="Platinum" title="Platinum"
+                        />
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="form-dia" type="checkbox" name="dia" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-dia">
+                        <img
+                            class="form-icon"
+                            src="static/icon/league/diamond.svg"
+                            alt="Diamond" title="Diamond"
+                        />
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="form-mas" type="checkbox" name="mas" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-mas">
+                        <img
+                            class="form-icon"
+                            src="static/icon/league/master.svg"
+                            alt="Master" title="Master"
+                        />
+                    </label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="form-gra" type="checkbox" name="gra" value="true" checked="checked" />
+                    <label class="form-check-label" for="form-gra">
+                        <img
+                            class="form-icon"
+                            src="static/icon/league/grandmaster.svg"
+                            alt="Grandmaster" title="Grandmaster"
+                        />
+                    </label>
+                </div>
+            </div>
+
+            <button class="btn btn-primary" type="submit">
+                <span>Generate</span>
+            </button>
+        </form>
+        <div id="generated-info-all" class="d-none">
+        <div class="c-divider-hr"></div>
+        <div class="mb-3 text-secondary text-center">
+            <span class="c-divider" title="Total/distinct (in 4v4 8 total games is 1 distinct game)">Games: <span id="games-total-count">0</span></span>
+            <span class="c-divider">Teams: <span id="teams-total-count">0</span></span>
+            <span class="c-divider">Players: <span id="players-total-count">0</span></span>
+        </div>
+        <ul id="stats-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+            <li class="nav-item">
+                <a
+                    id="ladder-tab"
+                    class="nav-link active"
+                    data-toggle="pill"
+                    href="#ladder-top"
+                    role="tab"
+                    aria-controls="ladder-top"
+                    aria-selected="true"
+                >
+                    Ladder
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    id="stats-race-tab"
+                    class="nav-link"
+                    data-toggle="pill"
+                    href="#stats-race"
+                    role="tab"
+                    aria-controls="stats-race"
+                    aria-selected="false"
+                >
+                    Race
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    id="stats-league-tab"
+                    class="nav-link"
+                    data-toggle="pill"
+                    href="#stats-league"
+                    role="tab"
+                    aria-controls="stats-league"
+                    aria-selected="false"
+                >
+                    League
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    id="stats-region-tab"
+                    class="nav-link"
+                    data-toggle="pill"
+                    href="#stats-region"
+                    role="tab"
+                    aria-controls="stats-region"
+                    aria-selected="false"
+                >
+                    Region
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
+                    id="stats-tier-tab"
+                    class="nav-link"
+                    data-toggle="pill"
+                    href="#stats-tier"
+                    role="tab"
+                    aria-controls="stats-tier"
+                    aria-selected="false"
+                >
+                    Tier
+                </a>
+            </li>
+        </ul>
+        <div id="ladder-all" class="tab-content">
+            <section id="ladder-top" class="tab-pane fade show active">
+                <h3>MMR Ladder</h3>
+                <nav class="pagination-container" aria-label="Ladder navigation top">
+                    <ul class="pagination justify-content-center flex-wrap"></ul>
+                </nav>
+                <div class="table-responsive">
+                    <table id="ladder" class="table table-sm table-hover" data-ladder-rank-show="true">
+                        <thead>
+                            <tr>
+                                <th scope="col">Rank</th>
+                                <th scope="col">Region</th>
+                                <th scope="col">League</th>
+                                <th scope="col">Team</th>
+                                <th scope="col">MMR</th>
+                                <th scope="col">Games</th>
+                                <th scope="col">Win%</th>
+                            </tr>
+                        </thead>
+                        <tbody id="ladder-body">
+                        </tbody>
+                    </table>
+                </div>
+                <nav class="pagination-container" aria-label="Ladder navigation bottom">
+                    <ul class="pagination justify-content-center flex-wrap"></ul>
+                </nav>
+            </section>
+            <section id="stats-race" class="tab-pane fade">
+                <h3>Race distribution</h3>
+                <div class="row no-gutters ml-3">
+                    <section id="games-played-race" class="col-lg-6 mb-3">
+                        <table
+                            id="games-played-race-table"
+                            class="chartable"
+                            data-chart-title="Games played by race"
+                            data-chart-type="pie"
+                            data-chart-tooltip-percentage="true"
+                            data-chart-id="games-played-race-chart"
+                        >
+                            <thead>
+                                <tr>
+                                    <th data-chart-color="terran">Terran</th>
+                                    <th data-chart-color="protoss">Protoss</th>
+                                    <th data-chart-color="zerg">Zerg</th>
+                                    <th data-chart-color="random">Random</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td id="games-terran-count"></td>
+                                    <td id="games-protoss-count"></td>
+                                    <td id="games-zerg-count"></td>
+                                    <td id="games-random-count"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="games-played-race-chart"></canvas></div>
+                    </section>
+                    <section id="team-count-race" class="col-lg-6 mb-3 align-self-center text-center">
+                        <span class="text-danger">
+                            Team and player count are not available for race stats.
+                            A team can have multiple races.
+                        </span>
+                    </section>
+                </div>
+            </section>
+            <section id="stats-league" class="tab-pane fade">
+                <h3>League distribution</h3>
+                <div class="row no-gutters">
+                    <section id="games-played-league" class="col-lg-6 mb-3">
+                        <table
+                            id="games-played-league-table"
+                            class="chartable"
+                            data-chart-title="Games played by league"
+                            data-chart-type="bar"
+                            data-chart-stacked="true"
+                            data-chart-stacked-label="games"
+                            data-chart-tooltip-percentage="true"
+                            data-chart-tooltip-sort="reverse"
+                            data-chart-id="games-played-league-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="games-played-league-chart"></canvas></div>
+                    </section>
+                    <section id="team-count-league" class="col-lg-6 mb-3">
+                        <table
+                            id="team-count-league-table"
+                            class="chartable"
+                            data-chart-title="Team count by league"
+                            data-chart-type="bar"
+                            data-chart-stacked="true"
+                            data-chart-stacked-label="teams"
+                            data-chart-tooltip-percentage="true"
+                            data-chart-tooltip-sort="reverse"
+                            data-chart-id="team-count-league-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="team-count-league-chart"></canvas></div>
+                    </section>
+                    <section id="player-count-league" class="col-lg-6 mb-3">
+                        <table
+                            id="player-count-league-table"
+                            class="chartable"
+                            data-chart-title="Player count by league"
+                            data-chart-type="bar"
+                            data-chart-stacked="true"
+                            data-chart-stacked-label="players"
+                            data-chart-tooltip-percentage="true"
+                            data-chart-tooltip-sort="reverse"
+                            data-chart-id="player-count-league-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="player-count-league-chart"></canvas></div>
+                    </section>
+                </div>
+            </section>
+            <section id="stats-region" class="tab-pane fade">
+                <h3>Region distribution</h3>
+                <div class="row no-gutters">
+                    <section id="games-played-region" class="col-lg-6 mb-3">
+                        <table
+                            id="games-played-region-table"
+                            class="chartable"
+                            data-chart-title="Games played by region"
+                            data-chart-type="pie"
+                            data-chart-tooltip-percentage="true"
+                            data-chart-id="games-played-region-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="games-played-region-chart"></canvas></div>
+                    </section>
+                    <section id="team-count-region" class="col-lg-6 mb-3">
+                        <table
+                            id="team-count-region-table"
+                            class="chartable"
+                            data-chart-title="Team count by region"
+                            data-chart-type="pie"
+                            data-chart-tooltip-percentage="true"
+                            data-chart-id="team-count-region-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="team-count-region-chart"></canvas></div>
+                    </section>
+                    <section id="player-count-region" class="col-lg-6 mb-3">
+                        <table
+                            id="player-count-region-table"
+                            class="chartable"
+                            data-chart-title="Player count by region"
+                            data-chart-type="pie"
+                            data-chart-tooltip-percentage="true"
+                            data-chart-id="player-count-region-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="player-count-region-chart"></canvas></div>
+                    </section>
+                </div>
+            </section>
+            <section id="stats-tier" class="tab-pane fade">
+                <h3>Tier MMR range</h3>
+                <div class="table-responsive">
+                    <table id="league-bounds-table" class="table table-sm table-hover">
+                        <thead>
+                            <tr>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </div><!--Ladder all-->
+        </div><!--Generated all-->
+        </section><!--Generator-->
+        </div><!--Tab content-->
+        <div class="c-divider-hr"></div>
+        <!-- Modal error-->
+        <div class="modal fade" id="error-generation" tabindex="-1" role="dialog" aria-labelledby="error-generation-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="error-generation-title">Generation error</h2>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        An error has occurred while generating your ladder.
+                        <div id="error-generation-text" class="text-danger"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal privacy-->
+        <div class="modal fade" id="privacy-policy" tabindex="-1" role="dialog" aria-labelledby="privacy-policy-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="privacy-policy-title">Privacy Policy</h2>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <dl>
+                            <dt>Personal Data</dt>
+                            <dd>No personal data is collected</dd>
+                            <dt>Non Personal Data</dt>
+                            <dd>Your IP address and URL are recorded for technical purposes</dd>
+                            <dt>3rd party</dt>
+                            <dd>This site is using 3rd party CDN. It may have its own Privacy Policy</dd>
+                            <dt>NO WARRANTY</dt>
+                            <dd>SC2 LADDER GENERATOR PROVIDES THE DATA “AS IS,” AND “AS AVAILABLE,” AND THE ENTIRE RISK AS TO SATISFACTORY QUALITY, PERFORMANCE, ACCURACY, AND EFFORT IS WITH YOU.</dd>
+                        </dl>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal player info-->
+        <div class="modal fade" id="player-info" tabindex="-1" role="dialog" aria-labelledby="player-info-title" aria-hidden="true">
+            <div class="modal-dialog modal-xl" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="player-info-title">Player Information: <span id="player-info-title-name"></span></h2>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <section>
+                            <h3>Links</h3>
+                            <ul>
+                                <li><a id="battlenet-profile-link" href="#" target="_blank" rel="noopener noreferrer">Battle.net profile</a></li>
+                                <li>BattleTag: <span id="player-info-battletag"></span></li>
+                            </ul>
+                        </section>
+                        <section id="character-teams-section">
+                            <h3>Teams</h3>
+                            <select id="teams-season-select" class="form-control mb-2"></select>
+                        </section>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="status-generating-fullscreen" class="status-generating-begin position-fixed w-100 h-100 invisible" data-hide-mode="hide">
+             <div class="d-flex justify-content-center w-100 h-100">
+                <span class="align-self-center spinner-border text-primary" role="status" aria-hidden="true"></span>
+            </div>
+        </div>
+    </section><!--Container-->
+    <footer>
+        <div class="container text-secondary">
+            <span class="c-divider d-inline-block mb-3"><a href="https://nephest.com/" class="text-secondary" target="_blank" rel="noopener noreferrer">&copy; 2020 Oleksandr Masniuk</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="#" class="text-secondary" data-toggle="modal" data-target="#privacy-policy">Privacy Policy</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-icons" class="text-secondary" target="_blank" rel="noopener noreferrer">SC2 icon pack</a></span>
+        </div>
+    </footer>
+    <script
+        src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+        integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8="
+        crossorigin="anonymous">
+    </script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+        crossorigin="anonymous">
+    </script>
+    <script
+        src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+        integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+        crossorigin="anonymous">
+    </script>
+    <script
+        src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"
+        integrity="sha384-i+dHPTzZw7YVZOx9lbH5l6lP74sLRtMtwN2XjVqjf3uAGAREAF4LMIUDTWEVs4LI"
+        crossorigin="anonymous">
+    </script>
+    <script src="static/sc2-restful.min.js"></script>
+</body>
+</html>

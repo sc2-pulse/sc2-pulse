@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  =========================LICENSE_START=========================
+  SC2 Ladder Generator
+  %%
+  Copyright (C) 2020 Oleksandr Masniuk
+  %%
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU Affero General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+  
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+  
+  You should have received a copy of the GNU Affero General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+  =========================LICENSE_END=========================
+  -->
+
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="975" height="650" viewBox="0 0 5850 3900">
+<rect width="5850" height="3900" fill="#b22234"/>
+<path d="M0,450H7410m0,600H0m0,600H7410m0,600H0m0,600H7410m0,600H0" stroke="#fff" stroke-width="300"/>
+<rect width="2964" height="2100" fill="#3c3b6e"/>
+<g fill="#fff">
+<g id="s18">
+<g id="s9">
+<g id="s5">
+<g id="s4">
+<path id="s" d="M247,90 317.534230,307.082039 132.873218,172.917961H361.126782L176.465770,307.082039z"/>
+<use xlink:href="#s" y="420"/>
+<use xlink:href="#s" y="840"/>
+<use xlink:href="#s" y="1260"/>
+</g>
+<use xlink:href="#s" y="1680"/>
+</g>
+<use xlink:href="#s4" x="247" y="210"/>
+</g>
+<use xlink:href="#s9" x="494"/>
+</g>
+<use xlink:href="#s18" x="988"/>
+<use xlink:href="#s9" x="1976"/>
+<use xlink:href="#s5" x="2470"/>
+</g>
+</svg>

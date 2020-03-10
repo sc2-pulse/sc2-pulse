@@ -1,0 +1,1213 @@
+/*-
+ * =========================LICENSE_START=========================
+ * SC2 Ladder Generator
+ * %%
+ * Copyright (C) 2020 Oleksandr Masniuk
+ * %%
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ * 
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ * 
+ * You should have received a copy of the GNU Affero General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * =========================LICENSE_END=========================
+ */
+const PAGINATION_SIDE_BUTTON_COUNT = 4;
+const RESOURCE_PATH = "static/";
+
+const REGION = Object.freeze
+({
+    US: {code:1, name: "us"},
+    EU: {code:2, name: "eu"},
+    KR: {code:3, name: "kr"},
+    CN: {code:5, name: "cn"}
+});
+
+const RACE = Object.freeze
+({
+    TERRAN: {name: "terran"},
+    PROTOSS: {name: "protoss"},
+    ZERG: {name: "zerg"},
+    RANDOM: {name: "random"}
+});
+
+const LEAGUE = Object.freeze
+({
+    BRONZE: {code:0, name: "bronze"},
+    SILVER: {code:1, name: "silver"},
+    GOLD: {code:2, name: "gold"},
+    PLATINUM: {code:3, name: "platinum"},
+    DIAMOND: {code:4, name: "diamond"},
+    MASTER: {code:5, name: "master"},
+    GRANDMASTER: {code:6, name: "grandmaster"}
+});
+
+const TEAM_FORMAT = Object.freeze
+({
+    _1V1: {code:201, name: "1V1", fullName: "LOTV_1V1", memberCount: 1},
+    _2V2: {code:202, name: "2V2", fullName: "LOTV_2V2", memberCount: 2},
+    _3V3: {code:203, name: "3V3", fullName: "LOTV_3V3", memberCount: 3},
+    _4V4: {code:204, name: "4V4", fullName: "LOTV_4V4", memberCount: 4},
+    ARCHON: {code:206, name: "Archon", fullName: "LOTV_ARCHON", memberCount: 2}
+});
+
+const TEAM_TYPE = Object.freeze
+({
+    ARRANGED: {code:0, name: "Arranged"},
+    RANDOM: {code:1, name: "Random"}
+});
+function getMemberCount(teamFormat, teamType)
+{
+    if(teamType === TEAM_TYPE.RANDOM) return 1;
+    return teamFormat.memberCount;
+}
+function enumOfId(id, enumObj)
+{
+    for(const curEnum of Object.values(enumObj)) if(curEnum.code == id) return curEnum;
+    throw new Error("Invalid id");
+}
+function enumOfName(name, enumObj)
+{
+    name = name.toLowerCase();
+    for(const curEnum of Object.values(enumObj)) if(curEnum.name.toLowerCase() == name) return curEnum;
+    throw new Error("Invalid name");
+}
+function enumOfFullName(fullName, enumObj)
+{
+    fullName = fullName.toLowerCase();
+    for(const curEnum of Object.values(enumObj)) if(curEnum.fullName.toLowerCase() == fullName) return curEnum;
+    throw new Error("Invalid full name");
+}
+
+const CHARTABLE_OBSERVER_CONFIG =
+{
+    attributes: true,
+    childList: false,
+    subtree: false
+}
+
+const CHARTABLE_OBSERVER = new MutationObserver(onChartableMutation);
+
+const CHARTS = new Map();
+const COLORS = new Map
+([
+    ["terran", "#295a91"],
+    ["protoss", "#dec93e"],
+    ["zerg", "#882991"],
+    ["random", "#646464"],
+    ["us", "#3c3b6e"],
+    ["eu", "#003399"],
+    ["kr", "#141414"],
+    ["cn", "#de2910"],
+    ["bronze", "#b9712d"],
+    ["silver", "#737373"],
+    ["gold", "#ffd700"],
+    ["platinum", "#a5a4a3"],
+    ["diamond", "#0d4594"],
+    ["master", "#00b1fb"],
+    ["grandmaster", "#ef3e00"]
+]);
+
+let currentRequests = 0;
+let documentIsChanging = false;
+let shouldScrollToResult = false;
+let currentSeason = -1;
+let currentTeamFormat;
+let currentTeamType;
+
+window.addEventListener("load", onWindowLoad);
+
+function onWindowLoad()
+{
+    getSeasons();
+        //.then(o => getLadderAll());
+    enhanceLadderForm();
+    enhanceSearchForm();
+    observeChartables();
+    createPaginations();
+    setFormCollapsibleScroll();
+}
+
+function encodeSpace(s){ return encodeURIComponent(s).replace(/%20/g,'+'); }
+
+function urlencodeFormData(fd){
+    let s = '';
+
+    for(const pair of fd.entries()){
+        if(typeof pair[1]=='string'){
+            s += (s?'&':'') + encodeSpace(pair[0])+'='+encodeSpace(pair[1]);
+        }
+    }
+    return s;
+}
+
+function enhanceLadderForm()
+{
+    const form = document.getElementById("form-ladder");
+    form.addEventListener("submit", function(evt)
+        {
+            evt.preventDefault();
+            getLadderAll();
+            $("#form-ladder").collapse("hide");
+        }
+    );
+}
+
+function setFormCollapsibleScroll()
+{
+    const jCol = $(document.getElementById("form-ladder"));
+    jCol.on("hide.bs.collapse", function(e){documentIsChanging = true});
+    jCol.on("hidden.bs.collapse", function(e){
+        documentIsChanging = false
+        if(shouldScrollToResult)
+        {
+            scrollIntoViewById("generated-info-all");
+            shouldScrollToResult = false;
+        }
+    });
+    jCol.on("show.bs.collapse", function(e){
+        documentIsChanging = true;
+        const scrollTo = e.currentTarget.getAttribute("data-scroll-to");
+        if(scrollTo != null) scrollIntoViewById(scrollTo);
+    });
+    jCol.on("shown.bs.collapse", function(e){documentIsChanging = false});
+}
+
+function enhanceSearchForm()
+{
+    const form = document.getElementById("form-search");
+    form.addEventListener("submit", function(evt)
+        {
+            evt.preventDefault();
+            findCharactersByName();
+        }
+    );
+}
+
+function getLadderAll()
+{
+    const formParams = getFormParameters();
+    getLadder(formParams);
+    getLadderStats(formParams);
+    getLeagueBounds(formParams);
+}
+
+function findCharactersByName()
+{
+    getCharacters(document.getElementById("search-player-name").value);
+}
+
+function getFormParameters(page = -1)
+{
+    const fd = new FormData(document.getElementById("form-ladder"));
+    if (page > 0) fd.set("page", page);
+    return urlencodeFormData(fd);
+}
+
+function getLadderStats(formParams)
+{
+    setGeneratingStatus("begin");
+    const request = "api/ladder/stats?" + formParams;
+    fetch(request)
+        .catch(e => setGeneratingStatus("error", e.message))
+        .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        .catch(e => setGeneratingStatus("error", e.message))
+        .then(json => updateLadderStats(json))
+        .then(o => setGeneratingStatus("success"));;
+}
+
+function updateLadderStats(searchResult)
+{
+    updateRaceGamesPlayed(searchResult.raceGamesPlayed);
+    updateGenericTable(document.getElementById("games-played-region-table"), searchResult.regionGamesPlayed);
+    updateGenericTable
+    (
+        document.getElementById("games-played-league-table"),
+        searchResult.leagueGamesPlayed,
+        (a, b)=>a[0].localeCompare(b[0]),
+        function(id){return enumOfId(id, LEAGUE).name;}
+    );
+
+    updateGenericTable(document.getElementById("team-count-region-table"), searchResult.regionTeamCount);
+    updateGenericTable
+    (
+        document.getElementById("team-count-league-table"),
+        searchResult.leagueTeamCount,
+        (a, b)=>a[0].localeCompare(b[0]),
+        function(id){return enumOfId(id, LEAGUE).name;}
+    );
+
+    const playerCountTotal = Object.values(searchResult.regionPlayerCount)
+        .reduce((a, b) => a + b, 0);
+    document.getElementById("players-total-count").textContent = playerCountTotal.toLocaleString();
+    updateGenericTable(document.getElementById("player-count-region-table"), searchResult.regionPlayerCount);
+    updateGenericTable
+    (
+        document.getElementById("player-count-league-table"),
+        searchResult.leaguePlayerCount,
+        (a, b)=>a[0].localeCompare(b[0]),
+        function(id){return enumOfId(id, LEAGUE).name;}
+    );
+}
+
+function updateRaceGamesPlayed(gamesPlayed)
+{
+    const gamesTotal = gamesPlayed.TERRAN + gamesPlayed.PROTOSS + gamesPlayed.ZERG + gamesPlayed.RANDOM;
+
+    document.getElementById("games-total-count").textContent =
+        gamesTotal.toLocaleString() + "/" + Math.round(gamesTotal / (currentTeamFormat.memberCount * 2)).toLocaleString();
+    document.getElementById("games-terran-count").textContent = gamesPlayed.TERRAN;
+    document.getElementById("games-protoss-count").textContent = gamesPlayed.PROTOSS;
+    document.getElementById("games-zerg-count").textContent = gamesPlayed.ZERG;
+    document.getElementById("games-random-count").textContent = gamesPlayed.RANDOM;
+    document.getElementById("games-played-race-table").setAttribute("data-last-updated", Date.now());
+}
+
+function updateGenericTable(table, data, sorter = null, translator = null)
+{
+    const headRow = table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0];
+    const bodyRow = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr")[0];
+    removeChildren(headRow);
+    removeChildren(bodyRow);
+    for(const [header, value] of Object.entries(data).sort(sorter == null ? (a, b)=>b[0].localeCompare(a[0]) : sorter))
+    {
+        const headCell = document.createElement("th");
+        const headerTranslated = translator == null ? header : translator(header);
+        headCell.setAttribute("data-chart-color", headerTranslated.toLowerCase());
+        headCell.appendChild(document.createTextNode(headerTranslated));
+        headRow.appendChild(headCell);
+
+        bodyRow.insertCell().appendChild(document.createTextNode(value));
+    }
+    table.setAttribute("data-last-updated", Date.now());
+}
+
+function getLeagueBounds(formParams)
+{
+    setGeneratingStatus("begin");
+    const request = "api/ladder/league/bounds?" + formParams;
+    fetch(request)
+        .catch(e => setGeneratingStatus("error", e.message))
+        .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        .catch(e => setGeneratingStatus("error", e.message))
+        .then(json => updateLeagueBounds(json))
+        .then(o => setGeneratingStatus("success"));
+}
+
+function updateLeagueBounds(searchResult)
+{
+    const table = document.getElementById("league-bounds-table");
+    const headers = table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0];
+    const body = table.getElementsByTagName("tbody")[0];
+    removeChildren(headers);
+    removeChildren(body);
+    if(Object.keys(searchResult).length === 0) return;
+    const leagueHeader = document.createElement("th");
+    leagueHeader.setAttribute("scope", "col");
+    leagueHeader.textContent = "Tier";
+    headers.appendChild(leagueHeader);
+    for(const region of Object.keys(searchResult))
+    {
+        const th = document.createElement("th");
+        th.setAttribute("scope", "col");
+        th.appendChild(createImage("flag/", region.toLowerCase(), ["table-image", "table-image-long"]));
+        headers.appendChild(th);
+    }
+    for(const [leagueId, leagueObj] of Object.entries(searchResult[Object.keys(searchResult)[0]]).sort((a, b)=>b[0] - a[0]))
+    {
+        const league = enumOfId(leagueId, LEAGUE);
+        for(const tierId of Object.keys(leagueObj))
+        {
+            const tr = document.createElement("tr");
+            const th = document.createElement("th");
+            th.setAttribute("scope", "row");
+            const leagueDiv = document.createElement("div");
+            leagueDiv.classList.add("text-nowrap");
+            leagueDiv.appendChild(createImage("league/", league.name, ["table-image", "table-image-square", "mr-1"]));
+            leagueDiv.appendChild(createImage("league/", "tier-" + (1 + + tierId), ["table-image-additional"]));
+            th.appendChild(leagueDiv);
+            tr.appendChild(th);
+            for(const region of Object.keys(searchResult))
+            {
+                const range = searchResult[region][leagueId][tierId];
+                const td = document.createElement("td");
+                td.textContent = league === LEAGUE.GRANDMASTER
+                    ? "Top 200"
+                    : (range[0] + "-" + range[1]);
+                tr.appendChild(td);
+            }
+            body.appendChild(tr);
+        }
+    }
+}
+
+function getLadder(formParams, page = 1)
+{
+    setGeneratingStatus("begin");
+    const request = "api/ladder?" + formParams;
+    fetch(request)
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(json => updateLadder(json))
+        .then(o => setGeneratingStatus("success"));
+}
+
+function updateLadder(searchResult)
+{
+    document.getElementById("teams-total-count").textContent = searchResult.meta.totalCount.toLocaleString();
+    updateTeamsTable(document.getElementById("ladder"), searchResult);
+    updatePaginations(searchResult.meta.page, searchResult.meta.pageCount);
+    document.getElementById("generated-info-all").classList.remove("d-none");
+}
+
+function updateTeamsTable(table, searchResult)
+{
+    const fullMode = table.getAttribute("data-ladder-format-show") == "true";
+    const includeRank = table.getAttribute("data-ladder-rank-show") == "true";
+    const ladderBody = table.getElementsByTagName("tbody")[0];
+    removeChildren(ladderBody);
+
+    for(let i = 0; i < searchResult.result.length; i++)
+    {
+        const team = searchResult.result[i];
+        const row = ladderBody.insertRow();
+        if(fullMode)
+        {
+            const teamFormat = enumOfId(team.league.queueType, TEAM_FORMAT);
+            const teamType = enumOfId(team.league.teamType, TEAM_TYPE);
+            row.insertCell().appendChild(document.createTextNode(teamFormat.name + " " + teamType.name));
+        }
+        if(searchResult.meta != null) row.insertCell()
+                .appendChild(document.createTextNode(calculateRank(searchResult, i)));
+        row.insertCell().appendChild(createImage("flag/", team.region.toLowerCase(), ["table-image-long"]));
+        const league = enumOfId(team.league.type, LEAGUE);
+        const leagueDiv = document.createElement("div");
+        leagueDiv.classList.add("text-nowrap");
+        leagueDiv.appendChild(createImage("league/", league.name, ["table-image", "table-image-square", "mr-1"]));
+        leagueDiv.appendChild(createImage("league/", "tier-" + (team.leagueTierType + 1), ["table-image-additional"]));
+        row.insertCell().appendChild(leagueDiv);
+        const membersCell = row.insertCell();
+        membersCell.classList.add("complex", "cell-main");
+        const mRow = document.createElement("span");
+        mRow.classList.add("row", "no-gutters");
+        for(const teamMember of team.members)
+        {
+            mRow.appendChild(createMemberInfo(team, teamMember));
+        }
+        membersCell.appendChild(mRow);
+        row.insertCell().appendChild(document.createTextNode(team.rating));
+        row.insertCell().appendChild(document.createTextNode(team.wins + team.losses));
+        row.insertCell().appendChild(document.createTextNode(Math.round( team.wins / (team.wins + team.losses) * 100) ));
+    }
+}
+
+function createMemberInfo(team, member)
+{
+    const nameElem = document.createElement("span");
+    nameElem.classList.add("player-name");
+    nameElem.textContent = member.character.name.substring(0, member.character.name.indexOf("#"));
+
+    const games = new Map();
+    games.set(RACE.TERRAN, typeof member.terranGamesPlayed === "undefined" ? 0 : member.terranGamesPlayed);
+    games.set(RACE.PROTOSS, typeof member.protossGamesPlayed === "undefined" ? 0 : member.protossGamesPlayed);
+    games.set(RACE.ZERG, typeof member.zergGamesPlayed === "undefined" ? 0 : member.zergGamesPlayed);
+    games.set(RACE.RANDOM, typeof member.randomGamesPlayed === "undefined" ? 0 : member.randomGamesPlayed);
+    let gamesTotal = 0;
+    for(const val of games.values()) gamesTotal += val;
+    const percentage = new Map();
+    for(const [key, val] of games.entries())
+        if(val != 0) percentage.set(key, Math.round((val / gamesTotal) * 100));
+    const percentageSorted = new Map([...percentage.entries()].sort((a, b)=>b[1] - a[1]));
+
+    const racesElem = document.createElement("span");
+    racesElem.classList.add("race-percentage-container", "mr-1", "text-nowrap", "d-inline-block");
+    for(const [race, val] of percentageSorted.entries())
+    {
+        if(val == 0) continue;
+        racesElem.appendChild(createImage("race/", race.name, ["table-image", "table-image-square"]));
+        if(val < 100)
+        {
+            const racePercent = document.createElement("span");
+            racePercent.classList.add("race-percentage", "race-percentage-" + race.name, "text-secondary");
+            racePercent.textContent = val;
+            racesElem.appendChild(racePercent);
+        }
+
+    }
+
+    const playerLink = document.createElement("a");
+    playerLink.classList.add("player-link");
+    playerLink.setAttribute("href", "#");
+    playerLink.setAttribute("data-character-id", member.battlenetId);
+    playerLink.setAttribute("data-character-realm", member.character.realm);
+    playerLink.setAttribute("data-character-region",  team.region);
+    playerLink.setAttribute("data-character-battletag", member.account.battleTag);
+    playerLink.addEventListener("click", showCharacterInfo);
+    playerLink.appendChild(racesElem);
+    playerLink.appendChild(nameElem);
+    const result = document.createElement("span");
+    result.classList.add("team-member-info", "col-md-" + (team.members.length > 1 ? "6" : "12"), "col-sm-12");
+    result.appendChild(playerLink);
+    return result;
+}
+
+function calculateRank(searchResult, i)
+{
+    return (searchResult.meta.page - 1) * searchResult.meta.perPage + i + 1;
+}
+
+function showCharacterInfo(e)
+{
+    e.preventDefault();
+    const info = document.getElementById("player-info");
+    document.getElementById("player-info-title-name").textContent
+        = e.currentTarget.getElementsByClassName("player-name")[0].textContent;
+    const region = enumOfName(e.currentTarget.getAttribute("data-character-region"), REGION);
+    const realm = e.currentTarget.getAttribute("data-character-realm");
+    const id = e.currentTarget.getAttribute("data-character-id");
+    const profileLink = `https://starcraft2.com/en-gb/profile/${region.code}/${realm}/${id}`;
+    document.getElementById("battlenet-profile-link").setAttribute("href", profileLink);
+    document.getElementById("player-info-battletag").textContent = e.currentTarget.getAttribute("data-character-battletag");
+    getCharacterTeams(region, id).then(o => $("#player-info").modal());
+}
+
+function getCharacterTeams(region, id)
+{
+    setGeneratingStatus("begin");
+    const request = "api/character/" + region.name.toUpperCase() + "/" + id + "/teams";
+    return fetch(request)
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(json => updateCharacterTeams(json))
+        .then(o => setGeneratingStatus("success"));
+}
+
+function updateCharacterTeams(searchResult)
+{
+    grouped = searchResult.reduce(function(rv, x) {
+        (rv[x["season"]["id"]] = rv[x["season"]["id"]] || []).push(x);
+        return rv;
+    }, {});
+
+    const navs = document.getElementById("character-teams-section").getElementsByClassName("nav-item");
+    const panes = document.getElementById("character-teams-section").getElementsByClassName("tab-pane");
+    let shown = false;
+    let ix = 0;
+
+    for(const nav of navs) nav.classList.add("d-none");
+    const groupedEntries = Object.entries(grouped);
+    for(const [season, teams] of groupedEntries)
+    {
+        const nav = navs[ix];
+        const link = nav.getElementsByClassName("nav-link")[0];
+        const pane = panes[ix];
+        const linkText = teams[0].season.year + " s" + teams[0].season.number;
+        link.textContent = linkText;
+        pane.getElementsByTagName("h4")[0].textContent =
+            teams[0].season.year + " season " + teams[0].season.number + " teams";
+        if(!shown)
+        {
+            if(currentSeason < 0 || season == currentSeason || ix == groupedEntries.length - 1)
+            {
+                $(link).tab("show");
+                shown = true;
+            }
+        }
+        const table = pane.getElementsByClassName("table")[0];
+        updateTeamsTable(table, {result: teams});
+        nav.classList.remove("d-none");
+        ix++;
+    }
+    updateTabSelect(document.getElementById("teams-season-select"), navs);
+}
+
+function getCharacters(name)
+{
+    setGeneratingStatus("begin");
+    const request = "api/characters?name=" + name;
+    return fetch(request)
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(json => updateCharacters(json))
+        .then(o => setGeneratingStatus("success"))
+        .then(o => scrollIntoViewById("search-result-all"));
+}
+
+function updateCharacters(searchResult)
+{
+    const tbody = document.getElementById("search-table").getElementsByTagName("tbody")[0];
+    removeChildren(tbody);
+
+    for(let i = 0; i < searchResult.length; i++)
+    {
+        const character = searchResult[i];
+        const row = tbody.insertRow();
+        row.insertCell().appendChild(createImage("flag/", character.region.toLowerCase(), ["table-image-long"]));
+        row.insertCell().appendChild(createImage("league/", enumOfId(character.leagueMax, LEAGUE).name, ["table-image", "table-image-square", "mr-1"]));
+        row.insertCell().appendChild(document.createTextNode(character.ratingMax));
+        const membersCell = row.insertCell();
+        membersCell.classList.add("complex", "cell-main");
+        const mRow = document.createElement("span");
+        mRow.classList.add("row", "no-gutters");
+        const mInfo = createMemberInfo(character, character.members);
+        mInfo.getElementsByClassName("player-name")[0].classList.add("c-divider");
+        const bTag = document.createElement("span");
+        bTag.classList.add("c-divider", "battle-tag");
+        bTag.textContent = character.members.account.battleTag;
+        mInfo.getElementsByClassName("player-link")[0].appendChild(bTag);
+        mRow.appendChild(mInfo);
+        membersCell.appendChild(mRow);
+        tbody.appendChild(row);
+    }
+    document.getElementById("search-result-all").classList.remove("d-none");
+}
+
+function getSeasons()
+{
+    setGeneratingStatus("begin");
+    return fetch("api/seasons")
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(json => updateSeasons(json))
+        .then(o => setGeneratingStatus("success"));
+}
+
+function updateSeasons(seasons)
+{
+    const seasonPicker = document.getElementById("season-picker");
+    removeChildren(seasonPicker);
+    if(seasons.length > 0) currentSeason = seasons[0].id;
+    updateSeasonsTabs(seasons);
+    for(const season of seasons)
+    {
+        const option = document.createElement("option");
+        option.setAttribute("label", season.year + " s" + season.number);
+        option.textContent = `${season.year} s${season.number}`;
+        option.setAttribute("value", season.id);
+        seasonPicker.appendChild(option);
+    }
+}
+
+function updateSeasonsTabs(seasons)
+{
+    const seasonPills = createTabList(seasons.length, "character-teams-season", "4");
+    seasonPills.nav.classList.add("d-none");
+    const teamSection = document.getElementById("character-teams-section");
+    enhanceTabSelect(document.getElementById("teams-season-select"), seasonPills.nav);
+    teamSection.appendChild(seasonPills.nav);
+    for(const pane of seasonPills.pane.getElementsByClassName("tab-pane"))
+    {
+        const table = createTable(["Format", "Region", "League", "Team", "MMR", "Games", "Win%"]);
+        table.getElementsByTagName("table")[0].setAttribute("data-ladder-format-show", "true");
+        pane.appendChild(table);
+    }
+    teamSection.appendChild(seasonPills.pane);
+}
+
+function removeChildren(node)
+{
+    while(node.hasChildNodes())
+    {
+        node.removeChild(node.lastChild);
+    }
+}
+
+function createImage(prefix, name, classes)
+{
+    const img = document.createElement("img");
+    img.setAttribute("src", `${RESOURCE_PATH}icon/${prefix}${name}.svg`);
+    img.setAttribute("alt", name);
+    img.setAttribute("title", name);
+    for(const clazz of classes)
+    {
+        img.classList.add(clazz);
+    }
+    return img;
+}
+
+function createPaginations()
+{
+    for(const container of document.getElementsByClassName("pagination"))
+    {
+        createPagination(container, PAGINATION_SIDE_BUTTON_COUNT);
+    }
+}
+
+function createPagination(container, sidePageCount)
+{
+    let i;
+    const pageCount = sidePageCount * 2 + 1 + 2 + 2;
+    for (i = 0; i < pageCount; i++)
+    {
+        container.appendChild(createPaginationPage(1, ""));
+    }
+}
+
+function createPaginationPage(pageNum, label)
+{
+    const li = document.createElement("li");
+    li.classList.add("page-item");
+    const page = document.createElement("a");
+    page.setAttribute("href", "#generated-info-all");
+    page.classList.add("page-link");
+    page.textContent = label;
+    page.setAttribute("data-page-number", pageNum);
+    li.appendChild(page);
+    return li;
+}
+
+function updatePaginations(currentPage, lastPage)
+{
+    for(const pagination of document.getElementsByClassName("pagination"))
+    {
+        updatePagination(pagination, currentPage, lastPage);
+    }
+}
+
+function updatePagination(pagination, currentPage, lastPage)
+{
+    const pages = pagination.getElementsByClassName("page-link");
+    updatePaginationPage(pages.item(0), 1, "First", currentPage != 1, false);
+    updatePaginationPage(pages.item(1), currentPage - 1, "<", currentPage - 1 >= 1, false);
+    updatePaginationPage(pages.item(pages.length - 1), lastPage, "Last", currentPage != lastPage, false);
+    updatePaginationPage(pages.item(pages.length - 2), +currentPage + 1, ">", +currentPage + 1 <= lastPage, false);
+
+    const dynamicCount = pages.length - 4;
+    const sideCount = (dynamicCount - 1) / 2;
+    const middleMin = sideCount + 1;
+    const middleMax = lastPage - sideCount;
+    const middleVal = currentPage < middleMin
+        ? middleMin
+        : currentPage > middleMax
+            ? middleMax
+            : currentPage;
+    let leftStart = middleVal - sideCount;
+    leftStart = leftStart < 1 ? 1 : leftStart;
+
+    let curDynamicPage;
+    for(let i = 2, curDynamicPage = leftStart; i < dynamicCount + 2; i++, curDynamicPage++ )
+    {
+        if(curDynamicPage == currentPage)
+        {
+            updatePaginationPage(pages.item(i), curDynamicPage, curDynamicPage, true, true);
+        }
+        else
+        {
+            let active = curDynamicPage <= lastPage;
+            updatePaginationPage(pages.item(i), curDynamicPage, active ? curDynamicPage : "", active, false);
+        }
+    }
+}
+
+function updatePaginationPage(page, number, label, enabled, current)
+{
+    if(label === "")
+    {
+        page.parentElement.classList.add("d-none");
+    }
+    else
+    {
+        page.parentElement.classList.remove("d-none");
+    }
+    if(!enabled)
+    {
+        page.parentElement.classList.remove("enabled");
+        page.parentElement.classList.add("disabled");
+        page.removeEventListener("click", paginationPageClick);
+    }
+    else if (enabled && !page.classList.contains("enabled"))
+    {
+        page.parentElement.classList.add("enabled");
+        page.parentElement.classList.remove("disabled");
+        page.addEventListener("click", paginationPageClick)
+    }
+    if(!current)
+    {
+        page.parentElement.classList.remove("active");
+    }
+    else
+    {
+        page.parentElement.classList.add("active");
+    }
+
+    page.setAttribute("data-page-number", number);
+    page.textContent = label;
+}
+
+function paginationPageClick(evt)
+{
+    const formParams = getFormParameters(evt.target.getAttribute("data-page-number"));
+    getLadder(formParams);
+}
+
+function observeChartables()
+{
+    for(const chartable of document.getElementsByClassName("chartable"))
+    {
+        CHARTABLE_OBSERVER.observe(chartable, CHARTABLE_OBSERVER_CONFIG);
+    }
+}
+
+function onChartableMutation(mutations, observer)
+{
+    for(const mutation of mutations)
+    {
+        updateChartable(mutation.target);
+    }
+}
+
+function createChart(chartable)
+{
+    const type = chartable.getAttribute("data-chart-type");
+    const stacked = chartable.getAttribute("data-chart-stacked");
+    const title = chartable.getAttribute("data-chart-title");
+    const tooltipPercentage = chartable.getAttribute("data-chart-tooltip-percentage");
+    const tooltipSort = chartable.getAttribute("data-chart-tooltip-sort");
+    const ctx = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
+    const data = collectChartJSData(chartable);
+    decorateChartData(data, type);
+    const chart = new Chart
+    (
+        ctx,
+        {
+            type: type,
+            data: data,
+            options:
+            {
+                title:
+                {
+                    display: title == null ? false : true,
+                    text: title
+                },
+                scales:
+                {
+                    xAxes:
+                    [{
+                        display: false,
+                        stacked: stacked === "true" ? true : false
+                    }],
+                    yAxes:
+                    [{
+                        display: false,
+                       // ticks:{beginAtZero: true},
+                        stacked: stacked === "true" ? true : false
+                    }]
+                },
+                tooltips:
+                {
+                    mode: (data.customMeta.type === "pie" || data.customMeta === "doughnut")
+                        ? "dataset"
+                        : "index",
+                    position: "average",
+                    intersect: true,
+                    callbacks:
+                    {
+                        ...(tooltipPercentage === "true") && {label: addTooltipPercentage}
+                    },
+                    ...(tooltipSort === "reverse") && {itemSort: sortTooltipReversed}
+                }
+            }
+        }
+    );
+    CHARTS.set(chartable.id, chart);
+}
+
+function addTooltipPercentage(tooltipItem, data)
+{
+    let label;
+    if(data.customMeta.type === "pie" || data.customMeta === "doughnut")
+    {
+        label = data.labels[tooltipItem.index];
+    }
+    else
+    {
+        label = data.datasets[tooltipItem.datasetIndex].label;
+    }
+    label += " "
+        + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+    let sum = 0;
+    for(const dataset of data.datasets)
+        for(const val of dataset.data) sum += val;
+    label += "\t(" + calculatePercentage(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index], sum) + "%)";
+    return label;
+}
+
+function sortTooltipReversed(a, b, data)
+{
+    return a.datasetIndex !== b.datasetIndex
+        ? (b.datasetIndex - a.datasetIndex)
+        : (b.index - a.index);
+}
+
+function decorateChartData(data, type)
+{
+    for (let i = 0; i < data.datasets.length; i++)
+    {
+        if (type === "line")
+        {
+            Object.defineProperty(data.datasets[i], "borderColor", { value: COLORS.get(data.customColors[i]), writable: true, enumerable: true, configurable: true });
+            Object.defineProperty(data.datasets[i], "backgroundColor", { value: "rgba(0, 0, 0, 0)", writable: true, enumerable: true, configurable: true });
+        }
+        else if(type === "doughnut" || type === "pie")
+        {
+            const dataColors = [];
+            const dataEmptyColors = [];
+            for(let dataValIx = 0; dataValIx < data.datasets[i].data.length; dataValIx++)
+            {
+                dataColors.push(COLORS.get(data.customColors[dataValIx]));
+                dataEmptyColors.push("rgba(0, 0, 0, 0)");
+            }
+            Object.defineProperty(data.datasets[i], "backgroundColor", { value: dataColors, writable: true, enumerable: true, configurable: true });
+            Object.defineProperty(data.datasets[i], "borderColor", { value: dataEmptyColors, writable: true, enumerable: true, configurable: true });
+        }
+        else
+        {
+            Object.defineProperty(data.datasets[i], "backgroundColor", { value: COLORS.get(data.customColors[i]), writable: true, enumerable: true, configurable: true });
+            Object.defineProperty(data.datasets[i], "borderColor", { value: "rgba(0, 0, 0, 0)", writable: true, enumerable: true, configurable: true });
+        }
+    }
+}
+
+function collectChartJSData(elem)
+{
+    const type = elem.getAttribute("data-chart-type");
+    const stacked = elem.getAttribute("data-chart-stacked");
+    const tableData = collectTableData(elem);
+    const datasets = [];
+    if(type !== "doughnut" && type !== "pie")
+    {
+        for (let i = 0; i < tableData.headers.length; i++)
+        {
+            datasets.push
+            (
+                {
+                    label: tableData.headers[i],
+                    data: tableData.values[i],
+                    hidden: !hasNonZeroValues(tableData.values[i])
+                }
+            )
+        }
+    }
+    else
+    {
+        const datasetData = [];
+        for (let i = 0; i < tableData.headers.length; i++)
+        {
+            datasetData.push(tableData.values[i][0]);
+        }
+        datasets.push({data: datasetData});
+    }
+    const data =
+    {
+        labels: stacked ? [elem.getAttribute("data-chart-stacked-label")] : tableData.headers,
+        datasets: datasets,
+        customColors: tableData.colors,
+        customMeta:
+        {
+            type: type
+        }
+    }
+    return data;
+}
+
+function collectTableData(elem)
+{
+    let mode = elem.getAttribute("data-chart-collection-mode");
+    mode = mode == null ? "body" : mode;
+    const headers = [];
+    const allVals = [];
+    const colors = [];
+    const headings = elem.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0].getElementsByTagName("th");
+    for (let i = 0; i < headings.length; i++)
+    {
+        const heading = headings[i];
+        headers.push(heading.textContent);
+        allVals.push([]);
+        colors.push(heading.getAttribute("data-chart-color"));
+    }
+
+    const rows = mode === "foot"
+        ? elem.getElementsByTagName("tfoot")[0].getElementsByTagName("tr")
+        : elem.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+    for (let i = 0; i < rows.length; i++)
+    {
+        const row = rows[i];
+        const tds = row.getElementsByTagName("td");
+        for (let tdix = 0; tdix < tds.length; tdix++)
+        {
+            const iText = tds[tdix].textContent;
+            allVals[tdix].push(parseFloat(iText));
+        }
+    }
+    return {headers: headers, values: allVals, colors: colors};
+}
+
+function updateChartable(chartable)
+{
+    const chart = CHARTS.get(chartable.id);
+    if (chart === undefined)
+    {
+        createChart(chartable);
+    }
+    else
+    {
+        updateChart(chart, collectChartJSData(chartable))
+    }
+}
+
+function updateChart(chart, data)
+{
+    if (data === null)
+    {
+        return;
+    }
+    if
+    (
+        chart.data.labels.length === data.labels.length
+        && chart.data.labels.every(function(val, ix){val === data.labels[ix]})
+    )
+    {
+        for (let i = 0; i < data.datasets.length; i++)
+        {
+            chart.data.datasets[i].label = data.datasets[i].label;
+            chart.data.datasets[i].data = data.datasets[i].data;
+            chart.data.datasets[i].hidden = data.datasets[i].hidden;
+        }
+    }
+    else
+    {
+        decorateChartData(data, chart.config.type);
+        chart.data = data;
+    }
+    chart.update();
+}
+
+function hasNonZeroValues(values)
+{
+    for (let i = 0; i < values.length; i++)
+    {
+        const val = values[i];
+        if (!isNaN(val) && val != 0)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+function calculatePercentage(val, allVal)
+{
+    return Math.round((val / allVal) * 100);
+}
+
+function setGeneratingStatus(status, errorText = "Error")
+{
+    switch(status)
+    {
+        case "begin":
+            currentRequests++;
+            if (currentRequests > 1) return;
+            currentSeason = document.getElementById("season-picker").value;
+            currentTeamFormat = enumOfFullName(document.getElementById("team-format-picker").value, TEAM_FORMAT);
+            currentTeamType = enumOfName(document.getElementById("team-type-picker").value, TEAM_TYPE);
+            disableElements(document.getElementsByTagName("input"), true);
+            disableElements(document.getElementsByTagName("select"), true);
+            disableElements(document.getElementsByTagName("button"), true);
+            setPaginationsState(false);
+            setElementsVisibility(document.getElementsByClassName("status-generating-begin"), true);
+            setElementsVisibility(document.getElementsByClassName("status-generating-success"), false);
+            setElementsVisibility(document.getElementsByClassName("status-generating-error"), false);
+        break;
+        case "success":
+        case "error":
+            currentRequests--;
+            if(status === "error")
+            {
+                document.getElementById("error-generation-text").textContent = errorText;
+                $("#error-generation").modal();
+            }
+            if(currentRequests > 0) return;
+            disableElements(document.getElementsByTagName("input"), false);
+            disableElements(document.getElementsByTagName("select"), false);
+            disableElements(document.getElementsByTagName("button"), false);
+            setPaginationsState(true);
+            setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
+            setElementsVisibility(document.getElementsByClassName("status-generating-" + status), true);
+            if(documentIsChanging)
+            {
+                shouldScrollToResult = true;
+            }
+            else
+            {
+                scrollIntoViewById("generated-info-all");
+                shouldScrollToResult = false;
+            }
+        break;
+    }
+}
+
+function setElementsVisibility(elems, visible)
+{
+    for (const elem of elems)
+    {
+        const clazz = elem.getAttribute("data-hide-mode") === "hide"
+            ? "invisible"
+            : "d-none";
+        if(!visible)
+        {
+            elem.classList.add(clazz);
+        }
+        else
+        {
+            elem.classList.remove(clazz);
+        }
+    }
+}
+
+function disableElements(elems, disable)
+{
+    for (var i = 0; i < elems.length; i++)
+    {
+        if (disable)
+        {
+            elems[i].setAttribute("disabled", "disabled");
+        }
+        else
+        {
+            elems[i].removeAttribute("disabled");
+        }
+    }
+}
+
+function setPaginationsState(enabled)
+{
+
+    for(const pagination of document.getElementsByClassName("pagination"))
+    {
+        if(enabled)
+        {
+            const active = pagination.getElementsByClassName("active")[0];
+            if(active != null)
+            {
+                const currentPage = active
+                    .getElementsByClassName("page-link")[0]
+                    .getAttribute("data-page-number");
+                const pageLinks = pagination.getElementsByClassName("page-link");
+                const lastPage = pageLinks[pageLinks.length - 1].getAttribute("data-page-number");
+                updatePagination(pagination, currentPage, lastPage);
+            }
+        }
+        else
+        {
+            for(const page of pagination.getElementsByClassName("page-link"))
+            {
+                page.parentElement.classList.remove("enabled");
+                page.parentElement.classList.add("disabled");
+                page.removeEventListener("click", paginationPageClick);
+            }
+        }
+    }
+}
+
+function scrollIntoViewById(id)
+{
+    document.getElementById(id).scrollIntoView({behavior: "smooth"});
+}
+
+function createTable(theads)
+{
+    const table = document.createElement("table");
+    const thead = document.createElement("thead");
+    const thr = document.createElement("tr");
+    for(const h of theads)
+    {
+        const th = document.createElement("th");
+        th.setAttribute("span", "col");
+        th.textContent = h;
+        thr.appendChild(th);
+    }
+    thead.appendChild(thr);
+    const tbody = document.createElement("tbody");
+    table.appendChild(thead);
+    table.appendChild(tbody);
+    table.classList.add("table", "table-sm", "table-hover");
+    const tcontainer = document.createElement("div");
+    tcontainer.classList.add("table-responsive");
+    tcontainer.appendChild(table);
+    return tcontainer;
+}
+
+function createTabList(count, prefix, hLevel, fade = false)
+{
+    const nav = document.createElement("nav");
+    const panes = document.createElement("div");
+    panes.classList.add("tab-content");
+    const ul = document.createElement("ul");
+    ul.classList.add("nav", "nav-pills", "mb-3", "justify-content-center");
+    ul.setAttribute("role", "tablist");
+    nav.appendChild(ul);
+    nav.setAttribute("id", prefix + "-nav")
+    for(let i = 0; i < count; i++)
+    {
+        const li = document.createElement("li");
+        li.classList.add("nav-item");
+        const a = document.createElement("a");
+        const name = prefix + "-" + i;
+        a.classList.add("nav-link");
+        a.setAttribute("id", name + '-link');
+        a.setAttribute("data-toggle", "pill");
+        a.setAttribute("href", "#" + name);
+        a.setAttribute("role", "tab");
+        a.setAttribute("aria-controls", name)
+        a.setAttribute("aria-selected", "false");
+        $(a).on("click", function(e) {
+            e.preventDefault();
+            $(this).tab("show");
+        });
+        li.appendChild(a);
+        ul.appendChild(li);
+
+        const pane = document.createElement("section");
+        pane.setAttribute("id", name);
+        pane.classList.add("tab-pane");
+        if(fade) pane.classList.add("fade");
+        const h = document.createElement("h" + hLevel);
+        pane.appendChild(h);
+        panes.appendChild(pane);
+    }
+    return {nav: nav, pane: panes};
+}
+
+function enhanceTabSelect(select, nav)
+{
+    select.addEventListener("change", e=>$(document.getElementById(e.target.options[e.target.selectedIndex].getAttribute("data-tab"))).tab("show"));
+    return select;
+}
+
+function updateTabSelect(select, navs)
+{
+    removeChildren(select);
+    for (const nav of navs)
+    {
+        if(!nav.classList.contains("d-none"))
+        {
+            const link = nav.getElementsByClassName("nav-link")[0];
+            const option = document.createElement("option");
+            option.textContent = link.textContent;
+            option.value = link.textContent;
+            option.setAttribute("data-tab", link.getAttribute("id"));
+            select.appendChild(option);
+            if(link.getAttribute("aria-selected") == "true") select.value = option.value;
+        }
+    }
+}
