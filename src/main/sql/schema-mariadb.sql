@@ -8,12 +8,12 @@
 -- it under the terms of the GNU Affero General Public License as published by
 -- the Free Software Foundation, either version 3 of the License, or
 -- (at your option) any later version.
--- 
+--
 -- This program is distributed in the hope that it will be useful,
 -- but WITHOUT ANY WARRANTY; without even the implied warranty of
 -- MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 -- GNU General Public License for more details.
--- 
+--
 -- You should have received a copy of the GNU Affero General Public License
 -- along with this program.  If not, see <http://www.gnu.org/licenses/>.
 -- =========================LICENSE_END=========================
@@ -162,8 +162,8 @@ CREATE TABLE `team`
         REFERENCES `division`(`id`)
         ON DELETE CASCADE ON UPDATE CASCADE,
 
-    CONSTRAINT `uq_team_division_id_battlenet_id`
-        UNIQUE (`division_id`, `battlenet_id`),
+    CONSTRAINT `uq_team_region_battlenet_id`
+        UNIQUE (`region`, `battlenet_id`),
 
     INDEX `ix_team_ladder_search_ix` (season, region, league_type, queue_type, team_type, rating, `id`)
 
