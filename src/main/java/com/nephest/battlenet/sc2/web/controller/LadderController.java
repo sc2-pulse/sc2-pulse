@@ -49,15 +49,6 @@ public class LadderController
     @Autowired
     private LadderSearchDAO ladderSearch;
 
-    @Autowired
-    private AccountDAO adao;
-
-    @GetMapping("/privacy")
-    public void privacy()
-    {
-        adao.removeExpiredByPrivacy();
-    }
-
     @GetMapping("/ladder")
     public PagedSearchResult<List<LadderTeam>> getLadder
     (
