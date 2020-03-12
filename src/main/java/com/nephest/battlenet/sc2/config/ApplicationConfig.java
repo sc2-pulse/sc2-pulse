@@ -33,12 +33,14 @@ import org.springframework.transaction.annotation.*;
 import org.springframework.core.convert.*;
 import org.springframework.core.convert.support.*;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.scheduling.annotation.*;
 
 import com.nephest.battlenet.sc2.config.convert.*;
 
 @Configuration
 @ComponentScan("com.nephest.battlenet.sc2")
 @EnableTransactionManagement
+@EnableScheduling
 public class ApplicationConfig
 {
 

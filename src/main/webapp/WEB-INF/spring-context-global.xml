@@ -70,12 +70,4 @@
         <property name="dataSource" ref="sc2StatsDataSource"/>
     </bean>
 
-    <task:annotation-driven scheduler="bgJobsScheduler"/>
-    <task:scheduler id="bgJobsScheduler" pool-size="3"/>
-    <task:scheduled-tasks>
-        <task:scheduled ref="accountDAO" method="removeExpiredByPrivacy" cron="45 6 0 * * *"/>
-        <task:scheduled ref="statsService" method="updateCurrent" cron="0 0 3 * * *"/>
-        <task:scheduled ref="statsService" method="updateAll" cron="0 0 5 * * SAT"/>
-    </task:scheduled-tasks>
-
 </beans>
