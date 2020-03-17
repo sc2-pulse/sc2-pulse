@@ -136,26 +136,12 @@ public class StatsService
             Collections.sort(seasonsToUpdate);
         }
 
-        int tries = 0;
-        while(tries < UPDATE_ALL_MAX_TRIES)
+        for(Iterator<Long> iter = seasonsToUpdate.iterator(); iter.hasNext();)
         {
-            try
-            {
-                for(Iterator<Long> iter = seasonsToUpdate.iterator(); iter.hasNext();)
-                {
-                    Long sId = iter.next();
-                    updateSeason(sId);
-                    iter.remove();
-                    LOG.log(Level.INFO, "Updated season {0}", new Object[]{sId});
-                }
-                tries = UPDATE_ALL_MAX_TRIES;
-            }
-            catch(RuntimeException ex)
-            {
-                LOG.log(Level.SEVERE, ex.getMessage(), ex);
-                tries++;
-                if(tries == UPDATE_ALL_MAX_TRIES) throw ex;
-            }
+            Long sId = iter.next();
+            updateSeason(sId);
+            iter.remove();
+            LOG.log(Level.INFO, "Updated season {0}", new Object[]{sId});
         }
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
