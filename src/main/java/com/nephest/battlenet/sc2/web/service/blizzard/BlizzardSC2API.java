@@ -80,6 +80,7 @@ public class BlizzardSC2API
     private WebClient client;
     private final String password;
     private BlizzardAccessToken accessToken;
+    private String regionUri;
 
     public BlizzardSC2API(String password)
     {
@@ -106,6 +107,11 @@ public class BlizzardSC2API
         client = WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(httpClient))
             .build();
+    }
+
+    protected void setRegionUri(String uri)
+    {
+        this.regionUri = uri;
     }
 
     protected void setWebClient(WebClient client)
@@ -143,7 +149,7 @@ public class BlizzardSC2API
         {
             BlizzardAccessToken token = getWebClient()
                 .post()
-                .uri("https://us.battle.net/oauth/token")
+                .uri(regionUri != null ? regionUri : "https://us.battle.net/oauth/token")
                 .header("Authorization", "Basic " + getPassword())
                 .accept(APPLICATION_JSON)
                 .contentType(APPLICATION_FORM_URLENCODED)
@@ -171,7 +177,7 @@ public class BlizzardSC2API
         renewAccessToken();
         return getWebClient()
             .get()
-            .uri(region.getBaseUrl() + "sc2/ladder/season/{0}", region.getId())
+            .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/ladder/season/{0}"), region.getId())
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
@@ -192,7 +198,7 @@ public class BlizzardSC2API
             .get()
             .uri
             (
-                region.getBaseUrl() + "data/sc2/league/{0}/{1}/{2}/{3}",
+                regionUri != null ? regionUri : (region.getBaseUrl() + "data/sc2/league/{0}/{1}/{2}/{3}"),
                 season.getId(),
                 queueType.getId(),
                 teamType.getId(),
@@ -215,7 +221,7 @@ public class BlizzardSC2API
             .get()
             .uri
             (
-                region.getBaseUrl() + "data/sc2/ladder/{0}",
+                regionUri != null ? regionUri : (region.getBaseUrl() + "data/sc2/ladder/{0}"),
                 division.getLadderId()
             )
             .accept(APPLICATION_JSON)
