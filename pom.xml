@@ -57,6 +57,20 @@
         <scope>test</scope>
     </dependency>
 
+    <dependency>
+        <groupId>com.squareup.okhttp3</groupId>
+        <artifactId>mockwebserver</artifactId>
+        <version>4.4.1</version>
+        <scope>test</scope>
+    </dependency>
+
+    <dependency>
+        <groupId>io.projectreactor</groupId>
+        <artifactId>reactor-test</artifactId>
+        <version>3.3.3.RELEASE</version>
+        <scope>test</scope>
+    </dependency>
+
     <!-- Application container config -->
     <!--
     <dependency>
