@@ -187,7 +187,7 @@ public class StatsService
 
     private void updateCurrentSeason(Region region)
     {
-        BlizzardSeason bSeason = api.getCurrentSeason(region);
+        BlizzardSeason bSeason = api.getCurrentSeason(region).block();
         Season season = seasonDao.merge(Season.of(bSeason, region));
         updateLeagues(bSeason, season);
     }
@@ -207,7 +207,7 @@ public class StatsService
                         season.getRegion(),
                         bSeason,
                         leagueType, queueType, teamType
-                    );
+                    ).block();
                     League league = League.of(season, bLeague);
 
                     leagueDao.merge(league);
@@ -300,7 +300,7 @@ public class StatsService
             divisionDao.merge(division);
             try
             {
-                updateTeams(api.getTeams(season.getRegion(), bDivision), season, league, tier, division);
+                updateTeams(api.getLadder(season.getRegion(), bDivision).block().getTeams(), season, league, tier, division);
                 //A lot of garbage here, hint the GC
                 System.gc();
             }

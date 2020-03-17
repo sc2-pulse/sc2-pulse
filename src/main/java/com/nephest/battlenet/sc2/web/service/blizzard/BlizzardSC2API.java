@@ -37,6 +37,7 @@ import org.springframework.http.client.reactive.*;
 
 import reactor.netty.tcp.*;
 import reactor.netty.http.client.*;
+import reactor.core.publisher.*;
 import io.netty.channel.*;
 import io.netty.handler.timeout.*;
 import io.netty.handler.codec.http.*;
@@ -165,22 +166,19 @@ public class BlizzardSC2API
         return MMR_SEASONS.get(id);
     }
 
-    public BlizzardSeason getCurrentSeason(Region region)
+    public Mono<BlizzardSeason> getCurrentSeason(Region region)
     {
         renewAccessToken();
-        BlizzardSeason season = getWebClient()
+        return getWebClient()
             .get()
             .uri(region.getBaseUrl() + "sc2/ladder/season/{0}", region.getId())
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
-            .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX)
-            .block();
-
-        return season;
+            .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX);
     }
 
-    public BlizzardLeague getLeague
+    public Mono<BlizzardLeague> getLeague
     (
         Region region,
         BlizzardSeason season,
@@ -190,7 +188,7 @@ public class BlizzardSC2API
     )
     {
         renewAccessToken();
-        BlizzardLeague league = getWebClient()
+        return getWebClient()
             .get()
             .uri
             (
@@ -203,20 +201,17 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
-            .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX)
-            .block();
-
-        return league;
+            .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX);
     }
 
-    public BlizzardTeam[] getTeams
+    public Mono<BlizzardLadder> getLadder
     (
         Region region,
         BlizzardTierDivision division
     )
     {
         renewAccessToken();
-        BlizzardLadder ladder = getWebClient()
+        return getWebClient()
             .get()
             .uri
             (
@@ -226,10 +221,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
-            .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX)
-            .block();
-
-        return ladder.getTeams();
+            .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX);
     }
 
 }
