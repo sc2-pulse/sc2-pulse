@@ -257,21 +257,5 @@
             </executions>
         </plugin>
     </plugins>
-    <resources>
-            <resource>
-                <filtering>false</filtering>
-                <directory>${basedir}/target/generated-sources/license/</directory>
-            </resource>
-            <resource>
-                <filtering>false</filtering>
-                <targetPath>src/</targetPath>
-                <directory>${basedir}/src/</directory>
-                <includes>
-                    <include>**/*.java</include>
-                    <include>**/*.js</include>
-                    <include>**/*.css</include>
-                </includes>
-            </resource>
-        </resources>
   </build>
 </project>
