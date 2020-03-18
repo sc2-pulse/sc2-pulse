@@ -20,22 +20,24 @@
  */
 package com.nephest.battlenet.sc2.config;
 
-import java.util.*;
-
+import javax.annotation.Resource;
 import javax.sql.DataSource;
-import javax.annotation.*;
 
-import org.springframework.context.annotation.*;
-import org.springframework.context.support.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.format.support.*;
-import org.springframework.transaction.annotation.*;
-import org.springframework.core.convert.*;
-import org.springframework.core.convert.support.*;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.scheduling.annotation.*;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import com.nephest.battlenet.sc2.config.convert.*;
+import com.nephest.battlenet.sc2.config.convert.IdentifiableToIntegerConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTierTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToQueueTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToRegionConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
 
 @Configuration
 @ComponentScan("com.nephest.battlenet.sc2")

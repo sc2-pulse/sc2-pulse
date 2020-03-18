@@ -20,13 +20,13 @@
  */
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import org.springframework.beans.factory.annotation.*;
-import org.springframework.stereotype.*;
-import org.springframework.jdbc.core.namedparam.*;
-import org.springframework.jdbc.support.*;
-import org.springframework.core.convert.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
 
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
 
 @Repository
 public class TeamMemberDAO

@@ -20,10 +20,10 @@
  */
 package com.nephest.battlenet.sc2.model.blizzard;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
+import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
-import static com.fasterxml.jackson.databind.PropertyNamingStrategy.*;
 
 @JsonNaming(SnakeCaseStrategy.class)
 public class BlizzardTierDivision

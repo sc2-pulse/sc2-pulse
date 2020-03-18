@@ -20,8 +20,8 @@
  */
 package com.nephest.battlenet.sc2.model.blizzard;
 
-import javax.validation.*;
-import javax.validation.constraints.*;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 

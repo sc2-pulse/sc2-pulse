@@ -20,7 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local.ladder;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
 public class SearchMeta
 {

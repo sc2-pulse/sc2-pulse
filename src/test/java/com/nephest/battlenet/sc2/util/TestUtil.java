@@ -20,8 +20,8 @@
  */
 package com.nephest.battlenet.sc2.util;
 
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 public final class TestUtil
 {

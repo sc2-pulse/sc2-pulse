@@ -20,30 +20,39 @@
  */
 package com.nephest.battlenet.sc2.web.service.blizzard;
 
-import java.time.*;
-import java.util.*;
-import java.util.function.*;
-import java.util.stream.*;
-import static java.util.stream.Collectors.*;
+import static java.util.stream.Collectors.toUnmodifiableMap;
+import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
 
-import javax.validation.*;
+import java.time.Duration;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Stream;
 
-import static org.springframework.http.MediaType.*;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.reactive.function.*;
-import org.springframework.web.reactive.function.client.*;
+import javax.validation.Valid;
+
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
-import org.springframework.http.client.reactive.*;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.reactive.function.BodyInserters;
+import org.springframework.web.reactive.function.client.WebClient;
 
-import reactor.netty.tcp.*;
-import reactor.netty.http.client.*;
-import reactor.core.publisher.*;
-import io.netty.channel.*;
-import io.netty.handler.timeout.*;
-import io.netty.handler.codec.http.*;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccessToken;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 
-import com.nephest.battlenet.sc2.model.blizzard.*;
-import com.nephest.battlenet.sc2.model.*;
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
+import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.TcpClient;
 
 @Service
 public class BlizzardSC2API

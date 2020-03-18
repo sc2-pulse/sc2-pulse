@@ -20,11 +20,11 @@
  */
 package com.nephest.battlenet.sc2.model.local.ladder;
 
-import java.util.*;
+import java.util.Map;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.Race;
 
 public class LadderSearchStatsResult
 {

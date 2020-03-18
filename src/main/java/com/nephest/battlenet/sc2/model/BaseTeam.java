@@ -20,7 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
 public class BaseTeam
 {

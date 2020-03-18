@@ -20,13 +20,6 @@
  */
 package com.nephest.battlenet.sc2.web.service.blizzard;
 
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.*;
-import org.junit.jupiter.params.provider.*;
-import static org.junit.jupiter.api.Assertions.*;
-
-import com.nephest.battlenet.sc2.model.blizzard.*;
-
 public class BlizzardSC2APITest
 {
 

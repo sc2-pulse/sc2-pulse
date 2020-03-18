@@ -20,14 +20,11 @@
  */
 package com.nephest.battlenet.sc2.model.blizzard;
 
-import javax.validation.*;
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.*;
-import com.fasterxml.jackson.databind.annotation.*;
-import static com.fasterxml.jackson.databind.PropertyNamingStrategy.*;
-
-import com.nephest.battlenet.sc2.model.*;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.nephest.battlenet.sc2.model.BaseAccount;
 
 @JsonNaming(SnakeCaseStrategy.class)
 public class BlizzardAccount

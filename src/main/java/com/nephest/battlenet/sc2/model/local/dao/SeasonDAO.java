@@ -20,18 +20,20 @@
  */
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import java.time.*;
-import java.util.*;
+import java.util.List;
 
-import org.springframework.beans.factory.annotation.*;
-import org.springframework.stereotype.*;
-import org.springframework.jdbc.core.*;
-import org.springframework.jdbc.core.namedparam.*;
-import org.springframework.jdbc.support.*;
-import org.springframework.core.convert.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.support.GeneratedKeyHolder;
+import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.stereotype.Repository;
 
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.Season;
 
 @Repository
 public class SeasonDAO

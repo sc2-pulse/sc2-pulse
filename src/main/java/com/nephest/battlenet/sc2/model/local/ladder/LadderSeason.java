@@ -20,9 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local.ladder;
 
-import javax.validation.constraints.*;
-
-import com.nephest.battlenet.sc2.model.blizzard.*;
+import javax.validation.constraints.NotNull;
 
 public class LadderSeason
 {

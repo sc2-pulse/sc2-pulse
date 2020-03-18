@@ -20,12 +20,12 @@
  */
 package com.nephest.battlenet.sc2.config;
 
-import org.springframework.stereotype.*;
-import org.springframework.beans.factory.annotation.*;
-import org.springframework.scheduling.annotation.*;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
 
-import com.nephest.battlenet.sc2.web.service.*;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.web.service.StatsService;
 
 @Component
 public class Cron

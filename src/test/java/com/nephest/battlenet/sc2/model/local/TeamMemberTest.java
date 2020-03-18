@@ -20,8 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
-import org.junit.jupiter.api.*;
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import com.nephest.battlenet.sc2.util.TestUtil;
 

@@ -22,11 +22,10 @@ package com.nephest.battlenet.sc2.model.blizzard;
 
 import java.util.Map;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import javax.validation.constraints.*;
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.Race;
 
 public class BlizzardTeamMemberRace
 {

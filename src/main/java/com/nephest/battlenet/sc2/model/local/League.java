@@ -22,9 +22,11 @@ package com.nephest.battlenet.sc2.model.local;
 
 import java.util.Objects;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
 
 public class League

@@ -20,19 +20,9 @@
  */
 package com.nephest.battlenet.sc2.web.service;
 
-import org.junit.jupiter.api.*;
-import org.junit.jupiter.params.*;
-import org.junit.jupiter.params.provider.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.mock;
 
-import org.mockito.*;
-import org.mockito.stubbing.*;
-import org.mockito.invocation.*;
-import static org.mockito.Mockito.*;
-
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.*;
-import com.nephest.battlenet.sc2.model.blizzard.*;
+import org.junit.jupiter.api.BeforeEach;
 
 public class StatsServiceTest
 {

@@ -22,7 +22,7 @@ package com.nephest.battlenet.sc2.model.local;
 
 import java.util.Objects;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
 

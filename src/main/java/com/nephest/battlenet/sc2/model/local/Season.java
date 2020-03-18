@@ -21,12 +21,12 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import java.util.Objects;
-import java.time.OffsetDateTime;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.blizzard.*;
+import com.nephest.battlenet.sc2.model.BaseSeason;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 
 public class Season
 extends BaseSeason

@@ -20,10 +20,10 @@
  */
 package com.nephest.battlenet.sc2.config.convert;
 
-import org.springframework.stereotype.Component;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.stereotype.Component;
 
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.QueueType;
 
 @Component
 public class IntegerToQueueTypeConverter

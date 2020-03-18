@@ -20,9 +20,9 @@
  */
 package com.nephest.battlenet.sc2.model;
 
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
-import com.fasterxml.jackson.annotation.*;
+import com.fasterxml.jackson.annotation.JsonValue;
 
 public class BaseLeague
 {
