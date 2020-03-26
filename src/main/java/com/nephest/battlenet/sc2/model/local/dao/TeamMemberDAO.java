@@ -31,11 +31,12 @@ import com.nephest.battlenet.sc2.model.local.TeamMember;
 @Repository
 public class TeamMemberDAO
 {
-
-    private static final String MERGE_QUERY = "INSERT INTO team_member "
+    private static final String CREATE_QUERY = "INSERT INTO team_member "
         + "(team_id, player_character_id, terran_games_played, protoss_games_played, zerg_games_played, random_games_played) "
-        + "VALUES (:teamId, :playerCharacterId, :terranGamesPlayed, :protossGamesPlayed, :zergGamesPlayed, :randomGamesPlayed) "
+        + "VALUES (:teamId, :playerCharacterId, :terranGamesPlayed, :protossGamesPlayed, :zergGamesPlayed, :randomGamesPlayed)";
 
+    private static final String MERGE_QUERY = CREATE_QUERY
+        + " "
         + "ON DUPLICATE KEY UPDATE "
         + "team_id=VALUES(team_id), "
         + "player_character_id=VALUES(player_character_id), "
@@ -55,17 +56,29 @@ public class TeamMemberDAO
         this.template = template;
     }
 
+    public TeamMember create(TeamMember member)
+    {
+        MapSqlParameterSource params = createParameterSource(member);
+        template.update(CREATE_QUERY, params);
+        return member;
+    }
+
     public TeamMember merge(TeamMember member)
     {
-        MapSqlParameterSource params = new MapSqlParameterSource()
+        MapSqlParameterSource params = createParameterSource(member);
+        template.update(MERGE_QUERY, params);
+        return member;
+    }
+
+    private MapSqlParameterSource createParameterSource(TeamMember member)
+    {
+        return new MapSqlParameterSource()
             .addValue("teamId", member.getTeamId())
             .addValue("playerCharacterId", member.getCharacterId())
             .addValue("terranGamesPlayed", member.getTerranGamesPlayed())
             .addValue("protossGamesPlayed", member.getProtossGamesPlayed())
             .addValue("zergGamesPlayed", member.getZergGamesPlayed())
             .addValue("randomGamesPlayed", member.getRandomGamesPlayed());
-        template.update(MERGE_QUERY, params);
-        return member;
     }
 
 }

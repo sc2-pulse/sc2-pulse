@@ -20,6 +20,8 @@
  */
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -29,13 +31,12 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import com.nephest.battlenet.sc2.model.local.Team;
+import java.math.BigInteger;
 
 @Repository
 public class TeamDAO
 {
-
-    private static final String MERGE_QUERY = "INSERT INTO team "
+    private static final String CREATE_QUERY = "INSERT INTO team "
         + "("
             + "division_id, battlenet_id, "
             + "season, region, league_type, queue_type, team_type, tier_type, "
@@ -45,8 +46,10 @@ public class TeamDAO
             + ":divisionId, :battlenetId, "
             + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
             + ":rating, :points, :wins, :losses, :ties"
-        + ") "
+        + ")";
 
+    private static final String MERGE_QUERY = CREATE_QUERY
+        + " "
         + "ON DUPLICATE KEY UPDATE "
         + "id=LAST_INSERT_ID(id),"
         + "division_id=VALUES(division_id), "
@@ -78,10 +81,27 @@ public class TeamDAO
         this.conversionService = conversionService;
     }
 
+    public Team create(Team team)
+    {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        MapSqlParameterSource params = createParameterSource(team);
+        template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
+        team.setId(keyHolder.getKey().longValue());
+        return team;
+    }
+
     public Team merge(Team team)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource params = new MapSqlParameterSource()
+        MapSqlParameterSource params = createParameterSource(team);
+        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
+        team.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        return team;
+    }
+
+    private MapSqlParameterSource createParameterSource(Team team)
+    {
+        return new MapSqlParameterSource()
             .addValue("divisionId", team.getDivisionId())
             .addValue("battlenetId", team.getBattlenetId())
             .addValue("season", team.getSeason())
@@ -95,9 +115,6 @@ public class TeamDAO
             .addValue("wins", team.getWins())
             .addValue("losses", team.getLosses())
             .addValue("ties", team.getTies());
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        team.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
-        return team;
     }
 
 }

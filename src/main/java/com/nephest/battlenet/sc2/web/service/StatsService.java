@@ -202,7 +202,7 @@ public class StatsService
         {
             updateSeason(region, seasonId);
         }
-        leagueStatsDao.calculateForSeason(seasonId);
+        leagueStatsDao.mergeCalculateForSeason(seasonId);
     }
 
     private void updateSeason(Region region, long seasonId)

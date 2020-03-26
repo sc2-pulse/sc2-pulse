@@ -20,8 +20,10 @@
  */
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import java.time.OffsetDateTime;
 import java.util.Collections;
 
+import com.nephest.battlenet.sc2.model.Region;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -36,10 +38,12 @@ import com.nephest.battlenet.sc2.model.local.Account;
 @Repository
 public class AccountDAO
 {
-    private static final String MERGE_QUERY = "INSERT INTO account "
+    private static final String CREATE_QUERY = "INSERT INTO account "
         + "(battlenet_id, region, battle_tag, updated) "
-        + "VALUES (:battlenetId, :region, :battleTag, :updated) "
+        + "VALUES (:battlenetId, :region, :battleTag, :updated)";
 
+    private static final String MERGE_QUERY = CREATE_QUERY
+        + " "
         + "ON DUPLICATE KEY UPDATE "
         + "id=LAST_INSERT_ID(id),"
         + "battlenet_id=VALUES(battlenet_id), "
@@ -64,17 +68,31 @@ public class AccountDAO
         this.conversionService = conversionService;
     }
 
+    public Account create(Account account)
+    {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        MapSqlParameterSource params = createParameterSource(account);
+        template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
+        account.setId(keyHolder.getKey().longValue());
+        return account;
+    }
+
     public Account merge(Account account)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource params = new MapSqlParameterSource()
+        MapSqlParameterSource params = createParameterSource(account);
+        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
+        account.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        return account;
+    }
+
+    private MapSqlParameterSource createParameterSource(Account account)
+    {
+        return new MapSqlParameterSource()
             .addValue("battlenetId", account.getBattlenetId())
             .addValue("region", conversionService.convert(account.getRegion(), Integer.class))
             .addValue("battleTag", account.getBattleTag())
             .addValue("updated", account.getUpdated());
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        account.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
-        return account;
     }
 
     public void removeExpiredByPrivacy()

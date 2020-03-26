@@ -20,6 +20,9 @@
  */
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Season;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -34,11 +37,12 @@ import com.nephest.battlenet.sc2.model.local.League;
 @Repository
 public class LeagueDAO
 {
-
-    private static final String MERGE_QUERY = "INSERT INTO league "
+    private static final String CREATE_QUERY = "INSERT INTO league "
         + "(season_id, type, queue_type, team_type) "
-        + "VALUES (:seasonId, :type, :queueType, :teamType) "
+        + "VALUES (:seasonId, :type, :queueType, :teamType)";
 
+    private static final String MERGE_QUERY = CREATE_QUERY
+        + " "
         + "ON DUPLICATE KEY UPDATE "
         + "id=LAST_INSERT_ID(id), "
         + "season_id=VALUES(season_id), "
@@ -60,17 +64,31 @@ public class LeagueDAO
         this.conversionService = conversionService;
     }
 
+    public League create(League league)
+    {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        MapSqlParameterSource params = createParameterSource(league);
+        template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
+        league.setId(keyHolder.getKey().longValue());
+        return league;
+    }
+
     public League merge(League league)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource params = new MapSqlParameterSource()
+        MapSqlParameterSource params = createParameterSource(league);
+        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
+        league.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        return league;
+    }
+
+    private MapSqlParameterSource createParameterSource(League league)
+    {
+        return new MapSqlParameterSource()
             .addValue("seasonId", league.getSeasonId())
             .addValue("type", conversionService.convert(league.getType(), Integer.class))
             .addValue("queueType", conversionService.convert(league.getQueueType(), Integer.class))
             .addValue("teamType", conversionService.convert(league.getTeamType(), Integer.class));
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        league.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
-        return league;
     }
 
 }

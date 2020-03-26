@@ -20,6 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.local.Account;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -33,11 +34,12 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 @Repository
 public class PlayerCharacterDAO
 {
-
-    private static final String MERGE_QUERY = "INSERT INTO player_character "
+    private static final String CREATE_QUERY = "INSERT INTO player_character "
         + "(account_id, battlenet_id, realm, name) "
-        + "VALUES (:accountId, :battlenetId, :realm, :name) "
+        + "VALUES (:accountId, :battlenetId, :realm, :name)";
 
+    private static final String MERGE_QUERY = CREATE_QUERY
+        + " "
         + "ON DUPLICATE KEY UPDATE "
         + "id=LAST_INSERT_ID(id),"
         + "account_id=VALUES(account_id), "
@@ -56,17 +58,31 @@ public class PlayerCharacterDAO
         this.template = template;
     }
 
+    public PlayerCharacter create(PlayerCharacter character)
+    {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        MapSqlParameterSource params = createParameterSource(character);
+        template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
+        character.setId(keyHolder.getKey().longValue());
+        return character;
+    }
+
     public PlayerCharacter merge(PlayerCharacter character)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource params = new MapSqlParameterSource()
+        MapSqlParameterSource params = createParameterSource(character);
+        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
+        character.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        return character;
+    }
+
+    private MapSqlParameterSource createParameterSource(PlayerCharacter character)
+    {
+        return new MapSqlParameterSource()
             .addValue("accountId", character.getAccountId())
             .addValue("battlenetId", character.getBattlenetId())
             .addValue("realm", character.getRealm())
             .addValue("name", character.getName());
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        character.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
-        return character;
     }
 
 }

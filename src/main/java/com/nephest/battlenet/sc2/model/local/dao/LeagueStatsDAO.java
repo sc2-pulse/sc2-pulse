@@ -30,7 +30,6 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class LeagueStatsDAO
 {
-
     private static final String CALCULATE_SEASON_STATS_QUERY =
         "INSERT INTO league_stats "
         + "(league_id, player_count, team_count, terran_games_played, protoss_games_played, zerg_games_played, random_games_played) "
@@ -54,8 +53,10 @@ public class LeagueStatsDAO
 
         + "WHERE "
         + "team.season=:seasonId "
-        + "GROUP BY team.region, team.league_type, team.queue_type, team.team_type "
+        + "GROUP BY team.region, team.league_type, team.queue_type, team.team_type";
 
+    private static final String CALCULATE_SEASON_STATS_MERGE_QUERY = CALCULATE_SEASON_STATS_QUERY
+        + " "
         + "ON DUPLICATE KEY UPDATE "
         + "league_id=VALUES(league_id), "
         + "player_count=VALUES(player_count), "
@@ -86,6 +87,13 @@ public class LeagueStatsDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_QUERY, params);
+    }
+
+    public void mergeCalculateForSeason(long season)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("seasonId", season);
+        template.update(CALCULATE_SEASON_STATS_MERGE_QUERY, params);
     }
 
 }

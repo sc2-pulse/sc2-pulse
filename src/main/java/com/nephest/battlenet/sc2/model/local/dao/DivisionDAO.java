@@ -20,6 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -34,10 +35,12 @@ import com.nephest.battlenet.sc2.model.local.Division;
 public class DivisionDAO
 {
 
-    private static final String MERGE_QUERY = "INSERT INTO division "
+    private static final String CREATE_QUERY = "INSERT INTO division "
         + "(league_tier_id, battlenet_id) "
-        + "VALUES (:leagueTierId, :battlenetId) "
+        + "VALUES (:leagueTierId, :battlenetId)";
 
+    private static final String MERGE_QUERY = CREATE_QUERY
+        + " "
         + "ON DUPLICATE KEY UPDATE "
         + "id=LAST_INSERT_ID(id),"
         + "league_tier_id=VALUES(league_tier_id), "
@@ -54,15 +57,29 @@ public class DivisionDAO
         this.template = template;
     }
 
+    public Division create(Division division)
+    {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        MapSqlParameterSource params = createPamarameterSource(division);
+        template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
+        division.setId(keyHolder.getKey().longValue());
+        return division;
+    }
+
     public Division merge(Division division)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("leagueTierId", division.getTierId())
-            .addValue("battlenetId", division.getBattlenetId());
+        MapSqlParameterSource params = createPamarameterSource(division);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
         division.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
         return division;
+    }
+
+    private MapSqlParameterSource createPamarameterSource(Division division)
+    {
+        return new MapSqlParameterSource()
+            .addValue("leagueTierId", division.getTierId())
+            .addValue("battlenetId", division.getBattlenetId());
     }
 
 }

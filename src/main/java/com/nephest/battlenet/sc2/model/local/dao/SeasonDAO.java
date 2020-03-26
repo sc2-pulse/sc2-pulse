@@ -38,11 +38,12 @@ import com.nephest.battlenet.sc2.model.local.Season;
 @Repository
 public class SeasonDAO
 {
-
-    private static final String MERGE_QUERY = "INSERT INTO season "
+    private static final String CREATE_QUERY = "INSERT INTO season "
         + "(battlenet_id, region, year, number) "
-        + "VALUES (:battlenetId, :region, :year, :number) "
+        + "VALUES (:battlenetId, :region, :year, :number)";
 
+    private static final String MERGE_QUERY = CREATE_QUERY
+        + " "
         + "ON DUPLICATE KEY UPDATE "
         + "id=LAST_INSERT_ID(id),"
         + "battlenet_id=VALUES(battlenet_id), "
@@ -84,17 +85,31 @@ public class SeasonDAO
         this.conversionService = conversionService;
     }
 
+    public Season create(Season season)
+    {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        MapSqlParameterSource params = createParameterSource(season);
+        template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
+        season.setId(keyHolder.getKey().longValue());
+        return season;
+    }
+
     public Season merge(Season season)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource params = new MapSqlParameterSource()
+        MapSqlParameterSource params = createParameterSource(season);
+        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
+        season.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        return season;
+    }
+
+    private MapSqlParameterSource createParameterSource(Season season)
+    {
+        return new MapSqlParameterSource()
             .addValue("battlenetId", season.getBattlenetId())
             .addValue("region", conversionService.convert(season.getRegion(), Integer.class))
             .addValue("year", season.getYear())
             .addValue("number", season.getNumber());
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        season.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
-        return season;
     }
 
     public List<Season> findListByRegion(Region region)

@@ -20,6 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.local.League;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -34,11 +35,12 @@ import com.nephest.battlenet.sc2.model.local.LeagueTier;
 @Repository
 public class LeagueTierDAO
 {
-
-    private static final String MERGE_QUERY = "INSERT INTO league_tier "
+    private static final String CREATE_QUERY = "INSERT INTO league_tier "
         + "(league_id, type, min_rating, max_rating) "
-        + "VALUES (:leagueId, :type, :minRating, :maxRating) "
+        + "VALUES (:leagueId, :type, :minRating, :maxRating)";
 
+    private static final String MERGE_QUERY = CREATE_QUERY
+        + " "
         + "ON DUPLICATE KEY UPDATE "
         + "id=LAST_INSERT_ID(id),"
         + "league_id=VALUES(league_id), "
@@ -60,17 +62,31 @@ public class LeagueTierDAO
         this.conversionService = conversionService;
     }
 
+    public LeagueTier create(LeagueTier tier)
+    {
+        KeyHolder keyHolder = new GeneratedKeyHolder();
+        MapSqlParameterSource params = createParameterSource(tier);
+        template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
+        tier.setId(keyHolder.getKey().longValue());
+        return tier;
+    }
+
     public LeagueTier merge(LeagueTier tier)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource params = new MapSqlParameterSource()
+        MapSqlParameterSource params = createParameterSource(tier);
+        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
+        tier.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        return tier;
+    }
+
+    private MapSqlParameterSource createParameterSource(LeagueTier tier)
+    {
+        return new MapSqlParameterSource()
             .addValue("leagueId", tier.getLeagueId())
             .addValue("type", conversionService.convert(tier.getType(), Integer.class))
             .addValue("minRating", tier.getMinRating())
             .addValue("maxRating", tier.getMaxRating());
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        tier.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
-        return tier;
     }
 
 }
