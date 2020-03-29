@@ -62,8 +62,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 public class LadderSearchDAO
 {
 
-    public static final int RESULTS_PER_PAGE = 100;
-
     private static final Map<String, Object> DEFAULT_TEAM_MEMBER_QUERY_VALUES;
 
     static
@@ -380,6 +378,8 @@ public class LadderSearchDAO
         return rs.getLong(1);
     };
 
+    private int resultsPerPage = 100;
+
     LadderSearchDAO(){}
 
     @Autowired
@@ -391,6 +391,16 @@ public class LadderSearchDAO
     {
         this.template = template;
         this.conversionService = conversionService;
+    }
+
+    protected void setResultsPerPage(int resultsPerPage)
+    {
+        this.resultsPerPage = resultsPerPage;
+    }
+    
+    public int getResultsPerPage()
+    {
+        return resultsPerPage;
     }
 
     private List<LadderTeam> mapTeams(ResultSet rs, boolean includeSeason)
@@ -475,27 +485,27 @@ public class LadderSearchDAO
     {
         long membersPerTeam = getMemberCount(queueType, teamType);
         long teamCount = (long) Math.ceil(getMemberCount(season, regions, leagueTypes, queueType, teamType) / (double) membersPerTeam);
-        long pageCount = (long) Math.ceil(teamCount /(double) RESULTS_PER_PAGE);
+        long pageCount = (long) Math.ceil(teamCount /(double) getResultsPerPage());
         long middlePage = pageCount / 2;
         long offset = 0;
-        long limit = RESULTS_PER_PAGE * membersPerTeam;
+        long limit = getResultsPerPage() * membersPerTeam;
         if (page < 1) page = 1;
         if(page > pageCount) page = pageCount;
         if(page < middlePage)
         {
-             offset = (page - 1) * RESULTS_PER_PAGE * membersPerTeam;
+             offset = (page - 1) * getResultsPerPage() * membersPerTeam;
         }
         else
         {
             if(page == pageCount)
             {
                 offset = 0;
-                limit = teamCount % RESULTS_PER_PAGE;
+                limit = teamCount % getResultsPerPage();
             }
             else
             {
-                offset = ((pageCount - (page)) * RESULTS_PER_PAGE * membersPerTeam)
-                    - ( RESULTS_PER_PAGE - (teamCount % RESULTS_PER_PAGE));
+                offset = ((pageCount - (page)) * getResultsPerPage() * membersPerTeam)
+                    - ( getResultsPerPage() - (teamCount % getResultsPerPage()));
             }
         }
 
@@ -519,12 +529,12 @@ public class LadderSearchDAO
             It can lead to fetching some strain team members into the result set.
             Ignoring such team members to return consistent results.
         */
-        if(teams.size() > RESULTS_PER_PAGE) teams = teams.subList(0, RESULTS_PER_PAGE);
+        if(teams.size() > getResultsPerPage()) teams = teams.subList(0, getResultsPerPage());
 
         return new PagedSearchResult<List<LadderTeam>>
         (
             teamCount,
-            (long) RESULTS_PER_PAGE,
+            (long) getResultsPerPage(),
             page,
             teams
         );
