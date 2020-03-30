@@ -23,8 +23,10 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 import com.nephest.battlenet.sc2.config.convert.*;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.junit.jupiter.api.BeforeAll;
@@ -70,7 +72,7 @@ public class LadderSearchDAOIT
     private LadderSearchDAO search;
 
     @BeforeAll
-    public static void beforeAll(@Autowired SeasonGenerator generator)
+    public static void beforeAll(@Autowired SeasonGenerator generator, @Autowired LeagueStatsDAO leagueStatsDAO)
     {
         generator.generateSeason
         (
@@ -81,6 +83,7 @@ public class LadderSearchDAOIT
             BaseLeagueTier.LeagueTierType.FIRST,
             TEAMS_PER_LEAGUE
         );
+        leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
     }
 
     //skip masters league for test
@@ -210,6 +213,50 @@ public class LadderSearchDAOIT
                 assertEquals(4, member.getRandomGamesPlayed());
             }
         }
+    }
+
+    @Test
+    public void test4v4LeagueStats()
+    {
+        QueueType queueType = QueueType.LOTV_4V4;
+        TeamType teamType = TeamType.ARRANGED;
+        BaseLeagueTier.LeagueTierType tierType = BaseLeagueTier.LeagueTierType.FIRST;
+        Set<BaseLeague.LeagueType> leaguesSet = EnumSet.copyOf(SEARCH_LEAGUES);
+        MergedLadderSearchStatsResult stats = search.findStats
+        (
+            DEFAULT_SEASON_ID,
+            Set.of(Region.values()),
+            leaguesSet,
+            queueType,
+            teamType
+        );
+
+        int teamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
+        int regionTeamCount = SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
+        int regionPlayerCount = regionTeamCount * queueType.getTeamFormat().getMemberCount(teamType);
+        int regionGamesPlayed = (regionTeamCount * 1 + regionTeamCount * 2 + regionTeamCount * 3 + regionTeamCount * 4)
+            * queueType.getTeamFormat().getMemberCount(teamType);
+        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
+        int leaguePlayerCount = leagueTeamCount * queueType.getTeamFormat().getMemberCount(teamType);
+        int leagueGamesPlayed = (leagueTeamCount * 1 + leagueTeamCount * 2 + leagueTeamCount * 3 + leagueTeamCount * 4)
+            * queueType.getTeamFormat().getMemberCount(teamType);
+        for(Region region : REGIONS)
+        {
+            assertEquals(regionTeamCount, stats.getRegionTeamCount().get(region));
+            assertEquals(regionPlayerCount, stats.getRegionPlayerCount().get(region));
+            assertEquals(regionGamesPlayed, stats.getRegionGamesPlayed().get(region));
+        }
+        for(BaseLeague.LeagueType league : SEARCH_LEAGUES)
+        {
+            assertEquals(leagueTeamCount, stats.getLeagueTeamCount().get(league));
+            assertEquals(leaguePlayerCount, stats.getLeaguePlayerCount().get(league));
+            assertEquals(leagueGamesPlayed, stats.getLeagueGamesPlayed().get(league));
+        }
+        for(Race race : Race.values())
+        {
+            assertEquals((race.ordinal() + 1) * teamCount * queueType.getTeamFormat().getMemberCount(teamType), stats.getRaceGamesPlayed().get(race));
+        }
+
     }
 
 
