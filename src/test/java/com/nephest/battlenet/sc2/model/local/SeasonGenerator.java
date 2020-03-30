@@ -118,7 +118,7 @@ public class SeasonGenerator
                 int accId = Integer.parseInt(teamCount + "" + memberIx);
                 Account account = accountDAO.create(new Account(null, season.getRegion(), (long) accId, "battletag#" + (long) accId));
                 PlayerCharacter character = playerCharacterDAO.create(new PlayerCharacter(null, account.getId(), (long) accId, DEFAULT_REALM, "character#" + (long) accId));
-                teamMemberDAO.create(new TeamMember(team.getId(), character.getId(), accId + 1, accId + 2, accId + 3, accId + 4));
+                teamMemberDAO.create(new TeamMember(team.getId(), character.getId(), 1, 2, 3, 4));
             }
             teamCount++;
         }

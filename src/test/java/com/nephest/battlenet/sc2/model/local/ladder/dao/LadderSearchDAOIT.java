@@ -138,10 +138,10 @@ public class LadderSearchDAOIT
                 int accId = Integer.parseInt(teamId + "" + mIx);
                 assertEquals("battletag#" + accId, member.getAccount().getBattleTag());
                 assertEquals("character#" + accId, member.getCharacter().getName());
-                assertEquals(accId + 1, member.getTerranGamesPlayed());
-                assertEquals(accId + 2, member.getProtossGamesPlayed());
-                assertEquals(accId + 3, member.getZergGamesPlayed());
-                assertEquals(accId + 4, member.getRandomGamesPlayed());
+                assertEquals(1, member.getTerranGamesPlayed());
+                assertEquals(2, member.getProtossGamesPlayed());
+                assertEquals(3, member.getZergGamesPlayed());
+                assertEquals(4, member.getRandomGamesPlayed());
             }
         }
     }
@@ -204,10 +204,10 @@ public class LadderSearchDAOIT
                 int accId = Integer.parseInt(teamId + "" + mIx);
                 assertEquals("battletag#" + accId, member.getAccount().getBattleTag());
                 assertEquals("character#" + accId, member.getCharacter().getName());
-                assertEquals(accId + 1, member.getTerranGamesPlayed());
-                assertEquals(accId + 2, member.getProtossGamesPlayed());
-                assertEquals(accId + 3, member.getZergGamesPlayed());
-                assertEquals(accId + 4, member.getRandomGamesPlayed());
+                assertEquals(1, member.getTerranGamesPlayed());
+                assertEquals(2, member.getProtossGamesPlayed());
+                assertEquals(3, member.getZergGamesPlayed());
+                assertEquals(4, member.getRandomGamesPlayed());
             }
         }
     }
