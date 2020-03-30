@@ -486,12 +486,13 @@ public class LadderSearchDAO
         long membersPerTeam = getMemberCount(queueType, teamType);
         long teamCount = (long) Math.ceil(getMemberCount(season, regions, leagueTypes, queueType, teamType) / (double) membersPerTeam);
         long pageCount = (long) Math.ceil(teamCount /(double) getResultsPerPage());
-        long middlePage = pageCount / 2;
+        long middlePage = (long) Math.ceil(pageCount / 2d);
         long offset = 0;
         long limit = getResultsPerPage() * membersPerTeam;
         if (page < 1) page = 1;
         if(page > pageCount) page = pageCount;
-        if(page < middlePage)
+        boolean reversed = page > middlePage;
+        if(!reversed)
         {
              offset = (page - 1) * getResultsPerPage() * membersPerTeam;
         }
@@ -500,12 +501,14 @@ public class LadderSearchDAO
             if(page == pageCount)
             {
                 offset = 0;
-                limit = teamCount % getResultsPerPage();
+                limit = (teamCount % getResultsPerPage()) * membersPerTeam;
+                limit = limit == 0 ? getResultsPerPage() * membersPerTeam : limit;
             }
             else
             {
-                offset = ((pageCount - (page)) * getResultsPerPage() * membersPerTeam)
-                    - ( getResultsPerPage() - (teamCount % getResultsPerPage()));
+                long reverseOffset = getResultsPerPage() - (teamCount % getResultsPerPage());
+                reverseOffset = reverseOffset == 0 ? getResultsPerPage() : reverseOffset;
+                offset = ((pageCount - (page)) * getResultsPerPage() * membersPerTeam) - (getResultsPerPage() - reverseOffset);
             }
         }
 
@@ -515,13 +518,12 @@ public class LadderSearchDAO
             .addValue("limit", limit);
 
         boolean late = page > 5 || pageCount - page > 5;
-        boolean reversed = page > middlePage;
         String q = late
             ? (reversed ? FIND_TEAM_MEMBERS_LATE_REVERSED_QUERY : FIND_TEAM_MEMBERS_LATE_QUERY)
             : (reversed ? FIND_TEAM_MEMBERS_REVERSED_QUERY : FIND_TEAM_MEMBERS_QUERY);
         List<LadderTeam> teams = template
             .query(q, params, LADDER_TEAM_SHORT_EXTRACTOR);
-        if(page > middlePage) Collections.reverse(teams);
+        if(reversed) Collections.reverse(teams);
         /*
             Blizzard sometimes returns invalid team members and they are ignored
             by the corresponding service. It is very rare, but in such occasion
