@@ -6,7 +6,7 @@ I use this project to learn the java web development process. This project is no
 You have to inject your bnet API key into the BlizzardSC2API bean
 ```xml
 <bean id="blizzardSC2API" class="com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API">
-   <constructor-arg index="0" value="YOUR_API_KEY" />
+   <constructor-arg index="0" value="base64 encoded client_id:client_secret" />
 </bean>
 ```
 ## Constraints
