@@ -29,7 +29,9 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import com.nephest.battlenet.sc2.config.convert.IdentifiableToIntegerConverter;
@@ -66,6 +68,12 @@ public class ApplicationConfig
         service.addConverter(new IntegerToRegionConverter());
         service.addConverter(new IntegerToTeamTypeConverter());
         return service;
+    }
+
+    @Bean
+    public TaskScheduler taskScheduler()
+    {
+        return new ConcurrentTaskScheduler();
     }
 
 }
