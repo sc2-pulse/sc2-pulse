@@ -32,6 +32,7 @@ import java.util.stream.Stream;
 
 import javax.validation.Valid;
 
+import io.netty.handler.timeout.TimeoutException;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -90,6 +91,7 @@ public class BlizzardSC2API
     private final String password;
     private BlizzardAccessToken accessToken;
     private String regionUri;
+    private Duration operationTimeout = Duration.ofMillis(10000);
 
     public BlizzardSC2API(String password)
     {
@@ -133,6 +135,16 @@ public class BlizzardSC2API
         return client;
     }
 
+    protected void setOperationTimeout(Duration operationTimeout)
+    {
+        this.operationTimeout = operationTimeout;
+    }
+
+    public Duration getOperationTimeout()
+    {
+        return operationTimeout;
+    }
+
     public String getPassword()
     {
         return password;
@@ -165,6 +177,7 @@ public class BlizzardSC2API
                 .body(BodyInserters.fromFormData("grant_type", "client_credentials"))
                 .retrieve()
                 .bodyToMono(BlizzardAccessToken.class)
+                .timeout(getOperationTimeout())
                 .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX)
                 .block();
             setAccessToken(token);
@@ -190,6 +203,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
+            .timeout(getOperationTimeout())
             .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX);
     }
 
@@ -216,6 +230,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
+            .timeout(getOperationTimeout())
             .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX);
     }
 
@@ -236,6 +251,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
+            .timeout(getOperationTimeout())
             .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX);
     }
 
