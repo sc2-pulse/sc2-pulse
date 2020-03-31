@@ -189,8 +189,7 @@ public class StatsService
     {
         long start = System.currentTimeMillis();
 
-         //should be change to update current season when bnet api is up
-        updateSeason(42);
+        updateCurrentSeason();
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.log(Level.INFO, "Updated current after {0} seconds", new Object[]{seconds});
@@ -212,11 +211,17 @@ public class StatsService
         updateLeagues(bSeason, season);
     }
 
-    private void updateCurrentSeason(Region region)
+    private void updateCurrentSeason()
     {
-        BlizzardSeason bSeason = api.getCurrentSeason(region).block();
-        Season season = seasonDao.merge(Season.of(bSeason, region));
-        updateLeagues(bSeason, season);
+        Long seasonId = null;
+        for(Region region : Region.values())
+        {
+            BlizzardSeason bSeason = api.getCurrentSeason(region).block();
+            Season season = seasonDao.merge(Season.of(bSeason, region));
+            updateLeagues(bSeason, season);
+            seasonId = season.getBattlenetId();
+        }
+        if(seasonId != null) leagueStatsDao.mergeCalculateForSeason(seasonId);
     }
 
     private void updateLeagues(BlizzardSeason bSeason, Season season)
