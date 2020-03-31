@@ -23,8 +23,12 @@ package com.nephest.battlenet.sc2.web.service.blizzard;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import io.netty.channel.ChannelOption;
+import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -38,13 +42,18 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
+import reactor.netty.tcp.TcpClient;
 import reactor.test.StepVerifier;
 
 public class BlizzardSC2APIIT
 {
 
     public static final int RETRY_COUNT = 2;
+    public static final Duration OPERATION_DURATION = Duration.ofMillis(100);
     public static final String VALID_ACCESS_TOKEN = "{\"access_token\":\"fdfgkjheufh\",\"token_type\":\"bearer\",\"expires_in\":86399}";
     public static final String VALID_SEASON = "{\"seasonId\": 1, \"year\": 2010, \"number\": 1}";
     public static final String VALID_LEAGUE = "{\"type\": 0, \"queueType\": 201, \"teamType\": 0, \"tier\": []}";
@@ -67,7 +76,24 @@ public class BlizzardSC2APIIT
     {
         MockWebServer server = new MockWebServer();
         server.start();
+        TcpClient timeoutClient = TcpClient.create()
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) OPERATION_DURATION.toMillis())
+            .doOnConnected
+            (
+                c->
+                {
+                    c.addHandlerLast(new ReadTimeoutHandler(OPERATION_DURATION.toMillis(), TimeUnit.MILLISECONDS))
+                        .addHandlerLast(new WriteTimeoutHandler(OPERATION_DURATION.toMillis(), TimeUnit.MILLISECONDS));
+
+                }
+            );
+        HttpClient httpClient = HttpClient.from(timeoutClient)
+            .compress(true);
+        WebClient client = WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .build();
         api.setRegionUri(server.url("/someurl").uri().toString());
+        api.setWebClient(client);
 
         testRetrying(api.getCurrentSeason(Region.EU), VALID_SEASON, server, RETRY_COUNT);
         testRetrying
@@ -123,7 +149,7 @@ public class BlizzardSC2APIIT
         System.out.println("Testing socket timeouts, might take some time...");
         MockResponse dr = new MockResponse()
             .setHeader("Content-Type", "application/json")
-            .setBodyDelay(6, TimeUnit.SECONDS)
+            .setBodyDelay(OPERATION_DURATION.toMillis() + 1000 , TimeUnit.MILLISECONDS)
             .setBody(body);
         for(int i = 0; i < count; i++) server.enqueue(dr);
         server.enqueue(new MockResponse().setHeader("Content-Type", "application/json").setBody(body));
