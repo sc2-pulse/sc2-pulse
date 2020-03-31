@@ -20,6 +20,14 @@
  */
 package com.nephest.battlenet.sc2.web.service.blizzard;
 
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import java.util.concurrent.TimeUnit;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -27,18 +35,11 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccessToken;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import reactor.core.publisher.Mono;
 import reactor.test.StepVerifier;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
-
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 public class BlizzardSC2APIIT
 {
@@ -120,7 +121,6 @@ public class BlizzardSC2APIIT
     throws Exception
     {
         System.out.println("Testing socket timeouts, might take some time...");
-        api.setOperationTimeout(Duration.ofMillis(100));
         MockResponse dr = new MockResponse()
             .setHeader("Content-Type", "application/json")
             .setBodyDelay(6, TimeUnit.SECONDS)
