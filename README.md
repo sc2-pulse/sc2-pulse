@@ -9,5 +9,10 @@ You have to inject your bnet API key into the BlizzardSC2API bean
    <constructor-arg index="0" value="YOUR_API_KEY" />
 </bean>
 ```
+## Constraints
+The project uses some features of:
+* Java 11
+* MySQL extensions
+
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
