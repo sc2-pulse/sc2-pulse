@@ -20,9 +20,9 @@
  */
 package com.nephest.battlenet.sc2.web.service;
 
-import static org.mockito.Mockito.mock;
-
 import org.junit.jupiter.api.BeforeEach;
+
+import static org.mockito.Mockito.mock;
 
 public class StatsServiceTest
 {

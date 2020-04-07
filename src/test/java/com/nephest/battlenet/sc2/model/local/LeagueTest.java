@@ -20,16 +20,15 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
+import com.nephest.battlenet.sc2.util.TestUtil;
+import org.junit.jupiter.api.Test;
+
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GOLD;
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.PLATINUM;
 import static com.nephest.battlenet.sc2.model.QueueType.HOTS_1V1;
 import static com.nephest.battlenet.sc2.model.QueueType.WOL_1V1;
 import static com.nephest.battlenet.sc2.model.TeamType.ARRANGED;
 import static com.nephest.battlenet.sc2.model.TeamType.RANDOM;
-
-import org.junit.jupiter.api.Test;
-
-import com.nephest.battlenet.sc2.util.TestUtil;
 
 public class LeagueTest
 {

@@ -20,10 +20,9 @@
  */
 package com.nephest.battlenet.sc2.config.convert;
 
+import com.nephest.battlenet.sc2.model.Identifiable;
 import org.springframework.core.convert.converter.Converter;
 import org.springframework.stereotype.Component;
-
-import com.nephest.battlenet.sc2.model.Identifiable;
 
 @Component
 public class IdentifiableToIntegerConverter

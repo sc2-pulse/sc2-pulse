@@ -20,11 +20,10 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
-import java.util.Objects;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 
 import javax.validation.constraints.NotNull;
-
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import java.util.Objects;
 
 public class Division
 implements java.io.Serializable

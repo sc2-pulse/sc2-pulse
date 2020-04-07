@@ -20,9 +20,8 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
-import org.junit.jupiter.api.Test;
-
 import com.nephest.battlenet.sc2.util.TestUtil;
+import org.junit.jupiter.api.Test;
 
 public class LeagueStatsTest
 {

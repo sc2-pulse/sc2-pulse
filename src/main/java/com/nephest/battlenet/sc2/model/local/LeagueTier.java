@@ -20,12 +20,11 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
-import java.util.Objects;
-
-import javax.validation.constraints.NotNull;
-
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
+
+import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 public class LeagueTier
 extends BaseLeagueTier

@@ -20,12 +20,11 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
-import java.util.Objects;
-
-import javax.validation.constraints.NotNull;
-
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+
+import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 public class PlayerCharacter
 extends BasePlayerCharacter

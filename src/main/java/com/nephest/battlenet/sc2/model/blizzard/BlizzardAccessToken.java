@@ -20,13 +20,12 @@
  */
 package com.nephest.battlenet.sc2.model.blizzard;
 
-import java.time.Instant;
+import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import javax.validation.constraints.Future;
 import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
-import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import java.time.Instant;
 
 @JsonNaming(SnakeCaseStrategy.class)
 public class BlizzardAccessToken

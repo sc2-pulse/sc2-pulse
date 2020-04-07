@@ -20,16 +20,15 @@
  */
 package com.nephest.battlenet.sc2.model.local.ladder;
 
-import java.util.Collections;
-import java.util.List;
-
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseTeam;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
+
+import javax.validation.constraints.NotNull;
+import java.util.Collections;
+import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LadderTeam

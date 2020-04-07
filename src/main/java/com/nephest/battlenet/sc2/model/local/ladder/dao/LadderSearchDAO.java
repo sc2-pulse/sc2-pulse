@@ -20,16 +20,13 @@
  */
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.ladder.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -40,23 +37,9 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
-import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Race;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.LeagueTier;
-import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderSearchStatsResult;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderSeason;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
-import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
-import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.*;
 
 @Repository
 public class LadderSearchDAO

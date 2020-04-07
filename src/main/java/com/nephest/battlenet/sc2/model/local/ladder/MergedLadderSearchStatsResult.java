@@ -20,12 +20,12 @@
  */
 package com.nephest.battlenet.sc2.model.local.ladder;
 
-import java.util.EnumMap;
-import java.util.Map;
-
 import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+
+import java.util.EnumMap;
+import java.util.Map;
 
 public class MergedLadderSearchStatsResult
 {

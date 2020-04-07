@@ -20,17 +20,16 @@
  */
 package com.nephest.battlenet.sc2.model.blizzard;
 
-import java.util.Map;
-
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.TeamType;
+
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
+import java.util.Map;
 
 @JsonNaming(SnakeCaseStrategy.class)
 public class BlizzardLeague

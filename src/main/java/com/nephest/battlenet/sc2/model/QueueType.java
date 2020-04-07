@@ -20,22 +20,12 @@
  */
 package com.nephest.battlenet.sc2.model;
 
-import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
-import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
-import static com.nephest.battlenet.sc2.model.TeamFormat._2V2;
-import static com.nephest.battlenet.sc2.model.TeamFormat._3V3;
-import static com.nephest.battlenet.sc2.model.TeamFormat._4V4;
-import static com.nephest.battlenet.sc2.model.Version.HOTS;
-import static com.nephest.battlenet.sc2.model.Version.LOTV;
-import static com.nephest.battlenet.sc2.model.Version.WOL;
-
-import java.util.Collections;
-import java.util.EnumMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-
 import com.fasterxml.jackson.annotation.JsonValue;
+
+import java.util.*;
+
+import static com.nephest.battlenet.sc2.model.TeamFormat.*;
+import static com.nephest.battlenet.sc2.model.Version.*;
 
 public enum QueueType
 implements Identifiable

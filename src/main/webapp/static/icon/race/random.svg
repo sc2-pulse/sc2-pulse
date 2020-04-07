@@ -22,11 +22,10 @@
 
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg xmlns="http://www.w3.org/2000/svg"
-    xmlns:xlink="http://www.w3.org/1999/xlink"
-    version="1.1"
-    viewBox="0 0 6.2653499 7.1578403"
-    height="7.1578403mm"
-    width="6.2653499mm"
+     version="1.1"
+     viewBox="0 0 6.2653499 7.1578403"
+     height="7.1578403mm"
+     width="6.2653499mm"
 >
     <desc>Starcraft2 Random Race</desc>
     <path

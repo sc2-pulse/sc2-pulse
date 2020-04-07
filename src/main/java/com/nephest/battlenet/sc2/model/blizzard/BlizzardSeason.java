@@ -20,10 +20,10 @@
  */
 package com.nephest.battlenet.sc2.model.blizzard;
 
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nephest.battlenet.sc2.model.BaseSeason;
+
+import javax.validation.constraints.NotNull;
 
 public class BlizzardSeason
 extends BaseSeason

@@ -20,9 +20,7 @@
  */
 package com.nephest.battlenet.sc2.config;
 
-import javax.annotation.Resource;
-import javax.sql.DataSource;
-
+import com.nephest.battlenet.sc2.config.convert.*;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
@@ -34,12 +32,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
-import com.nephest.battlenet.sc2.config.convert.IdentifiableToIntegerConverter;
-import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTierTypeConverter;
-import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTypeConverter;
-import com.nephest.battlenet.sc2.config.convert.IntegerToQueueTypeConverter;
-import com.nephest.battlenet.sc2.config.convert.IntegerToRegionConverter;
-import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
+import javax.annotation.Resource;
+import javax.sql.DataSource;
 
 @Configuration
 @ComponentScan("com.nephest.battlenet.sc2")

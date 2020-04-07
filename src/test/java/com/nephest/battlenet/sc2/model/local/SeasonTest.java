@@ -20,12 +20,11 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
-import static com.nephest.battlenet.sc2.model.Region.EU;
-import static com.nephest.battlenet.sc2.model.Region.US;
-
+import com.nephest.battlenet.sc2.util.TestUtil;
 import org.junit.jupiter.api.Test;
 
-import com.nephest.battlenet.sc2.util.TestUtil;
+import static com.nephest.battlenet.sc2.model.Region.EU;
+import static com.nephest.battlenet.sc2.model.Region.US;
 
 public class SeasonTest
 {

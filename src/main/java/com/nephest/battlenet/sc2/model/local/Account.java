@@ -20,14 +20,13 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
-import java.time.OffsetDateTime;
-import java.util.Objects;
-
-import javax.validation.constraints.NotNull;
-
 import com.nephest.battlenet.sc2.model.BaseAccount;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
+
+import javax.validation.constraints.NotNull;
+import java.time.OffsetDateTime;
+import java.util.Objects;
 
 public class Account
 extends BaseAccount

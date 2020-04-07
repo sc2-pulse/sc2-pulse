@@ -20,28 +20,23 @@
  */
 package com.nephest.battlenet.sc2.web.controller;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-
+import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
-import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderSeason;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
-import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @RestController("/api")
 public class LadderController

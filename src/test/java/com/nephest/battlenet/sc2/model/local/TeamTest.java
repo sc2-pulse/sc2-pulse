@@ -20,16 +20,15 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
-import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.FIRST;
-import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.SECOND;
-import static org.mockito.Mockito.mock;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.util.TestUtil;
+import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
-import org.junit.jupiter.api.Test;
-
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.util.TestUtil;
+import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.FIRST;
+import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.SECOND;
+import static org.mockito.Mockito.mock;
 
 public class TeamTest
 {

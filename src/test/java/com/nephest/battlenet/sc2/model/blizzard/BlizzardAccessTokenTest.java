@@ -20,10 +20,10 @@
  */
 package com.nephest.battlenet.sc2.model.blizzard;
 
+import org.junit.jupiter.api.Test;
+
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-
-import org.junit.jupiter.api.Test;
 
 public class BlizzardAccessTokenTest
 {

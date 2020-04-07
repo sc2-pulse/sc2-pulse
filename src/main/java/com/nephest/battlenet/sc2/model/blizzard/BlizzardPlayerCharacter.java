@@ -20,9 +20,9 @@
  */
 package com.nephest.battlenet.sc2.model.blizzard;
 
-import javax.validation.constraints.NotNull;
-
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
+
+import javax.validation.constraints.NotNull;
 
 public class BlizzardPlayerCharacter
 extends BasePlayerCharacter

@@ -20,9 +20,8 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
-import java.util.Objects;
-
 import javax.validation.constraints.NotNull;
+import java.util.Objects;
 
 public class LeagueStats
 extends BaseLocalTeamMember

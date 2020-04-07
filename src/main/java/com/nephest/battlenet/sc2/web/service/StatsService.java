@@ -20,9 +20,20 @@
  */
 package com.nephest.battlenet.sc2.web.service;
 
-import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
-import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
-import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.Version;
+import com.nephest.battlenet.sc2.model.blizzard.*;
+import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -31,41 +42,9 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
-
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.Version;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
-import com.nephest.battlenet.sc2.model.local.Account;
-import com.nephest.battlenet.sc2.model.local.Division;
-import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.LeagueTier;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.local.Team;
-import com.nephest.battlenet.sc2.model.local.TeamMember;
-import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
-import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
-import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
-import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
+import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
+import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
+import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
 
 @Service
 public class StatsService

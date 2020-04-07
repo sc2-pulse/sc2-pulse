@@ -20,10 +20,10 @@
  */
 package com.nephest.battlenet.sc2.model.blizzard;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-
-import com.fasterxml.jackson.annotation.JsonProperty;
 
 public class BlizzardTeamMember
 {

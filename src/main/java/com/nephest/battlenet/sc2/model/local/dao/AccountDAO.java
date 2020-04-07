@@ -20,10 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import java.time.OffsetDateTime;
-import java.util.Collections;
-
-import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.Account;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -33,7 +30,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import com.nephest.battlenet.sc2.model.local.Account;
+import java.util.Collections;
 
 @Repository
 public class AccountDAO

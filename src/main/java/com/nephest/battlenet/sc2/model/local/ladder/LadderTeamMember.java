@@ -20,12 +20,12 @@
  */
 package com.nephest.battlenet.sc2.model.local.ladder;
 
-import javax.validation.constraints.NotNull;
-
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.nephest.battlenet.sc2.model.BaseAccount;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.BaseLocalTeamMember;
+
+import javax.validation.constraints.NotNull;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class LadderTeamMember
