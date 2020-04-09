@@ -265,38 +265,13 @@ public class LadderSearchDAOIT
     {
 
         @Bean
-        public DataSource sc2StatsDataSource()
+        public DataSource dataSource()
         {
             return new EmbeddedDatabaseBuilder()
                 .setType(EmbeddedDatabaseType.HSQL)
                 .generateUniqueName(true)
                 .addScript("schema-hsql.sql")
                 .build();
-        }
-
-        @Bean
-        public NamedParameterJdbcTemplate sc2StatsNamedTemplate(DataSource ds)
-        {
-            return new NamedParameterJdbcTemplate(ds);
-        }
-
-        @Bean
-        public ConversionService sc2StatsConversionService()
-        {
-            DefaultFormattingConversionService service = new DefaultFormattingConversionService();
-            service.addConverter(new IdentifiableToIntegerConverter());
-            service.addConverter(new IntegerToQueueTypeConverter());
-            service.addConverter(new IntegerToLeagueTierTypeConverter());
-            service.addConverter(new IntegerToLeagueTypeConverter());
-            service.addConverter(new IntegerToRegionConverter());
-            service.addConverter(new IntegerToTeamTypeConverter());
-            return service;
-        }
-
-        @Bean
-        public BlizzardSC2API blizzardSC2API()
-        {
-            return new BlizzardSC2API("pass");
         }
 
     }

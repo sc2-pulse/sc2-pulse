@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.blizzard.*;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
@@ -84,7 +85,7 @@ public class BlizzardSC2API
     private BlizzardAccessToken accessToken;
     private String regionUri;
 
-    public BlizzardSC2API(String password)
+    public BlizzardSC2API(@Value("${blizzard.api.key}") String password)
     {
         Objects.requireNonNull(password);
         this.password = password;
