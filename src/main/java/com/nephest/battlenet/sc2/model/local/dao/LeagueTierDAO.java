@@ -39,12 +39,9 @@ public class LeagueTierDAO
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
-        + "ON DUPLICATE KEY UPDATE "
-        + "id=LAST_INSERT_ID(id),"
-        + "league_id=VALUES(league_id), "
-        + "type=VALUES(type), "
-        + "min_rating=VALUES(min_rating), "
-        + "max_rating=VALUES(max_rating)";
+        + "ON CONFLICT(league_id, type) DO UPDATE SET "
+        + "min_rating=excluded.min_rating, "
+        + "max_rating=excluded.max_rating";
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
@@ -74,7 +71,7 @@ public class LeagueTierDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(tier);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        tier.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        tier.setId(keyHolder.getKey().longValue());
         return tier;
     }
 

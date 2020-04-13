@@ -7,10 +7,9 @@ I use this project to learn the java web development process. This project is no
 blizzard.api.key = base64 encoded client_id:client_secret
 ds.jndi.url = DataSource is expected to be available via JNDI
 ```
-## Constraints
-The project uses some features of:
+## Dependencies
 * Java 11
-* MySQL extensions
+* PostgreSQL
 
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.

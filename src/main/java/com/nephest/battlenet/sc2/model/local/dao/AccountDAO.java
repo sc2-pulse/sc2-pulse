@@ -41,12 +41,9 @@ public class AccountDAO
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
-        + "ON DUPLICATE KEY UPDATE "
-        + "id=LAST_INSERT_ID(id),"
-        + "battlenet_id=VALUES(battlenet_id), "
-        + "region=VALUES(region), "
-        + "battle_tag=VALUES(battle_tag), "
-        + "updated=VALUES(updated)";
+        + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
+        + "battle_tag=excluded.battle_tag, "
+        + "updated=excluded.updated";
 
     private static final String REMOVE_EXPIRED_PRIVACY_QUERY =
         "DELETE FROM account WHERE updated < DATE_SUB(NOW(), INTERVAL 30 DAY)";
@@ -79,7 +76,7 @@ public class AccountDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(account);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        account.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        account.setId(keyHolder.getKey().longValue());
         return account;
     }
 

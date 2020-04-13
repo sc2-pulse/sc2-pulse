@@ -39,10 +39,8 @@ public class DivisionDAO
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
-        + "ON DUPLICATE KEY UPDATE "
-        + "id=LAST_INSERT_ID(id),"
-        + "league_tier_id=VALUES(league_tier_id), "
-        + "battlenet_id=VALUES(battlenet_id)";
+        + "ON CONFLICT(league_tier_id, battlenet_id) DO UPDATE SET "
+        + "battlenet_id=excluded.battlenet_id";
 
     private NamedParameterJdbcTemplate template;
 
@@ -69,7 +67,7 @@ public class DivisionDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createPamarameterSource(division);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        division.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        division.setId(keyHolder.getKey().longValue());
         return division;
     }
 

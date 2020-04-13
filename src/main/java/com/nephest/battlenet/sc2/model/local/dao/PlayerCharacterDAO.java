@@ -38,12 +38,9 @@ public class PlayerCharacterDAO
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
-        + "ON DUPLICATE KEY UPDATE "
-        + "id=LAST_INSERT_ID(id),"
-        + "account_id=VALUES(account_id), "
-        + "battlenet_id=VALUES(battlenet_id), "
-        + "realm=VALUES(realm), "
-        + "name=VALUES(name)";
+        + "ON CONFLICT(account_id, battlenet_id) DO UPDATE SET "
+        + "realm=excluded.realm, "
+        + "name=excluded.name";
 
     private NamedParameterJdbcTemplate template;
 
@@ -70,7 +67,7 @@ public class PlayerCharacterDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(character);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        character.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        character.setId(keyHolder.getKey().longValue());
         return character;
     }
 

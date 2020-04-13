@@ -47,21 +47,18 @@ public class TeamDAO
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
-        + "ON DUPLICATE KEY UPDATE "
-        + "id=LAST_INSERT_ID(id),"
-        + "division_id=VALUES(division_id), "
-        + "battlenet_id=VALUES(battlenet_id), "
-        + "season=VALUES(season), "
-        + "region=VALUES(region), "
-        + "league_type=VALUES(league_type), "
-        + "queue_type=VALUES(queue_type), "
-        + "team_type=VALUES(team_type), "
-        + "tier_type=VALUES(tier_type), "
-        + "rating=VALUES(rating), "
-        + "points=VALUES(points), "
-        + "wins=VALUES(wins), "
-        + "losses=VALUES(losses), "
-        + "ties=VALUES(ties)";
+        + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
+        + "division_id=excluded.division_id, "
+        + "season=excluded.season, "
+        + "league_type=excluded.league_type, "
+        + "queue_type=excluded.queue_type, "
+        + "team_type=excluded.team_type, "
+        + "tier_type=excluded.tier_type, "
+        + "rating=excluded.rating, "
+        + "points=excluded.points, "
+        + "wins=excluded.wins, "
+        + "losses=excluded.losses, "
+        + "ties=excluded.ties";
 
 
     private NamedParameterJdbcTemplate template;
@@ -92,7 +89,7 @@ public class TeamDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(team);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        team.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        team.setId(keyHolder.getKey().longValue());
         return team;
     }
 

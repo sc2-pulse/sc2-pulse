@@ -45,8 +45,8 @@ public class TeamTest
         );
         Team equalTeam = new Team
         (
-            1l, 1l, Region.US, mock(League.class), SECOND,
-            0l, BigInteger.valueOf(0),
+            1l, 0l, Region.EU, mock(League.class), SECOND,
+            1l, BigInteger.valueOf(0),
             1l, 1, 1, 1, 1
         );
 
@@ -54,13 +54,7 @@ public class TeamTest
         {
             new Team
             (
-                0l, 0l, Region.EU, equalLeague, FIRST,
-                1l, BigInteger.valueOf(0),
-                0l, 0, 0, 0, 0
-            ),
-            new Team
-            (
-                0l, 0l, Region.EU, equalLeague, FIRST,
+                0l, 1l, Region.US, equalLeague, FIRST,
                 0l, BigInteger.valueOf(1),
                 0l, 0, 0, 0, 0
             )
