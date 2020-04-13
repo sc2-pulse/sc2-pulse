@@ -96,9 +96,9 @@ public class LadderSearchDAO
         + "team.region, "
         + "team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
-        + "team.id, team.rating, team.wins, team.losses, "
+        + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
         + "account.battle_tag, "
-        + "player_character.battlenet_id, player_character.realm, player_character.name, "
+        + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
 
@@ -113,7 +113,7 @@ public class LadderSearchDAO
             + "AND teamr.queue_type=:queueType "
             + "AND teamr.team_type=:teamType "
             + "ORDER BY teamr.rating %1$s, teamr.id %1$s "
-            + "LIMIT :offset, :limit"
+            + "OFFSET :offset LIMIT :limit"
         + ") o "
         + "JOIN team_member ON team_member.team_id=o.team_id AND team_member.player_character_id=o.player_character_id "
         + "INNER JOIN team ON team_member.team_id=team.id "
@@ -132,22 +132,22 @@ public class LadderSearchDAO
         + "team.region, "
         + "team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
-        + "team.id, team.rating, team.wins, team.losses, "
+        + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
         + "account.battle_tag, "
-        + "player_character.battlenet_id, player_character.realm, player_character.name, "
+        + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
 
         + LADDER_SEARCH_TEAM_FROM_WHERE
 
         + "ORDER BY team.rating %1$s, team.id %1$s "
-        + "LIMIT :offset, :limit";
+        + "OFFSET :offset LIMIT :limit";
 
     private static final String FIND_TEAM_MEMBERS_QUERY =
-        String.format(FIND_TEAM_MEMBERS_LATE_FORMAT, "DESC");
+        String.format(FIND_TEAM_MEMBERS_FORMAT, "DESC");
 
     private static final String FIND_TEAM_MEMBERS_REVERSED_QUERY =
-        String.format(FIND_TEAM_MEMBERS_LATE_FORMAT, "ASC");
+        String.format(FIND_TEAM_MEMBERS_FORMAT, "ASC");
 
     private static final String FIND_TEAM_MEMBERS_COUNT_QUERY =
         "SELECT COUNT(*) "
@@ -157,12 +157,12 @@ public class LadderSearchDAO
 
     private static final String FIND_CARACTER_TEAM_MEMBERS_QUERY =
         "SELECT "
-        + "season.battlenet_id, season.year, season.number, "
+        + "season.battlenet_id AS \"season.battlenet_id\", season.year, season.number, "
         + "team.region, team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
-        + "team.id, team.rating, team.wins, team.losses, "
+        + "team.id AS \"team.id\", team.rating, team.wins, team.losses, "
         + "account.battle_tag, "
-        + "player_character.battlenet_id, player_character.realm, player_character.name, "
+        + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
 
@@ -239,8 +239,8 @@ public class LadderSearchDAO
     private static final String FIND_LEAGUE_TIER_BOUNDS_QUERY =
         "SELECT "
         + "season.region, "
-        + "league.type, "
-        + "league_tier.type, league_tier.min_rating, league_tier.max_rating "
+        + "league.type AS \"league.type\", "
+        + "league_tier.type AS \"league_tier.type\", league_tier.min_rating, league_tier.max_rating "
 
         + "FROM league_tier "
         + "INNER JOIN league ON league_tier.league_id=league.id "
@@ -292,13 +292,13 @@ public class LadderSearchDAO
         Map<Region, Map<LeagueType, LadderSearchStatsResult>> result = new EnumMap(Region.class);
         while(rs.next())
         {
-            Region region = conversionService.convert(rs.getInt("season.region"), Region.class);
-            LeagueType league = conversionService.convert(rs.getInt("league.type"), League.LeagueType.class);
-            Long playerCount = rs.getLong("league_stats.player_count");
-            Long teamCount = rs.getLong("league_stats.team_count");
+            Region region = conversionService.convert(rs.getInt("region"), Region.class);
+            LeagueType league = conversionService.convert(rs.getInt("type"), League.LeagueType.class);
+            Long playerCount = rs.getLong("player_count");
+            Long teamCount = rs.getLong("team_count");
             Map<Race, Long> gamesPlayed = new EnumMap(Race.class);
             for(Race race : Race.values())
-                gamesPlayed.put(race, (long) Math.round(rs.getDouble("league_stats." + race.name().toLowerCase() + "_games_played")));
+                gamesPlayed.put(race, (long) Math.round(rs.getDouble(race.name().toLowerCase() + "_games_played")));
             Map<LeagueType, LadderSearchStatsResult> leagueResults =
                 result.computeIfAbsent(region, (reg)->new EnumMap(LeagueType.class));
             leagueResults.put(league, new LadderSearchStatsResult(playerCount, teamCount, gamesPlayed));
@@ -312,11 +312,11 @@ public class LadderSearchDAO
         Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> result = new EnumMap(Region.class);
         while(rs.next())
         {
-            Region region = conversionService.convert(rs.getInt("season.region"), Region.class);
+            Region region = conversionService.convert(rs.getInt("region"), Region.class);
             LeagueType league = conversionService.convert(rs.getInt("league.type"), LeagueType.class);
             LeagueTierType tier = conversionService.convert(rs.getInt("league_tier.type"), LeagueTierType.class);
-            Integer minRating = rs.getInt("league_tier.min_rating");
-            Integer maxRating = rs.getInt("league_tier.max_rating");
+            Integer minRating = rs.getInt("min_rating");
+            Integer maxRating = rs.getInt("max_rating");
 
             Map<LeagueType, Map<LeagueTierType, Integer[]>> leagues =
                 result.computeIfAbsent(region, (reg)->new EnumMap(LeagueType.class));
@@ -402,23 +402,23 @@ public class LadderSearchDAO
                 LadderSeason season = !includeSeason ? null : new LadderSeason
                 (
                     rs.getLong("season.battlenet_id"),
-                    rs.getInt("season.year"),
-                    rs.getInt("season.number")
+                    rs.getInt("year"),
+                    rs.getInt("number")
                 );
                 LadderTeam team = new LadderTeam
                 (
                     season,
-                    conversionService.convert(rs.getInt("team.region"), Region.class),
+                    conversionService.convert(rs.getInt("region"), Region.class),
                     new BaseLeague
                     (
-                        conversionService.convert(rs.getInt("team.league_type"), League.LeagueType.class),
-                        conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
-                        conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
+                        conversionService.convert(rs.getInt("league_type"), League.LeagueType.class),
+                        conversionService.convert(rs.getInt("queue_type"), QueueType.class),
+                        conversionService.convert(rs.getInt("team_type"), TeamType.class)
                     ),
-                    conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
+                    conversionService.convert(rs.getInt("tier_type"), LeagueTier.LeagueTierType.class),
                     members,
-                    rs.getLong("team.rating"),
-                    rs.getInt("team.wins"), rs.getInt("team.losses"), null,
+                    rs.getLong("rating"),
+                    rs.getInt("wins"), rs.getInt("losses"), null,
                     null
                 );
                 teams.add(team);
@@ -428,13 +428,13 @@ public class LadderSearchDAO
             LadderTeamMember member = new LadderTeamMember
             (
                 rs.getLong("player_character.battlenet_id"),
-                rs.getInt("player_character.realm"),
-                rs.getString("account.battle_tag"),
-                rs.getString("player_character.name"),
-                (Integer) rs.getObject("team_member.terran_games_played"),
-                (Integer) rs.getObject("team_member.protoss_games_played"),
-                (Integer) rs.getObject("team_member.zerg_games_played"),
-                (Integer) rs.getObject("team_member.random_games_played")
+                rs.getInt("realm"),
+                rs.getString("battle_tag"),
+                rs.getString("name"),
+                (Integer) rs.getObject("terran_games_played"),
+                (Integer) rs.getObject("protoss_games_played"),
+                (Integer) rs.getObject("zerg_games_played"),
+                (Integer) rs.getObject("random_games_played")
             );
             members.add(member);
         }

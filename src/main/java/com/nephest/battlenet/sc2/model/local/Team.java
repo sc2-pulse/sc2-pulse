@@ -104,7 +104,7 @@ implements java.io.Serializable
     @Override
     public int hashCode()
     {
-        return Objects.hash(getDivisionId(), getBattlenetId());
+        return Objects.hash(getSeason(), getRegion(), getBattlenetId());
     }
 
     @Override
@@ -115,7 +115,8 @@ implements java.io.Serializable
         if( !(other instanceof Team) ) return false;
 
         Team otherTeam = (Team) other;
-        return getDivisionId() == otherTeam.getDivisionId()
+        return getSeason().equals(otherTeam.getSeason())
+            && getRegion() == otherTeam.getRegion()
             && getBattlenetId().equals(otherTeam.getBattlenetId());
     }
 
@@ -124,9 +125,9 @@ implements java.io.Serializable
     {
         return String.format
         (
-            "%s[%s %s]",
+            "%s[%s %s %s]",
             getClass().getSimpleName(),
-            String.valueOf(getDivisionId()), String.valueOf(getBattlenetId())
+            String.valueOf(getSeason()), getRegion().toString(), String.valueOf(getBattlenetId())
         );
     }
 

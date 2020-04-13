@@ -36,13 +36,11 @@ public class TeamMemberDAO
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
-        + "ON DUPLICATE KEY UPDATE "
-        + "team_id=VALUES(team_id), "
-        + "player_character_id=VALUES(player_character_id), "
-        + "terran_games_played=VALUES(terran_games_played), "
-        + "protoss_games_played=VALUES(protoss_games_played), "
-        + "zerg_games_played=VALUES(zerg_games_played), "
-        + "random_games_played=VALUES(random_games_played)";
+        + "ON CONFLICT(team_id, player_character_id) DO UPDATE SET "
+        + "terran_games_played=excluded.terran_games_played, "
+        + "protoss_games_played=excluded.protoss_games_played, "
+        + "zerg_games_played=excluded.zerg_games_played, "
+        + "random_games_played=excluded.random_games_played";
 
     private NamedParameterJdbcTemplate template;
 

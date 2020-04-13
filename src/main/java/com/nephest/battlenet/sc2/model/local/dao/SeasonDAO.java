@@ -43,12 +43,9 @@ public class SeasonDAO
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
-        + "ON DUPLICATE KEY UPDATE "
-        + "id=LAST_INSERT_ID(id),"
-        + "battlenet_id=VALUES(battlenet_id), "
-        + "region=VALUES(region), "
-        + "year=VALUES(year), "
-        + "number=VALUES(number) ";
+        + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
+        + "year=excluded.year, "
+        + "number=excluded.number";
 
     private static final String FIND_LIST_BY_REGION = "SELECT "
         + "id, battlenet_id, region, year, number "
@@ -98,7 +95,7 @@ public class SeasonDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(season);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        season.setId( (Long) keyHolder.getKeyList().get(0).get("insert_id"));
+        season.setId(keyHolder.getKey().longValue());
         return season;
     }
 

@@ -57,14 +57,13 @@ public class LeagueStatsDAO
 
     private static final String CALCULATE_SEASON_STATS_MERGE_QUERY = CALCULATE_SEASON_STATS_QUERY
         + " "
-        + "ON DUPLICATE KEY UPDATE "
-        + "league_id=VALUES(league_id), "
-        + "player_count=VALUES(player_count), "
-        + "team_count=VALUES(team_count), "
-        + "terran_games_played=VALUES(terran_games_played), "
-        + "protoss_games_played=VALUES(protoss_games_played), "
-        + "zerg_games_played=VALUES(zerg_games_played), "
-        + "random_games_played=VALUES(random_games_played)";
+        + "ON CONFLICT(league_id) DO UPDATE SET "
+        + "player_count=excluded.player_count, "
+        + "team_count=excluded.team_count, "
+        + "terran_games_played=excluded.terran_games_played, "
+        + "protoss_games_played=excluded.protoss_games_played, "
+        + "zerg_games_played=excluded.zerg_games_played, "
+        + "random_games_played=excluded.random_games_played";
 
 
 
