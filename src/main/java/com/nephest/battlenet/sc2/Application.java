@@ -30,19 +30,9 @@ public class Application
 extends SpringBootServletInitializer
 {
 
-    @Autowired
-    private Environment env;
-
     public static void main(String[] args)
     {
         SpringApplication.run(Application.class, args);
-    }
-
-    @Bean
-    public DataSource dataSource()
-    throws NamingException
-    {
-        return new JndiTemplate().lookup(env.getRequiredProperty("ds.jndi.url"), DataSource.class);
     }
 
     @Bean

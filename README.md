@@ -5,7 +5,6 @@ I use this project to learn the java web development process. This project is no
 ## Required application properties
 ```
 blizzard.api.key = base64 encoded client_id:client_secret
-ds.jndi.url = DataSource is expected to be available via JNDI
 ```
 ## Dependencies
 * Java 11
