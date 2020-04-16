@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.test.jdbc.JdbcTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -69,6 +70,7 @@ public class SeasonGenerator
     @Autowired
     private NamedParameterJdbcTemplate template;
 
+    @Transactional
     public void generateSeason
     (
         List<Region> regions,
