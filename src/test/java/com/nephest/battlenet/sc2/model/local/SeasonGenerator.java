@@ -25,7 +25,9 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.test.jdbc.JdbcTestUtils;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -63,6 +65,9 @@ public class SeasonGenerator
 
     @Autowired
     private TeamMemberDAO teamMemberDAO;
+
+    @Autowired
+    private NamedParameterJdbcTemplate template;
 
     public void generateSeason
     (
@@ -122,6 +127,23 @@ public class SeasonGenerator
             }
             teamCount++;
         }
+    }
+
+    public void cleanAll()
+    {
+        JdbcTestUtils.deleteFromTables
+        (
+            template.getJdbcTemplate(),
+            "season",
+            "league",
+            "league_tier",
+            "division",
+            "team",
+            "team_member",
+            "account",
+            "player_character",
+            "league_stats"
+        );
     }
 
 }
