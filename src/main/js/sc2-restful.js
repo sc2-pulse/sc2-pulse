@@ -62,6 +62,11 @@ const TEAM_TYPE = Object.freeze
     ARRANGED: {code:0, name: "Arranged"},
     RANDOM: {code:1, name: "Random"}
 });
+
+const PAGE_TYPE = Object.freeze
+({
+    FIRST: {}, LAST: {}, GENERAL: {}
+});
 function getMemberCount(teamFormat, teamType)
 {
     if(teamType === TEAM_TYPE.RANDOM) return 1;
@@ -120,6 +125,7 @@ let shouldScrollToResult = false;
 let currentSeason = -1;
 let currentTeamFormat;
 let currentTeamType;
+let currentLadder;
 
 window.addEventListener("load", onWindowLoad);
 
@@ -203,10 +209,10 @@ function findCharactersByName()
     getCharacters(document.getElementById("search-player-name").value);
 }
 
-function getFormParameters(page = -1)
+function getFormParameters(page = 0)
 {
     const fd = new FormData(document.getElementById("form-ladder"));
-    if (page > 0) fd.set("page", page);
+    if (page >= 0) fd.set("page", page);
     return urlencodeFormData(fd);
 }
 
@@ -347,10 +353,10 @@ function updateLeagueBounds(searchResult)
     }
 }
 
-function getLadder(formParams, page = 1)
+function getLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
 {
     setGeneratingStatus("begin");
-    const request = "api/ladder?" + formParams;
+    const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${forward}/${count}?` + formParams;
     fetch(request)
         .catch(error => setGeneratingStatus("error", error.message))
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
@@ -361,9 +367,10 @@ function getLadder(formParams, page = 1)
 
 function updateLadder(searchResult)
 {
+    currentLadder = searchResult;
     document.getElementById("teams-total-count").textContent = searchResult.meta.totalCount.toLocaleString();
     updateTeamsTable(document.getElementById("ladder"), searchResult);
-    updatePaginations(searchResult.meta.page, searchResult.meta.pageCount);
+    updateLadderPaginations();
     document.getElementById("generated-info-all").classList.remove("d-none");
 }
 
@@ -666,21 +673,35 @@ function createPaginationPage(pageNum, label)
     return li;
 }
 
-function updatePaginations(currentPage, lastPage)
+function updateLadderPaginations()
 {
-    for(const pagination of document.getElementsByClassName("pagination"))
+    if(currentLadder == null || currentLadder.result.length < 1) return;
+    const backwardParams = new Map();
+    backwardParams.set("rating-anchor", currentLadder.result[0].rating);
+    backwardParams.set("id-anchor", currentLadder.result[0].id);
+    const forwardParams = new Map();
+    forwardParams.set("rating-anchor", currentLadder.result[currentLadder.result.length - 1].rating);
+    forwardParams.set("id-anchor", currentLadder.result[currentLadder.result.length - 1].id);
+    const firstParams = new Map();
+    firstParams.set("rating-anchor", 99999);
+    firstParams.set("id-anchor", 1);
+    const lastParams = new Map();
+    lastParams.set("rating-anchor", 0);
+    lastParams.set("id-anchor", 0);
+    const params = {first: firstParams, last: lastParams, forward: forwardParams, backward: backwardParams};
+    for(const pagination of document.getElementsByClassName("pagination-ladder"))
     {
-        updatePagination(pagination, currentPage, lastPage);
+        updatePagination(pagination, params, currentLadder.meta.page, currentLadder.meta.pageCount);
     }
 }
 
-function updatePagination(pagination, currentPage, lastPage)
+function updatePagination(pagination, params, currentPage, lastPage)
 {
     const pages = pagination.getElementsByClassName("page-link");
-    updatePaginationPage(pages.item(0), 1, "First", currentPage != 1, false);
-    updatePaginationPage(pages.item(1), currentPage - 1, "<", currentPage - 1 >= 1, false);
-    updatePaginationPage(pages.item(pages.length - 1), lastPage, "Last", currentPage != lastPage, false);
-    updatePaginationPage(pages.item(pages.length - 2), +currentPage + 1, ">", +currentPage + 1 <= lastPage, false);
+    updatePaginationPage(pages.item(0), params, PAGE_TYPE.FIRST, true, 1, 0, "First", currentPage != 1, false);
+    updatePaginationPage(pages.item(1), params, PAGE_TYPE.GENERAL, false, 1, currentPage, "<", currentPage - 1 >= 1, false);
+    updatePaginationPage(pages.item(pages.length - 1), params, PAGE_TYPE.LAST, false, 1, +lastPage + 1, "Last", currentPage != lastPage, false);
+    updatePaginationPage(pages.item(pages.length - 2), params, PAGE_TYPE.GENERAL, true, 1, currentPage, ">", +currentPage + 1 <= lastPage, false);
 
     const dynamicCount = pages.length - 4;
     const sideCount = (dynamicCount - 1) / 2;
@@ -697,19 +718,15 @@ function updatePagination(pagination, currentPage, lastPage)
     let curDynamicPage;
     for(let i = 2, curDynamicPage = leftStart; i < dynamicCount + 2; i++, curDynamicPage++ )
     {
-        if(curDynamicPage == currentPage)
-        {
-            updatePaginationPage(pages.item(i), curDynamicPage, curDynamicPage, true, true);
-        }
-        else
-        {
-            let active = curDynamicPage <= lastPage;
-            updatePaginationPage(pages.item(i), curDynamicPage, active ? curDynamicPage : "", active, false);
-        }
+        const forward = curDynamicPage > currentPage;
+        const curTeam = forward ? teams[teams.length - 1] : teams[0];
+        const curCount = Math.abs(curDynamicPage - currentPage);
+        const active = curDynamicPage <= lastPage && curDynamicPage != currentPage;
+        updatePaginationPage(pages.item(i), params, PAGE_TYPE.GENERAL, forward, curCount, currentPage, (active || curDynamicPage == currentPage) ? curDynamicPage : "", active, curDynamicPage == currentPage);
     }
 }
 
-function updatePaginationPage(page, number, label, enabled, current)
+function updatePaginationPage(page, params, pageType, forward, count, pageNumber, label, enabled, current)
 {
     if(label === "")
     {
@@ -723,13 +740,13 @@ function updatePaginationPage(page, number, label, enabled, current)
     {
         page.parentElement.classList.remove("enabled");
         page.parentElement.classList.add("disabled");
-        page.removeEventListener("click", paginationPageClick);
+        page.removeEventListener("click", ladderPaginationPageClick);
     }
     else if (enabled && !page.classList.contains("enabled"))
     {
         page.parentElement.classList.add("enabled");
         page.parentElement.classList.remove("disabled");
-        page.addEventListener("click", paginationPageClick)
+        page.addEventListener("click", ladderPaginationPageClick)
     }
     if(!current)
     {
@@ -740,14 +757,38 @@ function updatePaginationPage(page, number, label, enabled, current)
         page.parentElement.classList.add("active");
     }
 
-    page.setAttribute("data-page-number", number);
+    let pageParams;
+    switch(pageType)
+    {
+        case PAGE_TYPE.FIRST:
+            pageParams = params.first;
+            break;
+        case PAGE_TYPE.LAST:
+            pageParams = params.last;
+            break;
+        case PAGE_TYPE.GENERAL:
+            pageParams = forward ? params.forward : params.backward;
+            break;
+    }
+    for(let [key, val] of pageParams) page.setAttribute("data-page-" + key, val);
+
+    page.setAttribute("data-page-forward", forward);
+    page.setAttribute("data-page-count", count);
+    page.setAttribute("data-page-number", pageNumber);
     page.textContent = label;
 }
 
-function paginationPageClick(evt)
+function ladderPaginationPageClick(evt)
 {
     const formParams = getFormParameters(evt.target.getAttribute("data-page-number"));
-    getLadder(formParams);
+    getLadder
+    (
+        formParams,
+        evt.target.getAttribute("data-page-rating-anchor"),
+        evt.target.getAttribute("data-page-id-anchor"),
+        evt.target.getAttribute("data-page-forward"),
+        evt.target.getAttribute("data-page-count")
+    );
 }
 
 function observeChartables()
@@ -1092,28 +1133,19 @@ function disableElements(elems, disable)
 function setPaginationsState(enabled)
 {
 
-    for(const pagination of document.getElementsByClassName("pagination"))
+    if(enabled)
     {
-        if(enabled)
-        {
-            const active = pagination.getElementsByClassName("active")[0];
-            if(active != null)
-            {
-                const currentPage = active
-                    .getElementsByClassName("page-link")[0]
-                    .getAttribute("data-page-number");
-                const pageLinks = pagination.getElementsByClassName("page-link");
-                const lastPage = pageLinks[pageLinks.length - 1].getAttribute("data-page-number");
-                updatePagination(pagination, currentPage, lastPage);
-            }
-        }
-        else
+        updateLadderPaginations();
+    }
+    else
+    {
+        for(const pagination of document.getElementsByClassName("pagination-ladder"))
         {
             for(const page of pagination.getElementsByClassName("page-link"))
             {
                 page.parentElement.classList.remove("enabled");
                 page.parentElement.classList.add("disabled");
-                page.removeEventListener("click", paginationPageClick);
+                page.removeEventListener("click", ladderPaginationPageClick);
             }
         }
     }

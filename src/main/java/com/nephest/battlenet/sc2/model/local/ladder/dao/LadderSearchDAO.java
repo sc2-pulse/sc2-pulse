@@ -30,6 +30,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
@@ -149,10 +150,32 @@ public class LadderSearchDAO
     private static final String FIND_TEAM_MEMBERS_REVERSED_QUERY =
         String.format(FIND_TEAM_MEMBERS_FORMAT, "ASC");
 
-    private static final String FIND_TEAM_MEMBERS_COUNT_QUERY =
+    private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =
+        "SELECT "
+        + "team.region, "
+        + "team.league_type, team.queue_type, team.team_type, "
+        + "team.tier_type, "
+        + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
+        + "account.battle_tag, "
+        + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
+        + "team_member.terran_games_played, team_member.protoss_games_played, "
+        + "team_member.zerg_games_played, team_member.random_games_played "
+
+        + LADDER_SEARCH_TEAM_FROM_WHERE
+        + "AND (team.rating, team.id) %2$s (:ratingAnchor, :idAnchor) "
+
+        + "ORDER BY team.rating %1$s, team.id %1$s "
+        + "OFFSET :offset LIMIT :limit";
+
+    private static final String FIND_TEAM_MEMBERS_ANCHOR_QUERY =
+        String.format(FIND_TEAM_MEMBERS_ANCHOR_FORMAT, "DESC", "<");
+
+    private static final String FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY =
+        String.format(FIND_TEAM_MEMBERS_ANCHOR_FORMAT, "ASC", ">");
+
+    private static final String FIND_TEAM_COUNT_QUERY =
         "SELECT COUNT(*) "
-        + "FROM team_member "
-        + "INNER JOIN team ON team_member.team_id=team.id "
+        + "FROM team "
         + LADDER_SEARCH_TEAM_WHERE;
 
     private static final String FIND_CARACTER_TEAM_MEMBERS_QUERY =
@@ -363,6 +386,9 @@ public class LadderSearchDAO
 
     private int resultsPerPage = 100;
 
+    @Autowired @Lazy
+    private LadderSearchDAO ladderSearchDAO;
+
     LadderSearchDAO(){}
 
     @Autowired
@@ -386,6 +412,16 @@ public class LadderSearchDAO
         return resultsPerPage;
     }
 
+    public LadderSearchDAO getLadderSearchDAO()
+    {
+        return ladderSearchDAO;
+    }
+
+    protected void setLadderSearchDAO(LadderSearchDAO ladderSearchDAO)
+    {
+        this.ladderSearchDAO = ladderSearchDAO;
+    }
+
     private List<LadderTeam> mapTeams(ResultSet rs, boolean includeSeason)
     throws SQLException
     {
@@ -407,6 +443,7 @@ public class LadderSearchDAO
                 );
                 LadderTeam team = new LadderTeam
                 (
+                    teamId,
                     season,
                     conversionService.convert(rs.getInt("region"), Region.class),
                     new BaseLeague
@@ -454,7 +491,7 @@ public class LadderSearchDAO
     @Cacheable
     (
         cacheNames="search-ladder",
-        condition="#a5 eq 1 and #a0 eq #root.target.lastSeasonId"
+        condition="#a5 eq 1 and #a0 eq #root.target.ladderSearchDAO.lastSeasonId"
     )
     public PagedSearchResult<List<LadderTeam>> find
     (
@@ -467,7 +504,7 @@ public class LadderSearchDAO
     )
     {
         long membersPerTeam = getMemberCount(queueType, teamType);
-        long teamCount = (long) Math.ceil(getMemberCount(season, regions, leagueTypes, queueType, teamType) / (double) membersPerTeam);
+        long teamCount = ladderSearchDAO.getTeamCount(season, regions, leagueTypes, queueType, teamType);
         long pageCount = (long) Math.ceil(teamCount /(double) getResultsPerPage());
         long middlePage = (long) Math.ceil(pageCount / 2d);
         long offset = 0;
@@ -525,7 +562,63 @@ public class LadderSearchDAO
         );
     }
 
-    private long getMemberCount
+    public PagedSearchResult<List<LadderTeam>> findAnchored
+    (
+        long season,
+        Set<Region> regions,
+        Set<League.LeagueType> leagueTypes,
+        QueueType queueType,
+        TeamType teamType,
+        long page,
+        long ratingAnchor,
+        long idAnchor,
+        boolean forward,
+        int count
+    )
+    {
+        long finalPage = forward ? page + count : page - count;
+        long teamCount = ladderSearchDAO.getTeamCount(season, regions, leagueTypes, queueType, teamType);
+        long pageCount = (long) Math.ceil(teamCount /(double) getResultsPerPage());
+        long membersPerTeam = getMemberCount(queueType, teamType);
+        long offset = (count - 1) * getResultsPerPage() * membersPerTeam;
+        long limit = getResultsPerPage() * membersPerTeam;
+        //if last page is requested, show only leftovers
+        if(page == pageCount + 1)
+        {
+            limit = (teamCount % getResultsPerPage()) * membersPerTeam;
+            limit = limit == 0 ? getResultsPerPage() * membersPerTeam : limit;
+        }
+        MapSqlParameterSource params =
+            createSearchParams(season, regions, leagueTypes, queueType, teamType)
+                .addValue("offset", offset)
+                .addValue("limit", limit)
+                .addValue("ratingAnchor", ratingAnchor)
+                .addValue("idAnchor", idAnchor);
+
+        String q = forward ? FIND_TEAM_MEMBERS_ANCHOR_QUERY : FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY;
+        List<LadderTeam> teams = template
+            .query(q, params, LADDER_TEAM_SHORT_EXTRACTOR);
+        if(!forward) Collections.reverse(teams);
+        /*
+            Blizzard sometimes returns invalid team members and they are ignored
+            by the corresponding service. It is very rare, but in such occasion
+            it is possible to have non full team(3 members out of 4, etc.) to be fetched.
+            It can lead to fetching some strain team members into the result set.
+            Ignoring such team members to return consistent results.
+        */
+        if(teams.size() > getResultsPerPage()) teams = teams.subList(0, getResultsPerPage());
+
+        return new PagedSearchResult<List<LadderTeam>>
+        (
+            teamCount,
+            (long) getResultsPerPage(),
+            finalPage,
+            teams
+        );
+    }
+
+    @Cacheable(cacheNames = "search-team-count")
+    public long getTeamCount
     (
         long season,
         Set<Region> regions,
@@ -536,7 +629,7 @@ public class LadderSearchDAO
     {
         MapSqlParameterSource params =
             createSearchParams(season, regions, leagueTypes, queueType, teamType);
-        return template.query(FIND_TEAM_MEMBERS_COUNT_QUERY, params, LONG_EXTRACTOR);
+        return template.query(FIND_TEAM_COUNT_QUERY, params, LONG_EXTRACTOR);
     }
 
     @Cacheable
@@ -592,7 +685,7 @@ public class LadderSearchDAO
     @Cacheable
     (
         cacheNames="search-ladder-stats",
-        condition="#a0 eq #root.target.lastSeasonId"
+        condition="#a0 eq #root.target.ladderSearchDAO.lastSeasonId"
     )
     public MergedLadderSearchStatsResult findStats
     (
@@ -616,7 +709,7 @@ public class LadderSearchDAO
     @Cacheable
     (
         cacheNames="search-ladder-league-bounds",
-        condition="#a0 eq #root.target.lastSeasonId"
+        condition="#a0 eq #root.target.ladderSearchDAO.lastSeasonId"
     )
     public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> findLeagueBounds
     (
@@ -636,7 +729,7 @@ public class LadderSearchDAO
     @Cacheable
     (
         cacheNames="search-ladder-season",
-        condition="#a0 eq #root.target.lastSeasonId"
+        condition="#a0 eq #root.target.ladderSearchDAO.lastSeasonId"
     )
     public List<Season> findSeasonsMeta
     (
