@@ -88,6 +88,59 @@ public class LadderController
         );
     }
 
+    @GetMapping("/ladder/a/{ratingAnchor}/{idAnchor}/{forward}/{count}")
+    public PagedSearchResult<List<LadderTeam>> getLadderAnchored
+        (
+            @PathVariable("ratingAnchor") long ratingAnchor,
+            @PathVariable("idAnchor") long idAnchor,
+            @PathVariable("forward") boolean forward,
+            @PathVariable("count") int count,
+            @RequestParam("season") long season,
+            @RequestParam("queue") QueueType queue,
+            @RequestParam("team-type") TeamType teamType,
+            @RequestParam(name = "page") int page,
+            @RequestParam(name = "us", required = false) boolean us,
+            @RequestParam(name = "eu", required = false) boolean eu,
+            @RequestParam(name = "kr", required = false) boolean kr,
+            @RequestParam(name = "cn", required = false) boolean cn,
+            @RequestParam(name = "bro", required = false) boolean bronze,
+            @RequestParam(name = "sil", required = false) boolean silver,
+            @RequestParam(name = "gol", required = false) boolean gold,
+            @RequestParam(name = "pla", required = false) boolean platinum,
+            @RequestParam(name = "dia", required = false) boolean diamond,
+            @RequestParam(name = "mas", required = false) boolean master,
+            @RequestParam(name = "gra", required = false) boolean grandmaster
+        )
+    {
+        Set<Region> regions = new HashSet();
+        if(us) regions.add(Region.US);
+        if(eu) regions.add(Region.EU);
+        if(kr) regions.add(Region.KR);
+        if(cn) regions.add(Region.CN);
+
+        Set<LeagueType> leagues = new HashSet();
+        if(bronze) leagues.add(LeagueType.BRONZE);
+        if(silver) leagues.add(LeagueType.SILVER);
+        if(gold) leagues.add(LeagueType.GOLD);
+        if(platinum) leagues.add(LeagueType.PLATINUM);
+        if(diamond) leagues.add(LeagueType.DIAMOND);
+        if(master) leagues.add(LeagueType.MASTER);
+        if(grandmaster) leagues.add(LeagueType.GRANDMASTER);
+        return ladderSearch.findAnchored
+        (
+            season,
+            regions,
+            leagues,
+            queue,
+            teamType,
+            page,
+            ratingAnchor,
+            idAnchor,
+            forward,
+            count
+        );
+    }
+
     @GetMapping("/ladder/stats")
     public MergedLadderSearchStatsResult getLadderStats
     (

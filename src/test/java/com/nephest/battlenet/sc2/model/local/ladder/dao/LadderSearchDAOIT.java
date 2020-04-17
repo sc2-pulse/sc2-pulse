@@ -20,7 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
-import com.nephest.battlenet.sc2.config.convert.*;
+import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
@@ -28,29 +28,29 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
-import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.ComponentScan;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.format.support.DefaultFormattingConversionService;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseBuilder;
-import org.springframework.jdbc.datasource.embedded.EmbeddedDatabaseType;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.util.*;
 
 import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_ID;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-@SpringJUnitConfig(LadderSearchDAOIT.LadderTestConfig.class)
+
+@SpringJUnitConfig(classes = Application.class)
+@TestPropertySource("classpath:application.properties")
+@TestPropertySource("classpath:application-private.properties")
 public class LadderSearchDAOIT
 {
 
@@ -66,23 +66,49 @@ public class LadderSearchDAOIT
         BaseLeague.LeagueType.DIAMOND, //skip masters for tests
         BaseLeague.LeagueType.GRANDMASTER
     ));
+    public static final QueueType QUEUE_TYPE = QueueType.LOTV_4V4;
+    public static final TeamType TEAM_TYPE = TeamType.ARRANGED;
+    public static final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
+    public static final Set<BaseLeague.LeagueType> LEAGUES_SET = Collections.unmodifiableSet(EnumSet.copyOf(SEARCH_LEAGUES));
 
     @Autowired
     private LadderSearchDAO search;
 
     @BeforeAll
-    public static void beforeAll(@Autowired SeasonGenerator generator, @Autowired LeagueStatsDAO leagueStatsDAO)
+    public static void beforeAll
+    (
+        @Autowired DataSource dataSource,
+        @Autowired SeasonGenerator generator,
+        @Autowired LeagueStatsDAO leagueStatsDAO
+    )
+    throws SQLException
     {
+        try(Connection connection = dataSource.getConnection())
+        {
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+        }
         generator.generateSeason
         (
             REGIONS,
             List.of(BaseLeague.LeagueType.values()),
-            QueueType.LOTV_4V4,
-            TeamType.ARRANGED,
-            BaseLeagueTier.LeagueTierType.FIRST,
+            QUEUE_TYPE,
+            TEAM_TYPE,
+            TIER_TYPE,
             TEAMS_PER_LEAGUE
         );
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
+    }
+
+    @AfterAll
+    public static void afterAll(@Autowired DataSource dataSource)
+        throws SQLException
+    {
+        try(Connection connection = dataSource.getConnection())
+        {
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
+        }
+
     }
 
     //skip masters league for test
@@ -90,23 +116,106 @@ public class LadderSearchDAOIT
     @ParameterizedTest
     public void test4v4Ladder(int page, int teamId)
     {
-        QueueType queueType = QueueType.LOTV_4V4;
-        TeamType teamType = TeamType.ARRANGED;
-        BaseLeagueTier.LeagueTierType tierType = BaseLeagueTier.LeagueTierType.FIRST;
-        Set<BaseLeague.LeagueType> leaguesSet = EnumSet.copyOf(SEARCH_LEAGUES);
-        int expectedTeamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
-        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
-
-        search.setResultsPerPage(leagueTeamCount);
+        search.setResultsPerPage(REGIONS.size() * TEAMS_PER_LEAGUE);
         PagedSearchResult<List<LadderTeam>> result = search.find
         (
             DEFAULT_SEASON_ID,
             EnumSet.copyOf(REGIONS),
-            leaguesSet,
-            queueType,
-            teamType,
+            LEAGUES_SET,
+            QUEUE_TYPE,
+            TEAM_TYPE,
             page
         );
+        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId);
+    }
+
+    //skip masters league for test
+    @CsvSource({"1, 279", "2, 199", "3, 159", "4, 119", "5, 79", "6, 39"})
+    @ParameterizedTest
+    public void test4v4LadderAnchor(int page, int teamId)
+    {
+        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
+        search.setResultsPerPage(leagueTeamCount);
+        PagedSearchResult<List<LadderTeam>> result = search.findAnchored
+        (
+            DEFAULT_SEASON_ID,
+            EnumSet.copyOf(REGIONS),
+            LEAGUES_SET,
+            QUEUE_TYPE,
+            TEAM_TYPE,
+            page - 1,
+            //team id is zero based in generator, but actual db id is 1 based. + 2 to offset that
+            teamId, teamId + 2,
+            true,
+            1
+        );
+        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId);
+
+        //reversed
+        PagedSearchResult<List<LadderTeam>> resultReversed = search.findAnchored
+        (
+            DEFAULT_SEASON_ID,
+            EnumSet.copyOf(REGIONS),
+            LEAGUES_SET,
+            QUEUE_TYPE,
+            TEAM_TYPE,
+            page + 1,
+            //for reversed order the generator offset is correct
+            teamId - leagueTeamCount, (teamId - leagueTeamCount) + 1,
+            false,
+            1
+        );
+        verifyLadder(resultReversed, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId);
+    }
+
+    @Test
+    public void test4v4LadderAnchorMultiplePages()
+    {
+        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
+        search.setResultsPerPage(leagueTeamCount);
+        PagedSearchResult<List<LadderTeam>> result = search.findAnchored
+        (
+            DEFAULT_SEASON_ID,
+            EnumSet.copyOf(REGIONS),
+            LEAGUES_SET,
+            QUEUE_TYPE,
+            TEAM_TYPE,
+            1,
+            200, 201,
+            true,
+            2
+        );
+        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, 3, 159);
+
+        //reversed
+        PagedSearchResult<List<LadderTeam>> resultReversed = search.findAnchored
+        (
+            DEFAULT_SEASON_ID,
+            EnumSet.copyOf(REGIONS),
+            LEAGUES_SET,
+            QUEUE_TYPE,
+            TEAM_TYPE,
+            3,
+            //for reversed order the generator offset is correct
+            159, 160,
+            false,
+            2
+        );
+        verifyLadder(resultReversed, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, 1, 279);
+    }
+
+    private void verifyLadder
+    (
+        PagedSearchResult<List<LadderTeam>> result,
+        QueueType queueType,
+        TeamType teamType,
+        BaseLeagueTier.LeagueTierType tierType,
+        int page,
+        int teamId
+    )
+    {
+        int expectedTeamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
+        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
 
         //validate meta
         assertEquals(expectedTeamCount, result.getMeta().getTotalCount());
@@ -151,27 +260,61 @@ public class LadderSearchDAOIT
     @Test
     public void test4v4ReversedOffset()
     {
-        QueueType queueType = QueueType.LOTV_4V4;
-        TeamType teamType = TeamType.ARRANGED;
-        BaseLeagueTier.LeagueTierType tierType = BaseLeagueTier.LeagueTierType.FIRST;
-        Set<BaseLeague.LeagueType> leaguesSet = EnumSet.copyOf(SEARCH_LEAGUES);
         int teamsPerPage = 45;
-        int expectedTeamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
-        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
         int lastPage = 6;
-        int leftovers = 15;
-        int teamId = expectedTeamCount - (expectedTeamCount - leftovers) - 1;
 
         search.setResultsPerPage(teamsPerPage);
         PagedSearchResult<List<LadderTeam>> result = search.find
         (
             DEFAULT_SEASON_ID,
             Set.of(Region.values()),
-            leaguesSet,
-            queueType,
-            teamType,
+            LEAGUES_SET,
+            QUEUE_TYPE,
+            TEAM_TYPE,
             lastPage
         );
+
+        verifyLadderOffset(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE);
+    }
+
+    @Test
+    public void test4v4AnchoredReversedOffset()
+    {
+        int teamsPerPage = 45;
+        int lastPage = 6;
+
+        search.setResultsPerPage(teamsPerPage);
+        PagedSearchResult<List<LadderTeam>> result = search.findAnchored
+        (
+            DEFAULT_SEASON_ID,
+            Set.of(Region.values()),
+            LEAGUES_SET,
+            QUEUE_TYPE,
+            TEAM_TYPE,
+            lastPage + 1,
+            -1,
+            0,
+            false,
+            1
+        );
+
+        verifyLadderOffset(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE);
+    }
+
+    private void verifyLadderOffset
+    (
+        PagedSearchResult<List<LadderTeam>> result,
+        QueueType queueType,
+        TeamType teamType,
+        BaseLeagueTier.LeagueTierType tierType
+    )
+    {
+        int teamsPerPage = 45;
+        int expectedTeamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
+        int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
+        int lastPage = 6;
+        int leftovers = 15;
+        int teamId = expectedTeamCount - (expectedTeamCount - leftovers) - 1;
 
         //validate meta
         assertEquals(expectedTeamCount, result.getMeta().getTotalCount());
@@ -217,28 +360,24 @@ public class LadderSearchDAOIT
     @Test
     public void test4v4LeagueStats()
     {
-        QueueType queueType = QueueType.LOTV_4V4;
-        TeamType teamType = TeamType.ARRANGED;
-        BaseLeagueTier.LeagueTierType tierType = BaseLeagueTier.LeagueTierType.FIRST;
-        Set<BaseLeague.LeagueType> leaguesSet = EnumSet.copyOf(SEARCH_LEAGUES);
         MergedLadderSearchStatsResult stats = search.findStats
         (
             DEFAULT_SEASON_ID,
             Set.of(Region.values()),
-            leaguesSet,
-            queueType,
-            teamType
+            LEAGUES_SET,
+            QUEUE_TYPE,
+            TEAM_TYPE
         );
 
         int teamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
         int regionTeamCount = SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
-        int regionPlayerCount = regionTeamCount * queueType.getTeamFormat().getMemberCount(teamType);
+        int regionPlayerCount = regionTeamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         int regionGamesPlayed = (regionTeamCount * 1 + regionTeamCount * 2 + regionTeamCount * 3 + regionTeamCount * 4)
-            * queueType.getTeamFormat().getMemberCount(teamType);
+            * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
-        int leaguePlayerCount = leagueTeamCount * queueType.getTeamFormat().getMemberCount(teamType);
+        int leaguePlayerCount = leagueTeamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         int leagueGamesPlayed = (leagueTeamCount * 1 + leagueTeamCount * 2 + leagueTeamCount * 3 + leagueTeamCount * 4)
-            * queueType.getTeamFormat().getMemberCount(teamType);
+            * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         for(Region region : REGIONS)
         {
             assertEquals(regionTeamCount, stats.getRegionTeamCount().get(region));
@@ -253,25 +392,7 @@ public class LadderSearchDAOIT
         }
         for(Race race : Race.values())
         {
-            assertEquals((race.ordinal() + 1) * teamCount * queueType.getTeamFormat().getMemberCount(teamType), stats.getRaceGamesPlayed().get(race));
-        }
-
-    }
-
-
-    @Configuration
-    @ComponentScan("com.nephest.battlenet.sc2")
-    public static class LadderTestConfig
-    {
-
-        @Bean
-        public DataSource dataSource()
-        {
-            return new EmbeddedDatabaseBuilder()
-                .setType(EmbeddedDatabaseType.HSQL)
-                .generateUniqueName(true)
-                .addScript("schema-hsql.sql")
-                .build();
+            assertEquals((race.ordinal() + 1) * teamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE), stats.getRaceGamesPlayed().get(race));
         }
 
     }

@@ -152,3 +152,10 @@ h4
     border: 0;
     border-top: 1px solid rgba(0,0,0,.1);
 }
+
+.page-item.disabled.active .page-link
+{
+    color: #fff;
+    background-color: #007bff;
+    border-color: #007bff;
+}

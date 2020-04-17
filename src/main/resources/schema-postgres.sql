@@ -167,7 +167,7 @@ CREATE TABLE "team"
 
 );
 
-CREATE INDEX "ix_team_ladder_search" ON "team"("season", "queue_type", "team_type", "rating", "id");
+CREATE INDEX "ix_team_ladder_search_full" ON "team"("season", "queue_type", "team_type", "rating", "id", "region", "league_type");
 
 CREATE TABLE "team_member"
 (

@@ -38,6 +38,9 @@ implements java.io.Serializable
 
     private static final long serialVersionUID = 1l;
 
+    @NotNull
+    private final Long id;
+
     private final LadderSeason season;
 
     @NotNull
@@ -54,6 +57,7 @@ implements java.io.Serializable
 
     public LadderTeam
     (
+        Long id,
         LadderSeason season,
         Region region,
         BaseLeague league,
@@ -63,11 +67,17 @@ implements java.io.Serializable
     )
     {
         super(rating, wins, losses, ties, points);
+        this.id = id;
         this.season = season;
         this.region = region;
         this.league = league;
         this.leagueTierType = leagueTierType;
         this.members = members;
+    }
+
+    public Long getId()
+    {
+        return id;
     }
 
     public LadderSeason getSeason()
