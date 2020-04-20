@@ -532,7 +532,7 @@ function updateCharacterTeams(searchResult)
 function getCharacters(name)
 {
     setGeneratingStatus("begin");
-    const request = "api/characters?name=" + name;
+    const request = "api/characters?name=" + encodeURIComponent(name);
     return fetch(request)
         .catch(error => setGeneratingStatus("error", error.message))
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
