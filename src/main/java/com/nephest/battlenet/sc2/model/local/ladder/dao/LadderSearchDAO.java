@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -223,7 +224,7 @@ public class LadderSearchDAO
 
         + LADDER_SEARCH_TEAM_FROM
 
-        + "WHERE player_character.id IN (SELECT player_character.id from player_character WHERE player_character.name LIKE :name) "
+        + "WHERE LOWER(player_character.name) LIKE LOWER(:name) "
 
         + "GROUP BY player_character.id "
         + "ORDER BY rating_max DESC";
@@ -764,7 +765,7 @@ public class LadderSearchDAO
         String name
     )
     {
-        name += "#%";
+        name = PostgreSQLUtils.escapeLikePattern(name) + "#%";
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("name", name);
         return template
