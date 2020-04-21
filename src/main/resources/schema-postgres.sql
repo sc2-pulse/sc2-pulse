@@ -59,7 +59,7 @@ CREATE TABLE "player_character"
 );
 
 CREATE INDEX "ix_player_character_battlenet_id" ON "player_character"("battlenet_id");
-CREATE INDEX "ix_player_character_name" ON "player_character"("name");
+CREATE INDEX "ix_player_character_name" ON "player_character"(LOWER("name") varchar_pattern_ops);
 
 CREATE TABLE "season"
 (
@@ -189,6 +189,8 @@ CREATE TABLE "team_member"
         REFERENCES "player_character"("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+CREATE INDEX "ix_fk_team_member_player_character_id" ON "team_member"("player_character_id");
 
 CREATE TABLE "league_stats"
 (
