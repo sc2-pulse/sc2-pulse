@@ -1,5 +1,6 @@
 # About
-SC2 ladder generator is what its name suggests - a SC2 ladder generator.
+SC2 ladder generator is what its name suggests - a SC2 ladder generator. It is a Spring Boot web application.
+The [reference website](https://www.nephest.com/sc2/) is available 24/7.
 ## Features
 * Flexible, user defined filters
 * All seasons, races, team formats
