@@ -162,8 +162,8 @@ CREATE TABLE "team"
         REFERENCES "division"("id")
         ON DELETE CASCADE ON UPDATE CASCADE,
 
-    CONSTRAINT "uq_team_season_region_battlenet_id"
-        UNIQUE ("season", "region", "battlenet_id")
+    CONSTRAINT "uq_team_region_battlenet_id"
+        UNIQUE ("region", "battlenet_id")
 
 );
 
