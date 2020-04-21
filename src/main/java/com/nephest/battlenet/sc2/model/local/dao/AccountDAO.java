@@ -21,6 +21,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -50,16 +51,19 @@ public class AccountDAO
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
+    private final PostgreSQLUtils postgreSQLUtils;
 
     @Autowired
     public AccountDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService,
+        PostgreSQLUtils postgreSQLUtils
     )
     {
         this.template = template;
         this.conversionService = conversionService;
+        this.postgreSQLUtils = postgreSQLUtils;
     }
 
     public Account create(Account account)
@@ -92,6 +96,7 @@ public class AccountDAO
     public void removeExpiredByPrivacy()
     {
         template.update(REMOVE_EXPIRED_PRIVACY_QUERY, Collections.emptyMap());
+        postgreSQLUtils.vacuum();
     }
 
 }
