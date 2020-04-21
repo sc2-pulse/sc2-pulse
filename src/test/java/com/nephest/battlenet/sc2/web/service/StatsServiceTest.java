@@ -33,7 +33,7 @@ public class StatsServiceTest
     @BeforeEach
     public void beforeEach()
     {
-        ss = new StatsService(null, null, null, null, null, null, null, null, null, null);
+        ss = new StatsService(null, null, null, null, null, null, null, null, null, null, null);
         nss = mock(StatsService.class);
         ss.setNestedService(nss);
     }

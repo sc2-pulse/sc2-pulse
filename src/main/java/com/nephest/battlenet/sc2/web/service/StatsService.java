@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.Version;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
@@ -70,6 +71,7 @@ public class StatsService
     private PlayerCharacterDAO playerCharacterDao;
     private TeamMemberDAO teamMemberDao;
     private LeagueStatsDAO leagueStatsDao;
+    private PostgreSQLUtils postgreSQLUtils;
 
     private List<Long> seasonsToUpdate = new ArrayList(BlizzardSC2API.MMR_SEASONS.keySet());
 
@@ -87,7 +89,8 @@ public class StatsService
         AccountDAO accountDao,
         PlayerCharacterDAO playerCharacterDao,
         TeamMemberDAO teamMemberDao,
-        LeagueStatsDAO leagueStatsDao
+        LeagueStatsDAO leagueStatsDao,
+        PostgreSQLUtils postgreSQLUtils
     )
     {
         this.api = api;
@@ -100,6 +103,7 @@ public class StatsService
         this.playerCharacterDao = playerCharacterDao;
         this.teamMemberDao = teamMemberDao;
         this.leagueStatsDao = leagueStatsDao;
+        this.postgreSQLUtils = postgreSQLUtils;
     }
 
     protected void setNestedService(StatsService statsService)
@@ -149,6 +153,7 @@ public class StatsService
             iter.remove();
             LOG.log(Level.INFO, "Updated season {0}", new Object[]{sId});
         }
+        postgreSQLUtils.analyze();
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.log(Level.INFO, "Updated all after {0} seconds", new Object[]{seconds});
@@ -169,6 +174,7 @@ public class StatsService
         long start = System.currentTimeMillis();
 
         updateCurrentSeason();
+        postgreSQLUtils.analyze();
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.log(Level.INFO, "Updated current after {0} seconds", new Object[]{seconds});
