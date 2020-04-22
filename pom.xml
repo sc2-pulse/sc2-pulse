@@ -11,7 +11,7 @@
     </parent>
   <groupId>com.nephest.battlenet.sc2</groupId>
   <artifactId>sc2-webapp</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0-SNAPSHOT</version>
   <packaging>war</packaging>
 
   <name>SC2 Ladder Generator</name>
