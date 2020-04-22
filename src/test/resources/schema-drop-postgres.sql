@@ -1,4 +1,5 @@
 DROP TABLE IF EXISTS "league_stats" CASCADE;
+DROP TABLE IF EXISTS "player_character_stats" CASCADE;
 DROP TABLE IF EXISTS "team_member" CASCADE;
 DROP TABLE IF EXISTS "player_character" CASCADE;
 DROP TABLE IF EXISTS "account" CASCADE;
