@@ -57,6 +57,7 @@ extends SpringBootServletInitializer
         service.addConverter(new IntegerToLeagueTypeConverter());
         service.addConverter(new IntegerToRegionConverter());
         service.addConverter(new IntegerToTeamTypeConverter());
+        service.addConverter(new IntegerToRaceConverter());
         return service;
     }
 
