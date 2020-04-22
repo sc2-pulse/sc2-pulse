@@ -71,6 +71,7 @@ public class StatsService
     private PlayerCharacterDAO playerCharacterDao;
     private TeamMemberDAO teamMemberDao;
     private LeagueStatsDAO leagueStatsDao;
+    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private PostgreSQLUtils postgreSQLUtils;
 
     private List<Long> seasonsToUpdate = new ArrayList(BlizzardSC2API.MMR_SEASONS.keySet());
@@ -90,6 +91,7 @@ public class StatsService
         PlayerCharacterDAO playerCharacterDao,
         TeamMemberDAO teamMemberDao,
         LeagueStatsDAO leagueStatsDao,
+        PlayerCharacterStatsDAO playerCharacterStatsDAO,
         PostgreSQLUtils postgreSQLUtils
     )
     {
@@ -103,6 +105,7 @@ public class StatsService
         this.playerCharacterDao = playerCharacterDao;
         this.teamMemberDao = teamMemberDao;
         this.leagueStatsDao = leagueStatsDao;
+        this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.postgreSQLUtils = postgreSQLUtils;
     }
 
@@ -187,6 +190,7 @@ public class StatsService
             updateSeason(region, seasonId);
         }
         leagueStatsDao.mergeCalculateForSeason(seasonId);
+        playerCharacterStatsDAO.mergeCalculate(seasonId);
     }
 
     private void updateSeason(Region region, long seasonId)
@@ -206,7 +210,11 @@ public class StatsService
             updateLeagues(bSeason, season);
             seasonId = season.getBattlenetId();
         }
-        if(seasonId != null) leagueStatsDao.mergeCalculateForSeason(seasonId);
+        if(seasonId != null)
+        {
+            leagueStatsDao.mergeCalculateForSeason(seasonId);
+            playerCharacterStatsDAO.mergeCalculate(seasonId);
+        }
     }
 
     private void updateLeagues(BlizzardSeason bSeason, Season season)

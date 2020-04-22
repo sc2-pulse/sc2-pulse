@@ -23,8 +23,11 @@ package com.nephest.battlenet.sc2.web.controller;
 import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +45,9 @@ public class LadderController
 
     @Autowired
     private LadderSearchDAO ladderSearch;
+
+    @Autowired
+    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @GetMapping("/ladder")
     public PagedSearchResult<List<LadderTeam>> getLadder
@@ -240,6 +246,15 @@ public class LadderController
     )
     {
         return ladderSearch.findCharacterTeams(id);
+    }
+
+    @GetMapping("/character/{id}/stats")
+    public List<PlayerCharacterStats> getCharacterStats
+    (
+        @PathVariable("id") long id
+    )
+    {
+        return playerCharacterStatsDAO.findGlobalList(id);
     }
 
     @GetMapping("/characters")
