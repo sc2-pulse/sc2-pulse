@@ -47,7 +47,7 @@ public class AccountDAO
         + "updated=excluded.updated";
 
     private static final String REMOVE_EXPIRED_PRIVACY_QUERY =
-        "DELETE FROM account WHERE updated < DATE_SUB(NOW(), INTERVAL 30 DAY)";
+        "DELETE FROM account WHERE updated < NOW() - INTERVAL '30 DAYS'";
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
