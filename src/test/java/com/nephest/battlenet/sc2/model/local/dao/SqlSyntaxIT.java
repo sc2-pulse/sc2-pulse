@@ -1,6 +1,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.Application;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -97,6 +98,9 @@ public class SqlSyntaxIT
 
         divisionDAO.create(new Division(null, tier.getId(), 1L));
         Division division = divisionDAO.merge(new Division(null, tier.getId(), 1L));
+        Division divFound = divisionDAO
+            .findListByLadder(40L, region, League.LeagueType.BRONZE, QueueType.HOTS_1V1, TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST).get(0);
+        assertEquals(division, divFound);
 
         Team newTeam = new Team
         (
