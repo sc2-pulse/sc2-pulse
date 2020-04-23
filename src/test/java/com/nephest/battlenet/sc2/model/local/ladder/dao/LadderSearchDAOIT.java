@@ -88,7 +88,7 @@ public class LadderSearchDAOIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
-        generator.generateSeason
+        generator.generateDefaultSeason
         (
             REGIONS,
             List.of(BaseLeague.LeagueType.values()),

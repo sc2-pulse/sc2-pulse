@@ -71,7 +71,7 @@ public class SeasonGenerator
     private NamedParameterJdbcTemplate template;
 
     @Transactional
-    public void generateSeason
+    public void generateDefaultSeason
     (
         List<Region> regions,
         List<League.LeagueType> leagues,
@@ -81,12 +81,27 @@ public class SeasonGenerator
         int teamsPerLeague
     )
     {
-        int teamCount = 0;
         List<Season> seasons = new ArrayList<>();
         for(Region region : regions)
         {
             seasons.add(seasonDAO.create(new Season(null, DEFAULT_SEASON_ID, region, DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER)));
         }
+        generateSeason(seasons, leagues, queueType, teamType, tierType, teamsPerLeague);
+    }
+
+    @Transactional
+    public void generateSeason
+    (
+        List<Season> seasons,
+        List<League.LeagueType> leagues,
+        QueueType queueType,
+        TeamType teamType,
+        LeagueTier.LeagueTierType tierType,
+        int teamsPerLeague
+    )
+    {
+        for(Season season : seasons) seasonDAO.merge(season);
+        int teamCount = 0;
         for (League.LeagueType type : leagues)
         {
             for(Season season : seasons)
