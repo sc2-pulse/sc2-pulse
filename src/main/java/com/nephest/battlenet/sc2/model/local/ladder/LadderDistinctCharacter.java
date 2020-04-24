@@ -22,6 +22,7 @@ package com.nephest.battlenet.sc2.model.local.ladder;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 
 import javax.validation.constraints.NotNull;
 
@@ -45,11 +46,8 @@ public class LadderDistinctCharacter
         Region region,
         BaseLeague.LeagueType leagueMax,
         Integer ratingMax,
-
-        Long battlenetId,
-        Integer realm,
         String battleTag,
-        String characterName,
+        PlayerCharacter character,
         Integer terranGamesPlayed,
         Integer protossGamesPlayed,
         Integer zergGamesPlayed,
@@ -61,10 +59,8 @@ public class LadderDistinctCharacter
         this.ratingMax = ratingMax;
         this.members = new LadderTeamMember
         (
-            battlenetId,
-            realm,
             battleTag,
-            characterName,
+            character,
             terranGamesPlayed,
             protossGamesPlayed,
             zergGamesPlayed,
