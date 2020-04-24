@@ -233,14 +233,13 @@ public class LadderController
         return ladderSearch.findSeasonList();
     }
 
-    @GetMapping("/character/{region}/{battlenetId}/teams")
+    @GetMapping("/character/{id}/teams")
     public List<LadderTeam> getCharacterTeams
     (
-        @PathVariable("region") Region region,
-        @PathVariable("battlenetId") long battlenetId
+        @PathVariable("id") long id
     )
     {
-        return ladderSearch.findCharacterTeams(region, battlenetId);
+        return ladderSearch.findCharacterTeams(id);
     }
 
     @GetMapping("/characters")

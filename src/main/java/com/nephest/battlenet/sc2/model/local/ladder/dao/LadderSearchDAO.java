@@ -25,6 +25,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
@@ -99,7 +100,8 @@ public class LadderSearchDAO
         + "team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
         + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
-        + "account.battle_tag, "
+        + "account.id AS \"account.id\", account.battle_tag,"
+        + "player_character.id AS \"player_character.id\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
@@ -135,7 +137,8 @@ public class LadderSearchDAO
         + "team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
         + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
-        + "account.battle_tag, "
+        + "account.id AS \"account.id\", account.battle_tag,"
+        + "player_character.id AS \"player_character.id\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
@@ -157,7 +160,8 @@ public class LadderSearchDAO
         + "team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
         + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
-        + "account.battle_tag, "
+        + "account.id AS \"account.id\", account.battle_tag,"
+        + "player_character.id AS \"player_character.id\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
@@ -185,8 +189,10 @@ public class LadderSearchDAO
         + "team.region, team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
         + "team.id AS \"team.id\", team.rating, team.wins, team.losses, "
-        + "account.battle_tag, "
-        + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
+        + "account.id AS \"account.id\", account.battle_tag,"
+        + "player_character.id AS \"player_character.id\", "
+        + "player_character.battlenet_id AS \"player_character.battlenet_id\", "
+        + "player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
 
@@ -201,8 +207,7 @@ public class LadderSearchDAO
             + "INNER JOIN team_member ON team_member.team_id=team.id "
             + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
             + "WHERE "
-            + "team.region=:region "
-            + "AND player_character.battlenet_id=:battlenetId"
+            + "player_character.id=:playerCharacterId"
         +") "
         + "ORDER BY team.season DESC, "
         + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
@@ -213,7 +218,9 @@ public class LadderSearchDAO
         + "MAX(team.region) as region_max, "
         + "MAX(team.league_type) as league_max, "
         + "MAX(team.rating) as rating_max, "
+        + "MAX(account.id) as account_id_max, "
         + "MAX(account.battle_tag) as battle_tag_concat, "
+        + "MAX(player_character.id) as player_character_id_max, "
         + "MAX(player_character.battlenet_id) as battlenet_id_max, "
         + "MAX(player_character.realm) as realm_max, "
         + "MAX(player_character.name) as name_concat, "
@@ -299,10 +306,15 @@ public class LadderSearchDAO
             conversionService.convert(rs.getInt("region_max"), Region.class),
             conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
             rs.getInt("rating_max"),
-            rs.getLong("battlenet_id_max"),
-            rs.getInt("realm_max"),
             rs.getString("battle_tag_concat"),
-            rs.getString("name_concat"),
+            new PlayerCharacter
+            (
+                rs.getLong("player_character_id_max"),
+                rs.getLong("account_id_max"),
+                rs.getLong("battlenet_id_max"),
+                rs.getInt("realm_max"),
+                rs.getString("name_concat")
+            ),
             rs.getInt("games_terran"),
             rs.getInt("games_protoss"),
             rs.getInt("games_zerg"),
@@ -465,10 +477,15 @@ public class LadderSearchDAO
 
             LadderTeamMember member = new LadderTeamMember
             (
-                rs.getLong("player_character.battlenet_id"),
-                rs.getInt("realm"),
                 rs.getString("battle_tag"),
-                rs.getString("name"),
+                new PlayerCharacter
+                (
+                    rs.getLong("player_character.id"),
+                    rs.getLong("account.id"),
+                    rs.getLong("player_character.battlenet_id"),
+                    rs.getInt("realm"),
+                    rs.getString("name")
+                ),
                 (Integer) rs.getObject("terran_games_played"),
                 (Integer) rs.getObject("protoss_games_played"),
                 (Integer) rs.getObject("zerg_games_played"),
@@ -747,15 +764,10 @@ public class LadderSearchDAO
             .query(FIND_SEASON_META_LIST_QUERY, params, SEASON_META_LIST_ROW_MAPPER);
     }
 
-    public List<LadderTeam> findCharacterTeams
-    (
-        Region region,
-        long battlenetId
-    )
+    public List<LadderTeam> findCharacterTeams(long id)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("region", conversionService.convert(region, Integer.class))
-            .addValue("battlenetId", battlenetId);
+            .addValue("playerCharacterId", id);
         return template
             .query(FIND_CARACTER_TEAM_MEMBERS_QUERY, params, LADDER_TEAM_EXTRACTOR);
     }

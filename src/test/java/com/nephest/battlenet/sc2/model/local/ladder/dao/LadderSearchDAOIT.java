@@ -242,7 +242,7 @@ public class LadderSearchDAOIT
             assertEquals(teamId + 1, team.getLosses());
             //validate members
             //no reason to sort members in query, sorting manually for testing
-            team.getMembers().sort(Comparator.comparing(LadderTeamMember::getBattlenetId));
+            team.getMembers().sort(Comparator.comparing(m->m.getCharacter().getBattlenetId()));
             for(int mIx = 0; mIx < team.getMembers().size(); mIx++)
             {
                 LadderTeamMember member = team.getMembers().get(mIx);
@@ -342,7 +342,7 @@ public class LadderSearchDAOIT
             assertEquals(teamId + 1, team.getLosses());
             //validate members
             //no reason to sort members in query, sorting manually for testing
-            team.getMembers().sort(Comparator.comparing(LadderTeamMember::getBattlenetId));
+            team.getMembers().sort(Comparator.comparing(m->m.getCharacter().getBattlenetId()));
             for(int mIx = 0; mIx < team.getMembers().size(); mIx++)
             {
                 LadderTeamMember member = team.getMembers().get(mIx);

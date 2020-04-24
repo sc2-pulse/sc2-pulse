@@ -452,7 +452,8 @@ function createMemberInfo(team, member)
     const playerLink = document.createElement("a");
     playerLink.classList.add("player-link");
     playerLink.setAttribute("href", "#");
-    playerLink.setAttribute("data-character-id", member.battlenetId);
+    playerLink.setAttribute("data-character-id", member.character.id);
+    playerLink.setAttribute("data-character-battlenet-id", member.character.battlenetId);
     playerLink.setAttribute("data-character-realm", member.character.realm);
     playerLink.setAttribute("data-character-region",  team.region);
     playerLink.setAttribute("data-character-battletag", member.account.battleTag);
@@ -479,16 +480,17 @@ function showCharacterInfo(e)
     const region = enumOfName(e.currentTarget.getAttribute("data-character-region"), REGION);
     const realm = e.currentTarget.getAttribute("data-character-realm");
     const id = e.currentTarget.getAttribute("data-character-id");
-    const profileLink = `https://starcraft2.com/en-gb/profile/${region.code}/${realm}/${id}`;
+    const battlenetId = e.currentTarget.getAttribute("data-character-battlenet-id");
+    const profileLink = `https://starcraft2.com/en-gb/profile/${region.code}/${realm}/${battlenetId}`;
     document.getElementById("battlenet-profile-link").setAttribute("href", profileLink);
     document.getElementById("player-info-battletag").textContent = e.currentTarget.getAttribute("data-character-battletag");
-    getCharacterTeams(region, id).then(o => $("#player-info").modal());
+    getCharacterTeams(id).then(o => $("#player-info").modal());
 }
 
-function getCharacterTeams(region, id)
+function getCharacterTeams(id)
 {
     setGeneratingStatus("begin");
-    const request = "api/character/" + region.name.toUpperCase() + "/" + id + "/teams";
+    const request = "api/character/" + id + "/teams";
     return fetch(request)
         .catch(error => setGeneratingStatus("error", error.message))
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})

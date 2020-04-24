@@ -22,8 +22,8 @@ package com.nephest.battlenet.sc2.model.local.ladder;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.nephest.battlenet.sc2.model.BaseAccount;
-import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.BaseLocalTeamMember;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 
 import javax.validation.constraints.NotNull;
 
@@ -33,23 +33,18 @@ extends BaseLocalTeamMember
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 2L;
 
     @NotNull
-    private Long battlenetId;
+    private final PlayerCharacter character;
 
     @NotNull
-    private BasePlayerCharacter character;
-
-    @NotNull
-    private BaseAccount account;
+    private final BaseAccount account;
 
     public LadderTeamMember
     (
-        Long battlenetId,
-        Integer realm,
         String battleTag,
-        String characterName,
+        PlayerCharacter character,
         Integer terranGamesPlayed,
         Integer protossGamesPlayed,
         Integer zergGamesPlayed,
@@ -57,17 +52,11 @@ implements java.io.Serializable
     )
     {
         super(terranGamesPlayed, protossGamesPlayed, zergGamesPlayed, randomGamesPlayed);
-        this.battlenetId = battlenetId;
-        this.character = new BasePlayerCharacter(realm, characterName);
+        this.character = character;
         this.account = new BaseAccount(battleTag);
     }
 
-    public Long getBattlenetId()
-    {
-        return battlenetId;
-    }
-
-    public BasePlayerCharacter getCharacter()
+    public PlayerCharacter getCharacter()
     {
         return character;
     }
