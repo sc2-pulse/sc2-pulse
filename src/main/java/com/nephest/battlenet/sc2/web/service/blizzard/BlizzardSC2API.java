@@ -36,6 +36,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
+import reactor.util.retry.Retry;
 
 import javax.validation.Valid;
 import java.time.Duration;
@@ -79,6 +80,10 @@ public class BlizzardSC2API
     public static final Duration IO_TIMEOUT = Duration.ofMillis(10000);
     public static final Duration RETRY_DURATION_MIN = Duration.ofMillis(300);
     public static final Duration RETRY_DURATION_MAX = Duration.ofMillis(1000);
+    public static final Retry RETRY = Retry
+        .backoff(RETRY_COUNT, RETRY_DURATION_MIN).maxBackoff(RETRY_DURATION_MAX)
+        .filter(t->true)
+        .transientErrors(true);
 
     private WebClient client;
     private final String password;
@@ -159,7 +164,7 @@ public class BlizzardSC2API
                 .body(BodyInserters.fromFormData("grant_type", "client_credentials"))
                 .retrieve()
                 .bodyToMono(BlizzardAccessToken.class)
-                .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX)
+                .retryWhen(RETRY)
                 .block();
             setAccessToken(token);
         }
@@ -184,7 +189,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
-            .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX);
+            .retryWhen(RETRY);
     }
 
     public Mono<BlizzardLeague> getLeague
@@ -210,7 +215,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
-            .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX);
+            .retryWhen(RETRY);
     }
 
     public Mono<BlizzardLadder> getLadder
@@ -230,7 +235,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
-            .retryBackoff(RETRY_COUNT, RETRY_DURATION_MIN, RETRY_DURATION_MAX);
+            .retryWhen(RETRY);
     }
 
 }
