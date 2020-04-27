@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Season;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -52,6 +53,9 @@ public class SeasonDAO
         + "FROM season "
         + "WHERE region=:region "
         + "ORDER BY battlenet_id DESC";
+
+    private static final String FIND_MAX_BATTLENET_ID_QUERY =
+        "SELECT MAX(battlenet_id) FROM season";
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
@@ -113,6 +117,12 @@ public class SeasonDAO
         MapSqlParameterSource params
             = new MapSqlParameterSource("region", conversionService.convert(region, Integer.class));
         return template.query(FIND_LIST_BY_REGION, params, FIND_LIST_BY_REGION_ROW_MAPPER);
+    }
+
+    @Cacheable(cacheNames="search-season-last")
+    public long getMaxBattlenetId()
+    {
+        return template.query(FIND_MAX_BATTLENET_ID_QUERY, DAOUtils.LONG_EXTRACTOR);
     }
 
 }
