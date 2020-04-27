@@ -74,7 +74,7 @@ public class BlizzardSC2API
         new BlizzardSeason(41l, 2019, 3),
         new BlizzardSeason(42l, 2019, 4)
     ).collect(toUnmodifiableMap(BlizzardSeason::getId, Function.identity()));
-    public static final int RETRY_COUNT = 2;
+    public static final int RETRY_COUNT = 3;
     public static final Duration CONNECT_TIMEOUT = Duration.ofMillis(10000);
     public static final Duration IO_TIMEOUT = Duration.ofMillis(10000);
     public static final Duration RETRY_DURATION_MIN = Duration.ofMillis(300);
