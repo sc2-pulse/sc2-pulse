@@ -28,6 +28,7 @@ import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -259,9 +260,6 @@ public class LadderSearchDAO
         + "AND league.queue_type=:queueType "
         + "AND league.team_type=:teamType ";
 
-    private static final String FIND_LAST_SEASON_ID_QUERY =
-        "SELECT MAX(battlenet_id) FROM season";
-
     private static final String FIND_SEASON_LIST =
         "SELECT DISTINCT "
         + "battlenet_id, year, number "
@@ -293,6 +291,7 @@ public class LadderSearchDAO
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
+    private SeasonDAO seasonDAO;
 
     private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_EXTRACTOR
         = (rs)->{return mapTeams(rs, true);};
@@ -402,11 +401,13 @@ public class LadderSearchDAO
     public LadderSearchDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService,
+        @Autowired SeasonDAO seasonDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
+        this.seasonDAO = seasonDAO;
     }
 
     protected void setResultsPerPage(int resultsPerPage)
@@ -427,6 +428,11 @@ public class LadderSearchDAO
     protected void setLadderSearchDAO(LadderSearchDAO ladderSearchDAO)
     {
         this.ladderSearchDAO = ladderSearchDAO;
+    }
+
+    public SeasonDAO getSeasonDAO()
+    {
+        return seasonDAO;
     }
 
     private List<LadderTeam> mapTeams(ResultSet rs, boolean includeSeason)
@@ -492,18 +498,8 @@ public class LadderSearchDAO
 
     @Cacheable
     (
-        cacheNames="search-season-last"
-    )
-    public long getLastSeasonId()
-    {
-        return template
-            .query(FIND_LAST_SEASON_ID_QUERY, DAOUtils.LONG_EXTRACTOR);
-    }
-
-    @Cacheable
-    (
         cacheNames="search-ladder",
-        condition="#a5 eq 1 and #a0 eq #root.target.ladderSearchDAO.lastSeasonId"
+        condition="#a5 eq 1 and #a0 eq #root.target.seasonDAO.maxBattlenetId"
     )
     public PagedSearchResult<List<LadderTeam>> find
     (
@@ -697,7 +693,7 @@ public class LadderSearchDAO
     @Cacheable
     (
         cacheNames="search-ladder-stats",
-        condition="#a0 eq #root.target.ladderSearchDAO.lastSeasonId"
+        condition="#a0 eq #root.target.seasonDAO.maxBattlenetId"
     )
     public MergedLadderSearchStatsResult findStats
     (
@@ -721,7 +717,7 @@ public class LadderSearchDAO
     @Cacheable
     (
         cacheNames="search-ladder-league-bounds",
-        condition="#a0 eq #root.target.ladderSearchDAO.lastSeasonId"
+        condition="#a0 eq #root.target.seasonDAO.maxBattlenetId"
     )
     public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> findLeagueBounds
     (
@@ -741,7 +737,7 @@ public class LadderSearchDAO
     @Cacheable
     (
         cacheNames="search-ladder-season",
-        condition="#a0 eq #root.target.ladderSearchDAO.lastSeasonId"
+        condition="#a0 eq #root.target.seasonDAO.maxBattlenetId"
     )
     public List<Season> findSeasonsMeta
     (
