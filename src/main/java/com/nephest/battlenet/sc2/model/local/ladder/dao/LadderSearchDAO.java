@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -390,13 +391,6 @@ public class LadderSearchDAO
         );
     };
 
-    private static final ResultSetExtractor<Long> LONG_EXTRACTOR =
-    (rs)->
-    {
-        rs.next();
-        return rs.getLong(1);
-    };
-
     private int resultsPerPage = 100;
 
     @Autowired @Lazy
@@ -503,7 +497,7 @@ public class LadderSearchDAO
     public long getLastSeasonId()
     {
         return template
-            .query(FIND_LAST_SEASON_ID_QUERY, LONG_EXTRACTOR);
+            .query(FIND_LAST_SEASON_ID_QUERY, DAOUtils.LONG_EXTRACTOR);
     }
 
     @Cacheable
@@ -647,7 +641,7 @@ public class LadderSearchDAO
     {
         MapSqlParameterSource params =
             createSearchParams(season, regions, leagueTypes, queueType, teamType);
-        return template.query(FIND_TEAM_COUNT_QUERY, params, LONG_EXTRACTOR);
+        return template.query(FIND_TEAM_COUNT_QUERY, params, DAOUtils.LONG_EXTRACTOR);
     }
 
     @Cacheable
