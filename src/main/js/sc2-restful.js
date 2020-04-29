@@ -138,6 +138,7 @@ function onWindowLoad()
     observeChartables();
     createPaginations();
     setFormCollapsibleScroll();
+    createPlayerStatsCards(document.getElementById("player-stats-container"));
 }
 
 function encodeSpace(s){ return encodeURIComponent(s).replace(/%20/g,'+'); }
@@ -485,6 +486,7 @@ function showCharacterInfo(e)
     document.getElementById("battlenet-profile-link").setAttribute("href", profileLink);
     document.getElementById("player-info-battletag").textContent = e.currentTarget.getAttribute("data-character-battletag");
     getCharacterTeams(id).then(o => $("#player-info").modal());
+    getCharacterStats(id);
 }
 
 function getCharacterTeams(id)
@@ -536,6 +538,54 @@ function updateCharacterTeams(searchResult)
         ix++;
     }
     updateTabSelect(document.getElementById("teams-season-select"), navs);
+}
+
+function getCharacterStats(id)
+{
+    setGeneratingStatus("begin");
+    const request = "api/character/" + id + "/stats";
+    return fetch(request)
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        .catch(error => setGeneratingStatus("error", error.message))
+        .then(json => updateCharacterStats(json))
+        .then(o => setGeneratingStatus("success"));
+}
+
+function updateCharacterStats(searchResult)
+{
+    for(const statsSection of document.getElementsByClassName("player-stats-dynamic")) statsSection.classList.add("d-none");
+    for(const stats of searchResult)
+    {
+        const teamFormat = enumOfId(stats.queueType, TEAM_FORMAT);
+        const teamType = enumOfId(stats.teamType, TEAM_TYPE);
+        const raceName = stats.race == null ? "all" : enumOfName(stats.race, RACE).name;
+        const league = enumOfId(stats.leagueMax, LEAGUE);
+        const card = document.getElementById("player-stats-" + teamFormat.name + "-" + teamType.name);
+        const raceStats = card.getElementsByClassName("player-stats-" + raceName)[0];
+        raceStats.getElementsByClassName("player-stats-" + raceName + "-mmr")[0].textContent = stats.ratingMax;
+        raceStats.getElementsByClassName("player-stats-" + raceName + "-games")[0].textContent = stats.gamesPlayed;
+        const leagueStats = raceStats.getElementsByClassName("player-stats-" + raceName + "-league")[0];
+        removeChildren(leagueStats);
+        leagueStats.appendChild(createImage("league/", league.name, ["table-image", "table-image-square"]));
+        raceStats.classList.remove("d-none");
+        card.classList.remove("d-none");
+    }
+    for(const card of document.querySelectorAll(".player-stats-section:not(.d-none)"))
+    {
+        const table = card.querySelector(".player-stats-table");
+        const visibleRows = table.querySelectorAll("tr.player-stats-dynamic:not(.d-none)");
+        if
+        (
+            visibleRows.length === 2
+            && visibleRows[0].querySelector(".player-stats-games").textContent
+                == visibleRows[1].querySelector(".player-stats-games").textContent
+        )
+            table.querySelector(".player-stats-all").classList.add("d-none");
+        const raceCol = table.querySelectorAll("th")[0];
+        const mmrCol = table.querySelectorAll("th")[1];
+        sortTable(table, [mmrCol, raceCol]);
+    }
 }
 
 function getCharacters(name)
@@ -1158,7 +1208,7 @@ function scrollIntoViewById(id)
     document.getElementById(id).scrollIntoView({behavior: "smooth"});
 }
 
-function createTable(theads)
+function createTable(theads, responsive = true)
 {
     const table = document.createElement("table");
     const thead = document.createElement("thead");
@@ -1175,10 +1225,14 @@ function createTable(theads)
     table.appendChild(thead);
     table.appendChild(tbody);
     table.classList.add("table", "table-sm", "table-hover");
-    const tcontainer = document.createElement("div");
-    tcontainer.classList.add("table-responsive");
-    tcontainer.appendChild(table);
-    return tcontainer;
+    if(responsive)
+    {
+        const tcontainer = document.createElement("div");
+        tcontainer.classList.add("table-responsive");
+        tcontainer.appendChild(table);
+        return tcontainer;
+    }
+    return table;
 }
 
 function createTabList(count, prefix, hLevel, fade = false)
@@ -1244,4 +1298,95 @@ function updateTabSelect(select, navs)
             if(link.getAttribute("aria-selected") == "true") select.value = option.value;
         }
     }
+}
+
+function createPlayerStatsCards(container)
+{
+    for(const teamFormat of Object.values(TEAM_FORMAT))
+    {
+        for(const teamType of Object.values(TEAM_TYPE))
+        {
+            container.appendChild(createPlayerStatsCard(teamFormat, teamType));
+        }
+    }
+}
+
+function createPlayerStatsCard(teamFormat, teamType)
+{
+    const card = document.createElement("div");
+    card.classList.add("card", "card-equal", "player-stats-section", "player-stats-dynamic", "mb-3");
+    card.setAttribute("id", "player-stats-" + teamFormat.name + "-" + teamType.name)
+    const cardBody = document.createElement("div");
+    cardBody.classList.add("card-body");
+    card.appendChild(cardBody);
+    const cardHeader = document.createElement("h4");
+    cardHeader.textContent = teamFormat.name + " " + teamType.name;
+    cardHeader.classList.add("card-title");
+    cardBody.appendChild(cardHeader);
+    const table = createTable(["Race", "MMR", "League", "Games"], false);
+    table.classList.add("player-stats-table");
+    const tbody = table.getElementsByTagName("tbody")[0];
+    for(const race of Object.values(RACE)) tbody.appendChild(createPlayerStatsRaceRow(race.name));
+    tbody.appendChild(createPlayerStatsRaceRow("all"));
+    cardBody.appendChild(table);
+    return card;
+}
+
+function createPlayerStatsRaceRow(raceName)
+{
+    const raceRow = document.createElement("tr");
+    raceRow.classList.add("player-stats-" + raceName, "player-stats-dynamic");
+    const raceRace = raceRow.insertCell();
+    raceRace.classList.add("player-stats-race", "player-stats-" + raceName + "-race");
+    if(raceName === "all")
+    {
+        raceRace.textContent = "All";
+    }
+    else
+    {
+        raceRace.appendChild(createImage("race/", raceName, ["table-image", "table-image-square"]));
+    }
+    raceRow.insertCell().classList.add("player-stats-mmr", "player-stats-" + raceName + "-mmr");
+    raceRow.insertCell().classList.add("player-stats-league", "player-stats-" + raceName + "-league");
+    raceRow.insertCell().classList.add("player-stats-games", "player-stats-" + raceName + "-games");
+    return raceRow;
+}
+
+const tableComparer = (idxs, asc) => (a, b) =>((v1, v2) =>compareValueArrays(v1, v2))
+(getCellValues(asc ? a : b, idxs), getCellValues(asc ? b : a, idxs));
+
+function getCellValues(tr, idxs)
+{
+    var vals = [];
+    for(const idx of idxs) vals.push(tr.children[idx].innerText || tr.children[idx].textContent);
+    return vals;
+}
+
+function compareValueArrays(a, b)
+{
+    var compare = 0;
+    for(var i = 0; i < a.length; i++)
+    {
+        compare = compareValues(a[i], b[i]);
+        if(compare !== 0) return compare;
+    }
+    return compare;
+}
+
+function compareValues(v1, v2)
+{
+    return v1 !== '' && v2 !== '' && !isNaN(v1) && !isNaN(v2) ? v1 - v2 : v1.toString().localeCompare(v2);
+}
+
+function sortTable(table, ths)
+{
+    if(ths.length < 1) return;
+
+    const tbody = table.querySelector('tbody');
+    const thsArray = Array.from(ths[0].parentNode.children);
+    const ixs = [];
+    for(th of ths) ixs.push(thsArray.indexOf(th));
+    Array.from(tbody.querySelectorAll('tr'))
+        .sort(tableComparer(ixs, false))
+        .forEach(tr => tbody.appendChild(tr));
 }
