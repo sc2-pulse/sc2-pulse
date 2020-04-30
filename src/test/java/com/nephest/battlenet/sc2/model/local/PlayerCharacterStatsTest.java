@@ -79,6 +79,18 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
+                null,
+                QueueType.LOTV_2V2,
+                TeamType.ARRANGED,
+                Race.PROTOSS,
+                0,
+                BaseLeague.LeagueType.GOLD,
+                0
+            ),
+            new PlayerCharacterStats
+            (
+                null,
+                0L,
                 0L,
                 QueueType.LOTV_1V1,
                 TeamType.RANDOM,

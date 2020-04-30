@@ -214,7 +214,7 @@ CREATE TABLE "player_character_stats"
 (
     "id" BIGSERIAL,
     "player_character_id" BIGINT NOT NULL,
-    "season_id" BIGINT NOT NULL,
+    "season_id" BIGINT,
     "queue_type" SMALLINT NOT NULL,
     "team_type" SMALLINT NOT NULL,
     "race" SMALLINT,
@@ -235,4 +235,4 @@ CREATE TABLE "player_character_stats"
 );
 
 CREATE UNIQUE INDEX "uq_player_character_stats_main"
-    ON "player_character_stats"("player_character_id", "season_id", "queue_type", "team_type", COALESCE("race", -32768));
+    ON "player_character_stats"("player_character_id", COALESCE("season_id", -32768), COALESCE("race", -32768), "queue_type", "team_type");

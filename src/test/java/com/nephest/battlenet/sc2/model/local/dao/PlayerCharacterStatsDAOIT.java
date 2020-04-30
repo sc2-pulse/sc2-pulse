@@ -107,6 +107,8 @@ public class PlayerCharacterStatsDAOIT
         playerCharacterStatsDAO.mergeCalculate(season1.getBattlenetId()); //just for testing, not actually required
         playerCharacterStatsDAO.calculate(season2.getBattlenetId());
         playerCharacterStatsDAO.mergeCalculate(season2.getBattlenetId()); //just for testing, not actually required
+        playerCharacterStatsDAO.calculateGlobal();
+        playerCharacterStatsDAO.mergeCalculateGlobal(); //just for testing, not actually required
         Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats =
             playerCharacterStatsDAO.findGlobalMap(character.getId());
 

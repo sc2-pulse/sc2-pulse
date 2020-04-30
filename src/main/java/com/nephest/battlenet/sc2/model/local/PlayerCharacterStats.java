@@ -20,7 +20,6 @@ implements Serializable
     @NotNull
     private Long playerCharacterId;
 
-    @NotNull
     private Long seasonId;
 
     @NotNull
@@ -46,7 +45,7 @@ implements Serializable
     (
         Long id,
         @NotNull Long playerCharacterId,
-        @NotNull Long seasonId,
+        Long seasonId,
         @NotNull QueueType queueType,
         @NotNull TeamType teamType,
         Race race,
@@ -72,8 +71,8 @@ implements Serializable
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         PlayerCharacterStats that = (PlayerCharacterStats) o;
-        return getPlayerCharacterId().equals(that.getPlayerCharacterId())
-            && getSeasonId().equals(that.getSeasonId())
+        return Objects.equals(getPlayerCharacterId(), that.getPlayerCharacterId())
+            && Objects.equals(getSeasonId(), that.getSeasonId())
             && getQueueType() == that.getQueueType()
             && getTeamType() == that.getTeamType()
             && getRace() == that.getRace();

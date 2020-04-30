@@ -33,7 +33,8 @@ public class PlayerCharacterStatsDAO
         "GROUP BY season.id, team.queue_type, team.team_type, player_character.id ";
     public static final String MERGE_TEMPLATE =
         " "
-        + "ON CONFLICT(player_character_id, season_id, queue_type, team_type, COALESCE(race, -32768)) DO UPDATE SET "
+        + "ON CONFLICT(player_character_id, COALESCE(season_id, -32768), COALESCE(race, -32768), " 
+        + "queue_type, team_type) DO UPDATE SET "
         + "rating_max=excluded.rating_max, "
         + "league_max=excluded.league_max, "
         + "games_played=excluded.games_played";
@@ -68,6 +69,17 @@ public class PlayerCharacterStatsDAO
     public static final String CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERY_FORMAT =
         CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERY_FORMAT
         + MERGE_TEMPLATE;
+    
+    public static final String CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS = 
+        "INSERT INTO player_character_stats "
+        + "(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played) "
+        + "SELECT player_character_id, queue_type, team_type, race, "
+        + "MAX(rating_max) AS rating_max, MAX(league_max) AS league_max, SUM(games_played) AS games_played "
+        + "FROM player_character_stats "
+        + "WHERE season_id IS NOT NULL "
+        + "GROUP BY player_character_id, race, queue_type, team_type";
+    public static final String CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS =
+        CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS + MERGE_TEMPLATE;
 
     private static Map<Race, String> CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES;
     private static Map<Race, String> CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES;
@@ -79,12 +91,9 @@ public class PlayerCharacterStatsDAO
         + "INNER JOIN player_character ON player_character_stats.player_character_id=player_character.id "
         + "WHERE player_character.id = :playerCharacterId";
     public static final String FIND_GLOBAL_STATS_LIST_BY_PLAYER_CHARACTER_ID_QUERY =
-        "SELECT NULL as id, NULL as season_id, queue_type, team_type, player_character_id, race,"
-        + "MAX(rating_max) AS rating_max, MAX(league_max) AS league_max, SUM(games_played) AS games_played "
+        "SELECT id, season_id, queue_type, team_type, player_character_id, race, rating_max, league_max, games_played "
         + "FROM player_character_stats "
-        + "INNER JOIN player_character ON player_character_stats.player_character_id=player_character.id "
-        + "WHERE player_character.id = :playerCharacterId "
-        + "GROUP BY player_character_id, queue_type, team_type, race";
+        + "WHERE player_character_id = :playerCharacterId AND season_id is NULL ";
 
     private final NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
@@ -155,6 +164,16 @@ public class PlayerCharacterStatsDAO
         for(Race race : Race.values()) template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race),
             params);
         template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
+    }
+
+    public void calculateGlobal()
+    {
+        template.getJdbcTemplate().update(CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS);
+    }
+
+    public void mergeCalculateGlobal()
+    {
+        template.getJdbcTemplate().update(CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS);
     }
 
     public List<PlayerCharacterStats> findList(Long playerCharacterId)

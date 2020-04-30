@@ -156,6 +156,7 @@ public class StatsService
             iter.remove();
             LOG.log(Level.INFO, "Updated season {0}", new Object[]{sId});
         }
+        playerCharacterStatsDAO.mergeCalculateGlobal();
         postgreSQLUtils.analyze();
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
@@ -214,6 +215,7 @@ public class StatsService
         {
             leagueStatsDao.mergeCalculateForSeason(seasonId);
             playerCharacterStatsDAO.mergeCalculate(seasonId);
+            playerCharacterStatsDAO.mergeCalculateGlobal();
         }
     }
 
