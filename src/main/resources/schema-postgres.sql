@@ -59,7 +59,7 @@ CREATE TABLE "player_character"
 );
 
 CREATE INDEX "ix_player_character_battlenet_id" ON "player_character"("battlenet_id");
-CREATE INDEX "ix_player_character_name" ON "player_character"(LOWER("name") varchar_pattern_ops);
+CREATE INDEX "ix_player_character_name" ON "player_character"(LOWER("name") text_pattern_ops);
 
 CREATE TABLE "season"
 (

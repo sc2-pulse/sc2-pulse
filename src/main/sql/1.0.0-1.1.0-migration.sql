@@ -1,3 +1,6 @@
+DROP INDEX "ix_player_character_name";
+CREATE INDEX "ix_player_character_name" ON "player_character"(LOWER("name") text_pattern_ops);
+
 CREATE TABLE "player_character_stats"
 (
     "id" BIGSERIAL,
