@@ -593,23 +593,57 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <section id="player-stats">
-                            <h3>Career summary</h3>
-                            <p class="text-secondary">Race specific stats are based on teams where player has played
-                            > 90% of that team games as a specific race</p>
-                            <div id="player-stats-container" class="card-deck"></div>
-                        </section>
-                        <section>
-                            <h3>Links</h3>
-                            <ul>
-                                <li><a id="battlenet-profile-link" href="#" target="_blank" rel="noopener noreferrer">Battle.net profile</a></li>
-                                <li>BattleTag: <span id="player-info-battletag"></span></li>
-                            </ul>
-                        </section>
-                        <section id="character-teams-section">
-                            <h3>Teams</h3>
-                            <select id="teams-season-select" class="form-control mb-2"></select>
-                        </section>
+                        <ul id="player-stats-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                            <li class="nav-item">
+                                <a
+                                        id="player-stats-summary-tab"
+                                        class="nav-link active"
+                                        data-toggle="pill"
+                                        href="#player-stats-summary"
+                                        role="tab"
+                                        aria-controls="player-stats-summary"
+                                        aria-selected="true"
+                                >
+                                    Summary
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a
+                                        id="player-stats-history-tab"
+                                        class="nav-link"
+                                        data-toggle="pill"
+                                        href="#player-stats-history"
+                                        role="tab"
+                                        aria-controls="player-stats-history"
+                                        aria-selected="false"
+                                >
+                                    History
+                                </a>
+                            </li>
+                        </ul>
+                        <div id="player-stats-all" class="tab-content">
+                            <section id="player-stats-summary" class="tab-pane fade show active">
+                                <section id="player-stats">
+                                    <h3>Career summary</h3>
+                                    <p class="text-secondary">Race specific stats are based on teams where player has played
+                                    > 90% of that team games as a specific race</p>
+                                    <div id="player-stats-container" class="card-deck"></div>
+                                </section>
+                                <section>
+                                    <h3>Links</h3>
+                                    <ul>
+                                        <li><a id="battlenet-profile-link" href="#" target="_blank" rel="noopener noreferrer">Battle.net profile</a></li>
+                                        <li>BattleTag: <span id="player-info-battletag"></span></li>
+                                    </ul>
+                                </section>
+                            </section>
+                            <section id="player-stats-history" class="tab-pane fade">
+                                <section id="character-teams-section">
+                                    <h3>History</h3>
+                                    <select id="teams-season-select" class="form-control mb-2"></select>
+                                </section>
+                            </section>
+                        </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
