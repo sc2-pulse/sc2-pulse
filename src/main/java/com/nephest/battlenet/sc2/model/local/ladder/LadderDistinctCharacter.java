@@ -39,6 +39,9 @@ public class LadderDistinctCharacter
     private final Integer ratingMax;
 
     @NotNull
+    private final Integer totalGamesPlayed;
+
+    @NotNull
     private final LadderTeamMember members;
 
     public LadderDistinctCharacter
@@ -51,12 +54,14 @@ public class LadderDistinctCharacter
         Integer terranGamesPlayed,
         Integer protossGamesPlayed,
         Integer zergGamesPlayed,
-        Integer randomGamesPlayed
+        Integer randomGamesPlayed,
+        Integer totalGamesPlayed
     )
     {
         this.region = region;
         this.leagueMax = leagueMax;
         this.ratingMax = ratingMax;
+        this.totalGamesPlayed = totalGamesPlayed;
         this.members = new LadderTeamMember
         (
             battleTag,
@@ -81,6 +86,11 @@ public class LadderDistinctCharacter
     public Integer getRatingMax()
     {
         return ratingMax;
+    }
+
+    public Integer getTotalGamesPlayed()
+    {
+        return totalGamesPlayed;
     }
 
     public LadderTeamMember getMembers()

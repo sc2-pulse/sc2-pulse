@@ -622,6 +622,7 @@ function updateCharacters(searchResult)
         row.insertCell().appendChild(createImage("flag/", character.region.toLowerCase(), ["table-image-long"]));
         row.insertCell().appendChild(createImage("league/", enumOfId(character.leagueMax, LEAGUE).name, ["table-image", "table-image-square", "mr-1"]));
         row.insertCell().appendChild(document.createTextNode(character.ratingMax));
+        row.insertCell().appendChild(document.createTextNode(character.totalGamesPlayed))
         const membersCell = row.insertCell();
         membersCell.classList.add("complex", "cell-main");
         const mRow = document.createElement("span");

@@ -217,25 +217,39 @@ public class LadderSearchDAO
         + "player_character.id ASC ";
     private static final String FIND_DISTINCT_CHARACTER_QUERY =
         "SELECT "
-        + "MAX(team.region) as region_max, "
-        + "MAX(team.league_type) as league_max, "
-        + "MAX(team.rating) as rating_max, "
-        + "MAX(account.id) as account_id_max, "
-        + "MAX(account.battle_tag) as battle_tag_concat, "
-        + "MAX(player_character.id) as player_character_id_max, "
-        + "MAX(player_character.battlenet_id) as battlenet_id_max, "
-        + "MAX(player_character.realm) as realm_max, "
-        + "MAX(player_character.name) as name_concat, "
-        + "SUM(team_member.terran_games_played) as games_terran, "
-        + "SUM(team_member.protoss_games_played) as games_protoss, "
-        + "SUM(team_member.zerg_games_played) as games_zerg, "
-        + "SUM(team_member.random_games_played) as games_random "
+        + "MAX(account.id) AS \"account.id\", "
+        + "MAX(account.battlenet_id) AS \"account.battlenet_id\", "
+        + "MAX(account.region) AS \"account.region\", "
+        + "MAX(account.battle_tag) AS \"account.battle_tag\", "
+        + "player_character_stats.player_character_id, "
+        + "MAX(player_character.battlenet_id) AS \"player_character.battlenet_id\", "
+        + "MAX(player_character.realm) AS \"player_character.realm\", "
+        + "MAX(player_character.name) AS \"player_character.name\", "
+        + "MAX(player_character_stats.race) AS \"race\", "
+        + "MAX(player_character_stats.league_max) AS \"league_max\", "
+        + "MAX(player_character_stats.rating_max) AS \"rating_max\", "
+        + "MAX(player_character_stats.games_played) AS \"games_played\" "
 
-        + LADDER_SEARCH_TEAM_FROM
+        + "FROM player_character_stats "
+        + "INNER JOIN "
+        + "("
+            + "SELECT MAX(player_character_stats.rating_max) AS rating_max_global "
+            + "FROM player_character_stats "
+            + "INNER JOIN player_character "
+                + " ON player_character_stats.player_character_id=player_character.id "
+            + "WHERE LOWER(player_character.name) LIKE LOWER(:name) "
+            + "AND COALESCE(player_character_stats.season_id, -32768) = -32768 "
+            + "GROUP BY player_character_stats.player_character_id "
+        + ") "
+        + "player_character_stats_max ON player_character_stats.rating_max=player_character_stats_max.rating_max_global "
+        + "INNER JOIN player_character ON player_character_stats.player_character_id=player_character.id "
+        + "INNER JOIN account ON player_character.account_id = account.id "
 
         + "WHERE LOWER(player_character.name) LIKE LOWER(:name) "
+        + "AND COALESCE(player_character_stats.season_id, -32768) = -32768 "
 
-        + "GROUP BY player_character.id "
+        + "GROUP BY player_character_stats.player_character_id "
+
         + "ORDER BY rating_max DESC";
     private static final String LADDER_SEARCH_STATS_QUERY =
         "SELECT "
@@ -301,24 +315,28 @@ public class LadderSearchDAO
     private final RowMapper<LadderDistinctCharacter> DISTINCT_CHARACTER_ROW_MAPPER =
     (rs, num)->
     {
+        Integer gamesPlayed = rs.getInt("games_played");
+        int raceInt = rs.getInt("race");
+        Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
         return new LadderDistinctCharacter
         (
-            conversionService.convert(rs.getInt("region_max"), Region.class),
+            conversionService.convert(rs.getInt("account.region"), Region.class),
             conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
             rs.getInt("rating_max"),
-            rs.getString("battle_tag_concat"),
+            rs.getString("account.battle_tag"),
             new PlayerCharacter
             (
-                rs.getLong("player_character_id_max"),
-                rs.getLong("account_id_max"),
-                rs.getLong("battlenet_id_max"),
-                rs.getInt("realm_max"),
-                rs.getString("name_concat")
+                rs.getLong("player_character_id"),
+                rs.getLong("account.id"),
+                rs.getLong("player_character.battlenet_id"),
+                rs.getInt("player_character.realm"),
+                rs.getString("player_character.name")
             ),
-            rs.getInt("games_terran"),
-            rs.getInt("games_protoss"),
-            rs.getInt("games_zerg"),
-            rs.getInt("games_random")
+            race == Race.TERRAN ? gamesPlayed : null,
+            race == Race.PROTOSS ? gamesPlayed : null,
+            race == Race.ZERG ? gamesPlayed : null,
+            race == Race.RANDOM ? gamesPlayed : null,
+            gamesPlayed
         );
     };
 
