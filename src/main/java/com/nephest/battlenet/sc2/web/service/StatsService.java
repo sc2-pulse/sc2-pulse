@@ -55,8 +55,7 @@ public class StatsService
 
     public static final Version VERSION = Version.LOTV;
     public static final int UPDATE_ALL_MAX_TRIES = 5;
-    //it is essential to have a minimum of 5000 here due to team index recalculation
-    public static final int MEMBERS_PER_TRANSACTION = 10000;
+    public static final int MEMBERS_PER_TRANSACTION = 400;
 
     @Autowired
     private StatsService statsService;
