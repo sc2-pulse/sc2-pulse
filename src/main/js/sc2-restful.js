@@ -436,18 +436,27 @@ function createMemberInfo(team, member)
 
     const racesElem = document.createElement("span");
     racesElem.classList.add("race-percentage-container", "mr-1", "text-nowrap", "d-inline-block");
-    for(const [race, val] of percentageSorted.entries())
+    if(percentageSorted.size > 0)
     {
-        if(val == 0) continue;
-        racesElem.appendChild(createImage("race/", race.name, ["table-image", "table-image-square"]));
-        if(val < 100)
+        for(const [race, val] of percentageSorted.entries())
         {
-            const racePercent = document.createElement("span");
-            racePercent.classList.add("race-percentage", "race-percentage-" + race.name, "text-secondary");
-            racePercent.textContent = val;
-            racesElem.appendChild(racePercent);
+            if(val == 0) continue;
+            racesElem.appendChild(createImage("race/", race.name, ["table-image", "table-image-square"]));
+            if(val < 100)
+            {
+                const racePercent = document.createElement("span");
+                racePercent.classList.add("race-percentage", "race-percentage-" + race.name, "text-secondary");
+                racePercent.textContent = val;
+                racesElem.appendChild(racePercent);
+            }
         }
-
+    }
+    else
+    {
+        const noRace = document.createElement("span");
+        noRace.classList.add("race-percentage", "race-percentage-none", "text-secondary", "table-image", "table-image-square");
+        noRace.setAttribute("title", "no specific race");
+        racesElem.appendChild(noRace);
     }
 
     const playerLink = document.createElement("a");

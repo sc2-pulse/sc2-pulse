@@ -119,6 +119,13 @@ h4
     content: " | ";
 }
 
+.race-percentage-none
+{
+    display: inline-block;
+    border-radius: 1em;
+    border: 0.15em solid gray;
+}
+
 .race-percentage:last-child:after,
 .c-divider:last-child:after
 {
