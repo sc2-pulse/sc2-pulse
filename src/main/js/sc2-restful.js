@@ -119,6 +119,8 @@ const COLORS = new Map
     ["grandmaster", "#ef3e00"]
 ]);
 
+const ROOT_CONTEXT_PATH = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 2));
+
 let currentRequests = 0;
 let documentIsChanging = false;
 let shouldScrollToResult = false;
@@ -126,19 +128,23 @@ let currentSeason = -1;
 let currentTeamFormat;
 let currentTeamType;
 let currentLadder;
+let currentAccount = null;
 
 window.addEventListener("load", onWindowLoad);
 
 function onWindowLoad()
 {
-    getSeasons();
+    enhanceModals();
+    getMyInfo().then(o=>getSeasons());
         //.then(o => getLadderAll());
     enhanceLadderForm();
     enhanceSearchForm();
+    enhanceTabs();
     observeChartables();
     createPaginations();
     setFormCollapsibleScroll();
     createPlayerStatsCards(document.getElementById("player-stats-container"));
+    showAnchoredTabs();
 }
 
 function encodeSpace(s){ return encodeURIComponent(s).replace(/%20/g,'+'); }
@@ -152,6 +158,28 @@ function urlencodeFormData(fd){
         }
     }
     return s;
+}
+
+function showAnchoredTabs()
+{
+    var url = document.location.toString();
+    if (url.match('#'))
+    {
+        $('.nav-pills-main a[href="#' + url.split('#')[1] + '"]').tab('show');
+        $('.nav-tabs-main a[href="#' + url.split('#')[1] + '"]').tab('show');
+    }
+}
+
+function enhanceTabs()
+{
+    $('.nav-tabs-main a').on('shown.bs.tab', function (e){window.location.hash = e.target.hash; window.scrollTo(0, 0);});
+    $('.nav-pills-main a').on('shown.bs.tab', function (e){window.location.hash = e.target.hash; window.scrollTo(0, 0);});
+}
+
+function enhanceModals()
+{
+    $("#error-session").on("hide.bs.modal", doRenewBlizzardRegistration);
+    $("#error-session").on("shown.bs.modal", e=>window.setTimeout(doRenewBlizzardRegistration, 3500));
 }
 
 function enhanceLadderForm()
@@ -1399,4 +1427,89 @@ function sortTable(table, ths)
     Array.from(tbody.querySelectorAll('tr'))
         .sort(tableComparer(ixs, false))
         .forEach(tr => tbody.appendChild(tr));
+}
+
+function getMyInfo()
+{
+    if(!document.cookie.includes("oauth-reg")) return Promise.resolve(1);
+    return getMyAccount()
+        .then(e=>updateMyInfoThen());
+}
+
+function updateMyInfoThen()
+{
+    if (currentAccount != null)
+    {
+        for(e of document.querySelectorAll(".login-anonymous")) e.classList.add("d-none");
+        for(e of document.querySelectorAll(".login-user")) e.classList.remove("d-none");
+    }
+    else
+    {
+        for(e of document.querySelectorAll(".login-anonymous")) e.classList.remove("d-none");
+        for(e of document.querySelectorAll(".login-user")) e.classList.add("d-none");
+    }
+}
+
+function getMyAccount()
+{
+    setGeneratingStatus("begin");
+    const request = "api/my/account";
+    return fetch(request)
+        .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+        .then(json => updateMyAccount(json))
+        .then(o => setGeneratingStatus("success"))
+        .catch(error => onPersonalException(error));
+}
+
+function onPersonalException(error)
+{
+    if (error.message.startsWith("401") && document.cookie.includes("oauth-reg"))
+    {
+        renewBlizzardRegistration();
+    }
+    else
+    {
+        setGeneratingStatus("error", error.message);
+    }
+}
+
+function updateMyAccount(account)
+{
+    currentAccount = account;
+    document.querySelector("#login-battletag").textContent = currentAccount.battleTag;
+}
+
+function renewBlizzardRegistration()
+{
+    if(currentAccount != null)
+    {
+        setGeneratingStatus("success");
+        $("#error-session").modal();
+    }
+    else
+    {
+        doRenewBlizzardRegistration();
+    }
+}
+
+function doRenewBlizzardRegistration()
+{
+    setGeneratingStatus("begin");
+    window.location.href=ROOT_CONTEXT_PATH + "/oauth2/authorization/" + getCookie("oauth-reg");
+}
+
+function getCookie(cname) {
+  var name = cname + "=";
+  var decodedCookie = decodeURIComponent(document.cookie);
+  var ca = decodedCookie.split(';');
+  for(var i = 0; i <ca.length; i++) {
+    var c = ca[i];
+    while (c.charAt(0) == ' ') {
+      c = c.substring(1);
+    }
+    if (c.indexOf(name) == 0) {
+      return c.substring(name.length, c.length);
+    }
+  }
+  return "";
 }
