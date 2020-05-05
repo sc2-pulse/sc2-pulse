@@ -35,7 +35,7 @@
 <body>
     <section class="container">
         <nav>
-            <ul id="main-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+            <ul id="main-tabs" class="nav nav-fill nav-pills nav-pills-main mb-3 justify-content-center" role="tablist">
                 <li class="nav-item">
                     <a
                         id="generator-tab"
@@ -60,6 +60,19 @@
                         aria-selected="false"
                     >
                         Search
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                            id="personal-tab"
+                            class="nav-link"
+                            data-toggle="pill"
+                            href="#personal"
+                            role="tab"
+                            aria-controls="personal"
+                            aria-selected="false"
+                    >
+                        My
                     </a>
                 </li>
                 <li class="nav-item">
@@ -128,6 +141,17 @@
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </section>
+        <section id="personal" class="tab-pane fade">
+            <h2>Personal</h2>
+            <div class="login-anonymous">
+                <p>
+                    <a class="btn btn-primary" href="login" role="button">Log in with BattleNet</a>
+                    <div>and create a personal ladder out of your favourite players</div>
+            </div>
+            <div class="login-user d-none">
+                <div><span class="mr-3" id="login-battletag"></span><a class="btn btn-primary" href="logout" role="button">Log out</a></div>
             </div>
         </section>
         <section id="generator" class="tab-pane fade show active">
@@ -548,6 +572,25 @@
                     <div class="modal-body">
                         An error has occurred while generating your ladder.
                         <div id="error-generation-text" class="text-danger"></div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- Modal session-->
+        <div class="modal fade" id="error-session" tabindex="-1" role="dialog" aria-labelledby="error-session-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="error-session-title">Session expired</h2>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        Your session has expired. It will be renewed automatically.
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
