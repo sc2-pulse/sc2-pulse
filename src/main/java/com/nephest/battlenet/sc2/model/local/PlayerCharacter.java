@@ -21,6 +21,7 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 
 import javax.validation.constraints.NotNull;
@@ -31,7 +32,7 @@ extends BasePlayerCharacter
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 2L;
 
     private Long id;
 
@@ -39,24 +40,29 @@ implements java.io.Serializable
     private Long accountId;
 
     @NotNull
+    private Region region;
+
+    @NotNull
     private Long battlenetId;
 
     public PlayerCharacter(){}
 
-    public PlayerCharacter(Long id, Long accountId, Long battlenetId, Integer realm, String name)
+    public PlayerCharacter(Long id, Long accountId, Region region, Long battlenetId, Integer realm, String name)
     {
         super(realm, name);
         this.id = id;
         this.accountId = accountId;
+        this.region = region;
         this.battlenetId = battlenetId;
     }
 
-    public static final PlayerCharacter of(Account account, BlizzardPlayerCharacter bCharacter)
+    public static final PlayerCharacter of(Account account, Region region, BlizzardPlayerCharacter bCharacter)
     {
         return new PlayerCharacter
         (
             null,
             account.getId(),
+            region,
             bCharacter.getId(),
             bCharacter.getRealm(),
             bCharacter.getName()
@@ -66,7 +72,7 @@ implements java.io.Serializable
     @Override
     public int hashCode()
     {
-        return Objects.hash(getAccountId(), getBattlenetId());
+        return Objects.hash(getRegion(), getBattlenetId());
     }
 
     @Override
@@ -77,8 +83,8 @@ implements java.io.Serializable
         if ( !(other instanceof PlayerCharacter) ) return false;
 
         PlayerCharacter otherPlayerCharacter = (PlayerCharacter) other;
-        return getAccountId() == otherPlayerCharacter.getAccountId()
-            && getBattlenetId() == otherPlayerCharacter.getBattlenetId();
+        return getRegion() == otherPlayerCharacter.getRegion()
+            && getBattlenetId().equals(otherPlayerCharacter.getBattlenetId());
     }
 
     @Override
@@ -88,7 +94,7 @@ implements java.io.Serializable
         (
             "%s[%s %s]",
             getClass().getSimpleName(),
-            String.valueOf(getAccountId()), String.valueOf(getBattlenetId())
+            getRegion().name(), getBattlenetId()
         );
     }
 
@@ -110,6 +116,16 @@ implements java.io.Serializable
     public Long getAccountId()
     {
         return accountId;
+    }
+
+    public Region getRegion()
+    {
+        return region;
+    }
+
+    public void setRegion(Region region)
+    {
+        this.region = region;
     }
 
     public void setBattlenetId(Long battlenetId)

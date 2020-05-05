@@ -21,7 +21,6 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.BaseAccount;
-import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
 
 import javax.validation.constraints.NotNull;
@@ -33,38 +32,30 @@ extends BaseAccount
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 2L;
 
     private Long id;
-
-    @NotNull
-    private Region region;
-
-    @NotNull
-    private Long battlenetId;
 
     @NotNull
     private OffsetDateTime updated = OffsetDateTime.now();
 
     public Account(){}
 
-    public Account(Long id, Region region, Long battlenetId, String battleTag)
+    public Account(Long id, String battleTag)
     {
         super(battleTag);
         this.id = id;
-        this.region = region;
-        this.battlenetId = battlenetId;
     }
 
-    public static final Account of(Region region, BlizzardAccount bAccount)
+    public static final Account of(BlizzardAccount bAccount)
     {
-        return new Account(null, region, bAccount.getId(), bAccount.getBattleTag());
+        return new Account(null, bAccount.getBattleTag());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getRegion(), getBattlenetId());
+        return Objects.hash(getBattleTag());
     }
 
     @Override
@@ -75,8 +66,7 @@ implements java.io.Serializable
         if( !(other instanceof Account) ) return false;
 
         Account otherAccount = (Account) other;
-        return getRegion() == otherAccount.getRegion()
-            && getBattlenetId() == otherAccount.getBattlenetId();
+        return getBattleTag().equals(otherAccount.getBattleTag());
     }
 
     @Override
@@ -84,9 +74,9 @@ implements java.io.Serializable
     {
         return String.format
         (
-            "%s[%s %s]",
+            "%s[%s]",
             getClass().getSimpleName(),
-            getRegion().toString(), String.valueOf(getBattlenetId())
+            getBattleTag()
         );
     }
 
@@ -98,26 +88,6 @@ implements java.io.Serializable
     public Long getId()
     {
         return id;
-    }
-
-    public void setRegion(Region region)
-    {
-        this.region = region;
-    }
-
-    public Region getRegion()
-    {
-        return region;
-    }
-
-    public void setBattlenetId(Long battlenetId)
-    {
-        this.battlenetId = battlenetId;
-    }
-
-    public Long getBattlenetId()
-    {
-        return battlenetId;
     }
 
     public void setUpdated(OffsetDateTime updated)

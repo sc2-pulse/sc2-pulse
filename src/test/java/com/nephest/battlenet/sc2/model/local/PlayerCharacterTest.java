@@ -20,6 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local;
 
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import org.junit.jupiter.api.Test;
 
@@ -29,13 +30,13 @@ public class PlayerCharacterTest
     @Test
     public void testUniqueness()
     {
-        PlayerCharacter character = new PlayerCharacter(0l, 0l, 0l, 0, "Name");
-        PlayerCharacter equalsCharacter = new PlayerCharacter(1l, 0l, 0l, 1, "DiffName");
+        PlayerCharacter character = new PlayerCharacter(0L, 0L, Region.EU, 0L, 0, "Name");
+        PlayerCharacter equalsCharacter = new PlayerCharacter(1L, 1L, Region.EU, 0L, 1, "DiffName");
 
         PlayerCharacter[] notEqualCharacters = new PlayerCharacter[]
         {
-            new PlayerCharacter(0l, 1l, 0l, 0, "Name"),
-            new PlayerCharacter(0l, 0l, 1l, 0, "Name")
+            new PlayerCharacter(0L, 0L, Region.US, 0L, 0, "Name"),
+            new PlayerCharacter(0L, 0L, Region.EU, 1L, 0, "Name")
         };
 
         TestUtil.testUniqueness(character, equalsCharacter, notEqualCharacters);

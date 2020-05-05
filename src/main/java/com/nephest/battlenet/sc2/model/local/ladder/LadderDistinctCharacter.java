@@ -21,16 +21,12 @@
 package com.nephest.battlenet.sc2.model.local.ladder;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 
 import javax.validation.constraints.NotNull;
 
 public class LadderDistinctCharacter
 {
-
-    @NotNull
-    private final Region region;
 
     @NotNull
     private final BaseLeague.LeagueType leagueMax;
@@ -46,7 +42,6 @@ public class LadderDistinctCharacter
 
     public LadderDistinctCharacter
     (
-        Region region,
         BaseLeague.LeagueType leagueMax,
         Integer ratingMax,
         String battleTag,
@@ -58,7 +53,6 @@ public class LadderDistinctCharacter
         Integer totalGamesPlayed
     )
     {
-        this.region = region;
         this.leagueMax = leagueMax;
         this.ratingMax = ratingMax;
         this.totalGamesPlayed = totalGamesPlayed;
@@ -71,11 +65,6 @@ public class LadderDistinctCharacter
             zergGamesPlayed,
             randomGamesPlayed
         );
-    }
-
-    public Region getRegion()
-    {
-        return region;
     }
 
     public BaseLeague.LeagueType getLeagueMax()

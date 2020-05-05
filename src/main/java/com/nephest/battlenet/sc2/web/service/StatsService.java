@@ -378,10 +378,10 @@ public class StatsService
             //blizzard can send invalid member without account sometimes. Ignoring these entries
             if (bMember.getAccount() == null) continue;
 
-            Account account = Account.of(season.getRegion(), bMember.getAccount());
+            Account account = Account.of(bMember.getAccount());
             accountDao.merge(account);
 
-            PlayerCharacter character = PlayerCharacter.of(account, bMember.getCharacter());
+            PlayerCharacter character = PlayerCharacter.of(account, season.getRegion(), bMember.getCharacter());
             playerCharacterDao.merge(character);
 
             TeamMember member = TeamMember.of(team, character, bMember.getRaces());

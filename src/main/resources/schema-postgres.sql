@@ -22,19 +22,16 @@ CREATE TABLE "account"
 (
 
     "id" BIGSERIAL,
-    "region" SMALLINT NOT NULL,
-    "battlenet_id" BIGINT NOT NULL,
     "battle_tag" VARCHAR(30) NOT NULL,
     "updated" TIMESTAMP NOT NULL,
 
     PRIMARY KEY ("id"),
 
-    CONSTRAINT "uq_account_region_battlenet_id"
-        UNIQUE ("region", "battlenet_id")
+    CONSTRAINT "uq_account_battle_tag"
+        UNIQUE ("battle_tag")
 
 );
 
-CREATE INDEX "ix_account_battle_tag" ON "account"("battle_tag");
 CREATE INDEX "ix_account_updated" ON "account"("updated");
 
 CREATE TABLE "player_character"
@@ -43,6 +40,7 @@ CREATE TABLE "player_character"
     "id" BIGSERIAL,
     "account_id" BIGINT NOT NULL,
     "battlenet_id" BIGINT NOT NULL,
+    "region" SMALLINT NOT NULL,
     "realm" SMALLINT NOT NULL,
     "name" VARCHAR(30) NOT NULL,
 
@@ -53,8 +51,8 @@ CREATE TABLE "player_character"
         REFERENCES "account"("id")
         ON DELETE CASCADE ON UPDATE CASCADE,
 
-    CONSTRAINT "uq_player_character_account_id_battlenet_id"
-        UNIQUE ("account_id", "battlenet_id")
+    CONSTRAINT "uq_player_character_region_battlenet_id"
+        UNIQUE ("region", "battlenet_id")
 
 );
 

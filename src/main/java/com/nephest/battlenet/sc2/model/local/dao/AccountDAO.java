@@ -37,13 +37,12 @@ import java.util.Collections;
 public class AccountDAO
 {
     private static final String CREATE_QUERY = "INSERT INTO account "
-        + "(battlenet_id, region, battle_tag, updated) "
-        + "VALUES (:battlenetId, :region, :battleTag, :updated)";
+        + "(battle_tag, updated) "
+        + "VALUES (:battleTag, :updated)";
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
-        + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
-        + "battle_tag=excluded.battle_tag, "
+        + "ON CONFLICT(battle_tag) DO UPDATE SET "
         + "updated=excluded.updated";
 
     private static final String REMOVE_EXPIRED_PRIVACY_QUERY =
@@ -87,8 +86,6 @@ public class AccountDAO
     private MapSqlParameterSource createParameterSource(Account account)
     {
         return new MapSqlParameterSource()
-            .addValue("battlenetId", account.getBattlenetId())
-            .addValue("region", conversionService.convert(account.getRegion(), Integer.class))
             .addValue("battleTag", account.getBattleTag())
             .addValue("updated", account.getUpdated());
     }
