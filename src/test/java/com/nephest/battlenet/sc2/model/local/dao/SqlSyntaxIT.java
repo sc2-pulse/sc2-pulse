@@ -120,13 +120,14 @@ public class SqlSyntaxIT
         assertEquals(2, team.getTies());
         assertEquals(2, team.getPoints());
 
-        accountDAO.create(new Account(null, season.getRegion(), 1L, "tag#1"));
-        Account account = accountDAO.merge(new Account(null, season.getRegion(), 1L, "newtag#2"));
+        accountDAO.create(new Account(null, "tag#1"));
+        Account account = accountDAO.merge(new Account(null, "newtag#2"));
         assertEquals("newtag#2", account.getBattleTag());
         accountDAO.removeExpiredByPrivacy();
 
-        playerCharacterDAO.create(new PlayerCharacter(null, account.getId(), 1L, 1, "name#1"));
-        PlayerCharacter character = playerCharacterDAO.merge(new PlayerCharacter(null, account.getId(), 1L, 2, "newname#2"));
+        playerCharacterDAO.create(new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1"));
+        PlayerCharacter character = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 2, "newname#2"));
         assertEquals(2, character.getRealm());
         assertEquals("newname#2", character.getName());
 

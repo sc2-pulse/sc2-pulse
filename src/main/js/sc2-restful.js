@@ -465,7 +465,7 @@ function createMemberInfo(team, member)
     playerLink.setAttribute("data-character-id", member.character.id);
     playerLink.setAttribute("data-character-battlenet-id", member.character.battlenetId);
     playerLink.setAttribute("data-character-realm", member.character.realm);
-    playerLink.setAttribute("data-character-region",  team.region);
+    playerLink.setAttribute("data-character-region",  member.character.region);
     playerLink.setAttribute("data-character-battletag", member.account.battleTag);
     playerLink.addEventListener("click", showCharacterInfo);
     playerLink.appendChild(racesElem);
@@ -619,7 +619,7 @@ function updateCharacters(searchResult)
     {
         const character = searchResult[i];
         const row = tbody.insertRow();
-        row.insertCell().appendChild(createImage("flag/", character.region.toLowerCase(), ["table-image-long"]));
+        row.insertCell().appendChild(createImage("flag/", character.members.character.region.toLowerCase(), ["table-image-long"]));
         row.insertCell().appendChild(createImage("league/", enumOfId(character.leagueMax, LEAGUE).name, ["table-image", "table-image-square", "mr-1"]));
         row.insertCell().appendChild(document.createTextNode(character.ratingMax));
         row.insertCell().appendChild(document.createTextNode(character.totalGamesPlayed))

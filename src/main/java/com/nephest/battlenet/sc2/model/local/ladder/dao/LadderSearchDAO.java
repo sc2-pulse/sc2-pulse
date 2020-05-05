@@ -98,12 +98,13 @@ public class LadderSearchDAO
 
     private static final String FIND_TEAM_MEMBERS_LATE_FORMAT =
         "SELECT "
-        + "team.region, "
+        + "team.region AS \"team.region\", "
         + "team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
         + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
         + "account.id AS \"account.id\", account.battle_tag,"
         + "player_character.id AS \"player_character.id\", "
+        + "player_character.region AS \"player_character.region\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
@@ -135,12 +136,13 @@ public class LadderSearchDAO
 
     private static final String FIND_TEAM_MEMBERS_FORMAT =
         "SELECT "
-        + "team.region, "
+        + "team.region AS \"team.region\", "
         + "team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
         + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
         + "account.id AS \"account.id\", account.battle_tag,"
         + "player_character.id AS \"player_character.id\", "
+        + "player_character.region AS \"player_character.region\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
@@ -158,12 +160,13 @@ public class LadderSearchDAO
 
     private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =
         "SELECT "
-        + "team.region, "
+        + "team.region AS \"team.region\", "
         + "team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
         + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
         + "account.id AS \"account.id\", account.battle_tag,"
         + "player_character.id AS \"player_character.id\", "
+        + "player_character.region AS \"player_character.region\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played "
@@ -188,11 +191,12 @@ public class LadderSearchDAO
     private static final String FIND_CARACTER_TEAM_MEMBERS_QUERY =
         "SELECT "
         + "season.battlenet_id AS \"season.battlenet_id\", season.year, season.number, "
-        + "team.region, team.league_type, team.queue_type, team.team_type, "
+        + "team.region AS \"team.region\", team.league_type, team.queue_type, team.team_type, "
         + "team.tier_type, "
         + "team.id AS \"team.id\", team.rating, team.wins, team.losses, "
         + "account.id AS \"account.id\", account.battle_tag,"
         + "player_character.id AS \"player_character.id\", "
+        + "player_character.region AS \"player_character.region\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", "
         + "player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
@@ -218,10 +222,9 @@ public class LadderSearchDAO
     private static final String FIND_DISTINCT_CHARACTER_QUERY =
         "SELECT "
         + "MAX(account.id) AS \"account.id\", "
-        + "MAX(account.battlenet_id) AS \"account.battlenet_id\", "
-        + "MAX(account.region) AS \"account.region\", "
         + "MAX(account.battle_tag) AS \"account.battle_tag\", "
         + "player_character_stats.player_character_id, "
+        + "MAX(player_character.region) AS \"player_character.region\", "
         + "MAX(player_character.battlenet_id) AS \"player_character.battlenet_id\", "
         + "MAX(player_character.realm) AS \"player_character.realm\", "
         + "MAX(player_character.name) AS \"player_character.name\", "
@@ -320,7 +323,6 @@ public class LadderSearchDAO
         Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
         return new LadderDistinctCharacter
         (
-            conversionService.convert(rs.getInt("account.region"), Region.class),
             conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
             rs.getInt("rating_max"),
             rs.getString("account.battle_tag"),
@@ -328,6 +330,7 @@ public class LadderSearchDAO
             (
                 rs.getLong("player_character_id"),
                 rs.getLong("account.id"),
+                conversionService.convert(rs.getInt("player_character.region"), Region.class),
                 rs.getLong("player_character.battlenet_id"),
                 rs.getInt("player_character.realm"),
                 rs.getString("player_character.name")
@@ -476,7 +479,7 @@ public class LadderSearchDAO
                 (
                     teamId,
                     season,
-                    conversionService.convert(rs.getInt("region"), Region.class),
+                    conversionService.convert(rs.getInt("team.region"), Region.class),
                     new BaseLeague
                     (
                         conversionService.convert(rs.getInt("league_type"), League.LeagueType.class),
@@ -500,6 +503,7 @@ public class LadderSearchDAO
                 (
                     rs.getLong("player_character.id"),
                     rs.getLong("account.id"),
+                    conversionService.convert(rs.getInt("player_character.region"), Region.class),
                     rs.getLong("player_character.battlenet_id"),
                     rs.getInt("realm"),
                     rs.getString("name")

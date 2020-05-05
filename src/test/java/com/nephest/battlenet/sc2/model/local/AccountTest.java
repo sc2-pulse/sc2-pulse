@@ -23,22 +23,18 @@ package com.nephest.battlenet.sc2.model.local;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import org.junit.jupiter.api.Test;
 
-import static com.nephest.battlenet.sc2.model.Region.EU;
-import static com.nephest.battlenet.sc2.model.Region.US;
-
 public class AccountTest
 {
 
     @Test
     public void testUniqueness()
     {
-        Account account = new Account(0l, EU, 0l, "Name#123");
-        Account equalsAccount = new Account(1l, EU, 0l, "DiffName#321");
+        Account account = new Account(0L, "Name#123");
+        Account equalsAccount = new Account(1L, "Name#123");
 
         Account[] notEqualAccounts = new Account[]
         {
-            new Account(0l, US, 0l, "Name#123"),
-            new Account(0l, EU, 1l, "Name#123")
+            new Account(0L, "DiffName#123")
         };
 
         TestUtil.testUniqueness(account, equalsAccount, notEqualAccounts);
