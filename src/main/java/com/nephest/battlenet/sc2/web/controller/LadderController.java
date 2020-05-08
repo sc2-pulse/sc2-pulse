@@ -23,7 +23,6 @@ package com.nephest.battlenet.sc2.web.controller;
 import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
 import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
@@ -263,6 +262,6 @@ public class LadderController
         @RequestParam("name") String name
     )
     {
-        return ladderSearch.findDistinctCharacters(name);
+        return ladderSearch.findDistinctCharactersByName(name);
     }
 }
