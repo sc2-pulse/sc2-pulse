@@ -20,7 +20,7 @@
  */
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
-import com.nephest.battlenet.sc2.Application;
+import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
@@ -48,7 +48,7 @@ import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEAS
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
-@SpringJUnitConfig(classes = Application.class)
+@SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class LadderSearchDAOIT
