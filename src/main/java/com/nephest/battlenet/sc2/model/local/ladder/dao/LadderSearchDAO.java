@@ -219,7 +219,7 @@ public class LadderSearchDAO
         + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
         + "team.rating DESC, team.id ASC, "
         + "player_character.id ASC ";
-    private static final String FIND_DISTINCT_CHARACTER_QUERY =
+    private static final String FIND_DISTINCT_CHARACTER_FORMAT =
         "SELECT "
         + "MAX(account.id) AS \"account.id\", "
         + "MAX(account.battle_tag) AS \"account.battle_tag\", "
@@ -240,7 +240,7 @@ public class LadderSearchDAO
             + "FROM player_character_stats "
             + "INNER JOIN player_character "
                 + " ON player_character_stats.player_character_id=player_character.id "
-            + "WHERE LOWER(player_character.name) LIKE LOWER(:name) "
+            + "%2$s "
             + "AND COALESCE(player_character_stats.season_id, -32768) = -32768 "
             + "GROUP BY player_character_stats.player_character_id "
         + ") "
@@ -248,12 +248,25 @@ public class LadderSearchDAO
         + "INNER JOIN player_character ON player_character_stats.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id = account.id "
 
-        + "WHERE LOWER(player_character.name) LIKE LOWER(:name) "
+        + "%1$s "
         + "AND COALESCE(player_character_stats.season_id, -32768) = -32768 "
 
         + "GROUP BY player_character_stats.player_character_id "
 
         + "ORDER BY rating_max DESC";
+    private static final String FIND_DISTINCT_CHARACTER_BY_NAME_QUERY = String.format
+    (
+        FIND_DISTINCT_CHARACTER_FORMAT,
+        "WHERE LOWER(player_character.name) LIKE LOWER(:name) ",
+        "WHERE LOWER(player_character.name) LIKE LOWER(:name) "
+    );
+    private static final String FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY = String.format
+    (
+        FIND_DISTINCT_CHARACTER_FORMAT,
+        "WHERE account.id = :accountId ",
+        "INNER JOIN account ON player_character.account_id=account.id "
+        + "WHERE account.id = :accountId "
+    );
     private static final String LADDER_SEARCH_STATS_QUERY =
         "SELECT "
         + "season.region, "
@@ -784,16 +797,21 @@ public class LadderSearchDAO
             .query(FIND_CARACTER_TEAM_MEMBERS_QUERY, params, LADDER_TEAM_EXTRACTOR);
     }
 
-    public List<LadderDistinctCharacter> findDistinctCharacters
-    (
-        String name
-    )
+    public List<LadderDistinctCharacter> findDistinctCharactersByName(String name)
     {
         name = PostgreSQLUtils.escapeLikePattern(name) + "#%";
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("name", name);
         return template
-            .query(FIND_DISTINCT_CHARACTER_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+            .query(FIND_DISTINCT_CHARACTER_BY_NAME_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+    }
+
+    public List<LadderDistinctCharacter> findDistinctCharactersByAccountId(Long accountId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("accountId", accountId);
+        return template
+            .query(FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
 
 }

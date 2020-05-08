@@ -71,3 +71,5 @@ DROP CONSTRAINT "uq_account_region_battlenet_id",
 DROP COLUMN "region",
 DROP COLUMN "battlenet_id";
 ALTER TABLE "account" ADD CONSTRAINT "uq_account_battle_tag" UNIQUE("battle_tag");
+
+CREATE INDEX "ix_player_character_account_id" ON "player_character"("account_id");
