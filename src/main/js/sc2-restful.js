@@ -633,14 +633,14 @@ function getCharacters(name)
         .catch(error => setGeneratingStatus("error", error.message))
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
         .catch(error => setGeneratingStatus("error", error.message))
-        .then(json => updateCharacters(json))
-        .then(o => setGeneratingStatus("success"))
+        .then(json => updateCharacters(document.getElementById("search-table"), json))
+        .then(o => {document.getElementById("search-result-all").classList.remove("d-none"); setGeneratingStatus("success");})
         .then(o => scrollIntoViewById("search-result-all"));
 }
 
-function updateCharacters(searchResult)
+function updateCharacters(table, searchResult)
 {
-    const tbody = document.getElementById("search-table").getElementsByTagName("tbody")[0];
+    const tbody = table.getElementsByTagName("tbody")[0];
     removeChildren(tbody);
 
     for(let i = 0; i < searchResult.length; i++)
@@ -665,7 +665,6 @@ function updateCharacters(searchResult)
         membersCell.appendChild(mRow);
         tbody.appendChild(row);
     }
-    document.getElementById("search-result-all").classList.remove("d-none");
 }
 
 function getSeasons()
@@ -1440,6 +1439,7 @@ function updateMyInfoThen()
 {
     if (currentAccount != null)
     {
+        getMyCharacters();
         for(e of document.querySelectorAll(".login-anonymous")) e.classList.add("d-none");
         for(e of document.querySelectorAll(".login-user")) e.classList.remove("d-none");
     }
@@ -1477,6 +1477,15 @@ function updateMyAccount(account)
 {
     currentAccount = account;
     document.querySelector("#login-battletag").textContent = currentAccount.battleTag;
+}
+
+function getMyCharacters()
+{
+    return fetch("api/my/characters")
+        .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+        .then(json => updateCharacters(document.querySelector("#personal-characters-table"), json))
+        .then(o => setGeneratingStatus("success"))
+        .catch(error => setGeneratingStatus("error", error.message));
 }
 
 function renewBlizzardRegistration()
