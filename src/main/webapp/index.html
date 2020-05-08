@@ -152,6 +152,57 @@
             </div>
             <div class="login-user d-none">
                 <div><span class="mr-3" id="login-battletag"></span><a class="btn btn-primary" href="logout" role="button">Log out</a></div>
+                <ul id="personal-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                    <li class="nav-item">
+                        <a
+                                id="personal-characters-tab"
+                                class="nav-link active"
+                                data-toggle="pill"
+                                href="#personal-characters"
+                                role="tab"
+                                aria-controls="personal-characters"
+                                aria-selected="true"
+                        >
+                            Characters
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
+                                id="personal-following-tab"
+                                class="nav-link"
+                                data-toggle="pill"
+                                href="#personal-following"
+                                role="tab"
+                                aria-controls="personal-following"
+                                aria-selected="false"
+                        >
+                            Following
+                        </a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <section id="personal-characters" class="tab-pane fade show active">
+                        <h3>Your characters</h3>
+                        <div class="table-responsive">
+                            <table id="personal-characters-table" class="table table-sm table-hover">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Region</th>
+                                    <th scope="col">Highest League</th>
+                                    <th scope="col">Highest Rating</th>
+                                    <th scope="col">Bracket games</th>
+                                    <th scope="col">Player</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </section>
+                    <section id="personal-following" class="tab-pane fade">
+                        <h3>Following</h3>
+                    </section>
+                </div>
             </div>
         </section>
         <section id="generator" class="tab-pane fade show active">
