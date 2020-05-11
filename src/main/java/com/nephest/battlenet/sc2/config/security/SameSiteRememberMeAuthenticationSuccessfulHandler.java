@@ -1,6 +1,7 @@
 package com.nephest.battlenet.sc2.config.security;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
@@ -11,12 +12,13 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
 @Component
-public class BlizzardOidcRememberMeHandler
+public class SameSiteRememberMeAuthenticationSuccessfulHandler
 extends SavedRequestAwareAuthenticationSuccessHandler
 {
 
@@ -50,7 +52,7 @@ extends SavedRequestAwareAuthenticationSuccessHandler
 
     private Map<String, String> issuers;
 
-    public BlizzardOidcRememberMeHandler()
+    public SameSiteRememberMeAuthenticationSuccessfulHandler()
     {
         setAlwaysUseDefaultTargetUrl(true);
         setDefaultTargetUrl("/#personal");
@@ -86,7 +88,21 @@ extends SavedRequestAwareAuthenticationSuccessHandler
             cookie.setMaxAge(COOKIE_MAX_AGE);
             cookie.setPath(request.getContextPath() + "/"); // + / for correctly deleting the cookie in security config
         response.addCookie(cookie);
+        addSameSiteCookieAttribute(response);
         super.onAuthenticationSuccess(request, response, authentication);
+    }
+
+    private void addSameSiteCookieAttribute(HttpServletResponse response) {
+        Collection<String> headers = response.getHeaders(HttpHeaders.SET_COOKIE);
+        boolean firstHeader = true;
+        for (String header : headers) {
+            if (firstHeader) {
+                response.setHeader(HttpHeaders.SET_COOKIE, String.format("%s; %s", header, "SameSite=Lax"));
+                firstHeader = false;
+                continue;
+            }
+            response.addHeader(HttpHeaders.SET_COOKIE, String.format("%s; %s", header, "SameSite=Lax"));
+        }
     }
 
 }

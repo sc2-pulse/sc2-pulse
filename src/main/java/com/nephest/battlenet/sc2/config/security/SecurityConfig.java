@@ -20,13 +20,14 @@ extends WebSecurityConfigurerAdapter
     private AccountDAO accountDAO;
 
     @Autowired
-    private BlizzardOidcRememberMeHandler blizzardOidcRememberMeHandler;
+    private SameSiteRememberMeAuthenticationSuccessfulHandler sameSiteRememberMeAuthenticationSuccessfulHandler;
 
     @Override
     public void configure(HttpSecurity http)
     throws Exception
     {
         http
+            .csrf().disable() //handled by sameSite
             .exceptionHandling()
                 .defaultAuthenticationEntryPointFor
                 (
@@ -37,9 +38,9 @@ extends WebSecurityConfigurerAdapter
                 .antMatchers("/api/my/**").authenticated()
             .and().logout()
                 .logoutSuccessUrl("/#generator")
-                .deleteCookies(BlizzardOidcRememberMeHandler.COOKIE_NAME)
+                .deleteCookies(SameSiteRememberMeAuthenticationSuccessfulHandler.COOKIE_NAME)
             .and().oauth2Login()
-                .successHandler(blizzardOidcRememberMeHandler)
+                .successHandler(sameSiteRememberMeAuthenticationSuccessfulHandler)
                 .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO));
     }
 
