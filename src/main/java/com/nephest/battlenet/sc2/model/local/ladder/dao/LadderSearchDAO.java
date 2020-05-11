@@ -23,10 +23,7 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
-import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.LeagueTier;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
@@ -349,7 +346,7 @@ public class LadderSearchDAO
         (
             conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
             rs.getInt("rating_max"),
-            rs.getString("account.battle_tag"),
+            new Account(rs.getLong("account.id"), rs.getString("account.battle_tag")),
             new PlayerCharacter
             (
                 rs.getLong("player_character_id"),
@@ -522,7 +519,7 @@ public class LadderSearchDAO
 
             LadderTeamMember member = new LadderTeamMember
             (
-                rs.getString("battle_tag"),
+                new Account(rs.getLong("account.id"), rs.getString("battle_tag")),
                 new PlayerCharacter
                 (
                     rs.getLong("player_character.id"),

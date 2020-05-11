@@ -21,7 +21,7 @@
 package com.nephest.battlenet.sc2.model.local.ladder;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.nephest.battlenet.sc2.model.BaseAccount;
+import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.BaseLocalTeamMember;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 
@@ -39,11 +39,11 @@ implements java.io.Serializable
     private final PlayerCharacter character;
 
     @NotNull
-    private final BaseAccount account;
+    private final Account account;
 
     public LadderTeamMember
     (
-        String battleTag,
+        Account account,
         PlayerCharacter character,
         Integer terranGamesPlayed,
         Integer protossGamesPlayed,
@@ -53,7 +53,7 @@ implements java.io.Serializable
     {
         super(terranGamesPlayed, protossGamesPlayed, zergGamesPlayed, randomGamesPlayed);
         this.character = character;
-        this.account = new BaseAccount(battleTag);
+        this.account = account;
     }
 
     public PlayerCharacter getCharacter()
@@ -61,7 +61,7 @@ implements java.io.Serializable
         return character;
     }
 
-    public BaseAccount getAccount()
+    public Account getAccount()
     {
         return account;
     }
