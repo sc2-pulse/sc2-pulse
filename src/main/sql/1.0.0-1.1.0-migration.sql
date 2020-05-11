@@ -73,3 +73,20 @@ DROP COLUMN "battlenet_id";
 ALTER TABLE "account" ADD CONSTRAINT "uq_account_battle_tag" UNIQUE("battle_tag");
 
 CREATE INDEX "ix_player_character_account_id" ON "player_character"("account_id");
+
+CREATE TABLE "account_following"
+(
+    "account_id" BIGINT NOT NULL,
+    "following_account_id" BIGINT NOT NULL,
+
+    PRIMARY KEY ("account_id", "following_account_id"),
+
+    CONSTRAINT "fk_account_following_account_id"
+        FOREIGN KEY ("account_id")
+        REFERENCES "account"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_account_following_following_account_id"
+        FOREIGN KEY ("following_account_id")
+        REFERENCES "account"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
