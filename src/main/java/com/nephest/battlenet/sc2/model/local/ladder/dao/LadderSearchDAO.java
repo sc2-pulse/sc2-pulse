@@ -134,7 +134,7 @@ public class LadderSearchDAO
     private static final String FIND_TEAM_MEMBERS_LATE_REVERSED_QUERY =
         String.format(FIND_TEAM_MEMBERS_LATE_FORMAT, "ASC");
 
-    private static final String FIND_TEAM_MEMBERS_FORMAT =
+    private static final String FIND_TEAM_MEMBERS_BASE =
         "SELECT "
         + "team.region AS \"team.region\", "
         + "team.league_type, team.queue_type, team.team_type, "
@@ -145,7 +145,9 @@ public class LadderSearchDAO
         + "player_character.region AS \"player_character.region\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
-        + "team_member.zerg_games_played, team_member.random_games_played "
+        + "team_member.zerg_games_played, team_member.random_games_played ";
+    private static final String FIND_TEAM_MEMBERS_FORMAT =
+        FIND_TEAM_MEMBERS_BASE
 
         + LADDER_SEARCH_TEAM_FROM_WHERE
 
@@ -157,6 +159,15 @@ public class LadderSearchDAO
 
     private static final String FIND_TEAM_MEMBERS_REVERSED_QUERY =
         String.format(FIND_TEAM_MEMBERS_FORMAT, "ASC");
+
+    private static final String FIND_FOLLOWING_TEAM_MEMBERS =
+        FIND_TEAM_MEMBERS_BASE
+        + LADDER_SEARCH_TEAM_FROM
+        + "INNER JOIN account_following ON account.id=account_following.following_account_id "
+
+        + LADDER_SEARCH_TEAM_WHERE
+        + "AND account_following.account_id=:accountId "
+        + "ORDER BY team.rating DESC, team.id DESC";
 
     private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =
         "SELECT "
@@ -795,6 +806,23 @@ public class LadderSearchDAO
             .addValue("playerCharacterId", id);
         return template
             .query(FIND_CARACTER_TEAM_MEMBERS_QUERY, params, LADDER_TEAM_EXTRACTOR);
+    }
+
+    public List<LadderTeam> findFollowingTeams
+    (
+        Long accountId,
+        long season,
+        Set<Region> regions,
+        Set<League.LeagueType> leagueTypes,
+        QueueType queueType,
+        TeamType teamType
+    )
+    {
+        MapSqlParameterSource params =
+            createSearchParams(season, regions, leagueTypes, queueType, teamType)
+            .addValue("accountId", accountId);
+        return template
+            .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAM_SHORT_EXTRACTOR);
     }
 
     public List<LadderDistinctCharacter> findDistinctCharactersByName(String name)

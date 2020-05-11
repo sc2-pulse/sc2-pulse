@@ -235,3 +235,20 @@ CREATE TABLE "player_character_stats"
 
 CREATE UNIQUE INDEX "uq_player_character_stats_main"
     ON "player_character_stats"("player_character_id", COALESCE("season_id", -32768), COALESCE("race", -32768), "queue_type", "team_type");
+
+CREATE TABLE "account_following"
+(
+    "account_id" BIGINT NOT NULL,
+    "following_account_id" BIGINT NOT NULL,
+
+    PRIMARY KEY ("account_id", "following_account_id"),
+
+    CONSTRAINT "fk_account_following_account_id"
+        FOREIGN KEY ("account_id")
+        REFERENCES "account"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_account_following_following_account_id"
+        FOREIGN KEY ("following_account_id")
+        REFERENCES "account"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
