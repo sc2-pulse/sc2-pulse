@@ -12,4 +12,12 @@ public final class DAOUtils
         rs.next();
         return rs.getLong(1);
     };
+
+    public static final ResultSetExtractor<Integer> INT_EXTRACTOR =
+    (rs)->
+    {
+        rs.next();
+        return rs.getInt(1);
+    };
+
 }
