@@ -129,6 +129,7 @@ let currentTeamFormat;
 let currentTeamType;
 let currentLadder;
 let currentAccount = null;
+let currentFollowing = null;
 
 window.addEventListener("load", onWindowLoad);
 
@@ -139,6 +140,8 @@ function onWindowLoad()
         //.then(o => getLadderAll());
     enhanceLadderForm();
     enhanceSearchForm();
+    enhanceMyLadderForm();
+    enchanceFollowButtons();
     enhanceTabs();
     observeChartables();
     createPaginations();
@@ -192,6 +195,27 @@ function enhanceLadderForm()
             $("#form-ladder").collapse("hide");
         }
     );
+}
+
+function enhanceMyLadderForm()
+{
+    const form = document.getElementById("form-following-ladder");
+    form.addEventListener
+    (
+        "submit",
+         function(evt)
+        {
+            evt.preventDefault();
+            getMyLadder(urlencodeFormData(new FormData(document.getElementById("form-following-ladder"))));
+            $("#form-following-ladder").collapse("hide");
+        }
+    );
+}
+
+function enchanceFollowButtons()
+{
+    document.querySelector("#follow-button").addEventListener("click", follow);
+    document.querySelector("#unfollow-button").addEventListener("click", unfollow);
 }
 
 function setFormCollapsibleScroll()
@@ -488,8 +512,11 @@ function createMemberInfo(team, member)
     }
 
     const playerLink = document.createElement("a");
-    playerLink.classList.add("player-link");
+    playerLink.classList.add("player-link", "w-100", "h-100", "d-inline-block");
+    if(currentFollowing != null && Object.values(currentFollowing).filter(val=>val.followingAccountId == member.account.id).length > 0)
+        playerLink.classList.add("text-success");
     playerLink.setAttribute("href", "#");
+    playerLink.setAttribute("data-account-id", member.account.id);
     playerLink.setAttribute("data-character-id", member.character.id);
     playerLink.setAttribute("data-character-battlenet-id", member.character.battlenetId);
     playerLink.setAttribute("data-character-realm", member.character.realm);
@@ -513,6 +540,22 @@ function showCharacterInfo(e)
 {
     e.preventDefault();
     const info = document.getElementById("player-info");
+
+    const accountId = e.currentTarget.getAttribute("data-account-id");
+    info.setAttribute("data-account-id", accountId);
+    if(currentAccount != null && currentFollowing != null)
+    {
+        if(Object.values(currentFollowing).filter(val=>val.followingAccountId == accountId).length > 0)
+        {
+            document.querySelector("#follow-button").classList.add("d-none");
+            document.querySelector("#unfollow-button").classList.remove("d-none");
+        }
+        else
+        {
+            document.querySelector("#follow-button").classList.remove("d-none");
+            document.querySelector("#unfollow-button").classList.add("d-none");
+        }
+    }
     document.getElementById("player-info-title-name").textContent
         = e.currentTarget.getElementsByClassName("player-name")[0].textContent;
     const region = enumOfName(e.currentTarget.getAttribute("data-character-region"), REGION);
@@ -680,17 +723,19 @@ function getSeasons()
 
 function updateSeasons(seasons)
 {
-    const seasonPicker = document.getElementById("season-picker");
-    removeChildren(seasonPicker);
-    if(seasons.length > 0) currentSeason = seasons[0].id;
     updateSeasonsTabs(seasons);
-    for(const season of seasons)
+    for(const seasonPicker of document.querySelectorAll(".season-picker"))
     {
-        const option = document.createElement("option");
-        option.setAttribute("label", season.year + " s" + season.number);
-        option.textContent = `${season.year} s${season.number}`;
-        option.setAttribute("value", season.id);
-        seasonPicker.appendChild(option);
+        removeChildren(seasonPicker);
+        if(seasons.length > 0) currentSeason = seasons[0].id;
+        for(const season of seasons)
+        {
+            const option = document.createElement("option");
+            option.setAttribute("label", season.year + " s" + season.number);
+            option.textContent = `${season.year} s${season.number}`;
+            option.setAttribute("value", season.id);
+            seasonPicker.appendChild(option);
+        }
     }
 }
 
@@ -1440,6 +1485,7 @@ function updateMyInfoThen()
     if (currentAccount != null)
     {
         getMyCharacters();
+        getMyFollowing();
         for(e of document.querySelectorAll(".login-anonymous")) e.classList.add("d-none");
         for(e of document.querySelectorAll(".login-user")) e.classList.remove("d-none");
     }
@@ -1481,9 +1527,85 @@ function updateMyAccount(account)
 
 function getMyCharacters()
 {
+    setGeneratingStatus("begin");
     return fetch("api/my/characters")
         .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
         .then(json => updateCharacters(document.querySelector("#personal-characters-table"), json))
+        .then(o => setGeneratingStatus("success"))
+        .catch(error => setGeneratingStatus("error", error.message));
+}
+
+function getMyFollowing()
+{
+    setGeneratingStatus("begin");
+    return fetch("api/my/following")
+        .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+        .then(json => currentFollowing = json)
+        .then(o => setGeneratingStatus("success"))
+        .catch(error => setGeneratingStatus("error", error.message));
+}
+
+function getMyLadder(formParams)
+{
+    setGeneratingStatus("begin");
+    return fetch("api/my/following/ladder?" + formParams)
+        .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        .then(json => updateMyLadder(json))
+        .then(o => setGeneratingStatus("success"))
+        .catch(error => setGeneratingStatus("error", error.message));
+}
+
+function updateMyLadder(searchResult)
+{
+    const result =
+    {
+        result: searchResult,
+        meta:
+        {
+            page: 1,
+            perPage: searchResult.length
+        }
+    }
+    updateTeamsTable(document.getElementById("following-ladder"), result);
+    document.getElementById("following-ladder-container").classList.remove("d-none");
+}
+
+function follow()
+{
+    setGeneratingStatus("begin");
+    const profile = document.querySelector("#player-info");
+    const id = profile.getAttribute("data-account-id");
+    return fetch("api/my/following/" + id, {method: "POST"})
+        .then
+        (
+            resp =>
+            {
+                if (!resp.ok) throw new Error(resp.statusText);
+                document.querySelector("#follow-button").classList.add("d-none");
+                document.querySelector("#unfollow-button").classList.remove("d-none");
+                return getMyFollowing();
+            }
+        )
+        .then(o => setGeneratingStatus("success"))
+        .catch(error => setGeneratingStatus("error", error.message));
+}
+
+function unfollow()
+{
+    setGeneratingStatus("begin");
+    const profile = document.querySelector("#player-info");
+    const id = profile.getAttribute("data-account-id");
+    return fetch("api/my/following/" + id, {method: "DELETE"})
+        .then
+        (
+            resp =>
+            {
+                if (!resp.ok) throw new Error(resp.statusText);
+                document.querySelector("#follow-button").classList.remove("d-none");
+                document.querySelector("#unfollow-button").classList.add("d-none");
+                return getMyFollowing();
+            }
+        )
         .then(o => setGeneratingStatus("success"))
         .catch(error => setGeneratingStatus("error", error.message));
 }
