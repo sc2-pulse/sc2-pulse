@@ -228,25 +228,6 @@
                 </dependency>
             </dependencies>
         </plugin>
-        <plugin>
-            <groupId>org.codehaus.mojo</groupId>
-            <artifactId>license-maven-plugin</artifactId>
-            <version>2.0.0</version>
-            <configuration>
-                <licenseName>agpl_v3</licenseName>
-                <generateBundle>true</generateBundle>
-                <force>true</force>
-                <addJavaLicenseAfterPackage>false</addJavaLicenseAfterPackage>
-                <processStartTag>=========================LICENSE_START=========================</processStartTag>
-                <processEndTag>=========================LICENSE_END=========================</processEndTag>
-            </configuration>
-            <executions>
-                <execution>
-                    <phase>generate-resources</phase>
-                    <goals><goal>update-project-license</goal></goals>
-                </execution>
-            </executions>
-        </plugin>
     </plugins>
   </build>
 </project>
