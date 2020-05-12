@@ -151,8 +151,20 @@
                     <div>and create a personal ladder out of your favourite players</div>
             </div>
             <div class="login-user d-none">
-                <div><span class="mr-3" id="login-battletag"></span><a class="btn btn-primary" href="logout" role="button">Log out</a></div>
                 <ul id="personal-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                    <li class="nav-item">
+                        <a
+                                id="personal-following-tab"
+                                class="nav-link"
+                                data-toggle="pill"
+                                href="#personal-following"
+                                role="tab"
+                                aria-controls="personal-following"
+                                aria-selected="false"
+                        >
+                            Ladder
+                        </a>
+                    </li>
                     <li class="nav-item">
                         <a
                                 id="personal-characters-tab"
@@ -168,15 +180,15 @@
                     </li>
                     <li class="nav-item">
                         <a
-                                id="personal-following-tab"
+                                id="personal-account-tab"
                                 class="nav-link"
                                 data-toggle="pill"
-                                href="#personal-following"
+                                href="#personal-account"
                                 role="tab"
-                                aria-controls="personal-following"
+                                aria-controls="personal-account"
                                 aria-selected="false"
                         >
-                            Following
+                            Account
                         </a>
                     </li>
                 </ul>
@@ -199,8 +211,176 @@
                             </table>
                         </div>
                     </section>
+                    <section id="personal-account" class="tab-pane fade">
+                        <h3>Account</h3>
+                        <div class="mb-3">
+                            <span class="mr-3" id="login-battletag"></span>
+                            <a class="btn btn-primary" href="logout" role="button">Log out</a>
+                        </div>
+                    </section>
                     <section id="personal-following" class="tab-pane fade">
-                        <h3>Following</h3>
+                        <h3><a id="following-generator-collapse" class="c-dropdown" href="#form-following-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-following-ladder">Ladder</a></h3>
+                        <form id="form-following-ladder" class="collapse show" data-scroll-to="following-generator-collapse">
+                            <p class="text-secondary">This ladder is made up of players you follow. You can follow
+                            a player from the Player Information page (click on player).</p>
+                            <div class="form-row">
+                                <div class="col-md-4 mb-3">
+                                    <select class="form-control season-picker" name="season"></select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <select class="form-control" name="queue">
+                                        <option value="LOTV_1V1" selected="selected">1V1</option>
+                                        <option value="LOTV_2V2">2V2</option>
+                                        <option value="LOTV_3V3">3V3</option>
+                                        <option value="LOTV_4V4">4V4</option>
+                                        <option value="LOTV_ARCHON">Archon</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-4 mb-3">
+                                    <select class="form-control" name="team-type">
+                                        <option value="ARRANGED" selected="selected">Arranged</option>
+                                        <option value="RANDOM">Random</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="us" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-us">
+                                        <img
+                                                class="form-icon-long"
+                                                src="static/icon/flag/us.svg"
+                                                alt="US" title="US"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="eu" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-eu">
+                                        <img
+                                                class="form-icon-long"
+                                                src="static/icon/flag/eu.svg"
+                                                alt="EU" title="EU"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="kr" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-kr">
+                                        <img
+                                                class="form-icon-long"
+                                                src="static/icon/flag/kr.svg"
+                                                alt="KR" title="KR"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="cn" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-cn">
+                                        <img
+                                                class="form-icon-long"
+                                                src="static/icon/flag/cn.svg"
+                                                alt="CN" title="CN"
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="bro" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-bro">
+                                        <img
+                                                class="form-icon"
+                                                src="static/icon/league/bronze.svg"
+                                                alt="Bronze" title="Bronze"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="sil" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-sil">
+                                        <img
+                                                class="form-icon"
+                                                src="static/icon/league/silver.svg"
+                                                alt="Silver" title="Silver"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="gol" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-gol">
+                                        <img
+                                                class="form-icon"
+                                                src="static/icon/league/gold.svg"
+                                                alt="Gold" title="Gold"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="pla" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-pla">
+                                        <img
+                                                class="form-icon"
+                                                src="static/icon/league/platinum.svg"
+                                                alt="Platinum" title="Platinum"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="dia" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-dia">
+                                        <img
+                                                class="form-icon"
+                                                src="static/icon/league/diamond.svg"
+                                                alt="Diamond" title="Diamond"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="mas" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-mas">
+                                        <img
+                                                class="form-icon"
+                                                src="static/icon/league/master.svg"
+                                                alt="Master" title="Master"
+                                        />
+                                    </label>
+                                </div>
+                                <div class="form-check form-check-inline">
+                                    <input type="checkbox" name="gra" value="true" checked="checked" />
+                                    <label class="form-check-label" for="form-gra">
+                                        <img
+                                                class="form-icon"
+                                                src="static/icon/league/grandmaster.svg"
+                                                alt="Grandmaster" title="Grandmaster"
+                                        />
+                                    </label>
+                                </div>
+                            </div>
+
+                            <button class="btn btn-primary mb-3" type="submit">
+                                <span>Generate</span>
+                            </button>
+                        </form>
+                        <div id="following-ladder-container" class="table-responsive d-none">
+                            <table id="following-ladder" class="table table-sm table-hover" data-ladder-rank-show="true">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Rank</th>
+                                    <th scope="col">Region</th>
+                                    <th scope="col">League</th>
+                                    <th scope="col">Team</th>
+                                    <th scope="col">MMR</th>
+                                    <th scope="col">Games</th>
+                                    <th scope="col">Win%</th>
+                                </tr>
+                                </thead>
+                                <tbody id="following-ladder-body">
+                                </tbody>
+                            </table>
+                        </div>
                     </section>
                 </div>
             </div>
@@ -210,7 +390,7 @@
         <form id="form-ladder" class="collapse show" data-scroll-to="generator-collapse">
             <div class="form-row">
                 <div class="col-md-4 mb-3">
-                    <select id="season-picker" class="form-control" name="season"></select>
+                    <select id="season-picker" class="form-control season-picker" name="season"></select>
                 </div>
                 <div class="col-md-4 mb-3">
                     <select id="team-format-picker" class="form-control" name="queue">
@@ -730,6 +910,8 @@
                                         <li><a id="battlenet-profile-link" href="#" target="_blank" rel="noopener noreferrer">Battle.net profile</a></li>
                                         <li>BattleTag: <span id="player-info-battletag"></span></li>
                                     </ul>
+                                    <button id="follow-button" type="button" class="btn btn-primary d-none">Follow</button>
+                                    <button id="unfollow-button" type="button" class="btn btn-primary d-none">Unfollow</button>
                                 </section>
                             </section>
                             <section id="player-stats-history" class="tab-pane fade">
