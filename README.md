@@ -1,11 +1,19 @@
 # About
-SC2 ladder generator is what its name suggests - a SC2 ladder generator. It is a Spring Boot web application.
-The [reference website](https://www.nephest.com/sc2/) is available 24/7.
+SC2 ladder generator is fast and flexible StarCraft&reg;2 stats aggregator. It is a Spring Boot web application.
+The [reference website](https://www.nephest.com/sc2/) (runs the latest release) is available 24/7.
 ## Features
 * Flexible, user defined filters
 * All seasons, races, team formats
-* Player profile/history
+* Player profile
+    * Career summary
+    * History: all teams and seasons
+* BattleNet integration
+    * Log in with a BattleNet account
+    * Easy access to personal stats
+    * Personal ladder out of your favourite players
 * Season meta info
+    * Race, team, player distribution with multiple filters
+    * Tier MMR ranges
 ## Disclamier
 I use this project for learning, it is not production-ready.
 ## Dependencies
@@ -33,7 +41,15 @@ relevant web container.
 ## Running
 You must set the following application properties:
 ```
-blizzard.api.key = base64 encoded client_id:client_secret
+blizzard.api.key = {base64 encoded client_id:client_secret}
+spring.security.oauth2.client.registration.sc2-lg-eu.client-id = {client_id}
+spring.security.oauth2.client.registration.sc2-lg-eu.client-secret = {client_secret}
+spring.security.oauth2.client.registration.sc2-lg-us.client-id = {client_id}
+spring.security.oauth2.client.registration.sc2-lg-us.client-secret = {client_secret}
+spring.security.oauth2.client.registration.sc2-lg-kr.client-id = {client_id}
+spring.security.oauth2.client.registration.sc2-lg-kr.client-secret = {client_secret}
+spring.security.oauth2.client.registration.sc2-lg-cn.client-id = {client_id}
+spring.security.oauth2.client.registration.sc2-lg-cn.client-secret = {client_secret}
 ```
 
 By default, DataSource must be configured in a web container:
@@ -44,3 +60,6 @@ You can use the ```src/main/resources/application-private.properties``` file (ig
 for private/local application properties
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
+## Contributing
+Want to make a bug report/feature request? Any contributions are welcome, see [CONTRIBUTING](CONTRIBUTING.md) for 
+more information. 
