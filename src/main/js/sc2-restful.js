@@ -508,7 +508,7 @@ function createMemberInfo(team, member)
     playerLink.appendChild(racesElem);
     playerLink.appendChild(nameElem);
     const result = document.createElement("span");
-    result.classList.add("team-member-info", "col-md-" + (team.members.length > 1 ? "6" : "12"), "col-sm-12");
+    result.classList.add("team-member-info", "col-lg-" + (team.members.length > 1 ? "6" : "12"), "col-md-12");
     result.appendChild(playerLink);
     return result;
 }
