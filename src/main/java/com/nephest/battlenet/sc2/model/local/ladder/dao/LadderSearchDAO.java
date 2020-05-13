@@ -143,10 +143,14 @@ public class LadderSearchDAO
     private static final String FIND_FOLLOWING_TEAM_MEMBERS =
         FIND_TEAM_MEMBERS_BASE
         + LADDER_SEARCH_TEAM_FROM
-        + "INNER JOIN account_following ON account.id=account_following.following_account_id "
-
-        + LADDER_SEARCH_TEAM_WHERE
-        + "AND account_following.account_id=:accountId "
+        + "INNER JOIN "
+        + "("
+            + "SELECT DISTINCT(team.id) "
+            + LADDER_SEARCH_TEAM_FROM
+            + "INNER JOIN account_following ON account.id=account_following.following_account_id "
+            + LADDER_SEARCH_TEAM_WHERE
+            + "AND account_following.account_id=:accountId "
+        + ") following_teams ON team.id=following_teams.id "
         + "ORDER BY team.rating DESC, team.id DESC";
 
     private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =

@@ -135,6 +135,10 @@ public class AccountFollowingIT
             .create(new PlayerCharacter(null, account.getId(), region, 9998L, 1, "refchar1#123"));
         PlayerCharacter character2 = playerCharacterDAO
             .create(new PlayerCharacter(null, account.getId(), region, 9999L, 1, "refchar2#123"));
+        //acc and char to be a part of the team
+        Account memberAccount = accountDAO.merge(new Account(null, "memberacc#123"));
+        PlayerCharacter memberCharacter = playerCharacterDAO
+            .create(new PlayerCharacter(null, memberAccount.getId(), region, 9997L, 1, "memberchar#123"));
         Team team1 = new Team
         (
             null, season2.getBattlenetId(), region,
@@ -149,6 +153,12 @@ public class AccountFollowingIT
             100, 0, 0, 0
         );
         teamMemberDAO.create(member1);
+        TeamMember member1_2 = new TeamMember
+        (
+            team1.getId(), memberCharacter.getId(),
+            0, 0, 100, 0
+        );
+        teamMemberDAO.create(member1_2);
 
         Team team2 = new Team
         (
@@ -226,7 +236,11 @@ public class AccountFollowingIT
             + "\"members\":[{\"terranGamesPlayed\":100,\"protossGamesPlayed\":0,\"zergGamesPlayed\":0,"
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"refchar1#123\",\"id\":281,"
             + "\"accountId\":1,\"region\":\"EU\",\"battlenetId\":9998},"
-            + "\"account\":{\"battleTag\":\"refaccount#123\"}}]},"
+            + "\"account\":{\"battleTag\":\"refaccount#123\"}},"
+            + "{\"terranGamesPlayed\":0,\"protossGamesPlayed\":0,\"zergGamesPlayed\":100,"
+            + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"memberchar#123\",\"id\":283,"
+            + "\"accountId\":283,\"region\":\"EU\",\"battlenetId\":9997},"
+            + "\"account\":{\"battleTag\":\"memberacc#123\"}}]},"
 
             + "{\"rating\":99,\"wins\":100,\"losses\":0,\"id\":73,"
             + "\"region\":\"EU\",\"league\":{\"type\":0,\"queueType\":204,\"teamType\":0},\"leagueTierType\":0,"
