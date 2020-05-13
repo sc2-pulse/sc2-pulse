@@ -125,7 +125,8 @@ function onWindowLoad()
     enhanceTabs();
     observeChartables();
     createPaginations();
-    setFormCollapsibleScroll();
+    setFormCollapsibleScroll("form-ladder");
+    setFormCollapsibleScroll("form-following-ladder");
     createPlayerStatsCards(document.getElementById("player-stats-container"));
     showAnchoredTabs();
 }
@@ -198,15 +199,16 @@ function enchanceFollowButtons()
     document.querySelector("#unfollow-button").addEventListener("click", unfollow);
 }
 
-function setFormCollapsibleScroll()
+function setFormCollapsibleScroll(id)
 {
-    const jCol = $(document.getElementById("form-ladder"));
+    const jCol = $(document.getElementById(id));
     jCol.on("hide.bs.collapse", function(e){documentIsChanging = true});
     jCol.on("hidden.bs.collapse", function(e){
         documentIsChanging = false
         if(shouldScrollToResult)
         {
-            scrollIntoViewById("generated-info-all");
+            const scrollTo = e.currentTarget.getAttribute("data-on-success-scroll-to");
+            if(scrollTo != null) scrollIntoViewById(scrollTo);
             shouldScrollToResult = false;
         }
     });
@@ -395,7 +397,7 @@ function getLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = tru
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
         .catch(error => setGeneratingStatus("error", error.message))
         .then(json => updateLadder(json))
-        .then(o => setGeneratingStatus("success"));
+        .then(o => setGeneratingStatus("success", null, "generated-info-all"));
 }
 
 function updateLadder(searchResult)
@@ -1165,7 +1167,7 @@ function calculatePercentage(val, allVal)
     return Math.round((val / allVal) * 100);
 }
 
-function setGeneratingStatus(status, errorText = "Error")
+function setGeneratingStatus(status, errorText = "Error", scrollToOnSuccess = null)
 {
     switch(status)
     {
@@ -1204,7 +1206,7 @@ function setGeneratingStatus(status, errorText = "Error")
             }
             else
             {
-                scrollIntoViewById("generated-info-all");
+                if(scrollToOnSuccess != null) scrollIntoViewById(scrollToOnSuccess);
                 shouldScrollToResult = false;
             }
         break;
@@ -1531,7 +1533,7 @@ function getMyLadder(formParams)
     return fetch("api/my/following/ladder?" + formParams)
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
         .then(json => updateMyLadder(json))
-        .then(o => setGeneratingStatus("success"))
+        .then(o => setGeneratingStatus("success", null, "following-ladder"))
         .catch(error => setGeneratingStatus("error", error.message));
 }
 

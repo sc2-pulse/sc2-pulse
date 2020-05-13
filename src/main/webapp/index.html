@@ -199,7 +199,7 @@
                     </section>
                     <section id="personal-following" class="tab-pane fade">
                         <h3><a id="following-generator-collapse" class="c-dropdown" href="#form-following-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-following-ladder">Ladder</a></h3>
-                        <form id="form-following-ladder" class="collapse show" data-scroll-to="following-generator-collapse">
+                        <form id="form-following-ladder" class="collapse show" data-scroll-to="following-generator-collapse" data-on-success-scroll-to="following-ladder">
                             <p class="text-secondary">This ladder is made up of players you follow. You can follow
                             a player from the Player Information page (click on player).</p>
                             <div class="form-row">
@@ -366,7 +366,7 @@
         </section>
         <section id="generator" class="tab-pane fade show active">
         <h2><a id="generator-collapse" class="c-dropdown" href="#form-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-ladder">Generator</a></h2>
-        <form id="form-ladder" class="collapse show" data-scroll-to="generator-collapse">
+        <form id="form-ladder" class="collapse show" data-scroll-to="generator-collapse" data-on-success-scroll-to="generated-info-all">
             <div class="form-row">
                 <div class="col-md-4 mb-3">
                     <select id="season-picker" class="form-control season-picker" name="season"></select>
