@@ -16,6 +16,9 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * Tier MMR ranges
 ## Disclamier
 I use this project for learning, it is not production-ready.
+
+This application uses Battle.net&reg; API. 
+This is not an official Blizzard Entertainment&reg; application.
 ## Dependencies
 * Java 11
 * PostgreSQL 11
@@ -63,3 +66,6 @@ for private/local application properties
 ## Contributing
 Want to make a bug report/feature request? Any contributions are welcome, see [CONTRIBUTING](CONTRIBUTING.md) for 
 more information. 
+## Trademarks
+Battle.net, Blizzard Entertainment and StarCraft are trademarks or registered trademarks of Blizzard Entertainment,
+ Inc. in the U.S. and/or other countries. 
