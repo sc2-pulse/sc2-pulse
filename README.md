@@ -35,7 +35,8 @@ to create a simple test config:
 spring.datasource.username=name
 spring.datasource.password=pasword
 spring.datasource.url=jdbc:postgresql://localhost:5432/db_name
-blizzard.api.key=123
+spring.security.oauth2.client.registration.sc2-sys.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys.client-secret={client_secret}
 ```
 
 By default, maven will build a spring boot war archive. You can use it with any 
@@ -44,7 +45,8 @@ relevant web container.
 ## Running
 You must set the following application properties:
 ```
-blizzard.api.key = {base64 encoded client_id:client_secret}
+spring.security.oauth2.client.registration.sc2-sys.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys.client-secret={client_secret}
 spring.security.oauth2.client.registration.sc2-lg-eu.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-eu.client-secret = {client_secret}
 spring.security.oauth2.client.registration.sc2-lg-us.client-id = {client_id}

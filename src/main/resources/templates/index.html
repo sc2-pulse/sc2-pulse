@@ -123,9 +123,12 @@
         <section id="personal" class="tab-pane fade">
             <h2>Personal</h2>
             <div class="login-anonymous">
-                <p>
-                    <a class="btn btn-primary" href="login" role="button">Log in with Battle.net&reg;</a>
-                    <div>and create a personal ladder out of your favourite players</div>
+                <h3>Log in with</h3>
+                <a class="btn btn-primary mb-3" role="button" href="#" th:href="@{/oauth2/authorization/sc2-lg-eu}">BattleNet EU</a>
+                <a class="btn btn-primary mb-3" role="button" href="#" th:href="@{/oauth2/authorization/sc2-lg-us}">BattleNet US</a>
+                <a class="btn btn-primary mb-3" role="button" href="#" th:href="@{/oauth2/authorization/sc2-lg-kr}">BattleNet KR</a>
+                <a class="btn btn-primary mb-3" role="button" href="#" th:href="@{/oauth2/authorization/sc2-lg-cn}">BattleNet CN</a>
+                <div>and create a personal ladder out of your favourite players</div>
             </div>
             <div class="login-user d-none">
                 <ul id="personal-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">

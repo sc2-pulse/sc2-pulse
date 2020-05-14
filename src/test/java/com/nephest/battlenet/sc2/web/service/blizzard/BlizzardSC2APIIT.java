@@ -3,10 +3,10 @@
 
 package com.nephest.battlenet.sc2.web.service.blizzard;
 
+import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccessToken;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
@@ -15,9 +15,12 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
@@ -27,31 +30,35 @@ import reactor.test.StepVerifier;
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
+@SpringBootTest(classes = {AllTestConfig.class})
+@TestPropertySource("classpath:application.properties")
+@TestPropertySource("classpath:application-private.properties")
 public class BlizzardSC2APIIT
 {
 
     public static final int RETRY_COUNT = 2;
     public static final Duration OPERATION_DURATION = Duration.ofMillis(100);
-    public static final String VALID_ACCESS_TOKEN = "{\"access_token\":\"fdfgkjheufh\",\"token_type\":\"bearer\",\"expires_in\":86399}";
     public static final String VALID_SEASON = "{\"seasonId\": 1, \"year\": 2010, \"number\": 1}";
     public static final String VALID_LEAGUE = "{\"type\": 0, \"queueType\": 201, \"teamType\": 0, \"tier\": []}";
     public static final String VALID_LADDER = "{\"team\": []}";
 
-    private static BlizzardSC2API api;
+    @Autowired
+    private BlizzardSC2API api;
 
-    @BeforeEach
-    public void beforeEach()
+    @Test @Order(1)
+    public void testFetch()
     {
-        api = new BlizzardSC2API("password");
-        BlizzardAccessToken token = mock(BlizzardAccessToken.class);
-        when(token.isValid()).thenReturn(true);
-        api.setAccessToken(token);
+        BlizzardSeason season = api.getCurrentSeason(Region.EU).block();
+        assertNotNull(season);
+        assertNotNull(season.getId());
+        assertNotNull(season.getNumber());
+        assertNotNull(season.getYear());
     }
 
-    @Test
+    @Test @Order(2)
     public void testRetrying()
     throws Exception
     {

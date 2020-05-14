@@ -6,30 +6,30 @@ package com.nephest.battlenet.sc2.web.service.blizzard;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.blizzard.*;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.reactive.function.BodyInserters;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
 import reactor.util.retry.Retry;
 
-import javax.validation.Valid;
 import java.time.Duration;
 import java.util.Map;
-import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.toUnmodifiableMap;
-import static org.springframework.http.MediaType.APPLICATION_FORM_URLENCODED;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Service
@@ -69,19 +69,19 @@ public class BlizzardSC2API
         .transientErrors(true);
 
     private WebClient client;
-    private final String password;
-    private BlizzardAccessToken accessToken;
     private String regionUri;
 
-    public BlizzardSC2API(@Value("${blizzard.api.key}") String password)
+    @Autowired
+    public BlizzardSC2API(OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
     {
-        Objects.requireNonNull(password);
-        this.password = password;
-        initWebClient();
+        initWebClient(auth2AuthorizedClientManager);
     }
 
-    private void initWebClient()
+    private void initWebClient(OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
     {
+        ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
+            new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
+        oauth2Client.setDefaultClientRegistrationId("sc2-sys");
         TcpClient timeoutClient = TcpClient.create()
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECT_TIMEOUT.toMillis())
             .doOnConnected
@@ -97,6 +97,7 @@ public class BlizzardSC2API
             .compress(true);
         client = WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .apply(oauth2Client.oauth2Configuration())
             .build();
     }
 
@@ -115,49 +116,6 @@ public class BlizzardSC2API
         return client;
     }
 
-    public String getPassword()
-    {
-        return password;
-    }
-
-    @Validated
-    public void setAccessToken(@Valid BlizzardAccessToken token)
-    {
-        this.accessToken = token;
-        client = client.mutate()
-            .defaultHeader("Authorization", "Bearer " + token.getAccessToken())
-            .build();
-    }
-
-    public BlizzardAccessToken getAccessToken()
-    {
-        return accessToken;
-    }
-
-    protected void renewAccessToken(boolean force)
-    {
-        if(force || getAccessToken() == null || !getAccessToken().isValid())
-        {
-            BlizzardAccessToken token = getWebClient()
-                .post()
-                .uri(regionUri != null ? regionUri : "https://us.battle.net/oauth/token")
-                .header("Authorization", "Basic " + getPassword())
-                .accept(APPLICATION_JSON)
-                .contentType(APPLICATION_FORM_URLENCODED)
-                .body(BodyInserters.fromFormData("grant_type", "client_credentials"))
-                .retrieve()
-                .bodyToMono(BlizzardAccessToken.class)
-                .retryWhen(RETRY)
-                .block();
-            setAccessToken(token);
-        }
-    }
-
-    public void renewAccessToken()
-    {
-        renewAccessToken(false);
-    }
-
     public static final BlizzardSeason getSeason(Long id)
     {
         return MMR_SEASONS.get(id);
@@ -165,7 +123,6 @@ public class BlizzardSC2API
 
     public Mono<BlizzardSeason> getCurrentSeason(Region region)
     {
-        renewAccessToken();
         return getWebClient()
             .get()
             .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/ladder/season/{0}"), region.getId())
@@ -184,7 +141,6 @@ public class BlizzardSC2API
         TeamType teamType
     )
     {
-        renewAccessToken();
         return getWebClient()
             .get()
             .uri
@@ -207,7 +163,6 @@ public class BlizzardSC2API
         BlizzardTierDivision division
     )
     {
-        renewAccessToken();
         return getWebClient()
             .get()
             .uri
