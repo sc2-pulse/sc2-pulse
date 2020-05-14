@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Generator</title>
+</head>
+<body>
+<form th:fragment="form (id, scrollTo, scrollToSuccess)"
+      th:id="${id}"
+      class="collapse show"
+      th:data-scroll-to="${scrollTo}"
+      th:data-on-success-scroll-to="${scrollToSuccess}"
+>
+    <div class="form-row">
+        <div class="col-md-4 mb-3">
+            <select id="season-picker" class="form-control season-picker" name="season"></select>
+        </div>
+        <div class="col-md-4 mb-3">
+            <select id="team-format-picker" class="form-control" name="queue">
+                <option value="LOTV_1V1" selected="selected">1V1</option>
+                <option value="LOTV_2V2">2V2</option>
+                <option value="LOTV_3V3">3V3</option>
+                <option value="LOTV_4V4">4V4</option>
+                <option value="LOTV_ARCHON">Archon</option>
+            </select>
+        </div>
+        <div class="col-md-4 mb-3">
+            <select id="team-type-picker" class="form-control" name="team-type">
+                <option value="ARRANGED" selected="selected">Arranged</option>
+                <option value="RANDOM">Random</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-us'" type="checkbox" name="us" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-us'">
+                <img
+                        class="form-icon-long"
+                        src="static/icon/flag/us.svg"
+                        alt="US" title="US"
+                />
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-eu'" type="checkbox" name="eu" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-eu'">
+                <img
+                        class="form-icon-long"
+                        src="static/icon/flag/eu.svg"
+                        alt="EU" title="EU"
+                />
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-kr'" type="checkbox" name="kr" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-kr'">
+                <img
+                        class="form-icon-long"
+                        src="static/icon/flag/kr.svg"
+                        alt="KR" title="KR"
+                />
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-cn'" type="checkbox" name="cn" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-cn'">
+                <img
+                        class="form-icon-long"
+                        src="static/icon/flag/cn.svg"
+                        alt="CN" title="CN"
+                />
+            </label>
+        </div>
+    </div>
+
+    <div class="mb-3">
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-bro'" type="checkbox" name="bro" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-bro'">
+                <img
+                        class="form-icon"
+                        src="static/icon/league/bronze.svg"
+                        alt="Bronze" title="Bronze"
+                />
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-sil'" type="checkbox" name="sil" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-sil'">
+                <img
+                        class="form-icon"
+                        src="static/icon/league/silver.svg"
+                        alt="Silver" title="Silver"
+                />
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-gol'" type="checkbox" name="gol" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-gol'">
+                <img
+                        class="form-icon"
+                        src="static/icon/league/gold.svg"
+                        alt="Gold" title="Gold"
+                />
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-pla'" type="checkbox" name="pla" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-pla'">
+                <img
+                        class="form-icon"
+                        src="static/icon/league/platinum.svg"
+                        alt="Platinum" title="Platinum"
+                />
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-dia'" type="checkbox" name="dia" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-dia'">
+                <img
+                        class="form-icon"
+                        src="static/icon/league/diamond.svg"
+                        alt="Diamond" title="Diamond"
+                />
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-mas'" type="checkbox" name="mas" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-mas'">
+                <img
+                        class="form-icon"
+                        src="static/icon/league/master.svg"
+                        alt="Master" title="Master"
+                />
+            </label>
+        </div>
+        <div class="form-check form-check-inline">
+            <input th:id="${id} + '-gra'" type="checkbox" name="gra" value="true" checked="checked" />
+            <label class="form-check-label" th:for="${id} + '-gra'">
+                <img
+                        class="form-icon"
+                        src="static/icon/league/grandmaster.svg"
+                        alt="Grandmaster" title="Grandmaster"
+                />
+            </label>
+        </div>
+    </div>
+
+    <button class="btn btn-primary" type="submit">
+        <span>Generate</span>
+    </button>
+</form>
+</body>
+</html>

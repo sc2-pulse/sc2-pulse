@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:fragment="layout (title, content, script)" lang="en">
+<head>
+    <title th:replace="${title}">SC2 Ladder Generator</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
+    <meta name="description" content="Flexible StarCraft&reg;2 ladder generator for any team format"/>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous"/>
+    <link rel="stylesheet" th:href="@{static/sc2.css}"/>
+    <link rel="icon" type="image/png" sizes="128x128" th:href="@{/static/icon/misc/favicon-128.png}" />
+    <link rel="icon" type="image/png" sizes="32x32" th:href="@{static/icon/misc/favicon-32.png}" />
+    <link rel="icon" type="image/png" sizes="16x16" th:href="@{static/icon/misc/favicon-16.png}" />
+</head>
+<body>
+    <div class="container">
+        <div th:replace="${content}"></div>
+        <!-- Modal privacy-->
+        <div class="modal fade" id="privacy-policy" tabindex="-1" role="dialog" aria-labelledby="privacy-policy-title" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h2 class="modal-title" id="privacy-policy-title">Privacy Policy</h2>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <dl>
+                            <dt>Personal Data</dt>
+                            <dd>No personal data is collected</dd>
+                            <dt>Technical data</dt>
+                            <dd>Your IP address and URL are recorded for technical purposes</dd>
+                            <dt>Cookies</dt>
+                            <dd>This site is using cookies to prevent you from authenticating on every request</dd>
+                            <dt>Battle.net&reg; Account ID, Battle.net&reg; BattleTag</dt>
+                            <dd>Only the BattleTag is required for authentication, but Battle.net&reg; will ask you for the id permission anyway</dd>
+                            <dt>Battle.net&reg; Account Identity</dt>
+                            <dd>This information is used within the OpenID&reg; protocol. Required for easy and secure authentication</dd>
+                            <dt>3rd party</dt>
+                            <dd>This site is using 3rd party CDN. It may have its own Privacy Policy</dd>
+                            <dt>NO WARRANTY</dt>
+                            <dd>SC2 LADDER GENERATOR PROVIDES THE DATA “AS IS,” AND “AS AVAILABLE,” AND THE ENTIRE RISK AS TO SATISFACTORY QUALITY, PERFORMANCE, ACCURACY, AND EFFORT IS WITH YOU.</dd>
+                        </dl>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer>
+        <div class="container text-secondary">
+            <span class="c-divider d-inline-block mb-3"><a href="https://nephest.com/" class="text-secondary" target="_blank" rel="noopener noreferrer">&copy; 2020 Oleksandr Masniuk</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="#" class="text-secondary" data-toggle="modal" data-target="#privacy-policy">Privacy Policy</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-icons" class="text-secondary" target="_blank" rel="noopener noreferrer">SC2 icon pack</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-ladder-generator" class="text-secondary" target="_blank" rel="noopener noreferrer">Source</a></span>
+        </div>
+    </footer>
+    <script
+            src="https://code.jquery.com/jquery-3.4.1.slim.min.js"
+            integrity="sha256-pasqAKBDmFT4eHoN2ndd6lN370kFiGUFyTiUHWhU7k8="
+            crossorigin="anonymous">
+    </script>
+    <script
+            src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+            integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
+            crossorigin="anonymous">
+    </script>
+    <script
+            src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+            integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
+            crossorigin="anonymous">
+    </script>
+    <script
+            src="https://cdn.jsdelivr.net/npm/chart.js@2.9.3/dist/Chart.min.js"
+            integrity="sha384-i+dHPTzZw7YVZOx9lbH5l6lP74sLRtMtwN2XjVqjf3uAGAREAF4LMIUDTWEVs4LI"
+            crossorigin="anonymous">
+    </script>
+    <th:block th:replace="${script}" />
+</body>
+</html>
+
