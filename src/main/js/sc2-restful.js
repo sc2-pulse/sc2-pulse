@@ -86,8 +86,10 @@ const COLORS = new Map
     ["protoss", "#dec93e"],
     ["zerg", "#882991"],
     ["random", "#646464"],
-    ["us", "#3c3b6e"],
-    ["eu", "#003399"],
+    //["us", "#3c3b6e"],
+    //["eu", "#003399"],
+    ["us", "#003399"],
+    ["eu", "#fc0"],
     ["kr", "#141414"],
     ["cn", "#de2910"],
     ["bronze", "#b9712d"],
@@ -104,6 +106,7 @@ const ROOT_CONTEXT_PATH = window.location.pathname.substring(0, window.location.
 let currentRequests = 0;
 let documentIsChanging = false;
 let shouldScrollToResult = false;
+let currentSeasons = null;
 let currentSeason = -1;
 let currentTeamFormat;
 let currentTeamType;
@@ -265,49 +268,63 @@ function getLadderStats(formParams)
 
 function updateLadderStats(searchResult)
 {
-    updateRaceGamesPlayed(searchResult.raceGamesPlayed);
-    updateGenericTable(document.getElementById("games-played-region-table"), searchResult.regionGamesPlayed);
-    updateGenericTable
+    const currentSeasonPlayerCount = Object.values(searchResult[currentSeason].regionPlayerCount)
+        .reduce((a, b) => a + b, 0);
+    document.getElementById("players-total-count").textContent = currentSeasonPlayerCount.toLocaleString();
+    const currentSeasonGamesTotal = Object.values(searchResult[currentSeason].raceGamesPlayed).reduce((a, b) => a + b, 0);
+    document.getElementById("games-total-count").textContent = currentSeasonGamesTotal.toLocaleString()
+        + "/" + Math.round(currentSeasonGamesTotal / (currentTeamFormat.memberCount * 2)).toLocaleString();
+
+    const percentageResult = {};
+    for(const [seasonId, stats] of Object.entries(searchResult))
+    {
+        for(const [param, vals] of Object.entries(stats))
+        {
+            if(percentageResult[param] == null) percentageResult[param] = {};
+            percentageResult[param][seasonId] = {};
+            const sum = Object.values(vals).reduce((a, b) => a + b, 0);
+            for(const [header, value] of Object.entries(vals))
+                percentageResult[param][seasonId][header] = calculatePercentage(value, sum);
+        }
+    }
+
+    updateColRowTable
+    (
+        document.getElementById("games-played-race-table"), percentageResult.raceGamesPlayed,
+        null, function(name){return enumOfName(name, RACE).name;}, seasonIdTranslator
+    );
+    updateColRowTable
+        (document.getElementById("games-played-region-table"), percentageResult.regionGamesPlayed, null, null, seasonIdTranslator);
+    updateColRowTable
     (
         document.getElementById("games-played-league-table"),
-        searchResult.leagueGamesPlayed,
+        percentageResult.leagueGamesPlayed,
         (a, b)=>a[0].localeCompare(b[0]),
-        function(id){return enumOfId(id, LEAGUE).name;}
+        function(id){return enumOfId(id, LEAGUE).name;},
+        seasonIdTranslator
     );
 
-    updateGenericTable(document.getElementById("team-count-region-table"), searchResult.regionTeamCount);
-    updateGenericTable
+    updateColRowTable
+        (document.getElementById("team-count-region-table"), percentageResult.regionTeamCount, null, null, seasonIdTranslator);
+    updateColRowTable
     (
         document.getElementById("team-count-league-table"),
-        searchResult.leagueTeamCount,
+        percentageResult.leagueTeamCount,
         (a, b)=>a[0].localeCompare(b[0]),
-        function(id){return enumOfId(id, LEAGUE).name;}
+        function(id){return enumOfId(id, LEAGUE).name;},
+        seasonIdTranslator
     );
 
-    const playerCountTotal = Object.values(searchResult.regionPlayerCount)
-        .reduce((a, b) => a + b, 0);
-    document.getElementById("players-total-count").textContent = playerCountTotal.toLocaleString();
-    updateGenericTable(document.getElementById("player-count-region-table"), searchResult.regionPlayerCount);
-    updateGenericTable
+    updateColRowTable
+        (document.getElementById("player-count-region-table"), percentageResult.regionPlayerCount, null, null, seasonIdTranslator);
+    updateColRowTable
     (
         document.getElementById("player-count-league-table"),
-        searchResult.leaguePlayerCount,
+        percentageResult.leaguePlayerCount,
         (a, b)=>a[0].localeCompare(b[0]),
-        function(id){return enumOfId(id, LEAGUE).name;}
+        function(id){return enumOfId(id, LEAGUE).name;},
+        seasonIdTranslator
     );
-}
-
-function updateRaceGamesPlayed(gamesPlayed)
-{
-    const gamesTotal = gamesPlayed.TERRAN + gamesPlayed.PROTOSS + gamesPlayed.ZERG + gamesPlayed.RANDOM;
-
-    document.getElementById("games-total-count").textContent =
-        gamesTotal.toLocaleString() + "/" + Math.round(gamesTotal / (currentTeamFormat.memberCount * 2)).toLocaleString();
-    document.getElementById("games-terran-count").textContent = gamesPlayed.TERRAN;
-    document.getElementById("games-protoss-count").textContent = gamesPlayed.PROTOSS;
-    document.getElementById("games-zerg-count").textContent = gamesPlayed.ZERG;
-    document.getElementById("games-random-count").textContent = gamesPlayed.RANDOM;
-    document.getElementById("games-played-race-table").setAttribute("data-last-updated", Date.now());
 }
 
 function updateGenericTable(table, data, sorter = null, translator = null)
@@ -327,6 +344,48 @@ function updateGenericTable(table, data, sorter = null, translator = null)
         bodyRow.insertCell().appendChild(document.createTextNode(value));
     }
     table.setAttribute("data-last-updated", Date.now());
+}
+
+function updateColRowTable(table, data, sorter = null, headTranslator = null, rowTranslator = null)
+{
+    const headRow = table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0];
+    removeChildren(headRow);
+    //row header padding
+    headRow.appendChild(document.createElement("th"));
+    const tBody = table.getElementsByTagName("tbody")[0];
+    removeChildren(tBody);
+    let rowIx = 0;
+    for(const[rowHeader, rowData] of Object.entries(data))
+    {
+        const bodyRow = document.createElement("tr");
+        const rowHeadCell = document.createElement("th");
+        const rowHeaderTranslated = rowTranslator == null ? rowHeader : rowTranslator(rowHeader);
+        rowHeadCell.setAttribute("span", "row");
+        rowHeadCell.appendChild(document.createTextNode(rowHeaderTranslated));
+        bodyRow.appendChild(rowHeadCell);
+        for(const [header, value] of Object.entries(rowData).sort(sorter == null ? (a, b)=>b[0].localeCompare(a[0]) : sorter))
+        {
+            if(rowIx == 0)
+            {
+                const headCell = document.createElement("th");
+                headCell.setAttribute("span", "col");
+                const headerTranslated = headTranslator == null ? header : headTranslator(header);
+                headCell.setAttribute("data-chart-color", headerTranslated.toLowerCase());
+                headCell.appendChild(document.createTextNode(headerTranslated));
+                headRow.appendChild(headCell);
+            }
+            bodyRow.insertCell().appendChild(document.createTextNode(value));
+        }
+        tBody.appendChild(bodyRow);
+        rowIx++;
+    }
+    table.setAttribute("data-last-updated", Date.now());
+}
+
+function seasonIdTranslator(id)
+{
+    const season = currentSeasons.filter((s)=>s.id == id)[0];
+    return `${season.year} season ${season.number} (${season.id})`;
 }
 
 function getLeagueBounds(formParams)
@@ -705,6 +764,7 @@ function getSeasons()
 
 function updateSeasons(seasons)
 {
+    currentSeasons = seasons;
     updateSeasonsTabs(seasons);
     for(const seasonPicker of document.querySelectorAll(".season-picker"))
     {
@@ -955,7 +1015,6 @@ function createChart(chartable)
                     }],
                     yAxes:
                     [{
-                        display: false,
                        // ticks:{beginAtZero: true},
                         stacked: stacked === "true" ? true : false
                     }]
@@ -965,8 +1024,8 @@ function createChart(chartable)
                     mode: (data.customMeta.type === "pie" || data.customMeta === "doughnut")
                         ? "dataset"
                         : "index",
-                    position: "average",
-                    intersect: true,
+                    position: "nearest",
+                    intersect: false,
                     callbacks:
                     {
                         ...(tooltipPercentage === "true") && {label: addTooltipPercentage}
@@ -993,8 +1052,7 @@ function addTooltipPercentage(tooltipItem, data)
     label += " "
         + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
     let sum = 0;
-    for(const dataset of data.datasets)
-        for(const val of dataset.data) sum += val;
+    for(const dataset of data.datasets) sum += dataset.data[tooltipItem.index];
     label += "\t(" + calculatePercentage(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index], sum) + "%)";
     return label;
 }
@@ -1013,6 +1071,8 @@ function decorateChartData(data, type)
         if (type === "line")
         {
             Object.defineProperty(data.datasets[i], "borderColor", { value: COLORS.get(data.customColors[i]), writable: true, enumerable: true, configurable: true });
+            Object.defineProperty(data.datasets[i], "pointBackgroundColor", { value: COLORS.get(data.customColors[i]), writable: true, enumerable: true, configurable: true });
+            //Object.defineProperty(data.datasets[i], "pointBorderColor", { value: COLORS.get(data.customColors[i]), writable: true, enumerable: true, configurable: true });
             Object.defineProperty(data.datasets[i], "backgroundColor", { value: "rgba(0, 0, 0, 0)", writable: true, enumerable: true, configurable: true });
         }
         else if(type === "doughnut" || type === "pie")
@@ -1066,7 +1126,7 @@ function collectChartJSData(elem)
     }
     const data =
     {
-        labels: stacked ? [elem.getAttribute("data-chart-stacked-label")] : tableData.headers,
+        labels: tableData.rowHeaders.length > 0 ? tableData.rowHeaders : tableData.headers,
         datasets: datasets,
         customColors: tableData.colors,
         customMeta:
@@ -1082,10 +1142,15 @@ function collectTableData(elem)
     let mode = elem.getAttribute("data-chart-collection-mode");
     mode = mode == null ? "body" : mode;
     const headers = [];
+    const rowHeaders = [];
     const allVals = [];
     const colors = [];
     const headings = elem.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0].getElementsByTagName("th");
-    for (let i = 0; i < headings.length; i++)
+    const rows = mode === "foot"
+        ? elem.getElementsByTagName("tfoot")[0].getElementsByTagName("tr")
+        : elem.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+    const startIx = rows[0].getElementsByTagName("th").length > 0 ? 1 : 0;
+    for (let i = startIx; i < headings.length; i++)
     {
         const heading = headings[i];
         headers.push(heading.textContent);
@@ -1093,12 +1158,10 @@ function collectTableData(elem)
         colors.push(heading.getAttribute("data-chart-color"));
     }
 
-    const rows = mode === "foot"
-        ? elem.getElementsByTagName("tfoot")[0].getElementsByTagName("tr")
-        : elem.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
     for (let i = 0; i < rows.length; i++)
     {
         const row = rows[i];
+        if(startIx == 1) rowHeaders.push(row.getElementsByTagName("th")[0].textContent);
         const tds = row.getElementsByTagName("td");
         for (let tdix = 0; tdix < tds.length; tdix++)
         {
@@ -1106,7 +1169,7 @@ function collectTableData(elem)
             allVals[tdix].push(parseFloat(iText));
         }
     }
-    return {headers: headers, values: allVals, colors: colors};
+    return {headers: headers, rowHeaders: rowHeaders, values: allVals, colors: colors};
 }
 
 function updateChartable(chartable)
