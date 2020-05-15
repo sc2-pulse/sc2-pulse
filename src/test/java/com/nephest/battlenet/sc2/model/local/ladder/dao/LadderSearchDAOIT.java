@@ -343,14 +343,15 @@ public class LadderSearchDAOIT
     @Test
     public void test4v4LeagueStats()
     {
-        MergedLadderSearchStatsResult stats = search.findStats
+        Map<Long, MergedLadderSearchStatsResult> statsMap = search.findStats
         (
-            DEFAULT_SEASON_ID,
             Set.of(Region.values()),
             LEAGUES_SET,
             QUEUE_TYPE,
             TEAM_TYPE
         );
+        assertEquals(1, statsMap.size());
+        MergedLadderSearchStatsResult stats = statsMap.get(DEFAULT_SEASON_ID);
 
         int teamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
         int regionTeamCount = SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;

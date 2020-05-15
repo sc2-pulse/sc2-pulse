@@ -32,7 +32,8 @@ public class SeasonDAO
         + "number=excluded.number";
 
     private static final String FIND_LIST_BY_REGION = "SELECT "
-        + "id, battlenet_id, region, year, number "
+        + "id AS \"season.id\", battlenet_id AS \"season.battlenet_id\", region AS \"season.region\", "
+        + "year AS \"season.year\", number AS \"season.number\""
         + "FROM season "
         + "WHERE region=:region "
         + "ORDER BY battlenet_id DESC";
@@ -43,16 +44,16 @@ public class SeasonDAO
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
 
-    private final RowMapper<Season> FIND_LIST_BY_REGION_ROW_MAPPER =
+    private final RowMapper<Season> STD_ROW_MAPPER =
     (rs, num)->
     {
         return new Season
         (
-            rs.getLong("id"),
-            rs.getLong("battlenet_id"),
-            conversionService.convert(rs.getInt("region"), Region.class),
-            rs.getInt("year"),
-            rs.getInt("number")
+            rs.getLong("season.id"),
+            rs.getLong("season.battlenet_id"),
+            conversionService.convert(rs.getInt("season.region"), Region.class),
+            rs.getInt("season.year"),
+            rs.getInt("season.number")
         );
     };
 
@@ -99,13 +100,18 @@ public class SeasonDAO
     {
         MapSqlParameterSource params
             = new MapSqlParameterSource("region", conversionService.convert(region, Integer.class));
-        return template.query(FIND_LIST_BY_REGION, params, FIND_LIST_BY_REGION_ROW_MAPPER);
+        return template.query(FIND_LIST_BY_REGION, params, STD_ROW_MAPPER);
     }
 
     @Cacheable(cacheNames="search-season-last")
     public long getMaxBattlenetId()
     {
         return template.query(FIND_MAX_BATTLENET_ID_QUERY, DAOUtils.LONG_EXTRACTOR);
+    }
+
+    public RowMapper<Season> getStandardRowMapper()
+    {
+        return STD_ROW_MAPPER;
     }
 
 }

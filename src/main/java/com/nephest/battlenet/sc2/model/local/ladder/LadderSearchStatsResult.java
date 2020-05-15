@@ -3,48 +3,49 @@
 
 package com.nephest.battlenet.sc2.model.local.ladder;
 
-import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueStats;
+import com.nephest.battlenet.sc2.model.local.Season;
 
 import javax.validation.constraints.NotNull;
-import java.util.Map;
 
 public class LadderSearchStatsResult
 {
 
     @NotNull
-    private final Long playerCount;
+    private final Season season;
 
     @NotNull
-    private final Long teamCount;
+    private final League league;
 
     @NotNull
-    private final Map<Race, Long> gamesPlayed;
+    private final LeagueStats leagueStats;
 
     public LadderSearchStatsResult
     (
-        Long playerCount,
-        Long teamCount,
-        Map<Race, Long> gamesPlayed
+        Season season,
+        League league,
+        LeagueStats leagueStats
     )
     {
-        this.playerCount = playerCount;
-        this.teamCount = teamCount;
-        this.gamesPlayed = gamesPlayed;
+        this.season = season;
+        this.league = league;
+        this.leagueStats = leagueStats;
     }
 
-    public Long getPlayerCount()
+    public Season getSeason()
     {
-        return playerCount;
+        return season;
     }
 
-    public Long getTeamCount()
+    public League getLeague()
     {
-        return teamCount;
+        return league;
     }
 
-    public Map<Race, Long> getGamesPlayed()
+    public LeagueStats getLeagueStats()
     {
-        return gamesPlayed;
+        return leagueStats;
     }
 
 }

@@ -3,10 +3,14 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -27,6 +31,18 @@ public class LeagueDAO
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
+
+    private final RowMapper<League> STD_ROW_MAPPER = (rs, num)->
+    {
+        return new League
+        (
+            rs.getLong("league.id"),
+            rs.getLong("league.season_id"),
+            conversionService.convert(rs.getInt("league.type"), BaseLeague.LeagueType.class),
+            conversionService.convert(rs.getInt("league.queue_type"), QueueType.class),
+            conversionService.convert(rs.getInt("league.team_type"), TeamType.class)
+        );
+    };
 
     @Autowired
     public LeagueDAO
@@ -64,6 +80,11 @@ public class LeagueDAO
             .addValue("type", conversionService.convert(league.getType(), Integer.class))
             .addValue("queueType", conversionService.convert(league.getQueueType(), Integer.class))
             .addValue("teamType", conversionService.convert(league.getTeamType(), Integer.class));
+    }
+
+    public RowMapper<League> getStandardRowMapper()
+    {
+        return STD_ROW_MAPPER;
     }
 
 }

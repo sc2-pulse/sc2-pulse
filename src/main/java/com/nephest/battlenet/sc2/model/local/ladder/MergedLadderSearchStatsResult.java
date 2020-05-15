@@ -40,16 +40,33 @@ public class MergedLadderSearchStatsResult
                 LeagueType league = leagueEntry.getKey();
                 LadderSearchStatsResult curStats = leagueEntry.getValue();
 
-                curRegionPlayerCount += curStats.getPlayerCount();
-                curRegionCount += curStats.getTeamCount();
-                leaguePlayerCount.put(league, leaguePlayerCount.getOrDefault(league, 0l) + curStats.getPlayerCount());
-                leagueTeamCount.put(league, leagueTeamCount.getOrDefault(league, 0l) + curStats.getTeamCount());
+                curRegionPlayerCount += curStats.getLeagueStats().getPlayerCount();
+                curRegionCount += curStats.getLeagueStats().getTeamCount();
+                leaguePlayerCount.put(league,
+                    leaguePlayerCount.getOrDefault(league, 0l) + curStats.getLeagueStats().getPlayerCount());
+                leagueTeamCount.put(league,
+                    leagueTeamCount.getOrDefault(league, 0l) + curStats.getLeagueStats().getTeamCount());
 
-                for(Map.Entry<Race, Long> raceEntry : curStats.getGamesPlayed().entrySet())
+                for(Race race : Race.values())
                 {
-                    Race race = raceEntry.getKey();
-                    Long gamesPlayed = raceEntry.getValue();
-
+                    Integer gamesPlayed = null;
+                    switch(race)
+                    {
+                        case TERRAN:
+                            gamesPlayed = curStats.getLeagueStats().getTerranGamesPlayed();
+                            break;
+                        case PROTOSS:
+                            gamesPlayed = curStats.getLeagueStats().getProtossGamesPlayed();
+                            break;
+                        case ZERG:
+                            gamesPlayed = curStats.getLeagueStats().getZergGamesPlayed();
+                            break;
+                        case RANDOM:
+                            gamesPlayed = curStats.getLeagueStats().getRandomGamesPlayed();
+                            break;
+                        default:
+                            throw new IllegalArgumentException("Unsupported race");
+                    };
                     regionGamesPlayed.put(region, regionGamesPlayed.getOrDefault(region, 0l) + gamesPlayed);
                     leagueGamesPlayed.put(league, leagueGamesPlayed.getOrDefault(league, 0l) + gamesPlayed);
                     raceGamesPlayed.put(race, raceGamesPlayed.getOrDefault(race, 0l) + gamesPlayed);

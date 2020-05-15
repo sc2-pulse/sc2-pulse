@@ -130,9 +130,8 @@ public class LadderController
     }
 
     @GetMapping("/ladder/stats")
-    public MergedLadderSearchStatsResult getLadderStats
+    public Map<Long, MergedLadderSearchStatsResult> getLadderStats
     (
-        @RequestParam("season") long season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
         @RequestParam(name = "us", required = false) boolean us,
@@ -164,7 +163,6 @@ public class LadderController
         if(grandmaster) leagues.add(LeagueType.GRANDMASTER);
         return ladderSearch.findStats
         (
-            season,
             regions,
             leagues,
             queue,

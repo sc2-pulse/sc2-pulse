@@ -3,9 +3,11 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.local.LeagueStats;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -50,6 +52,18 @@ public class LeagueStatsDAO
         + "protoss_games_played=excluded.protoss_games_played, "
         + "zerg_games_played=excluded.zerg_games_played, "
         + "random_games_played=excluded.random_games_played";
+
+    public static final RowMapper<LeagueStats> STD_ROW_MAPPER = (rs, num) ->
+    {
+        return new LeagueStats
+        (
+            rs.getLong("league_stats.league_id"),
+            rs.getInt("player_count"),
+            rs.getInt("team_count"),
+            rs.getInt("terran_games_played"), rs.getInt("protoss_games_played"), rs.getInt("zerg_games_played"),
+            rs.getInt("random_games_played")
+        );
+    };
 
 
 
