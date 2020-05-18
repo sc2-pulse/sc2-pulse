@@ -15,6 +15,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 
@@ -154,6 +156,7 @@ public class PlayerCharacterStatsDAO
         return Collections.unmodifiableMap(queries);
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void calculate(long season)
     {
         SqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
@@ -161,6 +164,7 @@ public class PlayerCharacterStatsDAO
         template.update(CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void mergeCalculate(long season)
     {
         SqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
@@ -169,11 +173,13 @@ public class PlayerCharacterStatsDAO
         template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void calculateGlobal()
     {
         template.getJdbcTemplate().update(CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS);
     }
 
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void mergeCalculateGlobal()
     {
         template.getJdbcTemplate().update(CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS);
