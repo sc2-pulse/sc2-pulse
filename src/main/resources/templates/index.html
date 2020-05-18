@@ -248,6 +248,19 @@
             </li>
             <li class="nav-item">
                 <a
+                        id="stats-global-tab"
+                        class="nav-link"
+                        data-toggle="pill"
+                        href="#stats-global"
+                        role="tab"
+                        aria-controls="stats-global"
+                        aria-selected="false"
+                >
+                    Global
+                </a>
+            </li>
+            <li class="nav-item">
+                <a
                     id="stats-race-tab"
                     class="nav-link"
                     data-toggle="pill"
@@ -325,6 +338,53 @@
                 <nav class="pagination-container" aria-label="Ladder navigation bottom">
                     <ul class="pagination pagination-ladder justify-content-center flex-wrap"></ul>
                 </nav>
+            </section>
+            <section id="stats-global" class="tab-pane fade">
+                <h3>Global stats</h3>
+                <div class="row no-gutters">
+                    <section id="games-played-global" class="col-lg-6 mb-3">
+                        <table
+                                id="games-played-global-table"
+                                class="chartable"
+                                data-chart-title="Games played"
+                                data-chart-type="line"
+                                data-chart-tooltip-sort="reverse"
+                                data-chart-id="games-played-global-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="games-played-global-chart"></canvas></div>
+                    </section>
+                    <section id="team-count-global" class="col-lg-6 mb-3">
+                        <table
+                                id="team-count-global-table"
+                                class="chartable"
+                                data-chart-title="Team count"
+                                data-chart-type="line"
+                                data-chart-tooltip-sort="reverse"
+                                data-chart-id="team-count-global-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="team-count-global-chart"></canvas></div>
+                    </section>
+                    <section id="player-count-global" class="col-lg-6 mb-3">
+                        <table
+                                id="player-count-global-table"
+                                class="chartable"
+                                data-chart-title="Player count"
+                                data-chart-type="line"
+                                data-chart-tooltip-sort="reverse"
+                                data-chart-id="player-count-global-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="player-count-global-chart"></canvas></div>
+                    </section>
+                </div>
             </section>
             <section id="stats-race" class="tab-pane fade">
                 <h3>Race distribution</h3>

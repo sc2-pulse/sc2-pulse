@@ -82,6 +82,7 @@ const CHARTABLE_OBSERVER = new MutationObserver(onChartableMutation);
 const CHARTS = new Map();
 const COLORS = new Map
 ([
+    ["global", "#007bff"],
     ["terran", "#295a91"],
     ["protoss", "#dec93e"],
     ["zerg", "#882991"],
@@ -275,9 +276,13 @@ function updateLadderStats(searchResult)
     document.getElementById("games-total-count").textContent = currentSeasonGamesTotal.toLocaleString()
         + "/" + Math.round(currentSeasonGamesTotal / (currentTeamFormat.memberCount * 2)).toLocaleString();
 
+    const globalResult = {gamesPlayed: {}, teamCount: {}, playerCount: {}};
     const percentageResult = {};
     for(const [seasonId, stats] of Object.entries(searchResult))
     {
+        globalResult.gamesPlayed[seasonId] = {global: Object.values(stats.regionGamesPlayed).reduce((a, b) => a + b, 0)};
+        globalResult.teamCount[seasonId] = {global: Object.values(stats.regionTeamCount).reduce((a, b) => a + b, 0)};
+        globalResult.playerCount[seasonId] = {global: Object.values(stats.regionPlayerCount).reduce((a, b) => a + b, 0)};
         for(const [param, vals] of Object.entries(stats))
         {
             if(percentageResult[param] == null) percentageResult[param] = {};
@@ -287,6 +292,12 @@ function updateLadderStats(searchResult)
                 percentageResult[param][seasonId][header] = calculatePercentage(value, sum);
         }
     }
+    updateColRowTable
+        (document.getElementById("games-played-global-table"), globalResult.gamesPlayed, null, null, seasonIdTranslator);
+    updateColRowTable
+        (document.getElementById("team-count-global-table"), globalResult.teamCount, null, null, seasonIdTranslator);
+    updateColRowTable
+        (document.getElementById("player-count-global-table"), globalResult.playerCount, null, null, seasonIdTranslator);
 
     updateColRowTable
     (
