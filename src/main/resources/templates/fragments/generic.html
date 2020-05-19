@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Generic</title>
+</head>
+    <body>
+        <section class="d-top-global-mild text-center" th:fragment="error (header, description)">
+            <h1 th:replace="${header}">Unexpected error</h1>
+            <p class="text-secondary" th:include="${description}"></p>
+            <a href="/" th:href="@{/}">Back to home</a>
+        </section>
+    </body>
+</html>
