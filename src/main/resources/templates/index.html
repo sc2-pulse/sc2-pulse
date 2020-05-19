@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{base :: layout(~{::title}, ~{::section}, ~{::script})}">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::section}, ~{::script})}">
 <head>
     <title>SC2 Ladder Generator</title>
 </head>
@@ -200,7 +200,7 @@
                     </section>
                     <section id="personal-following" class="tab-pane fade">
                         <h3><a id="following-generator-collapse" class="c-dropdown" href="#form-following-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-following-ladder">Ladder</a></h3>
-                        <div th:replace="~{generator-form :: form('form-following-ladder', 'following-generator-collapse', 'following-ladder')}"></div>
+                        <div th:replace="~{fragments/generator-form :: form('form-following-ladder', 'following-generator-collapse', 'following-ladder')}"></div>
                         <div id="following-ladder-container" class="table-responsive d-none">
                             <table id="following-ladder" class="table table-sm table-hover" data-ladder-rank-show="true">
                                 <thead>
@@ -224,7 +224,7 @@
         </section>
         <section id="generator" class="tab-pane fade show active">
         <h2><a id="generator-collapse" class="c-dropdown" href="#form-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-ladder">Generator</a></h2>
-        <div th:replace="~{generator-form :: form('form-ladder', 'generator-collapse', 'generated-info-all')}"></div>
+        <div th:replace="~{fragments/generator-form :: form('form-ladder', 'generator-collapse', 'generated-info-all')}"></div>
         <div id="generated-info-all" class="d-none">
         <div class="c-divider-hr"></div>
         <div class="mb-3 text-secondary text-center">
