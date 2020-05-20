@@ -259,12 +259,10 @@ function getLadderStats(formParams)
 {
     setGeneratingStatus("begin");
     const request = "api/ladder/stats?" + formParams;
-    fetch(request)
-        .catch(e => setGeneratingStatus("error", e.message))
+    return fetch(request)
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .catch(e => setGeneratingStatus("error", e.message))
-        .then(json => updateLadderStats(json))
-        .then(o => setGeneratingStatus("success"));;
+        .then(json => new Promise((res, rej)=>{updateLadderStats(json); setGeneratingStatus("success"); res();}))
+        .catch(e => setGeneratingStatus("error", e.message));
 }
 
 function updateLadderStats(searchResult)
@@ -403,12 +401,10 @@ function getLeagueBounds(formParams)
 {
     setGeneratingStatus("begin");
     const request = "api/ladder/league/bounds?" + formParams;
-    fetch(request)
-        .catch(e => setGeneratingStatus("error", e.message))
+    return fetch(request)
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .catch(e => setGeneratingStatus("error", e.message))
-        .then(json => updateLeagueBounds(json))
-        .then(o => setGeneratingStatus("success"));
+        .then(json => new Promise((res, rej)=>{updateLeagueBounds(json); setGeneratingStatus("success"); res();}))
+        .catch(e => setGeneratingStatus("error", e.message));
 }
 
 function updateLeagueBounds(searchResult)
@@ -462,12 +458,10 @@ function getLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = tru
 {
     setGeneratingStatus("begin");
     const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${forward}/${count}?` + formParams;
-    fetch(request)
-        .catch(error => setGeneratingStatus("error", error.message))
+    return fetch(request)
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .catch(error => setGeneratingStatus("error", error.message))
-        .then(json => updateLadder(json))
-        .then(o => setGeneratingStatus("success", null, "generated-info-all"));
+        .then(json => new Promise((res, rej)=>{updateLadder(json); setGeneratingStatus("success", null, "generated-info-all"); res();}))
+        .catch(error => setGeneratingStatus("error", error.message));
 }
 
 function updateLadder(searchResult)
@@ -626,11 +620,9 @@ function getCharacterTeams(id)
     setGeneratingStatus("begin");
     const request = "api/character/" + id + "/teams";
     return fetch(request)
-        .catch(error => setGeneratingStatus("error", error.message))
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .catch(error => setGeneratingStatus("error", error.message))
-        .then(json => updateCharacterTeams(json))
-        .then(o => setGeneratingStatus("success"));
+        .then(json => new Promise((res, rej)=>{updateCharacterTeams(json); setGeneratingStatus("success"); res();}))
+        .catch(error => setGeneratingStatus("error", error.message));
 }
 
 function updateCharacterTeams(searchResult)
@@ -677,11 +669,9 @@ function getCharacterStats(id)
     setGeneratingStatus("begin");
     const request = "api/character/" + id + "/stats";
     return fetch(request)
-        .catch(error => setGeneratingStatus("error", error.message))
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .catch(error => setGeneratingStatus("error", error.message))
-        .then(json => updateCharacterStats(json))
-        .then(o => setGeneratingStatus("success"));
+        .then(json => new Promise((res, rej)=>{updateCharacterStats(json); setGeneratingStatus("success"); res();}))
+        .catch(error => setGeneratingStatus("error", error.message));
 }
 
 function updateCharacterStats(searchResult)
@@ -725,12 +715,25 @@ function getCharacters(name)
     setGeneratingStatus("begin");
     const request = "api/characters?name=" + encodeURIComponent(name);
     return fetch(request)
-        .catch(error => setGeneratingStatus("error", error.message))
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .catch(error => setGeneratingStatus("error", error.message))
         .then(json => updateCharacters(document.getElementById("search-table"), json))
-        .then(o => {document.getElementById("search-result-all").classList.remove("d-none"); setGeneratingStatus("success");})
-        .then(o => scrollIntoViewById("search-result-all"));
+        .then
+        (
+            o =>
+            {
+                new Promise
+                (
+                    (res, rej)=>
+                    {
+                        document.getElementById("search-result-all").classList.remove("d-none");
+                        setGeneratingStatus("success");
+                        scrollIntoViewById("search-result-all");
+                        res();
+                    }
+                )
+            }
+        )
+        .catch(error => setGeneratingStatus("error", error.message));
 }
 
 function updateCharacters(table, searchResult)
@@ -766,11 +769,9 @@ function getSeasons()
 {
     setGeneratingStatus("begin");
     return fetch("api/seasons")
-        .catch(error => setGeneratingStatus("error", error.message))
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .catch(error => setGeneratingStatus("error", error.message))
-        .then(json => updateSeasons(json))
-        .then(o => setGeneratingStatus("success"));
+        .then(json => new Promise((res, rej)=>{updateSeasons(json); setGeneratingStatus("success"); res();}))
+        .catch(error => setGeneratingStatus("error", error.message));
 }
 
 function updateSeasons(seasons)
@@ -1558,8 +1559,7 @@ function getMyAccount()
     const request = "api/my/account";
     return fetch(request)
         .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
-        .then(json => updateMyAccount(json))
-        .then(o => setGeneratingStatus("success"))
+        .then(json => new Promise((res, rej)=>{updateMyAccount(json); setGeneratingStatus("success"); res()}))
         .catch(error => onPersonalException(error));
 }
 
@@ -1586,8 +1586,8 @@ function getMyCharacters()
     setGeneratingStatus("begin");
     return fetch("api/my/characters")
         .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
-        .then(json => updateCharacters(document.querySelector("#personal-characters-table"), json))
-        .then(o => setGeneratingStatus("success"))
+        .then(json => new Promise((res, rej)=>
+            {updateCharacters(document.querySelector("#personal-characters-table"), json); setGeneratingStatus("success"); res();}))
         .catch(error => setGeneratingStatus("error", error.message));
 }
 
@@ -1596,8 +1596,7 @@ function getMyFollowing()
     setGeneratingStatus("begin");
     return fetch("api/my/following")
         .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
-        .then(json => currentFollowing = json)
-        .then(o => setGeneratingStatus("success"))
+        .then(json => new Promise((res, rej)=>{currentFollowing = json; setGeneratingStatus("success"); res();}))
         .catch(error => setGeneratingStatus("error", error.message));
 }
 
@@ -1606,8 +1605,7 @@ function getMyLadder(formParams)
     setGeneratingStatus("begin");
     return fetch("api/my/following/ladder?" + formParams)
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .then(json => updateMyLadder(json))
-        .then(o => setGeneratingStatus("success", null, "following-ladder"))
+        .then(json => new Promise((res, rej)=>{updateMyLadder(json); setGeneratingStatus("success", null, "following-ladder"); res();}))
         .catch(error => setGeneratingStatus("error", error.message));
 }
 
@@ -1642,7 +1640,7 @@ function follow()
                 return getMyFollowing();
             }
         )
-        .then(o => setGeneratingStatus("success"))
+        .then(o => new Promise((res, rej)=>{setGeneratingStatus("success"); res();}))
         .catch(error => setGeneratingStatus("error", error.message));
 }
 
@@ -1662,7 +1660,7 @@ function unfollow()
                 return getMyFollowing();
             }
         )
-        .then(o => setGeneratingStatus("success"))
+        .then(o => new Promise((res, rej)=>{setGeneratingStatus("success"); res();}))
         .catch(error => setGeneratingStatus("error", error.message));
 }
 
