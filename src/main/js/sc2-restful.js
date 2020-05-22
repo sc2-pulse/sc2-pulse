@@ -322,13 +322,6 @@ function getLadderStats(formParams)
 
 function updateLadderStats(searchResult)
 {
-    const currentSeasonPlayerCount = Object.values(searchResult[currentSeason].regionPlayerCount)
-        .reduce((a, b) => a + b, 0);
-    document.getElementById("players-total-count").textContent = currentSeasonPlayerCount.toLocaleString();
-    const currentSeasonGamesTotal = Object.values(searchResult[currentSeason].raceGamesPlayed).reduce((a, b) => a + b, 0);
-    document.getElementById("games-total-count").textContent = currentSeasonGamesTotal.toLocaleString()
-        + "/" + Math.round(currentSeasonGamesTotal / (currentTeamFormat.memberCount * 2)).toLocaleString();
-
     const globalResult = {gamesPlayed: {}, teamCount: {}, playerCount: {}};
     const percentageResult = {};
     for(const [seasonId, stats] of Object.entries(searchResult))
@@ -522,7 +515,6 @@ function getLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = tru
 function updateLadder(searchResult)
 {
     currentLadder = searchResult;
-    document.getElementById("teams-total-count").textContent = searchResult.meta.totalCount.toLocaleString();
     updateTeamsTable(document.getElementById("ladder"), searchResult);
     updateLadderPaginations();
     document.getElementById("generated-info-all").classList.remove("d-none");
