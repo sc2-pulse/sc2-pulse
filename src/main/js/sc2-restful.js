@@ -77,7 +77,17 @@ const CHARTABLE_OBSERVER_CONFIG =
     subtree: false
 }
 
+const CHART_OBSERVER_CONFIG =
+{
+    attributes: true,
+    attributeFilter: ["style"],
+    childList: false,
+    subtree: false,
+    characterData: false
+}
+
 const CHARTABLE_OBSERVER = new MutationObserver(onChartableMutation);
+const CHART_OBSERVER = new MutationObserver(onChartMutation);
 
 const CHARTS = new Map();
 const COLORS = new Map
@@ -101,6 +111,8 @@ const COLORS = new Map
     ["master", "#00b1fb"],
     ["grandmaster", "#ef3e00"]
 ]);
+
+const ELEMENT_RESOLVERS = new Map();
 
 const ROOT_CONTEXT_PATH = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 2));
 
@@ -146,6 +158,49 @@ function urlencodeFormData(fd){
         }
     }
     return s;
+}
+
+function onChartMutation(mutations, observer)
+{
+    for(mutation of mutations)
+    {
+        const style = mutation.target.getAttribute("style");
+        if(!style.includes("width: 0") && !style.includes("height: 0"))
+        {
+            linkChartTabsHeight(mutation.target);
+            resolveElementPromise(mutation.target.id);
+        }
+    }
+}
+
+function linkChartTabsHeight(elem)
+{
+    let maxHeight = 0;
+    const tabs = elem.closest(".tab-content").querySelectorAll(":scope > .tab-pane");
+    for(const relTab of tabs)
+    {
+        if(relTab.classList.contains("active")) continue;
+        relTab.style.minHeight = null;
+        maxHeight = Math.max(maxHeight, relTab.clientHeight);
+    }
+    for(const relTab of tabs) relTab.style.minHeight = maxHeight + "px";
+}
+
+function observeCharts()
+{
+    for(const chart of document.querySelectorAll(".c-chart")) CHART_OBSERVER.observe(chart, CHART_OBSERVER_CONFIG);
+}
+
+function resolveElementPromise(id)
+{
+    const resolver = ELEMENT_RESOLVERS.get(id);
+    if(resolver != null)
+    {
+        resolver(id);
+        ELEMENT_RESOLVERS.delete(id);
+        return true;
+    }
+    return false;
 }
 
 function showAnchoredTabs()
@@ -984,6 +1039,7 @@ function observeChartables()
     for(const chartable of document.getElementsByClassName("chartable"))
     {
         CHARTABLE_OBSERVER.observe(chartable, CHARTABLE_OBSERVER_CONFIG);
+        chartable.setAttribute("data-last-updated", Date.now());
     }
 }
 

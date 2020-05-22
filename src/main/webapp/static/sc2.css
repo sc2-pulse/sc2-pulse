@@ -162,3 +162,42 @@ h4
 {
     margin-top: 25vh;
 }
+
+.tab-pane.c-height-linked:not(.active)
+{
+    visibility: hidden !important;
+    display: block !important;
+    position: fixed !important;
+}
+
+.tab-pane.c-height-linked:not(.active) {
+    width: 100%;
+    padding-right: 15px;
+    padding-left: 15px;
+    margin-right: auto;
+    margin-left: auto;
+}
+
+@media (min-width: 576px) {
+    .tab-pane.c-height-linked:not(.active) {
+        max-width: 540px;
+    }
+}
+
+@media (min-width: 768px) {
+    .tab-pane.c-height-linked:not(.active) {
+        max-width: 720px;
+    }
+}
+
+@media (min-width: 992px) {
+    .tab-pane.c-height-linked:not(.active) {
+        max-width: 960px;
+    }
+}
+
+@media (min-width: 1200px) {
+    .tab-pane.c-height-linked:not(.active) {
+        max-width: 1140px;
+    }
+}
