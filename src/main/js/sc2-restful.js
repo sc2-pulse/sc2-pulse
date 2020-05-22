@@ -129,6 +129,7 @@ const ROOT_CONTEXT_PATH = window.location.pathname.substring(0, window.location.
 let currentRequests = 0;
 let documentIsChanging = false;
 let shouldScrollToResult = false;
+let currentScrollToOnSuccess = null;
 let currentSeasons = null;
 let currentSeason = -1;
 let currentTeamFormat;
@@ -287,8 +288,15 @@ function setFormCollapsibleScroll(id)
         documentIsChanging = false
         if(shouldScrollToResult)
         {
-            const scrollTo = e.currentTarget.getAttribute("data-on-success-scroll-to");
-            if(scrollTo != null) scrollIntoViewById(scrollTo);
+            if(currentScrollToOnSuccess != null)
+            {
+                scrollIntoViewById(currentScrollToOnSuccess);
+            }
+            else
+            {
+                const scrollTo = e.currentTarget.getAttribute("data-on-success-scroll-to");
+                if(scrollTo != null) scrollIntoViewById(scrollTo);
+            }
             shouldScrollToResult = false;
         }
     });
@@ -1036,6 +1044,7 @@ function updatePaginationPage(page, params, pageType, forward, count, pageNumber
 
 function ladderPaginationPageClick(evt)
 {
+    evt.preventDefault();
     const formParams = getFormParameters(evt.target.getAttribute("data-page-number"));
     getLadder
     (
@@ -1044,7 +1053,7 @@ function ladderPaginationPageClick(evt)
         evt.target.getAttribute("data-page-id-anchor"),
         evt.target.getAttribute("data-page-forward"),
         evt.target.getAttribute("data-page-count")
-    );
+    ).then(e=>scrollIntoViewById(evt.target.getAttribute("href").substring(1)));
 }
 
 function observeChartables()
@@ -1313,6 +1322,7 @@ function calculatePercentage(val, allVal)
 
 function setGeneratingStatus(status, errorText = "Error", scrollToOnSuccess = null)
 {
+    if(scrollToOnSuccess != null) currentScrollToOnSuccess = scrollToOnSuccess;
     switch(status)
     {
         case "begin":
@@ -1350,7 +1360,7 @@ function setGeneratingStatus(status, errorText = "Error", scrollToOnSuccess = nu
             }
             else
             {
-                if(scrollToOnSuccess != null) scrollIntoViewById(scrollToOnSuccess);
+                if(currentScrollToOnSuccess != null) {scrollIntoViewById(currentScrollToOnSuccess); currentScrollToOnSuccess = null;}
                 shouldScrollToResult = false;
             }
         break;
@@ -1413,7 +1423,7 @@ function setPaginationsState(enabled)
 
 function scrollIntoViewById(id)
 {
-    document.getElementById(id).scrollIntoView({behavior: "smooth"});
+    document.getElementById(id).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
 }
 
 function createTable(theads, responsive = true)
