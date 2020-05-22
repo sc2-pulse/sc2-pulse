@@ -638,12 +638,7 @@ function createMemberInfo(team, member)
     if(currentFollowing != null && Object.values(currentFollowing).filter(val=>val.followingAccountId == member.account.id).length > 0)
         playerLink.classList.add("text-success");
     playerLink.setAttribute("href", "#");
-    playerLink.setAttribute("data-account-id", member.account.id);
     playerLink.setAttribute("data-character-id", member.character.id);
-    playerLink.setAttribute("data-character-battlenet-id", member.character.battlenetId);
-    playerLink.setAttribute("data-character-realm", member.character.realm);
-    playerLink.setAttribute("data-character-region",  member.character.region);
-    playerLink.setAttribute("data-character-battletag", member.account.battleTag);
     playerLink.addEventListener("click", showCharacterInfo);
     playerLink.appendChild(racesElem);
     playerLink.appendChild(nameElem);
@@ -661,34 +656,9 @@ function calculateRank(searchResult, i)
 function showCharacterInfo(e)
 {
     e.preventDefault();
-    const info = document.getElementById("player-info");
-
-    const accountId = e.currentTarget.getAttribute("data-account-id");
-    info.setAttribute("data-account-id", accountId);
-    if(currentAccount != null && currentFollowing != null)
-    {
-        if(Object.values(currentFollowing).filter(val=>val.followingAccountId == accountId).length > 0)
-        {
-            document.querySelector("#follow-button").classList.add("d-none");
-            document.querySelector("#unfollow-button").classList.remove("d-none");
-        }
-        else
-        {
-            document.querySelector("#follow-button").classList.remove("d-none");
-            document.querySelector("#unfollow-button").classList.add("d-none");
-        }
-    }
-    document.getElementById("player-info-title-name").textContent
-        = e.currentTarget.getElementsByClassName("player-name")[0].textContent;
-    const region = enumOfName(e.currentTarget.getAttribute("data-character-region"), REGION);
-    const realm = e.currentTarget.getAttribute("data-character-realm");
     const id = e.currentTarget.getAttribute("data-character-id");
-    const battlenetId = e.currentTarget.getAttribute("data-character-battlenet-id");
-    const profileLink = `https://starcraft2.com/en-gb/profile/${region.code}/${realm}/${battlenetId}`;
-    document.getElementById("battlenet-profile-link").setAttribute("href", profileLink);
-    document.getElementById("player-info-battletag").textContent = e.currentTarget.getAttribute("data-character-battletag");
-    getCharacterTeams(id).then(o => $("#player-info").modal());
-    getCharacterStats(id);
+    return Promise.all([getCharacterTeams(id), getCharacterStats(id)])
+        .then(o=>new Promise((res, rej)=>{$("#player-info").modal(); res();}));
 }
 
 function getCharacterTeams(id)
@@ -697,7 +667,12 @@ function getCharacterTeams(id)
     const request = "api/character/" + id + "/teams";
     return fetch(request)
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .then(json => new Promise((res, rej)=>{updateCharacterTeams(json); setGeneratingStatus("success"); res();}))
+        .then(json => new Promise((res, rej)=>{
+            updateCharacterInfo(json, id);
+            updateCharacterTeams(json);
+            setGeneratingStatus("success");
+            history.pushState({type: "character", id: id}, document.title);
+            res();}))
         .catch(error => setGeneratingStatus("error", error.message));
 }
 
@@ -738,6 +713,35 @@ function updateCharacterTeams(searchResult)
         ix++;
     }
     updateTabSelect(document.getElementById("teams-season-select"), navs);
+}
+
+function updateCharacterInfo(searchResult, id)
+{
+    const member = searchResult[0].members.filter(m=>m.character.id == id)[0];
+    const account = member.account;
+    const character = member.character;
+
+    const info = document.getElementById("player-info");
+    info.setAttribute("data-account-id", account.id);
+    if(currentAccount != null && currentFollowing != null)
+    {
+        if(Object.values(currentFollowing).filter(val=>val.followingAccountId == account.id).length > 0)
+        {
+            document.querySelector("#follow-button").classList.add("d-none");
+            document.querySelector("#unfollow-button").classList.remove("d-none");
+        }
+        else
+        {
+            document.querySelector("#follow-button").classList.remove("d-none");
+            document.querySelector("#unfollow-button").classList.add("d-none");
+        }
+    }
+
+    document.getElementById("player-info-title-name").textContent = character.name;
+    const region = enumOfName(character.region, REGION);
+    const profileLink = `https://starcraft2.com/en-gb/profile/${region.code}/${character.realm}/${character.battlenetId}`;
+    document.getElementById("battlenet-profile-link").setAttribute("href", profileLink);
+    document.getElementById("player-info-battletag").textContent = account.battleTag;
 }
 
 function getCharacterStats(id)
