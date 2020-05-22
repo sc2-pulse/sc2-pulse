@@ -77,6 +77,15 @@ const CHARTABLE_OBSERVER_CONFIG =
     subtree: false
 }
 
+const TAB_OBSERVER_CONFIG =
+{
+    attributes: true,
+    attributeFilter: ["class"],
+    childList: false,
+    subtree: false,
+    characterData: false
+}
+
 const CHART_OBSERVER_CONFIG =
 {
     attributes: true,
@@ -88,6 +97,7 @@ const CHART_OBSERVER_CONFIG =
 
 const CHARTABLE_OBSERVER = new MutationObserver(onChartableMutation);
 const CHART_OBSERVER = new MutationObserver(onChartMutation);
+const TAB_OBSERVER = new MutationObserver(onTabMutation);
 
 const CHARTS = new Map();
 const COLORS = new Map
@@ -158,6 +168,17 @@ function urlencodeFormData(fd){
         }
     }
     return s;
+}
+
+function onTabMutation(mutations, observer)
+{
+    for(let i = mutations.length - 1; i > -1; i--)
+        if(mutations[i].target.classList.contains("show") && resolveElementPromise(mutations[i].target.id)) break;
+}
+
+function observeTabs()
+{
+    for(const tab of document.querySelectorAll(".tab-pane")) TAB_OBSERVER.observe(tab, TAB_OBSERVER_CONFIG);
 }
 
 function onChartMutation(mutations, observer)
