@@ -125,6 +125,8 @@ const COLORS = new Map
 const ELEMENT_RESOLVERS = new Map();
 
 const ROOT_CONTEXT_PATH = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 2));
+/*sometimes browsers are reporting about things that are not actually rendered yet*/
+const EVENT_LOOP_DELAY = 100;
 
 let currentRequests = 0;
 let documentIsChanging = false;
@@ -137,25 +139,34 @@ let currentTeamType;
 let currentLadder;
 let currentAccount = null;
 let currentFollowing = null;
+let currentSearchParams = null;
+let isHistorical = false;
+let currentStateRestoration = null;
+let lastNonModalParams = null;
 
 window.addEventListener("load", onWindowLoad);
+window.addEventListener("popstate", e=>{currentStateRestoration = currentStateRestoration.then(r=>restoreState(e))});
 
 function onWindowLoad()
 {
-    enhanceModals();
-    getMyInfo().then(o=>getSeasons());
-        //.then(o => getLadderAll());
-    enhanceLadderForm();
-    enhanceSearchForm();
-    enhanceMyLadderForm();
-    enchanceFollowButtons();
-    enhanceTabs();
-    observeChartables();
-    createPaginations();
-    setFormCollapsibleScroll("form-ladder");
-    setFormCollapsibleScroll("form-following-ladder");
-    createPlayerStatsCards(document.getElementById("player-stats-container"));
-    showAnchoredTabs();
+    new Promise
+    (
+        (res, rej)=>
+        {
+            enhanceAll();
+            observeChartables();
+            createPaginations();
+            setFormCollapsibleScroll("form-ladder");
+            setFormCollapsibleScroll("form-following-ladder");
+            createPlayerStatsCards(document.getElementById("player-stats-container"));
+            initActiveTabs();
+            observeTabs();
+            observeCharts();
+            res();
+        }
+    )
+        .then(e=>Promise.all([getMyInfo(), getSeasons()]))
+        .then(o=>{currentStateRestoration = restoreState(null);});
 }
 
 function encodeSpace(s){ return encodeURIComponent(s).replace(/%20/g,'+'); }
@@ -169,6 +180,30 @@ function urlencodeFormData(fd){
         }
     }
     return s;
+}
+
+function updateActiveTabs(modalOnly = false)
+{
+    const params = new URLSearchParams(window.location.search);
+    params.delete("t");
+    const tabs = modalOnly
+        ? document.querySelectorAll(".modal.show .nav-pills a.active")
+        : document.querySelectorAll(".nav-pills a.active");
+    for(const tab of tabs)
+        if(tab.offsetParent != null) params.append("t", tab.hash.substring(1));
+   history.replaceState({}, document.title, "?" + params.toString());
+}
+
+function initActiveTabs()
+{
+    const params = new URLSearchParams(window.location.search);
+    const hashes = params.getAll("t");
+    if(hashes.length > 0) return; //tabs are explicit, do not touch them
+
+    for(const tab of document.querySelectorAll(".nav-pills a.active"))
+            if(tab.offsetParent != null) params.append("t", tab.hash.substring(1));
+    lastNonModalParams =  "?" + params.toString();
+    history.replaceState({}, document.title, "?" + params.toString());
 }
 
 function onTabMutation(mutations, observer)
@@ -227,22 +262,89 @@ function resolveElementPromise(id)
 
 function showAnchoredTabs()
 {
-    var url = document.location.toString();
-    if (url.match('#'))
+    setGeneratingStatus("begin");
+    const params = new URLSearchParams(window.location.search);
+    const hashes = params.getAll("t");
+    const promises = [];
+    for(const hash of hashes)
     {
-        $('.nav-pills-main a[href="#' + url.split('#')[1] + '"]').tab('show');
-        $('.nav-tabs-main a[href="#' + url.split('#')[1] + '"]').tab('show');
+        const element = document.querySelector('.nav-pills a[href="#' + hash + '"]');
+        if(!element.classList.contains("active"))
+        {
+            for(const chart of document.querySelectorAll("#" + hash + " > * > * > * > .c-chart"))
+            {
+                if(chart.style.width.startsWith("0"))
+                    promises.push(new Promise((res, rej)=>ELEMENT_RESOLVERS.set(chart.id, res)));
+            }
+            promises.push(new Promise((res, rej)=>ELEMENT_RESOLVERS.set(hash, res)));
+            $(element).tab('show')
+        }
     }
+    return Promise.all(promises).then(e=>new Promise((res, rej)=>{setTimeout(()=>{setGeneratingStatus("success"); res();}, EVENT_LOOP_DELAY)}));
+}
+
+function enhanceAll()
+{
+    enhanceModals();
+    enhanceLadderForm();
+    enhanceSearchForm();
+    enhanceMyLadderForm();
+    enchanceFollowButtons();
+    enhanceTabs();
 }
 
 function enhanceTabs()
 {
-    $('.nav-tabs-main a').on('shown.bs.tab', function (e){window.location.hash = e.target.hash; window.scrollTo(0, 0);});
-    $('.nav-pills-main a').on('shown.bs.tab', function (e){window.location.hash = e.target.hash; window.scrollTo(0, 0);});
+    $('.nav-pills a').on('shown.bs.tab', showTab);
+}
+
+function showTab(e)
+{
+    if(isHistorical) return;
+    const hash = e.target.hash.substring(1);
+    const params = new URLSearchParams(window.location.search);
+    params.delete("t");
+    const modal = e.target.closest(".modal");
+    const root = modal != null ? ("#" + modal.id) : "body";
+    for(const tab of document.querySelectorAll(root + " .nav-pills a.active"))
+        if(tab.offsetParent != null) params.append("t", tab.hash.substring(1));
+    history.pushState({}, document.title, "?" + params.toString());
+}
+
+function hideActiveModal(skipId = null)
+{
+    return new Promise((res, rej)=>{
+        const activeModal = document.querySelector(".modal.show");
+        if(activeModal != null)
+        {
+            if(skipId != null && activeModal.id == skipId)
+            {
+                res();
+            }
+            else
+            {
+                ELEMENT_RESOLVERS.set(activeModal.id, res);
+                $(activeModal).modal("hide");
+            }
+        }
+        else
+        {
+            res();
+        }
+    });
 }
 
 function enhanceModals()
 {
+    $(".modal")
+        .on("hidden.bs.modal", e=>{
+            resolveElementPromise(e.target.id);
+            if(!isHistorical) history.pushState({}, document.title, lastNonModalParams);
+        })
+        .on("show.bs.modal", e=>{
+            if(!window.location.search.includes("m=1")) lastNonModalParams = window.location.search;
+            updateActiveTabs(true);
+        });
     $("#error-session").on("hide.bs.modal", doRenewBlizzardRegistration);
     $("#error-session").on("shown.bs.modal", e=>window.setTimeout(doRenewBlizzardRegistration, 3500));
 }
@@ -317,6 +419,58 @@ function enhanceSearchForm()
             findCharactersByName();
         }
     );
+}
+
+function restoreState(e)
+{
+    if(e != null && e.state == null) return;
+    setGeneratingStatus("begin");
+    isHistorical = true;
+    promises = [];
+    promises.push(showAnchoredTabs());
+    const params = new URLSearchParams(window.location.search);
+    const tabs = params.getAll("t");
+    params.delete("t");
+    const stringParams = params.toString();
+    if(currentSearchParams === stringParams) return Promise.all(promises)
+        .then(e => new Promise((res, rej)=>{setGeneratingStatus("success"); res();}));
+
+    const type = params.get("type"); params.delete("type");
+    let scrollTo = null;
+    switch(type)
+    {
+        case "ladder":
+            const ratingAnchor = params.get("ratingAnchor"); params.delete("ratingAnchor");
+            const idAnchor = params.get("idAnchor"); params.delete("idAnchor");
+            const forward = params.get("forward"); params.delete("forward");
+            const count = params.get("count"); params.delete("count");
+            const formParams = params.toString();
+            scrollTo = "generated-info-all";
+            $("#form-ladder").collapse("hide");
+            promises.push(hideActiveModal());
+            promises.push(getLadder(formParams, ratingAnchor, idAnchor, forward, count));
+            promises.push(getLadderStats(formParams));
+            promises.push(getLeagueBounds(formParams));
+            break;
+        case "character":
+            const id = params.get("id"); params.delete("id");
+            promises.push(showCharacterInfo(null, id));
+            break;
+        case "following-ladder":
+            scrollTo = "following-ladder";
+            $("#form-following-ladder").collapse("hide");
+            promises.push(hideActiveModal());
+            promises.push(getMyLadder(params.toString()));
+            break;
+        default:
+            break;
+    }
+
+    return Promise.all(promises).then(e => new Promise((res, rej)=>{
+        currentSearchParams = stringParams;
+        setGeneratingStatus("success", null, scrollTo);
+        res();
+    }));
 }
 
 function getLadderAll()
@@ -534,10 +688,28 @@ function updateLeagueBounds(searchResult)
 function getLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
 {
     setGeneratingStatus("begin");
+    const tabs = new URLSearchParams(window.location.search).getAll("t");
+    const params =
+    {
+        form: formParams,
+        ratingAnchor: ratingAnchor,
+        idAnchor: idAnchor,
+        forward: forward,
+        count: count
+    }
+    const searchParams = new URLSearchParams(formParams);
+    searchParams.append("type", "ladder");
+    for(const [param, val] of Object.entries(params)) if(param != "form") searchParams.append(param, val);
+    for(const tab of tabs) searchParams.append("t", tab);
+
     const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${forward}/${count}?` + formParams;
     return fetch(request)
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .then(json => new Promise((res, rej)=>{updateLadder(json); setGeneratingStatus("success", null, "generated-info-all"); res();}))
+        .then(json => new Promise((res, rej)=>{
+            updateLadder(json);
+            setGeneratingStatus("success", null, "generated-info-all");
+            if(!isHistorical) history.pushState(params, document.title, "?" + searchParams.toString());
+            res();}))
         .catch(error => setGeneratingStatus("error", error.message));
 }
 
@@ -653,12 +825,28 @@ function calculateRank(searchResult, i)
     return (searchResult.meta.page - 1) * searchResult.meta.perPage + i + 1;
 }
 
-function showCharacterInfo(e)
+function showCharacterInfo(e = null, explicitId = null)
 {
-    e.preventDefault();
-    const id = e.currentTarget.getAttribute("data-character-id");
-    return Promise.all([getCharacterTeams(id), getCharacterStats(id)])
-        .then(o=>new Promise((res, rej)=>{$("#player-info").modal(); res();}));
+    if (e != null) e.preventDefault();
+    const id = explicitId || e.currentTarget.getAttribute("data-character-id");
+
+    const promises = [];
+    const tabs = new URLSearchParams(window.location.search).getAll("t");
+    const searchParams = new URLSearchParams();
+    searchParams.append("type", "character");
+    searchParams.append("id", id);
+    searchParams.append("m", "1");
+    for(const tab of tabs) searchParams.append("t", tab);
+    promises.push(hideActiveModal("player-info"));
+    promises.push(getCharacterTeams(id));
+    promises.push(getCharacterStats(id));
+
+    return Promise.all(promises)
+        .then(o=>new Promise((res, rej)=>{
+            $("#player-info").modal();
+            if(!isHistorical) history.pushState({type: "character", id: id}, document.title, "?" + searchParams.toString());
+            res();
+        }));
 }
 
 function getCharacterTeams(id)
@@ -671,7 +859,6 @@ function getCharacterTeams(id)
             updateCharacterInfo(json, id);
             updateCharacterTeams(json);
             setGeneratingStatus("success");
-            history.pushState({type: "character", id: id}, document.title);
             res();}))
         .catch(error => setGeneratingStatus("error", error.message));
 }
@@ -1358,6 +1545,7 @@ function setGeneratingStatus(status, errorText = "Error", scrollToOnSuccess = nu
             setPaginationsState(true);
             setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
             setElementsVisibility(document.getElementsByClassName("status-generating-" + status), true);
+            isHistorical = false;
             if(documentIsChanging)
             {
                 shouldScrollToResult = true;
@@ -1686,9 +1874,21 @@ function getMyFollowing()
 function getMyLadder(formParams)
 {
     setGeneratingStatus("begin");
+
+    const tabs = new URLSearchParams(window.location.search).getAll("t");
+    const params = {form: formParams}
+    const searchParams = new URLSearchParams(formParams);
+    searchParams.append("type", "following-ladder");
+    for(const tab of tabs) searchParams.append("t", tab);
+
     return fetch("api/my/following/ladder?" + formParams)
         .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        .then(json => new Promise((res, rej)=>{updateMyLadder(json); setGeneratingStatus("success", null, "following-ladder"); res();}))
+        .then(json => new Promise((res, rej)=>{
+            updateMyLadder(json);
+            setGeneratingStatus("success", null, "following-ladder");
+            if(!isHistorical) history.pushState(params, document.title, "?" + searchParams.toString());
+            res();
+        }))
         .catch(error => setGeneratingStatus("error", error.message));
 }
 
