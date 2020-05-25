@@ -86,6 +86,9 @@ extends SavedRequestAwareAuthenticationSuccessHandler
         String iss = user.getAttribute("iss").toString();
         for(Map.Entry<String, String> entry : issuers.entrySet())
             if(iss.startsWith(entry.getValue())) {reg = entry.getKey(); break;}
+        if(reg == null || reg.isEmpty())
+            throw new IllegalStateException("ISS/reg not found. Invalid security configuration? ISS: " + iss);
+
         Cookie cookie = new Cookie(COOKIE_NAME, reg);
             cookie.setHttpOnly(false); //needed by js + nothing secret about it
             cookie.setMaxAge(COOKIE_MAX_AGE);
