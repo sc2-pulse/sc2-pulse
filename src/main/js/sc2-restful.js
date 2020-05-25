@@ -343,8 +343,8 @@ function enhanceModals()
         })
         .on("show.bs.modal", e=>{
             if(!window.location.search.includes("m=1")) lastNonModalParams = window.location.search;
-            updateActiveTabs(true);
-        });
+        })
+        .on("shown.bs.modal", e=>updateActiveTabs(true));
     $("#error-session").on("hide.bs.modal", doRenewBlizzardRegistration);
     $("#error-session").on("shown.bs.modal", e=>window.setTimeout(doRenewBlizzardRegistration, 3500));
 }
