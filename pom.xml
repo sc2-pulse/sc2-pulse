@@ -223,7 +223,7 @@
                         <classpath>
                             <path refid="maven.plugin.classpath"/>
                         </classpath>
-                        <arg line="--compilation_level SIMPLE_OPTIMIZATIONS --language_in ECMASCRIPT_2018 --js ${basedir}/src/main/js/sc2-restful.js --js_output_file ${basedir}/target/sc2-webapp/static/sc2-restful.min.js"/>
+                        <arg line="--compilation_level SIMPLE_OPTIMIZATIONS --language_in ECMASCRIPT_2018 --js ${basedir}/src/main/js/*.js --js_output_file ${basedir}/target/sc2-webapp/static/sc2-restful.min.js"/>
                     </java>
                 </target>
             </configuration>
