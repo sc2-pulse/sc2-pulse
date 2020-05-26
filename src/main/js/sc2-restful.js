@@ -1,5 +1,4 @@
 const PAGINATION_SIDE_BUTTON_COUNT = 4;
-const RESOURCE_PATH = "static/";
 
 const REGION = Object.freeze
 ({
@@ -113,8 +112,6 @@ const COLORS = new Map
 ]);
 
 const ELEMENT_RESOLVERS = new Map();
-
-const ROOT_CONTEXT_PATH = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 2));
 const NEGATION_PREFIX = "neg-";
 
 let currentRequests = 0;
@@ -1941,7 +1938,7 @@ function renewBlizzardRegistration()
 function doRenewBlizzardRegistration()
 {
     setGeneratingStatus("begin");
-    window.location.href=ROOT_CONTEXT_PATH + "/oauth2/authorization/" + getCookie("oauth-reg");
+    window.location.href=ROOT_CONTEXT_PATH + "oauth2/authorization/" + getCookie("oauth-reg");
 }
 
 function getCookie(cname) {
