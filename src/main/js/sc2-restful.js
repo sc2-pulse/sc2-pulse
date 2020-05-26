@@ -682,6 +682,7 @@ function getLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = tru
     const searchParams = new URLSearchParams(formParams);
     searchParams.append("type", "ladder");
     for(const [param, val] of Object.entries(params)) if(param != "form") searchParams.append(param, val);
+    const stringParams = searchParams.toString();
     for(const tab of tabs) searchParams.append("t", tab);
 
     const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${forward}/${count}?` + formParams;
@@ -691,6 +692,7 @@ function getLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = tru
             updateLadder(json);
             setGeneratingStatus("success", null, "generated-info-all");
             if(!isHistorical) history.pushState(params, document.title, "?" + searchParams.toString());
+            currentSearchParams = stringParams;
             res();}))
         .catch(error => setGeneratingStatus("error", error.message));
 }
@@ -817,6 +819,7 @@ function showCharacterInfo(e = null, explicitId = null)
     const searchParams = new URLSearchParams();
     searchParams.append("type", "character");
     searchParams.append("id", id);
+    const stringParams = searchParams.toString();
     searchParams.append("m", "1");
     for(const tab of tabs) searchParams.append("t", tab);
     promises.push(hideActiveModal("player-info"));
@@ -827,6 +830,7 @@ function showCharacterInfo(e = null, explicitId = null)
         .then(o=>new Promise((res, rej)=>{
             $("#player-info").modal();
             if(!isHistorical) history.pushState({type: "character", id: id}, document.title, "?" + searchParams.toString());
+            currentSearchParams = stringParams;
             res();
         }));
 }
@@ -1851,6 +1855,7 @@ function getMyLadder(formParams)
     const params = {form: formParams}
     const searchParams = new URLSearchParams(formParams);
     searchParams.append("type", "following-ladder");
+    const stringParams = searchParams.toString();
     for(const tab of tabs) searchParams.append("t", tab);
 
     return fetch("api/my/following/ladder?" + formParams)
@@ -1859,6 +1864,7 @@ function getMyLadder(formParams)
             updateMyLadder(json);
             setGeneratingStatus("success", null, "following-ladder");
             if(!isHistorical) history.pushState(params, document.title, "?" + searchParams.toString());
+            currentSearchParams = stringParams;
             res();
         }))
         .catch(error => setGeneratingStatus("error", error.message));
