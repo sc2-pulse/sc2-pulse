@@ -30,9 +30,9 @@ class Util
             case "begin":
                 Session.currentRequests++;
                 if (Session.currentRequests > 1) return;
-                Session.currentSeason = document.getElementById("season-picker").value;
-                Session.currentTeamFormat = EnumUtil.enumOfFullName(document.getElementById("team-format-picker").value, TEAM_FORMAT);
-                Session.currentTeamType = EnumUtil.enumOfName(document.getElementById("team-type-picker").value, TEAM_TYPE);
+                Session.currentSeason = document.getElementById("form-ladder-season-picker").value;
+                Session.currentTeamFormat = EnumUtil.enumOfFullName(document.getElementById("form-ladder-team-format-picker").value, TEAM_FORMAT);
+                Session.currentTeamType = EnumUtil.enumOfName(document.getElementById("form-ladder-team-type-picker").value, TEAM_TYPE);
                 ElementUtil.disableElements(document.getElementsByTagName("input"), true);
                 ElementUtil.disableElements(document.getElementsByTagName("select"), true);
                 ElementUtil.disableElements(document.getElementsByTagName("button"), true);
