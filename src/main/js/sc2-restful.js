@@ -1591,7 +1591,7 @@ function setPaginationsState(enabled)
 
 function scrollIntoViewById(id)
 {
-    document.getElementById(id).scrollIntoView({behavior: "smooth", block: "start", inline: "nearest"});
+    document.getElementById(id).scrollIntoView();
 }
 
 function createTable(theads, responsive = true)
