@@ -77,15 +77,6 @@ const CHARTABLE_OBSERVER_CONFIG =
     subtree: false
 }
 
-const TAB_OBSERVER_CONFIG =
-{
-    attributes: true,
-    attributeFilter: ["class"],
-    childList: false,
-    subtree: false,
-    characterData: false
-}
-
 const CHART_OBSERVER_CONFIG =
 {
     attributes: true,
@@ -97,7 +88,6 @@ const CHART_OBSERVER_CONFIG =
 
 const CHARTABLE_OBSERVER = new MutationObserver(onChartableMutation);
 const CHART_OBSERVER = new MutationObserver(onChartMutation);
-const TAB_OBSERVER = new MutationObserver(onTabMutation);
 
 const CHARTS = new Map();
 const COLORS = new Map
@@ -125,13 +115,9 @@ const COLORS = new Map
 const ELEMENT_RESOLVERS = new Map();
 
 const ROOT_CONTEXT_PATH = window.location.pathname.substring(0, window.location.pathname.indexOf("/", 2));
-/*sometimes browsers are reporting about things that are not actually rendered yet*/
-const EVENT_LOOP_DELAY = 100;
+const NEGATION_PREFIX = "neg-";
 
 let currentRequests = 0;
-let documentIsChanging = false;
-let shouldScrollToResult = false;
-let currentScrollToOnSuccess = null;
 let currentSeasons = null;
 let currentSeason = -1;
 let currentTeamFormat;
@@ -160,7 +146,6 @@ function onWindowLoad()
             setFormCollapsibleScroll("form-following-ladder");
             createPlayerStatsCards(document.getElementById("player-stats-container"));
             initActiveTabs();
-            observeTabs();
             observeCharts();
             res();
         }
@@ -204,17 +189,6 @@ function initActiveTabs()
             if(tab.offsetParent != null) params.append("t", tab.hash.substring(1));
     lastNonModalParams =  "?" + params.toString();
     history.replaceState({}, document.title, "?" + params.toString());
-}
-
-function onTabMutation(mutations, observer)
-{
-    for(let i = mutations.length - 1; i > -1; i--)
-        if(mutations[i].target.classList.contains("show") && resolveElementPromise(mutations[i].target.id)) break;
-}
-
-function observeTabs()
-{
-    for(const tab of document.querySelectorAll(".tab-pane")) TAB_OBSERVER.observe(tab, TAB_OBSERVER_CONFIG);
 }
 
 function onChartMutation(mutations, observer)
@@ -276,16 +250,17 @@ function showAnchoredTabs()
                 if(chart.style.width.startsWith("0"))
                     promises.push(new Promise((res, rej)=>ELEMENT_RESOLVERS.set(chart.id, res)));
             }
-            promises.push(new Promise((res, rej)=>ELEMENT_RESOLVERS.set(hash, res)));
+            if(element.offsetParent != null) promises.push(new Promise((res, rej)=>ELEMENT_RESOLVERS.set(hash, res)));
             $(element).tab('show')
         }
     }
-    return Promise.all(promises).then(e=>new Promise((res, rej)=>{setTimeout(()=>{setGeneratingStatus("success"); res();}, EVENT_LOOP_DELAY)}));
+    return Promise.all(promises).then(e=>new Promise((res, rej)=>{setGeneratingStatus("success"); res();}));
 }
 
 function enhanceAll()
 {
     enhanceModals();
+    enhanceCollapsibles();
     enhanceLadderForm();
     enhanceSearchForm();
     enhanceMyLadderForm();
@@ -300,6 +275,7 @@ function enhanceTabs()
 
 function showTab(e)
 {
+    resolveElementPromise(e.target.getAttribute("href").substring(1));
     if(isHistorical) return;
     const hash = e.target.hash.substring(1);
     const params = new URLSearchParams(window.location.search);
@@ -309,6 +285,23 @@ function showTab(e)
     for(const tab of document.querySelectorAll(root + " .nav-pills a.active"))
         if(tab.offsetParent != null) params.append("t", tab.hash.substring(1));
     history.pushState({}, document.title, "?" + params.toString());
+}
+
+function hideCollapsible(id)
+{
+    return new Promise((res, rej)=>{
+        const elem = document.getElementById(id);
+        if(elem.offsetParent == null)
+        {
+            $(elem).collapse("hide");
+            res();
+        }
+        else
+        {
+            ELEMENT_RESOLVERS.set(NEGATION_PREFIX + id, res);
+            $(elem).collapse("hide");
+        }
+    });
 }
 
 function hideActiveModal(skipId = null)
@@ -349,14 +342,19 @@ function enhanceModals()
     $("#error-session").on("shown.bs.modal", e=>window.setTimeout(doRenewBlizzardRegistration, 3500));
 }
 
+function enhanceCollapsibles()
+{
+    $(".collapse").on("hidden.bs.collapse", e=>resolveElementPromise(NEGATION_PREFIX + e.target.id));
+}
+
 function enhanceLadderForm()
 {
     const form = document.getElementById("form-ladder");
     form.addEventListener("submit", function(evt)
         {
             evt.preventDefault();
-            getLadderAll();
-            $("#form-ladder").collapse("hide");
+            Promise.all([getLadderAll(), hideCollapsible("form-ladder")])
+                .then(e=>scrollIntoViewById(form.getAttribute("data-on-success-scroll-to")));
         }
     );
 }
@@ -370,8 +368,8 @@ function enhanceMyLadderForm()
          function(evt)
         {
             evt.preventDefault();
-            getMyLadder(urlencodeFormData(new FormData(document.getElementById("form-following-ladder"))));
-            $("#form-following-ladder").collapse("hide");
+            Promise.all([getMyLadder(urlencodeFormData(new FormData(document.getElementById("form-following-ladder"))), hideCollapsible("form-following-ladder"))])
+                .then(e=>scrollIntoViewById(form.getAttribute("data-on-success-scroll-to")));
         }
     );
 }
@@ -385,29 +383,10 @@ function enchanceFollowButtons()
 function setFormCollapsibleScroll(id)
 {
     const jCol = $(document.getElementById(id));
-    jCol.on("hide.bs.collapse", function(e){documentIsChanging = true});
-    jCol.on("hidden.bs.collapse", function(e){
-        documentIsChanging = false
-        if(shouldScrollToResult)
-        {
-            if(currentScrollToOnSuccess != null)
-            {
-                scrollIntoViewById(currentScrollToOnSuccess);
-            }
-            else
-            {
-                const scrollTo = e.currentTarget.getAttribute("data-on-success-scroll-to");
-                if(scrollTo != null) scrollIntoViewById(scrollTo);
-            }
-            shouldScrollToResult = false;
-        }
-    });
     jCol.on("show.bs.collapse", function(e){
-        documentIsChanging = true;
         const scrollTo = e.currentTarget.getAttribute("data-scroll-to");
         if(scrollTo != null) scrollIntoViewById(scrollTo);
     });
-    jCol.on("shown.bs.collapse", function(e){documentIsChanging = false});
 }
 
 function enhanceSearchForm()
@@ -427,13 +406,15 @@ function restoreState(e)
     setGeneratingStatus("begin");
     isHistorical = true;
     promises = [];
-    promises.push(showAnchoredTabs());
+    lazyPromises = [];
+    lazyPromises.push(e=>showAnchoredTabs());
     const params = new URLSearchParams(window.location.search);
-    const tabs = params.getAll("t");
-    params.delete("t");
+    const tabs = params.getAll("t"); params.delete("t");
+    const isModal = params.get("m"); params.delete("m");
     const stringParams = params.toString();
     if(currentSearchParams === stringParams) return Promise.all(promises)
-        .then(e => new Promise((res, rej)=>{setGeneratingStatus("success"); res();}));
+        .then(e => {const ap = []; for(lp of lazyPromises) ap.push(lp()); return Promise.all(ap);})
+        .then(e => new Promise((res, rej)=>{updateActiveTabs(); setGeneratingStatus("success"); res();}));
 
     const type = params.get("type"); params.delete("type");
     let scrollTo = null;
@@ -446,8 +427,8 @@ function restoreState(e)
             const count = params.get("count"); params.delete("count");
             const formParams = params.toString();
             scrollTo = "generated-info-all";
-            $("#form-ladder").collapse("hide");
-            promises.push(hideActiveModal());
+            lazyPromises.push(e=>hideCollapsible("form-ladder"));
+            lazyPromises.push(e=>hideActiveModal());
             promises.push(getLadder(formParams, ratingAnchor, idAnchor, forward, count));
             promises.push(getLadderStats(formParams));
             promises.push(getLeagueBounds(formParams));
@@ -458,17 +439,20 @@ function restoreState(e)
             break;
         case "following-ladder":
             scrollTo = "following-ladder";
-            $("#form-following-ladder").collapse("hide");
-            promises.push(hideActiveModal());
+            lazyPromises.push(e=>hideCollapsible("form-following-ladder"));
+            lazyPromises.push(e=>hideActiveModal());
             promises.push(getMyLadder(params.toString()));
             break;
         default:
             break;
     }
 
-    return Promise.all(promises).then(e => new Promise((res, rej)=>{
-        currentSearchParams = stringParams;
-        setGeneratingStatus("success", null, scrollTo);
+    return Promise.all(promises)
+    .then(e => {const ap = []; for(lp of lazyPromises) ap.push(lp()); return Promise.all(ap)})
+    .then(e => new Promise((res, rej)=>{
+        updateActiveTabs();
+        setGeneratingStatus("success");
+        if(scrollTo != null) scrollIntoViewById(scrollTo);
         res();
     }));
 }
@@ -476,9 +460,7 @@ function restoreState(e)
 function getLadderAll()
 {
     const formParams = getFormParameters();
-    getLadder(formParams);
-    getLadderStats(formParams);
-    getLeagueBounds(formParams);
+    return Promise.all([getLadder(formParams), getLadderStats(formParams), getLeagueBounds(formParams)]);
 }
 
 function findCharactersByName()
@@ -1511,9 +1493,8 @@ function calculatePercentage(val, allVal)
     return Math.round((val / allVal) * 100);
 }
 
-function setGeneratingStatus(status, errorText = "Error", scrollToOnSuccess = null)
+function setGeneratingStatus(status, errorText = "Error")
 {
-    if(scrollToOnSuccess != null) currentScrollToOnSuccess = scrollToOnSuccess;
     switch(status)
     {
         case "begin":
@@ -1546,15 +1527,6 @@ function setGeneratingStatus(status, errorText = "Error", scrollToOnSuccess = nu
             setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
             setElementsVisibility(document.getElementsByClassName("status-generating-" + status), true);
             isHistorical = false;
-            if(documentIsChanging)
-            {
-                shouldScrollToResult = true;
-            }
-            else
-            {
-                if(currentScrollToOnSuccess != null) {scrollIntoViewById(currentScrollToOnSuccess); currentScrollToOnSuccess = null;}
-                shouldScrollToResult = false;
-            }
         break;
     }
 }
