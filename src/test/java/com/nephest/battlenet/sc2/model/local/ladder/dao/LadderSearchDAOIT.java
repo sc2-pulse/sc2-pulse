@@ -57,6 +57,9 @@ public class LadderSearchDAOIT
     @Autowired
     private LadderSearchDAO search;
 
+    @Autowired
+    private LadderStatsDAO ladderStatsDAO;
+
     @BeforeAll
     public static void beforeAll
     (
@@ -343,7 +346,7 @@ public class LadderSearchDAOIT
     @Test
     public void test4v4LeagueStats()
     {
-        Map<Long, MergedLadderSearchStatsResult> statsMap = search.findStats
+        Map<Long, MergedLadderSearchStatsResult> statsMap = ladderStatsDAO.findStats
         (
             Set.of(Region.values()),
             LEAGUES_SET,

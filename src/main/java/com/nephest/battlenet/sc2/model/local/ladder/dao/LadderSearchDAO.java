@@ -4,17 +4,19 @@
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
-import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderSeason;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -28,7 +30,10 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
 
 @Repository
 public class LadderSearchDAO
@@ -47,16 +52,6 @@ public class LadderSearchDAO
         + "AND team.league_type IN (:leagueType0, :leagueType1, :leagueType2, :leagueType3, :leagueType4, :leagueType5, :leagueType6) "
         + "AND team.queue_type=:queueType "
         + "AND team.team_type=:teamType ";
-
-    private static final String LADDER_SEARCH_WHERE =
-        "WHERE "
-        + "season.battlenet_id=:seasonId "
-        + "AND season.region IN (:region0, :region1, :region2, :region3) "
-        + "AND league.type IN (:leagueType0, :leagueType1, :leagueType2, :leagueType3, :leagueType4, :leagueType5, :leagueType6) "
-        + "AND league.queue_type=:queueType "
-        + "AND league.team_type=:teamType ";
-
-
 
     private static final String LADDER_SEARCH_TEAM_FROM_WHERE =
         LADDER_SEARCH_TEAM_FROM + LADDER_SEARCH_TEAM_WHERE;
@@ -199,36 +194,6 @@ public class LadderSearchDAO
         + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
         + "team.rating DESC, team.id ASC, "
         + "player_character.id ASC ";
-    private static final String LADDER_SEARCH_STATS_QUERY =
-        "SELECT "
-        + "season.id AS \"season.id\","
-        + "season.battlenet_id AS \"season.battlenet_id\","
-        + "season.region AS \"season.region\","
-        + "season.year AS \"season.year\","
-        + "season.number AS \"season.number\","
-        + "league.id AS \"league.id\","
-        + "league.season_id AS \"league.season_id\","
-        + "league.type AS \"league.type\","
-        + "league.queue_type AS \"league.queue_type\","
-        + "league.team_type AS \"league.team_type\","
-        + "league_stats.league_id AS \"league_stats.league_id\","
-        + "league_stats.player_count, "
-        + "league_stats.team_count, "
-        + "league_stats.terran_games_played, "
-        + "league_stats.protoss_games_played, "
-        + "league_stats.zerg_games_played, "
-        + "league_stats.random_games_played "
-
-
-        + "FROM league_stats "
-        + "INNER JOIN league ON league_stats.league_id=league.id "
-        + "INNER JOIN season ON league.season_id = season.id "
-
-        + "WHERE "
-        + "season.region IN (:region0, :region1, :region2, :region3) "
-        + "AND league.type IN (:leagueType0, :leagueType1, :leagueType2, :leagueType3, :leagueType4, :leagueType5, :leagueType6) "
-        + "AND league.queue_type=:queueType "
-        + "AND league.team_type=:teamType ";
 
     private static final String FIND_SEASON_LIST =
         "SELECT DISTINCT "
@@ -236,71 +201,16 @@ public class LadderSearchDAO
         + "FROM season "
         + "ORDER BY battlenet_id DESC";
 
-    private static final String FIND_LEAGUE_TIER_BOUNDS_QUERY =
-        "SELECT "
-        + "season.region, "
-        + "league.type AS \"league.type\", "
-        + "league_tier.type AS \"league_tier.type\", league_tier.min_rating, league_tier.max_rating "
 
-        + "FROM league_tier "
-        + "INNER JOIN league ON league_tier.league_id=league.id "
-        + "INNER JOIN season ON league.season_id=season.id "
-
-        + LADDER_SEARCH_WHERE;
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
     private SeasonDAO seasonDAO;
-    private LeagueDAO leagueDAO;
 
     private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_EXTRACTOR
         = (rs)->{return mapTeams(rs, true);};
     private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_SHORT_EXTRACTOR
         = (rs)->{return mapTeams(rs, false);};
-
-    private final ResultSetExtractor<Map<Long, Map<Region, Map<LeagueType, LadderSearchStatsResult>>>> LADDER_STATS_EXTRACTOR =
-    (rs)->
-    {
-        Map<Long, Map<Region, Map<LeagueType, LadderSearchStatsResult>>> result = new HashMap<>();
-        int num = 1;
-        while(rs.next())
-        {
-            Season season = seasonDAO.getStandardRowMapper().mapRow(rs, num);
-            League league = leagueDAO.getStandardRowMapper().mapRow(rs, num);
-            LeagueStats leagueStats = LeagueStatsDAO.STD_ROW_MAPPER.mapRow(rs, num);
-            Map<Region, Map<LeagueType, LadderSearchStatsResult>> regionResults =
-                result.computeIfAbsent(season.getBattlenetId(), (reg)->new EnumMap(Region.class));
-            Map<LeagueType, LadderSearchStatsResult> leagueResults =
-                regionResults.computeIfAbsent(season.getRegion(), (reg)->new EnumMap(LeagueType.class));
-            leagueResults.put(league.getType(), new LadderSearchStatsResult(season, league, leagueStats));
-            num++;
-        }
-        return result;
-    };
-
-    private final ResultSetExtractor<Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>>> LEAGUE_TIER_BOUNDS_EXTRACTOR =
-    (rs)->
-    {
-        Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> result = new EnumMap(Region.class);
-        while(rs.next())
-        {
-            Region region = conversionService.convert(rs.getInt("region"), Region.class);
-            LeagueType league = conversionService.convert(rs.getInt("league.type"), LeagueType.class);
-            LeagueTierType tier = conversionService.convert(rs.getInt("league_tier.type"), LeagueTierType.class);
-            Integer minRating = rs.getInt("min_rating");
-            Integer maxRating = rs.getInt("max_rating");
-
-            Map<LeagueType, Map<LeagueTierType, Integer[]>> leagues =
-                result.computeIfAbsent(region, (reg)->new EnumMap(LeagueType.class));
-            Map<LeagueTierType, Integer[]> tiers =
-                leagues.computeIfAbsent(league, (lea)->new EnumMap(LeagueTierType.class));
-            Integer[] bounds =
-                tiers.computeIfAbsent(tier, (tie)->new Integer[2]);
-            bounds[0] = minRating;
-            bounds[1] = maxRating;
-        }
-        return result;
-    };
 
     private static final RowMapper<LadderSeason> FIND_SEASON_LIST_ROW_MAPPER =
     (rs, num)->
@@ -328,15 +238,13 @@ public class LadderSearchDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         @Autowired LadderUtil ladderUtil,
-        @Autowired SeasonDAO seasonDAO,
-        @Autowired LeagueDAO leagueDAO
+        @Autowired SeasonDAO seasonDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
         this.ladderUtil = ladderUtil;
         this.seasonDAO = seasonDAO;
-        this.leagueDAO = leagueDAO;
     }
 
     protected void setResultsPerPage(int resultsPerPage)
@@ -587,45 +495,6 @@ public class LadderSearchDAO
     {
         if(teamType == TeamType.RANDOM) return 1;
         else return queueType.getTeamFormat().getMemberCount();
-    }
-
-    @Cacheable(cacheNames="search-ladder-stats")
-    public Map<Long, MergedLadderSearchStatsResult> findStats
-    (
-        Set<Region> regions,
-        Set<League.LeagueType> leagueTypes,
-        QueueType queueType,
-        TeamType teamType
-    )
-    {
-        MapSqlParameterSource params =
-            createSearchParams(0, regions, leagueTypes, queueType, teamType);
-        Map<Long, Map<Region, Map<LeagueType, LadderSearchStatsResult>>> stats = template
-            .query(LADDER_SEARCH_STATS_QUERY, params, LADDER_STATS_EXTRACTOR);
-        Map<Long, MergedLadderSearchStatsResult> result = new HashMap(stats.size(), 1.0f);
-        for(Map.Entry<Long, Map<Region, Map<LeagueType, LadderSearchStatsResult>>> entry : stats.entrySet())
-            result.put(entry.getKey(), new MergedLadderSearchStatsResult(entry.getValue()));
-        return result;
-    }
-
-    @Cacheable
-    (
-        cacheNames="search-ladder-league-bounds",
-        condition="#a0 eq #root.target.seasonDAO.maxBattlenetId"
-    )
-    public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> findLeagueBounds
-    (
-        long season,
-        Set<Region> regions,
-        Set<League.LeagueType> leagueTypes,
-        QueueType queueType,
-        TeamType teamType
-    )
-    {
-        MapSqlParameterSource params =
-            createSearchParams(season, regions, leagueTypes, queueType, teamType);
-        return template
-            .query(FIND_LEAGUE_TIER_BOUNDS_QUERY, params, LEAGUE_TIER_BOUNDS_EXTRACTOR);
     }
 
     public List<LadderTeam> findCharacterTeams(long id)

@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +32,9 @@ public class LadderController
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
+
+    @Autowired
+    private LadderStatsDAO ladderStatsDAO;
 
     @Autowired
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
@@ -165,7 +169,7 @@ public class LadderController
         if(diamond) leagues.add(LeagueType.DIAMOND);
         if(master) leagues.add(LeagueType.MASTER);
         if(grandmaster) leagues.add(LeagueType.GRANDMASTER);
-        return ladderSearch.findStats
+        return ladderStatsDAO.findStats
         (
             regions,
             leagues,
@@ -207,7 +211,7 @@ public class LadderController
         if(diamond) leagues.add(LeagueType.DIAMOND);
         if(master) leagues.add(LeagueType.MASTER);
         if(grandmaster) leagues.add(LeagueType.GRANDMASTER);
-        return ladderSearch.findLeagueBounds
+        return ladderStatsDAO.findLeagueBounds
         (
             season,
             regions,
