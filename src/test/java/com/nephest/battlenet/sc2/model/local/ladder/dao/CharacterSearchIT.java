@@ -57,7 +57,7 @@ public class CharacterSearchIT
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @Autowired
-    private LadderSearchDAO ladderSearchDAO;
+    private LadderCharacterDAO ladderCharacterDAO;
 
     @BeforeAll
     public static void beforeAll(@Autowired DataSource dataSource)
@@ -132,7 +132,7 @@ public class CharacterSearchIT
         playerCharacterStatsDAO.mergeCalculate(season1.getBattlenetId());
         playerCharacterStatsDAO.mergeCalculateGlobal();
 
-        List<LadderDistinctCharacter> byName = ladderSearchDAO.findDistinctCharactersByName("refchar1");
+        List<LadderDistinctCharacter> byName = ladderCharacterDAO.findDistinctCharactersByName("refchar1");
         assertEquals(1, byName.size());
         LadderDistinctCharacter char1 = byName.get(0);
         assertEquals("refchar1#123", char1.getMembers().getCharacter().getName());
@@ -140,7 +140,7 @@ public class CharacterSearchIT
         assertEquals(100, char1.getRatingMax());
         assertEquals(100, char1.getTotalGamesPlayed());
 
-        List<LadderDistinctCharacter> byAccount = ladderSearchDAO.findDistinctCharactersByAccountId(acc.getId());
+        List<LadderDistinctCharacter> byAccount = ladderCharacterDAO.findDistinctCharactersByAccountId(acc.getId());
         assertEquals(2, byAccount.size());
         LadderDistinctCharacter char11 = byAccount.get(1);
         assertEquals("refchar1#123", char11.getMembers().getCharacter().getName());

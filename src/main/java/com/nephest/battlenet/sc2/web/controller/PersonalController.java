@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.service.AccountFollowingService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +34,9 @@ public class PersonalController
     private LadderSearchDAO ladderSearchDAO;
 
     @Autowired
+    private LadderCharacterDAO ladderCharacterDAO;
+
+    @Autowired
     private AccountFollowingService accountFollowingService;
 
     @GetMapping("/account")
@@ -44,7 +48,7 @@ public class PersonalController
     @GetMapping("/characters")
     public List<LadderDistinctCharacter> getCharacters(@AuthenticationPrincipal BlizzardOidcUser user)
     {
-        return ladderSearchDAO.findDistinctCharactersByAccountId(user.getAccount().getId());
+        return ladderCharacterDAO.findDistinctCharactersByAccountId(user.getAccount().getId());
     }
 
     @PostMapping("/following/{id}")

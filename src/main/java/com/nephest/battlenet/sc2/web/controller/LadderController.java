@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -27,6 +28,9 @@ public class LadderController
 
     @Autowired
     private LadderSearchDAO ladderSearch;
+
+    @Autowired
+    private LadderCharacterDAO ladderCharacterDAO;
 
     @Autowired
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
@@ -243,6 +247,6 @@ public class LadderController
         @RequestParam("name") String name
     )
     {
-        return ladderSearch.findDistinctCharactersByName(name);
+        return ladderCharacterDAO.findDistinctCharactersByName(name);
     }
 }
