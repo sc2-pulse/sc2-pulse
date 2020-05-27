@@ -313,17 +313,6 @@ public class LadderSearchDAO
 
         + LADDER_SEARCH_WHERE;
 
-    private static final String FIND_SEASON_META_LIST_QUERY =
-        "SELECT "
-        + "region, battlenet_id, year, number "
-        + "FROM season "
-        + "WHERE season.battlenet_id=:seasonId "
-        + "AND season.region IN (:region0, :region1, :region2, :region3)";
-
-
-    private static final String LAST_SELECTED_ROWS =
-        "SELECT FOUND_ROWS()";
-
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
     private SeasonDAO seasonDAO;
@@ -412,19 +401,6 @@ public class LadderSearchDAO
         return new LadderSeason
         (
             rs.getLong("battlenet_id"),
-            rs.getInt("year"),
-            rs.getInt("number")
-        );
-    };
-
-    private final RowMapper<Season> SEASON_META_LIST_ROW_MAPPER =
-    (rs, num)->
-    {
-        return new Season
-        (
-            null,
-            rs.getLong("battlenet_id"),
-            conversionService.convert(rs.getInt("region"), Region.class),
             rs.getInt("year"),
             rs.getInt("number")
         );
@@ -770,26 +746,6 @@ public class LadderSearchDAO
             createSearchParams(season, regions, leagueTypes, queueType, teamType);
         return template
             .query(FIND_LEAGUE_TIER_BOUNDS_QUERY, params, LEAGUE_TIER_BOUNDS_EXTRACTOR);
-    }
-
-    @Cacheable
-    (
-        cacheNames="search-ladder-season",
-        condition="#a0 eq #root.target.seasonDAO.maxBattlenetId"
-    )
-    public List<Season> findSeasonsMeta
-    (
-        long season,
-        Set<Region> regions,
-        Set<League.LeagueType> leagueTypes,
-        QueueType queueType,
-        TeamType teamType
-    )
-    {
-        MapSqlParameterSource params =
-            createSearchParams(season, regions, leagueTypes, queueType, teamType);
-        return template
-            .query(FIND_SEASON_META_LIST_QUERY, params, SEASON_META_LIST_ROW_MAPPER);
     }
 
     public List<LadderTeam> findCharacterTeams(long id)
