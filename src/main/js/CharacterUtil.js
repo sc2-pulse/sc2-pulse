@@ -17,7 +17,7 @@ class CharacterUtil
         const stringParams = searchParams.toString();
         searchParams.append("m", "1");
         for(const tab of tabs) searchParams.append("t", tab);
-        promises.push(BootstrapUtil.hideActiveModal("player-info"));
+        promises.push(BootstrapUtil.hideActiveModal(["player-info", "error-generation"]));
         promises.push(CharacterUtil.getCharacterTeams(id));
         promises.push(CharacterUtil.getCharacterStats(id));
 
