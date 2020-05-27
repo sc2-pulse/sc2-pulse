@@ -9,6 +9,16 @@ body
     font-size: 15px;
 }
 
+#about
+{
+    text-align: left;
+}
+
+#about h2
+{
+    text-align: center;
+}
+
 table, ul, dl, .modal
 {
     text-align: initial;
