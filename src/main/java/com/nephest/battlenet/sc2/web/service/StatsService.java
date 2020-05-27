@@ -25,6 +25,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
 import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
@@ -143,6 +144,39 @@ public class StatsService
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.log(Level.INFO, "Updated all after {0} seconds", new Object[]{seconds});
+    }
+
+    @CacheEvict
+    (
+        cacheNames=
+            {
+                "search-seasons", "search-season-last",
+                "search-ladder", "search-ladder-stats", "search-team-count",
+                "search-ladder-league-bounds", "search-ladder-season"
+            },
+        allEntries=true
+    )
+    public void updateMissing()
+    {
+        Long lastSeason = seasonDao.getMaxBattlenetId();
+        final Long lastSeasonFinal = lastSeason == null ? 0 : lastSeason;
+        List<Long> seasons = BlizzardSC2API.MMR_SEASONS.keySet().stream()
+            .filter((id)->id > lastSeasonFinal)
+            .sorted()
+            .collect(Collectors.toList());
+
+        long start = System.currentTimeMillis();
+
+        for(Long season : seasons)
+        {
+            updateSeason(season);
+            LOG.log(Level.INFO, "Updated season {0}", new Object[]{season});
+        }
+        playerCharacterStatsDAO.mergeCalculateGlobal();
+        postgreSQLUtils.analyze();
+
+        long seconds = (System.currentTimeMillis() - start) / 1000;
+        LOG.log(Level.INFO, "Updated missing after {0} seconds", new Object[]{seconds});
     }
 
     @CacheEvict
