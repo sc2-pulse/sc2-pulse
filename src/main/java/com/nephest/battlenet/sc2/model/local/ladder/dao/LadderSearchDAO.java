@@ -34,25 +34,6 @@ import java.util.*;
 public class LadderSearchDAO
 {
 
-    private static final Map<String, Object> DEFAULT_TEAM_MEMBER_QUERY_VALUES;
-
-    static
-    {
-        Map<String, Object> vals = new HashMap();
-        vals.put("region0", null);
-        vals.put("region1", null);
-        vals.put("region2", null);
-        vals.put("region3", null);
-        vals.put("leagueType0", null);
-        vals.put("leagueType1", null);
-        vals.put("leagueType2", null);
-        vals.put("leagueType3", null);
-        vals.put("leagueType4", null);
-        vals.put("leagueType5", null);
-        vals.put("leagueType6", null);
-        DEFAULT_TEAM_MEMBER_QUERY_VALUES = Collections.unmodifiableMap(vals);
-    }
-
     private static final String LADDER_SEARCH_TEAM_FROM =
         "FROM team_member "
         + "INNER JOIN team ON team_member.team_id=team.id "
@@ -334,6 +315,8 @@ public class LadderSearchDAO
 
     private int resultsPerPage = 100;
 
+    private LadderUtil ladderUtil;
+
     @Autowired @Lazy
     private LadderSearchDAO ladderSearchDAO;
 
@@ -344,12 +327,14 @@ public class LadderSearchDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
+        @Autowired LadderUtil ladderUtil,
         @Autowired SeasonDAO seasonDAO,
         @Autowired LeagueDAO leagueDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
+        this.ladderUtil = ladderUtil;
         this.seasonDAO = seasonDAO;
         this.leagueDAO = leagueDAO;
     }
@@ -486,7 +471,7 @@ public class LadderSearchDAO
         }
 
         MapSqlParameterSource params =
-            createSearchParams(season, regions, leagueTypes, queueType, teamType)
+            ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType)
             .addValue("offset", offset)
             .addValue("limit", limit);
 
@@ -542,7 +527,7 @@ public class LadderSearchDAO
             limit = limit == 0 ? getResultsPerPage() * membersPerTeam : limit;
         }
         MapSqlParameterSource params =
-            createSearchParams(season, regions, leagueTypes, queueType, teamType)
+            ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType)
                 .addValue("offset", offset)
                 .addValue("limit", limit)
                 .addValue("ratingAnchor", ratingAnchor)
@@ -581,7 +566,7 @@ public class LadderSearchDAO
     )
     {
         MapSqlParameterSource params =
-            createSearchParams(season, regions, leagueTypes, queueType, teamType);
+            ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType);
         return template.query(FIND_TEAM_COUNT_QUERY, params, DAOUtils.LONG_EXTRACTOR);
     }
 
@@ -602,37 +587,6 @@ public class LadderSearchDAO
     {
         if(teamType == TeamType.RANDOM) return 1;
         else return queueType.getTeamFormat().getMemberCount();
-    }
-
-    private MapSqlParameterSource createSearchParams
-    (
-        long season,
-        Set<Region> regions,
-        Set<League.LeagueType> leagueTypes,
-        QueueType queueType,
-        TeamType teamType
-    )
-    {
-        MapSqlParameterSource params = new MapSqlParameterSource(DEFAULT_TEAM_MEMBER_QUERY_VALUES)
-            .addValue("seasonId", season)
-            .addValue("queueType", conversionService.convert(queueType, Integer.class))
-            .addValue("teamType", conversionService.convert(teamType, Integer.class));
-
-        int i = 0;
-        for(Region region : regions)
-        {
-            params.addValue("region" + i, conversionService.convert(region, Integer.class));
-            i++;
-        }
-
-        i = 0;
-        for(League.LeagueType leagueType : leagueTypes)
-        {
-            params.addValue("leagueType" + i, conversionService.convert(leagueType, Integer.class));
-            i++;
-        }
-
-        return params;
     }
 
     @Cacheable(cacheNames="search-ladder-stats")
@@ -693,7 +647,7 @@ public class LadderSearchDAO
     )
     {
         MapSqlParameterSource params =
-            createSearchParams(season, regions, leagueTypes, queueType, teamType)
+            ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType)
             .addValue("accountId", accountId);
         return template
             .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAM_SHORT_EXTRACTOR);
