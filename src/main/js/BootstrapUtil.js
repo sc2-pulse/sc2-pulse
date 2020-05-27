@@ -40,13 +40,13 @@ class BootstrapUtil
         });
     }
 
-    static hideActiveModal(skipId = null)
+    static hideActiveModal(skipIds = [])
     {
         return new Promise((res, rej)=>{
             const activeModal = document.querySelector(".modal.show");
             if(activeModal != null)
             {
-                if(skipId != null && activeModal.id == skipId)
+                if(skipIds.includes(activeModal.id))
                 {
                     res();
                 }
