@@ -147,6 +147,11 @@ public class LadderStatsDAO
         this.leagueDAO = leagueDAO;
     }
 
+    public SeasonDAO getSeasonDAO()
+    {
+        return seasonDAO;
+    }
+
     @Cacheable
     (
         cacheNames="search-ladder-league-bounds",
