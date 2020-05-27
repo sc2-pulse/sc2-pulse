@@ -13,14 +13,16 @@ public final class DAOUtils
     (rs)->
     {
         rs.next();
-        return rs.getLong(1);
+        long val = rs.getLong(1);
+        return rs.wasNull() ? null : val;
     };
 
     public static final ResultSetExtractor<Integer> INT_EXTRACTOR =
     (rs)->
     {
         rs.next();
-        return rs.getInt(1);
+        int val = rs.getInt(1);
+        return rs.wasNull() ? null : val;
     };
 
 }

@@ -104,7 +104,7 @@ public class SeasonDAO
     }
 
     @Cacheable(cacheNames="search-season-last")
-    public long getMaxBattlenetId()
+    public Long getMaxBattlenetId()
     {
         return template.query(FIND_MAX_BATTLENET_ID_QUERY, DAOUtils.LONG_EXTRACTOR);
     }
