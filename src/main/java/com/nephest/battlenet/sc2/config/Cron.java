@@ -3,7 +3,6 @@
 
 package com.nephest.battlenet.sc2.config;
 
-import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -16,9 +15,6 @@ public class Cron
     @Autowired
     private StatsService statsService;
 
-    @Autowired
-    private AccountDAO accountDao;
-
     @Scheduled(cron="0 0 3 * * *")
     public void updateCurrentSeason()
     {
@@ -26,15 +22,9 @@ public class Cron
     }
 
     @Scheduled(cron="0 0 5 * * SAT")
-    public void updateAllSeasons()
+    public void updateMissingSeasons()
     {
-        statsService.updateAll();
-    }
-
-    @Scheduled(cron="45 6 0 * * *")
-    public void removeExpiredPrivacy()
-    {
-        accountDao.removeExpiredByPrivacy();
+        statsService.updateMissing();
     }
 
 }
