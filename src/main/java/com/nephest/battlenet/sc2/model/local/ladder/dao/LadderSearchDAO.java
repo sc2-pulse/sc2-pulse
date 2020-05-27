@@ -349,7 +349,7 @@ public class LadderSearchDAO
         long page
     )
     {
-        long membersPerTeam = getMemberCount(queueType, teamType);
+        long membersPerTeam = queueType.getTeamFormat().getMemberCount(teamType);
         long teamCount = ladderSearchDAO.getTeamCount(season, regions, leagueTypes, queueType, teamType);
         long pageCount = (long) Math.ceil(teamCount /(double) getResultsPerPage());
         long middlePage = (long) Math.ceil(pageCount / 2d);
@@ -425,7 +425,7 @@ public class LadderSearchDAO
         long finalPage = forward ? page + count : page - count;
         long teamCount = ladderSearchDAO.getTeamCount(season, regions, leagueTypes, queueType, teamType);
         long pageCount = (long) Math.ceil(teamCount /(double) getResultsPerPage());
-        long membersPerTeam = getMemberCount(queueType, teamType);
+        long membersPerTeam = queueType.getTeamFormat().getMemberCount(teamType);
         long offset = (count - 1) * getResultsPerPage() * membersPerTeam;
         long limit = getResultsPerPage() * membersPerTeam;
         //if last page is requested, show only leftovers
@@ -489,12 +489,6 @@ public class LadderSearchDAO
             FIND_SEASON_LIST,
             FIND_SEASON_LIST_ROW_MAPPER
         );
-    }
-
-    private static final int getMemberCount(QueueType queueType, TeamType teamType)
-    {
-        if(teamType == TeamType.RANDOM) return 1;
-        else return queueType.getTeamFormat().getMemberCount();
     }
 
     public List<LadderTeam> findCharacterTeams(long id)
