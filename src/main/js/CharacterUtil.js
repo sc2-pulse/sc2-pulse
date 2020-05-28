@@ -68,8 +68,18 @@ class CharacterUtil
 
         document.getElementById("player-info-title-name").textContent = character.name;
         const region = EnumUtil.enumOfName(character.region, REGION);
-        const profileLink = `https://starcraft2.com/en-gb/profile/${region.code}/${character.realm}/${character.battlenetId}`;
-        document.getElementById("battlenet-profile-link").setAttribute("href", profileLink);
+        const profileLinkElement = document.getElementById("battlenet-profile-link");
+        if(region == REGION.CN)
+        {
+            //the upstream site is not supporting the CN region.
+            profileLinkElement.parentElement.classList.add("d-none");
+        }
+        else
+        {
+            const profileLink = `https://starcraft2.com/profile/${region.code}/${character.realm}/${character.battlenetId}`;
+            profileLinkElement.setAttribute("href", profileLink);
+            profileLinkElement.parentElement.classList.remove("d-none");
+        }
         document.getElementById("player-info-battletag").textContent = account.battleTag;
     }
 
