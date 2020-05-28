@@ -88,7 +88,7 @@ public class CharacterSearchIT
         //generate some noise
         seasonGenerator.generateSeason(List.of(season1),
             List.of(BaseLeague.LeagueType.values()),
-            QUEUE_TYPE,
+            List.of(QUEUE_TYPE),
             TEAM_TYPE,
             TIER_TYPE,
             5

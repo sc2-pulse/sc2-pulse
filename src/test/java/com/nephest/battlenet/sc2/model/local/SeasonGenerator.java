@@ -56,7 +56,7 @@ public class SeasonGenerator
     (
         List<Region> regions,
         List<League.LeagueType> leagues,
-        QueueType queueType,
+        List<QueueType> queueTypes,
         TeamType teamType,
         LeagueTier.LeagueTierType tierType,
         int teamsPerLeague
@@ -67,7 +67,7 @@ public class SeasonGenerator
         {
             seasons.add(seasonDAO.create(new Season(null, DEFAULT_SEASON_ID, region, DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER)));
         }
-        generateSeason(seasons, leagues, queueType, teamType, tierType, teamsPerLeague);
+        generateSeason(seasons, leagues, queueTypes, teamType, tierType, teamsPerLeague);
     }
 
     @Transactional
@@ -75,7 +75,7 @@ public class SeasonGenerator
     (
         List<Season> seasons,
         List<League.LeagueType> leagues,
-        QueueType queueType,
+        List<QueueType> queueTypes,
         TeamType teamType,
         LeagueTier.LeagueTierType tierType,
         int teamsPerLeague
@@ -83,12 +83,15 @@ public class SeasonGenerator
     {
         for(Season season : seasons) seasonDAO.merge(season);
         int teamCount = 0;
-        for (League.LeagueType type : leagues)
+        for (QueueType queueType : queueTypes)
         {
-            for(Season season : seasons)
+            for (League.LeagueType type : leagues)
             {
-                generateLeague(season, type, queueType, teamType, tierType, teamsPerLeague, teamCount);
-                teamCount += teamsPerLeague;
+                for (Season season : seasons)
+                {
+                    generateLeague(season, type, queueType, teamType, tierType, teamsPerLeague, teamCount);
+                    teamCount += teamsPerLeague;
+                }
             }
         }
     }

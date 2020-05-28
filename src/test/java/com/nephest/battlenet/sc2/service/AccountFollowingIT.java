@@ -123,7 +123,7 @@ public class AccountFollowingIT
         (
             List.of(season1, season2),
             List.of(BaseLeague.LeagueType.values()),
-            QUEUE_TYPE,
+            List.of(QUEUE_TYPE),
             TEAM_TYPE,
             TIER_TYPE,
             5

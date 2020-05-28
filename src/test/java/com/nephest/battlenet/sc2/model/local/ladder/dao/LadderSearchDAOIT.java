@@ -78,7 +78,7 @@ public class LadderSearchDAOIT
         (
             REGIONS,
             List.of(BaseLeague.LeagueType.values()),
-            QUEUE_TYPE,
+            List.of(QUEUE_TYPE),
             TEAM_TYPE,
             TIER_TYPE,
             TEAMS_PER_LEAGUE
