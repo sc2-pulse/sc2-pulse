@@ -3,9 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -134,6 +132,42 @@ public class SeasonGenerator
             }
             teamCount++;
         }
+    }
+
+    public Account[] generateAccounts(String name, int count)
+    {
+        Account[] accounts = new Account[count];
+        for(int i = 0; i < count; i++) accounts[i] = accountDAO.create(new Account(null, name + "#" + i));
+        return accounts;
+    }
+
+    public PlayerCharacter[] generateCharacters(String name, Account[] accounts, Region region, long idStart)
+    {
+        PlayerCharacter[] characters = new PlayerCharacter[accounts.length];
+        for(int i = 0; i < accounts.length; i++) characters[i] = playerCharacterDAO
+            .create(new PlayerCharacter(null, accounts[i].getId(), region, idStart + i, 1, name + "#" + i));
+        return  characters;
+    }
+
+    public Team createTeam
+    (
+        Season season,
+        BaseLeague league,
+        BaseLeagueTier.LeagueTierType tierType,
+        Division division,
+        BigInteger battlenetId,
+        long rating, int wins, int losses, int ties, int points,
+        PlayerCharacter... members
+    )
+    {
+        Team newTeam = new Team
+        (
+            null, season.getBattlenetId(), season.getRegion(), league, tierType, division.getId(), battlenetId,
+            rating, wins, losses, ties, points
+        );
+        Team team = teamDAO.create(newTeam);
+        for(PlayerCharacter member : members) teamMemberDAO.create(new TeamMember(team.getId(), member.getId(), 1, 2, 3, 4));
+        return team;
     }
 
     public void cleanAll()
