@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::div}, _)}">
+<head>
+    <title>500 - Internal Server Error</title>
+</head>
+<body>
+    <div th:replace="~{fragments/generic :: error(~{::h1}, ~{::span})}">
+        <h1>500 - INTERNAL SERVER ERROR</h1>
+        <span>
+            Something went wrong. Feel free to
+            <a href="https://github.com/nephest/sc2-ladder-generator/issues" target="_blank" rel="noopener noreferrer">submit a bug report</a>
+            if the error persists.
+        </span>
+    </div>
+</body>
+</html>
