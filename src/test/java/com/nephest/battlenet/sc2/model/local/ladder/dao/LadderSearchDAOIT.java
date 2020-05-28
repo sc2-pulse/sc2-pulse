@@ -5,12 +5,11 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
-import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
-import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -27,7 +26,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
 
-import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_ID;
+import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
@@ -59,6 +58,9 @@ public class LadderSearchDAOIT
 
     @Autowired
     private LadderStatsDAO ladderStatsDAO;
+
+    @Autowired
+    private SeasonDAO seasonDAO;
 
     @BeforeAll
     public static void beforeAll
@@ -382,6 +384,46 @@ public class LadderSearchDAOIT
             assertEquals((race.ordinal() + 1) * teamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE), stats.getRaceGamesPlayed().get(race));
         }
 
+    }
+
+    @Test
+    public void testLeagueTierBounds()
+    {
+        Map<Region, Map<BaseLeague.LeagueType, Map<BaseLeagueTier.LeagueTierType, Integer[]>>> bounds =
+            ladderStatsDAO.findLeagueBounds(DEFAULT_SEASON_ID, Set.of(Region.values()), LEAGUES_SET, QUEUE_TYPE, TEAM_TYPE);
+        for(Region region : Region.values())
+        {
+            for(BaseLeague.LeagueType leagueType : LEAGUES_SET)
+            {
+                Integer[] curBounds = bounds.get(region).get(leagueType).get(TIER_TYPE);
+                assertEquals(2, curBounds.length);
+                assertEquals(region.ordinal() + leagueType.ordinal(), curBounds[0]);
+                assertEquals(region.ordinal() + leagueType.ordinal() + 1, curBounds[1]);
+            }
+        }
+    }
+
+    @Test
+    public void testFindSeasons()
+    {
+        seasonDAO.merge(new Season(null, 10L, Region.EU, 2020, 1));
+        seasonDAO.merge(new Season(null, 11L, Region.US, 2020, 2));
+        seasonDAO.merge(new Season(null, 11L, Region.EU, 2020, 2));
+        List<LadderSeason> seasons = search.findSeasonList();
+
+        assertEquals(3, seasons.size());
+
+        assertEquals(DEFAULT_SEASON_ID, seasons.get(2).getId());
+        assertEquals(DEFAULT_SEASON_YEAR, seasons.get(2).getYear());
+        assertEquals(DEFAULT_SEASON_NUMBER, seasons.get(2).getNumber());
+
+        assertEquals(10, seasons.get(1).getId());
+        assertEquals(2020, seasons.get(1).getYear());
+        assertEquals(1, seasons.get(1).getNumber());
+
+        assertEquals(11, seasons.get(0).getId());
+        assertEquals(2020, seasons.get(0).getYear());
+        assertEquals(2, seasons.get(0).getNumber());
     }
 
 }
