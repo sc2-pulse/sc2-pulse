@@ -33,48 +33,48 @@ class StatsUtil
             }
         }
         TableUtil.updateColRowTable
-            (document.getElementById("games-played-global-table"), globalResult.gamesPlayed, null, null, SeasonUtil.seasonIdtranslator);
+            (document.getElementById("games-played-global-table"), globalResult.gamesPlayed, null, null, SeasonUtil.seasonIdTranslator);
         TableUtil.updateColRowTable
-            (document.getElementById("team-count-global-table"), globalResult.teamCount, null, null, SeasonUtil.seasonIdtranslator);
+            (document.getElementById("team-count-global-table"), globalResult.teamCount, null, null, SeasonUtil.seasonIdTranslator);
         TableUtil.updateColRowTable
-            (document.getElementById("player-count-global-table"), globalResult.playerCount, null, null, SeasonUtil.seasonIdtranslator);
+            (document.getElementById("player-count-global-table"), globalResult.playerCount, null, null, SeasonUtil.seasonIdTranslator);
 
         TableUtil.updateColRowTable
         (
             document.getElementById("games-played-race-table"), percentageResult.raceGamesPlayed,
-            null, function(name){return EnumUtil.enumOfName(name, RACE).name;}, SeasonUtil.seasonIdtranslator
+            null, function(name){return EnumUtil.enumOfName(name, RACE).name;}, SeasonUtil.seasonIdTranslator
         );
         TableUtil.updateColRowTable
-            (document.getElementById("games-played-region-table"), percentageResult.regionGamesPlayed, null, null, SeasonUtil.seasonIdtranslator);
+            (document.getElementById("games-played-region-table"), percentageResult.regionGamesPlayed, null, null, SeasonUtil.seasonIdTranslator);
         TableUtil.updateColRowTable
         (
             document.getElementById("games-played-league-table"),
             percentageResult.leagueGamesPlayed,
             (a, b)=>a[0].localeCompare(b[0]),
             function(id){return EnumUtil.enumOfId(id, LEAGUE).name;},
-            SeasonUtil.seasonIdtranslator
+            SeasonUtil.seasonIdTranslator
         );
 
         TableUtil.updateColRowTable
-            (document.getElementById("team-count-region-table"), percentageResult.regionTeamCount, null, null, SeasonUtil.seasonIdtranslator);
+            (document.getElementById("team-count-region-table"), percentageResult.regionTeamCount, null, null, SeasonUtil.seasonIdTranslator);
         TableUtil.updateColRowTable
         (
             document.getElementById("team-count-league-table"),
             percentageResult.leagueTeamCount,
             (a, b)=>a[0].localeCompare(b[0]),
             function(id){return EnumUtil.enumOfId(id, LEAGUE).name;},
-            SeasonUtil.seasonIdtranslator
+            SeasonUtil.seasonIdTranslator
         );
 
         TableUtil.updateColRowTable
-            (document.getElementById("player-count-region-table"), percentageResult.regionPlayerCount, null, null, SeasonUtil.seasonIdtranslator);
+            (document.getElementById("player-count-region-table"), percentageResult.regionPlayerCount, null, null, SeasonUtil.seasonIdTranslator);
         TableUtil.updateColRowTable
         (
             document.getElementById("player-count-league-table"),
             percentageResult.leaguePlayerCount,
             (a, b)=>a[0].localeCompare(b[0]),
             function(id){return EnumUtil.enumOfId(id, LEAGUE).name;},
-            SeasonUtil.seasonIdtranslator
+            SeasonUtil.seasonIdTranslator
         );
     }
 
