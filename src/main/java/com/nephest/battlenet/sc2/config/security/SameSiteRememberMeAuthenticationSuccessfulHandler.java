@@ -58,7 +58,7 @@ extends SavedRequestAwareAuthenticationSuccessHandler
     public SameSiteRememberMeAuthenticationSuccessfulHandler()
     {
         setAlwaysUseDefaultTargetUrl(true);
-        setDefaultTargetUrl("/#personal");
+        setDefaultTargetUrl("/?t=personal&t=personal-characters");
     }
 
     @PostConstruct
