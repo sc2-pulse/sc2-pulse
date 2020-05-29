@@ -23,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
@@ -58,6 +59,7 @@ public class StatsService
     private PostgreSQLUtils postgreSQLUtils;
 
     private List<Long> seasonsToUpdate = new ArrayList(BlizzardSC2API.MMR_SEASONS.keySet());
+    private AtomicBoolean isUpdating = new AtomicBoolean(false);
 
     public StatsService(){}
 
@@ -97,19 +99,9 @@ public class StatsService
         this.statsService = statsService;
     }
 
-    @CacheEvict
-    (
-        cacheNames=
-        {
-            "search-seasons", "search-season-last",
-            "search-ladder", "search-ladder-stats", "search-team-count",
-            "search-ladder-league-bounds", "search-ladder-season"
-        },
-        allEntries=true
-    )
-    public void updateAll()
+    protected void setIsUpdating(boolean isUpdating)
     {
-        updateAll(true);
+        this.isUpdating.set(isUpdating);
     }
 
     @CacheEvict
@@ -122,8 +114,29 @@ public class StatsService
         },
         allEntries=true
     )
-    public void updateAll(boolean purgeStatus)
+    public boolean updateAll()
     {
+        return updateAll(true);
+    }
+
+    @CacheEvict
+    (
+        cacheNames=
+        {
+            "search-seasons", "search-season-last",
+            "search-ladder", "search-ladder-stats", "search-team-count",
+            "search-ladder-league-bounds", "search-ladder-season"
+        },
+        allEntries=true
+    )
+    public boolean updateAll(boolean purgeStatus)
+    {
+        if(!isUpdating.compareAndSet(false, true))
+        {
+            LOG.info("Service is already updating");
+            return false;
+        }
+
         long start = System.currentTimeMillis();
 
         if(purgeStatus)
@@ -142,8 +155,10 @@ public class StatsService
         playerCharacterStatsDAO.mergeCalculateGlobal();
         postgreSQLUtils.analyze();
 
+        isUpdating.set(false);
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.log(Level.INFO, "Updated all after {0} seconds", new Object[]{seconds});
+        return true;
     }
 
     @CacheEvict
@@ -156,8 +171,14 @@ public class StatsService
             },
         allEntries=true
     )
-    public void updateMissing()
+    public boolean updateMissing()
     {
+        if(!isUpdating.compareAndSet(false, true))
+        {
+            LOG.info("Service is already updating");
+            return false;
+        }
+
         Long lastSeason = seasonDao.getMaxBattlenetId();
         final Long lastSeasonFinal = lastSeason == null ? 0 : lastSeason;
         List<Long> seasons = BlizzardSC2API.MMR_SEASONS.keySet().stream()
@@ -175,8 +196,10 @@ public class StatsService
         playerCharacterStatsDAO.mergeCalculateGlobal();
         postgreSQLUtils.analyze();
 
+        isUpdating.set(false);
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.log(Level.INFO, "Updated missing after {0} seconds", new Object[]{seconds});
+        return true;
     }
 
     @CacheEvict
@@ -189,15 +212,23 @@ public class StatsService
         },
         allEntries=true
     )
-    public void updateCurrent()
+    public boolean updateCurrent()
     {
+        if(!isUpdating.compareAndSet(false, true))
+        {
+            LOG.info("Service is already updating");
+            return false;
+        }
+
         long start = System.currentTimeMillis();
 
         updateCurrentSeason();
         postgreSQLUtils.analyze();
 
+        isUpdating.set(false);
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.log(Level.INFO, "Updated current after {0} seconds", new Object[]{seconds});
+        return true;
     }
 
     private void updateSeason(long seasonId)

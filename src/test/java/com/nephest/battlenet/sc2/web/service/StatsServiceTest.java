@@ -4,7 +4,9 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.Mockito.mock;
 
 public class StatsServiceTest
@@ -19,6 +21,15 @@ public class StatsServiceTest
         ss = new StatsService(null, null, null, null, null, null, null, null, null, null, null, null);
         nss = mock(StatsService.class);
         ss.setNestedService(nss);
+    }
+
+    @Test
+    public void testAlreadyUpdating()
+    {
+        ss.setIsUpdating(true);
+        assertFalse(ss.updateAll());
+        assertFalse(ss.updateMissing());
+        assertFalse(ss.updateCurrent());
     }
 /*
     @Test
