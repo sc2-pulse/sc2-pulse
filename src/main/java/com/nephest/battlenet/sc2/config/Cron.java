@@ -15,16 +15,11 @@ public class Cron
     @Autowired
     private StatsService statsService;
 
-    @Scheduled(cron="0 0 3 * * *")
-    public void updateCurrentSeason()
-    {
-        statsService.updateCurrent();
-    }
-
-    @Scheduled(cron="0 0 5 * * SAT")
-    public void updateMissingSeasons()
+    @Scheduled(cron="0 0 3,15 * * *")
+    public void updateSeasons()
     {
         statsService.updateMissing();
+        statsService.updateCurrent();
     }
 
 }
