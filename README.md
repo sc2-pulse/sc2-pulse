@@ -10,10 +10,12 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
 * BattleNet integration
     * Log in with a BattleNet account
     * Easy access to personal stats
-    * Personal ladder out of your favourite players
-* Season meta info
-    * Race, team, player distribution with multiple filters
-    * Tier MMR ranges
+    * Create a personal ladder out of your favourite players
+* Stats
+    * Global numbers
+    * Race, region, league distribution
+    * Grouped by games played, team and player count
+* Tier MMR ranges
 ## Disclamier
 I use this project for learning, it is not production-ready.
 
