@@ -29,20 +29,17 @@ public class LeagueDAO
         + "ON CONFLICT(season_id, type, queue_type, team_type) DO UPDATE SET "
         + "type=excluded.type";
 
-    private NamedParameterJdbcTemplate template;
+    private final NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
 
-    private final RowMapper<League> STD_ROW_MAPPER = (rs, num)->
-    {
-        return new League
-        (
-            rs.getLong("league.id"),
-            rs.getLong("league.season_id"),
-            conversionService.convert(rs.getInt("league.type"), BaseLeague.LeagueType.class),
-            conversionService.convert(rs.getInt("league.queue_type"), QueueType.class),
-            conversionService.convert(rs.getInt("league.team_type"), TeamType.class)
-        );
-    };
+    private final RowMapper<League> STD_ROW_MAPPER = (rs, num)-> new League
+    (
+        rs.getLong("league.id"),
+        rs.getLong("league.season_id"),
+        conversionService.convert(rs.getInt("league.type"), BaseLeague.LeagueType.class),
+        conversionService.convert(rs.getInt("league.queue_type"), QueueType.class),
+        conversionService.convert(rs.getInt("league.team_type"), TeamType.class)
+    );
 
     @Autowired
     public LeagueDAO

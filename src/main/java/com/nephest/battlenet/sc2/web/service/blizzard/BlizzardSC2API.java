@@ -43,20 +43,20 @@ public class BlizzardSC2API
     public static final int firstSeasonYear = 2016;
     public static final Map<Long, BlizzardSeason> MMR_SEASONS = Stream.of
     (
-        new BlizzardSeason(29l, 2016, 5),
-        new BlizzardSeason(30l, 2016, 6),
-        new BlizzardSeason(31l, 2017, 1),
-        new BlizzardSeason(32l, 2017, 2),
-        new BlizzardSeason(33l, 2017, 3),
-        new BlizzardSeason(34l, 2017, 4),
-        new BlizzardSeason(35l, 2018, 1),
-        new BlizzardSeason(36l, 2018, 2),
-        new BlizzardSeason(37l, 2018, 3),
-        new BlizzardSeason(38l, 2018, 4),
-        new BlizzardSeason(39l, 2019, 1),
-        new BlizzardSeason(40l, 2019, 2),
-        new BlizzardSeason(41l, 2019, 3),
-        new BlizzardSeason(42l, 2019, 4)
+        new BlizzardSeason(29L, 2016, 5),
+        new BlizzardSeason(30L, 2016, 6),
+        new BlizzardSeason(31L, 2017, 1),
+        new BlizzardSeason(32L, 2017, 2),
+        new BlizzardSeason(33L, 2017, 3),
+        new BlizzardSeason(34L, 2017, 4),
+        new BlizzardSeason(35L, 2018, 1),
+        new BlizzardSeason(36L, 2018, 2),
+        new BlizzardSeason(37L, 2018, 3),
+        new BlizzardSeason(38L, 2018, 4),
+        new BlizzardSeason(39L, 2019, 1),
+        new BlizzardSeason(40L, 2019, 2),
+        new BlizzardSeason(41L, 2019, 3),
+        new BlizzardSeason(42L, 2019, 4)
     ).collect(toUnmodifiableMap(BlizzardSeason::getId, Function.identity()));
     public static final int RETRY_COUNT = 3;
     public static final Duration CONNECT_TIMEOUT = Duration.ofMillis(10000);
@@ -86,12 +86,8 @@ public class BlizzardSC2API
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECT_TIMEOUT.toMillis())
             .doOnConnected
             (
-                c->
-                {
-                    c.addHandlerLast(new ReadTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
-                    .addHandlerLast(new WriteTimeoutHandler((int) IO_TIMEOUT.toSeconds()));
-
-                }
+                c-> c.addHandlerLast(new ReadTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
+                .addHandlerLast(new WriteTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
             );
         HttpClient httpClient = HttpClient.from(timeoutClient)
             .compress(true);
@@ -116,7 +112,7 @@ public class BlizzardSC2API
         return client;
     }
 
-    public static final BlizzardSeason getSeason(Long id)
+    public static BlizzardSeason getSeason(Long id)
     {
         return MMR_SEASONS.get(id);
     }

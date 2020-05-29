@@ -12,13 +12,13 @@ public class TeamMemberTest
     @Test
     public void testUniqueness()
     {
-        TeamMember member = new TeamMember(0l, 0l, 0, 0 ,0 ,0);
-        TeamMember equalTeamMember = new TeamMember(0l, 0l, 1, 1, 1 ,1);
+        TeamMember member = new TeamMember(0L, 0L, 0, 0 ,0 ,0);
+        TeamMember equalTeamMember = new TeamMember(0L, 0L, 1, 1, 1 ,1);
 
         TeamMember[] notEqualTeamMembers = new TeamMember[]
         {
-            new TeamMember(0l, 1l, 0, 0, 0, 0),
-            new TeamMember(1l, 0l, 0, 0, 0, 0)
+            new TeamMember(0L, 1L, 0, 0, 0, 0),
+            new TeamMember(1L, 0L, 0, 0, 0, 0)
         };
 
         TestUtil.testUniqueness(member, equalTeamMember, notEqualTeamMembers);

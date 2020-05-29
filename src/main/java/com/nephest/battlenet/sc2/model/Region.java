@@ -15,7 +15,7 @@ implements Identifiable
     private final int id;
     private final String baseUrl;
 
-    private Region(int id, String baseUrl)
+    Region(int id, String baseUrl)
     {
         this.id = id;
         this.baseUrl = baseUrl;

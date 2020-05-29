@@ -15,7 +15,7 @@ extends BaseSeason
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 1L;
 
     private Long id;
 
@@ -42,7 +42,7 @@ implements java.io.Serializable
         this.region = region;
     }
 
-    public static final Season of(BlizzardSeason season, Region region)
+    public static Season of(BlizzardSeason season, Region region)
     {
         return new Season
         (
@@ -68,7 +68,7 @@ implements java.io.Serializable
         if (!(other instanceof Season)) return false;
 
         Season otherSeason = (Season) other;
-        return getBattlenetId() == otherSeason.getBattlenetId()
+        return getBattlenetId().equals(otherSeason.getBattlenetId())
             && getRegion() == otherSeason.getRegion();
     }
 
@@ -79,7 +79,7 @@ implements java.io.Serializable
         (
             "%s[%s %s]",
             getClass().getSimpleName(),
-            String.valueOf(getBattlenetId()), getRegion().toString()
+            getBattlenetId(), getRegion().toString()
         );
     }
 

@@ -12,13 +12,13 @@ implements Identifiable
     private final int id;
     private final String name;
 
-    private Race(int id, String name)
+    Race(int id, String name)
     {
         this.id = id;
         this.name = name;
     }
 
-    public static final Race from(String name)
+    public static Race from(String name)
     {
         for(Race race : Race.values())
         {
@@ -27,7 +27,7 @@ implements Identifiable
         throw new IllegalArgumentException("Invalid name");
     }
 
-    public static final Race from(int id)
+    public static Race from(int id)
     {
         for(Race race : Race.values())
         {

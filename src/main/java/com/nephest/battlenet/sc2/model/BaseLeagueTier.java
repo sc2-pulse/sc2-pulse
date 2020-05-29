@@ -11,7 +11,7 @@ import javax.validation.constraints.NotNull;
 public class BaseLeagueTier
 {
 
-    public static enum LeagueTierType
+    public enum LeagueTierType
     implements Identifiable
     {
 
@@ -19,13 +19,13 @@ public class BaseLeagueTier
 
         private final int id;
 
-        private LeagueTierType(int id)
+        LeagueTierType(int id)
         {
             this.id = id;
         }
 
         @JsonCreator
-        public static final LeagueTierType from(int id)
+        public static LeagueTierType from(int id)
         {
             for (LeagueTierType type : LeagueTierType.values())
             {

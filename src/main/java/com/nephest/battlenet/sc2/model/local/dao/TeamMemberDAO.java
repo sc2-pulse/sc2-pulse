@@ -25,7 +25,7 @@ public class TeamMemberDAO
         + "zerg_games_played=excluded.zerg_games_played, "
         + "random_games_played=excluded.random_games_played";
 
-    private NamedParameterJdbcTemplate template;
+    private final NamedParameterJdbcTemplate template;
 
     @Autowired
     public TeamMemberDAO

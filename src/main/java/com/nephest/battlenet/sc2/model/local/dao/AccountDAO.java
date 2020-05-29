@@ -7,7 +7,6 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -31,20 +30,17 @@ public class AccountDAO
     private static final String REMOVE_EXPIRED_PRIVACY_QUERY =
         "DELETE FROM account WHERE updated < NOW() - INTERVAL '30 DAYS'";
 
-    private NamedParameterJdbcTemplate template;
-    private ConversionService conversionService;
+    private final NamedParameterJdbcTemplate template;
     private final PostgreSQLUtils postgreSQLUtils;
 
     @Autowired
     public AccountDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         PostgreSQLUtils postgreSQLUtils
     )
     {
         this.template = template;
-        this.conversionService = conversionService;
         this.postgreSQLUtils = postgreSQLUtils;
     }
 

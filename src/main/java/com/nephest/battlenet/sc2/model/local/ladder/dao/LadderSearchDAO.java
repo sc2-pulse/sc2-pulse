@@ -208,20 +208,17 @@ public class LadderSearchDAO
     private SeasonDAO seasonDAO;
 
     private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_EXTRACTOR
-        = (rs)->{return mapTeams(rs, true);};
+        = (rs)-> mapTeams(rs, true);
     private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_SHORT_EXTRACTOR
-        = (rs)->{return mapTeams(rs, false);};
+        = (rs)-> mapTeams(rs, false);
 
     private static final RowMapper<LadderSeason> FIND_SEASON_LIST_ROW_MAPPER =
-    (rs, num)->
-    {
-        return new LadderSeason
-        (
-            rs.getLong("battlenet_id"),
-            rs.getInt("year"),
-            rs.getInt("number")
-        );
-    };
+    (rs, num)-> new LadderSeason
+    (
+        rs.getLong("battlenet_id"),
+        rs.getInt("year"),
+        rs.getInt("number")
+    );
 
     private int resultsPerPage = 100;
 
@@ -276,7 +273,7 @@ public class LadderSearchDAO
     throws SQLException
     {
         long lastTeamId = -1;
-        List<LadderTeam> teams = new ArrayList();
+        List<LadderTeam> teams = new ArrayList<>();
         List<LadderTeamMember> members = null;
         while(rs.next())
         {
@@ -284,7 +281,7 @@ public class LadderSearchDAO
             long teamId = rs.getLong("team.id");
             if (teamId != lastTeamId)
             {
-                members = new ArrayList();
+                members = new ArrayList<>();
                 LadderSeason season = !includeSeason ? null : new LadderSeason
                 (
                     rs.getLong("season.battlenet_id"),
@@ -332,7 +329,7 @@ public class LadderSearchDAO
             members.add(member);
         }
         return teams;
-    };
+    }
 
     @Cacheable
     (
@@ -353,7 +350,7 @@ public class LadderSearchDAO
         long teamCount = ladderSearchDAO.getTeamCount(season, regions, leagueTypes, queueType, teamType);
         long pageCount = (long) Math.ceil(teamCount /(double) getResultsPerPage());
         long middlePage = (long) Math.ceil(pageCount / 2d);
-        long offset = 0;
+        long offset;
         long limit = getResultsPerPage() * membersPerTeam;
         if (page < 1) page = 1;
         if(page > pageCount) page = pageCount;
@@ -399,13 +396,7 @@ public class LadderSearchDAO
         */
         if(teams.size() > getResultsPerPage()) teams = teams.subList(0, getResultsPerPage());
 
-        return new PagedSearchResult<List<LadderTeam>>
-        (
-            teamCount,
-            (long) getResultsPerPage(),
-            page,
-            teams
-        );
+        return new PagedSearchResult<>(teamCount, (long) getResultsPerPage(), page, teams);
     }
 
     public PagedSearchResult<List<LadderTeam>> findAnchored
@@ -454,13 +445,7 @@ public class LadderSearchDAO
         */
         if(teams.size() > getResultsPerPage()) teams = teams.subList(0, getResultsPerPage());
 
-        return new PagedSearchResult<List<LadderTeam>>
-        (
-            teamCount,
-            (long) getResultsPerPage(),
-            finalPage,
-            teams
-        );
+        return new PagedSearchResult<>(teamCount, (long) getResultsPerPage(), finalPage, teams);
     }
 
     @Cacheable(cacheNames = "search-team-count")

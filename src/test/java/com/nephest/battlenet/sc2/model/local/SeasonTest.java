@@ -15,12 +15,12 @@ public class SeasonTest
     @Test
     public void testUniqueness()
     {
-        Season season = new Season(0l, 0l, EU, 0, 0);
-        Season equalSeason = new Season(1l, 0l, EU, 2, 3);
+        Season season = new Season(0L, 0L, EU, 0, 0);
+        Season equalSeason = new Season(1L, 0L, EU, 2, 3);
         Season[] notEqualSeasons = new Season[]
         {
-            new Season(0l, 0l, US, 0, 0),
-            new Season(0l, 1l, EU, 0, 0)
+            new Season(0L, 0L, US, 0, 0),
+            new Season(0L, 1L, EU, 0, 0)
         };
 
         TestUtil.testUniqueness(season, equalSeason, notEqualSeasons);

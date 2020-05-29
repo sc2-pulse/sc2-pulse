@@ -10,7 +10,7 @@ public enum TeamFormat
 
     private final int memberCount;
 
-    private TeamFormat(int memberCount)
+    TeamFormat(int memberCount)
     {
         this.memberCount = memberCount;
     }

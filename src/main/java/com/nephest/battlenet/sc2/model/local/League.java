@@ -16,7 +16,7 @@ extends BaseLeague
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 1L;
 
     private Long id;
 
@@ -62,7 +62,7 @@ implements java.io.Serializable
         if ( !(other instanceof League) ) return false;
 
         League otherLeague = (League) other;
-        return getSeasonId() == otherLeague.getSeasonId()
+        return getSeasonId().equals(otherLeague.getSeasonId())
             && getType() == otherLeague.getType()
             && getQueueType() == otherLeague.getQueueType()
             && getTeamType() == otherLeague.getTeamType();
@@ -75,7 +75,7 @@ implements java.io.Serializable
         (
             "%s[%s %s %s %s]",
             getClass().getSimpleName(),
-            String.valueOf(getSeasonId()),
+            getSeasonId(),
             getType().toString(),
             getQueueType().toString(),
             getTeamType().toString()

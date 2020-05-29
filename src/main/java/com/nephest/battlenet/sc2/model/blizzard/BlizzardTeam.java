@@ -19,7 +19,7 @@ extends BaseTeam
 
     private static final BlizzardTeamMember[] EMPTY_TEAM_MEMBER_ARRAY = new BlizzardTeamMember[0];
 
-    public static final Long RATING_MAX = 20000l;
+    public static final Long RATING_MAX = 20000L;
 
     @NotNull
     private BigInteger id;
@@ -34,7 +34,7 @@ extends BaseTeam
         in a very rare occasion some of the values could be null.
         defaulting to zeros in this case
     */
-    public BlizzardTeam(){super(0l, 0, 0, 0, 0);}
+    public BlizzardTeam(){super(0L, 0, 0, 0, 0);}
 
     public BlizzardTeam
     (
@@ -83,7 +83,7 @@ extends BaseTeam
     @Override
     public void setRating(Long rating)
     {
-        if(rating == null || rating > RATING_MAX) rating = 0l;
+        if(rating == null || rating > RATING_MAX) rating = 0L;
         super.setRating(rating);
     }
 

@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.config.convert;
 
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,7 +14,7 @@ implements Converter<Integer, BaseLeagueTier.LeagueTierType>
 {
 
     @Override
-    public BaseLeagueTier.LeagueTierType convert(Integer id)
+    public BaseLeagueTier.LeagueTierType convert(@NonNull Integer id)
     {
         return BaseLeagueTier.LeagueTierType.from(id);
     }

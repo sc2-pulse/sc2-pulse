@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.config.convert;
 
 import com.nephest.battlenet.sc2.model.TeamType;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -13,7 +14,7 @@ implements Converter<Integer, TeamType>
 {
 
     @Override
-    public TeamType convert(Integer id)
+    public TeamType convert(@NonNull Integer id)
     {
         return TeamType.from(id);
     }

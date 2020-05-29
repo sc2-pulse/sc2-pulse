@@ -361,11 +361,11 @@ public class LadderSearchDAOIT
         int teamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
         int regionTeamCount = SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
         int regionPlayerCount = regionTeamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
-        int regionGamesPlayed = (regionTeamCount * 1 + regionTeamCount * 2 + regionTeamCount * 3 + regionTeamCount * 4)
+        int regionGamesPlayed = (regionTeamCount + regionTeamCount * 2 + regionTeamCount * 3 + regionTeamCount * 4)
             * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
         int leaguePlayerCount = leagueTeamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
-        int leagueGamesPlayed = (leagueTeamCount * 1 + leagueTeamCount * 2 + leagueTeamCount * 3 + leagueTeamCount * 4)
+        int leagueGamesPlayed = (leagueTeamCount + leagueTeamCount * 2 + leagueTeamCount * 3 + leagueTeamCount * 4)
             * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         for(Region region : REGIONS)
         {

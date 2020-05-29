@@ -11,7 +11,7 @@ extends BaseLocalTeamMember
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 1L;
 
     @NotNull
     private Long leagueId;
@@ -64,7 +64,7 @@ implements java.io.Serializable
         (
             "%s[%s]",
             getClass().getSimpleName(),
-            String.valueOf(getLeagueId())
+            getLeagueId()
         );
     }
 

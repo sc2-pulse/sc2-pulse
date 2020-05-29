@@ -58,8 +58,8 @@ public class StatsService
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private PostgreSQLUtils postgreSQLUtils;
 
-    private List<Long> seasonsToUpdate = new ArrayList(BlizzardSC2API.MMR_SEASONS.keySet());
-    private AtomicBoolean isUpdating = new AtomicBoolean(false);
+    private List<Long> seasonsToUpdate = new ArrayList<>(BlizzardSC2API.MMR_SEASONS.keySet());
+    private final AtomicBoolean isUpdating = new AtomicBoolean(false);
 
     public StatsService(){}
 
@@ -141,7 +141,7 @@ public class StatsService
 
         if(purgeStatus)
         {
-            seasonsToUpdate = new ArrayList(BlizzardSC2API.MMR_SEASONS.keySet());
+            seasonsToUpdate = new ArrayList<>(BlizzardSC2API.MMR_SEASONS.keySet());
             Collections.sort(seasonsToUpdate);
         }
 
@@ -243,7 +243,7 @@ public class StatsService
 
     private void updateSeason(Region region, long seasonId)
     {
-        BlizzardSeason bSeason = api.getSeason(seasonId);
+        BlizzardSeason bSeason = BlizzardSC2API.getSeason(seasonId);
         Season season = seasonDao.merge(Season.of(bSeason, region));
         updateLeagues(bSeason, season);
     }
@@ -299,14 +299,7 @@ public class StatsService
             && (queueType.getTeamFormat() == ARCHON || queueType.getTeamFormat() == _1V1)
         ) return false;
 
-        if
-        (
-            leagueType == GRANDMASTER
-            && queueType.getTeamFormat() != ARCHON
-            && queueType.getTeamFormat() != _1V1
-        ) return false;
-
-        return true;
+        return leagueType != GRANDMASTER || queueType.getTeamFormat() == ARCHON || queueType.getTeamFormat() == _1V1;
     }
 
     private void updateLeagueTiers(BlizzardLeague bLeague, Season season, League league)
@@ -329,7 +322,7 @@ public class StatsService
             (league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType()) * 100);
         perTransaction = perTransaction == 0 ? 1 : perTransaction;
         int to = from + perTransaction;
-        to = to <= bTier.getDivisions().length ? to : bTier.getDivisions().length;
+        to = Math.min(to, bTier.getDivisions().length);
         while(from < bTier.getDivisions().length)
         {
             /*
@@ -349,7 +342,7 @@ public class StatsService
             }
             from += perTransaction;
             to += perTransaction;
-            to = to <= bTier.getDivisions().length ? to : bTier.getDivisions().length;
+            to = Math.min(to, bTier.getDivisions().length);
         }
     }
 

@@ -44,8 +44,8 @@ public class TeamDAO
         + "ties=excluded.ties";
 
 
-    private NamedParameterJdbcTemplate template;
-    private ConversionService conversionService;
+    private final NamedParameterJdbcTemplate template;
+    private final ConversionService conversionService;
 
     @Autowired
     public TeamDAO

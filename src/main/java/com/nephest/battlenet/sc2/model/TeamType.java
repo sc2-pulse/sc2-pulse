@@ -13,7 +13,7 @@ implements Identifiable
 
     private final int id;
 
-    private TeamType(int id)
+    TeamType(int id)
     {
         this.id = id;
     }

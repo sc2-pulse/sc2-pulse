@@ -26,8 +26,8 @@ public class LeagueTierDAO
         + "min_rating=excluded.min_rating, "
         + "max_rating=excluded.max_rating";
 
-    private NamedParameterJdbcTemplate template;
-    private ConversionService conversionService;
+    private final NamedParameterJdbcTemplate template;
+    private final ConversionService conversionService;
 
     @Autowired
     public LeagueTierDAO

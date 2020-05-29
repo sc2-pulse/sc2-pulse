@@ -12,7 +12,7 @@ public class Division
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 1L;
 
     private Long id;
 
@@ -31,7 +31,7 @@ implements java.io.Serializable
         this.battlenetId = battlenetId;
     }
 
-    public static final Division of(LeagueTier tier, BlizzardTierDivision bDivision)
+    public static Division of(LeagueTier tier, BlizzardTierDivision bDivision)
     {
         return new Division
         (
@@ -55,8 +55,8 @@ implements java.io.Serializable
         if( !(other instanceof Division) ) return false;
 
         Division otherDivision = (Division) other;
-        return getTierId() == otherDivision.getTierId()
-            && getBattlenetId() == otherDivision.getBattlenetId();
+        return getTierId().equals(otherDivision.getTierId())
+            && getBattlenetId().equals(otherDivision.getBattlenetId());
     }
 
     @Override
@@ -66,7 +66,7 @@ implements java.io.Serializable
         (
             "%s[%s %s]",
             getClass().getSimpleName(),
-            String.valueOf(getTierId()), String.valueOf(getBattlenetId())
+            getTierId(), getBattlenetId()
         );
     }
 

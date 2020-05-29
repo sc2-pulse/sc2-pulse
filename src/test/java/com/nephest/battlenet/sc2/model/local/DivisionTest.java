@@ -12,13 +12,13 @@ public class DivisionTest
     @Test
     public void testUniqueness()
     {
-        Division division = new Division(0l, 0l, 0l);
-        Division equalDivision = new Division(1l, 0l, 0l);
+        Division division = new Division(0L, 0L, 0L);
+        Division equalDivision = new Division(1L, 0L, 0L);
 
         Division[] notEqualDivisions = new Division[]
         {
-            new Division(0l, 1l, 0l),
-            new Division(0l, 0l, 1l)
+            new Division(0L, 1L, 0L),
+            new Division(0L, 0L, 1L)
         };
 
         TestUtil.testUniqueness(division, equalDivision, notEqualDivisions);

@@ -41,21 +41,18 @@ public class SeasonDAO
     private static final String FIND_MAX_BATTLENET_ID_QUERY =
         "SELECT MAX(battlenet_id) FROM season";
 
-    private NamedParameterJdbcTemplate template;
+    private final NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
 
     private final RowMapper<Season> STD_ROW_MAPPER =
-    (rs, num)->
-    {
-        return new Season
-        (
-            rs.getLong("season.id"),
-            rs.getLong("season.battlenet_id"),
-            conversionService.convert(rs.getInt("season.region"), Region.class),
-            rs.getInt("season.year"),
-            rs.getInt("season.number")
-        );
-    };
+    (rs, num)-> new Season
+    (
+        rs.getLong("season.id"),
+        rs.getLong("season.battlenet_id"),
+        conversionService.convert(rs.getInt("season.region"), Region.class),
+        rs.getInt("season.year"),
+        rs.getInt("season.number")
+    );
 
 
     @Autowired

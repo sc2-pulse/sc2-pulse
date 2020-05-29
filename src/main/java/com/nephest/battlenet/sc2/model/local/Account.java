@@ -30,7 +30,7 @@ implements java.io.Serializable
         this.id = id;
     }
 
-    public static final Account of(BlizzardAccount bAccount)
+    public static Account of(BlizzardAccount bAccount)
     {
         return new Account(null, bAccount.getBattleTag());
     }

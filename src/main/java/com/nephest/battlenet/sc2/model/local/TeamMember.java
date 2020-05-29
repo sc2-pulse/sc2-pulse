@@ -13,7 +13,7 @@ extends BaseLocalTeamMember
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 1L;
 
     @NotNull
     private Long teamId;
@@ -41,7 +41,7 @@ implements java.io.Serializable
         this.characterId = characterId;
     }
 
-    public static final TeamMember of
+    public static TeamMember of
     (
         Team team,
         PlayerCharacter character,
@@ -86,8 +86,8 @@ implements java.io.Serializable
         if( !(other instanceof TeamMember) ) return false;
 
         TeamMember otherMember = (TeamMember) other;
-        return getTeamId() == otherMember.getTeamId()
-            && getCharacterId() == otherMember.getCharacterId();
+        return getTeamId().equals(otherMember.getTeamId())
+            && getCharacterId().equals(otherMember.getCharacterId());
     }
 
     @Override
@@ -97,7 +97,7 @@ implements java.io.Serializable
         (
             "%s[%s %s]",
             getClass().getSimpleName(),
-            String.valueOf(getTeamId()), String.valueOf(getCharacterId())
+            getTeamId(), getCharacterId()
         );
     }
 

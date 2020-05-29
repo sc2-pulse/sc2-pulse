@@ -39,7 +39,7 @@ implements java.io.Serializable
         this.battlenetId = battlenetId;
     }
 
-    public static final PlayerCharacter of(Account account, Region region, BlizzardPlayerCharacter bCharacter)
+    public static PlayerCharacter of(Account account, Region region, BlizzardPlayerCharacter bCharacter)
     {
         return new PlayerCharacter
         (

@@ -21,25 +21,16 @@ public class TeamTest
     {
         League equalLeague = mock(League.class);
         Team team = new Team
-        (
-            0l, 0l, Region.EU, equalLeague, FIRST,
-            0l, BigInteger.valueOf(0),
-            0l, 0, 0, 0, 0
+        (0L, 0L, Region.EU, equalLeague, FIRST, 0L, BigInteger.valueOf(0), 0L, 0, 0, 0, 0
         );
         Team equalTeam = new Team
-        (
-            1l, 0l, Region.EU, mock(League.class), SECOND,
-            1l, BigInteger.valueOf(0),
-            1l, 1, 1, 1, 1
+        (1L, 0L, Region.EU, mock(League.class), SECOND, 1L, BigInteger.valueOf(0), 1L, 1, 1, 1, 1
         );
 
         Team[] notEqualTeams = new Team[]
         {
             new Team
-            (
-                0l, 1l, Region.US, equalLeague, FIRST,
-                0l, BigInteger.valueOf(1),
-                0l, 0, 0, 0, 0
+            (0L, 1L, Region.US, equalLeague, FIRST, 0L, BigInteger.valueOf(1), 0L, 0, 0, 0, 0
             )
         };
 

@@ -10,7 +10,6 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 
 import javax.validation.constraints.NotNull;
-import java.util.Collections;
 import java.util.List;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -19,7 +18,7 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 1L;
 
     @NotNull
     private final Long id;
@@ -36,7 +35,7 @@ implements java.io.Serializable
     private final LeagueTier.LeagueTierType leagueTierType;
 
 
-    private List<LadderTeamMember> members = Collections.emptyList();
+    private final List<LadderTeamMember> members;
 
     public LadderTeam
     (

@@ -19,15 +19,15 @@ public class LeagueTest
     @Test
     public void testUniqueness()
     {
-        League league = new League(0l, 0l, GOLD, WOL_1V1, ARRANGED);
-        League equalLeague = new League(1l, 0l, GOLD, WOL_1V1, ARRANGED);
+        League league = new League(0L, 0L, GOLD, WOL_1V1, ARRANGED);
+        League equalLeague = new League(1L, 0L, GOLD, WOL_1V1, ARRANGED);
 
         League[] notEqualLeagues = new League[]
         {
-            new League(0l, 1l, GOLD, WOL_1V1, ARRANGED),
-            new League(0l, 0l, PLATINUM, WOL_1V1, ARRANGED),
-            new League(0l, 0l, GOLD, HOTS_1V1, ARRANGED),
-            new League(0l, 0l, GOLD, WOL_1V1, RANDOM),
+            new League(0L, 1L, GOLD, WOL_1V1, ARRANGED),
+            new League(0L, 0L, PLATINUM, WOL_1V1, ARRANGED),
+            new League(0L, 0L, GOLD, HOTS_1V1, ARRANGED),
+            new League(0L, 0L, GOLD, WOL_1V1, RANDOM),
         };
 
         TestUtil.testUniqueness(league, equalLeague, notEqualLeagues);

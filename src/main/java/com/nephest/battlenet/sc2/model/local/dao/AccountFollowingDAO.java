@@ -62,7 +62,7 @@ public class AccountFollowingDAO
         template.update(DELETE_QUERY, params);
     }
 
-    public int getFollowingCount(long accountId)
+    public Integer getFollowingCount(long accountId)
     {
         SqlParameterSource params = new MapSqlParameterSource()
             .addValue("accountId", accountId);

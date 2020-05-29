@@ -13,13 +13,12 @@ public class StatsServiceTest
 {
 
     private StatsService ss;
-    private StatsService nss;
 
     @BeforeEach
     public void beforeEach()
     {
         ss = new StatsService(null, null, null, null, null, null, null, null, null, null, null, null);
-        nss = mock(StatsService.class);
+        StatsService nss = mock(StatsService.class);
         ss.setNestedService(nss);
     }
 

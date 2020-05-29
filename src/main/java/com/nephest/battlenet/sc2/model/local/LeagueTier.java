@@ -14,7 +14,7 @@ extends BaseLeagueTier
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 1L;
 
     private Long id;
 
@@ -30,7 +30,7 @@ implements java.io.Serializable
         this.leagueId = leagueId;
     }
 
-    public static final LeagueTier of(League league, BlizzardLeagueTier bTier)
+    public static LeagueTier of(League league, BlizzardLeagueTier bTier)
     {
         return new LeagueTier
         (
@@ -56,7 +56,7 @@ implements java.io.Serializable
         if ( !(other instanceof LeagueTier) ) return false;
 
         LeagueTier otherTier = (LeagueTier) other;
-        return getLeagueId() == otherTier.getLeagueId()
+        return getLeagueId().equals(otherTier.getLeagueId())
             && getType() == otherTier.getType();
     }
 
@@ -67,7 +67,7 @@ implements java.io.Serializable
         (
             "%s[%s %s]",
             getClass().getSimpleName(),
-            String.valueOf(getLeagueId()), getType().toString()
+            getLeagueId(), getType().toString()
         );
     }
 

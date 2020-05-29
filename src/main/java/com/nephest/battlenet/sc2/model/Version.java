@@ -6,6 +6,6 @@ package com.nephest.battlenet.sc2.model;
 public enum Version
 {
 
-    WOL, HOTS, LOTV;
+    WOL, HOTS, LOTV
 
 }

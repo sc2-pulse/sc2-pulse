@@ -7,7 +7,7 @@ public class BaseLocalTeamMember
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 1L;
 
     private Integer terranGamesPlayed;
     private Integer protossGamesPlayed;

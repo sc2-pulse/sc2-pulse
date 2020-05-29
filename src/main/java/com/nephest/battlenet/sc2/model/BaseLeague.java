@@ -10,7 +10,7 @@ import javax.validation.constraints.NotNull;
 public class BaseLeague
 {
 
-    public static enum LeagueType
+    public enum LeagueType
     implements Identifiable
     {
 
@@ -18,7 +18,7 @@ public class BaseLeague
 
         private final int id;
 
-        private LeagueType(int id)
+        LeagueType(int id)
         {
             this.id = id;
         }

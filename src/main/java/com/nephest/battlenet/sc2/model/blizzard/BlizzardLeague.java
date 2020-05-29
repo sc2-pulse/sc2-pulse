@@ -47,9 +47,9 @@ extends BaseLeague
 
     public void setKey(Map<String, String> key)
     {
-        setType(LeagueType.from(Integer.valueOf(key.get("league_id"))));
-        setQueueType(QueueType.from(Integer.valueOf(key.get("queue_id"))));
-        setTeamType(TeamType.from(Integer.valueOf(key.get("team_type"))));
+        setType(LeagueType.from(Integer.parseInt(key.get("league_id"))));
+        setQueueType(QueueType.from(Integer.parseInt(key.get("queue_id"))));
+        setTeamType(TeamType.from(Integer.parseInt(key.get("team_type"))));
     }
 
 }

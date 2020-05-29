@@ -15,13 +15,13 @@ public class LeagueTierTest
     @Test
     public void testUniqueness()
     {
-        LeagueTier tier = new LeagueTier(0l, 0l, FIRST, 0, 0);
-        LeagueTier equalTier = new LeagueTier(1l, 0l, FIRST, 1, 1);
+        LeagueTier tier = new LeagueTier(0L, 0L, FIRST, 0, 0);
+        LeagueTier equalTier = new LeagueTier(1L, 0L, FIRST, 1, 1);
 
         LeagueTier[] notEqualTiers = new LeagueTier[]
         {
-            new LeagueTier(0l, 1l, FIRST, 0, 0),
-            new LeagueTier(0l, 0l, SECOND, 0, 0),
+            new LeagueTier(0L, 1L, FIRST, 0, 0),
+            new LeagueTier(0L, 0L, SECOND, 0, 0),
         };
 
         TestUtil.testUniqueness(tier, equalTier, notEqualTiers);

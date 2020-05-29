@@ -40,18 +40,15 @@ public class DivisionDAO
         + "AND league.type=:leagueType AND league.queue_type=:queueType AND league.team_type=:teamType "
         + "AND league_tier.type=:tierType";
 
-    private NamedParameterJdbcTemplate template;
-    private ConversionService conversionService;
+    private final NamedParameterJdbcTemplate template;
+    private final ConversionService conversionService;
 
-    public final RowMapper<Division> STD_ROW_MAPPER = (rs, num)->
-    {
-        return new Division
-        (
-            rs.getLong("id"),
-            rs.getLong("league_tier_id"),
-            rs.getLong("battlenet_id")
-        );
-    };
+    public final RowMapper<Division> STD_ROW_MAPPER = (rs, num)-> new Division
+    (
+        rs.getLong("id"),
+        rs.getLong("league_tier_id"),
+        rs.getLong("battlenet_id")
+    );
 
     @Autowired
     public DivisionDAO

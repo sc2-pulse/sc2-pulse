@@ -12,12 +12,12 @@ public class LeagueStatsTest
     @Test
     public void testUniqueness()
     {
-        LeagueStats stats = new LeagueStats(0l, 0, 0, 0, 0, 0, 0);
-        LeagueStats equalStats = new LeagueStats(0l, 1, 1, 1, 1, 1, 1);
+        LeagueStats stats = new LeagueStats(0L, 0, 0, 0, 0, 0, 0);
+        LeagueStats equalStats = new LeagueStats(0L, 1, 1, 1, 1, 1, 1);
 
         LeagueStats[] notEqualStats = new LeagueStats[]
         {
-            new LeagueStats(1l, 0, 0, 0, 0, 0, 0)
+            new LeagueStats(1L, 0, 0, 0, 0, 0, 0)
         };
 
         TestUtil.testUniqueness(stats, equalStats, notEqualStats);

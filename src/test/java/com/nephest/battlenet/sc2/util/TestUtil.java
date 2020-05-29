@@ -11,7 +11,7 @@ public final class TestUtil
 
     private TestUtil(){}
 
-    public static final void testUniqueness(Object object, Object equalObject, Object... notEqualObjects)
+    public static void testUniqueness(Object object, Object equalObject, Object... notEqualObjects)
     {
         assertEquals(object, equalObject);
         assertEquals(object.hashCode(), equalObject.hashCode());

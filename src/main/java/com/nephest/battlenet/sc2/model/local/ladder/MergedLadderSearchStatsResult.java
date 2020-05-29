@@ -13,22 +13,22 @@ import java.util.Map;
 public class MergedLadderSearchStatsResult
 {
 
-    private final Map<Region, Long> regionPlayerCount = new EnumMap(Region.class);
-    private final Map<LeagueType, Long> leaguePlayerCount = new EnumMap(LeagueType.class);
+    private final Map<Region, Long> regionPlayerCount = new EnumMap<>(Region.class);
+    private final Map<LeagueType, Long> leaguePlayerCount = new EnumMap<>(LeagueType.class);
 
-    private final Map<Region, Long> regionTeamCount = new EnumMap(Region.class);
-    private final Map<LeagueType, Long> leagueTeamCount = new EnumMap(LeagueType.class);
+    private final Map<Region, Long> regionTeamCount = new EnumMap<>(Region.class);
+    private final Map<LeagueType, Long> leagueTeamCount = new EnumMap<>(LeagueType.class);
 
-    private final Map<Region, Long> regionGamesPlayed = new EnumMap(Region.class);
-    private final Map<LeagueType, Long> leagueGamesPlayed = new EnumMap(LeagueType.class);
-    private final Map<Race, Long> raceGamesPlayed = new EnumMap(Race.class);
+    private final Map<Region, Long> regionGamesPlayed = new EnumMap<>(Region.class);
+    private final Map<LeagueType, Long> leagueGamesPlayed = new EnumMap<>(LeagueType.class);
+    private final Map<Race, Long> raceGamesPlayed = new EnumMap<>(Race.class);
 
     public MergedLadderSearchStatsResult(Map<Region, Map<LeagueType, LadderSearchStatsResult>> stats)
     {
         init(stats);
     }
 
-    private final void init(Map<Region, Map<LeagueType, LadderSearchStatsResult>> stats)
+    private void init(Map<Region, Map<LeagueType, LadderSearchStatsResult>> stats)
     {
         for(Map.Entry<Region,  Map<LeagueType, LadderSearchStatsResult>> regionEntry : stats.entrySet())
         {
@@ -43,13 +43,13 @@ public class MergedLadderSearchStatsResult
                 curRegionPlayerCount += curStats.getLeagueStats().getPlayerCount();
                 curRegionCount += curStats.getLeagueStats().getTeamCount();
                 leaguePlayerCount.put(league,
-                    leaguePlayerCount.getOrDefault(league, 0l) + curStats.getLeagueStats().getPlayerCount());
+                    leaguePlayerCount.getOrDefault(league, 0L) + curStats.getLeagueStats().getPlayerCount());
                 leagueTeamCount.put(league,
-                    leagueTeamCount.getOrDefault(league, 0l) + curStats.getLeagueStats().getTeamCount());
+                    leagueTeamCount.getOrDefault(league, 0L) + curStats.getLeagueStats().getTeamCount());
 
                 for(Race race : Race.values())
                 {
-                    Integer gamesPlayed = null;
+                    Integer gamesPlayed;
                     switch(race)
                     {
                         case TERRAN:
@@ -66,10 +66,10 @@ public class MergedLadderSearchStatsResult
                             break;
                         default:
                             throw new IllegalArgumentException("Unsupported race");
-                    };
-                    regionGamesPlayed.put(region, regionGamesPlayed.getOrDefault(region, 0l) + gamesPlayed);
-                    leagueGamesPlayed.put(league, leagueGamesPlayed.getOrDefault(league, 0l) + gamesPlayed);
-                    raceGamesPlayed.put(race, raceGamesPlayed.getOrDefault(race, 0l) + gamesPlayed);
+                    }
+                    regionGamesPlayed.put(region, regionGamesPlayed.getOrDefault(region, 0L) + gamesPlayed);
+                    leagueGamesPlayed.put(league, leagueGamesPlayed.getOrDefault(league, 0L) + gamesPlayed);
+                    raceGamesPlayed.put(race, raceGamesPlayed.getOrDefault(race, 0L) + gamesPlayed);
                 }
             }
             regionPlayerCount.put(regionEntry.getKey(), curRegionPlayerCount);

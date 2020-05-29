@@ -68,12 +68,8 @@ public class BlizzardSC2APIIT
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) OPERATION_DURATION.toMillis())
             .doOnConnected
             (
-                c->
-                {
-                    c.addHandlerLast(new ReadTimeoutHandler(OPERATION_DURATION.toMillis(), TimeUnit.MILLISECONDS))
-                        .addHandlerLast(new WriteTimeoutHandler(OPERATION_DURATION.toMillis(), TimeUnit.MILLISECONDS));
-
-                }
+                c-> c.addHandlerLast(new ReadTimeoutHandler(OPERATION_DURATION.toMillis(), TimeUnit.MILLISECONDS))
+                    .addHandlerLast(new WriteTimeoutHandler(OPERATION_DURATION.toMillis(), TimeUnit.MILLISECONDS))
             );
         HttpClient httpClient = HttpClient.from(timeoutClient)
             .compress(true);
@@ -100,7 +96,7 @@ public class BlizzardSC2APIIT
         server.shutdown();
     }
 
-    private void testRetrying(Mono mono, String body, MockWebServer server, int count)
+    private void testRetrying(Mono<?> mono, String body, MockWebServer server, int count)
     throws Exception
     {
         testRetryingOnErrorCodes(mono, body, server, count);
@@ -108,8 +104,7 @@ public class BlizzardSC2APIIT
         testRetryingOnTimeout(mono, body, server, count);
     }
 
-    private void testRetryingOnErrorCodes(Mono mono, String body, MockWebServer server, int count)
-    throws Exception
+    private void testRetryingOnErrorCodes(Mono<?> mono, String body, MockWebServer server, int count)
     {
         for(int i = 0; i < count; i++) server.enqueue(new MockResponse().setResponseCode(500));
         server.enqueue(new MockResponse().setHeader("Content-Type", "application/json").setBody(body));
@@ -119,11 +114,10 @@ public class BlizzardSC2APIIT
             .expectComplete().verify();
     }
 
-    private void testRetryingOnMalformedBody(Mono mono, String body, MockWebServer server, int count)
-    throws Exception
+    private void testRetryingOnMalformedBody(Mono<?> mono, String body, MockWebServer server, int count)
     {
         for(int i = 0; i < count; i++)
-            server.enqueue(new MockResponse().setHeader("Content-Type", "application/json").setBody("dadsdcz"));;
+            server.enqueue(new MockResponse().setHeader("Content-Type", "application/json").setBody("dadsdcz"));
         server.enqueue(new MockResponse().setHeader("Content-Type", "application/json").setBody(body));
 
         StepVerifier.create(mono)
@@ -131,8 +125,7 @@ public class BlizzardSC2APIIT
             .expectComplete().verify();
     }
 
-    private void testRetryingOnTimeout(Mono mono, String body, MockWebServer server, int count)
-    throws Exception
+    private void testRetryingOnTimeout(Mono<?> mono, String body, MockWebServer server, int count)
     {
         System.out.println("Testing socket timeouts, might take some time...");
         MockResponse dr = new MockResponse()

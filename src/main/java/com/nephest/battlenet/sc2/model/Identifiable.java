@@ -6,6 +6,6 @@ package com.nephest.battlenet.sc2.model;
 public interface Identifiable
 {
 
-    public int getId();
+    int getId();
 
 }

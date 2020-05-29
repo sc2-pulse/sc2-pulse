@@ -59,13 +59,13 @@ public class LadderController
         @RequestParam(name = "page", defaultValue="1") int page
     )
     {
-        Set<Region> regions = new HashSet();
+        Set<Region> regions = new HashSet<>();
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<LeagueType> leagues = new HashSet();
+        Set<LeagueType> leagues = new HashSet<>();
         if(bronze) leagues.add(LeagueType.BRONZE);
         if(silver) leagues.add(LeagueType.SILVER);
         if(gold) leagues.add(LeagueType.GOLD);
@@ -108,13 +108,13 @@ public class LadderController
             @RequestParam(name = "gra", required = false) boolean grandmaster
         )
     {
-        Set<Region> regions = new HashSet();
+        Set<Region> regions = new HashSet<>();
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<LeagueType> leagues = new HashSet();
+        Set<LeagueType> leagues = new HashSet<>();
         if(bronze) leagues.add(LeagueType.BRONZE);
         if(silver) leagues.add(LeagueType.SILVER);
         if(gold) leagues.add(LeagueType.GOLD);
@@ -155,13 +155,13 @@ public class LadderController
         @RequestParam(name = "gra", required = false) boolean grandmaster
     )
     {
-        Set<Region> regions = new HashSet();
+        Set<Region> regions = new HashSet<>();
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<LeagueType> leagues = new HashSet();
+        Set<LeagueType> leagues = new HashSet<>();
         if(bronze) leagues.add(LeagueType.BRONZE);
         if(silver) leagues.add(LeagueType.SILVER);
         if(gold) leagues.add(LeagueType.GOLD);
@@ -197,13 +197,13 @@ public class LadderController
         @RequestParam(name = "gra", required = false) boolean grandmaster
     )
     {
-        Set<Region> regions = new HashSet();
+        Set<Region> regions = new HashSet<>();
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<LeagueType> leagues = new HashSet();
+        Set<LeagueType> leagues = new HashSet<>();
         if(bronze) leagues.add(LeagueType.BRONZE);
         if(silver) leagues.add(LeagueType.SILVER);
         if(gold) leagues.add(LeagueType.GOLD);

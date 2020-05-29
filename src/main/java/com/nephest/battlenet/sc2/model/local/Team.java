@@ -15,7 +15,7 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1l;
+    private static final long serialVersionUID = 1L;
 
     private Long id;
 
@@ -60,7 +60,7 @@ implements java.io.Serializable
         this.tierType = tierType;
     }
 
-    public static final Team of
+    public static Team of
     (
         Season season,
         League league,
@@ -110,7 +110,7 @@ implements java.io.Serializable
         (
             "%s[%s %s %s]",
             getClass().getSimpleName(),
-            String.valueOf(getSeason()), getRegion().toString(), String.valueOf(getBattlenetId())
+            getSeason(), getRegion().toString(), getBattlenetId()
         );
     }
 

@@ -207,13 +207,13 @@ public class PlayerCharacterStatsDAO
 
     public Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> findGlobalMap(Long playerCharacterId)
     {
-        Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> result = new EnumMap(QueueType.class);
+        Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> result = new EnumMap<>(QueueType.class);
         for(PlayerCharacterStats stats : findGlobalList(playerCharacterId))
         {
             Map<TeamType, Map<Race, PlayerCharacterStats>> teams = result
-                .computeIfAbsent(stats.getQueueType(),r->new EnumMap(TeamType.class));
+                .computeIfAbsent(stats.getQueueType(),r->new EnumMap<>(TeamType.class));
             Map<Race, PlayerCharacterStats> races = teams
-                .computeIfAbsent(stats.getTeamType(),r->new HashMap(Race.values().length + 1, 1));
+                .computeIfAbsent(stats.getTeamType(),r->new HashMap<>(Race.values().length + 1, 1));
             races.put(stats.getRace(), stats);
         }
         return result;

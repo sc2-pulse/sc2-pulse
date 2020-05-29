@@ -95,13 +95,13 @@ public class PersonalController
         @RequestParam(name = "gra", required = false) boolean grandmaster
     )
     {
-        Set<Region> regions = new HashSet();
+        Set<Region> regions = new HashSet<>();
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<BaseLeague.LeagueType> leagues = new HashSet();
+        Set<BaseLeague.LeagueType> leagues = new HashSet<>();
         if(bronze) leagues.add(BaseLeague.LeagueType.BRONZE);
         if(silver) leagues.add(BaseLeague.LeagueType.SILVER);
         if(gold) leagues.add(BaseLeague.LeagueType.GOLD);

@@ -30,8 +30,8 @@ implements Identifiable
     LOTV_4V4(204, LOTV, _4V4),
     LOTV_ARCHON(206, LOTV, ARCHON);
 
-    private static Map<Version, Set<QueueType>> VERSION_QUEUES;
-    private static Map<TeamFormat, Set<QueueType>> TEAM_QUEUES;
+    private static final Map<Version, Set<QueueType>> VERSION_QUEUES;
+    private static final Map<TeamFormat, Set<QueueType>> TEAM_QUEUES;
 
     private final int id;
     private final Version version;
@@ -39,11 +39,11 @@ implements Identifiable
 
     static
     {
-        Map<Version, Set<QueueType>> ver = new EnumMap(Version.class);
-        Map<TeamFormat, Set<QueueType>> team = new EnumMap(TeamFormat.class);
+        Map<Version, Set<QueueType>> ver = new EnumMap<>(Version.class);
+        Map<TeamFormat, Set<QueueType>> team = new EnumMap<>(TeamFormat.class);
 
-        for (Version v : Version.values()) ver.put(v, new HashSet());
-        for (TeamFormat t : TeamFormat.values()) team.put(t, new HashSet());
+        for (Version v : Version.values()) ver.put(v, new HashSet<>());
+        for (TeamFormat t : TeamFormat.values()) team.put(t, new HashSet<>());
 
         for (QueueType q : QueueType.values())
         {
@@ -60,7 +60,7 @@ implements Identifiable
         TEAM_QUEUES = Collections.unmodifiableMap(team);
     }
 
-    private QueueType(int id, Version version, TeamFormat teamFormat)
+    QueueType(int id, Version version, TeamFormat teamFormat)
     {
         this.id = id;
         this.version = version;
