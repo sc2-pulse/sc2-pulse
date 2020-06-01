@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderSeason;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -456,6 +457,21 @@ public class LadderSearchDAO
         MapSqlParameterSource params =
             ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType);
         return template.query(FIND_TEAM_COUNT_QUERY, params, DAOUtils.LONG_EXTRACTOR);
+    }
+
+    public void precache()
+    {
+        for(long season : BlizzardSC2API.MMR_SEASONS.keySet()) precacheSeason(season);
+        precacheSeason(seasonDAO.getMaxBattlenetId());
+    }
+
+    private void precacheSeason(long season)
+    {
+        Set<Region> regions = Set.of(Region.values());
+        Set<BaseLeague.LeagueType> leagues = Set.of(BaseLeague.LeagueType.values());
+        for(QueueType queue : QueueType.values())
+            for(TeamType team : TeamType.values())
+                getLadderSearchDAO().getTeamCount(season, regions , leagues, queue, team);
     }
 
     @Cacheable

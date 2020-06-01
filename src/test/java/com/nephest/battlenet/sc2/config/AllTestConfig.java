@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.Application;
+import com.nephest.battlenet.sc2.Startup;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
@@ -18,9 +19,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 (
     basePackages = {"com.nephest.battlenet.sc2"},
     excludeFilters =
-        {
-            @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Application.class),
-        }
+    {
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Application.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class)
+    }
 )
 @Import(CoreTestConfig.class)
 public class AllTestConfig

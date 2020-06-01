@@ -1,30 +1,25 @@
 // Copyright (C) 2020 Oleksandr Masniuk and contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-package com.nephest.battlenet.sc2.config;
+package com.nephest.battlenet.sc2;
 
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.web.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.boot.ApplicationArguments;
+import org.springframework.boot.ApplicationRunner;
 import org.springframework.stereotype.Component;
 
 @Component
-public class Cron
+public class Startup
+implements ApplicationRunner
 {
-
-    @Autowired
-    private StatsService statsService;
 
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
 
-    @Scheduled(cron="0 0 3,15 * * *")
-    public void updateSeasons()
+    @Override
+    public void run(ApplicationArguments args)
     {
-        statsService.updateMissing();
-        statsService.updateCurrent();
         ladderSearchDAO.precache();
     }
-
 }
