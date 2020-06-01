@@ -331,11 +331,6 @@ public class LadderSearchDAO
         return teams;
     }
 
-    @Cacheable
-    (
-        cacheNames="search-ladder",
-        condition="#a5 eq 1 and #a0 eq #root.target.seasonDAO.maxBattlenetId"
-    )
     public PagedSearchResult<List<LadderTeam>> find
     (
         long season,
