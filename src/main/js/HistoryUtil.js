@@ -88,6 +88,12 @@ class HistoryUtil
                 const id = params.get("id"); params.delete("id");
                 promises.push(CharacterUtil.showCharacterInfo(null, id));
                 break;
+            case "search":
+                const name = params.get("name"); params.delete("name");
+                scrollTo = "search-result-all";
+                lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
+                promises.push(CharacterUtil.getCharacters(name));
+                break;
             case "following-ladder":
                 scrollTo = "following-ladder";
                 lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-following-ladder"));

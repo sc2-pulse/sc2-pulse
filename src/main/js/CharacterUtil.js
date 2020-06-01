@@ -176,6 +176,12 @@ class CharacterUtil
     static getCharacters(name)
     {
         Util.setGeneratingStatus("begin");
+        const tabs = new URLSearchParams(window.location.search).getAll("t");
+        const searchParams = new URLSearchParams();
+        searchParams.append("type", "search");
+        searchParams.append("name", name);
+        const stringParams = searchParams.toString();
+        for(const tab of tabs) searchParams.append("t", tab);
         const request = "api/characters?name=" + encodeURIComponent(name);
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
@@ -191,6 +197,8 @@ class CharacterUtil
                             document.getElementById("search-result-all").classList.remove("d-none");
                             Util.setGeneratingStatus("success");
                             Util.scrollIntoViewById("search-result-all");
+                            if(!Session.isHistorical) history.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString());
+                            Session.currentSearchParams = stringParams;
                             res();
                         }
                     )
