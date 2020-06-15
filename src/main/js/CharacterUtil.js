@@ -104,7 +104,7 @@ class CharacterUtil
             const pane = panes[ix];
             const linkText = teams[0].season.year + " s" + teams[0].season.number;
             link.textContent = linkText;
-            pane.getElementsByTagName("h4")[0].textContent =
+            pane.querySelector(":scope table h4").textContent =
                 teams[0].season.year + " season " + teams[0].season.number + " teams";
             if(!shown)
             {

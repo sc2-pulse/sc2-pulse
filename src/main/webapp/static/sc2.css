@@ -44,6 +44,15 @@ h4
     font-size: 1.1rem;
 }
 
+caption
+{
+    caption-side: top;
+    text-align: center;
+    color: inherit;
+    padding: 0;
+    margin: 0;
+}
+
 #status-generating-fullscreen
 {
     left: 0;

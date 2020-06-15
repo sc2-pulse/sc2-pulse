@@ -148,9 +148,11 @@ class ElementUtil
         const cardHeader = document.createElement("h4");
         cardHeader.textContent = teamFormat.name + " " + teamType.name;
         cardHeader.classList.add("card-title");
-        cardBody.appendChild(cardHeader);
         const table = TableUtil.createTable(["Race", "MMR", "League", "Games"], false);
         table.classList.add("player-stats-table");
+        const tableCaption = document.createElement("caption");
+        tableCaption.appendChild(cardHeader);
+        table.prepend(tableCaption);
         const tbody = table.getElementsByTagName("tbody")[0];
         for(const race of Object.values(RACE)) tbody.appendChild(ElementUtil.createPlayerStatsRaceRow(race.name));
         tbody.appendChild(ElementUtil.createPlayerStatsRaceRow("all"));

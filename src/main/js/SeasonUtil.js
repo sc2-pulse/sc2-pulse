@@ -49,6 +49,9 @@ class SeasonUtil
         {
             const table = TableUtil.createTable(["Format", "Region", "League", "Team", "MMR", "Games", "Win%"]);
             table.getElementsByTagName("table")[0].setAttribute("data-ladder-format-show", "true");
+            const tableCaption = document.createElement("caption");
+            tableCaption.appendChild(document.createElement("h4"));
+            table.childNodes[0].prepend(tableCaption);
             pane.appendChild(table);
         }
         teamSection.appendChild(seasonPills.pane);
