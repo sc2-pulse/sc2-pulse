@@ -79,10 +79,7 @@ class TeamUtil
         }
         else
         {
-            const noRace = document.createElement("span");
-            noRace.classList.add("race-percentage", "race-percentage-none", "text-secondary", "table-image", "table-image-square");
-            noRace.setAttribute("title", "no specific race");
-            racesElem.appendChild(noRace);
+            racesElem.appendChild(ElementUtil.createNoRaceImage());
         }
 
         const playerLink = document.createElement("a");

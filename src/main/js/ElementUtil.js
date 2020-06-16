@@ -85,6 +85,14 @@ class ElementUtil
         return img;
     }
 
+    static createNoRaceImage()
+    {
+        const noRace = document.createElement("span");
+        noRace.classList.add("race-percentage", "race-percentage-none", "text-secondary", "table-image", "table-image-square");
+        noRace.setAttribute("title", "no specific race");
+        return noRace;
+    }
+
     static setElementsVisibility(elems, visible)
     {
         for (const elem of elems)
@@ -168,7 +176,7 @@ class ElementUtil
         raceRace.classList.add("player-stats-race", "player-stats-" + raceName + "-race");
         if(raceName === "all")
         {
-            raceRace.textContent = "All";
+            raceRace.appendChild(ElementUtil.createNoRaceImage());
         }
         else
         {

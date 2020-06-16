@@ -91,6 +91,7 @@ caption
 .table-image, .form-icon
 {
     height: 1.2em;
+    vertical-align: middle;
 }
 
 .table-image-long, .form-icon-long
