@@ -31,6 +31,14 @@ class TableUtil
         return table;
     }
 
+    static createRowTh(row = null)
+    {
+        const th = document.createElement("th");
+        th.setAttribute("scope", "row");
+        if(row != null) row.appendChild(th);
+        return th;
+    }
+
     static updateColRowTable(table, data, sorter = null, headTranslator = null, rowTranslator = null)
     {
         const headRow = table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0];
