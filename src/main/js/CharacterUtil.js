@@ -162,9 +162,9 @@ class CharacterUtil
                     == visibleRows[1].querySelector(".player-stats-games").textContent
             )
                 table.querySelector(".player-stats-all").classList.add("d-none");
-            const raceCol = table.querySelectorAll("th")[0];
+            const gamesCol = table.querySelectorAll("th")[3];
             const mmrCol = table.querySelectorAll("th")[1];
-            TableUtil.sortTable(table, [mmrCol, raceCol]);
+            TableUtil.sortTable(table, [mmrCol, gamesCol]);
         }
     }
 
