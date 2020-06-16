@@ -21,7 +21,7 @@ class TeamUtil
                 const teamType = EnumUtil.enumOfId(team.league.teamType, TEAM_TYPE);
                 row.insertCell().appendChild(document.createTextNode(teamFormat.name + " " + teamType.name));
             }
-            if(searchResult.meta != null) row.insertCell()
+            if(searchResult.meta != null) TableUtil.createRowTh(row)
                     .appendChild(document.createTextNode(Util.calculateRank(searchResult, i)));
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), ["table-image-long"]));
             const league = EnumUtil.enumOfId(team.league.type, LEAGUE);

@@ -164,7 +164,7 @@ class ElementUtil
     {
         const raceRow = document.createElement("tr");
         raceRow.classList.add("player-stats-" + raceName, "player-stats-dynamic");
-        const raceRace = raceRow.insertCell();
+        const raceRace = TableUtil.createRowTh(raceRow);
         raceRace.classList.add("player-stats-race", "player-stats-" + raceName + "-race");
         if(raceName === "all")
         {
