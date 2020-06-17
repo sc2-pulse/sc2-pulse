@@ -11,7 +11,7 @@ class HistoryUtil
         if(hashes.length > 0) return; //tabs are explicit, do not touch them
 
         for(const tab of document.querySelectorAll(".nav-pills a.active"))
-                if(tab.offsetParent != null) params.append("t", tab.hash.substring(1));
+                if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
         Session.lastNonModalParams =  "?" + params.toString();
         history.replaceState({}, document.title, "?" + params.toString());
     }
@@ -24,7 +24,7 @@ class HistoryUtil
             ? document.querySelectorAll(".modal.show .nav-pills a.active")
             : document.querySelectorAll(".nav-pills a.active");
         for(const tab of tabs)
-            if(tab.offsetParent != null) params.append("t", tab.hash.substring(1));
+            if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
        history.replaceState({}, document.title, "?" + params.toString());
     }
 
@@ -36,7 +36,7 @@ class HistoryUtil
         const promises = [];
         for(const hash of hashes)
         {
-            const element = document.querySelector('.nav-pills a[href="#' + hash + '"]');
+            const element = document.querySelector('.nav-pills a[data-target="#' + hash + '"]');
             if(!element.classList.contains("active"))
             {
                 for(const chart of document.querySelectorAll("#" + hash + " > * > * > * > .c-chart"))

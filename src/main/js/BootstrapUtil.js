@@ -11,15 +11,14 @@ class BootstrapUtil
 
     static showTab(e)
     {
-        ElementUtil.resolveElementPromise(e.target.getAttribute("href").substring(1));
+        ElementUtil.resolveElementPromise(e.target.getAttribute("data-target").substring(1));
         if(Session.isHistorical) return;
-        const hash = e.target.hash.substring(1);
         const params = new URLSearchParams(window.location.search);
         params.delete("t");
         const modal = e.target.closest(".modal");
         const root = modal != null ? ("#" + modal.id) : "body";
         for(const tab of document.querySelectorAll(root + " .nav-pills a.active"))
-            if(tab.offsetParent != null) params.append("t", tab.hash.substring(1));
+            if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
         history.pushState({}, document.title, "?" + params.toString());
     }
 
