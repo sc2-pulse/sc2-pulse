@@ -62,7 +62,7 @@ class Session
 
 Session.currentRequests = 0;
 Session.currentSeasons = null;
-Session.currentSeason = -1;
+Session.currentSeason = null;
 Session.currentTeamFormat = null;
 Session.currentTeamType = null;
 Session.currentPersonalSeason = -1;

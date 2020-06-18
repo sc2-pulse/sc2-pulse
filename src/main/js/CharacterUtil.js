@@ -108,7 +108,7 @@ class CharacterUtil
                 teams[0].season.year + " season " + teams[0].season.number + " teams";
             if(!shown)
             {
-                if(Session.currentSeason < 0 || season == Session.currentSeason || ix == groupedEntries.length - 1)
+                if(Session.currentSeason == null || season == Session.currentSeason || ix == groupedEntries.length - 1)
                 {
                     $(link).tab("show");
                     shown = true;
