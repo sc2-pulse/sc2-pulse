@@ -70,7 +70,7 @@
         <h1 class="text-dark">SC2 Ladder generator</h1>
         <div class="c-divider-hr"></div>
         <div class="tab-content tab-content-main">
-        <section id="about" class="tab-pane fade">
+        <section id="about" class="tab-pane fade" data-view-title="About">
             <section>
                 <h2>What is this site?</h2>
                 <p>
@@ -130,7 +130,7 @@
                 </dl>
             </section>
         </section>
-        <section id="search" class="tab-pane fade">
+        <section id="search" class="tab-pane fade" data-view-title="Player search">
             <h2>Find player by name</h2>
             <form id="form-search" class="form-inline justify-content-center">
                 <label class="sr-only" for="search-player-name">Name</label>
@@ -157,7 +157,7 @@
                 </div>
             </div>
         </section>
-        <section id="personal" class="tab-pane fade">
+        <section id="personal" class="tab-pane fade" data-view-title="Personal">
             <h2>Personal</h2>
             <div class="login-anonymous">
                 <h3>Log in with</h3>
@@ -213,7 +213,7 @@
                     </li>
                 </ul>
                 <div class="tab-content">
-                    <section id="personal-characters" class="tab-pane fade show active">
+                    <section id="personal-characters" class="tab-pane fade show active" data-view-title="Personal characters">
                         <div class="table-responsive">
                             <table id="personal-characters-table" class="table table-sm table-hover">
                                 <caption><h3>Your characters</h3></caption>
@@ -231,14 +231,14 @@
                             </table>
                         </div>
                     </section>
-                    <section id="personal-account" class="tab-pane fade">
+                    <section id="personal-account" class="tab-pane fade" data-view-title="Personal account">
                         <h3>Account</h3>
                         <div class="mb-3">
                             <span class="mr-3" id="login-battletag"></span>
                             <a class="btn btn-primary" href="logout" role="button">Log out</a>
                         </div>
                     </section>
-                    <section id="personal-following" class="tab-pane fade">
+                    <section id="personal-following" class="tab-pane fade" data-view-title="Personal ladder">
                         <h3><a id="following-generator-collapse" class="c-dropdown" href="#form-following-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-following-ladder">Ladder</a></h3>
                         <div th:replace="~{fragments/generator-form :: form('form-following-ladder', 'following-generator-collapse', 'following-ladder')}"></div>
                         <div id="following-ladder-container" class="table-responsive d-none">
@@ -262,7 +262,7 @@
                 </div>
             </div>
         </section>
-        <section id="generator" class="tab-pane fade show active">
+        <section id="generator" class="tab-pane fade show active" data-view-title="Generator">
         <h2><a id="generator-collapse" class="c-dropdown" href="#form-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-ladder">Generator</a></h2>
         <div th:replace="~{fragments/generator-form :: form('form-ladder', 'generator-collapse', 'generated-info-all')}"></div>
         <div id="generated-info-all" class="d-none">
@@ -354,7 +354,7 @@
             </li>
         </ul>
         <div id="ladder-all" class="tab-content">
-            <section id="ladder-top" class="tab-pane fade show active">
+            <section id="ladder-top" class="tab-pane fade show active" data-view-title="Ladder">
                 <nav class="pagination-container" aria-label="Ladder navigation top">
                     <ul class="pagination pagination-ladder justify-content-center flex-wrap"></ul>
                 </nav>
@@ -380,7 +380,7 @@
                     <ul class="pagination pagination-ladder justify-content-center flex-wrap"></ul>
                 </nav>
             </section>
-            <section id="stats-global" class="tab-pane fade c-height-linked">
+            <section id="stats-global" class="tab-pane fade c-height-linked" data-view-title="Global Stats">
                 <h3>Global stats</h3>
                 <div class="row no-gutters">
                     <section id="games-played-global" class="col-lg-6 mb-3">
@@ -427,7 +427,7 @@
                     </section>
                 </div>
             </section>
-            <section id="stats-race" class="tab-pane fade c-height-linked">
+            <section id="stats-race" class="tab-pane fade c-height-linked" data-view-title="Race stats">
                 <h3>Race distribution</h3>
                 <div class="row no-gutters ml-3">
                     <section id="games-played-race" class="col-lg-6 mb-3">
@@ -452,7 +452,7 @@
                     </section>
                 </div>
             </section>
-            <section id="stats-league" class="tab-pane fade c-height-linked">
+            <section id="stats-league" class="tab-pane fade c-height-linked" data-view-title="League stats">
                 <h3>League distribution</h3>
                 <div class="row no-gutters">
                     <section id="games-played-league" class="col-lg-6 mb-3">
@@ -502,7 +502,7 @@
                     </section>
                 </div>
             </section>
-            <section id="stats-region" class="tab-pane fade c-height-linked">
+            <section id="stats-region" class="tab-pane fade c-height-linked" data-view-title="Region stats">
                 <h3>Region distribution</h3>
                 <div class="row no-gutters">
                     <section id="games-played-region" class="col-lg-6 mb-3">
@@ -549,7 +549,7 @@
                     </section>
                 </div>
             </section>
-            <section id="stats-tier" class="tab-pane fade">
+            <section id="stats-tier" class="tab-pane fade" data-view-title="Tier bounds">
                 <div class="table-responsive">
                     <table id="league-bounds-table" class="table table-sm table-hover">
                         <caption><h3>Tier MMR ranges</h3></caption>
@@ -648,7 +648,7 @@
                             </li>
                         </ul>
                         <div id="player-stats-all" class="tab-content">
-                            <section id="player-stats-summary" class="tab-pane fade show active">
+                            <section id="player-stats-summary" class="tab-pane fade show active" data-view-title="Summary">
                                 <section id="player-stats">
                                     <h3>Career summary</h3>
                                     <p class="text-secondary">Race specific stats are based on teams where player has played
@@ -665,7 +665,7 @@
                                     <button id="unfollow-button" type="button" class="btn btn-primary d-none">Unfollow</button>
                                 </section>
                             </section>
-                            <section id="player-stats-history" class="tab-pane fade">
+                            <section id="player-stats-history" class="tab-pane fade" data-view-title="History">
                                 <section id="character-teams-section">
                                     <h3>History</h3>
                                     <select id="teams-season-select" class="form-control mb-2"></select>

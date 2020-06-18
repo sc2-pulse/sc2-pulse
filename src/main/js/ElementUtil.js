@@ -188,7 +188,28 @@ class ElementUtil
         return raceRow;
     }
 
+    static getTabTitle(params)
+    {
+        const tabs = params.getAll("t");
+        if(tabs.length < 1) return "SC2 Ladder Generator";
+
+        const tab = tabs[tabs.length - 1];
+        return document.querySelector("#" + tab).getAttribute("data-view-title");
+    }
+
+    static generateLadderTitle(params)
+    {
+        return `Ranked ${Session.currentTeamType.name} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(params)}, season ${Session.currentSeason}`;
+    }
+
+    static generateCharacterTitle(params)
+    {
+        const name = document.querySelector("#player-info-title-name").textContent;
+        return `${name} ${ElementUtil.getTabTitle(params)}`;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
+ElementUtil.TITLE_CONSTRUCTORS = new Map();
 ElementUtil.NEGATION_PREFIX = "neg-";

@@ -65,13 +65,17 @@ Session.currentSeasons = null;
 Session.currentSeason = -1;
 Session.currentTeamFormat = null;
 Session.currentTeamType = null;
+Session.currentPersonalSeason = -1;
+Session.currentPersonalTeamFormat = null;
+Session.currentPersonalTeamType = null;
 Session.currentLadder = null;
 Session.currentAccount = null;
 Session.currentFollowing = null;
 Session.currentSearchParams = null;
 Session.isHistorical = false;
 Session.currentStateRestoration = null;
-Session.lastNonModalParams = null;
+Session.lastNonModalParams = "?t=generator";
+Session.lastNonModalTitle = "Generator";
 
 class PersonalUtil
 {

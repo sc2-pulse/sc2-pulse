@@ -25,7 +25,14 @@ class HistoryUtil
             : document.querySelectorAll(".nav-pills a.active");
         for(const tab of tabs)
             if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
-       history.replaceState({}, document.title, "?" + params.toString());
+        const newTabs = params.getAll("t");
+        const dataTarget = "#" + newTabs[newTabs.length - 1];
+        const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(dataTarget);
+        const title = titleConstructor != null
+            ? titleConstructor(params)
+            : document.querySelector(dataTarget).getAttribute("data-view-title");
+        document.title = title;
+        history.replaceState({}, title, "?" + params.toString());
     }
 
     static showAnchoredTabs()

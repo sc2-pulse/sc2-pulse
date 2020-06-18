@@ -7,11 +7,16 @@ class BootstrapUtil
     static enhanceTabs()
     {
         $('.nav-pills a').on('shown.bs.tab', BootstrapUtil.showTab);
+        for(const a of document.querySelectorAll('#generator .nav-pills a'))
+            ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateLadderTitle);
+        for(const a of document.querySelectorAll('#player-info .nav-pills a'))
+            ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateCharacterTitle);
     }
 
     static showTab(e)
     {
-        ElementUtil.resolveElementPromise(e.target.getAttribute("data-target").substring(1));
+        const dataTarget = e.target.getAttribute("data-target");
+        ElementUtil.resolveElementPromise(dataTarget.substring(1));
         if(Session.isHistorical) return;
         const params = new URLSearchParams(window.location.search);
         params.delete("t");
@@ -19,7 +24,12 @@ class BootstrapUtil
         const root = modal != null ? ("#" + modal.id) : "body";
         for(const tab of document.querySelectorAll(root + " .nav-pills a.active"))
             if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
-        history.pushState({}, document.title, "?" + params.toString());
+        const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(dataTarget);
+        const title = titleConstructor != null
+            ? titleConstructor(params)
+            : document.querySelector(dataTarget).getAttribute("data-view-title");
+        document.title = title;
+        history.pushState({}, title, "?" + params.toString());
     }
 
     static hideCollapsible(id)
@@ -67,10 +77,18 @@ class BootstrapUtil
         $(".modal")
             .on("hidden.bs.modal", e=>{
                 ElementUtil.resolveElementPromise(e.target.id);
-                if(!Session.isHistorical) history.pushState({}, document.title, Session.lastNonModalParams);
+                if(!Session.isHistorical)
+                {
+                    history.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
+                    document.title = Session.lastNonModalTitle;
+                }
             })
             .on("show.bs.modal", e=>{
-                if(!window.location.search.includes("m=1")) Session.lastNonModalParams = window.location.search;
+                if(!window.location.search.includes("m=1"))
+                {
+                    Session.lastNonModalParams = window.location.search;
+                    Session.lastNonModalTitle = document.title;
+                }
             })
             .on("shown.bs.modal", e=>HistoryUtil.updateActiveTabs(true));
         $("#error-session").on("hide.bs.modal", Session.doRenewBlizzardRegistration);
