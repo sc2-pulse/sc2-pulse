@@ -25,11 +25,12 @@ class BootstrapUtil
             if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
         const newTabs = params.getAll("t");
         const parentDataTarget = newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2];
+        const lastDataTarget = "#" + newTabs[newTabs.length - 1];
         const parentParams = Session.sectionParams.get(parentDataTarget);
-        const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(dataTarget);
+        const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(lastDataTarget);
         const title = titleConstructor != null
             ? titleConstructor(params)
-            : document.querySelector(dataTarget).getAttribute("data-view-title");
+            : document.querySelector(lastDataTarget).getAttribute("data-view-title");
         document.title = title;
         HistoryUtil.pushState({}, title, "?" + (parentParams == null ? "" : parentParams) + "&" + params.toString());
     }
