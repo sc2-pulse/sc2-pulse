@@ -26,7 +26,6 @@ class SeasonUtil
         for(const seasonPicker of document.querySelectorAll(".season-picker"))
         {
             ElementUtil.removeChildren(seasonPicker);
-            if(seasons.length > 0) Session.currentSeason = seasons[0].id;
             for(const season of seasons)
             {
                 const option = document.createElement("option");
