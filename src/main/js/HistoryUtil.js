@@ -18,7 +18,9 @@ class HistoryUtil
     {
         const params = new URLSearchParams(paramsStr);
         const newTabs = params.getAll("t");
-        const dataTarget = newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2];
+        let dataTarget = newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2];
+        const modal = document.querySelector(dataTarget).closest(".modal");
+        dataTarget = modal == null ? dataTarget : "#" + modal.id;
         const tablessParams = new URLSearchParams(params.toString());
         tablessParams.delete("t");
         Session.sectionParams.set(dataTarget, tablessParams.toString())

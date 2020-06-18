@@ -24,7 +24,9 @@ class BootstrapUtil
         for(const tab of document.querySelectorAll(root + " .nav-pills a.active"))
             if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
         const newTabs = params.getAll("t");
-        const parentDataTarget = newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2];
+        const parentDataTarget = modal != null
+            ? "#" + modal.id
+            : (newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2]);
         const lastDataTarget = "#" + newTabs[newTabs.length - 1];
         const parentParams = Session.sectionParams.get(parentDataTarget);
         const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(lastDataTarget);
