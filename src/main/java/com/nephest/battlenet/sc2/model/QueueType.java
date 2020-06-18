@@ -42,8 +42,8 @@ implements Identifiable
         Map<Version, Set<QueueType>> ver = new EnumMap<>(Version.class);
         Map<TeamFormat, Set<QueueType>> team = new EnumMap<>(TeamFormat.class);
 
-        for (Version v : Version.values()) ver.put(v, new HashSet<>());
-        for (TeamFormat t : TeamFormat.values()) team.put(t, new HashSet<>());
+        for (Version v : Version.values()) ver.put(v, EnumSet.noneOf(QueueType.class));
+        for (TeamFormat t : TeamFormat.values()) team.put(t, EnumSet.noneOf(QueueType.class));
 
         for (QueueType q : QueueType.values())
         {

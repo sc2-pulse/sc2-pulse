@@ -17,7 +17,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -59,13 +59,13 @@ public class LadderController
         @RequestParam(name = "page", defaultValue="1") int page
     )
     {
-        Set<Region> regions = new HashSet<>();
+        Set<Region> regions = EnumSet.noneOf(Region.class);
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<LeagueType> leagues = new HashSet<>();
+        Set<LeagueType> leagues = EnumSet.noneOf(LeagueType.class);
         if(bronze) leagues.add(LeagueType.BRONZE);
         if(silver) leagues.add(LeagueType.SILVER);
         if(gold) leagues.add(LeagueType.GOLD);
@@ -108,13 +108,13 @@ public class LadderController
             @RequestParam(name = "gra", required = false) boolean grandmaster
         )
     {
-        Set<Region> regions = new HashSet<>();
+        Set<Region> regions = EnumSet.noneOf(Region.class);
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<LeagueType> leagues = new HashSet<>();
+        Set<LeagueType> leagues = EnumSet.noneOf(LeagueType.class);
         if(bronze) leagues.add(LeagueType.BRONZE);
         if(silver) leagues.add(LeagueType.SILVER);
         if(gold) leagues.add(LeagueType.GOLD);
@@ -155,13 +155,13 @@ public class LadderController
         @RequestParam(name = "gra", required = false) boolean grandmaster
     )
     {
-        Set<Region> regions = new HashSet<>();
+        Set<Region> regions = EnumSet.noneOf(Region.class);
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<LeagueType> leagues = new HashSet<>();
+        Set<LeagueType> leagues = EnumSet.noneOf(LeagueType.class);
         if(bronze) leagues.add(LeagueType.BRONZE);
         if(silver) leagues.add(LeagueType.SILVER);
         if(gold) leagues.add(LeagueType.GOLD);
@@ -197,13 +197,13 @@ public class LadderController
         @RequestParam(name = "gra", required = false) boolean grandmaster
     )
     {
-        Set<Region> regions = new HashSet<>();
+        Set<Region> regions = EnumSet.noneOf(Region.class);
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<LeagueType> leagues = new HashSet<>();
+        Set<LeagueType> leagues = EnumSet.noneOf(LeagueType.class);
         if(bronze) leagues.add(LeagueType.BRONZE);
         if(silver) leagues.add(LeagueType.SILVER);
         if(gold) leagues.add(LeagueType.GOLD);

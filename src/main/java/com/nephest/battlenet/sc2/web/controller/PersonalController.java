@@ -21,7 +21,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashSet;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -95,13 +95,13 @@ public class PersonalController
         @RequestParam(name = "gra", required = false) boolean grandmaster
     )
     {
-        Set<Region> regions = new HashSet<>();
+        Set<Region> regions = EnumSet.noneOf(Region.class);
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
         if(kr) regions.add(Region.KR);
         if(cn) regions.add(Region.CN);
 
-        Set<BaseLeague.LeagueType> leagues = new HashSet<>();
+        Set<BaseLeague.LeagueType> leagues = EnumSet.noneOf(BaseLeague.LeagueType.class);
         if(bronze) leagues.add(BaseLeague.LeagueType.BRONZE);
         if(silver) leagues.add(BaseLeague.LeagueType.SILVER);
         if(gold) leagues.add(BaseLeague.LeagueType.GOLD);
