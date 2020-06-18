@@ -102,7 +102,16 @@ class HistoryUtil
         const stringParams = params.toString();
         if(Session.currentSearchParams === stringParams) return Promise.all(promises)
             .then(e => {const ap = []; for(lp of lazyPromises) ap.push(lp()); return Promise.all(ap);})
-            .then(e => new Promise((res, rej)=>{HistoryUtil.updateActiveTabs(); Util.setGeneratingStatus("success"); res();}));
+            .then(e => new Promise((res, rej)=>{
+                if(tabs.length > 0 && isModal != null)
+                {
+                    const lastModal = document.getElementById(tabs[tabs.length - 1]).closest(".modal");
+                    if(lastModal != null) $(lastModal).modal();
+                }
+                HistoryUtil.updateActiveTabs();
+                Util.setGeneratingStatus("success");
+                res();
+            }));
 
         const type = params.get("type"); params.delete("type");
         let scrollTo = null;
@@ -136,6 +145,9 @@ class HistoryUtil
                 lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-following-ladder"));
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(LadderUtil.getMyLadder(params.toString()));
+                break;
+            case null:
+                lazyPromises.push(e=>BootstrapUtil.hideActiveModal());
                 break;
             default:
                 break;
