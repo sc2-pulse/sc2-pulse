@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.local.League;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
@@ -29,6 +30,9 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
+import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
+import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
 import static java.util.stream.Collectors.toUnmodifiableMap;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
@@ -75,6 +79,17 @@ public class BlizzardSC2API
     public BlizzardSC2API(OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
     {
         initWebClient(auth2AuthorizedClientManager);
+    }
+
+    public static boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
+    {
+        if
+        (
+            teamType == TeamType.RANDOM
+            && (queueType.getTeamFormat() == ARCHON || queueType.getTeamFormat() == _1V1)
+        ) return false;
+
+        return leagueType != GRANDMASTER || queueType.getTeamFormat() == ARCHON || queueType.getTeamFormat() == _1V1;
     }
 
     private void initWebClient(OAuth2AuthorizedClientManager auth2AuthorizedClientManager)

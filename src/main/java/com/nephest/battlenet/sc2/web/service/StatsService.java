@@ -28,10 +28,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
-import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
-import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
-
 @Service
 public class StatsService
 {
@@ -274,7 +270,7 @@ public class StatsService
             {
                 for (TeamType teamType : TeamType.values())
                 {
-                    if (!isValidCombination(leagueType, queueType, teamType)) continue;
+                    if (!BlizzardSC2API.isValidCombination(leagueType, queueType, teamType)) continue;
 
                     BlizzardLeague bLeague = api.getLeague
                     (
@@ -289,17 +285,6 @@ public class StatsService
                 }
             }
         }
-    }
-
-    private boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
-    {
-        if
-        (
-            teamType == TeamType.RANDOM
-            && (queueType.getTeamFormat() == ARCHON || queueType.getTeamFormat() == _1V1)
-        ) return false;
-
-        return leagueType != GRANDMASTER || queueType.getTeamFormat() == ARCHON || queueType.getTeamFormat() == _1V1;
     }
 
     private void updateLeagueTiers(BlizzardLeague bLeague, Season season, League league)
