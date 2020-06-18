@@ -18,6 +18,7 @@ class BootstrapUtil
         const dataTarget = e.target.getAttribute("data-target");
         ElementUtil.resolveElementPromise(dataTarget.substring(1));
         if(Session.isHistorical) return;
+
         const params = new URLSearchParams();
         const modal = e.target.closest(".modal");
         const root = modal != null ? ("#" + modal.id) : "body";
@@ -28,13 +29,18 @@ class BootstrapUtil
             ? "#" + modal.id
             : (newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2]);
         const lastDataTarget = "#" + newTabs[newTabs.length - 1];
-        const parentParams = Session.sectionParams.get(parentDataTarget);
+
+        const parentParamsStr = Session.sectionParams.get(parentDataTarget);
+        const fullParams = new URLSearchParams(parentParamsStr == null ? "" : parentParamsStr);
+        for(const t of newTabs) fullParams.append("t", t);
+
         const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(lastDataTarget);
         const title = titleConstructor != null
-            ? titleConstructor(params)
+            ? titleConstructor(fullParams)
             : document.querySelector(lastDataTarget).getAttribute("data-view-title");
+
         document.title = title;
-        HistoryUtil.pushState({}, title, "?" + (parentParams == null ? "" : parentParams) + "&" + params.toString());
+        HistoryUtil.pushState({}, title, "?" + fullParams.toString());
     }
 
     static hideCollapsible(id)
