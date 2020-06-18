@@ -18,18 +18,20 @@ class BootstrapUtil
         const dataTarget = e.target.getAttribute("data-target");
         ElementUtil.resolveElementPromise(dataTarget.substring(1));
         if(Session.isHistorical) return;
-        const params = new URLSearchParams(window.location.search);
-        params.delete("t");
+        const params = new URLSearchParams();
         const modal = e.target.closest(".modal");
         const root = modal != null ? ("#" + modal.id) : "body";
         for(const tab of document.querySelectorAll(root + " .nav-pills a.active"))
             if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
+        const newTabs = params.getAll("t");
+        const parentDataTarget = newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2];
+        const parentParams = Session.sectionParams.get(parentDataTarget);
         const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(dataTarget);
         const title = titleConstructor != null
             ? titleConstructor(params)
             : document.querySelector(dataTarget).getAttribute("data-view-title");
         document.title = title;
-        history.pushState({}, title, "?" + params.toString());
+        HistoryUtil.pushState({}, title, "?" + (parentParams == null ? "" : parentParams) + "&" + params.toString());
     }
 
     static hideCollapsible(id)
@@ -79,7 +81,7 @@ class BootstrapUtil
                 ElementUtil.resolveElementPromise(e.target.id);
                 if(!Session.isHistorical)
                 {
-                    history.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
+                    HistoryUtil.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
                     document.title = Session.lastNonModalTitle;
                 }
             })

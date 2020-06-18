@@ -24,7 +24,7 @@ class CharacterUtil
         return Promise.all(promises)
             .then(o=>new Promise((res, rej)=>{
                 $("#player-info").modal();
-                if(!Session.isHistorical) history.pushState({type: "character", id: id}, document.title, "?" + searchParams.toString());
+                if(!Session.isHistorical) HistoryUtil.pushState({type: "character", id: id}, document.title, "?" + searchParams.toString());
                 Session.currentSearchParams = stringParams;
                 res();
             }));
@@ -197,7 +197,7 @@ class CharacterUtil
                             document.getElementById("search-result-all").classList.remove("d-none");
                             Util.setGeneratingStatus("success");
                             Util.scrollIntoViewById("search-result-all");
-                            if(!Session.isHistorical) history.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString());
+                            if(!Session.isHistorical) HistoryUtil.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString());
                             Session.currentSearchParams = stringParams;
                             res();
                         }

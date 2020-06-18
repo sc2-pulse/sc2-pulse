@@ -77,6 +77,8 @@ Session.currentStateRestoration = null;
 Session.lastNonModalParams = "?t=generator";
 Session.lastNonModalTitle = "Generator";
 
+Session.sectionParams = new Map();
+
 class PersonalUtil
 {
     static getMyAccount()

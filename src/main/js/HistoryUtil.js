@@ -4,6 +4,34 @@
 class HistoryUtil
 {
 
+    static replaceState(obj, title, params)
+    {
+        HistoryUtil.updateState(obj, title, params, true);
+    }
+
+    static pushState(obj, title, params)
+    {
+        HistoryUtil.updateState(obj, title, params, false);
+    }
+
+    static updateState(obj, title, paramsStr, replace)
+    {
+        const params = new URLSearchParams(paramsStr);
+        const newTabs = params.getAll("t");
+        const dataTarget = newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2];
+        const tablessParams = new URLSearchParams(params.toString());
+        tablessParams.delete("t");
+        Session.sectionParams.set(dataTarget, tablessParams.toString())
+        if(replace)
+        {
+            history.replaceState(obj, title, "?" + params.toString());
+        }
+        else
+        {
+            history.pushState(obj, title, "?" + params.toString());
+        }
+    }
+
     static initActiveTabs()
     {
         const params = new URLSearchParams(window.location.search);
@@ -13,7 +41,7 @@ class HistoryUtil
         for(const tab of document.querySelectorAll(".nav-pills a.active"))
                 if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
         Session.lastNonModalParams =  "?" + params.toString();
-        history.replaceState({}, document.title, "?" + params.toString());
+        HistoryUtil.replaceState({}, document.title, "?" + params.toString());
     }
 
     static updateActiveTabs(modalOnly = false)
@@ -32,7 +60,7 @@ class HistoryUtil
             ? titleConstructor(params)
             : document.querySelector(dataTarget).getAttribute("data-view-title");
         document.title = title;
-        history.replaceState({}, title, "?" + params.toString());
+        HistoryUtil.replaceState({}, title, "?" + params.toString());
     }
 
     static showAnchoredTabs()

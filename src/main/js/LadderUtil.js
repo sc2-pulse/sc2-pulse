@@ -34,7 +34,7 @@ class LadderUtil
             .then(json => new Promise((res, rej)=>{
                 LadderUtil.updateLadder(json);
                 Util.setGeneratingStatus("success", null, "generated-info-all");
-                if(!Session.isHistorical) history.pushState(params, document.title, "?" + searchParams.toString());
+                if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
                 HistoryUtil.updateActiveTabs();
                 Session.currentSearchParams = stringParams;
                 res();}))
@@ -65,7 +65,7 @@ class LadderUtil
             .then(json => new Promise((res, rej)=>{
                 LadderUtil.updateMyLadder(json);
                 Util.setGeneratingStatus("success", null, "following-ladder");
-                if(!Session.isHistorical) history.pushState(params, document.title, "?" + searchParams.toString());
+                if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
                 Session.currentSearchParams = stringParams;
                 res();
             }))
