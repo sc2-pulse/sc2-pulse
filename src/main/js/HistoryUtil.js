@@ -6,12 +6,21 @@ class HistoryUtil
 
     static replaceState(obj, title, params)
     {
+        Session.titleAndUrlHistory[Session.titleAndUrlHistory.length - 1] = [title, params];
         HistoryUtil.updateState(obj, title, params, true);
     }
 
     static pushState(obj, title, params)
     {
+        Session.titleAndUrlHistory.push([title, params]);
         HistoryUtil.updateState(obj, title, params, false);
+    }
+
+    static previousTitleAndUrl()
+    {
+        return Session.titleAndUrlHistory.length > 1
+            ? Session.titleAndUrlHistory[Session.titleAndUrlHistory.length - 2]
+            : Session.titleAndUrlHistory[Session.titleAndUrlHistory.length - 1];
     }
 
     static updateState(obj, title, paramsStr, replace)

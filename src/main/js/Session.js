@@ -76,6 +76,7 @@ Session.isHistorical = false;
 Session.currentStateRestoration = null;
 Session.lastNonModalParams = "?t=generator";
 Session.lastNonModalTitle = "Generator";
+Session.titleAndUrlHistory = [["Generator", "?t=generator"]];
 
 Session.sectionParams = new Map();
 
