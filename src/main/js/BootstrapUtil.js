@@ -60,6 +60,24 @@ class BootstrapUtil
         });
     }
 
+    static showModal(id)
+    {
+        return new Promise((res, rej)=>{
+            const elem = document.getElementById(id);
+            if(!elem.classList.contains("show"))
+            {
+                ElementUtil.ELEMENT_RESOLVERS.set(id, res);
+                $(elem).modal();
+            }
+            else
+            {
+                BootstrapUtil.onModalShow(elem);
+                BootstrapUtil.onModalShown(elem);
+                res();
+            }
+        });
+    }
+
     static hideActiveModal(skipIds = [])
     {
         return new Promise((res, rej)=>{
@@ -94,16 +112,26 @@ class BootstrapUtil
                     document.title = Session.lastNonModalTitle;
                 }
             })
-            .on("show.bs.modal", e=>{
-                if(!window.location.search.includes("m=1"))
-                {
-                    Session.lastNonModalParams = window.location.search;
-                    Session.lastNonModalTitle = document.title;
-                }
-            })
-            .on("shown.bs.modal", e=>HistoryUtil.updateActiveTabs(true));
+            .on("show.bs.modal", e=>{BootstrapUtil.onModalShow(e.currentTarget)})
+            .on("shown.bs.modal", e=>{BootstrapUtil.onModalShown(e.currentTarget)});
         $("#error-session").on("hide.bs.modal", Session.doRenewBlizzardRegistration);
         $("#error-session").on("shown.bs.modal", e=>window.setTimeout(Session.doRenewBlizzardRegistration, 3500));
+    }
+
+    static onModalShow(modal)
+    {
+        const prev = HistoryUtil.previousTitleAndUrl();
+        if(!prev[1].includes("m=1"))
+        {
+            Session.lastNonModalTitle = prev[0];
+            Session.lastNonModalParams = prev[1];
+        }
+    }
+
+    static onModalShown(modal)
+    {
+        ElementUtil.resolveElementPromise(modal.id);
+        HistoryUtil.updateActiveTabs();
     }
 
     static enhanceCollapsibles()

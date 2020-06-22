@@ -23,11 +23,11 @@ class CharacterUtil
 
         return Promise.all(promises)
             .then(o=>new Promise((res, rej)=>{
-                $("#player-info").modal();
                 if(!Session.isHistorical) HistoryUtil.pushState({type: "character", id: id}, document.title, "?" + searchParams.toString());
                 Session.currentSearchParams = stringParams;
                 res();
-            }));
+            }))
+            .then(e=>BootstrapUtil.showModal("player-info"));
     }
 
     static getCharacterTeams(id)

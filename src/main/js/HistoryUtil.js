@@ -117,8 +117,14 @@ class HistoryUtil
                 if(tabs.length > 0 && isModal != null)
                 {
                     const lastModal = document.getElementById(tabs[tabs.length - 1]).closest(".modal");
-                    if(lastModal != null) $(lastModal).modal();
+                    if(lastModal != null) BootstrapUtil.showModal(lastModal.id).then(e=>res());
                 }
+                else
+                {
+                    res();
+                }
+            }))
+            .then(e => new Promise((res, rej)=>{
                 HistoryUtil.updateActiveTabs();
                 Util.setGeneratingStatus("success");
                 res();
