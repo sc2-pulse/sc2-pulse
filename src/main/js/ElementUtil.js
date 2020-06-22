@@ -199,14 +199,7 @@ class ElementUtil
 
     static generateLadderTitle(params)
     {
-        const teamType = Session.currentTeamType != null
-            ? Session.currentTeamType.name
-            : EnumUtil.enumOfName(params.get("team-type"), TEAM_TYPE).name;
-        const teamFormat = Session.currentTeamFormat != null
-            ? Session.currentTeamFormat.name
-            : EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT).name;
-        const season = Session.currentSeason != null ? Session.currentSeason : params.get("season");
-        return `Ranked ${teamType} ${teamFormat} ${ElementUtil.getTabTitle(params)}, season ${season}`;
+        return `Ranked ${Session.currentTeamType.name} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(params)}, season ${Session.currentSeason}`;
     }
 
     static generateCharacterTitle(params)
