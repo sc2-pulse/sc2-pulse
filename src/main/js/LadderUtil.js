@@ -35,8 +35,11 @@ class LadderUtil
                 LadderUtil.updateLadder(json);
                 Util.setGeneratingStatus("success", null, "generated-info-all");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
-                HistoryUtil.updateActiveTabs();
+                Session.currentSeason = searchParams.get("season");
+                Session.currentTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
+                Session.currentTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
                 Session.currentSearchParams = stringParams;
+                HistoryUtil.updateActiveTabs();
                 res();}))
             .catch(error => Util.setGeneratingStatus("error", error.message));
     }
@@ -66,6 +69,9 @@ class LadderUtil
                 LadderUtil.updateMyLadder(json);
                 Util.setGeneratingStatus("success", null, "following-ladder");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
+                Session.currentPersonalSeasonSeason = searchParams.get("season");
+                Session.currentPersonalTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
+                Session.currentPersonalTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
                 Session.currentSearchParams = stringParams;
                 res();
             }))
