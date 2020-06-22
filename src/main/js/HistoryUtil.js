@@ -55,8 +55,10 @@ class HistoryUtil
         HistoryUtil.replaceState({}, document.title, "?" + params.toString());
     }
 
-    static updateActiveTabs(modalOnly = false)
+    static updateActiveTabs()
     {
+        const modal = document.querySelector(".modal.show");
+        const modalOnly = modal != null;
         const params = new URLSearchParams(window.location.search);
         params.delete("t");
         const tabs = modalOnly
@@ -65,7 +67,7 @@ class HistoryUtil
         for(const tab of tabs)
             if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
         const newTabs = params.getAll("t");
-        const dataTarget = "#" + newTabs[newTabs.length - 1];
+        const dataTarget = "#" + (newTabs.length > 0 ? newTabs[newTabs.length - 1] : modal.id);
         const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(dataTarget);
         const title = titleConstructor != null
             ? titleConstructor(params)
