@@ -53,7 +53,11 @@ class HistoryUtil
 
         for(const tab of document.querySelectorAll(".nav-pills a.active"))
                 if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
-        Session.lastNonModalParams =  "?" + params.toString();
+        if(params.get("m") != 1)
+        {
+            Session.lastNonModalParams =  "?" + params.toString();
+            Session.lastNonModalTitle = document.title;
+        }
         HistoryUtil.replaceState({}, document.title, "?" + params.toString());
     }
 
