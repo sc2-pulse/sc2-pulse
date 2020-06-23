@@ -17,7 +17,8 @@
     <div class="container">
         <div th:replace="${content}"></div>
         <!-- Modal privacy-->
-        <div class="modal fade" id="privacy-policy" tabindex="-1" role="dialog" aria-labelledby="privacy-policy-title" aria-hidden="true">
+        <div class="modal fade" id="privacy-policy" tabindex="-1" role="dialog" aria-labelledby="privacy-policy-title" aria-hidden="true"
+            data-view-title="Privacy Policy" data-modal-singleton="true">
             <div class="modal-dialog modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
@@ -56,7 +57,7 @@
     <footer>
         <div class="container text-secondary">
             <span class="c-divider d-inline-block mb-3"><a href="https://nephest.com/" class="text-secondary" target="_blank" rel="noopener noreferrer">&copy; 2020 Oleksandr Masniuk</a></span>
-            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="#" class="text-secondary" data-toggle="modal" data-target="#privacy-policy">Privacy Policy</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="?type=modal&id=privacy-policy&m=1" class="text-secondary" data-toggle="modal" data-target="#privacy-policy">Privacy Policy</a></span>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-icons" class="text-secondary" target="_blank" rel="noopener noreferrer">SC2 icon pack</a></span>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-ladder-generator" class="text-secondary" target="_blank" rel="noopener noreferrer">Source</a></span>
         </div>

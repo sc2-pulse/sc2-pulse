@@ -130,8 +130,10 @@ class BootstrapUtil
 
     static onModalShown(modal)
     {
-        ElementUtil.resolveElementPromise(modal.id);
+        if(!Session.isHistorical && modal.getAttribute("data-modal-singleton") != null)
+            HistoryUtil.pushState({}, modal.getAttribute("data-view-title"), "?type=modal&id=" + modal.id + "&m=1");
         HistoryUtil.updateActiveTabs();
+        ElementUtil.resolveElementPromise(modal.id);
     }
 
     static enhanceCollapsibles()

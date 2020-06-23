@@ -27,10 +27,12 @@ class HistoryUtil
     {
         const params = new URLSearchParams(paramsStr);
         const newTabs = params.getAll("t");
-        let dataTarget = newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2];
+        let dataTarget = newTabs.length == 0
+            ? "#" + document.querySelector(".modal.show").id
+            : (newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2]);
         const modal = document.querySelector(dataTarget).closest(".modal");
         dataTarget = modal == null ? dataTarget : "#" + modal.id;
-        const tablessParams = new URLSearchParams(params.toString());
+        const tablessParams = new URLSearchParams(paramsStr);
         tablessParams.delete("t");
         Session.sectionParams.set(dataTarget, tablessParams.toString())
         if(replace)
@@ -162,6 +164,11 @@ class HistoryUtil
                 lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-following-ladder"));
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(LadderUtil.getMyLadder(params.toString()));
+                break;
+            case "modal":
+                const modalId = params.get("id"); params.delete("id");
+                promises.push(BootstrapUtil.hideActiveModal("error-generation"));
+                lazyPromises.push(e=>BootstrapUtil.showModal(modalId));
                 break;
             case null:
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal());
