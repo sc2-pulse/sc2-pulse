@@ -120,12 +120,6 @@ class BootstrapUtil
 
     static onModalShow(modal)
     {
-        const prev = HistoryUtil.previousTitleAndUrl();
-        if(!prev[1].includes("m=1"))
-        {
-            Session.lastNonModalTitle = prev[0];
-            Session.lastNonModalParams = prev[1];
-        }
     }
 
     static onModalShown(modal)
@@ -133,6 +127,12 @@ class BootstrapUtil
         if(!Session.isHistorical && modal.getAttribute("data-modal-singleton") != null)
             HistoryUtil.pushState({}, modal.getAttribute("data-view-title"), "?type=modal&id=" + modal.id + "&m=1");
         HistoryUtil.updateActiveTabs();
+        const prev = HistoryUtil.previousTitleAndUrl();
+        if(!prev[1].includes("m=1"))
+        {
+            Session.lastNonModalTitle = prev[0];
+            Session.lastNonModalParams = prev[1];
+        }
         ElementUtil.resolveElementPromise(modal.id);
     }
 
