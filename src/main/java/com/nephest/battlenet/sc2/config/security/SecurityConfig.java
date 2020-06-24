@@ -3,10 +3,13 @@
 
 package com.nephest.battlenet.sc2.config.security;
 
+import com.nephest.battlenet.sc2.config.filter.RobotsDenyFilter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -73,6 +76,16 @@ extends WebSecurityConfigurerAdapter
         authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
 
         return authorizedClientManager;
+    }
+
+    @Bean
+    public FilterRegistrationBean<RobotsDenyFilter> robotsDenyFilterFilterRegistrationBean()
+    {
+        FilterRegistrationBean<RobotsDenyFilter> bean = new FilterRegistrationBean<>();
+        bean.setFilter(new RobotsDenyFilter());
+        bean.addUrlPatterns("/oauth2/*");
+        bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return bean;
     }
 
 }
