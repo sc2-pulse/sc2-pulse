@@ -1,1 +1,1 @@
-window.addEventListener("load", e=>SC2Restful.start());
+$(document).ready(function(){SC2Restful.start();});
