@@ -234,6 +234,18 @@
             </executions>
         </plugin>
         <plugin>
+            <artifactId>maven-war-plugin</artifactId>
+            <version>3.2.3</version>
+            <configuration>
+                <archive>
+                    <manifest>
+                        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                        <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                    </manifest>
+                </archive>
+            </configuration>
+        </plugin>
+        <plugin>
             <artifactId>maven-antrun-plugin</artifactId>
             <version>3.0.0</version>
             <executions>

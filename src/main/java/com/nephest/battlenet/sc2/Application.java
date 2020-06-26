@@ -29,6 +29,8 @@ public class Application
 extends SpringBootServletInitializer
 {
 
+    public static final String VERSION = Application.class.getPackage().getImplementationVersion();
+
     public static void main(String[] args)
     {
         SpringApplication.run(Application.class, args);
