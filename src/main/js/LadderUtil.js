@@ -39,7 +39,6 @@ class LadderUtil
                 Session.currentTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
                 Session.currentTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
                 Session.currentSearchParams = stringParams;
-                HistoryUtil.updateActiveTabs();
                 res();}))
             .catch(error => Util.setGeneratingStatus("error", error.message));
     }
