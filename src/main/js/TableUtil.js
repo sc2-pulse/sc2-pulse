@@ -48,6 +48,16 @@ class TableUtil
         const tBody = table.getElementsByTagName("tbody")[0];
         ElementUtil.removeChildren(tBody);
         let rowIx = 0;
+        const headers = TableUtil.collectHeaders(data).sort(sorter == null ? (a, b)=>b[0].localeCompare(a[0]) : sorter);
+        for(const header of headers)
+        {
+            const headCell = document.createElement("th");
+            headCell.setAttribute("span", "col");
+            const headerTranslated = headTranslator == null ? header : headTranslator(header);
+            headCell.setAttribute("data-chart-color", headerTranslated.toLowerCase());
+            headCell.appendChild(document.createTextNode(headerTranslated));
+            headRow.appendChild(headCell);
+        }
         for(const[rowHeader, rowData] of Object.entries(data))
         {
             const bodyRow = document.createElement("tr");
@@ -56,23 +66,25 @@ class TableUtil
             rowHeadCell.setAttribute("span", "row");
             rowHeadCell.appendChild(document.createTextNode(rowHeaderTranslated));
             bodyRow.appendChild(rowHeadCell);
-            for(const [header, value] of Object.entries(rowData).sort(sorter == null ? (a, b)=>b[0].localeCompare(a[0]) : sorter))
-            {
-                if(rowIx == 0)
-                {
-                    const headCell = document.createElement("th");
-                    headCell.setAttribute("span", "col");
-                    const headerTranslated = headTranslator == null ? header : headTranslator(header);
-                    headCell.setAttribute("data-chart-color", headerTranslated.toLowerCase());
-                    headCell.appendChild(document.createTextNode(headerTranslated));
-                    headRow.appendChild(headCell);
-                }
-                bodyRow.insertCell().appendChild(document.createTextNode(value));
-            }
+            for(const header of headers)
+                bodyRow.insertCell().appendChild(document.createTextNode(rowData[header] != null ? rowData[header] : "0"));
             tBody.appendChild(bodyRow);
             rowIx++;
         }
         table.setAttribute("data-last-updated", Date.now());
+    }
+
+    static collectHeaders(data)
+    {
+        const headers = [];
+        for(const[rowHeader, rowData] of Object.entries(data))
+        {
+            for(const [header, value] of Object.entries(rowData))
+            {
+                if(!headers.includes(header)) headers.push(header);
+            }
+        }
+        return headers;
     }
 
     static updateGenericTable(table, data, sorter = null, translator = null)
