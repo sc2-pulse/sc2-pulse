@@ -67,7 +67,7 @@
                 </li>
             </ul>
         </nav>
-        <h1 class="text-dark">SC2 Ladder generator</h1>
+        <h1 class="text-dark"><a th:href="@{/}">SC2 Ladder generator</a></h1>
         <div class="c-divider-hr"></div>
         <div class="tab-content tab-content-main">
         <section id="about" class="tab-pane fade" data-view-title="About">
@@ -427,7 +427,7 @@
                     </section>
                 </div>
             </section>
-            <section id="stats-race" class="tab-pane fade c-height-linked" data-view-title="Race stats">
+            <section id="stats-race" class="tab-pane fade c-height-linked" data-view-title="Race distribution">
                 <h3>Race distribution</h3>
                 <div class="row no-gutters ml-3">
                     <section id="games-played-race" class="col-lg-6 mb-3">
@@ -452,7 +452,7 @@
                     </section>
                 </div>
             </section>
-            <section id="stats-league" class="tab-pane fade c-height-linked" data-view-title="League stats">
+            <section id="stats-league" class="tab-pane fade c-height-linked" data-view-title="League distribution">
                 <h3>League distribution</h3>
                 <div class="row no-gutters">
                     <section id="games-played-league" class="col-lg-6 mb-3">
@@ -502,7 +502,7 @@
                     </section>
                 </div>
             </section>
-            <section id="stats-region" class="tab-pane fade c-height-linked" data-view-title="Region stats">
+            <section id="stats-region" class="tab-pane fade c-height-linked" data-view-title="Region distribution">
                 <h3>Region distribution</h3>
                 <div class="row no-gutters">
                     <section id="games-played-region" class="col-lg-6 mb-3">
@@ -549,7 +549,7 @@
                     </section>
                 </div>
             </section>
-            <section id="stats-tier" class="tab-pane fade" data-view-title="Tier bounds">
+            <section id="stats-tier" class="tab-pane fade" data-view-title="Tier MMR ranges">
                 <div class="table-responsive">
                     <table id="league-bounds-table" class="table table-sm table-hover">
                         <caption><h3>Tier MMR ranges</h3></caption>
@@ -651,9 +651,11 @@
                             <section id="player-stats-summary" class="tab-pane fade show active" data-view-title="Summary">
                                 <section id="player-stats">
                                     <h3>Career summary</h3>
-                                    <p class="text-secondary">Race specific stats are based on teams where player has played
-                                    > 90% of that team games as a specific race</p>
                                     <div id="player-stats-container" class="card-deck"></div>
+                                    <p class="text-secondary">
+                                        Race specific stats are based on teams where player has played
+                                        > 90% of that team games as a specific race
+                                    </p>
                                 </section>
                                 <section>
                                     <h3>Links</h3>

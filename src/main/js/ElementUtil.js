@@ -199,7 +199,7 @@ class ElementUtil
 
     static generateLadderTitle(params)
     {
-        return `Ranked ${Session.currentTeamType.name} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(params)}, season ${Session.currentSeason}`;
+        return `${Session.currentTeamType.name} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(params)}, ${SeasonUtil.seasonIdTranslator(Session.currentSeason)}`;
     }
 
     static generateCharacterTitle(params)
