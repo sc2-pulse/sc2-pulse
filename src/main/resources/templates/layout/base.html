@@ -7,7 +7,7 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta name="description" content="Flexible StarCraft&reg;2 ladder generator for any team format"/>
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
+    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
     <link rel="stylesheet" th:href="@{/static/sc2.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"/>
     <link rel="icon" type="image/png" sizes="128x128" th:href="@{/static/icon/misc/favicon-128.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/png" sizes="32x32" th:href="@{/static/icon/misc/favicon-32.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
@@ -62,9 +62,9 @@
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-ladder-generator" class="text-secondary" target="_blank" rel="noopener noreferrer">Source</a></span>
         </div>
     </footer>
-    <script th:src="@{/webjars/jquery/jquery.min.js(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"></script>
-    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"></script>
-    <script th:src="@{/webjars/chartjs/Chart.min.js(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"></script>
+    <script th:src="@{/webjars/jquery/jquery.min.js}"></script>
+    <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>
+    <script th:src="@{/webjars/chartjs/Chart.min.js}"></script>
     <script th:inline="javascript">
         const ROOT_CONTEXT_PATH = /*[[@{/}]]*/ '';
         const RESOURCE_PATH = ROOT_CONTEXT_PATH + "/static/";
