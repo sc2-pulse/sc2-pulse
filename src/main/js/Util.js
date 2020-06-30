@@ -30,10 +30,6 @@ class Util
             case "begin":
                 Session.currentRequests++;
                 if (Session.currentRequests > 1) return;
-                ElementUtil.disableElements(document.getElementsByTagName("input"), true);
-                ElementUtil.disableElements(document.getElementsByTagName("select"), true);
-                ElementUtil.disableElements(document.getElementsByTagName("button"), true);
-                PaginationUtil.setPaginationsState(false);
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), true);
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-success"), false);
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-error"), false);
@@ -47,10 +43,6 @@ class Util
                     $("#error-generation").modal();
                 }
                 if(Session.currentRequests > 0) return;
-                ElementUtil.disableElements(document.getElementsByTagName("input"), false);
-                ElementUtil.disableElements(document.getElementsByTagName("select"), false);
-                ElementUtil.disableElements(document.getElementsByTagName("button"), false);
-                PaginationUtil.setPaginationsState(true);
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-" + status), true);
                 Session.isHistorical = false;

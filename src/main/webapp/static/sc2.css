@@ -59,7 +59,6 @@ caption
     top: 0;
     z-index: 9999;
     cursor: wait;
-    transition: visibility 200ms, opacity 200ms;
     opacity: 1;
 }
 
@@ -150,6 +149,11 @@ caption
 {
     border-top: .3em solid;
     border-bottom: 0;
+}
+
+.collapsing
+{
+    transition: none;
 }
 
 .c-divider-hr
