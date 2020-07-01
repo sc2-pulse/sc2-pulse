@@ -26,6 +26,7 @@ import reactor.netty.tcp.TcpClient;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -64,6 +65,7 @@ public class BlizzardSC2API
         new BlizzardSeason(43L, 2020, 1),
         new BlizzardSeason(44L, 2020, 2)
     ).collect(toUnmodifiableMap(BlizzardSeason::getId, Function.identity()));
+    public static final long LAST_SEASON = MMR_SEASONS.keySet().stream().max(Comparator.naturalOrder()).get();
     public static final int RETRY_COUNT = 3;
     public static final Duration CONNECT_TIMEOUT = Duration.ofMillis(10000);
     public static final Duration IO_TIMEOUT = Duration.ofMillis(10000);
