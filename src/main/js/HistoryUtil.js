@@ -25,6 +25,7 @@ class HistoryUtil
 
     static updateState(obj, title, paramsStr, replace)
     {
+        ElementUtil.updateTabLinks(paramsStr);
         const params = new URLSearchParams(paramsStr);
         const newTabs = params.getAll("t");
         let dataTarget = newTabs.length == 0

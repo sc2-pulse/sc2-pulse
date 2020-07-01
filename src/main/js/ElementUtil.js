@@ -188,6 +188,44 @@ class ElementUtil
         return raceRow;
     }
 
+    static updateTabLinks(params)
+    {
+        for(link of document.querySelectorAll(".nav-pills:not(.nav-pills-main) a[data-target]"))
+            link.setAttribute("href", link.getAttribute("data-target"));
+
+        const paramsNoTabs = new URLSearchParams(params);
+        paramsNoTabs.delete("t");
+        const paramsNoTabsStr = paramsNoTabs.toString();
+
+        let root = "";
+        switch(paramsNoTabs.get("type"))
+        {
+            case "ladder":
+                root = "#generator";
+                break;
+            case "character":
+                root = "#player-info";
+                break;
+            default:
+                return;
+        }
+
+        for(link of document.querySelectorAll(root + " .nav-pills a"))
+        {
+            const curParams = new URLSearchParams(paramsNoTabsStr);
+            const tabChain = [];
+            let curTab = document.querySelector(link.getAttribute("data-target"));
+            while(curTab != null)
+            {
+                tabChain.push(curTab.id);
+                curTab = curTab.parentElement.closest(".tab-pane");
+            }
+            for(let i = tabChain.length - 1; i > -1; i--)
+                curParams.append("t", tabChain[i]);
+            link.setAttribute("href", "?" + curParams.toString());
+        }
+    }
+
     static getTabTitle(params)
     {
         const tabs = params.getAll("t");
