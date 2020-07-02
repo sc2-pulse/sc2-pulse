@@ -70,7 +70,10 @@
         <h1 class="text-dark"><a th:href="@{/}">SC2 Ladder generator</a></h1>
         <div class="c-divider-hr"></div>
         <div class="tab-content tab-content-main">
-        <section id="about" class="tab-pane fade" data-view-title="About">
+        <section id="about" class="tab-pane fade"
+                 data-view-title="About"
+                 data-view-description="A quick summary of what this site is about + some useful links."
+        >
             <section>
                 <h2>What is this site?</h2>
                 <p>
@@ -130,7 +133,10 @@
                 </dl>
             </section>
         </section>
-        <section id="search" class="tab-pane fade" data-view-title="Player search">
+        <section id="search" class="tab-pane fade"
+                 data-view-title="Player search"
+                 data-view-description="Find a StarCraft2 player by name. Info includes: full profile, best race, best MMR, BattleTag."
+        >
             <h2>Find player by name</h2>
             <form id="form-search" class="form-inline justify-content-center">
                 <label class="sr-only" for="search-player-name">Name</label>
@@ -157,7 +163,11 @@
                 </div>
             </div>
         </section>
-        <section id="personal" class="tab-pane fade" data-view-title="Personal">
+        <section id="personal" class="tab-pane fade"
+                 data-view-title="Personal"
+                 data-view-description="Log in with your BattleNet account and get an easy access to your personal data.
+                  See your stats, follow favorite players, create a personal ladder."
+        >
             <h2>Personal</h2>
             <div class="login-anonymous">
                 <h3>Log in with</h3>
@@ -262,7 +272,11 @@
                 </div>
             </div>
         </section>
-        <section id="generator" class="tab-pane fade show active" data-view-title="Generator">
+        <section id="generator" class="tab-pane fade show active"
+                 data-view-title="Generator"
+                 data-view-description="StarCraft2 ladder/stats generator with flexible filters. All seasons, races,
+                  team formats. MMR based ranking."
+        >
         <h2><a id="generator-collapse" class="c-dropdown" href="#form-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-ladder">Generator</a></h2>
         <div th:replace="~{fragments/generator-form :: form('form-ladder', 'generator-collapse', 'generated-info-all')}"></div>
         <div id="generated-info-all" class="d-none">
@@ -354,7 +368,7 @@
             </li>
         </ul>
         <div id="ladder-all" class="tab-content">
-            <section id="ladder-top" class="tab-pane fade show active" data-view-title="Ladder">
+            <section id="ladder-top" class="tab-pane fade show active" data-view-title="MMR Ladder">
                 <nav class="pagination-container" aria-label="Ladder navigation top">
                     <ul class="pagination pagination-ladder justify-content-center flex-wrap"></ul>
                 </nav>

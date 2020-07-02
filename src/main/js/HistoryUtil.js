@@ -75,12 +75,8 @@ class HistoryUtil
             if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
         const newTabs = params.getAll("t");
         const dataTarget = "#" + (newTabs.length > 0 ? newTabs[newTabs.length - 1] : modal.id);
-        const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(dataTarget);
-        const title = titleConstructor != null
-            ? titleConstructor(params)
-            : document.querySelector(dataTarget).getAttribute("data-view-title");
-        document.title = title;
-        HistoryUtil.replaceState({}, title, "?" + params.toString());
+        ElementUtil.updateTitleAndDescription(params, dataTarget);
+        HistoryUtil.replaceState({}, document.title, "?" + params.toString());
     }
 
     static showAnchoredTabs()

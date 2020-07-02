@@ -8,9 +8,16 @@ class BootstrapUtil
     {
         $('.nav-pills a').on('shown.bs.tab', BootstrapUtil.showTab);
         for(const a of document.querySelectorAll('#generator .nav-pills a'))
+        {
             ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateLadderTitle);
+            ElementUtil.DESCRIPTION_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateLadderDescription);
+        }
+
         for(const a of document.querySelectorAll('#player-info .nav-pills a'))
+        {
             ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateCharacterTitle);
+            ElementUtil.DESCRIPTION_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateCharacterDescription);
+        }
     }
 
     static showTab(e)
@@ -34,13 +41,8 @@ class BootstrapUtil
         const fullParams = new URLSearchParams(parentParamsStr == null ? "" : parentParamsStr);
         for(const t of newTabs) fullParams.append("t", t);
 
-        const titleConstructor = ElementUtil.TITLE_CONSTRUCTORS.get(lastDataTarget);
-        const title = titleConstructor != null
-            ? titleConstructor(fullParams)
-            : document.querySelector(lastDataTarget).getAttribute("data-view-title");
-
-        document.title = title;
-        HistoryUtil.pushState({}, title, "?" + fullParams.toString());
+        ElementUtil.updateTitleAndDescription(fullParams, lastDataTarget);
+        HistoryUtil.pushState({}, document.title, "?" + fullParams.toString());
     }
 
     static hideCollapsible(id)

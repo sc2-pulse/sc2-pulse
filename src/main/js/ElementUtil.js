@@ -246,8 +246,75 @@ class ElementUtil
         return `${name} ${ElementUtil.getTabTitle(params)}`;
     }
 
+    static generateLadderDescription(params)
+    {
+        let desc = ElementUtil.getTabTitle(params);
+
+        if(desc == "MMR Ladder")
+        {
+            const pageFrom = params.get("page");
+            const count = params.get("count");
+            const forward = params.get("forward");
+            const page = forward ? pageFrom + count : pageFrom - count;
+            const rankFrom = ((page - 1) * 100) + 1;
+            desc += ", rank " +  rankFrom + "-" + (rankFrom + 99);
+        }
+
+        desc += ". Regions: ";
+        let regionAdded = false;
+        for(const region of Object.values(REGION))
+        {
+            if(params.get(region.name))
+            {
+                if(regionAdded) desc += ", ";
+                desc += region.name;
+                regionAdded = true;
+            }
+        }
+
+        let leagueAdded = false;
+        desc += ". Leagues: ";
+        for(const league of Object.values(LEAGUE))
+        {
+            if(params.get(league.name.substring(0, 3)))
+            {
+                if(leagueAdded) desc += ", ";
+                desc += league.name;
+                leagueAdded = true;
+            }
+        }
+
+        desc += ". " + Session.currentTeamType.name + " " + Session.currentTeamFormat.name + ", " + SeasonUtil.seasonIdTranslator(Session.currentSeason) + ".";
+        return desc;
+    }
+
+    static generateCharacterDescription(params)
+    {
+        const name = document.querySelector("#player-info-title-name").textContent;
+        const battletag = document.querySelector("#player-info-battletag").textContent;
+
+        return `${name}/${battletag} career best MMR for all brackets/races. BattleNet profile and all seasons history`;
+    }
+
+    static generateGenericTitle(constructors, params, dataTarget, attrSuffix)
+    {
+        const titleConstructor = constructors.get(dataTarget);
+        return titleConstructor != null
+            ? titleConstructor(params)
+            : (document.querySelector(dataTarget).getAttribute("data-view-" + attrSuffix)
+                || document.querySelector(dataTarget).getAttribute("data-view-title"));
+    }
+
+    static updateTitleAndDescription(params, dataTarget)
+    {
+        document.title = ElementUtil.generateGenericTitle(ElementUtil.TITLE_CONSTRUCTORS, params, dataTarget, "title");
+        document.querySelector('meta[name="description"]').setAttribute("content",
+            ElementUtil.generateGenericTitle(ElementUtil.DESCRIPTION_CONSTRUCTORS, params, dataTarget, "description"));
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
 ElementUtil.TITLE_CONSTRUCTORS = new Map();
+ElementUtil.DESCRIPTION_CONSTRUCTORS = new Map();
 ElementUtil.NEGATION_PREFIX = "neg-";
