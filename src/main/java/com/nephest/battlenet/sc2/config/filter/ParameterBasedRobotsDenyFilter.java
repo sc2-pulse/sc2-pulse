@@ -10,7 +10,7 @@ import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletResponse;
 
 @WebFilter("/")
-public class OldSeasonRobotsDenyFilter
+public class ParameterBasedRobotsDenyFilter
 implements Filter
 {
 
@@ -18,16 +18,32 @@ implements Filter
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
     throws java.io.IOException, ServletException
     {
-        String seasonStr = req.getParameter("season");
-        if(seasonStr == null) {chain.doFilter(req, resp); return;}
-
-        int season = Integer.parseInt(seasonStr);
-        if(season < BlizzardSC2API.LAST_SEASON)
+        if(mustDeny(req))
         {
             HttpServletResponse hresp = (HttpServletResponse) resp;
             hresp.setHeader("X-Robots-Tag", "noindex, nofollow");
         }
         chain.doFilter(req, resp);
+    }
+
+    private boolean mustDeny(ServletRequest req)
+    {
+        return isOldSeason(req) || isCharacterType(req);
+    }
+
+    private boolean isOldSeason(ServletRequest req)
+    {
+        String seasonStr = req.getParameter("season");
+        if(seasonStr == null) return false;
+
+        int season = Integer.parseInt(seasonStr);
+        return season < BlizzardSC2API.LAST_SEASON;
+    }
+
+    private boolean isCharacterType(ServletRequest req)
+    {
+        String type = req.getParameter("type");
+        return type != null && type.equals("character");
     }
 
 }
