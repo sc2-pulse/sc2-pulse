@@ -19,5 +19,10 @@
                     </th:block>
                 </th:block>
         </th:block>
+        <!-- Serral on nephest.com -->
+        <url>
+            <loc th:text="@{__${absoluteUrl}__/(type='character', id='236695', m='1', t='player-stats-summary')}"></loc>
+            <changefreq>daily</changefreq>
+        </url>
     </th:block>
 </urlset>
