@@ -36,6 +36,7 @@ class BootstrapUtil
             ? "#" + modal.id
             : (newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2]);
         const lastDataTarget = "#" + newTabs[newTabs.length - 1];
+        ElementUtil.setMainContent(lastDataTarget);
 
         const parentParamsStr = Session.sectionParams.get(parentDataTarget);
         const fullParams = new URLSearchParams(parentParamsStr == null ? "" : parentParamsStr);

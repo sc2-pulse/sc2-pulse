@@ -312,6 +312,12 @@ class ElementUtil
             ElementUtil.generateGenericTitle(ElementUtil.DESCRIPTION_CONSTRUCTORS, params, dataTarget, "description"));
     }
 
+    static setMainContent(id)
+    {
+        for(const main of document.querySelectorAll('*[role="main"]')) main.removeAttribute("role");
+        document.querySelector(id).setAttribute("role", "main");
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
