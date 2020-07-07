@@ -35,7 +35,8 @@ class HistoryUtil
         dataTarget = modal == null ? dataTarget : "#" + modal.id;
         const tablessParams = new URLSearchParams(paramsStr);
         tablessParams.delete("t");
-        Session.sectionParams.set(dataTarget, tablessParams.toString())
+        Session.sectionParams.set(dataTarget, tablessParams.toString());
+        RichDataUtil.enrich(params);
         if(replace)
         {
             history.replaceState(obj, title, "?" + params.toString());
