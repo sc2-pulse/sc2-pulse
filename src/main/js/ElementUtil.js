@@ -235,9 +235,9 @@ class ElementUtil
         return document.querySelector("#" + tab).getAttribute("data-view-title");
     }
 
-    static generateLadderTitle(params)
+    static generateLadderTitle(params, includeSeason = true)
     {
-        return `${Session.currentTeamType.name} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(params)}, ${SeasonUtil.seasonIdTranslator(Session.currentSeason)}`;
+        return `${Session.currentTeamType.name} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(params)}${includeSeason ? ", " + SeasonUtil.seasonIdTranslator(Session.currentSeason) : ""}`;
     }
 
     static generateCharacterTitle(params)
@@ -246,7 +246,7 @@ class ElementUtil
         return `${name} ${ElementUtil.getTabTitle(params)}`;
     }
 
-    static generateLadderDescription(params)
+    static generateLadderDescription(params, includeSeason = true)
     {
         let desc = ElementUtil.getTabTitle(params);
 
@@ -284,7 +284,9 @@ class ElementUtil
             }
         }
 
-        desc += ". " + Session.currentTeamType.name + " " + Session.currentTeamFormat.name + ", " + SeasonUtil.seasonIdTranslator(Session.currentSeason) + ".";
+        desc += ". " + Session.currentTeamType.name + " " + Session.currentTeamFormat.name
+        + (includeSeason ? (", " + SeasonUtil.seasonIdTranslator(Session.currentSeason)) : "")
+        +  ".";
         return desc;
     }
 
