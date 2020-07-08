@@ -83,7 +83,7 @@ extends WebSecurityConfigurerAdapter
     {
         FilterRegistrationBean<RobotsDenyFilter> bean = new FilterRegistrationBean<>();
         bean.setFilter(new RobotsDenyFilter());
-        bean.addUrlPatterns("/oauth2/*");
+        bean.addUrlPatterns("/oauth2/*", "/logout");
         bean.setOrder(Ordered.HIGHEST_PRECEDENCE);
         return bean;
     }
