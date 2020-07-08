@@ -18,7 +18,7 @@
             <select th:id="${id} + '-season-picker'" class="form-control season-picker" name="season"></select>
         </div>
         <div class="col-md-4 mb-3">
-            <select th:id="${id} + '-team-format-picker'" class="form-control" name="queue">
+            <select th:id="${id} + '-team-format-picker'" class="form-control team-format-picker" name="queue">
                 <option value="LOTV_1V1" selected="selected">1V1</option>
                 <option value="LOTV_2V2">2V2</option>
                 <option value="LOTV_3V3">3V3</option>
@@ -27,7 +27,7 @@
             </select>
         </div>
         <div class="col-md-4 mb-3">
-            <select th:id="${id} + '-team-type-picker'" class="form-control" name="team-type">
+            <select th:id="${id} + '-team-type-picker'" class="form-control team-type-picker" name="team-type">
                 <option value="ARRANGED" selected="selected">Arranged</option>
                 <option value="RANDOM">Random</option>
             </select>
