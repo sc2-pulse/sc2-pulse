@@ -109,6 +109,7 @@ class LadderUtil
     static enhanceLadderForm()
     {
         const form = document.getElementById("form-ladder");
+        form.querySelector(".team-format-picker").addEventListener("change", LadderUtil.onLadderFormTeamFormatChange);
         form.addEventListener("submit", function(evt)
             {
                 evt.preventDefault();
@@ -124,6 +125,7 @@ class LadderUtil
     static enhanceMyLadderForm()
     {
         const form = document.getElementById("form-following-ladder");
+        form.querySelector(".team-format-picker").addEventListener("change", LadderUtil.onLadderFormTeamFormatChange);
         form.addEventListener
         (
             "submit",
@@ -137,6 +139,22 @@ class LadderUtil
                     .then(e=>{Util.scrollIntoViewById(form.getAttribute("data-on-success-scroll-to")); HistoryUtil.updateActiveTabs();});
             }
         );
+    }
+
+    static onLadderFormTeamFormatChange(e)
+    {
+        const teamTypeSelect = e.target.closest("form").querySelector('.team-type-picker');
+        const randomSelectOption = teamTypeSelect.querySelector(':scope option[value="RANDOM"]');
+        const teamFormat = EnumUtil.enumOfFullName(e.target.value, TEAM_FORMAT);
+        if(teamFormat == TEAM_FORMAT._1V1 || teamFormat == TEAM_FORMAT.ARCHON)
+        {
+            randomSelectOption.setAttribute("disabled", "disabled");
+            teamTypeSelect.value = TEAM_TYPE.ARRANGED.name.toUpperCase();
+        }
+        else
+        {
+            randomSelectOption.removeAttribute("disabled");
+        }
     }
 
 }
