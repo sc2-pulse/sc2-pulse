@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletResponse;
+import java.util.Arrays;
 
 @WebFilter("/")
 public class ParameterBasedRobotsDenyFilter
@@ -28,7 +29,7 @@ implements Filter
 
     private boolean mustDeny(ServletRequest req)
     {
-        return isOldSeason(req) || isCharacterType(req);
+        return isOldSeason(req) || isCharacterHistoryTab(req);
     }
 
     private boolean isOldSeason(ServletRequest req)
@@ -44,6 +45,12 @@ implements Filter
     {
         String type = req.getParameter("type");
         return type != null && type.equals("character");
+    }
+
+    private boolean isCharacterHistoryTab(ServletRequest req)
+    {
+        String[] tabs = req.getParameterValues("t");
+        return tabs != null && Arrays.asList(tabs).contains("player-stats-history");
     }
 
 }
