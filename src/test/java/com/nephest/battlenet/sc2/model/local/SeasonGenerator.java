@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 @Component
 public class SeasonGenerator
@@ -81,8 +83,25 @@ public class SeasonGenerator
         int teamsPerLeague
     )
     {
-        for(Season season : seasons) seasonDAO.merge(season);
+        Map<Long, List<Season>> seasonsGrouped = seasons.stream().collect(Collectors.groupingBy(Season::getBattlenetId));
         int teamCount = 0;
+        for(Long id : seasonsGrouped.keySet().stream().sorted().collect(Collectors.toList()))
+            teamCount += generateGroupedSeasons(seasonsGrouped.get(id), leagues, queueTypes, teamType, tierType,teamsPerLeague, teamCount);
+    }
+
+    private int generateGroupedSeasons
+    (
+        List<Season> seasons,
+        List<League.LeagueType> leagues,
+        List<QueueType> queueTypes,
+        TeamType teamType,
+        LeagueTier.LeagueTierType tierType,
+        int teamsPerLeague,
+        int teamCount
+    )
+    {
+        for(Season season : seasons) seasonDAO.merge(season);
+
         for (QueueType queueType : queueTypes)
         {
             for (League.LeagueType type : leagues)
@@ -94,6 +113,7 @@ public class SeasonGenerator
                 }
             }
         }
+        return teamCount;
     }
 
     private void generateLeague
