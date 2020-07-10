@@ -76,16 +76,36 @@ public class LadderSearchDAOIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
-        generator.generateDefaultSeason
+
+        List<Season> seasons = new ArrayList<>();
+        for(Region region : REGIONS) seasons.add(new Season(null, DEFAULT_SEASON_ID, region, DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER));
+        for(Region region : REGIONS) seasons.add(new Season(null, DEFAULT_SEASON_ID + 1, region,
+            DEFAULT_SEASON_YEAR + 1, DEFAULT_SEASON_NUMBER + 1));
+        List<Season> emptySeasons = new ArrayList<>();
+        for(Region region : REGIONS) emptySeasons.add(new Season(null, DEFAULT_SEASON_ID + 2, region,
+            DEFAULT_SEASON_YEAR + 2, DEFAULT_SEASON_NUMBER + 2));
+
+        generator.generateSeason
         (
-            REGIONS,
+            seasons,
             List.of(BaseLeague.LeagueType.values()),
             List.of(QUEUE_TYPE),
             TEAM_TYPE,
             TIER_TYPE,
             TEAMS_PER_LEAGUE
         );
+        generator.generateSeason
+        (
+            emptySeasons,
+            List.of(BaseLeague.LeagueType.values()),
+            List.of(QUEUE_TYPE),
+            TEAM_TYPE,
+            TIER_TYPE,
+            0
+        );
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
+        leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
+        leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
     }
 
     @AfterAll
@@ -355,7 +375,7 @@ public class LadderSearchDAOIT
             QUEUE_TYPE,
             TEAM_TYPE
         );
-        assertEquals(1, statsMap.size());
+        assertEquals(2, statsMap.size());
         MergedLadderSearchStatsResult stats = statsMap.get(DEFAULT_SEASON_ID);
 
         int teamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
@@ -411,11 +431,19 @@ public class LadderSearchDAOIT
         seasonDAO.merge(new Season(null, 11L, Region.EU, 2020, 2));
         List<LadderSeason> seasons = search.findSeasonList();
 
-        assertEquals(3, seasons.size());
+        assertEquals(5, seasons.size());
 
-        assertEquals(DEFAULT_SEASON_ID, seasons.get(2).getId());
-        assertEquals(DEFAULT_SEASON_YEAR, seasons.get(2).getYear());
-        assertEquals(DEFAULT_SEASON_NUMBER, seasons.get(2).getNumber());
+        assertEquals(DEFAULT_SEASON_ID, seasons.get(4).getId());
+        assertEquals(DEFAULT_SEASON_YEAR, seasons.get(4).getYear());
+        assertEquals(DEFAULT_SEASON_NUMBER, seasons.get(4).getNumber());
+
+        assertEquals(DEFAULT_SEASON_ID + 1, seasons.get(3).getId());
+        assertEquals(DEFAULT_SEASON_YEAR + 1, seasons.get(3).getYear());
+        assertEquals(DEFAULT_SEASON_NUMBER + 1, seasons.get(3).getNumber());
+
+        assertEquals(DEFAULT_SEASON_ID + 2, seasons.get(2).getId());
+        assertEquals(DEFAULT_SEASON_YEAR + 2, seasons.get(2).getYear());
+        assertEquals(DEFAULT_SEASON_NUMBER + 2, seasons.get(2).getNumber());
 
         assertEquals(10, seasons.get(1).getId());
         assertEquals(2020, seasons.get(1).getYear());
