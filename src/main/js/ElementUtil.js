@@ -36,6 +36,7 @@ class ElementUtil
             a.setAttribute("id", name + '-link');
             a.setAttribute("data-toggle", "pill");
             a.setAttribute("href", "#" + name);
+            a.setAttribute("data-target", "#" + name);
             a.setAttribute("role", "tab");
             a.setAttribute("aria-controls", name)
             a.setAttribute("aria-selected", "false");
