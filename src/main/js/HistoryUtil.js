@@ -149,6 +149,7 @@ class HistoryUtil
                 lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-ladder"));
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(LadderUtil.getLadder(formParams, ratingAnchor, idAnchor, forward, count));
+                promises.push(StatsUtil.getQueueStats(formParams));
                 promises.push(StatsUtil.getLadderStats(formParams));
                 promises.push(StatsUtil.getLeagueBounds(formParams));
                 break;

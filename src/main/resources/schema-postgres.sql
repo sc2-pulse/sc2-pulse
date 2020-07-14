@@ -190,6 +190,20 @@ CREATE TABLE "team_member"
 
 CREATE INDEX "ix_fk_team_member_player_character_id" ON "team_member"("player_character_id");
 
+CREATE TABLE "queue_stats"
+(
+    "id" BIGSERIAL,
+    "season" BIGINT NOT NULL,
+    "queue_type" SMALLINT NOT NULL,
+    "team_type" SMALLINT NOT NULL,
+    "player_base" BIGINT NOT NULL,
+
+    PRIMARY KEY ("id"),
+
+    CONSTRAINT "uq_queue_stats_queue_type_team_type_season"
+        UNIQUE ("queue_type", "team_type", "season")
+);
+
 CREATE TABLE "league_stats"
 (
     "league_id" BIGINT NOT NULL,

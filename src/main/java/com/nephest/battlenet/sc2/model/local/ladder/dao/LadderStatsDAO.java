@@ -6,9 +6,11 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueStats;
+import com.nephest.battlenet.sc2.model.local.QueueStats;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
@@ -21,10 +23,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Repository
 public class LadderStatsDAO
@@ -83,6 +82,7 @@ public class LadderStatsDAO
     private final LadderUtil ladderUtil;
     private SeasonDAO seasonDAO;
     private LeagueDAO leagueDAO;
+    private final QueueStatsDAO queueStatsDAO;
 
     private final ResultSetExtractor<Map<Long, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>>>
         LADDER_STATS_EXTRACTOR =
@@ -137,7 +137,8 @@ public class LadderStatsDAO
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         @Autowired LadderUtil ladderUtil,
         @Autowired SeasonDAO seasonDAO,
-        @Autowired LeagueDAO leagueDAO
+        @Autowired LeagueDAO leagueDAO,
+        @Autowired QueueStatsDAO queueStatsDAO
     )
     {
         this.template = template;
@@ -145,6 +146,7 @@ public class LadderStatsDAO
         this.ladderUtil = ladderUtil;
         this.seasonDAO = seasonDAO;
         this.leagueDAO = leagueDAO;
+        this.queueStatsDAO = queueStatsDAO;
     }
 
     public SeasonDAO getSeasonDAO()
@@ -189,6 +191,12 @@ public class LadderStatsDAO
         for(Map.Entry<Long, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>> entry : stats.entrySet())
             result.put(entry.getKey(), new MergedLadderSearchStatsResult(entry.getValue()));
         return result;
+    }
+
+    @Cacheable(cacheNames="search-ladder-stats-queue")
+    public List<QueueStats> findQueueStats(QueueType queueType, TeamType teamType)
+    {
+        return queueStatsDAO.findQueueStats(queueType, teamType);
     }
 
 }

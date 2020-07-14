@@ -7,7 +7,13 @@ class LadderUtil
     static getLadderAll()
     {
         const formParams = Util.getFormParameters();
-        return Promise.all([LadderUtil.getLadder(formParams), StatsUtil.getLadderStats(formParams), StatsUtil.getLeagueBounds(formParams)]);
+        return Promise.all
+        ([
+            LadderUtil.getLadder(formParams),
+            StatsUtil.getQueueStats(formParams),
+            StatsUtil.getLadderStats(formParams),
+            StatsUtil.getLeagueBounds(formParams)
+        ]);
     }
 
     static getLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)

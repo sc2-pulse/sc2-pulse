@@ -4,6 +4,38 @@
 class StatsUtil
 {
 
+    static getQueueStats(formParams)
+    {
+        Util.setGeneratingStatus("begin");
+        const params = new URLSearchParams(formParams);
+        const queueType = EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT);
+        const teamType = EnumUtil.enumOfFullName(params.get("team-type"), TEAM_TYPE);
+        const request = `api/ladder/stats/queue/${queueType.fullName}/${teamType.fullName}`;
+        return fetch(request)
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{StatsUtil.updateQueueStats(json); Util.setGeneratingStatus("success"); res();}))
+            .catch(e => Util.setGeneratingStatus("error", e.message));
+    }
+
+    static updateQueueStats(searchResult)
+    {
+        const newPlayers = {};
+        for(let i = 0; i < searchResult.length; i++)
+        {
+            const seasonStats = searchResult[i];
+            if(i == 0)
+            {
+                newPlayers[seasonStats.season] = {global: seasonStats.playerBase};
+            }
+            else
+            {
+                newPlayers[seasonStats.season] = {global: seasonStats.playerBase - searchResult[i - 1].playerBase};
+            }
+        }
+        TableUtil.updateColRowTable
+            (document.getElementById("player-new-global-table"), newPlayers, null, null, SeasonUtil.seasonIdTranslator);
+    }
+
     static getLadderStats(formParams)
     {
         Util.setGeneratingStatus("begin");

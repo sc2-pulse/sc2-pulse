@@ -5,10 +5,8 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -22,9 +20,11 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import javax.sql.DataSource;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -38,7 +38,6 @@ public class LadderSearchDAOIT
 
     public static final int TEAMS_PER_LEAGUE = 10;
     public static final List<Region> REGIONS = Collections.unmodifiableList(List.of(Region.values()));
-    public static final int TEAMS_TOTAL = REGIONS.size() * (BaseLeague.LeagueType.values()).length * TEAMS_PER_LEAGUE;
     public static final List<BaseLeague.LeagueType> SEARCH_LEAGUES = Collections.unmodifiableList(List.of
     (
         BaseLeague.LeagueType.BRONZE,
@@ -52,6 +51,8 @@ public class LadderSearchDAOIT
     public static final TeamType TEAM_TYPE = TeamType.ARRANGED;
     public static final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
     public static final Set<BaseLeague.LeagueType> LEAGUES_SET = Collections.unmodifiableSet(EnumSet.copyOf(SEARCH_LEAGUES));
+    public static final int TEAMS_TOTAL = REGIONS.size() * (BaseLeague.LeagueType.values()).length * TEAMS_PER_LEAGUE;
+    public static final int PLAYERS_TOTAL = TEAMS_TOTAL * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
 
     @Autowired
     private LadderSearchDAO search;
@@ -59,15 +60,17 @@ public class LadderSearchDAOIT
     @Autowired
     private LadderStatsDAO ladderStatsDAO;
 
-    @Autowired
-    private SeasonDAO seasonDAO;
-
     @BeforeAll
     public static void beforeAll
     (
         @Autowired DataSource dataSource,
         @Autowired SeasonGenerator generator,
-        @Autowired LeagueStatsDAO leagueStatsDAO
+        @Autowired QueueStatsDAO queueStatsDAO,
+        @Autowired LeagueStatsDAO leagueStatsDAO,
+        @Autowired SeasonDAO seasonDAO,
+        @Autowired DivisionDAO divisionDAO,
+        @Autowired TeamDAO teamDAO,
+        @Autowired TeamMemberDAO teamMemberDAO
     )
     throws SQLException
     {
@@ -103,9 +106,34 @@ public class LadderSearchDAOIT
             TIER_TYPE,
             0
         );
+
+        //a bunch of empty seasons for season finder testing
+        seasonDAO.merge(new Season(null, 10L, Region.EU, 2020, 1));
+        seasonDAO.merge(new Season(null, 11L, Region.US, 2020, 2));
+        seasonDAO.merge(new Season(null, 11L, Region.EU, 2020, 2));
+
+        //a team with OLD players, should not be included in the queue_stats player_base.
+        //counting only NEW players.
+        Division bronzeDivision = divisionDAO.findListByLadder(emptySeasons.get(0).getBattlenetId(), Region.EU,
+            BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
+        BaseLeague bronzeLeague = new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE);
+        Team newTeam = new Team
+        (
+            null, emptySeasons.get(0).getBattlenetId(), Region.EU, bronzeLeague, TIER_TYPE, bronzeDivision.getId(),
+            BigInteger.valueOf(9999L), 1L, 1, 1, 1, 1
+        );
+        Team team = teamDAO.create(newTeam);
+        //old player
+        teamMemberDAO.create(new TeamMember(team.getId(), 1L, 1, 2, 3, 4));
+
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
+        leagueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
+        queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
+        queueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
+        queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
+        queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
     }
 
     @AfterAll
@@ -375,8 +403,9 @@ public class LadderSearchDAOIT
             QUEUE_TYPE,
             TEAM_TYPE
         );
-        assertEquals(2, statsMap.size());
-        MergedLadderSearchStatsResult stats = statsMap.get(DEFAULT_SEASON_ID);
+        assertEquals(3, statsMap.size());
+        List<QueueStats> queueStats = ladderStatsDAO.findQueueStats(QUEUE_TYPE, TEAM_TYPE);
+        assertEquals(3, queueStats.size());
 
         int teamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
         int regionTeamCount = SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
@@ -387,23 +416,33 @@ public class LadderSearchDAOIT
         int leaguePlayerCount = leagueTeamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         int leagueGamesPlayed = (leagueTeamCount + leagueTeamCount * 2 + leagueTeamCount * 3 + leagueTeamCount * 4)
             * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
-        for(Region region : REGIONS)
+        List<Long> sortedSeasons = statsMap.keySet().stream().sorted().collect(Collectors.toList());
+
+        for(int i = 0; i < statsMap.size() - 1; i++)
         {
-            assertEquals(regionTeamCount, stats.getRegionTeamCount().get(region));
-            assertEquals(regionPlayerCount, stats.getRegionPlayerCount().get(region));
-            assertEquals(regionGamesPlayed, stats.getRegionGamesPlayed().get(region));
-        }
-        for(BaseLeague.LeagueType league : SEARCH_LEAGUES)
-        {
-            assertEquals(leagueTeamCount, stats.getLeagueTeamCount().get(league));
-            assertEquals(leaguePlayerCount, stats.getLeaguePlayerCount().get(league));
-            assertEquals(leagueGamesPlayed, stats.getLeagueGamesPlayed().get(league));
-        }
-        for(Race race : Race.values())
-        {
-            assertEquals((race.ordinal() + 1) * teamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE), stats.getRaceGamesPlayed().get(race));
+            MergedLadderSearchStatsResult stats = statsMap.get(sortedSeasons.get(i));
+            for(Region region : REGIONS)
+            {
+
+                assertEquals(regionTeamCount, stats.getRegionTeamCount().get(region));
+                assertEquals(regionPlayerCount, stats.getRegionPlayerCount().get(region));
+                assertEquals(regionGamesPlayed, stats.getRegionGamesPlayed().get(region));
+            }
+            for(BaseLeague.LeagueType league : SEARCH_LEAGUES)
+            {
+                assertEquals(leagueTeamCount, stats.getLeagueTeamCount().get(league));
+                assertEquals(leaguePlayerCount, stats.getLeaguePlayerCount().get(league));
+                assertEquals(leagueGamesPlayed, stats.getLeagueGamesPlayed().get(league));
+            }
+            for(Race race : Race.values())
+            {
+                assertEquals((race.ordinal() + 1) * teamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE), stats.getRaceGamesPlayed().get(race));
+            }
+            assertEquals(PLAYERS_TOTAL * (i + 1), queueStats.get(i).getPlayerBase());
         }
 
+        //last season consists of old players, so values should be the same
+        assertEquals(queueStats.get(1).getPlayerBase(), queueStats.get(2).getPlayerBase());
     }
 
     @Test
@@ -426,9 +465,6 @@ public class LadderSearchDAOIT
     @Test
     public void testFindSeasons()
     {
-        seasonDAO.merge(new Season(null, 10L, Region.EU, 2020, 1));
-        seasonDAO.merge(new Season(null, 11L, Region.US, 2020, 2));
-        seasonDAO.merge(new Season(null, 11L, Region.EU, 2020, 2));
         List<LadderSeason> seasons = search.findSeasonList();
 
         assertEquals(5, seasons.size());

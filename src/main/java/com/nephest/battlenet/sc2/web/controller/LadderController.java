@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
+import com.nephest.battlenet.sc2.model.local.QueueStats;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
@@ -135,6 +136,16 @@ public class LadderController
             forward,
             count
         );
+    }
+
+    @GetMapping("/ladder/stats/queue/{queueType}/{teamType}")
+    public List<QueueStats> getQueueStats
+    (
+        @PathVariable("queueType") QueueType queueType,
+        @PathVariable("teamType") TeamType teamType
+    )
+    {
+        return ladderStatsDAO.findQueueStats(queueType, teamType);
     }
 
     @GetMapping("/ladder/stats")

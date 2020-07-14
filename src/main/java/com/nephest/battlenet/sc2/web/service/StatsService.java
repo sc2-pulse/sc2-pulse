@@ -50,6 +50,7 @@ public class StatsService
     private AccountDAO accountDao;
     private PlayerCharacterDAO playerCharacterDao;
     private TeamMemberDAO teamMemberDao;
+    private QueueStatsDAO queueStatsDAO;
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private PostgreSQLUtils postgreSQLUtils;
@@ -71,6 +72,7 @@ public class StatsService
         AccountDAO accountDao,
         PlayerCharacterDAO playerCharacterDao,
         TeamMemberDAO teamMemberDao,
+        QueueStatsDAO queueStatsDAO,
         LeagueStatsDAO leagueStatsDao,
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
         PostgreSQLUtils postgreSQLUtils
@@ -85,6 +87,7 @@ public class StatsService
         this.accountDao = accountDao;
         this.playerCharacterDao = playerCharacterDao;
         this.teamMemberDao = teamMemberDao;
+        this.queueStatsDAO = queueStatsDAO;
         this.leagueStatsDao = leagueStatsDao;
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.postgreSQLUtils = postgreSQLUtils;
@@ -106,7 +109,8 @@ public class StatsService
         {
             "search-seasons", "search-season-last",
             "search-ladder", "search-ladder-stats", "search-team-count",
-            "search-ladder-league-bounds", "search-ladder-season"
+            "search-ladder-league-bounds", "search-ladder-season",
+            "search-ladder-stats-queue"
         },
         allEntries=true
     )
@@ -121,7 +125,8 @@ public class StatsService
         {
             "search-seasons", "search-season-last",
             "search-ladder", "search-ladder-stats", "search-team-count",
-            "search-ladder-league-bounds", "search-ladder-season"
+            "search-ladder-league-bounds", "search-ladder-season",
+            "search-ladder-stats-queue"
         },
         allEntries=true
     )
@@ -163,7 +168,8 @@ public class StatsService
             {
                 "search-seasons", "search-season-last",
                 "search-ladder", "search-ladder-stats", "search-team-count",
-                "search-ladder-league-bounds", "search-ladder-season"
+                "search-ladder-league-bounds", "search-ladder-season",
+                "search-ladder-stats-queue"
             },
         allEntries=true
     )
@@ -204,7 +210,8 @@ public class StatsService
         {
             "search-seasons", "search-season-last",
             "search-ladder", "search-ladder-stats", "search-team-count",
-            "search-ladder-league-bounds", "search-ladder-season"
+            "search-ladder-league-bounds", "search-ladder-season",
+            "search-ladder-stats-queue"
         },
         allEntries=true
     )
@@ -233,6 +240,7 @@ public class StatsService
         {
             updateSeason(region, seasonId);
         }
+        queueStatsDAO.mergeCalculateForSeason(seasonId);
         leagueStatsDao.mergeCalculateForSeason(seasonId);
         playerCharacterStatsDAO.mergeCalculate(seasonId);
     }
@@ -256,6 +264,7 @@ public class StatsService
         }
         if(seasonId != null)
         {
+            queueStatsDAO.mergeCalculateForSeason(seasonId);
             leagueStatsDao.mergeCalculateForSeason(seasonId);
             playerCharacterStatsDAO.mergeCalculate(seasonId);
             playerCharacterStatsDAO.mergeCalculateGlobal();
