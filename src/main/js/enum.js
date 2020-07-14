@@ -39,8 +39,8 @@ const TEAM_FORMAT = Object.freeze
 
 const TEAM_TYPE = Object.freeze
 ({
-    ARRANGED: {code:0, name: "Arranged"},
-    RANDOM: {code:1, name: "Random"}
+    ARRANGED: {code:0, name: "Arranged", fullName: "ARRANGED"},
+    RANDOM: {code:1, name: "Random", fullName: "RANDOM"}
 });
 
 const PAGE_TYPE = Object.freeze
