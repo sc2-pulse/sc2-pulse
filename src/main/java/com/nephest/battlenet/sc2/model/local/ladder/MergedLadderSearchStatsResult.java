@@ -13,9 +13,6 @@ import java.util.Map;
 public class MergedLadderSearchStatsResult
 {
 
-    private final Map<Region, Long> regionPlayerCount = new EnumMap<>(Region.class);
-    private final Map<LeagueType, Long> leaguePlayerCount = new EnumMap<>(LeagueType.class);
-
     private final Map<Region, Long> regionTeamCount = new EnumMap<>(Region.class);
     private final Map<LeagueType, Long> leagueTeamCount = new EnumMap<>(LeagueType.class);
 
@@ -33,17 +30,13 @@ public class MergedLadderSearchStatsResult
         for(Map.Entry<Region,  Map<LeagueType, LadderSearchStatsResult>> regionEntry : stats.entrySet())
         {
             Region region = regionEntry.getKey();
-            long curRegionPlayerCount = 0;
             long curRegionCount = 0;
             for(Map.Entry<LeagueType, LadderSearchStatsResult> leagueEntry : regionEntry.getValue().entrySet())
             {
                 LeagueType league = leagueEntry.getKey();
                 LadderSearchStatsResult curStats = leagueEntry.getValue();
 
-                curRegionPlayerCount += curStats.getLeagueStats().getPlayerCount();
                 curRegionCount += curStats.getLeagueStats().getTeamCount();
-                leaguePlayerCount.put(league,
-                    leaguePlayerCount.getOrDefault(league, 0L) + curStats.getLeagueStats().getPlayerCount());
                 leagueTeamCount.put(league,
                     leagueTeamCount.getOrDefault(league, 0L) + curStats.getLeagueStats().getTeamCount());
 
@@ -72,19 +65,8 @@ public class MergedLadderSearchStatsResult
                     raceGamesPlayed.put(race, raceGamesPlayed.getOrDefault(race, 0L) + gamesPlayed);
                 }
             }
-            regionPlayerCount.put(regionEntry.getKey(), curRegionPlayerCount);
             regionTeamCount.put(regionEntry.getKey(), curRegionCount);
         }
-    }
-
-    public Map<Region, Long> getRegionPlayerCount()
-    {
-        return regionPlayerCount;
-    }
-
-    public Map<LeagueType, Long> getLeaguePlayerCount()
-    {
-        return leaguePlayerCount;
     }
 
     public Map<Region, Long> getRegionTeamCount()

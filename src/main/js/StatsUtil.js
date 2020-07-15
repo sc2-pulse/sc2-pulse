@@ -20,6 +20,7 @@ class StatsUtil
     static updateQueueStats(searchResult)
     {
         const newPlayers = {};
+        const playerCount = {};
         for(let i = 0; i < searchResult.length; i++)
         {
             const seasonStats = searchResult[i];
@@ -31,9 +32,13 @@ class StatsUtil
             {
                 newPlayers[seasonStats.season] = {global: seasonStats.playerBase - searchResult[i - 1].playerBase};
             }
+            playerCount[seasonStats.season] = {global: seasonStats.playerCount};
         }
+
         TableUtil.updateColRowTable
             (document.getElementById("player-new-global-table"), newPlayers, null, null, SeasonUtil.seasonIdTranslator);
+        TableUtil.updateColRowTable
+            (document.getElementById("player-count-global-table"), playerCount, null, null, SeasonUtil.seasonIdTranslator);
     }
 
     static getLadderStats(formParams)
@@ -48,13 +53,12 @@ class StatsUtil
 
     static updateLadderStats(searchResult)
     {
-        const globalResult = {gamesPlayed: {}, teamCount: {}, playerCount: {}};
+        const globalResult = {gamesPlayed: {}, teamCount: {}};
         const percentageResult = {};
         for(const [seasonId, stats] of Object.entries(searchResult))
         {
             globalResult.gamesPlayed[seasonId] = {global: Object.values(stats.regionGamesPlayed).reduce((a, b) => a + b, 0)};
             globalResult.teamCount[seasonId] = {global: Object.values(stats.regionTeamCount).reduce((a, b) => a + b, 0)};
-            globalResult.playerCount[seasonId] = {global: Object.values(stats.regionPlayerCount).reduce((a, b) => a + b, 0)};
             for(const [param, vals] of Object.entries(stats))
             {
                 if(percentageResult[param] == null) percentageResult[param] = {};
@@ -68,8 +72,6 @@ class StatsUtil
             (document.getElementById("games-played-global-table"), globalResult.gamesPlayed, null, null, SeasonUtil.seasonIdTranslator);
         TableUtil.updateColRowTable
             (document.getElementById("team-count-global-table"), globalResult.teamCount, null, null, SeasonUtil.seasonIdTranslator);
-        TableUtil.updateColRowTable
-            (document.getElementById("player-count-global-table"), globalResult.playerCount, null, null, SeasonUtil.seasonIdTranslator);
 
         TableUtil.updateColRowTable
         (
@@ -93,17 +95,6 @@ class StatsUtil
         (
             document.getElementById("team-count-league-table"),
             percentageResult.leagueTeamCount,
-            (a, b)=>a[0].localeCompare(b[0]),
-            function(id){return EnumUtil.enumOfId(id, LEAGUE).name;},
-            SeasonUtil.seasonIdTranslator
-        );
-
-        TableUtil.updateColRowTable
-            (document.getElementById("player-count-region-table"), percentageResult.regionPlayerCount, null, null, SeasonUtil.seasonIdTranslator);
-        TableUtil.updateColRowTable
-        (
-            document.getElementById("player-count-league-table"),
-            percentageResult.leaguePlayerCount,
             (a, b)=>a[0].localeCompare(b[0]),
             function(id){return EnumUtil.enumOfId(id, LEAGUE).name;},
             SeasonUtil.seasonIdTranslator

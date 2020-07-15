@@ -29,13 +29,17 @@ implements java.io.Serializable
     @NotNull
     private Long playerBase;
 
+    @NotNull
+    private Integer playerCount;
+
     public QueueStats
     (
         Long id,
         @NotNull Long season,
         @NotNull QueueType queueType,
         @NotNull TeamType teamType,
-        @NotNull Long playerBase
+        @NotNull Long playerBase,
+        @NotNull Integer playerCount
     )
     {
         this.id = id;
@@ -43,6 +47,7 @@ implements java.io.Serializable
         this.queueType = queueType;
         this.teamType = teamType;
         this.playerBase = playerBase;
+        this.playerCount = playerCount;
     }
 
     @Override
@@ -119,5 +124,15 @@ implements java.io.Serializable
     public void setPlayerBase(Long playerBase)
     {
         this.playerBase = playerBase;
+    }
+
+    public Integer getPlayerCount()
+    {
+        return playerCount;
+    }
+
+    public void setPlayerCount(Integer playerCount)
+    {
+        this.playerCount = playerCount;
     }
 }

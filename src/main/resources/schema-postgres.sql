@@ -197,6 +197,7 @@ CREATE TABLE "queue_stats"
     "queue_type" SMALLINT NOT NULL,
     "team_type" SMALLINT NOT NULL,
     "player_base" BIGINT NOT NULL,
+    "player_count" INTEGER NOT NULL,
 
     PRIMARY KEY ("id"),
 
@@ -207,7 +208,6 @@ CREATE TABLE "queue_stats"
 CREATE TABLE "league_stats"
 (
     "league_id" BIGINT NOT NULL,
-    "player_count" INTEGER NOT NULL,
     "team_count" INTEGER NOT NULL,
     "terran_games_played" INTEGER NOT NULL,
     "protoss_games_played" INTEGER NOT NULL,

@@ -42,7 +42,6 @@ public class LadderStatsDAO
         + "league.queue_type AS \"league.queue_type\","
         + "league.team_type AS \"league.team_type\","
         + "league_stats.league_id AS \"league_stats.league_id\","
-        + "league_stats.player_count, "
         + "league_stats.team_count, "
         + "league_stats.terran_games_played, "
         + "league_stats.protoss_games_played, "

@@ -409,11 +409,9 @@ public class LadderSearchDAOIT
 
         int teamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
         int regionTeamCount = SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
-        int regionPlayerCount = regionTeamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         int regionGamesPlayed = (regionTeamCount + regionTeamCount * 2 + regionTeamCount * 3 + regionTeamCount * 4)
             * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
-        int leaguePlayerCount = leagueTeamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         int leagueGamesPlayed = (leagueTeamCount + leagueTeamCount * 2 + leagueTeamCount * 3 + leagueTeamCount * 4)
             * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
         List<Long> sortedSeasons = statsMap.keySet().stream().sorted().collect(Collectors.toList());
@@ -425,13 +423,11 @@ public class LadderSearchDAOIT
             {
 
                 assertEquals(regionTeamCount, stats.getRegionTeamCount().get(region));
-                assertEquals(regionPlayerCount, stats.getRegionPlayerCount().get(region));
                 assertEquals(regionGamesPlayed, stats.getRegionGamesPlayed().get(region));
             }
             for(BaseLeague.LeagueType league : SEARCH_LEAGUES)
             {
                 assertEquals(leagueTeamCount, stats.getLeagueTeamCount().get(league));
-                assertEquals(leaguePlayerCount, stats.getLeaguePlayerCount().get(league));
                 assertEquals(leagueGamesPlayed, stats.getLeagueGamesPlayed().get(league));
             }
             for(Race race : Race.values())
@@ -439,8 +435,10 @@ public class LadderSearchDAOIT
                 assertEquals((race.ordinal() + 1) * teamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE), stats.getRaceGamesPlayed().get(race));
             }
             assertEquals(PLAYERS_TOTAL * (i + 1), queueStats.get(i).getPlayerBase());
+            assertEquals(PLAYERS_TOTAL, queueStats.get(i).getPlayerCount());
         }
 
+        assertEquals(1, queueStats.get(2).getPlayerCount());
         //last season consists of old players, so values should be the same
         assertEquals(queueStats.get(1).getPlayerBase(), queueStats.get(2).getPlayerBase());
     }

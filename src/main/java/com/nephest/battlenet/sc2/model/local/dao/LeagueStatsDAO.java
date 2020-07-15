@@ -19,11 +19,10 @@ public class LeagueStatsDAO
 {
     private static final String CALCULATE_SEASON_STATS_QUERY =
         "INSERT INTO league_stats "
-        + "(league_id, player_count, team_count, terran_games_played, protoss_games_played, zerg_games_played, random_games_played) "
+        + "(league_id, team_count, terran_games_played, protoss_games_played, zerg_games_played, random_games_played) "
 
         + "SELECT "
         + "MAX(league.id), "
-        + "COUNT(DISTINCT(account.id)) as player_count, "
         + "COUNT(DISTINCT(team.id)) as team_count, "
         + "(COALESCE(SUM(team_member.terran_games_played), 0)) as games_terran, "
         + "(COALESCE(SUM(team_member.protoss_games_played), 0)) as games_protoss, "
@@ -32,8 +31,6 @@ public class LeagueStatsDAO
 
         + "FROM team_member "
         + "INNER JOIN team ON team_member.team_id=team.id "
-        + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
-        + "INNER JOIN account ON player_character.account_id=account.id "
         + "INNER JOIN division ON team.division_id=division.id "
         + "INNER JOIN league_tier ON division.league_tier_id=league_tier.id "
         + "INNER JOIN league ON league_tier.league_id=league.id "
@@ -45,7 +42,6 @@ public class LeagueStatsDAO
     private static final String CALCULATE_SEASON_STATS_MERGE_QUERY = CALCULATE_SEASON_STATS_QUERY
         + " "
         + "ON CONFLICT(league_id) DO UPDATE SET "
-        + "player_count=excluded.player_count, "
         + "team_count=excluded.team_count, "
         + "terran_games_played=excluded.terran_games_played, "
         + "protoss_games_played=excluded.protoss_games_played, "
@@ -55,7 +51,6 @@ public class LeagueStatsDAO
     public static final RowMapper<LeagueStats> STD_ROW_MAPPER = (rs, num) -> new LeagueStats
     (
         rs.getLong("league_stats.league_id"),
-        rs.getInt("player_count"),
         rs.getInt("team_count"),
         rs.getInt("terran_games_played"), rs.getInt("protoss_games_played"), rs.getInt("zerg_games_played"),
         rs.getInt("random_games_played")

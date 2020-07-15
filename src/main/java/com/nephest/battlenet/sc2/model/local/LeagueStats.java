@@ -17,15 +17,11 @@ implements java.io.Serializable
     private Long leagueId;
 
     @NotNull
-    private Integer playerCount;
-
-    @NotNull
     private Integer teamCount;
 
     public LeagueStats
     (
         Long leagueId,
-        Integer playerCount,
         Integer teamCount,
         Integer terranGamesPlayed,
         Integer protossGamesPlayed,
@@ -35,7 +31,6 @@ implements java.io.Serializable
     {
         super(terranGamesPlayed, protossGamesPlayed, zergGamesPlayed, randomGamesPlayed);
         this.leagueId = leagueId;
-        this.playerCount = playerCount;
         this.teamCount = teamCount;
     }
 
@@ -76,16 +71,6 @@ implements java.io.Serializable
     public Long getLeagueId()
     {
         return leagueId;
-    }
-
-    public void setPlayerCount(Integer playerCount)
-    {
-        this.playerCount = playerCount;
-    }
-
-    public Integer getPlayerCount()
-    {
-        return playerCount;
     }
 
     public void setTeamCount(Integer teamCount)
