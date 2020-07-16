@@ -110,4 +110,9 @@ class Util
         return (searchResult.meta.page - 1) * searchResult.meta.perPage + i + 1;
     }
 
+    static translateUnderscore(str)
+    {
+        return str.replace(/_/g, " ").trim();
+    }
+
 }
