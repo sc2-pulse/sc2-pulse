@@ -29,7 +29,7 @@ implements Filter
 
     private boolean mustDeny(ServletRequest req)
     {
-        return isOldSeason(req) || isCharacterHistoryTab(req);
+        return isOldSeason(req) || !isAllowedCharacterParams(req);
     }
 
     private boolean isOldSeason(ServletRequest req)
@@ -39,6 +39,13 @@ implements Filter
 
         int season = Integer.parseInt(seasonStr);
         return season < BlizzardSC2API.LAST_SEASON;
+    }
+
+    private boolean isAllowedCharacterParams(ServletRequest req)
+    {
+        boolean result = true;
+        if(isCharacterType(req)) result = isCharacterSummaryTabExclusively(req);
+        return result;
     }
 
     private boolean isCharacterType(ServletRequest req)
@@ -51,6 +58,12 @@ implements Filter
     {
         String[] tabs = req.getParameterValues("t");
         return tabs != null && Arrays.asList(tabs).contains("player-stats-history");
+    }
+
+    private boolean isCharacterSummaryTabExclusively(ServletRequest req)
+    {
+        String[] tabs = req.getParameterValues("t");
+        return tabs != null && tabs.length == 1 && tabs[0].equals("player-stats-summary");
     }
 
 }
