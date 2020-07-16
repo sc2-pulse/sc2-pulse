@@ -19,26 +19,23 @@ class StatsUtil
 
     static updateQueueStats(searchResult)
     {
-        const newPlayers = {};
         const playerCount = {};
         for(let i = 0; i < searchResult.length; i++)
         {
             const seasonStats = searchResult[i];
             if(i == 0)
             {
-                newPlayers[seasonStats.season] = {global: seasonStats.playerBase};
+                playerCount[seasonStats.season] = {_new: seasonStats.playerBase};
             }
             else
             {
-                newPlayers[seasonStats.season] = {global: seasonStats.playerBase - searchResult[i - 1].playerBase};
+                playerCount[seasonStats.season] = {_new: seasonStats.playerBase - searchResult[i - 1].playerBase};
             }
-            playerCount[seasonStats.season] = {global: seasonStats.playerCount};
+            playerCount[seasonStats.season]["old"] = seasonStats.playerCount - playerCount[seasonStats.season]["_new"];
+            playerCount[seasonStats.season]["global"] = seasonStats.playerCount;
         }
-
         TableUtil.updateColRowTable
-            (document.getElementById("player-new-global-table"), newPlayers, null, null, SeasonUtil.seasonIdTranslator);
-        TableUtil.updateColRowTable
-            (document.getElementById("player-count-global-table"), playerCount, null, null, SeasonUtil.seasonIdTranslator);
+            (document.getElementById("player-count-global-table"), playerCount, null, Util.translateUnderscore, SeasonUtil.seasonIdTranslator);
     }
 
     static getLadderStats(formParams)
