@@ -11,10 +11,14 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * Log in with a BattleNet account
     * Easy access to personal stats
     * Create a personal ladder out of your favourite players
-* Stats
+* Activity stats
+    * Parameters: games played, team count
     * Global numbers
     * Race, region, league distribution
-    * Grouped by games played, team and player count
+    * All filters
+* Population stats
+    * New, old, total player count
+    * Team format and team type filters
 * Tier MMR ranges
 ## Disclamier
 I use this project for learning, it is not production-ready.
