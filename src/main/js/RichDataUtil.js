@@ -6,6 +6,8 @@ class RichDataUtil
 
     static generateDataSet(params)
     {
+        const queueType = EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT);
+        const teamType = EnumUtil.enumOfFullName(params.get("team-type"), TEAM_TYPE);
         const script = document.createElement("script");
         script.setAttribute("type", "application/ld+json");
         const content =
@@ -26,11 +28,19 @@ class RichDataUtil
                     "name": "Oleksandr Masniuk"
                  },
                 "temporalCoverage": "2016-10-18/..",
-                "distribution":{
-                     "@type":"DataDownload",
-                     "encodingFormat":"JSON",
-                     "contentUrl":"${window.location.protocol}//${window.location.host}${ROOT_CONTEXT_PATH}api/ladder/stats?${params.toString()}"
-                }
+                "distribution":
+                [
+                    {
+                        "@type":"DataDownload",
+                        "encodingFormat":"JSON",
+                        "contentUrl":"${window.location.protocol}//${window.location.host}${ROOT_CONTEXT_PATH}api/ladder/stats?${params.toString()}"
+                    },
+                    {
+                        "@type":"DataDownload",
+                        "encodingFormat":"JSON",
+                        "contentUrl":"${window.location.protocol}//${window.location.host}${ROOT_CONTEXT_PATH}api/ladder/stats/queue/${queueType.fullName}/${teamType.fullName}"
+                    }
+                ]
             }`
         ;
         script.appendChild(document.createTextNode(content));
