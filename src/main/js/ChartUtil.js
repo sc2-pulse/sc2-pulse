@@ -18,7 +18,7 @@ class ChartUtil
         (
             ctx,
             {
-                type: type,
+                type: type == "line" ? "lineVCursor" : type,
                 data: data,
                 options:
                 {
@@ -98,7 +98,7 @@ class ChartUtil
     {
         for (let i = 0; i < data.datasets.length; i++)
         {
-            if (type === "line")
+            if (type === "lineVCursor")
             {
                 data.datasets[i]["borderWidth"] = 2;
                 data.datasets[i]["pointRadius"] = 0;
@@ -281,3 +281,32 @@ ChartUtil.CHART_OBSERVER_CONFIG =
 
 ChartUtil.CHARTABLE_OBSERVER = new MutationObserver(ChartUtil.onChartableMutation);
 ChartUtil.CHART_OBSERVER = new MutationObserver(ChartUtil.onChartMutation);
+
+Chart.defaults.lineVCursor = Chart.defaults.line;
+Chart.controllers.lineVCursor = Chart.controllers.line.extend
+({
+    draw: function(ease)
+    {
+        Chart.controllers.line.prototype.draw.call(this, ease);
+        if (this.chart.tooltip._active && this.chart.tooltip._active.length)
+        {
+            var activePoint = this.chart.tooltip._active[0],
+            ctx = this.chart.ctx,
+            x = activePoint.tooltipPosition().x,
+            topY = this.chart.legend.bottom,
+            bottomY = this.chart.chartArea.bottom;
+
+            // draw line
+            ctx.save();
+            ctx.globalCompositeOperation='destination-over';
+            ctx.beginPath();
+            ctx.moveTo(x, topY);
+            ctx.lineTo(x, bottomY);
+            ctx.setLineDash([1, 2]);
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = 'black';
+            ctx.stroke();
+            ctx.restore();
+        }
+    }
+});
