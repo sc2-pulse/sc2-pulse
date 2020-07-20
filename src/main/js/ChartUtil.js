@@ -40,6 +40,15 @@ class ChartUtil
                             stacked: stacked === "true" ? true : false
                         }]
                     },
+                    hover:
+                    {
+                        mode: (data.customMeta.type === "pie" || data.customMeta === "doughnut")
+                            ? "dataset"
+                            : "index",
+                        position: "nearest",
+                        intersect: false,
+                        animationDuration: 0
+                    },
                     tooltips:
                     {
                         mode: (data.customMeta.type === "pie" || data.customMeta === "doughnut")
@@ -93,6 +102,7 @@ class ChartUtil
             {
                 data.datasets[i]["borderWidth"] = 2;
                 data.datasets[i]["pointRadius"] = 0;
+                data.datasets[i]["hoverPointRadius"] = 2;
 
                 data.datasets[i]["borderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
                 data.datasets[i]["pointBackgroundColor"] = SC2Restful.COLORS.get(data.customColors[i]);
