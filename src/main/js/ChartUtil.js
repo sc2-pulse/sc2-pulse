@@ -91,10 +91,10 @@ class ChartUtil
         {
             if (type === "line")
             {
-                Object.defineProperty(data.datasets[i], "borderColor", { value: SC2Restful.COLORS.get(data.customColors[i]), writable: true, enumerable: true, configurable: true });
-                Object.defineProperty(data.datasets[i], "pointBackgroundColor", { value: SC2Restful.COLORS.get(data.customColors[i]), writable: true, enumerable: true, configurable: true });
-                //Object.defineProperty(data.datasets[i], "pointBorderColor", { value: SC2Restful.COLORS.get(data.customColors[i]), writable: true, enumerable: true, configurable: true });
-                Object.defineProperty(data.datasets[i], "backgroundColor", { value: "rgba(0, 0, 0, 0)", writable: true, enumerable: true, configurable: true });
+                data.datasets[i]["borderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
+                data.datasets[i]["pointBackgroundColor"] = SC2Restful.COLORS.get(data.customColors[i]);
+                //data.datasets[i]["pointBorderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
+                data.datasets[i]["backgroundColor"] = "rgba(0, 0, 0, 0)";
             }
             else if(type === "doughnut" || type === "pie")
             {
@@ -105,13 +105,13 @@ class ChartUtil
                     dataColors.push(SC2Restful.COLORS.get(data.customColors[dataValIx]));
                     dataEmptyColors.push("rgba(0, 0, 0, 0)");
                 }
-                Object.defineProperty(data.datasets[i], "backgroundColor", { value: dataColors, writable: true, enumerable: true, configurable: true });
-                Object.defineProperty(data.datasets[i], "borderColor", { value: dataEmptyColors, writable: true, enumerable: true, configurable: true });
+                data.datasets[i]["backgroundColor"] = dataColors;
+                data.datasets[i]["borderColor"] = dataEmptyColors;
             }
             else
             {
-                Object.defineProperty(data.datasets[i], "backgroundColor", { value: SC2Restful.COLORS.get(data.customColors[i]), writable: true, enumerable: true, configurable: true });
-                Object.defineProperty(data.datasets[i], "borderColor", { value: "rgba(0, 0, 0, 0)", writable: true, enumerable: true, configurable: true });
+                data.datasets[i]["backgroundColor"] = SC2Restful.COLORS.get(data.customColors[i]);
+                data.datasets[i]["borderColor"] = "rgba(0, 0, 0, 0)";
             }
         }
     }
