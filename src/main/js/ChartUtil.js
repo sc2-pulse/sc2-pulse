@@ -91,6 +91,9 @@ class ChartUtil
         {
             if (type === "line")
             {
+                data.datasets[i]["borderWidth"] = 2;
+                data.datasets[i]["pointRadius"] = 0;
+
                 data.datasets[i]["borderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
                 data.datasets[i]["pointBackgroundColor"] = SC2Restful.COLORS.get(data.customColors[i]);
                 //data.datasets[i]["pointBorderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
