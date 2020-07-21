@@ -115,4 +115,10 @@ class Util
         return str.replace(/_/g, " ").trim();
     }
 
+    static addStringTail(str, strs, tail)
+    {
+        const maxLen = Math.max(...strs.map(s=>s.length));
+        return str + Array(maxLen - str.length).fill(tail).join("");
+    }
+
 }
