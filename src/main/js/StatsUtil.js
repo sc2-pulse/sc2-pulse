@@ -73,27 +73,41 @@ class StatsUtil
         TableUtil.updateColRowTable
         (
             document.getElementById("games-played-race-table"), percentageResult.raceGamesPlayed,
-            null, function(name){return EnumUtil.enumOfName(name, RACE).name;}, SeasonUtil.seasonIdTranslator
+            (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order,
+            (name)=>EnumUtil.enumOfName(name, RACE).name,
+            SeasonUtil.seasonIdTranslator
         );
         TableUtil.updateColRowTable
-            (document.getElementById("games-played-region-table"), percentageResult.regionGamesPlayed, null, null, SeasonUtil.seasonIdTranslator);
+        (
+            document.getElementById("games-played-region-table"),
+            percentageResult.regionGamesPlayed,
+            (a, b)=>EnumUtil.enumOfName(a, REGION).order - EnumUtil.enumOfName(b, REGION).order,
+            (name)=>EnumUtil.enumOfName(name, REGION).name,
+            SeasonUtil.seasonIdTranslator
+        );
         TableUtil.updateColRowTable
         (
             document.getElementById("games-played-league-table"),
             percentageResult.leagueGamesPlayed,
-            (a, b)=>a[0].localeCompare(b[0]),
-            function(id){return EnumUtil.enumOfId(id, LEAGUE).name;},
+            (a, b)=>EnumUtil.enumOfId(a, LEAGUE).order - EnumUtil.enumOfId(b, LEAGUE).order,
+            (name)=>EnumUtil.enumOfId(name, LEAGUE).name,
             SeasonUtil.seasonIdTranslator
         );
 
         TableUtil.updateColRowTable
-            (document.getElementById("team-count-region-table"), percentageResult.regionTeamCount, null, null, SeasonUtil.seasonIdTranslator);
+        (
+            document.getElementById("team-count-region-table"),
+            percentageResult.regionTeamCount,
+            (a, b)=>EnumUtil.enumOfName(a, REGION).order - EnumUtil.enumOfName(b, REGION).order,
+            (name)=>EnumUtil.enumOfName(name, REGION).name,
+            SeasonUtil.seasonIdTranslator
+        );
         TableUtil.updateColRowTable
         (
             document.getElementById("team-count-league-table"),
             percentageResult.leagueTeamCount,
-            (a, b)=>a[0].localeCompare(b[0]),
-            function(id){return EnumUtil.enumOfId(id, LEAGUE).name;},
+            (a, b)=>EnumUtil.enumOfId(a, LEAGUE).order - EnumUtil.enumOfId(b, LEAGUE).order,
+            (name)=>EnumUtil.enumOfId(name, LEAGUE).name,
             SeasonUtil.seasonIdTranslator
         );
     }
