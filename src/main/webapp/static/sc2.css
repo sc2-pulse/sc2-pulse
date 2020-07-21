@@ -194,6 +194,34 @@ caption
     position: fixed !important;
 }
 
+.nav-pills .nav-link
+{
+    border-radius: 0;
+}
+
+.nav-pills .nav-link
+{
+    outline: none;
+    color: #212529;
+    border-bottom: #f0f0f0 0.19rem solid;
+    transition-property: color, border-bottom-color;
+    transition-duration: 200ms;
+}
+
+.nav-pills .nav-link:focus,
+.nav-pills .nav-link:hover
+{
+    border-bottom-color: #5a6268;
+}
+
+.nav-pills .nav-link.active,
+.nav-pills .nav-link.active:focus
+{
+    color: #007bff;
+    background-color: unset;
+    border-bottom-color: #007bff;
+}
+
 .tab-pane.c-height-linked:not(.active) {
     width: 100%;
     padding-right: 15px;
