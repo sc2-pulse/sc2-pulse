@@ -47,3 +47,10 @@ const PAGE_TYPE = Object.freeze
 ({
     FIRST: {}, LAST: {}, GENERAL: {}
 });
+
+const AGE_DISTRIBUTION = Object.freeze
+({
+    GLOBAL: {name: "global", order: 1},
+    OLD: {name: "old", order: 2},
+    NEW: {name: "new", order: 3}
+});

@@ -36,7 +36,13 @@ class StatsUtil
             playerCount[seasonStats.season]["global"] = seasonStats.playerCount;
         }
         TableUtil.updateColRowTable
-            (document.getElementById("player-count-global-table"), playerCount, null, null, SeasonUtil.seasonIdTranslator);
+        (
+            document.getElementById("player-count-global-table"),
+            playerCount,
+            (a, b)=>EnumUtil.enumOfName(a, AGE_DISTRIBUTION).order - EnumUtil.enumOfName(b, AGE_DISTRIBUTION).order,
+            null,
+            SeasonUtil.seasonIdTranslator
+        );
     }
 
     static getLadderStats(formParams)
