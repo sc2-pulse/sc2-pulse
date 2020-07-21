@@ -23,19 +23,20 @@ class StatsUtil
         for(let i = 0; i < searchResult.length; i++)
         {
             const seasonStats = searchResult[i];
+            playerCount[seasonStats.season] = {};
             if(i == 0)
             {
-                playerCount[seasonStats.season] = {_new: seasonStats.playerBase};
+                playerCount[seasonStats.season]["new"] = seasonStats.playerBase;
             }
             else
             {
-                playerCount[seasonStats.season] = {_new: seasonStats.playerBase - searchResult[i - 1].playerBase};
+                playerCount[seasonStats.season]["new"] = seasonStats.playerBase - searchResult[i - 1].playerBase;
             }
-            playerCount[seasonStats.season]["old"] = seasonStats.playerCount - playerCount[seasonStats.season]["_new"];
+            playerCount[seasonStats.season]["old"] = seasonStats.playerCount - playerCount[seasonStats.season]["new"];
             playerCount[seasonStats.season]["global"] = seasonStats.playerCount;
         }
         TableUtil.updateColRowTable
-            (document.getElementById("player-count-global-table"), playerCount, null, Util.translateUnderscore, SeasonUtil.seasonIdTranslator);
+            (document.getElementById("player-count-global-table"), playerCount, null, null, SeasonUtil.seasonIdTranslator);
     }
 
     static getLadderStats(formParams)
