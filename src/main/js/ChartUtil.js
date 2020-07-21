@@ -37,6 +37,7 @@ class ChartUtil
                         yAxes:
                         [{
                            // ticks:{beginAtZero: true},
+                            ticks: {callback: (val, valIx, vals)=>val.toLocaleString()},
                             stacked: stacked === "true" ? true : false
                         }]
                     },
@@ -51,6 +52,7 @@ class ChartUtil
                     },
                     tooltips:
                     {
+                        bodyFontFamily: "'Liberation Mono', monospace",
                         mode: (data.customMeta.type === "pie" || data.customMeta === "doughnut")
                             ? "dataset"
                             : "index",
@@ -58,7 +60,7 @@ class ChartUtil
                         intersect: false,
                         callbacks:
                         {
-                            ...(tooltipPercentage === "true") && {label: ChartUtil.addTooltipPercentage}
+                            label: tooltipPercentage === "true" ? ChartUtil.addTooltipPercentage : ChartUtil.formatTooltip
                         },
                         ...(tooltipSort === "reverse") && {itemSort: ChartUtil.sortTooltipReversed}
                     }
@@ -66,6 +68,25 @@ class ChartUtil
             }
         );
         ChartUtil.CHARTS.set(chartable.id, chart);
+    }
+
+    static formatTooltip(tooltipItem, data)
+    {
+        let label;
+        let labels;
+        if(data.customMeta.type === "pie" || data.customMeta === "doughnut")
+        {
+            labels = data.labels;
+            label = labels[tooltipItem.index];
+        }
+        else
+        {
+            labels = data.datasets.map(ds=>ds.label);
+            label = labels[tooltipItem.datasetIndex];
+        }
+        label = Util.addStringTail(label, labels, " ");
+        label += " " + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+        return label;
     }
 
     static addTooltipPercentage(tooltipItem, data)
