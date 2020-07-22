@@ -121,4 +121,19 @@ class Util
         return str + Array(maxLen - str.length).fill(tail).join("");
     }
 
+    static isBarcode(name)
+    {
+        return  Util.BARCODE_REGEX.test(name);
+    }
+
+    static unmaskBarcode(character, account)
+    {
+        const name = character.name.substring(0, character.name.indexOf("#"));
+        return Util.isBarcode(name)
+            ? account.battleTag.substring(0, account.battleTag.indexOf("#"))
+            : name;
+    }
+
 }
+
+Util.BARCODE_REGEX = new RegExp("^[lI]+$");

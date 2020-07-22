@@ -20,6 +20,7 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * New, old, total player count
     * Team format and team type filters
 * Tier MMR ranges
+* Barcode unmasking
 ## Disclamier
 I use this project for learning, it is not production-ready.
 

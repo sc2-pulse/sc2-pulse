@@ -46,7 +46,7 @@ class TeamUtil
     {
         const nameElem = document.createElement("span");
         nameElem.classList.add("player-name");
-        nameElem.textContent = member.character.name.substring(0, member.character.name.indexOf("#"));
+        nameElem.textContent = Util.unmaskBarcode(member.character, member.account);
 
         const games = new Map();
         games.set(RACE.TERRAN, typeof member.terranGamesPlayed === "undefined" ? 0 : member.terranGamesPlayed);
