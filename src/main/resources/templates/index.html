@@ -3,7 +3,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::section}, ~{::script})}">
 <head>
-    <title>SC2 Ladder Generator</title>
+    <title>SC2 Pulse</title>
 </head>
 <body>
     <section>
@@ -11,16 +11,16 @@
             <ul id="main-tabs" class="nav nav-fill nav-pills nav-pills-main mb-3 justify-content-center" role="tablist">
                 <li class="nav-item">
                     <a
-                        id="generator-tab"
+                        id="stats-tab"
                         class="nav-link active"
                         data-toggle="pill"
-                        data-target="#generator"
-                        th:href="@{/?t=generator}"
+                        data-target="#stats"
+                        th:href="@{/?t=stats}"
                         role="tab"
-                        aria-controls="generator"
+                        aria-controls="stats"
                         aria-selected="true"
                     >
-                        Generator
+                        Stats
                     </a>
                 </li>
                 <li class="nav-item">
@@ -67,15 +67,15 @@
                 </li>
             </ul>
         </nav>
-        <h1 class="text-dark"><a th:href="@{/}">SC2 Ladder generator</a></h1>
+        <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}"  alt="Pulse"/>SC2 Pulse</a></h1>
         <div class="c-divider-hr"></div>
         <div class="tab-content tab-content-main">
-        <section id="generator" class="tab-pane fade show active"
-                 data-view-title="Generator"
-                 data-view-description="StarCraft2 ladder/stats generator with flexible filters. All seasons, races,
-                  team formats. MMR based ranking."
+        <section id="stats" class="tab-pane fade show active"
+                 data-view-title="Stats"
+                 data-view-description="StarCraft2 stats with flexible filters. All seasons, races,
+                  team formats. MMR based ranking. Region, league distribution. Tier MMR ranges."
         >
-        <h2><a id="generator-collapse" class="c-dropdown" href="#form-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-ladder">Generator</a></h2>
+        <h2><a id="generator-collapse" class="c-dropdown" href="#form-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-ladder">Filters</a></h2>
         <div th:replace="~{fragments/generator-form :: form('form-ladder', 'generator-collapse', 'generated-info-all')}"></div>
         <div id="generated-info-all" class="d-none">
         <div class="c-divider-hr"></div>
@@ -455,7 +455,7 @@
                         </div>
                     </section>
                     <section id="personal-following" class="tab-pane fade" data-view-title="Personal ladder">
-                        <h3><a id="following-generator-collapse" class="c-dropdown" href="#form-following-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-following-ladder">Ladder</a></h3>
+                        <h3><a id="following-generator-collapse" class="c-dropdown" href="#form-following-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-following-ladder">Filters</a></h3>
                         <div th:replace="~{fragments/generator-form :: form('form-following-ladder', 'following-generator-collapse', 'following-ladder')}"></div>
                         <div id="following-ladder-container" class="table-responsive d-none">
                             <table id="following-ladder" class="table table-sm table-hover" data-ladder-rank-show="true">
@@ -485,7 +485,7 @@
             <section>
                 <h2>What is this site?</h2>
                 <p>
-                    Wanna know something about the StarCraft&reg;2 player base? Is it alive? How big is it? SC2 ladder generator has
+                    Wanna know something about the StarCraft&reg;2 player base? Is it alive? How big is it? SC2 Pulse has
                     all the answers.
                 </p>
                 <section>

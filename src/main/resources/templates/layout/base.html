@@ -3,15 +3,16 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:fragment="layout (title, content, script)" lang="en">
 <head>
-    <title th:replace="${title}">SC2 Ladder Generator</title>
+    <title th:replace="${title}">SC2 Pulse</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-    <meta name="description" content="Flexible StarCraft&reg;2 ladder generator for any team format"/>
+    <meta name="description" content="Flexible StarCraft&reg;2 stats aggregator for any team format"/>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
     <link rel="stylesheet" th:href="@{/static/sc2.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"/>
     <link rel="icon" type="image/png" sizes="128x128" th:href="@{/static/icon/misc/favicon-128.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/png" sizes="32x32" th:href="@{/static/icon/misc/favicon-32.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/png" sizes="16x16" th:href="@{/static/icon/misc/favicon-16.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
+    <link rel="icon" type="image/svg+xml" th:href="@{/static/icon/misc/pulse.svg(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
 </head>
 <body th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder)}">
     <div class="container">
@@ -59,7 +60,7 @@
             <span class="c-divider d-inline-block mb-3"><a href="https://nephest.com/" class="text-secondary" target="_blank" rel="noopener noreferrer">&copy; 2020 Oleksandr Masniuk</a></span>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="?type=modal&id=privacy-policy&m=1" class="text-secondary" data-toggle="modal" data-target="#privacy-policy">Privacy Policy</a></span>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-icons" class="text-secondary" target="_blank" rel="noopener noreferrer">SC2 icon pack</a></span>
-            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-ladder-generator" class="text-secondary" target="_blank" rel="noopener noreferrer">Source</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-pulse" class="text-secondary" target="_blank" rel="noopener noreferrer">Github</a></span>
         </div>
     </footer>
     <script th:src="@{/webjars/jquery/jquery.min.js}"></script>

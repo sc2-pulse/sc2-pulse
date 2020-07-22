@@ -7,7 +7,7 @@ class BootstrapUtil
     static enhanceTabs()
     {
         $('.nav-pills a').on('shown.bs.tab', BootstrapUtil.showTab);
-        for(const a of document.querySelectorAll('#generator .nav-pills a'))
+        for(const a of document.querySelectorAll('#stats .nav-pills a'))
         {
             ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateLadderTitle);
             ElementUtil.DESCRIPTION_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateLadderDescription);

@@ -1,5 +1,5 @@
 # About
-SC2 ladder generator is fast and flexible StarCraft&reg;2 stats aggregator. It is a Spring Boot web application.
+SC2 Pulse is fast and flexible StarCraft&reg;2 stats aggregator. It is a Spring Boot web application.
 The [reference website](https://www.nephest.com/sc2/) (runs the latest release) is available 24/7.
 ## Features
 * Flexible, user defined filters

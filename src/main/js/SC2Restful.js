@@ -62,3 +62,5 @@ SC2Restful.COLORS = new Map
     ["master", "#00b1fb"],
     ["grandmaster", "#ef3e00"]
 ]);
+
+SC2Restful.SITE_NAME = "SC2 Pulse";

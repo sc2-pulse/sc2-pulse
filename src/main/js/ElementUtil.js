@@ -202,7 +202,7 @@ class ElementUtil
         switch(paramsNoTabs.get("type"))
         {
             case "ladder":
-                root = "#generator";
+                root = "#stats";
                 break;
             case "character":
                 root = "#player-info";
@@ -230,7 +230,7 @@ class ElementUtil
     static getTabTitle(params)
     {
         const tabs = params.getAll("t");
-        if(tabs.length < 1) return "SC2 Ladder Generator";
+        if(tabs.length < 1) return "";
 
         const tab = tabs[tabs.length - 1];
         return document.querySelector("#" + tab).getAttribute("data-view-title");
@@ -310,7 +310,8 @@ class ElementUtil
 
     static updateTitleAndDescription(params, dataTarget)
     {
-        document.title = ElementUtil.generateGenericTitle(ElementUtil.TITLE_CONSTRUCTORS, params, dataTarget, "title");
+        const generatedTitle = ElementUtil.generateGenericTitle(ElementUtil.TITLE_CONSTRUCTORS, params, dataTarget, "title");
+        document.title = generatedTitle ? (generatedTitle + " - " + SC2Restful.SITE_NAME) : SC2Restful.SITE_NAME;
         document.querySelector('meta[name="description"]').setAttribute("content",
             ElementUtil.generateGenericTitle(ElementUtil.DESCRIPTION_CONSTRUCTORS, params, dataTarget, "description"));
     }

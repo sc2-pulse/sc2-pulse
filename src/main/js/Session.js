@@ -74,9 +74,9 @@ Session.currentFollowing = null;
 Session.currentSearchParams = null;
 Session.isHistorical = false;
 Session.currentStateRestoration = null;
-Session.lastNonModalParams = "?t=generator";
-Session.lastNonModalTitle = "Generator";
-Session.titleAndUrlHistory = [["Generator", "?t=generator"]];
+Session.lastNonModalParams = "?t=stats";
+Session.lastNonModalTitle = "Stats";
+Session.titleAndUrlHistory = [["Stats", "?t=stats"]];
 
 Session.sectionParams = new Map();
 

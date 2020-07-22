@@ -46,7 +46,7 @@ extends WebSecurityConfigurerAdapter
             .and().authorizeRequests()
                 .antMatchers("/api/my/**").authenticated()
             .and().logout()
-                .logoutSuccessUrl("/?t=generator")
+                .logoutSuccessUrl("/?t=stats")
                 .deleteCookies(SameSiteRememberMeAuthenticationSuccessfulHandler.COOKIE_NAME)
             .and().oauth2Login()
                 .loginPage("/#personal")

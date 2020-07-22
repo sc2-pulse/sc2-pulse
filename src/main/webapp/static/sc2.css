@@ -29,6 +29,11 @@ h1
     font-size: 1.5rem;
 }
 
+h1 img
+{
+    width: 1.333em;
+}
+
 h2
 {
     font-size: 1.4rem;

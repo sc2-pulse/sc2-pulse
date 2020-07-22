@@ -14,7 +14,7 @@
   <version>1.4.0-SNAPSHOT</version>
   <packaging>war</packaging>
 
-  <name>SC2 Ladder Generator</name>
+  <name>SC2 Pulse</name>
   <url>https://www.nephest.com/sc2/</url>
 
     <organization>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg xmlns="http://www.w3.org/2000/svg"
+     version="1.1"
+     width="32px" height="32px"
+     viewBox="0 0 32 32"
+>
+    <desc>Heartbeat Pulse</desc>
+    <polyline
+        id="line"
+        points="0,16 8,16 10,21 13,0 15,32 18,16 21,16 24,10 27,16 32,16"
+        stroke-width="2px" stroke="#007bff"
+        fill="none"
+        shape-rendering="geometricPrecision"
+    />
+</svg>

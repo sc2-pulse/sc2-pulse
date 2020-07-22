@@ -19,7 +19,7 @@ class RichDataUtil
                       Parameters: player count, team count, games played.
                       The first data point is season 29. Dataset is compiled from BattleNet API ladders.",
                  "url": "${window.location.protocol}//${window.location.host}${ROOT_CONTEXT_PATH}?${params.toString()}",
-                 "keywords": "StarCraft2, StarCraft II, stats, distribution",
+                 "keywords": "StarCraft2, StarCraft II, stats, distribution, SC2 Pulse",
                  "license" : "https://creativecommons.org/publicdomain/zero/1.0/",
                  "creator":{
                     "@type": "Person",
