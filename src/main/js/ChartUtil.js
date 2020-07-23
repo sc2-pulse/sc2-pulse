@@ -63,7 +63,8 @@ class ChartUtil
                             label: tooltipPercentage === "true" ? ChartUtil.addTooltipPercentage : ChartUtil.formatTooltip
                         },
                         ...(tooltipSort === "reverse") && {itemSort: ChartUtil.sortTooltipReversed}
-                    }
+                    },
+                    layout: {padding: {right: 15}}
                 }
             }
         );
