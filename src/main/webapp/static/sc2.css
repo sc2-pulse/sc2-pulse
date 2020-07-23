@@ -235,6 +235,11 @@ caption
     margin-left: auto;
 }
 
+.modal-header, .modal-footer
+{
+    background-color: #fcfcfc;
+}
+
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;
