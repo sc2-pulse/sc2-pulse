@@ -35,6 +35,7 @@ class SC2Restful
         BootstrapUtil.enhanceTabs();
         BootstrapUtil.setFormCollapsibleScroll("form-ladder");
         BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
+        BootstrapUtil.enhanceTooltips();
     }
 
 }
