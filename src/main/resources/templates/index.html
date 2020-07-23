@@ -221,7 +221,14 @@
                         <div class="container-chart"><canvas id="team-count-global-chart" class="c-chart"></canvas></div>
                     </section>
                     <section id="player-count-global" class="col-lg-6 mb-3">
-                        <h4>Player count</h4>
+                        <h4>Player count
+                            (<img
+                                th:src="@{/static/icon/misc/filter.svg}"
+                                alt="Some filters are not applicable: region, league"
+                                title="Some filters are not applicable: region, league"
+                                data-toggle="tooltip"
+                            />)
+                        </h4>
                         <table
                                 id="player-count-global-table"
                                 class="chartable"
