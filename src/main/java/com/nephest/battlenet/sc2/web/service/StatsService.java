@@ -190,13 +190,16 @@ public class StatsService
 
         long start = System.currentTimeMillis();
 
-        for(Long season : seasons)
+        if(!seasons.isEmpty())
         {
-            updateSeason(season);
-            LOG.log(Level.INFO, "Updated season {0}", new Object[]{season});
+            for (Long season : seasons)
+            {
+                updateSeason(season);
+                LOG.log(Level.INFO, "Updated season {0}", new Object[]{season});
+            }
+            playerCharacterStatsDAO.mergeCalculateGlobal();
+            postgreSQLUtils.analyze();
         }
-        playerCharacterStatsDAO.mergeCalculateGlobal();
-        postgreSQLUtils.analyze();
 
         isUpdating.set(false);
         long seconds = (System.currentTimeMillis() - start) / 1000;
