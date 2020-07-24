@@ -240,6 +240,11 @@ caption
     margin-left: auto;
 }
 
+.modal-open .modal
+{
+    overflow-y: scroll;
+}
+
 .modal-header, .modal-footer
 {
     background-color: #fcfcfc;
