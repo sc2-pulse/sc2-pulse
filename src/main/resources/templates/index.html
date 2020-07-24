@@ -7,163 +7,169 @@
 </head>
 <body>
     <section>
-        <nav>
-            <ul id="main-tabs" class="nav nav-fill nav-pills nav-pills-main mb-3 justify-content-center" role="tablist">
-                <li class="nav-item">
-                    <a
-                        id="stats-tab"
-                        class="nav-link active"
-                        data-toggle="pill"
-                        data-target="#stats"
-                        th:href="@{/?t=stats}"
-                        role="tab"
-                        aria-controls="stats"
-                        aria-selected="true"
-                    >
-                        Stats
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a
-                        id="search-tab"
-                        class="nav-link"
-                        data-toggle="pill"
-                        data-target="#search"
-                        th:href="@{/?t=search}"
-                        role="tab"
-                        aria-controls="search"
-                        aria-selected="false"
-                    >
-                        Search
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a
-                        id="personal-tab"
-                        class="nav-link"
-                        data-toggle="pill"
-                        data-target="#personal"
-                        th:href="@{/?t=personal}"
-                        role="tab"
-                        aria-controls="personal"
-                        aria-selected="false"
-                    >
-                        My
-                    </a>
-                </li>
-                <li class="nav-item">
-                    <a
-                        id="about-tab"
-                        class="nav-link"
-                        data-toggle="pill"
-                        data-target="#about"
-                        th:href="@{/?t=about}"
-                        role="tab"
-                        aria-controls="about"
-                        aria-selected="false"
-                    >
-                        About
-                    </a>
-                </li>
-            </ul>
-        </nav>
-        <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}"  alt="Pulse"/><span> SC2 Pulse</span></a></h1>
-        <div class="c-divider-hr"></div>
+        <header>
+            <nav>
+                <ul id="main-tabs" class="nav nav-fill nav-pills nav-pills-main mb-3 justify-content-center" role="tablist">
+                    <li class="nav-item">
+                        <a
+                            id="stats-tab"
+                            class="nav-link active"
+                            data-toggle="pill"
+                            data-target="#stats"
+                            th:href="@{/?t=stats}"
+                            role="tab"
+                            aria-controls="stats"
+                            aria-selected="true"
+                        >
+                            Stats
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
+                            id="search-tab"
+                            class="nav-link"
+                            data-toggle="pill"
+                            data-target="#search"
+                            th:href="@{/?t=search}"
+                            role="tab"
+                            aria-controls="search"
+                            aria-selected="false"
+                        >
+                            Search
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
+                            id="personal-tab"
+                            class="nav-link"
+                            data-toggle="pill"
+                            data-target="#personal"
+                            th:href="@{/?t=personal}"
+                            role="tab"
+                            aria-controls="personal"
+                            aria-selected="false"
+                        >
+                            My
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
+                            id="about-tab"
+                            class="nav-link"
+                            data-toggle="pill"
+                            data-target="#about"
+                            th:href="@{/?t=about}"
+                            role="tab"
+                            aria-controls="about"
+                            aria-selected="false"
+                        >
+                            About
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+            <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}"  alt="Pulse"/><span> SC2 Pulse</span></a></h1>
+            <div class="c-divider-hr"></div>
+        </header>
         <div class="tab-content tab-content-main">
         <section id="stats" class="tab-pane fade show active"
                  data-view-title="Stats"
                  data-view-description="StarCraft2 stats with flexible filters. All seasons, races,
                   team formats. MMR based ranking. Region, league distribution. Tier MMR ranges."
         >
-        <h2><a id="generator-collapse" class="c-dropdown" href="#form-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-ladder">Filters</a></h2>
-        <div th:replace="~{fragments/generator-form :: form('form-ladder', 'generator-collapse', 'generated-info-all')}"></div>
+        <header>
+            <h2><a id="generator-collapse" class="c-dropdown" href="#form-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-ladder">Filters</a></h2>
+            <div th:replace="~{fragments/generator-form :: form('form-ladder', 'generator-collapse', 'generated-info-all')}"></div>
+        </header>
         <div id="generated-info-all" class="d-none">
-        <ul id="stats-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
-            <li class="nav-item">
-                <a
-                    id="ladder-tab"
-                    class="nav-link active"
-                    data-toggle="pill"
-                    data-target="#ladder-top"
-                    href="#ladder-top"
-                    role="tab"
-                    aria-controls="ladder-top"
-                    aria-selected="true"
-                >
-                    Ladder
-                </a>
-            </li>
-            <li class="nav-item">
-                <a
-                    id="stats-global-tab"
-                    class="nav-link"
-                    data-toggle="pill"
-                    data-target="#stats-global"
-                    href="#stats-global"
-                    role="tab"
-                    aria-controls="stats-global"
-                    aria-selected="false"
-                >
-                    Global
-                </a>
-            </li>
-            <li class="nav-item">
-                <a
-                    id="stats-race-tab"
-                    class="nav-link"
-                    data-toggle="pill"
-                    data-target="#stats-race"
-                    href="#stats-race"
-                    role="tab"
-                    aria-controls="stats-race"
-                    aria-selected="false"
-                >
-                    Race
-                </a>
-            </li>
-            <li class="nav-item">
-                <a
-                    id="stats-league-tab"
-                    class="nav-link"
-                    data-toggle="pill"
-                    data-target="#stats-league"
-                    href="#stats-league"
-                    role="tab"
-                    aria-controls="stats-league"
-                    aria-selected="false"
-                >
-                    League
-                </a>
-            </li>
-            <li class="nav-item">
-                <a
-                    id="stats-region-tab"
-                    class="nav-link"
-                    data-toggle="pill"
-                    data-target="#stats-region"
-                    href="#stats-region"
-                    role="tab"
-                    aria-controls="stats-region"
-                    aria-selected="false"
-                >
-                    Region
-                </a>
-            </li>
-            <li class="nav-item">
-                <a
-                    id="stats-tier-tab"
-                    class="nav-link"
-                    data-toggle="pill"
-                    data-target="#stats-tier"
-                    href="#stats-tier"
-                    role="tab"
-                    aria-controls="stats-tier"
-                    aria-selected="false"
-                >
-                    Tier
-                </a>
-            </li>
-        </ul>
+        <nav>
+            <ul id="stats-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                <li class="nav-item">
+                    <a
+                        id="ladder-tab"
+                        class="nav-link active"
+                        data-toggle="pill"
+                        data-target="#ladder-top"
+                        href="#ladder-top"
+                        role="tab"
+                        aria-controls="ladder-top"
+                        aria-selected="true"
+                    >
+                        Ladder
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                        id="stats-global-tab"
+                        class="nav-link"
+                        data-toggle="pill"
+                        data-target="#stats-global"
+                        href="#stats-global"
+                        role="tab"
+                        aria-controls="stats-global"
+                        aria-selected="false"
+                    >
+                        Global
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                        id="stats-race-tab"
+                        class="nav-link"
+                        data-toggle="pill"
+                        data-target="#stats-race"
+                        href="#stats-race"
+                        role="tab"
+                        aria-controls="stats-race"
+                        aria-selected="false"
+                    >
+                        Race
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                        id="stats-league-tab"
+                        class="nav-link"
+                        data-toggle="pill"
+                        data-target="#stats-league"
+                        href="#stats-league"
+                        role="tab"
+                        aria-controls="stats-league"
+                        aria-selected="false"
+                    >
+                        League
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                        id="stats-region-tab"
+                        class="nav-link"
+                        data-toggle="pill"
+                        data-target="#stats-region"
+                        href="#stats-region"
+                        role="tab"
+                        aria-controls="stats-region"
+                        aria-selected="false"
+                    >
+                        Region
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                        id="stats-tier-tab"
+                        class="nav-link"
+                        data-toggle="pill"
+                        data-target="#stats-tier"
+                        href="#stats-tier"
+                        role="tab"
+                        aria-controls="stats-tier"
+                        aria-selected="false"
+                    >
+                        Tier
+                    </a>
+                </li>
+            </ul>
+        </nav>
         <div id="ladder-all" class="tab-content">
             <section id="ladder-top" class="tab-pane fade show active" data-view-title="MMR Ladder">
                 <nav class="pagination-container" aria-label="Ladder navigation top">
@@ -349,14 +355,16 @@
                  data-view-title="Player search"
                  data-view-description="Find a StarCraft2 player by name. Info includes: full profile, best race, best MMR, BattleTag."
         >
-            <h2>Find player by name</h2>
-            <form id="form-search" class="form-inline justify-content-center">
-                <label class="sr-only" for="search-player-name">Name</label>
-                <input type="text" class="form-control mb-3" id="search-player-name" name="name" placeholder="Name" required="required"/>
-                <button class="btn btn-primary mb-3" type="submit">
-                    <span>Find</span>
-                </button>
-            </form>
+            <header>
+                <h2>Find player by name</h2>
+                <form id="form-search" class="form-inline justify-content-center">
+                    <label class="sr-only" for="search-player-name">Name</label>
+                    <input type="text" class="form-control mb-3" id="search-player-name" name="name" placeholder="Name" required="required"/>
+                    <button class="btn btn-primary mb-3" type="submit">
+                        <span>Find</span>
+                    </button>
+                </form>
+            </header>
             <div id="search-result-all" class="d-none">
                 <div class="table-responsive">
                     <table id="search-table" class="table table-sm table-hover">
@@ -390,50 +398,52 @@
                 <div>and create a personal ladder out of your favourite players</div>
             </div>
             <div class="login-user d-none">
-                <ul id="personal-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
-                    <li class="nav-item">
-                        <a
-                                id="personal-following-tab"
-                                class="nav-link"
-                                data-toggle="pill"
-                                data-target="#personal-following"
-                                href="#personal-following"
-                                role="tab"
-                                aria-controls="personal-following"
-                                aria-selected="false"
-                        >
-                            Ladder
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a
-                                id="personal-characters-tab"
-                                class="nav-link active"
-                                data-toggle="pill"
-                                data-target="#personal-characters"
-                                href="#personal-characters"
-                                role="tab"
-                                aria-controls="personal-characters"
-                                aria-selected="true"
-                        >
-                            Characters
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a
-                                id="personal-account-tab"
-                                class="nav-link"
-                                data-toggle="pill"
-                                data-target="#personal-account"
-                                href="#personal-account"
-                                role="tab"
-                                aria-controls="personal-account"
-                                aria-selected="false"
-                        >
-                            Account
-                        </a>
-                    </li>
-                </ul>
+                <nav>
+                    <ul id="personal-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                        <li class="nav-item">
+                            <a
+                                    id="personal-following-tab"
+                                    class="nav-link"
+                                    data-toggle="pill"
+                                    data-target="#personal-following"
+                                    href="#personal-following"
+                                    role="tab"
+                                    aria-controls="personal-following"
+                                    aria-selected="false"
+                            >
+                                Ladder
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a
+                                    id="personal-characters-tab"
+                                    class="nav-link active"
+                                    data-toggle="pill"
+                                    data-target="#personal-characters"
+                                    href="#personal-characters"
+                                    role="tab"
+                                    aria-controls="personal-characters"
+                                    aria-selected="true"
+                            >
+                                Characters
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a
+                                    id="personal-account-tab"
+                                    class="nav-link"
+                                    data-toggle="pill"
+                                    data-target="#personal-account"
+                                    href="#personal-account"
+                                    role="tab"
+                                    aria-controls="personal-account"
+                                    aria-selected="false"
+                            >
+                                Account
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
                 <div class="tab-content">
                     <section id="personal-characters" class="tab-pane fade show active" data-view-title="Personal characters">
                         <div class="table-responsive">
@@ -489,11 +499,13 @@
                  data-view-description="A quick summary of what this site is about + some useful links."
         >
             <section>
-                <h2>What is this site?</h2>
-                <p>
-                    Wanna know something about the StarCraft&reg;2 player base? Is it alive? How big is it? SC2 Pulse has
-                    all the answers.
-                </p>
+                <header>
+                    <h2>What is this site?</h2>
+                    <p>
+                        Wanna know something about the StarCraft&reg;2 player base? Is it alive? How big is it? SC2 Pulse has
+                        all the answers.
+                    </p>
+                </header>
                 <section>
                     <h3>Features</h3>
                     <ul>
@@ -534,30 +546,34 @@
                         <li>Barcode unmasking</li>
                     </ul>
                 </section>
-                <section>
-                    <h3>Wanna more cool stats?</h3>
-                    <dl>
-                        <dt><a href="https://www.rankedftw.com/" rel="noopener noreferrer" target="_blank">rankedftw</a></dt>
-                        <dd>One of THE original stats sites. It was(and still is) the place to go after the sc2ranks.com shutdown.
-                            The core feature is a team rank progression throughout the seasons, which was priceless during the pre MMR era.
-                            The project is open source too! Check it out.</dd>
-                        <dt><a href="https://sc2replaystats.com/" rel="noopener noreferrer" target="_blank">sc2replaystats</a></dt>
-                        <dd>A different take on stats aggregation. It uses replay files submitted by users, which gives an access to
-                            numerous interesting stats that are not available via the standard API.</dd>
-                        <dt><a href="https://liquipedia.net/starcraft2/" rel="noopener noreferrer" target="_blank">liquipedia</a></dt>
-                        <dd>Wiki-style resource with a lot of meta info, which includes: competitive scene, general game info, latest patches.
-                    </dl>
-                </section>
+                <aside>
+                    <section>
+                        <h3>Wanna more cool stats?</h3>
+                        <dl>
+                            <dt><a href="https://www.rankedftw.com/" rel="noopener noreferrer" target="_blank">rankedftw</a></dt>
+                            <dd>One of THE original stats sites. It was(and still is) the place to go after the sc2ranks.com shutdown.
+                                The core feature is a team rank progression throughout the seasons, which was priceless during the pre MMR era.
+                                The project is open source too! Check it out.</dd>
+                            <dt><a href="https://sc2replaystats.com/" rel="noopener noreferrer" target="_blank">sc2replaystats</a></dt>
+                            <dd>A different take on stats aggregation. It uses replay files submitted by users, which gives an access to
+                                numerous interesting stats that are not available via the standard API.</dd>
+                            <dt><a href="https://liquipedia.net/starcraft2/" rel="noopener noreferrer" target="_blank">liquipedia</a></dt>
+                            <dd>Wiki-style resource with a lot of meta info, which includes: competitive scene, general game info, latest patches.
+                        </dl>
+                    </section>
+                </aside>
                 <section>
                     <h3>Notice</h3>
                     <p>
                         This site is using <a href="https://develop.battle.net/" target="_blank" rel="noopener noreferrer">Battle.net&reg; API</a>. I am not affiliated with
                         Blizzard Entertainment&reg; in any way, shape or form. This is not an official Blizzard site.
                     </p>
-                    <p>
-                        Battle.net, Blizzard Entertainment and StarCraft are trademarks or registered trademarks
-                        of Blizzard Entertainment, Inc. in the U.S. and/or other countries.
-                    </p>
+                    <aside>
+                        <p>
+                            Battle.net, Blizzard Entertainment and StarCraft are trademarks or registered trademarks
+                            of Blizzard Entertainment, Inc. in the U.S. and/or other countries.
+                        </p>
+                    </aside>
                 </section>
             </section>
         </section>
@@ -613,45 +629,49 @@
                         </button>
                     </div>
                     <div class="modal-body">
-                        <ul id="player-stats-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
-                            <li class="nav-item">
-                                <a
-                                        id="player-stats-summary-tab"
-                                        class="nav-link active"
-                                        data-toggle="pill"
-                                        data-target="#player-stats-summary"
-                                        href="#player-stats-summary"
-                                        role="tab"
-                                        aria-controls="player-stats-summary"
-                                        aria-selected="true"
-                                >
-                                    Summary
-                                </a>
-                            </li>
-                            <li class="nav-item">
-                                <a
-                                        id="player-stats-history-tab"
-                                        class="nav-link"
-                                        data-toggle="pill"
-                                        data-target="#player-stats-history"
-                                        href="#player-stats-history"
-                                        role="tab"
-                                        aria-controls="player-stats-history"
-                                        aria-selected="false"
-                                >
-                                    History
-                                </a>
-                            </li>
-                        </ul>
+                        <nav>
+                            <ul id="player-stats-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                                <li class="nav-item">
+                                    <a
+                                            id="player-stats-summary-tab"
+                                            class="nav-link active"
+                                            data-toggle="pill"
+                                            data-target="#player-stats-summary"
+                                            href="#player-stats-summary"
+                                            role="tab"
+                                            aria-controls="player-stats-summary"
+                                            aria-selected="true"
+                                    >
+                                        Summary
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a
+                                            id="player-stats-history-tab"
+                                            class="nav-link"
+                                            data-toggle="pill"
+                                            data-target="#player-stats-history"
+                                            href="#player-stats-history"
+                                            role="tab"
+                                            aria-controls="player-stats-history"
+                                            aria-selected="false"
+                                    >
+                                        History
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
                         <div id="player-stats-all" class="tab-content">
                             <section id="player-stats-summary" class="tab-pane fade show active" data-view-title="Summary">
                                 <section id="player-stats">
                                     <h3>Career summary</h3>
                                     <div id="player-stats-container" class="card-deck"></div>
-                                    <p class="text-secondary">
-                                        Race specific stats are based on teams where player has played
-                                        > 90% of that team games as a specific race
-                                    </p>
+                                    <aside>
+                                        <p class="text-secondary">
+                                            Race specific stats are based on teams where player has played
+                                            > 90% of that team games as a specific race
+                                        </p>
+                                    </aside>
                                 </section>
                                 <section>
                                     <h3>Links</h3>
