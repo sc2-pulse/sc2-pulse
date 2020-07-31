@@ -322,6 +322,12 @@ class ElementUtil
         document.querySelector(id).setAttribute("role", "main");
     }
 
+    static removeNofollowRels(rootId)
+    {
+        for(a of document.getElementById(rootId).querySelectorAll(':scope a[rel~="nofollow"]'))
+            a.relList.remove("nofollow");
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();

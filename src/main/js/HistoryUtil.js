@@ -185,6 +185,8 @@ class HistoryUtil
         .then(e => {const ap = []; for(lp of lazyPromises) ap.push(lp()); return Promise.all(ap)})
         .then(e => new Promise((res, rej)=>{
             HistoryUtil.updateActiveTabs();
+            if(document.querySelector("#main-tabs .nav-link.active").getAttribute("data-target") === "#about")
+                ElementUtil.removeNofollowRels("about");
             Util.setGeneratingStatus("success");
             if(scrollTo != null) Util.scrollIntoViewById(scrollTo);
             res();
