@@ -253,6 +253,7 @@ public class StatsService
         BlizzardSeason bSeason = BlizzardSC2API.getSeason(seasonId);
         Season season = seasonDao.merge(Season.of(bSeason, region));
         updateLeagues(bSeason, season);
+        LOG.log(Level.FINER, "Updated leagues: {0} {1}", new Object[]{seasonId, region});
     }
 
     private void updateCurrentSeason()
@@ -264,6 +265,7 @@ public class StatsService
             Season season = seasonDao.merge(Season.of(bSeason, region));
             updateLeagues(bSeason, season);
             seasonId = season.getBattlenetId();
+            LOG.log(Level.FINER, "Updated leagues: {0} {1}", new Object[]{seasonId, region});
         }
         if(seasonId != null)
         {

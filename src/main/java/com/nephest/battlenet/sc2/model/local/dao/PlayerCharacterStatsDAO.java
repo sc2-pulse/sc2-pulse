@@ -19,10 +19,14 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 @Repository
 public class PlayerCharacterStatsDAO
 {
+
+    private static final Logger LOG = Logger.getLogger(PlayerCharacterStatsDAO.class.getName());
 
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START =
         "INSERT INTO player_character_stats "
@@ -162,6 +166,7 @@ public class PlayerCharacterStatsDAO
         SqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
         for(Race race : Race.values()) template.update(CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race), params);
         template.update(CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
+        LOG.log(Level.FINER, "Calculated player character stats for {0} season", new Object[]{season});
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -171,18 +176,21 @@ public class PlayerCharacterStatsDAO
         for(Race race : Race.values()) template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race),
             params);
         template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
+        LOG.log(Level.FINER, "Calculated (merged) player character stats for {0} season", new Object[]{season});
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void calculateGlobal()
     {
         template.getJdbcTemplate().update(CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS);
+        LOG.log(Level.FINER, "Calculated player character global stats");
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void mergeCalculateGlobal()
     {
         template.getJdbcTemplate().update(CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS);
+        LOG.log(Level.FINER, "Calculated (merged) player character global stats");
     }
 
     public List<PlayerCharacterStats> findList(Long playerCharacterId)

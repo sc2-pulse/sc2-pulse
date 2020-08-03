@@ -13,10 +13,16 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @Repository
 public class LeagueStatsDAO
 {
+
+    private static final Logger LOG = Logger.getLogger(LeagueStatsDAO.class.getName());
+
     private static final String CALCULATE_SEASON_STATS_QUERY =
         "INSERT INTO league_stats "
         + "(league_id, team_count, terran_games_played, protoss_games_played, zerg_games_played, random_games_played) "
@@ -74,6 +80,7 @@ public class LeagueStatsDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_QUERY, params);
+        LOG.log(Level.FINER, "Calculated league stats for {0} season", new Object[]{season});
     }
 
     public void mergeCalculateForSeason(long season)
@@ -81,6 +88,7 @@ public class LeagueStatsDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_MERGE_QUERY, params);
+        LOG.log(Level.FINER, "Calculated (merged) league stats for {0} season", new Object[]{season});
     }
 
 }
