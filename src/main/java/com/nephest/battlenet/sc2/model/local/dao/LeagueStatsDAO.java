@@ -4,6 +4,8 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.LeagueStats;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
@@ -13,15 +15,12 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @Repository
 public class LeagueStatsDAO
 {
 
-    private static final Logger LOG = Logger.getLogger(LeagueStatsDAO.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(LeagueStatsDAO.class);
 
     private static final String CALCULATE_SEASON_STATS_QUERY =
         "INSERT INTO league_stats "
@@ -80,7 +79,7 @@ public class LeagueStatsDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_QUERY, params);
-        LOG.log(Level.FINER, "Calculated league stats for {0} season", new Object[]{season});
+        LOG.debug("Calculated league stats for {} season", new Object[]{season});
     }
 
     public void mergeCalculateForSeason(long season)
@@ -88,7 +87,7 @@ public class LeagueStatsDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_MERGE_QUERY, params);
-        LOG.log(Level.FINER, "Calculated (merged) league stats for {0} season", new Object[]{season});
+        LOG.debug("Calculated (merged) league stats for {} season", new Object[]{season});
     }
 
 }

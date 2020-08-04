@@ -12,6 +12,8 @@ import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -24,15 +26,13 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 @Service
 public class StatsService
 {
 
-    private static final Logger LOG = Logger.getLogger(StatsService.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(StatsService.class);
 
     public static final Version VERSION = Version.LOTV;
     public static final int UPDATE_ALL_MAX_TRIES = 5;
@@ -151,14 +151,14 @@ public class StatsService
             Long sId = iter.next();
             updateSeason(sId);
             iter.remove();
-            LOG.log(Level.INFO, "Updated season {0}", new Object[]{sId});
+            LOG.info("Updated season {}", new Object[]{sId});
         }
         playerCharacterStatsDAO.mergeCalculateGlobal();
         postgreSQLUtils.analyze();
 
         isUpdating.set(false);
         long seconds = (System.currentTimeMillis() - start) / 1000;
-        LOG.log(Level.INFO, "Updated all after {0} seconds", new Object[]{seconds});
+        LOG.info("Updated all after {} seconds", new Object[]{seconds});
         return true;
     }
 
@@ -195,7 +195,7 @@ public class StatsService
             for (Long season : seasons)
             {
                 updateSeason(season);
-                LOG.log(Level.INFO, "Updated season {0}", new Object[]{season});
+                LOG.info("Updated season {}", new Object[]{season});
             }
             playerCharacterStatsDAO.mergeCalculateGlobal();
             postgreSQLUtils.analyze();
@@ -203,7 +203,7 @@ public class StatsService
 
         isUpdating.set(false);
         long seconds = (System.currentTimeMillis() - start) / 1000;
-        LOG.log(Level.INFO, "Updated missing after {0} seconds", new Object[]{seconds});
+        LOG.info("Updated missing after {} seconds", new Object[]{seconds});
         return true;
     }
 
@@ -233,7 +233,7 @@ public class StatsService
 
         isUpdating.set(false);
         long seconds = (System.currentTimeMillis() - start) / 1000;
-        LOG.log(Level.INFO, "Updated current after {0} seconds", new Object[]{seconds});
+        LOG.info("Updated current after {} seconds", new Object[]{seconds});
         return true;
     }
 
@@ -253,7 +253,7 @@ public class StatsService
         BlizzardSeason bSeason = BlizzardSC2API.getSeason(seasonId);
         Season season = seasonDao.merge(Season.of(bSeason, region));
         updateLeagues(bSeason, season);
-        LOG.log(Level.FINER, "Updated leagues: {0} {1}", new Object[]{seasonId, region});
+        LOG.debug("Updated leagues: {} {}", new Object[]{seasonId, region});
     }
 
     private void updateCurrentSeason()
@@ -265,7 +265,7 @@ public class StatsService
             Season season = seasonDao.merge(Season.of(bSeason, region));
             updateLeagues(bSeason, season);
             seasonId = season.getBattlenetId();
-            LOG.log(Level.FINER, "Updated leagues: {0} {1}", new Object[]{seasonId, region});
+            LOG.debug("Updated leagues: {} {}", new Object[]{seasonId, region});
         }
         if(seasonId != null)
         {
@@ -335,7 +335,7 @@ public class StatsService
             }
             catch(Exception ex)
             {
-                LOG.log(Level.SEVERE, ex.getMessage(), ex);
+                LOG.error(ex.getMessage(), ex);
                 LOG.info("Retrying transaction");
                 statsService.updateDivisions(bTier.getDivisions(), season, league, tier, from, to);
             }
@@ -379,10 +379,9 @@ public class StatsService
                         if exception is thrown there is nothing we can do
                         skip failed division
                     */
-                    LOG.log
+                    LOG.info
                     (
-                        Level.INFO,
-                        "Skipped invalid division {0}",
+                        "Skipped invalid division {}",
                         new Object[]{division.getBattlenetId()}
                     );
                 }

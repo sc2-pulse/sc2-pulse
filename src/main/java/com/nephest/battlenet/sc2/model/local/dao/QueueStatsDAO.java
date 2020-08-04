@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -17,15 +19,13 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @Repository
 public class QueueStatsDAO
 {
 
-    private  static final Logger LOG = Logger.getLogger(QueueStatsDAO.class.getName());
+    private  static final Logger LOG = LoggerFactory.getLogger(QueueStatsDAO.class);
 
     private static final String CALCULATE_SEASON_PLAYER_BASE_QUERY =
         "WITH count_all "
@@ -113,7 +113,7 @@ public class QueueStatsDAO
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_QUERY, params);
         template.update(CALCULATE_SEASON_PLAYER_BASE_MERGE_QUERY, params);
-        LOG.log(Level.FINER, "Calculated queue stats for {0} season", new Object[]{season});
+        LOG.debug("Calculated queue stats for {} season", new Object[]{season});
     }
 
     public void mergeCalculateForSeason(long season)
@@ -122,7 +122,7 @@ public class QueueStatsDAO
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_MERGE_QUERY, params);
         template.update(CALCULATE_SEASON_PLAYER_BASE_MERGE_QUERY, params);
-        LOG.log(Level.FINER, "Calculated (merged) queue stats for {0} season", new Object[]{season});
+        LOG.debug("Calculated (merged) queue stats for {} season", new Object[]{season});
     }
 
     public List<QueueStats> findQueueStats(QueueType queueType, TeamType teamType)
