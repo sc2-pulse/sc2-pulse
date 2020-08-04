@@ -102,6 +102,23 @@ caption
     width: 100%;
 }
 
+th.hoverable::before
+{
+    content: "";
+    display: inline-block;
+    width: 1.2em;
+    height: 1.2em;
+    background-size: 1.2em;
+    background-image: url("icon/misc/info.svg");
+    vertical-align: middle;
+    margin-right: 0.1em;
+}
+
+th.hoverable span
+{
+    vertical-align: middle;
+}
+
 .chartable
 {
     display: none;
@@ -263,6 +280,11 @@ caption
 .popover
 {
     max-width: 100%;
+}
+
+.popover th
+{
+    text-transform: capitalize;
 }
 
 @media (min-width: 576px) {

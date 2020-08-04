@@ -26,6 +26,11 @@ public class TeamTest
         Team equalTeam = new Team
         (1L, 0L, Region.EU, mock(League.class), SECOND, 1L, BigInteger.valueOf(0), 1L, 1, 1, 1, 1
         );
+        equalTeam.setGlobalRank(-1);
+        equalTeam.setRegionRank(-1);
+        equalTeam.setLeagueRank(-1);
+        equalTeam.setTierRank(-1);
+        equalTeam.setDivisionRank(-1);
 
         Team[] notEqualTeams = new Team[]
         {

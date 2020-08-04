@@ -37,6 +37,21 @@ implements java.io.Serializable
     @NotNull
     private LeagueTier.LeagueTierType tierType;
 
+    @NotNull
+    private Integer globalRank = 2147483647;
+
+    @NotNull
+    private Integer regionRank = 2147483647;
+
+    @NotNull
+    private Integer leagueRank = 2147483647;
+
+    @NotNull
+    private Integer tierRank = 2147483647;
+
+    @NotNull
+    private Integer divisionRank = 32767;
+
     public Team(){}
 
     public Team
@@ -214,4 +229,53 @@ implements java.io.Serializable
         return tierType;
     }
 
+    public Integer getGlobalRank()
+    {
+        return globalRank;
+    }
+
+    public void setGlobalRank(Integer globalRank)
+    {
+        this.globalRank = globalRank;
+    }
+
+    public Integer getRegionRank()
+    {
+        return regionRank;
+    }
+
+    public void setRegionRank(Integer regionRank)
+    {
+        this.regionRank = regionRank;
+    }
+
+    public Integer getLeagueRank()
+    {
+        return leagueRank;
+    }
+
+    public void setLeagueRank(Integer leagueRank)
+    {
+        this.leagueRank = leagueRank;
+    }
+
+    public Integer getTierRank()
+    {
+        return tierRank;
+    }
+
+    public void setTierRank(Integer tierRank)
+    {
+        this.tierRank = tierRank;
+    }
+
+    public Integer getDivisionRank()
+    {
+        return divisionRank;
+    }
+
+    public void setDivisionRank(Integer divisionRank)
+    {
+        this.divisionRank = divisionRank;
+    }
 }

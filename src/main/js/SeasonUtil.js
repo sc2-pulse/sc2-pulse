@@ -46,7 +46,12 @@ class SeasonUtil
         teamSection.appendChild(seasonPills.nav);
         for(const pane of seasonPills.pane.getElementsByClassName("tab-pane"))
         {
-            const table = TableUtil.createTable(["Format", "Region", "League", "Team", "MMR", "Games", "Win%"]);
+            const table = TableUtil.createTable(["Format", "Rank", "Region", "League", "Team", "MMR", "Games", "Win%"]);
+            table.querySelector("table").id = pane.id + "-table";
+            const rankHeader = table.querySelectorAll(":scope thead th")[1];
+            rankHeader.innerHTML = "<span>Rank</span>"
+            rankHeader.classList.add("hoverable");
+            BootstrapUtil.addTooltip(rankHeader, "Hover over this column values to get a more detailed view", "#player-info");
             table.getElementsByTagName("table")[0].setAttribute("data-ladder-format-show", "true");
             const tableCaption = document.createElement("caption");
             tableCaption.appendChild(document.createElement("h4"));

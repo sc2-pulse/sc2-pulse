@@ -4,10 +4,9 @@
 class TeamUtil
 {
 
-    static updateTeamsTable(table, searchResult)
+    static updateTeamsTable(table, searchResult, statsBundle)
     {
         const fullMode = table.getAttribute("data-ladder-format-show") == "true";
-        const includeRank = table.getAttribute("data-ladder-rank-show") == "true";
         const ladderBody = table.getElementsByTagName("tbody")[0];
         ElementUtil.removeChildren(ladderBody);
 
@@ -21,8 +20,7 @@ class TeamUtil
                 const teamType = EnumUtil.enumOfId(team.league.teamType, TEAM_TYPE);
                 row.insertCell().appendChild(document.createTextNode(teamFormat.name + " " + teamType.name));
             }
-            if(searchResult.meta != null) TableUtil.createRowTh(row)
-                    .appendChild(document.createTextNode(Util.calculateRank(searchResult, i)));
+            TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, statsBundle, team, i);
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), ["table-image-long"]));
             const league = EnumUtil.enumOfId(team.league.type, LEAGUE);
             const leagueDiv = document.createElement("div");
@@ -40,6 +38,37 @@ class TeamUtil
             row.insertCell().appendChild(document.createTextNode(team.wins + team.losses));
             row.insertCell().appendChild(document.createTextNode(Math.round( team.wins / (team.wins + team.losses) * 100) ));
         }
+        BootstrapUtil.enhancePopovers("#" + table.id);
+    }
+
+    static appendRankInfo(parent, searchResult, statsBundle, team, teamIx)
+    {
+        const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
+        const rank = searchResult.meta != null
+            ? Util.NUMBER_FORMAT.format(Util.calculateRank(searchResult, teamIx))
+            : Util.NUMBER_FORMAT.format(team.globalRank);
+        const ranksTable = TableUtil.createTable(["Scope", "Rank", "Total", "Top%"], false);
+        const tbody = ranksTable.querySelector("tbody");
+        tbody.appendChild(TeamUtil.createRankRow(team, "global", Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)));
+        tbody.appendChild(TeamUtil.createRankRow(team, "region", stats.regionTeamCount[team.region]));
+        tbody.appendChild(TeamUtil.createRankRow(team, "league", stats.leagueTeamCount[team.league.type]));
+
+        parent.setAttribute("data-toggle", "popover");
+        parent.setAttribute("data-trigger", "hover");
+        parent.setAttribute("data-placement", "right");
+        parent.setAttribute("data-html", "true");
+        parent.setAttribute("data-content", ranksTable.outerHTML);
+        parent.appendChild(document.createTextNode(rank));
+    }
+
+    static createRankRow(team, scope, teamCount)
+    {
+        const row = document.createElement("tr");
+        TableUtil.createRowTh(row).appendChild(document.createTextNode(scope));
+        row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(team[scope + "Rank"])));
+        row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(teamCount)));
+        row.insertCell().appendChild(document.createTextNode(Util.DECIMAL_FORMAT.format((team[scope + "Rank"] / teamCount) * 100)));
+        return row;
     }
 
     static createMemberInfo(team, member)

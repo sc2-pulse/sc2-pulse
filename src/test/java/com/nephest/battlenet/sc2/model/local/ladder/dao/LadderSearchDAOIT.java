@@ -51,6 +51,7 @@ public class LadderSearchDAOIT
     public static final TeamType TEAM_TYPE = TeamType.ARRANGED;
     public static final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
     public static final Set<BaseLeague.LeagueType> LEAGUES_SET = Collections.unmodifiableSet(EnumSet.copyOf(SEARCH_LEAGUES));
+    public static final int TEAMS_PER_REGION = REGIONS.size() * TEAMS_PER_LEAGUE;
     public static final int TEAMS_TOTAL = REGIONS.size() * (BaseLeague.LeagueType.values()).length * TEAMS_PER_LEAGUE;
     public static final int PLAYERS_TOTAL = TEAMS_TOTAL * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
 
@@ -126,6 +127,9 @@ public class LadderSearchDAOIT
         //old player
         teamMemberDAO.create(new TeamMember(team.getId(), 1L, 1, 2, 3, 4));
 
+        teamDAO.updateRanks(DEFAULT_SEASON_ID);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID + 1);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID + 2);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
@@ -276,6 +280,7 @@ public class LadderSearchDAOIT
             assertEquals(teamId, team.getRating());
             assertEquals(teamId, team.getWins());
             assertEquals(teamId + 1, team.getLosses());
+            verifyTeamRanks(team, 1);
             //validate members
             //no reason to sort members in query, sorting manually for testing
             team.getMembers().sort(Comparator.comparing(m->m.getCharacter().getBattlenetId()));
@@ -291,6 +296,27 @@ public class LadderSearchDAOIT
                 assertEquals(4, member.getRandomGamesPlayed());
             }
         }
+    }
+
+    private void verifyTeamRanks(LadderTeam team, int seasonOrdinal)
+    {
+        long expectedGlobalRank = (TEAMS_TOTAL - team.getId() + 1) / seasonOrdinal;
+        long expectedLeagueRank = (TEAMS_PER_REGION - ((team.getId() - 1) % TEAMS_PER_REGION)) / seasonOrdinal;
+        long expectedDivisionRank = (expectedLeagueRank % TEAMS_PER_LEAGUE) / seasonOrdinal;
+        expectedDivisionRank = expectedDivisionRank == 0 ? TEAMS_PER_LEAGUE : expectedDivisionRank;
+        long expectedRegionRank =
+            (((TEAMS_TOTAL - team.getId()) / TEAMS_PER_REGION) * TEAMS_PER_LEAGUE //prev region ranks
+            + expectedLeagueRank //cur region ranks
+            - (REGIONS.size() - 1 - REGIONS.indexOf(team.getRegion())) * TEAMS_PER_LEAGUE) //region offset
+            / seasonOrdinal;
+
+        assertEquals(expectedGlobalRank, (long) team.getGlobalRank());
+        assertEquals(expectedRegionRank, (long) team.getRegionRank());
+        assertEquals(expectedLeagueRank, (long) team.getLeagueRank());
+        //generator creates only one tier, so tier rank here is actually global
+        assertEquals(expectedGlobalRank, (long) team.getTierRank());
+        assertEquals(expectedDivisionRank, (long) team.getDivisionRank());
+
     }
 
     @Test

@@ -35,10 +35,11 @@ class LadderUtil
         for(const tab of tabs) searchParams.append("t", tab);
 
         const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${forward}/${count}?` + formParams;
-        return fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{
-                LadderUtil.updateLadder(json);
+        const ladderPromise = fetch(request)
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();});
+        return Promise.all([ladderPromise, StatsUtil.getBundlePromise()])
+            .then(jsons => new Promise((res, rej)=>{
+                LadderUtil.updateLadder(jsons[0], jsons[1]);
                 Util.setGeneratingStatus("success", null, "generated-info-all");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
                 Session.currentSeason = searchParams.get("season");
@@ -49,10 +50,10 @@ class LadderUtil
             .catch(error => Util.setGeneratingStatus("error", error.message));
     }
 
-    static updateLadder(searchResult)
+    static updateLadder(searchResult, statsBundle)
     {
         Session.currentLadder = searchResult;
-        TeamUtil.updateTeamsTable(document.getElementById("ladder"), searchResult);
+        TeamUtil.updateTeamsTable(document.getElementById("ladder"), searchResult, statsBundle);
         PaginationUtil.updateLadderPaginations();
         document.getElementById("generated-info-all").classList.remove("d-none");
     }
@@ -68,10 +69,11 @@ class LadderUtil
         const stringParams = searchParams.toString();
         for(const tab of tabs) searchParams.append("t", tab);
 
-        return fetch("api/my/following/ladder?" + formParams)
+        const ladderPromise = fetch("api/my/following/ladder?" + formParams)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{
-                LadderUtil.updateMyLadder(json);
+        return Promise.all([ladderPromise, StatsUtil.getBundlePromise()])
+            .then(jsons => new Promise((res, rej)=>{
+                LadderUtil.updateMyLadder(jsons[0], jsons[1]);
                 Util.setGeneratingStatus("success", null, "following-ladder");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
                 Session.currentPersonalSeasonSeason = searchParams.get("season");
@@ -83,7 +85,7 @@ class LadderUtil
             .catch(error => Util.setGeneratingStatus("error", error.message));
     }
 
-    static updateMyLadder(searchResult)
+    static updateMyLadder(searchResult, statsBundle)
     {
         const result =
         {
@@ -94,7 +96,7 @@ class LadderUtil
                 perPage: searchResult.length
             }
         }
-        TeamUtil.updateTeamsTable(document.getElementById("following-ladder"), result);
+        TeamUtil.updateTeamsTable(document.getElementById("following-ladder"), result, statsBundle);
         document.getElementById("following-ladder-container").classList.remove("d-none");
     }
 

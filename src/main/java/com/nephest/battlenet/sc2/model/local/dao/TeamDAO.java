@@ -43,6 +43,29 @@ public class TeamDAO
         + "losses=excluded.losses, "
         + "ties=excluded.ties";
 
+    private static final String CALCULATE_RANK_TEMPLATE =
+        "WITH cte AS"
+        + "("
+            + "SELECT id, RANK() OVER(PARTITION BY queue_type, team_type%2$s ORDER BY rating DESC, id DESC) as rnk "
+            + "FROM team "
+            + "WHERE season = :season "
+        + ")"
+        + "UPDATE team "
+        + "set %1$s_rank=cte.rnk "
+        + "FROM cte "
+        + "WHERE team.id = cte.id "
+        + "AND team.%1$s_rank != cte.rnk";
+
+    private static final String CALCULATE_GLOBAL_RANK_QUERY = String.format(CALCULATE_RANK_TEMPLATE, "global", "");
+    private static final String CALCULATE_REGION_RANK_QUERY =
+        String.format(CALCULATE_RANK_TEMPLATE, "region", ", region");
+    private static final String CALCULATE_LEAGUE_RANK_QUERY =
+        String.format(CALCULATE_RANK_TEMPLATE, "league", ", league_type");
+    private static final String CALCULATE_TIER_RANK_QUERY =
+        String.format(CALCULATE_RANK_TEMPLATE, "tier", ", tier_type");
+    private static final String CALCULATE_DIVISION_RANK_QUERY =
+        String.format(CALCULATE_RANK_TEMPLATE, "division", ", division_id");
+
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -74,6 +97,16 @@ public class TeamDAO
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
         team.setId(keyHolder.getKey().longValue());
         return team;
+    }
+
+    public void updateRanks(long season)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
+        template.update(CALCULATE_GLOBAL_RANK_QUERY, params);
+        template.update(CALCULATE_REGION_RANK_QUERY, params);
+        template.update(CALCULATE_LEAGUE_RANK_QUERY, params);
+        template.update(CALCULATE_TIER_RANK_QUERY, params);
+        template.update(CALCULATE_DIVISION_RANK_QUERY, params);
     }
 
     private MapSqlParameterSource createParameterSource(Team team)

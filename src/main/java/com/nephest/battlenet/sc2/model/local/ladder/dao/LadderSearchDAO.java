@@ -275,6 +275,11 @@ public class LadderSearchDAO
                     null,
                     members
                 );
+                team.setGlobalRank(rs.getInt("global_rank"));
+                team.setRegionRank(rs.getInt("region_rank"));
+                team.setLeagueRank(rs.getInt("league_rank"));
+                team.setTierRank(rs.getInt("tier_rank"));
+                team.setDivisionRank(rs.getInt("division_rank"));
                 teams.add(team);
                 lastTeamId = teamId;
             }

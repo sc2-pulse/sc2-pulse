@@ -30,15 +30,19 @@ class CharacterUtil
             .then(e=>BootstrapUtil.showModal("player-info"));
     }
 
+    static getCharacterTeamsPromise(id)
+    {
+        const request = "api/character/" + id + "/teams";
+        return fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+    }
+
     static getCharacterTeams(id)
     {
         Util.setGeneratingStatus("begin");
-        const request = "api/character/" + id + "/teams";
-        return fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{
-                CharacterUtil.updateCharacterInfo(json, id);
-                CharacterUtil.updateCharacterTeams(json);
+            Promise.all([CharacterUtil.getCharacterTeamsPromise(id), StatsUtil.getBundlePromise()])
+            .then(jsons => new Promise((res, rej)=>{
+                CharacterUtil.updateCharacterInfo(jsons[0], id);
+                CharacterUtil.updateCharacterTeams(jsons[0], jsons[1]);
                 Util.setGeneratingStatus("success");
                 res();}))
             .catch(error => Util.setGeneratingStatus("error", error.message));
@@ -83,7 +87,7 @@ class CharacterUtil
         document.getElementById("player-info-battletag").textContent = account.battleTag;
     }
 
-    static updateCharacterTeams(searchResult)
+    static updateCharacterTeams(searchResult, statsBundle)
     {
         grouped = searchResult.reduce(function(rv, x) {
             (rv[x["season"]] = rv[x["season"]] || []).push(x);
@@ -116,7 +120,7 @@ class CharacterUtil
                 }
             }
             const table = pane.getElementsByClassName("table")[0];
-            TeamUtil.updateTeamsTable(table, {result: teams});
+            TeamUtil.updateTeamsTable(table, {result: teams}, statsBundle);
             nav.classList.remove("d-none");
             ix++;
         }
