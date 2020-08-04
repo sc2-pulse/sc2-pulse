@@ -86,7 +86,7 @@ class CharacterUtil
     static updateCharacterTeams(searchResult)
     {
         grouped = searchResult.reduce(function(rv, x) {
-            (rv[x["season"]["id"]] = rv[x["season"]["id"]] || []).push(x);
+            (rv[x["season"]] = rv[x["season"]] || []).push(x);
             return rv;
         }, {});
 
@@ -102,10 +102,11 @@ class CharacterUtil
             const nav = navs[ix];
             const link = nav.getElementsByClassName("nav-link")[0];
             const pane = panes[ix];
-            const linkText = teams[0].season.year + " s" + teams[0].season.number;
+            const seasonFull = Session.currentSeasons.find(s=>s.id == season);
+            const linkText = seasonFull.year + " s" + seasonFull.number;
             link.textContent = linkText;
             pane.querySelector(":scope table h4").textContent =
-                teams[0].season.year + " season " + teams[0].season.number + " teams";
+                seasonFull.year + " season " + seasonFull.number + " teams";
             if(!shown)
             {
                 if(Session.currentSeason == null || season == Session.currentSeason || ix == groupedEntries.length - 1)

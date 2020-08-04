@@ -15,7 +15,7 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private Long id;
 
@@ -162,6 +162,16 @@ implements java.io.Serializable
     public Region getRegion()
     {
         return region;
+    }
+
+    public BaseLeague getLeague()
+    {
+        return league;
+    }
+
+    public void setLeague(BaseLeague league)
+    {
+        this.league = league;
     }
 
     public void setLeagueType(League.LeagueType type)

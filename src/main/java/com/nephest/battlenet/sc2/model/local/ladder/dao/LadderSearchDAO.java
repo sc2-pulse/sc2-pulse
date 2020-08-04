@@ -29,6 +29,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -39,6 +40,24 @@ import java.util.Set;
 @Repository
 public class LadderSearchDAO
 {
+
+    private static final String FIND_TEAM_MEMBERS_BASE =
+        "SELECT "
+        + "team.season AS \"team.season\", "
+        + "team.region AS \"team.region\", "
+        + "team.league_type, team.queue_type, team.team_type, "
+        + "team.tier_type, "
+        + "team.id as \"team.id\", "
+        + "team.division_id as \"team.division_id\", "
+        + "team.battlenet_id as \"team.battlenet_id\", "
+        + "team.rating, team.wins, team.losses, "
+        + "team.global_rank, team.region_rank, team.league_rank, team.tier_rank, team.division_rank, "
+        + "account.id AS \"account.id\", account.battle_tag,"
+        + "player_character.id AS \"player_character.id\", "
+        + "player_character.region AS \"player_character.region\", "
+        + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
+        + "team_member.terran_games_played, team_member.protoss_games_played, "
+        + "team_member.zerg_games_played, team_member.random_games_played ";
 
     private static final String LADDER_SEARCH_TEAM_FROM =
         "FROM team_member "
@@ -58,17 +77,7 @@ public class LadderSearchDAO
         LADDER_SEARCH_TEAM_FROM + LADDER_SEARCH_TEAM_WHERE;
 
     private static final String FIND_TEAM_MEMBERS_LATE_FORMAT =
-        "SELECT "
-        + "team.region AS \"team.region\", "
-        + "team.league_type, team.queue_type, team.team_type, "
-        + "team.tier_type, "
-        + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
-        + "account.id AS \"account.id\", account.battle_tag,"
-        + "player_character.id AS \"player_character.id\", "
-        + "player_character.region AS \"player_character.region\", "
-        + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
-        + "team_member.terran_games_played, team_member.protoss_games_played, "
-        + "team_member.zerg_games_played, team_member.random_games_played "
+        FIND_TEAM_MEMBERS_BASE
 
         + "FROM "
         + "(SELECT team_id, player_character_id "
@@ -95,18 +104,6 @@ public class LadderSearchDAO
     private static final String FIND_TEAM_MEMBERS_LATE_REVERSED_QUERY =
         String.format(FIND_TEAM_MEMBERS_LATE_FORMAT, "ASC");
 
-    private static final String FIND_TEAM_MEMBERS_BASE =
-        "SELECT "
-        + "team.region AS \"team.region\", "
-        + "team.league_type, team.queue_type, team.team_type, "
-        + "team.tier_type, "
-        + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
-        + "account.id AS \"account.id\", account.battle_tag,"
-        + "player_character.id AS \"player_character.id\", "
-        + "player_character.region AS \"player_character.region\", "
-        + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
-        + "team_member.terran_games_played, team_member.protoss_games_played, "
-        + "team_member.zerg_games_played, team_member.random_games_played ";
     private static final String FIND_TEAM_MEMBERS_FORMAT =
         FIND_TEAM_MEMBERS_BASE
 
@@ -135,17 +132,7 @@ public class LadderSearchDAO
         + "ORDER BY team.rating DESC, team.id DESC";
 
     private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =
-        "SELECT "
-        + "team.region AS \"team.region\", "
-        + "team.league_type, team.queue_type, team.team_type, "
-        + "team.tier_type, "
-        + "team.id as \"team.id\", team.rating, team.wins, team.losses, "
-        + "account.id AS \"account.id\", account.battle_tag,"
-        + "player_character.id AS \"player_character.id\", "
-        + "player_character.region AS \"player_character.region\", "
-        + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
-        + "team_member.terran_games_played, team_member.protoss_games_played, "
-        + "team_member.zerg_games_played, team_member.random_games_played "
+        FIND_TEAM_MEMBERS_BASE
 
         + LADDER_SEARCH_TEAM_FROM_WHERE
         + "AND (team.rating, team.id) %2$s (:ratingAnchor, :idAnchor) "
@@ -165,18 +152,7 @@ public class LadderSearchDAO
         + LADDER_SEARCH_TEAM_WHERE;
 
     private static final String FIND_CARACTER_TEAM_MEMBERS_QUERY =
-        "SELECT "
-        + "season.battlenet_id AS \"season.battlenet_id\", season.year, season.number, "
-        + "team.region AS \"team.region\", team.league_type, team.queue_type, team.team_type, "
-        + "team.tier_type, "
-        + "team.id AS \"team.id\", team.rating, team.wins, team.losses, "
-        + "account.id AS \"account.id\", account.battle_tag,"
-        + "player_character.id AS \"player_character.id\", "
-        + "player_character.region AS \"player_character.region\", "
-        + "player_character.battlenet_id AS \"player_character.battlenet_id\", "
-        + "player_character.realm, player_character.name, "
-        + "team_member.terran_games_played, team_member.protoss_games_played, "
-        + "team_member.zerg_games_played, team_member.random_games_played "
+        FIND_TEAM_MEMBERS_BASE
 
         + LADDER_SEARCH_TEAM_FROM
         + "INNER JOIN season ON season.battlenet_id=team.season AND season.region=team.region "
@@ -208,10 +184,7 @@ public class LadderSearchDAO
     private ConversionService conversionService;
     private SeasonDAO seasonDAO;
 
-    private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_EXTRACTOR
-        = (rs)-> mapTeams(rs, true);
-    private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_SHORT_EXTRACTOR
-        = (rs)-> mapTeams(rs, false);
+    private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_EXTRACTOR= this::mapTeams;
 
     private static final RowMapper<LadderSeason> FIND_SEASON_LIST_ROW_MAPPER =
     (rs, num)-> new LadderSeason
@@ -270,7 +243,7 @@ public class LadderSearchDAO
         return seasonDAO;
     }
 
-    private List<LadderTeam> mapTeams(ResultSet rs, boolean includeSeason)
+    private List<LadderTeam> mapTeams(ResultSet rs)
     throws SQLException
     {
         long lastTeamId = -1;
@@ -283,16 +256,10 @@ public class LadderSearchDAO
             if (teamId != lastTeamId)
             {
                 members = new ArrayList<>();
-                LadderSeason season = !includeSeason ? null : new LadderSeason
-                (
-                    rs.getLong("season.battlenet_id"),
-                    rs.getInt("year"),
-                    rs.getInt("number")
-                );
                 LadderTeam team = new LadderTeam
                 (
                     teamId,
-                    season,
+                    rs.getLong("team.season"),
                     conversionService.convert(rs.getInt("team.region"), Region.class),
                     new BaseLeague
                     (
@@ -301,10 +268,12 @@ public class LadderSearchDAO
                         conversionService.convert(rs.getInt("team_type"), TeamType.class)
                     ),
                     conversionService.convert(rs.getInt("tier_type"), LeagueTier.LeagueTierType.class),
-                    members,
+                    rs.getLong("team.division_id"),
+                    ((BigDecimal) rs.getObject("team.battlenet_id")).toBigInteger(),
                     rs.getLong("rating"),
                     rs.getInt("wins"), rs.getInt("losses"), null,
-                    null
+                    null,
+                    members
                 );
                 teams.add(team);
                 lastTeamId = teamId;
@@ -381,7 +350,7 @@ public class LadderSearchDAO
             ? (reversed ? FIND_TEAM_MEMBERS_LATE_REVERSED_QUERY : FIND_TEAM_MEMBERS_LATE_QUERY)
             : (reversed ? FIND_TEAM_MEMBERS_REVERSED_QUERY : FIND_TEAM_MEMBERS_QUERY);
         List<LadderTeam> teams = template
-            .query(q, params, LADDER_TEAM_SHORT_EXTRACTOR);
+            .query(q, params, LADDER_TEAM_EXTRACTOR);
         if(reversed) Collections.reverse(teams);
         /*
             Blizzard sometimes returns invalid team members and they are ignored
@@ -430,7 +399,7 @@ public class LadderSearchDAO
 
         String q = forward ? FIND_TEAM_MEMBERS_ANCHOR_QUERY : FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY;
         List<LadderTeam> teams = template
-            .query(q, params, LADDER_TEAM_SHORT_EXTRACTOR);
+            .query(q, params, LADDER_TEAM_EXTRACTOR);
         if(!forward) Collections.reverse(teams);
         /*
             Blizzard sometimes returns invalid team members and they are ignored
@@ -509,7 +478,7 @@ public class LadderSearchDAO
             ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType)
             .addValue("accountId", accountId);
         return template
-            .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAM_SHORT_EXTRACTOR);
+            .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAM_EXTRACTOR);
     }
 
 }

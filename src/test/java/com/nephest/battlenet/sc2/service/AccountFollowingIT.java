@@ -225,14 +225,14 @@ public class AccountFollowingIT
         //returning data according to filters
         String expectedResult =
             "[{\"rating\":101,\"wins\":100,\"losses\":0,\"id\":72,"
-            + "\"region\":\"EU\",\"league\":{\"type\":0,\"queueType\":204,\"teamType\":0},\"leagueTierType\":0,"
+            + "\"region\":\"EU\",\"league\":{\"type\":0,\"queueType\":204,\"teamType\":0},\"tierType\":0,"
             + "\"members\":[{\"terranGamesPlayed\":100,\"protossGamesPlayed\":0,\"zergGamesPlayed\":0,"
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"refchar1#123\",\"id\":281,"
             + "\"accountId\":1,\"region\":\"EU\",\"battlenetId\":9998},"
             + "\"account\":{\"battleTag\":\"refaccount#123\"}}]},"
 
             + "{\"rating\":100,\"wins\":100,\"losses\":0,\"id\":71,"
-            + "\"region\":\"EU\",\"league\":{\"type\":0,\"queueType\":204,\"teamType\":0},\"leagueTierType\":0,"
+            + "\"region\":\"EU\",\"league\":{\"type\":0,\"queueType\":204,\"teamType\":0},\"tierType\":0,"
             + "\"members\":[{\"terranGamesPlayed\":100,\"protossGamesPlayed\":0,\"zergGamesPlayed\":0,"
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"refchar1#123\",\"id\":281,"
             + "\"accountId\":1,\"region\":\"EU\",\"battlenetId\":9998},"
@@ -243,7 +243,7 @@ public class AccountFollowingIT
             + "\"account\":{\"battleTag\":\"memberacc#123\"}}]},"
 
             + "{\"rating\":99,\"wins\":100,\"losses\":0,\"id\":73,"
-            + "\"region\":\"EU\",\"league\":{\"type\":0,\"queueType\":204,\"teamType\":0},\"leagueTierType\":0,"
+            + "\"region\":\"EU\",\"league\":{\"type\":0,\"queueType\":204,\"teamType\":0},\"tierType\":0,"
             + "\"members\":[{\"terranGamesPlayed\":100,\"protossGamesPlayed\":0,\"zergGamesPlayed\":0,"
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"refchar2#123\",\"id\":282,"
             + "\"accountId\":1,\"region\":\"EU\",\"battlenetId\":9999},"

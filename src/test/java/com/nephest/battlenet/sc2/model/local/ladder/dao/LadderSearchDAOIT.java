@@ -272,7 +272,7 @@ public class LadderSearchDAOIT
             assertEquals(expectedLeagueType, team.getLeague().getType());
             assertEquals(queueType, team.getLeague().getQueueType());
             assertEquals(teamType, team.getLeague().getTeamType());
-            assertEquals(tierType, team.getLeagueTierType());
+            assertEquals(tierType, team.getTierType());
             assertEquals(teamId, team.getRating());
             assertEquals(teamId, team.getWins());
             assertEquals(teamId + 1, team.getLosses());
@@ -372,7 +372,7 @@ public class LadderSearchDAOIT
             assertEquals(expectedLeagueType, team.getLeague().getType());
             assertEquals(queueType, team.getLeague().getQueueType());
             assertEquals(teamType, team.getLeague().getTeamType());
-            assertEquals(tierType, team.getLeagueTierType());
+            assertEquals(tierType, team.getTierType());
             assertEquals(teamId, team.getRating());
             assertEquals(teamId, team.getWins());
             assertEquals(teamId + 1, team.getLosses());
