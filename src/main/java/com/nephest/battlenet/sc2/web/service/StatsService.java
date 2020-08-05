@@ -123,18 +123,27 @@ public class StatsService
             return false;
         }
 
-        long start = System.currentTimeMillis();
-        for(Long season : BlizzardSC2API.MMR_SEASONS.keySet().stream().sorted().collect(Collectors.toList()))
+        try
         {
-            updateSeason(season);
-            LOG.info("Updated season {}", new Object[]{season});
-        }
-        playerCharacterStatsDAO.mergeCalculateGlobal();
-        postgreSQLUtils.analyze();
+            long start = System.currentTimeMillis();
+            for (Long season : BlizzardSC2API.MMR_SEASONS.keySet().stream().sorted().collect(Collectors.toList()))
+            {
+                updateSeason(season);
+                LOG.info("Updated season {}", new Object[]{season});
+            }
+            playerCharacterStatsDAO.mergeCalculateGlobal();
+            postgreSQLUtils.analyze();
 
-        isUpdating.set(false);
-        long seconds = (System.currentTimeMillis() - start) / 1000;
-        LOG.info("Updated all after {} seconds", new Object[]{seconds});
+            isUpdating.set(false);
+            long seconds = (System.currentTimeMillis() - start) / 1000;
+            LOG.info("Updated all after {} seconds", new Object[]{seconds});
+        }
+        catch(RuntimeException ex)
+        {
+            isUpdating.set(false);
+            throw ex;
+        }
+
         return true;
     }
 
@@ -157,29 +166,39 @@ public class StatsService
             return false;
         }
 
-        Long lastSeason = seasonDao.getMaxBattlenetId();
-        final Long lastSeasonFinal = lastSeason == null ? 0 : lastSeason;
-        List<Long> seasons = BlizzardSC2API.MMR_SEASONS.keySet().stream()
-            .filter((id)->id > lastSeasonFinal)
-            .sorted()
-            .collect(Collectors.toList());
-
-        long start = System.currentTimeMillis();
-
-        if(!seasons.isEmpty())
+        try
         {
-            for (Long season : seasons)
+            Long lastSeason = seasonDao.getMaxBattlenetId();
+            final Long lastSeasonFinal = lastSeason == null ? 0 : lastSeason;
+            List<Long> seasons = BlizzardSC2API.MMR_SEASONS.keySet()
+                .stream()
+                .filter((id) -> id > lastSeasonFinal)
+                .sorted()
+                .collect(Collectors.toList());
+
+            long start = System.currentTimeMillis();
+
+            if (!seasons.isEmpty())
             {
-                updateSeason(season);
-                LOG.info("Updated season {}", new Object[]{season});
+                for (Long season : seasons)
+                {
+                    updateSeason(season);
+                    LOG.info("Updated season {}", new Object[]{season});
+                }
+                playerCharacterStatsDAO.mergeCalculateGlobal();
+                postgreSQLUtils.analyze();
             }
-            playerCharacterStatsDAO.mergeCalculateGlobal();
-            postgreSQLUtils.analyze();
+
+            isUpdating.set(false);
+            long seconds = (System.currentTimeMillis() - start) / 1000;
+            LOG.info("Updated missing after {} seconds", new Object[]{seconds});
+        }
+        catch(RuntimeException ex)
+        {
+            isUpdating.set(false);
+            throw ex;
         }
 
-        isUpdating.set(false);
-        long seconds = (System.currentTimeMillis() - start) / 1000;
-        LOG.info("Updated missing after {} seconds", new Object[]{seconds});
         return true;
     }
 
@@ -202,14 +221,23 @@ public class StatsService
             return false;
         }
 
-        long start = System.currentTimeMillis();
+        try
+        {
+            long start = System.currentTimeMillis();
 
-        updateCurrentSeason();
-        postgreSQLUtils.analyze();
+            updateCurrentSeason();
+            postgreSQLUtils.analyze();
 
-        isUpdating.set(false);
-        long seconds = (System.currentTimeMillis() - start) / 1000;
-        LOG.info("Updated current after {} seconds", new Object[]{seconds});
+            isUpdating.set(false);
+            long seconds = (System.currentTimeMillis() - start) / 1000;
+            LOG.info("Updated current after {} seconds", new Object[]{seconds});
+        }
+        catch(RuntimeException ex)
+        {
+            isUpdating.set(false);
+            throw ex;
+        }
+
         return true;
     }
 

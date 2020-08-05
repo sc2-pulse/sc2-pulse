@@ -30,6 +30,19 @@ public class StatsServiceTest
         assertFalse(ss.updateMissing());
         assertFalse(ss.updateCurrent());
     }
+
+    @Test
+    public void testIsUpdatingFlagResetOnException()
+    {
+        try{ss.updateAll();} catch(Exception ex){}
+        assertFalse(ss.isUpdating());
+
+        try{ss.updateMissing();} catch(Exception ex){}
+        assertFalse(ss.isUpdating());
+
+        try{ss.updateCurrent();} catch(Exception ex){}
+        assertFalse(ss.isUpdating());
+    }
 /*
     @Test
     public void testMemberTransaction()
