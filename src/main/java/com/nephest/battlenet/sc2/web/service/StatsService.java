@@ -99,6 +99,11 @@ public class StatsService
         this.isUpdating.set(isUpdating);
     }
 
+    public boolean isUpdating()
+    {
+        return isUpdating.get();
+    }
+
     @CacheEvict
     (
         cacheNames=
