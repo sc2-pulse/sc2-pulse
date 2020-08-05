@@ -21,9 +21,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
@@ -55,7 +52,6 @@ public class StatsService
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private PostgreSQLUtils postgreSQLUtils;
 
-    private List<Long> seasonsToUpdate = new ArrayList<>(BlizzardSC2API.MMR_SEASONS.keySet());
     private final AtomicBoolean isUpdating = new AtomicBoolean(false);
 
     public StatsService(){}
@@ -116,22 +112,6 @@ public class StatsService
     )
     public boolean updateAll()
     {
-        return updateAll(true);
-    }
-
-    @CacheEvict
-    (
-        cacheNames=
-        {
-            "search-seasons", "search-season-last",
-            "search-ladder", "search-ladder-stats", "search-team-count",
-            "search-ladder-league-bounds", "search-ladder-season",
-            "search-ladder-stats-queue"
-        },
-        allEntries=true
-    )
-    public boolean updateAll(boolean purgeStatus)
-    {
         if(!isUpdating.compareAndSet(false, true))
         {
             LOG.info("Service is already updating");
@@ -139,19 +119,10 @@ public class StatsService
         }
 
         long start = System.currentTimeMillis();
-
-        if(purgeStatus)
+        for(Long season : BlizzardSC2API.MMR_SEASONS.keySet().stream().sorted().collect(Collectors.toList()))
         {
-            seasonsToUpdate = new ArrayList<>(BlizzardSC2API.MMR_SEASONS.keySet());
-            Collections.sort(seasonsToUpdate);
-        }
-
-        for(Iterator<Long> iter = seasonsToUpdate.iterator(); iter.hasNext();)
-        {
-            Long sId = iter.next();
-            updateSeason(sId);
-            iter.remove();
-            LOG.info("Updated season {}", new Object[]{sId});
+            updateSeason(season);
+            LOG.info("Updated season {}", new Object[]{season});
         }
         playerCharacterStatsDAO.mergeCalculateGlobal();
         postgreSQLUtils.analyze();
