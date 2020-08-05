@@ -10,13 +10,14 @@ import com.nephest.battlenet.sc2.model.TeamType;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 public class PlayerCharacterStats
 implements Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private Long id;
 
@@ -42,6 +43,9 @@ implements Serializable
     @NotNull
     private Integer gamesPlayed;
 
+    @NotNull
+    private OffsetDateTime updated;
+
     public PlayerCharacterStats(){}
 
     public PlayerCharacterStats
@@ -54,7 +58,8 @@ implements Serializable
         Race race,
         @NotNull Integer ratingMax,
         @NotNull BaseLeague.LeagueType leagueMax,
-        @NotNull Integer gamesPlayed
+        @NotNull Integer gamesPlayed,
+        @NotNull OffsetDateTime updated
     )
     {
         this.id = id;
@@ -66,6 +71,7 @@ implements Serializable
         this.ratingMax = ratingMax;
         this.leagueMax = leagueMax;
         this.gamesPlayed = gamesPlayed;
+        this.updated = updated;
     }
 
     @Override
@@ -190,5 +196,15 @@ implements Serializable
     public void setGamesPlayed(Integer gamesPlayed)
     {
         this.gamesPlayed = gamesPlayed;
+    }
+
+    public OffsetDateTime getUpdated()
+    {
+        return updated;
+    }
+
+    public void setUpdated(OffsetDateTime updated)
+    {
+        this.updated = updated;
     }
 }

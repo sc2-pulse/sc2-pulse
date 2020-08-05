@@ -233,6 +233,7 @@ CREATE TABLE "player_character_stats"
     "rating_max" SMALLINT NOT NULL,
     "league_max" SMALLINT NOT NULL,
     "games_played" INTEGER NOT NULL,
+    "updated" TIMESTAMP NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
 
@@ -248,6 +249,9 @@ CREATE TABLE "player_character_stats"
 
 CREATE UNIQUE INDEX "uq_player_character_stats_main"
     ON "player_character_stats"("player_character_id", COALESCE("season_id", -32768), COALESCE("race", -32768), "queue_type", "team_type");
+
+CREATE INDEX "ix_player_character_stats_updated"
+    ON "player_character_stats"("updated");
 
 CREATE TABLE "account_following"
 (

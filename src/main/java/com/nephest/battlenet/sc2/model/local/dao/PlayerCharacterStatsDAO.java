@@ -20,6 +20,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Repository
@@ -46,7 +47,8 @@ public class PlayerCharacterStatsDAO
         + "queue_type, team_type) DO UPDATE SET "
         + "rating_max=excluded.rating_max, "
         + "league_max=excluded.league_max, "
-        + "games_played=excluded.games_played";
+        + "games_played=excluded.games_played, "
+        + "updated=excluded.updated";
     public static final String CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY =
         String.format
         (
@@ -95,12 +97,12 @@ public class PlayerCharacterStatsDAO
 
     public static final String FIND_STATS_LIST_BY_PLAYER_CHARACTER_ID_QUERY =
         "SELECT player_character_stats.id, season_id, queue_type, team_type, player_character_id, race, rating_max, "
-        + "league_max, games_played "
+        + "league_max, games_played, updated "
         + "FROM player_character_stats "
         + "INNER JOIN player_character ON player_character_stats.player_character_id=player_character.id "
         + "WHERE player_character.id = :playerCharacterId";
     public static final String FIND_GLOBAL_STATS_LIST_BY_PLAYER_CHARACTER_ID_QUERY =
-        "SELECT id, season_id, queue_type, team_type, player_character_id, race, rating_max, league_max, games_played "
+        "SELECT id, season_id, queue_type, team_type, player_character_id, race, rating_max, league_max, games_played, updated "
         + "FROM player_character_stats "
         + "WHERE player_character_id = :playerCharacterId AND season_id is NULL ";
 
@@ -121,7 +123,8 @@ public class PlayerCharacterStatsDAO
             race,
             rs.getInt("rating_max"),
             conversionService.convert(rs.getInt("league_max"), BaseLeague.LeagueType.class),
-            rs.getInt("games_played")
+            rs.getInt("games_played"),
+            rs.getObject("updated", OffsetDateTime.class)
         );
     };
 

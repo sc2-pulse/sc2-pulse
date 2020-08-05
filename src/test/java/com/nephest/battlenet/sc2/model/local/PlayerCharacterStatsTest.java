@@ -10,6 +10,8 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import org.junit.jupiter.api.Test;
 
+import java.time.OffsetDateTime;
+
 public class PlayerCharacterStatsTest
 {
 
@@ -26,7 +28,8 @@ public class PlayerCharacterStatsTest
             Race.PROTOSS,
             0,
             BaseLeague.LeagueType.GOLD,
-            0
+            0,
+            OffsetDateTime.MAX
         );
         PlayerCharacterStats equalStats = new PlayerCharacterStats
         (
@@ -38,7 +41,8 @@ public class PlayerCharacterStatsTest
             Race.PROTOSS,
             1,
             BaseLeague.LeagueType.BRONZE,
-            1
+            1,
+            OffsetDateTime.MIN
         );
         PlayerCharacterStats[] notEqualsStats = new PlayerCharacterStats[]
         {
@@ -52,7 +56,8 @@ public class PlayerCharacterStatsTest
                 Race.PROTOSS,
                 0,
                 BaseLeague.LeagueType.GOLD,
-                0
+                0,
+                OffsetDateTime.MAX
             ),
             new PlayerCharacterStats
             (
@@ -64,7 +69,8 @@ public class PlayerCharacterStatsTest
                 Race.PROTOSS,
                 0,
                 BaseLeague.LeagueType.GOLD,
-                0
+                0,
+                OffsetDateTime.MAX
             ),
             new PlayerCharacterStats
             (
@@ -76,7 +82,8 @@ public class PlayerCharacterStatsTest
                 Race.PROTOSS,
                 0,
                 BaseLeague.LeagueType.GOLD,
-                0
+                0,
+                OffsetDateTime.MAX
             ),
             new PlayerCharacterStats
             (
@@ -88,7 +95,8 @@ public class PlayerCharacterStatsTest
                 Race.PROTOSS,
                 0,
                 BaseLeague.LeagueType.GOLD,
-                0
+                0,
+                OffsetDateTime.MAX
             ),
             new PlayerCharacterStats
             (
@@ -100,7 +108,8 @@ public class PlayerCharacterStatsTest
                 Race.PROTOSS,
                 0,
                 BaseLeague.LeagueType.GOLD,
-                0
+                0,
+                OffsetDateTime.MAX
             ),
             new PlayerCharacterStats
             (
@@ -112,7 +121,8 @@ public class PlayerCharacterStatsTest
                 Race.TERRAN,
                 0,
                 BaseLeague.LeagueType.GOLD,
-                0
+                0,
+                OffsetDateTime.MAX
             ),
             new PlayerCharacterStats
             (
@@ -124,7 +134,8 @@ public class PlayerCharacterStatsTest
                 null,
                 0,
                 BaseLeague.LeagueType.GOLD,
-                0
+                0,
+                OffsetDateTime.MAX
             )
         };
         TestUtil.testUniqueness(stats, equalStats, notEqualsStats);
