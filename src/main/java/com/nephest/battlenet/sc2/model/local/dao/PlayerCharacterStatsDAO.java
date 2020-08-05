@@ -48,7 +48,8 @@ public class PlayerCharacterStatsDAO
         + "rating_max=excluded.rating_max, "
         + "league_max=excluded.league_max, "
         + "games_played=excluded.games_played, "
-        + "updated=excluded.updated";
+        + "updated=excluded.updated "
+        + "WHERE player_character_stats.games_played<>excluded.games_played";
     public static final String CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY =
         String.format
         (
@@ -72,6 +73,7 @@ public class PlayerCharacterStatsDAO
         + "SUM(%2$s_games_played) "
         + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END
         + "WHERE team.season=:season "
+        + "AND %2$s_games_played > 0 "
         + "AND ("
             + "%2$s_games_played::decimal / "
             + "(team.wins + team.losses + team.ties) "
@@ -88,7 +90,8 @@ public class PlayerCharacterStatsDAO
         + "MAX(rating_max) AS rating_max, MAX(league_max) AS league_max, SUM(games_played) AS games_played "
         + "FROM player_character_stats "
         + "WHERE season_id IS NOT NULL "
-        + "GROUP BY player_character_id, race, queue_type, team_type";
+        + "GROUP BY player_character_id, race, queue_type, team_type "
+        + "HAVING MAX(updated) > NOW() - INTERVAL '1 HOURS'";
     public static final String CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS =
         CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS + MERGE_TEMPLATE;
 
