@@ -176,4 +176,11 @@ class StatsUtil
         }
     }
 
+    static getBundlePromise()
+    {
+        return fetch(ROOT_CONTEXT_PATH + "/api/ladder/stats/bundle")
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();});
+    }
+
+
 }

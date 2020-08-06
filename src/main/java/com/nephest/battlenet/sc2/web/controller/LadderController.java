@@ -189,6 +189,12 @@ public class LadderController
         );
     }
 
+    @GetMapping("/ladder/stats/bundle")
+    public Map<QueueType, Map<TeamType, Map<Long, MergedLadderSearchStatsResult>>> getLadderStatsBundle()
+    {
+        return ladderStatsDAO.findStats();
+    }
+
     @GetMapping("/ladder/league/bounds")
     public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> getLadderLeagueBounds
     (

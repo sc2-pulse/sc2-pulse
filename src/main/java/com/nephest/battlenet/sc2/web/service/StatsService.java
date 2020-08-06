@@ -109,7 +109,7 @@ public class StatsService
         cacheNames=
         {
             "search-seasons", "search-season-last",
-            "search-ladder", "search-ladder-stats", "search-team-count",
+            "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle", "search-team-count",
             "search-ladder-league-bounds", "search-ladder-season",
             "search-ladder-stats-queue"
         },
@@ -152,7 +152,7 @@ public class StatsService
         cacheNames=
             {
                 "search-seasons", "search-season-last",
-                "search-ladder", "search-ladder-stats", "search-team-count",
+                "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle", "search-team-count",
                 "search-ladder-league-bounds", "search-ladder-season",
                 "search-ladder-stats-queue"
             },
@@ -207,7 +207,7 @@ public class StatsService
         cacheNames=
         {
             "search-seasons", "search-season-last",
-            "search-ladder", "search-ladder-stats", "search-team-count",
+            "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle", "search-team-count",
             "search-ladder-league-bounds", "search-ladder-season",
             "search-ladder-stats-queue"
         },

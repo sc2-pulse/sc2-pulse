@@ -192,6 +192,25 @@ public class LadderStatsDAO
         return result;
     }
 
+    @Cacheable(cacheNames="search-ladder-stats-bundle")
+    public Map<QueueType, Map<TeamType, Map<Long, MergedLadderSearchStatsResult>>> findStats()
+    {
+        Set<Region> regions = Set.of(Region.values());
+        Set<BaseLeague.LeagueType> leagues = Set.of(BaseLeague.LeagueType.values());
+
+        Map<QueueType, Map<TeamType, Map<Long, MergedLadderSearchStatsResult>>> result = new EnumMap<>(QueueType.class);
+        for(QueueType queueType: QueueType.values())
+        {
+            Map<TeamType, Map<Long, MergedLadderSearchStatsResult>> teamMap = new EnumMap<>(TeamType.class);
+            result.put(queueType, teamMap);
+            for(TeamType teamType: TeamType.values())
+            {
+                teamMap.put(teamType, findStats(regions, leagues, queueType, teamType));
+            }
+        }
+        return result;
+    }
+
     @Cacheable(cacheNames="search-ladder-stats-queue")
     public List<QueueStats> findQueueStats(QueueType queueType, TeamType teamType)
     {
