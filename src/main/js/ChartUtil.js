@@ -37,7 +37,7 @@ class ChartUtil
                         yAxes:
                         [{
                            // ticks:{beginAtZero: true},
-                            ticks: {callback: (val, valIx, vals)=>val.toLocaleString()},
+                            ticks: {callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val)},
                             stacked: stacked === "true" ? true : false
                         }]
                     },
@@ -86,7 +86,7 @@ class ChartUtil
             label = labels[tooltipItem.datasetIndex];
         }
         label = Util.addStringTail(label, labels, " ");
-        label += " " + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+        label += " " + Util.NUMBER_FORMAT.format(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]);
         return label;
     }
 
@@ -102,7 +102,7 @@ class ChartUtil
             label = data.datasets[tooltipItem.datasetIndex].label;
         }
         label += " "
-            + data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index].toLocaleString();
+            + Util.NUMBER_FORMAT.format(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]);
         let sum = 0;
         for(const dataset of data.datasets) sum += dataset.data[tooltipItem.index];
         label += "\t(" + Util.calculatePercentage(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index], sum) + "%)";

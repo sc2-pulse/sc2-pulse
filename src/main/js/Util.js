@@ -137,3 +137,5 @@ class Util
 }
 
 Util.BARCODE_REGEX = new RegExp("^[lI]+$");
+Util.NUMBER_FORMAT = new Intl.NumberFormat(navigator.language);
+Util.DECIMAL_FORMAT = new Intl.NumberFormat(navigator.language, {minimumFractionDigits: 2, maximumFractionDigits: 2});
