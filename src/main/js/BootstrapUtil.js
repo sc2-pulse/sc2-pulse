@@ -159,9 +159,9 @@ class BootstrapUtil
         return select;
     }
 
-    static enhanceTooltips()
+    static enhanceTooltips(selector = "body")
     {
-        $('[data-toggle="tooltip"]').tooltip();
+        $(selector + ' [data-toggle="tooltip"]').tooltip();
     }
 
 }
