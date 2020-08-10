@@ -4,6 +4,17 @@
 class BootstrapUtil
 {
 
+    static init()
+    {
+        $.fn.popover.Constructor.Default.whiteList.table = [];
+        $.fn.popover.Constructor.Default.whiteList.tr = [];
+        $.fn.popover.Constructor.Default.whiteList.th = [];
+        $.fn.popover.Constructor.Default.whiteList.td = [];
+        $.fn.popover.Constructor.Default.whiteList.div = [];
+        $.fn.popover.Constructor.Default.whiteList.tbody = [];
+        $.fn.popover.Constructor.Default.whiteList.thead = [];
+    }
+
     static enhanceTabs()
     {
         $('.nav-pills a').on('shown.bs.tab', BootstrapUtil.showTab);
@@ -162,6 +173,11 @@ class BootstrapUtil
     static enhanceTooltips(selector = "body")
     {
         $(selector + ' [data-toggle="tooltip"]').tooltip();
+    }
+
+    static enhancePopovers(selector = "body")
+    {
+        $(selector + ' [data-toggle="popover"]').popover();
     }
 
 }

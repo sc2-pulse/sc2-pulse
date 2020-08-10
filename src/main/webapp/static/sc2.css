@@ -260,6 +260,11 @@ caption
     background-color: #fcfcfc;
 }
 
+.popover
+{
+    max-width: 100%;
+}
+
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;

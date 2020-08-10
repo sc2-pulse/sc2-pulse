@@ -26,6 +26,7 @@ class SC2Restful
 
     static enhanceAll()
     {
+        BootstrapUtil.init();
         BootstrapUtil.enhanceModals();
         BootstrapUtil.enhanceCollapsibles();
         LadderUtil.enhanceLadderForm();
