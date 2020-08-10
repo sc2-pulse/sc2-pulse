@@ -328,6 +328,15 @@ class ElementUtil
             a.relList.remove("nofollow");
     }
 
+    static removeParentAndChildrenAttributes(elem, attrs)
+    {
+        for(attr of attrs)
+        {
+            elem.removeAttribute(attr);
+            for(e of elem.querySelectorAll(":scope [" + attr + "]")) e.removeAttribute(attr);
+        }
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
