@@ -175,6 +175,15 @@ class BootstrapUtil
         $(selector + ' [data-toggle="tooltip"]').tooltip();
     }
 
+    static addTooltip(elem, text, boundary = null)
+    {
+        elem.setAttribute("title", text);
+        elem.setAttribute("data-toggle", "tooltip");
+        elem.setAttribute("data-placement", "auto");
+        if(boundary != null) elem.setAttribute("data-boundary", boundary);
+        $(elem).tooltip();
+    }
+
     static enhancePopovers(selector = "body")
     {
         $(selector + ' [data-toggle="popover"]').popover();
