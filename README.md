@@ -74,7 +74,10 @@ for private/local application properties
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
 ## Contributing
 Want to make a bug report/feature request? Any contributions are welcome, see [CONTRIBUTING](CONTRIBUTING.md) for 
-more information. 
+more information.
+## Licenses
+* [Main license](LICENSE.txt)
+* [3rd party licenses](3rd-party-licenses.txt)
 ## Trademarks
 Battle.net, Blizzard Entertainment and StarCraft are trademarks or registered trademarks of Blizzard Entertainment,
  Inc. in the U.S. and/or other countries. 
