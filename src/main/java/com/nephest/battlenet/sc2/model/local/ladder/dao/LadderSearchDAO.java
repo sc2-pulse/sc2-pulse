@@ -259,7 +259,7 @@ public class LadderSearchDAO
                 LadderTeam team = new LadderTeam
                 (
                     teamId,
-                    rs.getLong("team.season"),
+                    rs.getInt("team.season"),
                     conversionService.convert(rs.getInt("team.region"), Region.class),
                     new BaseLeague
                     (

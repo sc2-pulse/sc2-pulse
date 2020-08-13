@@ -149,7 +149,7 @@ public class LadderController
     }
 
     @GetMapping("/ladder/stats")
-    public Map<Long, MergedLadderSearchStatsResult> getLadderStats
+    public Map<Integer, MergedLadderSearchStatsResult> getLadderStats
     (
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
@@ -190,7 +190,7 @@ public class LadderController
     }
 
     @GetMapping("/ladder/stats/bundle")
-    public Map<QueueType, Map<TeamType, Map<Long, MergedLadderSearchStatsResult>>> getLadderStatsBundle()
+    public Map<QueueType, Map<TeamType, Map<Integer, MergedLadderSearchStatsResult>>> getLadderStatsBundle()
     {
         return ladderStatsDAO.findStats();
     }

@@ -126,7 +126,7 @@ public class StatsService
         try
         {
             long start = System.currentTimeMillis();
-            for (Long season : BlizzardSC2API.MMR_SEASONS.keySet().stream().sorted().collect(Collectors.toList()))
+            for (Integer season : BlizzardSC2API.MMR_SEASONS.keySet().stream().sorted().collect(Collectors.toList()))
             {
                 updateSeason(season);
                 LOG.info("Updated season {}", new Object[]{season});
@@ -168,9 +168,9 @@ public class StatsService
 
         try
         {
-            Long lastSeason = seasonDao.getMaxBattlenetId();
-            final Long lastSeasonFinal = lastSeason == null ? 0 : lastSeason;
-            List<Long> seasons = BlizzardSC2API.MMR_SEASONS.keySet()
+            Integer lastSeason = seasonDao.getMaxBattlenetId();
+            final Integer lastSeasonFinal = lastSeason == null ? 0 : lastSeason;
+            List<Integer> seasons = BlizzardSC2API.MMR_SEASONS.keySet()
                 .stream()
                 .filter((id) -> id > lastSeasonFinal)
                 .sorted()
@@ -180,7 +180,7 @@ public class StatsService
 
             if (!seasons.isEmpty())
             {
-                for (Long season : seasons)
+                for (Integer season : seasons)
                 {
                     updateSeason(season);
                     LOG.info("Updated season {}", new Object[]{season});
@@ -262,7 +262,7 @@ public class StatsService
 
     private void updateCurrentSeason()
     {
-        Long seasonId = null;
+        Integer seasonId = null;
         for(Region region : Region.values())
         {
             BlizzardSeason bSeason = api.getCurrentSeason(region).block();

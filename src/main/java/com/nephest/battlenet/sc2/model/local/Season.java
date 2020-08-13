@@ -15,12 +15,12 @@ extends BaseSeason
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private Long id;
 
     @NotNull
-    private Long battlenetId;
+    private Integer battlenetId;
 
     @NotNull
     private Region region;
@@ -30,7 +30,7 @@ implements java.io.Serializable
     public Season
     (
         Long id,
-        Long battlenetId,
+        Integer battlenetId,
         Region region,
         Integer year,
         Integer number
@@ -93,12 +93,12 @@ implements java.io.Serializable
         return id;
     }
 
-    public void setBattlenetId(Long battlenetId)
+    public void setBattlenetId(Integer battlenetId)
     {
         this.battlenetId = battlenetId;
     }
 
-    public Long getBattlenetId()
+    public Integer getBattlenetId()
     {
         return battlenetId;
     }

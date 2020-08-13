@@ -48,7 +48,7 @@ public class SeasonDAO
     (rs, num)-> new Season
     (
         rs.getLong("season.id"),
-        rs.getLong("season.battlenet_id"),
+        rs.getInt("season.battlenet_id"),
         conversionService.convert(rs.getInt("season.region"), Region.class),
         rs.getInt("season.year"),
         rs.getInt("season.number")
@@ -101,9 +101,9 @@ public class SeasonDAO
     }
 
     @Cacheable(cacheNames="search-season-last")
-    public Long getMaxBattlenetId()
+    public Integer getMaxBattlenetId()
     {
-        return template.query(FIND_MAX_BATTLENET_ID_QUERY, DAOUtils.LONG_EXTRACTOR);
+        return template.query(FIND_MAX_BATTLENET_ID_QUERY, DAOUtils.INT_EXTRACTOR);
     }
 
     public RowMapper<Season> getStandardRowMapper()

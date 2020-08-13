@@ -21,10 +21,10 @@ public class TeamTest
     {
         League equalLeague = mock(League.class);
         Team team = new Team
-        (0L, 0L, Region.EU, equalLeague, FIRST, 0L, BigInteger.valueOf(0), 0L, 0, 0, 0, 0
+        (0L, 0, Region.EU, equalLeague, FIRST, 0L, BigInteger.valueOf(0), 0L, 0, 0, 0, 0
         );
         Team equalTeam = new Team
-        (1L, 0L, Region.EU, mock(League.class), SECOND, 1L, BigInteger.valueOf(0), 1L, 1, 1, 1, 1
+        (1L, 0, Region.EU, mock(League.class), SECOND, 1L, BigInteger.valueOf(0), 1L, 1, 1, 1, 1
         );
         equalTeam.setGlobalRank(-1);
         equalTeam.setRegionRank(-1);
@@ -35,7 +35,7 @@ public class TeamTest
         Team[] notEqualTeams = new Team[]
         {
             new Team
-            (0L, 1L, Region.US, equalLeague, FIRST, 0L, BigInteger.valueOf(1), 0L, 0, 0, 0, 0
+            (0L, 1, Region.US, equalLeague, FIRST, 0L, BigInteger.valueOf(1), 0L, 0, 0, 0, 0
             )
         };
 

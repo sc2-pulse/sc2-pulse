@@ -83,11 +83,11 @@ public class LadderStatsDAO
     private LeagueDAO leagueDAO;
     private final QueueStatsDAO queueStatsDAO;
 
-    private final ResultSetExtractor<Map<Long, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>>>
+    private final ResultSetExtractor<Map<Integer, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>>>
         LADDER_STATS_EXTRACTOR =
         (rs)->
         {
-            Map<Long, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>> result = new HashMap<>();
+            Map<Integer, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>> result = new HashMap<>();
             int num = 1;
             while(rs.next())
             {
@@ -174,7 +174,7 @@ public class LadderStatsDAO
     }
 
     @Cacheable(cacheNames="search-ladder-stats")
-    public Map<Long, MergedLadderSearchStatsResult> findStats
+    public Map<Integer, MergedLadderSearchStatsResult> findStats
     (
         Set<Region> regions,
         Set<League.LeagueType> leagueTypes,
@@ -184,24 +184,24 @@ public class LadderStatsDAO
     {
         MapSqlParameterSource params =
             ladderUtil.createSearchParams(0, regions, leagueTypes, queueType, teamType);
-        Map<Long, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>> stats = template
+        Map<Integer, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>> stats = template
             .query(LADDER_SEARCH_STATS_QUERY, params, LADDER_STATS_EXTRACTOR);
-        Map<Long, MergedLadderSearchStatsResult> result = new HashMap<>(stats.size(), 1.0f);
-        for(Map.Entry<Long, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>> entry : stats.entrySet())
+        Map<Integer, MergedLadderSearchStatsResult> result = new HashMap<>(stats.size(), 1.0f);
+        for(Map.Entry<Integer, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>> entry : stats.entrySet())
             result.put(entry.getKey(), new MergedLadderSearchStatsResult(entry.getValue()));
         return result;
     }
 
     @Cacheable(cacheNames="search-ladder-stats-bundle")
-    public Map<QueueType, Map<TeamType, Map<Long, MergedLadderSearchStatsResult>>> findStats()
+    public Map<QueueType, Map<TeamType, Map<Integer, MergedLadderSearchStatsResult>>> findStats()
     {
         Set<Region> regions = Set.of(Region.values());
         Set<BaseLeague.LeagueType> leagues = Set.of(BaseLeague.LeagueType.values());
 
-        Map<QueueType, Map<TeamType, Map<Long, MergedLadderSearchStatsResult>>> result = new EnumMap<>(QueueType.class);
+        Map<QueueType, Map<TeamType, Map<Integer, MergedLadderSearchStatsResult>>> result = new EnumMap<>(QueueType.class);
         for(QueueType queueType: QueueType.values())
         {
-            Map<TeamType, Map<Long, MergedLadderSearchStatsResult>> teamMap = new EnumMap<>(TeamType.class);
+            Map<TeamType, Map<Integer, MergedLadderSearchStatsResult>> teamMap = new EnumMap<>(TeamType.class);
             result.put(queueType, teamMap);
             for(TeamType teamType: TeamType.values())
             {

@@ -88,7 +88,7 @@ public class DivisionDAO
 
     public List<Division> findListByLadder
     (
-        Long season, Region region,
+        Integer season, Region region,
         BaseLeague.LeagueType leagueType, QueueType queueType, TeamType teamType,
         BaseLeagueTier.LeagueTierType tierType
     )

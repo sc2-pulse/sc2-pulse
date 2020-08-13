@@ -64,7 +64,7 @@ CREATE TABLE "season"
 
     "id" BIGSERIAL,
     "region" SMALLINT NOT NULL,
-    "battlenet_id" BIGINT NOT NULL,
+    "battlenet_id" SMALLINT NOT NULL,
     "year" SMALLINT NOT NULL,
     "number" SMALLINT NOT NULL,
 
@@ -141,7 +141,7 @@ CREATE TABLE "team"
     "id" BIGSERIAL,
     "division_id" BIGINT NOT NULL,
     "battlenet_id" NUMERIC(20, 0) NOT NULL,
-    "season" BIGINT NOT NULL,
+    "season" SMALLINT NOT NULL,
     "region" SMALLINT NOT NULL,
     "league_type" SMALLINT NOT NULL,
     "queue_type" SMALLINT NOT NULL,
@@ -198,7 +198,7 @@ CREATE INDEX "ix_fk_team_member_player_character_id" ON "team_member"("player_ch
 CREATE TABLE "queue_stats"
 (
     "id" BIGSERIAL,
-    "season" BIGINT NOT NULL,
+    "season" SMALLINT NOT NULL,
     "queue_type" SMALLINT NOT NULL,
     "team_type" SMALLINT NOT NULL,
     "player_base" BIGINT NOT NULL,

@@ -14,13 +14,13 @@ extends BaseSeason
 
     @NotNull
     @JsonProperty("seasonId")
-    private Long id;
+    private Integer id;
 
     public BlizzardSeason(){}
 
     public BlizzardSeason
     (
-        Long id,
+        Integer id,
         Integer year,
         Integer number
     )
@@ -29,12 +29,12 @@ extends BaseSeason
         this.id = id;
     }
 
-    public void setId(Long id)
+    public void setId(Integer id)
     {
         this.id = id;
     }
 
-    public Long getId()
+    public Integer getId()
     {
         return id;
     }

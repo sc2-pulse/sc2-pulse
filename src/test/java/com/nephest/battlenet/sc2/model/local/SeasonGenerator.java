@@ -21,7 +21,7 @@ import java.util.stream.Collectors;
 public class SeasonGenerator
 {
 
-    public static final long DEFAULT_SEASON_ID = 1L;
+    public static final int DEFAULT_SEASON_ID = 1;
     public static final int DEFAULT_SEASON_YEAR = 2020;
     public static final int DEFAULT_SEASON_NUMBER = 1;
     public static final int DEFAULT_REALM = 1;
@@ -83,9 +83,9 @@ public class SeasonGenerator
         int teamsPerLeague
     )
     {
-        Map<Long, List<Season>> seasonsGrouped = seasons.stream().collect(Collectors.groupingBy(Season::getBattlenetId));
+        Map<Integer, List<Season>> seasonsGrouped = seasons.stream().collect(Collectors.groupingBy(Season::getBattlenetId));
         int teamCount = 0;
-        for(Long id : seasonsGrouped.keySet().stream().sorted().collect(Collectors.toList()))
+        for(Integer id : seasonsGrouped.keySet().stream().sorted().collect(Collectors.toList()))
             teamCount += generateGroupedSeasons(seasonsGrouped.get(id), leagues, queueTypes, teamType, tierType,teamsPerLeague, teamCount);
     }
 

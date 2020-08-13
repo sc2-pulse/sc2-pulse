@@ -15,7 +15,7 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private Long id;
 
@@ -26,7 +26,7 @@ implements java.io.Serializable
     private BigInteger battlenetId;
 
     @NotNull
-    private Long season;
+    private Integer season;
 
     @NotNull
     private Region region;
@@ -57,7 +57,7 @@ implements java.io.Serializable
     public Team
     (
         Long id,
-        Long season, Region region,
+        Integer season, Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType tierType,
         Long divisionId,
@@ -159,12 +159,12 @@ implements java.io.Serializable
         return battlenetId;
     }
 
-    public void setSeason(Long season)
+    public void setSeason(Integer season)
     {
         this.season = season;
     }
 
-    public Long getSeason()
+    public Integer getSeason()
     {
         return season;
     }

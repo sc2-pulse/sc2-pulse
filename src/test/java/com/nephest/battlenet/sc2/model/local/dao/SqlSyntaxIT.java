@@ -83,12 +83,12 @@ public class SqlSyntaxIT
     public void testSqlSyntax()
     {
         Region region = Region.EU;
-        seasonDAO.create(new Season(null, 40L, region, 2020, 1));
-        seasonDAO.merge(new Season(null, 40L, region, 2019, 2));
+        seasonDAO.create(new Season(null, 40, region, 2020, 1));
+        seasonDAO.merge(new Season(null, 40, region, 2019, 2));
         List<Season> seasons = seasonDAO.findListByRegion(region);
         assertEquals(1, seasons.size());
         Season season = seasons.get(0);
-        assertEquals(40L, season.getBattlenetId());
+        assertEquals(40, season.getBattlenetId());
         assertEquals(2019, season.getYear());
         assertEquals(2, season.getNumber());
 
@@ -102,7 +102,7 @@ public class SqlSyntaxIT
         divisionDAO.create(new Division(null, tier.getId(), 1L));
         Division division = divisionDAO.merge(new Division(null, tier.getId(), 1L));
         Division divFound = divisionDAO
-            .findListByLadder(40L, region, League.LeagueType.BRONZE, QueueType.HOTS_1V1, TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST).get(0);
+            .findListByLadder(40, region, League.LeagueType.BRONZE, QueueType.HOTS_1V1, TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST).get(0);
         assertEquals(division, divFound);
 
         Team newTeam = new Team

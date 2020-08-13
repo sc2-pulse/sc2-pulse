@@ -99,7 +99,7 @@ public class QueueStatsDAO
         this.STD_ROW_MAPPER = (rs, num) -> new QueueStats
         (
             rs.getLong("queue_stats.id"),
-            rs.getLong("queue_stats.season"),
+            rs.getInt("queue_stats.season"),
             conversionService.convert(rs.getInt("queue_stats.queue_type"), QueueType.class),
             conversionService.convert(rs.getInt("queue_stats.team_type"), TeamType.class),
             rs.getLong("queue_stats.player_base"),

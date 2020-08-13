@@ -13,12 +13,12 @@ public class QueueStats
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private Long id;
 
     @NotNull
-    private Long season;
+    private Integer season;
 
     @NotNull
     private QueueType queueType;
@@ -35,7 +35,7 @@ implements java.io.Serializable
     public QueueStats
     (
         Long id,
-        @NotNull Long season,
+        @NotNull Integer season,
         @NotNull QueueType queueType,
         @NotNull TeamType teamType,
         @NotNull Long playerBase,
@@ -86,12 +86,12 @@ implements java.io.Serializable
         this.id = id;
     }
 
-    public Long getSeason()
+    public Integer getSeason()
     {
         return season;
     }
 
-    public void setSeason(Long season)
+    public void setSeason(Integer season)
     {
         this.season = season;
     }

@@ -116,8 +116,8 @@ public class AccountFollowingIT
     throws Exception
     {
         Region region = Region.EU;
-        Season season1 = new Season(null, 1L, region, 2020, 1);
-        Season season2 = new Season(null, 2L, region, 2020, 2);
+        Season season1 = new Season(null, 1, region, 2020, 1);
+        Season season2 = new Season(null, 2, region, 2020, 2);
         //generate some noise
         seasonGenerator.generateSeason
         (

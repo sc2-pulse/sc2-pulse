@@ -14,14 +14,14 @@ public class QueueStatsTest
     @Test
     public void testUniqueness()
     {
-        QueueStats stats = new QueueStats(0L, 0L, QueueType.LOTV_1V1, TeamType.ARRANGED, 0L, 0);
-        QueueStats equalStats = new QueueStats(1L, 0L, QueueType.LOTV_1V1, TeamType.ARRANGED, 1L, 1);
+        QueueStats stats = new QueueStats(0L, 0, QueueType.LOTV_1V1, TeamType.ARRANGED, 0L, 0);
+        QueueStats equalStats = new QueueStats(1L, 0, QueueType.LOTV_1V1, TeamType.ARRANGED, 1L, 1);
 
         QueueStats[] notEqualStats = new QueueStats[]
         {
-            new QueueStats(0L, 1L, QueueType.LOTV_2V2, TeamType.RANDOM, 0L, 0),
-            new QueueStats(0L, 0L, QueueType.LOTV_2V2, TeamType.RANDOM, 0L, 0),
-            new QueueStats(0L, 0L, QueueType.LOTV_1V1, TeamType.RANDOM, 0L, 0)
+            new QueueStats(0L, 1, QueueType.LOTV_2V2, TeamType.RANDOM, 0L, 0),
+            new QueueStats(0L, 0, QueueType.LOTV_2V2, TeamType.RANDOM, 0L, 0),
+            new QueueStats(0L, 0, QueueType.LOTV_1V1, TeamType.RANDOM, 0L, 0)
         };
 
         TestUtil.testUniqueness(stats, equalStats, notEqualStats);

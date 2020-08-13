@@ -46,24 +46,24 @@ public class BlizzardSC2API
     public static final long lastSeason = 42;
     public static final int firstSeasonNumber = 3;
     public static final int firstSeasonYear = 2016;
-    public static final Map<Long, BlizzardSeason> MMR_SEASONS = Stream.of
+    public static final Map<Integer, BlizzardSeason> MMR_SEASONS = Stream.of
     (
-        new BlizzardSeason(29L, 2016, 5),
-        new BlizzardSeason(30L, 2016, 6),
-        new BlizzardSeason(31L, 2017, 1),
-        new BlizzardSeason(32L, 2017, 2),
-        new BlizzardSeason(33L, 2017, 3),
-        new BlizzardSeason(34L, 2017, 4),
-        new BlizzardSeason(35L, 2018, 1),
-        new BlizzardSeason(36L, 2018, 2),
-        new BlizzardSeason(37L, 2018, 3),
-        new BlizzardSeason(38L, 2018, 4),
-        new BlizzardSeason(39L, 2019, 1),
-        new BlizzardSeason(40L, 2019, 2),
-        new BlizzardSeason(41L, 2019, 3),
-        new BlizzardSeason(42L, 2019, 4),
-        new BlizzardSeason(43L, 2020, 1),
-        new BlizzardSeason(44L, 2020, 2)
+        new BlizzardSeason(29, 2016, 5),
+        new BlizzardSeason(30, 2016, 6),
+        new BlizzardSeason(31, 2017, 1),
+        new BlizzardSeason(32, 2017, 2),
+        new BlizzardSeason(33, 2017, 3),
+        new BlizzardSeason(34, 2017, 4),
+        new BlizzardSeason(35, 2018, 1),
+        new BlizzardSeason(36, 2018, 2),
+        new BlizzardSeason(37, 2018, 3),
+        new BlizzardSeason(38, 2018, 4),
+        new BlizzardSeason(39, 2019, 1),
+        new BlizzardSeason(40, 2019, 2),
+        new BlizzardSeason(41, 2019, 3),
+        new BlizzardSeason(42, 2019, 4),
+        new BlizzardSeason(43, 2020, 1),
+        new BlizzardSeason(44, 2020, 2)
     ).collect(toUnmodifiableMap(BlizzardSeason::getId, Function.identity()));
     public static final long LAST_SEASON = MMR_SEASONS.keySet().stream().max(Comparator.naturalOrder()).get();
     public static final int RETRY_COUNT = 3;

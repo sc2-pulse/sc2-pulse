@@ -109,9 +109,9 @@ public class LadderSearchDAOIT
         );
 
         //a bunch of empty seasons for season finder testing
-        seasonDAO.merge(new Season(null, 10L, Region.EU, 2020, 1));
-        seasonDAO.merge(new Season(null, 11L, Region.US, 2020, 2));
-        seasonDAO.merge(new Season(null, 11L, Region.EU, 2020, 2));
+        seasonDAO.merge(new Season(null, 10, Region.EU, 2020, 1));
+        seasonDAO.merge(new Season(null, 11, Region.US, 2020, 2));
+        seasonDAO.merge(new Season(null, 11, Region.EU, 2020, 2));
 
         //a team with OLD players, should not be included in the queue_stats player_base.
         //counting only NEW players.
@@ -422,7 +422,7 @@ public class LadderSearchDAOIT
     @Test
     public void test4v4LeagueStats()
     {
-        Map<Long, MergedLadderSearchStatsResult> statsMap = ladderStatsDAO.findStats
+        Map<Integer, MergedLadderSearchStatsResult> statsMap = ladderStatsDAO.findStats
         (
             Set.of(Region.values()),
             LEAGUES_SET,
@@ -440,7 +440,7 @@ public class LadderSearchDAOIT
         int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
         int leagueGamesPlayed = (leagueTeamCount + leagueTeamCount * 2 + leagueTeamCount * 3 + leagueTeamCount * 4)
             * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
-        List<Long> sortedSeasons = statsMap.keySet().stream().sorted().collect(Collectors.toList());
+        List<Integer> sortedSeasons = statsMap.keySet().stream().sorted().collect(Collectors.toList());
 
         for(int i = 0; i < statsMap.size() - 1; i++)
         {

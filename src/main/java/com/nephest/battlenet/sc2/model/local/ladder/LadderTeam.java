@@ -18,14 +18,14 @@ extends Team
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private final List<LadderTeamMember> members;
 
     public LadderTeam
     (
         Long id,
-        Long season,
+        Integer season,
         Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType leagueTierType,
