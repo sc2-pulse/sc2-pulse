@@ -70,8 +70,7 @@ class CharacterUtil
             }
         }
 
-        document.getElementById("player-info-title-name").textContent = character.name.substring(0, character.name.indexOf("#"));
-        document.getElementById("player-info-title-name-additional").textContent = character.name.substring(character.name.indexOf("#"));
+        CharacterUtil.updateCharacterInfoName(character, account);
         const region = EnumUtil.enumOfName(character.region, REGION);
         const profileLinkElement = document.getElementById("battlenet-profile-link");
         if(region == REGION.CN)
@@ -86,6 +85,26 @@ class CharacterUtil
             profileLinkElement.parentElement.classList.remove("d-none");
         }
         document.getElementById("player-info-battletag").textContent = account.battleTag;
+    }
+
+    static updateCharacterInfoName(character, account)
+    {
+        let charName;
+        let charNameAdditional;
+        const hashIx = character.name.indexOf("#");
+        const nameNoHash = character.name.substring(0, hashIx);
+        if(!Util.isBarcode(nameNoHash))
+        {
+            charName = nameNoHash;
+            charNameAdditional = character.name.substring(hashIx);
+        }
+        else
+        {
+            charName = Util.unmaskBarcode(character, account);
+            charNameAdditional = `(${character.name})`;
+        }
+        document.getElementById("player-info-title-name").textContent = charName;
+        document.getElementById("player-info-title-name-additional").textContent = charNameAdditional;
     }
 
     static updateCharacterTeams(searchResult, statsBundle)
