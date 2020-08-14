@@ -48,10 +48,8 @@ class SeasonUtil
         {
             const table = TableUtil.createTable(["Format", "Rank", "MMR", "League", "Region", "Team", "Games", "Win%"]);
             table.querySelector("table").id = pane.id + "-table";
-            const rankHeader = table.querySelectorAll(":scope thead th")[1];
-            rankHeader.innerHTML = "<span>Rank</span>"
-            rankHeader.classList.add("hoverable");
-            BootstrapUtil.addTooltip(rankHeader, "Hover over this column values to get a more detailed view", "#player-info");
+            const headers = table.querySelectorAll(":scope thead th");
+            TableUtil.hoverableColumnHeader(headers[1], "#player-info");
             table.getElementsByTagName("table")[0].setAttribute("data-ladder-format-show", "true");
             const tableCaption = document.createElement("caption");
             tableCaption.appendChild(document.createElement("h4"));

@@ -161,6 +161,14 @@ class TableUtil
         return {headers: headers, rowHeaders: rowHeaders, values: allVals, colors: colors};
     }
 
+    static hoverableColumnHeader(thead, boundary)
+    {
+        const oldText = thead.textContent;
+        thead.innerHTML = "<span>" + oldText + "</span>"
+        thead.classList.add("hoverable");
+        BootstrapUtil.addTooltip(thead, "Hover over this column values to get a more detailed view", boundary);
+    }
+
 }
 
 TableUtil.tableComparer = (idxs, asc) => (a, b) =>((v1, v2) =>Util.compareValueArrays(v1, v2))
