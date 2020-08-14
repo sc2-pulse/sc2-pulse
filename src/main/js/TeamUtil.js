@@ -20,7 +20,7 @@ class TeamUtil
             row.insertCell().appendChild(TeamUtil.createLeagueDiv(team));
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), ["table-image-long"]));
             row.appendChild(TeamUtil.createMembersCell(team));
-            row.insertCell().appendChild(document.createTextNode(team.wins + team.losses));
+            row.insertCell().appendChild(document.createTextNode(team.wins + team.losses + team.ties));
             row.insertCell().appendChild(document.createTextNode(Math.round( team.wins / (team.wins + team.losses) * 100) ));
         }
         BootstrapUtil.enhancePopovers("#" + table.id);

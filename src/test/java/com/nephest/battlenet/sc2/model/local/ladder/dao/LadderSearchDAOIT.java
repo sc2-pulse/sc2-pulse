@@ -280,6 +280,7 @@ public class LadderSearchDAOIT
             assertEquals(teamId, team.getRating());
             assertEquals(teamId, team.getWins());
             assertEquals(teamId + 1, team.getLosses());
+            assertEquals(teamId + 2, team.getTies());
             verifyTeamRanks(team, 1);
             //validate members
             //no reason to sort members in query, sorting manually for testing
@@ -402,6 +403,7 @@ public class LadderSearchDAOIT
             assertEquals(teamId, team.getRating());
             assertEquals(teamId, team.getWins());
             assertEquals(teamId + 1, team.getLosses());
+            assertEquals(teamId + 2, team.getTies());
             //validate members
             //no reason to sort members in query, sorting manually for testing
             team.getMembers().sort(Comparator.comparing(m->m.getCharacter().getBattlenetId()));

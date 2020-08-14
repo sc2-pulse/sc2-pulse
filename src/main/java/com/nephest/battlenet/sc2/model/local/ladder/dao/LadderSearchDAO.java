@@ -50,7 +50,7 @@ public class LadderSearchDAO
         + "team.id as \"team.id\", "
         + "team.division_id as \"team.division_id\", "
         + "team.battlenet_id as \"team.battlenet_id\", "
-        + "team.rating, team.wins, team.losses, "
+        + "team.rating, team.wins, team.losses, team.ties, "
         + "team.global_rank, team.region_rank, team.league_rank, team.tier_rank, team.division_rank, "
         + "account.id AS \"account.id\", account.battle_tag,"
         + "player_character.id AS \"player_character.id\", "
@@ -271,7 +271,7 @@ public class LadderSearchDAO
                     rs.getLong("team.division_id"),
                     ((BigDecimal) rs.getObject("team.battlenet_id")).toBigInteger(),
                     rs.getLong("rating"),
-                    rs.getInt("wins"), rs.getInt("losses"), null,
+                    rs.getInt("wins"), rs.getInt("losses"), rs.getInt("ties"),
                     null,
                     members
                 );
