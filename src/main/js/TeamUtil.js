@@ -20,7 +20,7 @@ class TeamUtil
             row.insertCell().appendChild(TeamUtil.createLeagueDiv(team));
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), ["table-image-long"]));
             row.appendChild(TeamUtil.createMembersCell(team));
-            row.insertCell().appendChild(document.createTextNode(team.wins + team.losses + team.ties));
+            TeamUtil.appendGamesInfo(row.insertCell(), team);
             row.insertCell().appendChild(document.createTextNode(Math.round( team.wins / (team.wins + team.losses) * 100) ));
         }
         BootstrapUtil.enhancePopovers("#" + table.id);
@@ -61,6 +61,22 @@ class TeamUtil
         row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(teamCount)));
         row.insertCell().appendChild(document.createTextNode(Util.DECIMAL_FORMAT.format((team[scope + "Rank"] / teamCount) * 100)));
         return row;
+    }
+
+    static appendGamesInfo(parent, team)
+    {
+        const gamesTable = TableUtil.createTable(["Type", "Count"], false);
+        const tbody = gamesTable.querySelector("tbody");
+        tbody.appendChild(TableUtil.createSimpleRow(team, "wins"));
+        tbody.appendChild(TableUtil.createSimpleRow(team, "losses"));
+        tbody.appendChild(TableUtil.createSimpleRow(team, "ties"));
+
+        parent.setAttribute("data-toggle", "popover");
+        parent.setAttribute("data-trigger", "hover");
+        parent.setAttribute("data-placement", "left");
+        parent.setAttribute("data-html", "true");
+        parent.setAttribute("data-content", gamesTable.outerHTML);
+        parent.appendChild(document.createTextNode(team.wins + team.losses + team.ties));
     }
 
     static createMemberInfo(team, member)

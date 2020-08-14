@@ -50,6 +50,7 @@ class SeasonUtil
             table.querySelector("table").id = pane.id + "-table";
             const headers = table.querySelectorAll(":scope thead th");
             TableUtil.hoverableColumnHeader(headers[1], "#player-info");
+            TableUtil.hoverableColumnHeader(headers[6], "#player-info");
             table.getElementsByTagName("table")[0].setAttribute("data-ladder-format-show", "true");
             const tableCaption = document.createElement("caption");
             tableCaption.appendChild(document.createElement("h4"));
