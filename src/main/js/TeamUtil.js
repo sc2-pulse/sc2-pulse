@@ -14,31 +14,23 @@ class TeamUtil
         {
             const team = searchResult.result[i];
             const row = ladderBody.insertRow();
-            if(fullMode)
-            {
-                const teamFormat = EnumUtil.enumOfId(team.league.queueType, TEAM_FORMAT);
-                const teamType = EnumUtil.enumOfId(team.league.teamType, TEAM_TYPE);
-                row.insertCell().appendChild(document.createTextNode(teamFormat.name + " " + teamType.name));
-            }
+            if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
             TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, statsBundle, team, i);
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), ["table-image-long"]));
-            const league = EnumUtil.enumOfId(team.league.type, LEAGUE);
-            const leagueDiv = document.createElement("div");
-            leagueDiv.classList.add("text-nowrap");
-            leagueDiv.appendChild(ElementUtil.createImage("league/", league.name, ["table-image", "table-image-square", "mr-1"]));
-            leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (team.tierType + 1), ["table-image-additional"]));
-            row.insertCell().appendChild(leagueDiv);
-            const membersCell = row.insertCell();
-            membersCell.classList.add("complex", "cell-main");
-            const mRow = document.createElement("span");
-            mRow.classList.add("row", "no-gutters");
-            for(const teamMember of team.members) mRow.appendChild(TeamUtil.createMemberInfo(team, teamMember));
-            membersCell.appendChild(mRow);
+            row.insertCell().appendChild(TeamUtil.createLeagueDiv(team));
+            row.appendChild(TeamUtil.createMembersCell(team));
             row.insertCell().appendChild(document.createTextNode(team.rating));
             row.insertCell().appendChild(document.createTextNode(team.wins + team.losses));
             row.insertCell().appendChild(document.createTextNode(Math.round( team.wins / (team.wins + team.losses) * 100) ));
         }
         BootstrapUtil.enhancePopovers("#" + table.id);
+    }
+
+    static createTeamFormatInfo(team)
+    {
+        const teamFormat = EnumUtil.enumOfId(team.league.queueType, TEAM_FORMAT);
+        const teamType = EnumUtil.enumOfId(team.league.teamType, TEAM_TYPE);
+        return document.createTextNode(teamFormat.name + " " + teamType.name);
     }
 
     static appendRankInfo(parent, searchResult, statsBundle, team, teamIx)
@@ -73,10 +65,36 @@ class TeamUtil
 
     static createMemberInfo(team, member)
     {
+        const result = document.createElement("span");
+        result.classList.add("team-member-info", "col-lg-" + (team.members.length > 1 ? "6" : "12"), "col-md-12");
+        result.appendChild(TeamUtil.createPlayerLink(team, member));
+        return result;
+    }
+
+    static createPlayerLink(team, member)
+    {
+        const playerLink = document.createElement("a");
+        playerLink.classList.add("player-link", "w-100", "h-100", "d-inline-block");
+        if(Session.currentFollowing != null && Object.values(Session.currentFollowing).filter(val=>val.followingAccountId == member.account.id).length > 0)
+            playerLink.classList.add("text-success");
+        playerLink.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=character&id=${member.character.id}&m=1&t=player-stats-summary`);
+        playerLink.setAttribute("data-character-id", member.character.id);
+        playerLink.addEventListener("click", CharacterUtil.showCharacterInfo);
+        playerLink.appendChild(TeamUtil.createRacesElem(team, member));
+        playerLink.appendChild(TeamUtil.createNameElem(team, member));
+        return playerLink
+    }
+
+    static createNameElem(team, member)
+    {
         const nameElem = document.createElement("span");
         nameElem.classList.add("player-name");
         nameElem.textContent = Util.unmaskBarcode(member.character, member.account);
+        return nameElem
+    }
 
+    static createRacesElem(team, member)
+    {
         const games = new Map();
         games.set(RACE.TERRAN, typeof member.terranGamesPlayed === "undefined" ? 0 : member.terranGamesPlayed);
         games.set(RACE.PROTOSS, typeof member.protossGamesPlayed === "undefined" ? 0 : member.protossGamesPlayed);
@@ -110,20 +128,28 @@ class TeamUtil
         {
             racesElem.appendChild(ElementUtil.createNoRaceImage());
         }
+        return racesElem;
+    }
 
-        const playerLink = document.createElement("a");
-        playerLink.classList.add("player-link", "w-100", "h-100", "d-inline-block");
-        if(Session.currentFollowing != null && Object.values(Session.currentFollowing).filter(val=>val.followingAccountId == member.account.id).length > 0)
-            playerLink.classList.add("text-success");
-        playerLink.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=character&id=${member.character.id}&m=1&t=player-stats-summary`);
-        playerLink.setAttribute("data-character-id", member.character.id);
-        playerLink.addEventListener("click", CharacterUtil.showCharacterInfo);
-        playerLink.appendChild(racesElem);
-        playerLink.appendChild(nameElem);
-        const result = document.createElement("span");
-        result.classList.add("team-member-info", "col-lg-" + (team.members.length > 1 ? "6" : "12"), "col-md-12");
-        result.appendChild(playerLink);
-        return result;
+    static createMembersCell(team)
+    {
+        const membersCell = document.createElement("td");
+        membersCell.classList.add("complex", "cell-main");
+        const mRow = document.createElement("span");
+        mRow.classList.add("row", "no-gutters");
+        for(const teamMember of team.members) mRow.appendChild(TeamUtil.createMemberInfo(team, teamMember));
+        membersCell.appendChild(mRow);
+        return membersCell;
+    }
+
+    static createLeagueDiv(team)
+    {
+        const league = EnumUtil.enumOfId(team.league.type, LEAGUE);
+        const leagueDiv = document.createElement("div");
+        leagueDiv.classList.add("text-nowrap");
+        leagueDiv.appendChild(ElementUtil.createImage("league/", league.name, ["table-image", "table-image-square", "mr-1"]));
+        leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (team.tierType + 1), ["table-image-additional"]));
+        return leagueDiv;
     }
 
 }
