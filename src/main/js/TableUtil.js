@@ -12,7 +12,7 @@ class TableUtil
         for(const h of theads)
         {
             const th = document.createElement("th");
-            th.setAttribute("span", "col");
+            th.setAttribute("scope", "col");
             th.textContent = h;
             thr.appendChild(th);
         }
@@ -52,7 +52,7 @@ class TableUtil
         for(const header of headers)
         {
             const headCell = document.createElement("th");
-            headCell.setAttribute("span", "col");
+            headCell.setAttribute("scope", "col");
             const headerTranslated = headTranslator == null ? header : headTranslator(header);
             headCell.setAttribute("data-chart-color", headerTranslated.toLowerCase());
             headCell.appendChild(document.createTextNode(headerTranslated));
@@ -63,7 +63,7 @@ class TableUtil
             const bodyRow = document.createElement("tr");
             const rowHeadCell = document.createElement("th");
             const rowHeaderTranslated = rowTranslator == null ? rowHeader : rowTranslator(rowHeader);
-            rowHeadCell.setAttribute("span", "row");
+            rowHeadCell.setAttribute("scope", "row");
             rowHeadCell.appendChild(document.createTextNode(rowHeaderTranslated));
             bodyRow.appendChild(rowHeadCell);
             for(const header of headers)
