@@ -54,6 +54,13 @@ h4
     font-size: 1.0rem;
 }
 
+#stats h4
+{
+    position: sticky;
+    top: 0;
+    background-color: white;
+}
+
 caption
 {
     caption-side: top;
