@@ -169,6 +169,14 @@ class TableUtil
         BootstrapUtil.addTooltip(thead, "Hover over this column values to get a more detailed view", boundary);
     }
 
+    static createSimpleRow(object, property)
+    {
+        const row = document.createElement("tr");
+        TableUtil.createRowTh(row).appendChild(document.createTextNode(property));
+        row.insertCell().appendChild(document.createTextNode(object[property]));
+        return row;
+    }
+
 }
 
 TableUtil.tableComparer = (idxs, asc) => (a, b) =>((v1, v2) =>Util.compareValueArrays(v1, v2))
