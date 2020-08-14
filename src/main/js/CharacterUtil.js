@@ -70,7 +70,8 @@ class CharacterUtil
             }
         }
 
-        document.getElementById("player-info-title-name").textContent = character.name;
+        document.getElementById("player-info-title-name").textContent = character.name.substring(0, character.name.indexOf("#"));
+        document.getElementById("player-info-title-name-additional").textContent = character.name.substring(character.name.indexOf("#"));
         const region = EnumUtil.enumOfName(character.region, REGION);
         const profileLinkElement = document.getElementById("battlenet-profile-link");
         if(region == REGION.CN)

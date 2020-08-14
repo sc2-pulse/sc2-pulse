@@ -244,7 +244,8 @@ class ElementUtil
     static generateCharacterTitle(params)
     {
         const name = document.querySelector("#player-info-title-name").textContent;
-        return `${name} ${ElementUtil.getTabTitle(params)}`;
+        const nameAdditional = document.querySelector("#player-info-title-name-additional").textContent;
+        return `${name}${nameAdditional} ${ElementUtil.getTabTitle(params)}`;
     }
 
     static generateLadderDescription(params, includeSeason = true)
