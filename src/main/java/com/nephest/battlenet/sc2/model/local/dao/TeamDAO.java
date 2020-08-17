@@ -4,6 +4,8 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.Team;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -16,6 +18,9 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class TeamDAO
 {
+
+    private  static final Logger LOG = LoggerFactory.getLogger(TeamDAO.class);
+
     private static final String CREATE_QUERY = "INSERT INTO team "
         + "("
             + "division_id, battlenet_id, "
@@ -107,6 +112,7 @@ public class TeamDAO
         template.update(CALCULATE_LEAGUE_RANK_QUERY, params);
         template.update(CALCULATE_TIER_RANK_QUERY, params);
         template.update(CALCULATE_DIVISION_RANK_QUERY, params);
+        LOG.debug("Calculated team ranks for {} season", new Object[]{season});
     }
 
     private MapSqlParameterSource createParameterSource(Team team)
