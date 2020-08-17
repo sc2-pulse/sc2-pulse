@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::div}, _)}">
+<head>
+    <title>503 - Maintenance</title>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: error(~{::h1}, ~{::span})}">
+    <h1>503 - MAINTENANCE</h1>
+    <span>
+            The server is in a maintenance mode. This usually takes less than an hour to complete. Come back later.
+    </span>
+</div>
+</body>
+</html>
