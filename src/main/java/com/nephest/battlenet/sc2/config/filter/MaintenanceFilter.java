@@ -3,18 +3,10 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
-import org.springframework.context.annotation.Profile;
-import org.springframework.core.Ordered;
-import org.springframework.core.annotation.Order;
-
 import javax.servlet.*;
-import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-@WebFilter("/*")
-@Order(Ordered.HIGHEST_PRECEDENCE)
-@Profile("maintenance")
 public class MaintenanceFilter
 implements Filter
 {

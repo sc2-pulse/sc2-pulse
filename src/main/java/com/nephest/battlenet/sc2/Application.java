@@ -4,11 +4,14 @@
 package com.nephest.battlenet.sc2;
 
 import com.nephest.battlenet.sc2.config.convert.*;
+import com.nephest.battlenet.sc2.config.filter.MaintenanceFilter;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
@@ -60,6 +63,15 @@ extends SpringBootServletInitializer
         service.addConverter(new IntegerToTeamTypeConverter());
         service.addConverter(new IntegerToRaceConverter());
         return service;
+    }
+
+    @Bean @Profile("maintenance")
+    public FilterRegistrationBean<MaintenanceFilter> maintenanceFilterRegistration()
+    {
+        FilterRegistrationBean<MaintenanceFilter> reg = new FilterRegistrationBean<>();
+        reg.setFilter(new MaintenanceFilter());
+        reg.addUrlPatterns("/*");
+        return reg;
     }
 
 }
