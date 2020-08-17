@@ -247,6 +247,11 @@ public class StatsService
         {
             updateSeason(region, seasonId);
         }
+        updateSeasonStats(seasonId);
+    }
+
+    private void updateSeasonStats(int seasonId)
+    {
         queueStatsDAO.mergeCalculateForSeason(seasonId);
         leagueStatsDao.mergeCalculateForSeason(seasonId);
         playerCharacterStatsDAO.mergeCalculate(seasonId);
@@ -273,9 +278,7 @@ public class StatsService
         }
         if(seasonId != null)
         {
-            queueStatsDAO.mergeCalculateForSeason(seasonId);
-            leagueStatsDao.mergeCalculateForSeason(seasonId);
-            playerCharacterStatsDAO.mergeCalculate(seasonId);
+            updateSeasonStats(seasonId);
             playerCharacterStatsDAO.mergeCalculateGlobal();
         }
     }
