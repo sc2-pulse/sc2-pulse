@@ -30,7 +30,7 @@ class TeamUtil
     {
         const teamFormat = EnumUtil.enumOfId(team.league.queueType, TEAM_FORMAT);
         const teamType = EnumUtil.enumOfId(team.league.teamType, TEAM_TYPE);
-        return document.createTextNode(teamFormat.name + " " + teamType.name);
+        return document.createTextNode(teamFormat.name + " " + teamType.secondaryName);
     }
 
     static appendRankInfo(parent, searchResult, statsBundle, team, teamIx)

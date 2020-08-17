@@ -155,7 +155,7 @@ class ElementUtil
         cardBody.classList.add("card-body");
         card.appendChild(cardBody);
         const cardHeader = document.createElement("h4");
-        cardHeader.textContent = teamFormat.name + " " + teamType.name;
+        cardHeader.textContent = teamFormat.name + " " + teamType.secondaryName;
         cardHeader.classList.add("card-title");
         const table = TableUtil.createTable(["Race", "MMR", "League", "Games"], false);
         table.classList.add("player-stats-table");
