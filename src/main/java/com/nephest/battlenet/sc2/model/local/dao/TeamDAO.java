@@ -99,7 +99,7 @@ public class TeamDAO
         return team;
     }
 
-    public void updateRanks(long season)
+    public void updateRanks(int season)
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
         template.update(CALCULATE_GLOBAL_RANK_QUERY, params);

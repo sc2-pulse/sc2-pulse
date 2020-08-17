@@ -131,7 +131,7 @@ public class BlizzardSC2API
         return client;
     }
 
-    public static BlizzardSeason getSeason(Long id)
+    public static BlizzardSeason getSeason(Integer id)
     {
         return MMR_SEASONS.get(id);
     }

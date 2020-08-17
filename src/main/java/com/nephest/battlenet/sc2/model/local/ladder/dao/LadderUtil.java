@@ -54,7 +54,7 @@ public class LadderUtil
 
     public MapSqlParameterSource createSearchParams
     (
-        long season,
+        int season,
         Set<Region> regions,
         Set<League.LeagueType> leagueTypes,
         QueueType queueType,

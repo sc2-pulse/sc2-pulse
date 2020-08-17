@@ -308,7 +308,7 @@ public class LadderSearchDAO
 
     public PagedSearchResult<List<LadderTeam>> find
     (
-        long season,
+        int season,
         Set<Region> regions,
         Set<League.LeagueType> leagueTypes,
         QueueType queueType,
@@ -371,7 +371,7 @@ public class LadderSearchDAO
 
     public PagedSearchResult<List<LadderTeam>> findAnchored
     (
-        long season,
+        int season,
         Set<Region> regions,
         Set<League.LeagueType> leagueTypes,
         QueueType queueType,
@@ -421,7 +421,7 @@ public class LadderSearchDAO
     @Cacheable(cacheNames = "search-team-count")
     public long getTeamCount
     (
-        long season,
+        int season,
         Set<Region> regions,
         Set<League.LeagueType> leagueTypes,
         QueueType queueType,
@@ -435,11 +435,11 @@ public class LadderSearchDAO
 
     public void precache()
     {
-        for(long season : BlizzardSC2API.MMR_SEASONS.keySet()) precacheSeason(season);
+        for(int season : BlizzardSC2API.MMR_SEASONS.keySet()) precacheSeason(season);
         precacheSeason(seasonDAO.getMaxBattlenetId());
     }
 
-    private void precacheSeason(long season)
+    private void precacheSeason(int season)
     {
         Set<Region> regions = Set.of(Region.values());
         Set<BaseLeague.LeagueType> leagues = Set.of(BaseLeague.LeagueType.values());
@@ -472,7 +472,7 @@ public class LadderSearchDAO
     public List<LadderTeam> findFollowingTeams
     (
         Long accountId,
-        long season,
+        int season,
         Set<Region> regions,
         Set<League.LeagueType> leagueTypes,
         QueueType queueType,

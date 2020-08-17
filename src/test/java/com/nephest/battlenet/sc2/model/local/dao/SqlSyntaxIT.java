@@ -141,8 +141,8 @@ public class SqlSyntaxIT
         assertEquals(2, teamMember.getZergGamesPlayed());
         assertEquals(2, teamMember.getRandomGamesPlayed());
 
-        leagueStatsDAO.calculateForSeason(40L);
-        leagueStatsDAO.mergeCalculateForSeason(40L);
+        leagueStatsDAO.calculateForSeason(40);
+        leagueStatsDAO.mergeCalculateForSeason(40);
     }
 
 }

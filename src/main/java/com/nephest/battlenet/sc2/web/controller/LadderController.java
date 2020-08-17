@@ -43,7 +43,7 @@ public class LadderController
     @GetMapping("/ladder")
     public PagedSearchResult<List<LadderTeam>> getLadder
     (
-        @RequestParam("season") long season,
+        @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
         @RequestParam(name = "us", required = false) boolean us,
@@ -92,7 +92,7 @@ public class LadderController
             @PathVariable("idAnchor") long idAnchor,
             @PathVariable("forward") boolean forward,
             @PathVariable("count") int count,
-            @RequestParam("season") long season,
+            @RequestParam("season") int season,
             @RequestParam("queue") QueueType queue,
             @RequestParam("team-type") TeamType teamType,
             @RequestParam(name = "page") int page,
@@ -198,7 +198,7 @@ public class LadderController
     @GetMapping("/ladder/league/bounds")
     public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> getLadderLeagueBounds
     (
-        @RequestParam("season") long season,
+        @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
         @RequestParam(name = "us", required = false) boolean us,

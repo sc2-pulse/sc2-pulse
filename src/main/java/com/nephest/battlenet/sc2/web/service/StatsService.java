@@ -241,7 +241,7 @@ public class StatsService
         return true;
     }
 
-    private void updateSeason(long seasonId)
+    private void updateSeason(int seasonId)
     {
         for(Region region : Region.values())
         {
@@ -252,7 +252,7 @@ public class StatsService
         playerCharacterStatsDAO.mergeCalculate(seasonId);
     }
 
-    private void updateSeason(Region region, long seasonId)
+    private void updateSeason(Region region, int seasonId)
     {
         BlizzardSeason bSeason = BlizzardSC2API.getSeason(seasonId);
         Season season = seasonDao.merge(Season.of(bSeason, region));

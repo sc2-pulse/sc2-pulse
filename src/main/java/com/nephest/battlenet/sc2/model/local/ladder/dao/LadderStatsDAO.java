@@ -160,7 +160,7 @@ public class LadderStatsDAO
     )
     public Map<Region, Map<BaseLeague.LeagueType, Map<BaseLeagueTier.LeagueTierType, Integer[]>>> findLeagueBounds
     (
-        long season,
+        int season,
         Set<Region> regions,
         Set<League.LeagueType> leagueTypes,
         QueueType queueType,

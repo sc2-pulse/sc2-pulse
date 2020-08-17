@@ -167,7 +167,7 @@ public class PlayerCharacterStatsDAO
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void calculate(long season)
+    public void calculate(int season)
     {
         SqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
         for(Race race : Race.values()) template.update(CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race), params);
@@ -176,7 +176,7 @@ public class PlayerCharacterStatsDAO
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void mergeCalculate(long season)
+    public void mergeCalculate(int season)
     {
         SqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
         for(Race race : Race.values()) template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race),

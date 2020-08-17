@@ -79,7 +79,7 @@ public class PersonalController
     public List<LadderTeam> getFollowingLadder
     (
         @AuthenticationPrincipal BlizzardOidcUser user,
-        @RequestParam("season") long season,
+        @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,
         @RequestParam(name = "us", required = false) boolean us,

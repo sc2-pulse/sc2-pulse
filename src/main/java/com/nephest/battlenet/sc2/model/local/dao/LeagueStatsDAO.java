@@ -74,7 +74,7 @@ public class LeagueStatsDAO
         this.template = template;
     }
 
-    public void calculateForSeason(long season)
+    public void calculateForSeason(int season)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("seasonId", season);
@@ -82,7 +82,7 @@ public class LeagueStatsDAO
         LOG.debug("Calculated league stats for {} season", new Object[]{season});
     }
 
-    public void mergeCalculateForSeason(long season)
+    public void mergeCalculateForSeason(int season)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("seasonId", season);
