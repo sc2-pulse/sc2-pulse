@@ -255,6 +255,7 @@ public class StatsService
         queueStatsDAO.mergeCalculateForSeason(seasonId);
         leagueStatsDao.mergeCalculateForSeason(seasonId);
         playerCharacterStatsDAO.mergeCalculate(seasonId);
+        teamDao.updateRanks(seasonId);
     }
 
     private void updateSeason(Region region, int seasonId)
