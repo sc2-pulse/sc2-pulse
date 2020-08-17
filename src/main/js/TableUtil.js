@@ -161,7 +161,7 @@ class TableUtil
         return {headers: headers, rowHeaders: rowHeaders, values: allVals, colors: colors};
     }
 
-    static hoverableColumnHeader(thead, boundary)
+    static hoverableColumnHeader(thead, boundary = "body")
     {
         const oldText = thead.textContent;
         thead.innerHTML = "<span>" + oldText + "</span>"
