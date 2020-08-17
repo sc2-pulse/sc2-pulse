@@ -49,6 +49,7 @@ class TeamUtil
         parent.setAttribute("data-trigger", "hover");
         parent.setAttribute("data-placement", "right");
         parent.setAttribute("data-html", "true");
+        parent.setAttribute("data-boundary", "body");
         parent.setAttribute("data-content", ranksTable.outerHTML);
         parent.appendChild(document.createTextNode(rank));
     }
@@ -75,6 +76,7 @@ class TeamUtil
         parent.setAttribute("data-trigger", "hover");
         parent.setAttribute("data-placement", "left");
         parent.setAttribute("data-html", "true");
+        parent.setAttribute("data-boundary", "body");
         parent.setAttribute("data-content", gamesTable.outerHTML);
         parent.appendChild(document.createTextNode(team.wins + team.losses + team.ties));
     }

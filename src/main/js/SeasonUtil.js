@@ -49,8 +49,8 @@ class SeasonUtil
             const table = TableUtil.createTable(["Format", "Rank", "MMR", "League", "Region", "Team", "Games", "Win%"]);
             table.querySelector("table").id = pane.id + "-table";
             const headers = table.querySelectorAll(":scope thead th");
-            TableUtil.hoverableColumnHeader(headers[1], "#player-info");
-            TableUtil.hoverableColumnHeader(headers[6], "#player-info");
+            TableUtil.hoverableColumnHeader(headers[1], "body");
+            TableUtil.hoverableColumnHeader(headers[6], "body");
             table.getElementsByTagName("table")[0].setAttribute("data-ladder-format-show", "true");
             const tableCaption = document.createElement("caption");
             tableCaption.appendChild(document.createElement("h4"));
