@@ -24,7 +24,33 @@ class TeamUtil
             TeamUtil.appendGamesInfo(row.insertCell(), team);
             row.insertCell().appendChild(document.createTextNode(Math.round( team.wins / (team.wins + team.losses) * 100) ));
         }
-        BootstrapUtil.enhancePopovers("#" + table.id);
+
+        $(table).popover
+        ({
+            html: true,
+            boundary: "body",
+            placement: "auto",
+            trigger: "hover",
+            selector: '[data-toggle="popover"]',
+            content: function(){return TeamUtil.createDynamicPopoverContent($(this)[0]).outerHTML;}
+        });
+    }
+
+    static createDynamicPopoverContent(parent)
+    {
+        let content;
+        switch(parent.getAttribute("data-ctype"))
+        {
+            case "rank":
+                content = TeamUtil.createDynamicRankTable(parent);
+                break;
+            case "games":
+                content = TeamUtil.createDynamicGamesTable(parent);
+                break;
+            default:
+                throw new Error("invalid popover data type");
+        }
+        return content;
     }
 
     static createTeamFormatInfo(team)
@@ -36,24 +62,35 @@ class TeamUtil
 
     static appendRankInfo(parent, searchResult, team, teamIx)
     {
-        const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
-        const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
         const rank = searchResult.meta != null
             ? Util.NUMBER_FORMAT.format(Util.calculateRank(searchResult, teamIx))
             : Util.NUMBER_FORMAT.format(team.globalRank);
+
+        parent.setAttribute("data-toggle", "popover");
+        parent.setAttribute("data-ctype", "rank");
+        parent.appendChild(document.createTextNode(rank));
+    }
+
+    static getTeamFromElement(parent)
+    {
+        const view = EnumUtil.enumOfName(parent.closest("[data-view-name]").getAttribute("data-view-name"), VIEW);
+        const teamId = parent.closest("tr").getAttribute("data-team-id");
+        return Model.DATA.get(view).get(VIEW_DATA.SEARCH).result.filter(t=>t.id==teamId)[0];
+    }
+
+    static createDynamicRankTable(parent)
+    {
+        const team = TeamUtil.getTeamFromElement(parent);
+        const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
+        const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
+
         const ranksTable = TableUtil.createTable(["Scope", "Rank", "Total", "Top%"], false);
         const tbody = ranksTable.querySelector("tbody");
         tbody.appendChild(TeamUtil.createRankRow(team, "global", Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)));
         tbody.appendChild(TeamUtil.createRankRow(team, "region", stats.regionTeamCount[team.region]));
         tbody.appendChild(TeamUtil.createRankRow(team, "league", stats.leagueTeamCount[team.league.type]));
 
-        parent.setAttribute("data-toggle", "popover");
-        parent.setAttribute("data-trigger", "hover");
-        parent.setAttribute("data-placement", "right");
-        parent.setAttribute("data-html", "true");
-        parent.setAttribute("data-boundary", "body");
-        parent.setAttribute("data-content", ranksTable.outerHTML);
-        parent.appendChild(document.createTextNode(rank));
+        return ranksTable;
     }
 
     static createRankRow(team, scope, teamCount)
@@ -68,19 +105,22 @@ class TeamUtil
 
     static appendGamesInfo(parent, team)
     {
+        parent.setAttribute("data-toggle", "popover");
+        parent.setAttribute("data-ctype", "games");
+        parent.appendChild(document.createTextNode(team.wins + team.losses + team.ties));
+    }
+
+    static createDynamicGamesTable(parent)
+    {
+        const team = TeamUtil.getTeamFromElement(parent);
+
         const gamesTable = TableUtil.createTable(["Type", "Count"], false);
         const tbody = gamesTable.querySelector("tbody");
         tbody.appendChild(TableUtil.createSimpleRow(team, "wins"));
         tbody.appendChild(TableUtil.createSimpleRow(team, "losses"));
         tbody.appendChild(TableUtil.createSimpleRow(team, "ties"));
 
-        parent.setAttribute("data-toggle", "popover");
-        parent.setAttribute("data-trigger", "hover");
-        parent.setAttribute("data-placement", "left");
-        parent.setAttribute("data-html", "true");
-        parent.setAttribute("data-boundary", "body");
-        parent.setAttribute("data-content", gamesTable.outerHTML);
-        parent.appendChild(document.createTextNode(team.wins + team.losses + team.ties));
+        return gamesTable;
     }
 
     static createMemberInfo(team, member)
