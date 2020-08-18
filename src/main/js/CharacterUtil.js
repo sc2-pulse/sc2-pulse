@@ -39,7 +39,7 @@ class CharacterUtil
     static getCharacterTeams(id)
     {
         Util.setGeneratingStatus("begin");
-            Promise.all([CharacterUtil.getCharacterTeamsPromise(id), StatsUtil.getBundlePromise()])
+            Promise.all([CharacterUtil.getCharacterTeamsPromise(id), StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
                 CharacterUtil.updateCharacterInfo(jsons[0], id);
                 CharacterUtil.updateCharacterTeams(jsons[0], jsons[1]);

@@ -37,7 +37,7 @@ class LadderUtil
         const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${forward}/${count}?` + formParams;
         const ladderPromise = fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();});
-        return Promise.all([ladderPromise, StatsUtil.getBundlePromise()])
+        return Promise.all([ladderPromise, StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
                 LadderUtil.updateLadder(jsons[0], jsons[1]);
                 Util.setGeneratingStatus("success", null, "generated-info-all");
@@ -71,7 +71,7 @@ class LadderUtil
 
         const ladderPromise = fetch("api/my/following/ladder?" + formParams)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        return Promise.all([ladderPromise, StatsUtil.getBundlePromise()])
+        return Promise.all([ladderPromise, StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
                 LadderUtil.updateMyLadder(jsons[0], jsons[1]);
                 Util.setGeneratingStatus("success", null, "following-ladder");

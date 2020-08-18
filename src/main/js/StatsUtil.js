@@ -176,10 +176,11 @@ class StatsUtil
         }
     }
 
-    static getBundlePromise()
+    static updateBundleModel()
     {
         return fetch(ROOT_CONTEXT_PATH + "/api/ladder/stats/bundle")
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();});
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.BUNDLE, json); res(json);}));
     }
 
 
