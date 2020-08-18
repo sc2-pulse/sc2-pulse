@@ -54,3 +54,24 @@ const AGE_DISTRIBUTION = Object.freeze
     OLD: {name: "old", order: 2},
     NEW: {name: "new", order: 3}
 });
+
+const VIEW = Object.freeze
+({
+    GLOBAL: {name: "global", order: 1},
+    LADDER: {name: "ladder", order: 2},
+    FOLLOWING_LADDER: {name: "following-ladder", order: 3},
+    CHARACTER: {name: "character", order: 4},
+    CHARACTER_SEARCH: {name: "character-search", order: 5},
+    PERSONAL_CHARACTERS: {name: "personal-characters", order: 6}
+});
+
+const VIEW_DATA = Object.freeze
+({
+    SEARCH: {name: "search", order: 1},
+    LADDER_STATS: {name: "ladder-stats", order: 2},
+    QUEUE_STATS: {name: "queue-stats", order: 3},
+    LEAGUE_BOUNDS: {name: "league-bounds", order: 4},
+    BUNDLE: {name: "bundle", order: 5},
+    CHARACTER_STATS: {name: "character-stats", order: 6},
+    VAR: {name: "var", order: 7}
+});

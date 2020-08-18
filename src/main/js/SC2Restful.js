@@ -11,6 +11,7 @@ class SC2Restful
         (
             (res, rej)=>
             {
+                SC2Restful.initAll();
                 SC2Restful.enhanceAll();
                 ChartUtil.observeChartables();
                 PaginationUtil.createPaginations();
@@ -22,6 +23,11 @@ class SC2Restful
         )
             .then(e=>Promise.all([Session.getMyInfo(), SeasonUtil.getSeasons()]))
             .then(o=>{Session.currentStateRestoration = HistoryUtil.restoreState(null);});
+    }
+
+    static initAll()
+    {
+        Model.init();
     }
 
     static enhanceAll()
