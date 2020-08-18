@@ -68,7 +68,6 @@ Session.currentTeamType = null;
 Session.currentPersonalSeason = -1;
 Session.currentPersonalTeamFormat = null;
 Session.currentPersonalTeamType = null;
-Session.currentLadder = null;
 Session.currentAccount = null;
 Session.currentFollowing = null;
 Session.currentSearchParams = null;

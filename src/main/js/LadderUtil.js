@@ -9,14 +9,35 @@ class LadderUtil
         const formParams = Util.getFormParameters();
         return Promise.all
         ([
-            LadderUtil.getLadder(formParams),
+            LadderUtil.updateLadder(formParams),
             StatsUtil.getQueueStats(formParams),
             StatsUtil.getLadderStats(formParams),
             StatsUtil.getLeagueBounds(formParams)
         ]);
     }
 
-    static getLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
+    static updateLadderModel(params, formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
+    {
+        const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${forward}/${count}?` + formParams;
+        const ladderPromise = fetch(request)
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.SEARCH, json); res(json);}));
+        return Promise.all([ladderPromise, StatsUtil.updateBundleModel()]);
+    }
+
+    static updateLadderView()
+    {
+        TeamUtil.updateTeamsTable
+        (
+            document.getElementById("ladder"),
+            Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH),
+            Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE)
+        );
+        PaginationUtil.updateLadderPaginations();
+        document.getElementById("generated-info-all").classList.remove("d-none");
+    }
+
+    static updateLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
     {
         Util.setGeneratingStatus("begin");
         const tabs = new URLSearchParams(window.location.search).getAll("t");
@@ -27,38 +48,57 @@ class LadderUtil
             idAnchor: idAnchor,
             forward: forward,
             count: count
-        }
+        };
         const searchParams = new URLSearchParams(formParams);
         searchParams.append("type", "ladder");
         for(const [param, val] of Object.entries(params)) if(param != "form") searchParams.append(param, val);
         const stringParams = searchParams.toString();
         for(const tab of tabs) searchParams.append("t", tab);
 
-        const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${forward}/${count}?` + formParams;
-        const ladderPromise = fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();});
-        return Promise.all([ladderPromise, StatsUtil.updateBundleModel()])
-            .then(jsons => new Promise((res, rej)=>{
-                LadderUtil.updateLadder(jsons[0], jsons[1]);
+        return LadderUtil.updateLadderModel(params, formParams, ratingAnchor, idAnchor, forward, count)
+            .then(e => new Promise((res, rej)=>{
+                LadderUtil.updateLadderView();
                 Util.setGeneratingStatus("success", null, "generated-info-all");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
                 Session.currentSeason = searchParams.get("season");
                 Session.currentTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
                 Session.currentTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
                 Session.currentSearchParams = stringParams;
-                res();}))
+                res();
+            }))
             .catch(error => Util.setGeneratingStatus("error", error.message));
     }
 
-    static updateLadder(searchResult, statsBundle)
+    static updateMyLadderModel(formParams)
     {
-        Session.currentLadder = searchResult;
-        TeamUtil.updateTeamsTable(document.getElementById("ladder"), searchResult, statsBundle);
-        PaginationUtil.updateLadderPaginations();
-        document.getElementById("generated-info-all").classList.remove("d-none");
+        const ladderPromise = fetch("api/my/following/ladder?" + formParams)
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{
+                const result =
+                {
+                    result: json,
+                    meta:
+                    {
+                        page: 1,
+                        perPage: json.length
+                    }
+                }
+                Model.DATA.get(VIEW.FOLLOWING_LADDER).set(VIEW_DATA.SEARCH, result); res(result);}));
+        return Promise.all([ladderPromise, StatsUtil.updateBundleModel()]);
     }
 
-    static getMyLadder(formParams)
+    static updateMyLadderView()
+    {
+        TeamUtil.updateTeamsTable
+        (
+            document.getElementById("following-ladder"),
+            Model.DATA.get(VIEW.FOLLOWING_LADDER).get(VIEW_DATA.SEARCH),
+            Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE)
+        );
+        document.getElementById("following-ladder-container").classList.remove("d-none");
+    }
+
+    static updateMyLadder(formParams)
     {
         Util.setGeneratingStatus("begin");
 
@@ -69,11 +109,9 @@ class LadderUtil
         const stringParams = searchParams.toString();
         for(const tab of tabs) searchParams.append("t", tab);
 
-        const ladderPromise = fetch("api/my/following/ladder?" + formParams)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        return Promise.all([ladderPromise, StatsUtil.updateBundleModel()])
+        return LadderUtil.updateMyLadderModel(formParams)
             .then(jsons => new Promise((res, rej)=>{
-                LadderUtil.updateMyLadder(jsons[0], jsons[1]);
+                LadderUtil.updateMyLadderView();
                 Util.setGeneratingStatus("success", null, "following-ladder");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
                 Session.currentPersonalSeasonSeason = searchParams.get("season");
@@ -85,26 +123,11 @@ class LadderUtil
             .catch(error => Util.setGeneratingStatus("error", error.message));
     }
 
-    static updateMyLadder(searchResult, statsBundle)
-    {
-        const result =
-        {
-            result: searchResult,
-            meta:
-            {
-                page: 1,
-                perPage: searchResult.length
-            }
-        }
-        TeamUtil.updateTeamsTable(document.getElementById("following-ladder"), result, statsBundle);
-        document.getElementById("following-ladder-container").classList.remove("d-none");
-    }
-
     static ladderPaginationPageClick(evt)
     {
         evt.preventDefault();
         const formParams = Util.getFormParameters(evt.target.getAttribute("data-page-number"));
-        LadderUtil.getLadder
+        LadderUtil.updateLadder
         (
             formParams,
             evt.target.getAttribute("data-page-rating-anchor"),
@@ -143,7 +166,7 @@ class LadderUtil
                 Session.currentPersonalSeason = document.getElementById("form-following-ladder-season-picker").value;
                 Session.currentPersonalTeamFormat = EnumUtil.enumOfFullName(document.getElementById("form-following-ladder-team-format-picker").value, TEAM_FORMAT);
                 Session.currentPersonalTeamType = EnumUtil.enumOfName(document.getElementById("form-following-ladder-team-type-picker").value, TEAM_TYPE);
-                Promise.all([LadderUtil.getMyLadder(Util.urlencodeFormData(new FormData(document.getElementById("form-following-ladder"))), BootstrapUtil.hideCollapsible("form-following-ladder"))])
+                Promise.all([LadderUtil.updateMyLadder(Util.urlencodeFormData(new FormData(document.getElementById("form-following-ladder"))), BootstrapUtil.hideCollapsible("form-following-ladder"))])
                     .then(e=>{Util.scrollIntoViewById(form.getAttribute("data-on-success-scroll-to")); HistoryUtil.updateActiveTabs();});
             }
         );

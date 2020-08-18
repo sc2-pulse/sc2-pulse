@@ -26,13 +26,14 @@ class PaginationUtil
 
     static updateLadderPaginations()
     {
-        if(Session.currentLadder == null || Session.currentLadder.result.length < 1) return;
+        const currentLadder = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH);
+        if(currentLadder == null || currentLadder.result.length < 1) return;
         const backwardParams = new Map();
-        backwardParams.set("rating-anchor", Session.currentLadder.result[0].rating);
-        backwardParams.set("id-anchor", Session.currentLadder.result[0].id);
+        backwardParams.set("rating-anchor", currentLadder.result[0].rating);
+        backwardParams.set("id-anchor", currentLadder.result[0].id);
         const forwardParams = new Map();
-        forwardParams.set("rating-anchor", Session.currentLadder.result[Session.currentLadder.result.length - 1].rating);
-        forwardParams.set("id-anchor", Session.currentLadder.result[Session.currentLadder.result.length - 1].id);
+        forwardParams.set("rating-anchor", currentLadder.result[currentLadder.result.length - 1].rating);
+        forwardParams.set("id-anchor", currentLadder.result[currentLadder.result.length - 1].id);
         const firstParams = new Map();
         firstParams.set("rating-anchor", 99999);
         firstParams.set("id-anchor", 1);
@@ -42,7 +43,7 @@ class PaginationUtil
         const params = {first: firstParams, last: lastParams, forward: forwardParams, backward: backwardParams};
         for(const pagination of document.getElementsByClassName("pagination-ladder"))
         {
-            PaginationUtil.updatePagination(pagination, params, Session.currentLadder.meta.page, Session.currentLadder.meta.pageCount);
+            PaginationUtil.updatePagination(pagination, params, currentLadder.meta.page, currentLadder.meta.pageCount);
         }
     }
 

@@ -148,7 +148,7 @@ class HistoryUtil
                 scrollTo = "generated-info-all";
                 lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-ladder"));
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
-                promises.push(LadderUtil.getLadder(formParams, ratingAnchor, idAnchor, forward, count));
+                promises.push(LadderUtil.updateLadder(formParams, ratingAnchor, idAnchor, forward, count));
                 promises.push(StatsUtil.getQueueStats(formParams));
                 promises.push(StatsUtil.getLadderStats(formParams));
                 promises.push(StatsUtil.getLeagueBounds(formParams));
@@ -167,7 +167,7 @@ class HistoryUtil
                 scrollTo = "following-ladder";
                 lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-following-ladder"));
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
-                promises.push(LadderUtil.getMyLadder(params.toString()));
+                promises.push(LadderUtil.updateMyLadder(params.toString()));
                 break;
             case "modal":
                 const modalId = params.get("id"); params.delete("id");
