@@ -4,21 +4,20 @@
 class StatsUtil
 {
 
-    static getQueueStats(formParams)
+    static updateQueueStatsModel(formParams)
     {
-        Util.setGeneratingStatus("begin");
         const params = new URLSearchParams(formParams);
         const queueType = EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT);
         const teamType = EnumUtil.enumOfFullName(params.get("team-type"), TEAM_TYPE);
         const request = `api/ladder/stats/queue/${queueType.fullName}/${teamType.fullName}`;
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{StatsUtil.updateQueueStats(json); Util.setGeneratingStatus("success"); res();}))
-            .catch(e => Util.setGeneratingStatus("error", e.message));
+            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.QUEUE_STATS, json); res(json);}));
     }
 
-    static updateQueueStats(searchResult)
+    static updateQueueStatsView()
     {
+        const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.QUEUE_STATS);
         const playerCount = {};
         for(let i = 0; i < searchResult.length; i++)
         {
@@ -45,18 +44,25 @@ class StatsUtil
         );
     }
 
-    static getLadderStats(formParams)
+    static updateQueueStats(formParams)
     {
         Util.setGeneratingStatus("begin");
-        const request = "api/ladder/stats?" + formParams;
-        return fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{StatsUtil.updateLadderStats(json); Util.setGeneratingStatus("success"); res();}))
+        return StatsUtil.updateQueueStatsModel(formParams)
+            .then(json => new Promise((res, rej)=>{StatsUtil.updateQueueStatsView(); Util.setGeneratingStatus("success"); res();}))
             .catch(e => Util.setGeneratingStatus("error", e.message));
     }
 
-    static updateLadderStats(searchResult)
+    static updateLadderStatsModel(formParams)
     {
+        const request = "api/ladder/stats?" + formParams;
+        return fetch(request)
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LADDER_STATS, json); res(json);}));
+    }
+
+    static updateLadderStatsView()
+    {
+        const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
         const globalResult = {gamesPlayed: {}, teamCount: {}};
         const percentageResult = {};
         for(const [seasonId, stats] of Object.entries(searchResult))
@@ -119,18 +125,25 @@ class StatsUtil
         );
     }
 
-    static getLeagueBounds(formParams)
+    static updateLadderStats(formParams)
     {
         Util.setGeneratingStatus("begin");
-        const request = "api/ladder/league/bounds?" + formParams;
-        return fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{StatsUtil.updateLeagueBounds(json); Util.setGeneratingStatus("success"); res();}))
+        return StatsUtil.updateLadderStatsModel(formParams)
+            .then(json => new Promise((res, rej)=>{StatsUtil.updateLadderStatsView(); Util.setGeneratingStatus("success"); res();}))
             .catch(e => Util.setGeneratingStatus("error", e.message));
     }
 
-    static updateLeagueBounds(searchResult)
+    static updateLeagueBoundsModel(formParams)
     {
+        const request = "api/ladder/league/bounds?" + formParams;
+        return fetch(request)
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LEAGUE_BOUNDS, json); res(json);}));
+    }
+
+    static updateLeagueBoundsView()
+    {
+        const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LEAGUE_BOUNDS);
         const table = document.getElementById("league-bounds-table");
         const headers = table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0];
         const body = table.getElementsByTagName("tbody")[0];
@@ -174,6 +187,14 @@ class StatsUtil
                 body.appendChild(tr);
             }
         }
+    }
+
+    static updateLeagueBounds(formParams)
+    {
+        Util.setGeneratingStatus("begin");
+        return StatsUtil.updateLeagueBoundsModel(formParams)
+            .then(json => new Promise((res, rej)=>{StatsUtil.updateLeagueBoundsView(); Util.setGeneratingStatus("success"); res();}))
+            .catch(e => Util.setGeneratingStatus("error", e.message));
     }
 
     static updateBundleModel()

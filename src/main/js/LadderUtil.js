@@ -10,9 +10,9 @@ class LadderUtil
         return Promise.all
         ([
             LadderUtil.updateLadder(formParams),
-            StatsUtil.getQueueStats(formParams),
-            StatsUtil.getLadderStats(formParams),
-            StatsUtil.getLeagueBounds(formParams)
+            StatsUtil.updateQueueStats(formParams),
+            StatsUtil.updateLadderStats(formParams),
+            StatsUtil.updateLeagueBounds(formParams)
         ]);
     }
 

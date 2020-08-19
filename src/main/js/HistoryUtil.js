@@ -149,9 +149,9 @@ class HistoryUtil
                 lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-ladder"));
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(LadderUtil.updateLadder(formParams, ratingAnchor, idAnchor, forward, count));
-                promises.push(StatsUtil.getQueueStats(formParams));
-                promises.push(StatsUtil.getLadderStats(formParams));
-                promises.push(StatsUtil.getLeagueBounds(formParams));
+                promises.push(StatsUtil.updateQueueStats(formParams));
+                promises.push(StatsUtil.updateLadderStats(formParams));
+                promises.push(StatsUtil.updateLeagueBounds(formParams));
                 break;
             case "character":
                 const id = params.get("id"); params.delete("id");
