@@ -14,6 +14,7 @@ class TeamUtil
         {
             const team = searchResult.result[i];
             const row = ladderBody.insertRow();
+            row.setAttribute("data-team-id", team.id);
             if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
             TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, i);
             row.insertCell().appendChild(document.createTextNode(team.rating));
