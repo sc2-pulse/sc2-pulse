@@ -37,7 +37,7 @@ class CharacterUtil
             fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
         return Promise.all([characterTeamsPromise, StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
-                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, jsons[0]);
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, {result: jsons[0]});
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, id);
                 res(jsons);
              }));
@@ -63,8 +63,9 @@ class CharacterUtil
             .catch(error => Util.setGeneratingStatus("error", error.message));
     }
 
-    static updateCharacterInfo(searchResult, id)
+    static updateCharacterInfo(searchResultFull, id)
     {
+        const searchResult = searchResultFull.result;
         const member = searchResult[0].members.filter(m=>m.character.id == id)[0];
         const account = member.account;
         const character = member.character;
@@ -122,8 +123,9 @@ class CharacterUtil
         document.getElementById("player-info-title-name-additional").textContent = charNameAdditional;
     }
 
-    static updateCharacterTeamsSection(searchResult)
+    static updateCharacterTeamsSection(searchResultFull)
     {
+        const searchResult = searchResultFull.result;
         grouped = searchResult.reduce(function(rv, x) {
             (rv[x["season"]] = rv[x["season"]] || []).push(x);
             return rv;
