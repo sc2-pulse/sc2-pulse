@@ -5,7 +5,7 @@
 <head>
     <title>SC2 Pulse</title>
 </head>
-<body>
+<body data-view-name="global">
     <section>
         <header>
             <nav>
@@ -73,6 +73,7 @@
         </header>
         <div class="tab-content tab-content-main">
         <section id="stats" class="tab-pane fade show active"
+                 data-view-name="ladder"
                  data-view-title="Stats"
                  data-view-description="StarCraft2 stats with flexible filters. All seasons, races,
                   team formats. MMR based ranking. Region, league distribution. Tier MMR ranges."
@@ -369,6 +370,7 @@
         </div><!--Generated all-->
         </section><!--Generator-->
         <section id="search" class="tab-pane fade"
+                 data-view-name="player-search"
                  data-view-title="Player search"
                  data-view-description="Find a StarCraft2 player by name. Info includes: full profile, best race, best MMR, BattleTag."
         >
@@ -462,7 +464,12 @@
                     </ul>
                 </nav>
                 <div class="tab-content">
-                    <section id="personal-characters" class="tab-pane fade show active" data-view-title="Personal characters">
+                    <section
+                            id="personal-characters"
+                            class="tab-pane fade show active"
+                            data-view-name="personal-characters"
+                            data-view-title="Personal characters"
+                    >
                         <div class="table-responsive">
                             <table id="personal-characters-table" class="table table-sm table-hover">
                                 <caption><h3>Your characters</h3></caption>
@@ -487,7 +494,12 @@
                             <a class="btn btn-primary" href="logout" role="button">Log out</a>
                         </div>
                     </section>
-                    <section id="personal-following" class="tab-pane fade" data-view-title="Personal ladder">
+                    <section
+                            id="personal-following"
+                            class="tab-pane fade"
+                            data-view-name="following-ladder"
+                            data-view-title="Personal ladder"
+                    >
                         <h3><a id="following-generator-collapse" class="c-dropdown" href="#form-following-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-following-ladder">Filters</a></h3>
                         <div th:replace="~{fragments/generator-form :: form('form-following-ladder', 'following-generator-collapse', 'following-ladder')}"></div>
                         <div id="following-ladder-container" class="table-responsive d-none">
@@ -652,7 +664,15 @@
             </div>
         </div>
         <!-- Modal player info-->
-        <div class="modal fade" id="player-info" tabindex="-1" role="dialog" aria-labelledby="player-info-title" aria-hidden="true">
+        <div
+            class="modal fade"
+            id="player-info"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="player-info-title"
+            aria-hidden="true"
+            data-view-name="character"
+        >
             <div class="modal-dialog modal-xl" role="document">
                 <div class="modal-content">
                     <div class="modal-header">
