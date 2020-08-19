@@ -47,9 +47,8 @@ class CharacterUtil
     {
         const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
         const searchResult = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-        const bundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
         CharacterUtil.updateCharacterInfo(searchResult, id);
-        CharacterUtil.updateCharacterTeamsSection(searchResult, bundle);
+        CharacterUtil.updateCharacterTeamsSection(searchResult);
     }
 
     static updateCharacterTeams(id)
@@ -123,7 +122,7 @@ class CharacterUtil
         document.getElementById("player-info-title-name-additional").textContent = charNameAdditional;
     }
 
-    static updateCharacterTeamsSection(searchResult, statsBundle)
+    static updateCharacterTeamsSection(searchResult)
     {
         grouped = searchResult.reduce(function(rv, x) {
             (rv[x["season"]] = rv[x["season"]] || []).push(x);
@@ -156,7 +155,7 @@ class CharacterUtil
                 }
             }
             const table = pane.getElementsByClassName("table")[0];
-            TeamUtil.updateTeamsTable(table, {result: teams}, statsBundle);
+            TeamUtil.updateTeamsTable(table, {result: teams});
             nav.classList.remove("d-none");
             ix++;
         }

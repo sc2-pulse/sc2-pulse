@@ -30,8 +30,7 @@ class LadderUtil
         TeamUtil.updateTeamsTable
         (
             document.getElementById("ladder"),
-            Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH),
-            Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE)
+            Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH)
         );
         PaginationUtil.updateLadderPaginations();
         document.getElementById("generated-info-all").classList.remove("d-none");
@@ -92,8 +91,7 @@ class LadderUtil
         TeamUtil.updateTeamsTable
         (
             document.getElementById("following-ladder"),
-            Model.DATA.get(VIEW.FOLLOWING_LADDER).get(VIEW_DATA.SEARCH),
-            Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE)
+            Model.DATA.get(VIEW.FOLLOWING_LADDER).get(VIEW_DATA.SEARCH)
         );
         document.getElementById("following-ladder-container").classList.remove("d-none");
     }

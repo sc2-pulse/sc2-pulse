@@ -4,7 +4,7 @@
 class TeamUtil
 {
 
-    static updateTeamsTable(table, searchResult, statsBundle)
+    static updateTeamsTable(table, searchResult)
     {
         const fullMode = table.getAttribute("data-ladder-format-show") == "true";
         const ladderBody = table.getElementsByTagName("tbody")[0];
@@ -15,7 +15,7 @@ class TeamUtil
             const team = searchResult.result[i];
             const row = ladderBody.insertRow();
             if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
-            TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, statsBundle, team, i);
+            TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, i);
             row.insertCell().appendChild(document.createTextNode(team.rating));
             row.insertCell().appendChild(TeamUtil.createLeagueDiv(team));
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), ["table-image-long"]));
@@ -33,8 +33,9 @@ class TeamUtil
         return document.createTextNode(teamFormat.name + " " + teamType.secondaryName);
     }
 
-    static appendRankInfo(parent, searchResult, statsBundle, team, teamIx)
+    static appendRankInfo(parent, searchResult, team, teamIx)
     {
+        const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
         const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
         const rank = searchResult.meta != null
             ? Util.NUMBER_FORMAT.format(Util.calculateRank(searchResult, teamIx))
