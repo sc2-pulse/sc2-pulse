@@ -161,7 +161,7 @@ class HistoryUtil
                 const name = params.get("name"); params.delete("name");
                 scrollTo = "search-result-all";
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
-                promises.push(CharacterUtil.getCharacters(name));
+                promises.push(CharacterUtil.updateCharacterSearch(name));
                 break;
             case "following-ladder":
                 scrollTo = "following-ladder";

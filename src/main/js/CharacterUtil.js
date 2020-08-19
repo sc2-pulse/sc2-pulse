@@ -18,8 +18,8 @@ class CharacterUtil
         searchParams.append("m", "1");
         for(const tab of tabs) searchParams.append("t", tab);
         promises.push(BootstrapUtil.hideActiveModal(["player-info", "error-generation"]));
-        promises.push(CharacterUtil.getCharacterTeams(id));
-        promises.push(CharacterUtil.getCharacterStats(id));
+        promises.push(CharacterUtil.updateCharacterTeams(id));
+        promises.push(CharacterUtil.updateCharacterStats(id));
 
         return Promise.all(promises)
             .then(o=>new Promise((res, rej)=>{
@@ -30,21 +30,37 @@ class CharacterUtil
             .then(e=>BootstrapUtil.showModal("player-info"));
     }
 
-    static getCharacterTeamsPromise(id)
+    static updateCharacterTeamsModel(id)
     {
         const request = "api/character/" + id + "/teams";
-        return fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        const characterTeamsPromise =
+            fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        return Promise.all([characterTeamsPromise, StatsUtil.updateBundleModel()])
+            .then(jsons => new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, jsons[0]);
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, id);
+                res(jsons);
+             }));
     }
 
-    static getCharacterTeams(id)
+    static updateCharacterTeamsView()
+    {
+        const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        const searchResult = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        const bundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
+        CharacterUtil.updateCharacterInfo(searchResult, id);
+        CharacterUtil.updateCharacterTeamsSection(searchResult, bundle);
+    }
+
+    static updateCharacterTeams(id)
     {
         Util.setGeneratingStatus("begin");
-            Promise.all([CharacterUtil.getCharacterTeamsPromise(id), StatsUtil.updateBundleModel()])
+        return CharacterUtil.updateCharacterTeamsModel(id)
             .then(jsons => new Promise((res, rej)=>{
-                CharacterUtil.updateCharacterInfo(jsons[0], id);
-                CharacterUtil.updateCharacterTeams(jsons[0], jsons[1]);
+                CharacterUtil.updateCharacterTeamsView();
                 Util.setGeneratingStatus("success");
-                res();}))
+                res();
+            }))
             .catch(error => Util.setGeneratingStatus("error", error.message));
     }
 
@@ -107,7 +123,7 @@ class CharacterUtil
         document.getElementById("player-info-title-name-additional").textContent = charNameAdditional;
     }
 
-    static updateCharacterTeams(searchResult, statsBundle)
+    static updateCharacterTeamsSection(searchResult, statsBundle)
     {
         grouped = searchResult.reduce(function(rv, x) {
             (rv[x["season"]] = rv[x["season"]] || []).push(x);
@@ -147,18 +163,21 @@ class CharacterUtil
         ElementUtil.updateTabSelect(document.getElementById("teams-season-select"), navs);
     }
 
-    static getCharacterStats(id)
+    static updateCharacterStatsModel(id)
     {
-        Util.setGeneratingStatus("begin");
         const request = "api/character/" + id + "/stats";
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{CharacterUtil.updateCharacterStats(json); Util.setGeneratingStatus("success"); res();}))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .then(json => new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.CHARACTER_STATS, json);
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, id);
+                res(json);
+            }));
     }
 
-    static updateCharacterStats(searchResult)
+    static updateCharacterStatsView()
     {
+        const searchResult = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.CHARACTER_STATS);
         for(const statsSection of document.getElementsByClassName("player-stats-dynamic")) statsSection.classList.add("d-none");
         for(const stats of searchResult)
         {
@@ -193,43 +212,36 @@ class CharacterUtil
         }
     }
 
-    static findCharactersByName()
-    {
-        CharacterUtil.getCharacters(document.getElementById("search-player-name").value);
-    }
-
-    static getCharacters(name)
+    static updateCharacterStats(id)
     {
         Util.setGeneratingStatus("begin");
-        const tabs = new URLSearchParams(window.location.search).getAll("t");
-        const searchParams = new URLSearchParams();
-        searchParams.append("type", "search");
-        searchParams.append("name", name);
-        const stringParams = searchParams.toString();
-        for(const tab of tabs) searchParams.append("t", tab);
+        CharacterUtil.updateCharacterStatsModel(id)
+            .then(json => new Promise((res, rej)=>{CharacterUtil.updateCharacterStatsView(); Util.setGeneratingStatus("success"); res();}))
+            .catch(error => Util.setGeneratingStatus("error", error.message));
+    }
+
+    static findCharactersByName()
+    {
+        CharacterUtil.updateCharacterSearch(document.getElementById("search-player-name").value);
+    }
+
+    static updateCharacterSearchModel(name)
+    {
         const request = "api/characters?name=" + encodeURIComponent(name);
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => CharacterUtil.updateCharacters(document.getElementById("search-table"), json))
-            .then
-            (
-                o =>
-                {
-                    new Promise
-                    (
-                        (res, rej)=>
-                        {
-                            document.getElementById("search-result-all").classList.remove("d-none");
-                            Util.setGeneratingStatus("success");
-                            Util.scrollIntoViewById("search-result-all");
-                            if(!Session.isHistorical) HistoryUtil.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString());
-                            Session.currentSearchParams = stringParams;
-                            res();
-                        }
-                    )
-                }
-            )
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .then(json => new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.SEARCH, json);
+                Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.VAR, name);
+                res(json);
+            }));
+    }
+
+    static updateCharacterSearchView()
+    {
+        CharacterUtil.updateCharacters(document.getElementById("search-table"),  Model.DATA.get(VIEW.CHARACTER_SEARCH).get(VIEW_DATA.SEARCH));
+        document.getElementById("search-result-all").classList.remove("d-none");
+        Util.scrollIntoViewById("search-result-all");
     }
 
     static updateCharacters(table, searchResult)
@@ -261,13 +273,50 @@ class CharacterUtil
         }
     }
 
-    static getMyCharacters()
+    static updateCharacterSearch(name)
     {
         Util.setGeneratingStatus("begin");
+        const tabs = new URLSearchParams(window.location.search).getAll("t");
+        const searchParams = new URLSearchParams();
+        searchParams.append("type", "search");
+        searchParams.append("name", name);
+        const stringParams = searchParams.toString();
+        for(const tab of tabs) searchParams.append("t", tab);
+        return CharacterUtil.updateCharacterSearchModel(name)
+            .then(json => new Promise((res, rej)=>{
+                CharacterUtil.updateCharacterSearchView();
+                Util.setGeneratingStatus("success");
+                if(!Session.isHistorical) HistoryUtil.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString());
+                Session.currentSearchParams = stringParams;
+                res();
+            }))
+            .catch(error => Util.setGeneratingStatus("error", error.message));
+    }
+
+    static updatePersonalCharactersModel()
+    {
         return fetch("api/my/characters")
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>
-                {CharacterUtil.updateCharacters(document.querySelector("#personal-characters-table"), json); Util.setGeneratingStatus("success"); res();}))
+            .then(json => new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json);
+                res(json);
+            }));
+    }
+
+    static updatePersonalCharactersView()
+    {
+        CharacterUtil.updateCharacters(document.querySelector("#personal-characters-table"), Model.DATA.get(VIEW.PERSONAL_CHARACTERS).get(VIEW_DATA.SEARCH));
+    }
+
+    static updatePersonalCharacters()
+    {
+        Util.setGeneratingStatus("begin");
+        return CharacterUtil.updatePersonalCharactersModel()
+            .then(json => new Promise((res, rej)=>{
+                CharacterUtil.updatePersonalCharactersView();
+                Util.setGeneratingStatus("success");
+                res();
+            }))
             .catch(error => Util.setGeneratingStatus("error", error.message));
     }
 
