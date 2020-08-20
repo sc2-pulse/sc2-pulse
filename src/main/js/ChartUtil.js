@@ -238,7 +238,6 @@ class ChartUtil
         for(const chartable of document.getElementsByClassName("chartable"))
         {
             ChartUtil.CHARTABLE_OBSERVER.observe(chartable, ChartUtil.CHARTABLE_OBSERVER_CONFIG);
-            chartable.setAttribute("data-last-updated", Date.now());
         }
     }
 
