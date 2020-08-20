@@ -161,12 +161,12 @@ class TableUtil
         return {headers: headers, rowHeaders: rowHeaders, values: allVals, colors: colors};
     }
 
-    static hoverableColumnHeader(thead, boundary = "body")
+    static hoverableColumnHeader(thead)
     {
         const oldText = thead.textContent;
         thead.innerHTML = "<span>" + oldText + "</span>"
         thead.classList.add("hoverable");
-        BootstrapUtil.addTooltip(thead, "Hover over this column values to get a more detailed view", boundary);
+        BootstrapUtil.addTooltip(thead, "Hover over this column values to get a more detailed view");
     }
 
     static createSimpleRow(object, property)

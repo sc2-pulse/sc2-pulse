@@ -170,18 +170,23 @@ class BootstrapUtil
         return select;
     }
 
-    static enhanceTooltips(selector = "body")
+    static enhanceTooltips()
     {
-        $(selector + ' [data-toggle="tooltip"]').tooltip();
+        $("body").tooltip
+        ({
+            html: false,
+            boundary: "body",
+            placement: "auto",
+            trigger: "hover",
+            selector: '[data-toggle="tooltip"]',
+            content: function(){return $(this).attr("title");}
+        });
     }
 
-    static addTooltip(elem, text, boundary = null)
+    static addTooltip(elem, text)
     {
         elem.setAttribute("title", text);
         elem.setAttribute("data-toggle", "tooltip");
-        elem.setAttribute("data-placement", "auto");
-        if(boundary != null) elem.setAttribute("data-boundary", boundary);
-        $(elem).tooltip();
     }
 
     static enhancePopovers(selector = "body")
