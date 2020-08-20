@@ -64,7 +64,7 @@ class TeamUtil
     {
         const rank = searchResult.meta != null
             ? Util.NUMBER_FORMAT.format(Util.calculateRank(searchResult, teamIx))
-            : Util.NUMBER_FORMAT.format(team.globalRank);
+            : (!Util.isUndefinedRank(team.globalRank) ? Util.NUMBER_FORMAT.format(team.globalRank) : "-");
 
         parent.setAttribute("data-toggle", "popover");
         parent.setAttribute("data-ctype", "rank");
@@ -97,9 +97,21 @@ class TeamUtil
     {
         const row = document.createElement("tr");
         TableUtil.createRowTh(row).appendChild(document.createTextNode(scope));
-        row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(team[scope + "Rank"])));
-        row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(teamCount)));
-        row.insertCell().appendChild(document.createTextNode(Util.DECIMAL_FORMAT.format((team[scope + "Rank"] / teamCount) * 100)));
+
+        const rank = team[scope + "Rank"];
+        if(!Util.isUndefinedRank(rank))
+        {
+            row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(rank)));
+            row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(teamCount)));
+            row.insertCell().appendChild(document.createTextNode(Util.DECIMAL_FORMAT.format((rank / teamCount) * 100)));
+        }
+        else
+        {
+            row.insertCell().appendChild(document.createTextNode("-"));
+            row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(teamCount)));
+            row.insertCell().appendChild(document.createTextNode("-"));
+        }
+
         return row;
     }
 
