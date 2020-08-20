@@ -120,7 +120,7 @@ class ChartUtil
     {
         for (let i = 0; i < data.datasets.length; i++)
         {
-            if (type === "lineVCursor")
+            if (type === "lineVCursor" || type === "line")
             {
                 data.datasets[i]["borderWidth"] = 2;
                 data.datasets[i]["pointRadius"] = 0;
