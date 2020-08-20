@@ -79,7 +79,8 @@ class LadderUtil
                     meta:
                     {
                         page: 1,
-                        perPage: json.length
+                        perPage: json.length,
+                        totalCount: json.length
                     }
                 }
                 Model.DATA.get(VIEW.FOLLOWING_LADDER).set(VIEW_DATA.SEARCH, result); res(result);}));
