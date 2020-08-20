@@ -134,6 +134,11 @@ class Util
             : name;
     }
 
+    static isUndefinedRank(rank)
+    {
+        return rank == SC2Restful.UNDEFINED_RANK || rank == SC2Restful.UNDEFINED_SMALL_RANK;
+    }
+
 }
 
 Util.BARCODE_REGEX = new RegExp("^[lI]+$");
