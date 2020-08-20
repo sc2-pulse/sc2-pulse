@@ -139,8 +139,26 @@ class Util
         return rank == SC2Restful.UNDEFINED_RANK || rank == SC2Restful.UNDEFINED_SMALL_RANK;
     }
 
+    static escapeHtml(string)
+    {
+        return String(string).replace(/[&<>"'`=\/]/g, function (s) {
+            return entityMap[s];
+        });
+    }
+
 }
 
+Util.HTML_ENTITY_MAP =
+{
+   '&': '&amp;',
+   '<': '&lt;',
+   '>': '&gt;',
+   '"': '&quot;',
+   "'": '&#39;',
+   '/': '&#x2F;',
+   '`': '&#x60;',
+   '=': '&#x3D;'
+ };
 Util.BARCODE_REGEX = new RegExp("^[lI]+$");
 Util.NUMBER_FORMAT = new Intl.NumberFormat(navigator.language);
 Util.DECIMAL_FORMAT = new Intl.NumberFormat(navigator.language, {minimumFractionDigits: 2, maximumFractionDigits: 2});
