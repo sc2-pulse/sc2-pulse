@@ -19,7 +19,7 @@ public class Cron
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
 
-    @Scheduled(cron="0 0 3,15 * * *")
+    @Scheduled(cron="0 0 3 * * *")
     public void updateSeasons()
     {
         statsService.updateMissing();
