@@ -86,9 +86,8 @@ class TeamUtil
 
     static getTeamFromElement(parent)
     {
-        const view = EnumUtil.enumOfName(parent.closest("[data-view-name]").getAttribute("data-view-name"), VIEW);
         const teamId = parent.closest("tr").getAttribute("data-team-id");
-        return Model.DATA.get(view).get(VIEW_DATA.SEARCH).result.filter(t=>t.id==teamId)[0];
+        return Model.DATA.get(ViewUtil.getView(parent)).get(VIEW_DATA.SEARCH).result.filter(t=>t.id==teamId)[0];
     }
 
     static createDynamicRankTable(parent)
