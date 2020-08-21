@@ -136,7 +136,7 @@ class Util
 
     static isUndefinedRank(rank)
     {
-        return rank == SC2Restful.UNDEFINED_RANK || rank == SC2Restful.UNDEFINED_SMALL_RANK;
+        return rank == SC2Restful.UNDEFINED_RANK;
     }
 
     static escapeHtml(string)

@@ -29,8 +29,6 @@ public class TeamTest
         equalTeam.setGlobalRank(-1);
         equalTeam.setRegionRank(-1);
         equalTeam.setLeagueRank(-1);
-        equalTeam.setTierRank(-1);
-        equalTeam.setDivisionRank(-1);
 
         Team[] notEqualTeams = new Team[]
         {

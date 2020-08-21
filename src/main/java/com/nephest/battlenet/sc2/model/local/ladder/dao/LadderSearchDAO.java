@@ -51,7 +51,7 @@ public class LadderSearchDAO
         + "team.division_id as \"team.division_id\", "
         + "team.battlenet_id as \"team.battlenet_id\", "
         + "team.rating, team.wins, team.losses, team.ties, "
-        + "team.global_rank, team.region_rank, team.league_rank, team.tier_rank, team.division_rank, "
+        + "team.global_rank, team.region_rank, team.league_rank, "
         + "account.id AS \"account.id\", account.battle_tag,"
         + "player_character.id AS \"player_character.id\", "
         + "player_character.region AS \"player_character.region\", "
@@ -278,8 +278,6 @@ public class LadderSearchDAO
                 team.setGlobalRank(rs.getInt("global_rank"));
                 team.setRegionRank(rs.getInt("region_rank"));
                 team.setLeagueRank(rs.getInt("league_rank"));
-                team.setTierRank(rs.getInt("tier_rank"));
-                team.setDivisionRank(rs.getInt("division_rank"));
                 teams.add(team);
                 lastTeamId = teamId;
             }

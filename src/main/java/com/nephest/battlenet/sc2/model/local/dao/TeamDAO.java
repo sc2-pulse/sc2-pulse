@@ -66,10 +66,6 @@ public class TeamDAO
         String.format(CALCULATE_RANK_TEMPLATE, "region", ", region");
     private static final String CALCULATE_LEAGUE_RANK_QUERY =
         String.format(CALCULATE_RANK_TEMPLATE, "league", ", league_type");
-    private static final String CALCULATE_TIER_RANK_QUERY =
-        String.format(CALCULATE_RANK_TEMPLATE, "tier", ", tier_type");
-    private static final String CALCULATE_DIVISION_RANK_QUERY =
-        String.format(CALCULATE_RANK_TEMPLATE, "division", ", division_id");
 
 
     private final NamedParameterJdbcTemplate template;
@@ -110,8 +106,6 @@ public class TeamDAO
         template.update(CALCULATE_GLOBAL_RANK_QUERY, params);
         template.update(CALCULATE_REGION_RANK_QUERY, params);
         template.update(CALCULATE_LEAGUE_RANK_QUERY, params);
-        template.update(CALCULATE_TIER_RANK_QUERY, params);
-        template.update(CALCULATE_DIVISION_RANK_QUERY, params);
         LOG.debug("Calculated team ranks for {} season", new Object[]{season});
     }
 

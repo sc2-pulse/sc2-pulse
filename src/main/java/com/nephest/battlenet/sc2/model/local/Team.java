@@ -15,7 +15,7 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     private Long id;
 
@@ -45,12 +45,6 @@ implements java.io.Serializable
 
     @NotNull
     private Integer leagueRank = 2147483647;
-
-    @NotNull
-    private Integer tierRank = 2147483647;
-
-    @NotNull
-    private Integer divisionRank = 32767;
 
     public Team(){}
 
@@ -259,23 +253,4 @@ implements java.io.Serializable
         this.leagueRank = leagueRank;
     }
 
-    public Integer getTierRank()
-    {
-        return tierRank;
-    }
-
-    public void setTierRank(Integer tierRank)
-    {
-        this.tierRank = tierRank;
-    }
-
-    public Integer getDivisionRank()
-    {
-        return divisionRank;
-    }
-
-    public void setDivisionRank(Integer divisionRank)
-    {
-        this.divisionRank = divisionRank;
-    }
 }

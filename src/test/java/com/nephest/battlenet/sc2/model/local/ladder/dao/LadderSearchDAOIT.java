@@ -303,8 +303,6 @@ public class LadderSearchDAOIT
     {
         long expectedGlobalRank = (TEAMS_TOTAL - team.getId() + 1) / seasonOrdinal;
         long expectedLeagueRank = (TEAMS_PER_REGION - ((team.getId() - 1) % TEAMS_PER_REGION)) / seasonOrdinal;
-        long expectedDivisionRank = (expectedLeagueRank % TEAMS_PER_LEAGUE) / seasonOrdinal;
-        expectedDivisionRank = expectedDivisionRank == 0 ? TEAMS_PER_LEAGUE : expectedDivisionRank;
         long expectedRegionRank =
             (((TEAMS_TOTAL - team.getId()) / TEAMS_PER_REGION) * TEAMS_PER_LEAGUE //prev region ranks
             + expectedLeagueRank //cur region ranks
@@ -314,10 +312,6 @@ public class LadderSearchDAOIT
         assertEquals(expectedGlobalRank, (long) team.getGlobalRank());
         assertEquals(expectedRegionRank, (long) team.getRegionRank());
         assertEquals(expectedLeagueRank, (long) team.getLeagueRank());
-        //generator creates only one tier, so tier rank here is actually global
-        assertEquals(expectedGlobalRank, (long) team.getTierRank());
-        assertEquals(expectedDivisionRank, (long) team.getDivisionRank());
-
     }
 
     @Test
