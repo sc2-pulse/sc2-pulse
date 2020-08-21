@@ -92,12 +92,24 @@ class TeamUtil
 
     static createDynamicRankTable(parent)
     {
+        const searchResult = Model.DATA.get(ViewUtil.getView(parent)).get(VIEW_DATA.SEARCH);
         const team = TeamUtil.getTeamFromElement(parent);
         const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
         const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
 
         const ranksTable = TableUtil.createTable(["Scope", "Rank", "Total", "Top%"], false);
         const tbody = ranksTable.querySelector("tbody");
+        if(searchResult.meta != null)
+        {
+            const rank = Util.calculateRank(searchResult, searchResult.result.indexOf(team));
+            tbody.innerHTML =
+            `<tr>
+                <th scope="row">filter</th>
+                <td>${Util.NUMBER_FORMAT.format(rank)}</td>
+                <td>${Util.NUMBER_FORMAT.format(searchResult.meta.totalCount)}</td>
+                <td>${Util.DECIMAL_FORMAT.format((rank / searchResult.meta.totalCount) * 100)}</td>
+            </tr>`;
+        }
         tbody.appendChild(TeamUtil.createRankRow(team, "global", Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)));
         tbody.appendChild(TeamUtil.createRankRow(team, "region", stats.regionTeamCount[team.region]));
         tbody.appendChild(TeamUtil.createRankRow(team, "league", stats.leagueTeamCount[team.league.type]));
