@@ -16,3 +16,9 @@ ADD COLUMN "league_rank" INTEGER NOT NULL DEFAULT 2147483647;
 ALTER TABLE "season" ALTER COLUMN "battlenet_id" TYPE SMALLINT;
 ALTER TABLE "team" ALTER COLUMN "season" TYPE SMALLINT;
 ALTER TABLE "queue_stats" ALTER COLUMN "season" TYPE SMALLINT;
+
+DELETE FROM team
+USING team AS t
+LEFT JOIN team_member ON t.id=team_member.team_id
+WHERE team.id = t.id
+AND team_member.player_character_id IS NULL;
