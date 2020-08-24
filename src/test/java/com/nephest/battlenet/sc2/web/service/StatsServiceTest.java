@@ -3,21 +3,31 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.mockito.Mockito.mock;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.*;
 
 public class StatsServiceTest
 {
 
     private StatsService ss;
 
+    private TeamDAO teamDAO;
+
     @BeforeEach
     public void beforeEach()
     {
-        ss = new StatsService(null, null, null, null, null, null, null, null, null, null, null, null, null);
+        teamDAO = mock(TeamDAO.class);
+        ss = new StatsService(null, null, null, null, null, teamDAO, null, null, null, null, null, null, null);
         StatsService nss = mock(StatsService.class);
         ss.setNestedService(nss);
     }
@@ -42,6 +52,15 @@ public class StatsServiceTest
 
         try{ss.updateCurrent();} catch(Exception ex){}
         assertFalse(ss.isUpdating());
+    }
+
+    @Test
+    public void testEmptyTeam()
+    {
+        ss.updateTeams(new BlizzardTeam[]{new BlizzardTeam()}, mock(Season.class), mock(League.class),
+            mock(LeagueTier.class), mock(Division.class));
+
+        verify(teamDAO, never()).merge(any());
     }
 /*
     @Test

@@ -401,7 +401,7 @@ public class StatsService
         }
     }
 
-    private void updateTeams
+    protected void updateTeams
     (
         BlizzardTeam[] bTeams,
         Season season,
@@ -412,9 +412,13 @@ public class StatsService
     {
         for (BlizzardTeam bTeam : bTeams)
         {
-            Team team = Team.of(season, league, tier, division, bTeam);
-            teamDao.merge(team);
-            updateTeamMembers(bTeam.getMembers(), season, team);
+            //saving an empty team is messing with the stats numbers
+            if(bTeam.getMembers().length > 0)
+            {
+                Team team = Team.of(season, league, tier, division, bTeam);
+                teamDao.merge(team);
+                updateTeamMembers(bTeam.getMembers(), season, team);
+            }
         }
     }
 
