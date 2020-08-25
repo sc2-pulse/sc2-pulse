@@ -22,3 +22,5 @@ USING team AS t
 LEFT JOIN team_member ON t.id=team_member.team_id
 WHERE team.id = t.id
 AND team_member.player_character_id IS NULL;
+
+DELETE FROM team WHERE wins = 0 AND losses = 0 AND ties = 0;
