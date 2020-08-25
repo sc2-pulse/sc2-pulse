@@ -412,14 +412,21 @@ public class StatsService
     {
         for (BlizzardTeam bTeam : bTeams)
         {
-            //saving an empty team is messing with the stats numbers
-            if(bTeam.getMembers().length > 0)
+            if(isValidTeam(bTeam))
             {
                 Team team = Team.of(season, league, tier, division, bTeam);
                 teamDao.merge(team);
                 updateTeamMembers(bTeam.getMembers(), season, team);
             }
         }
+    }
+
+    private boolean isValidTeam(BlizzardTeam team)
+    {
+        //empty team is messing with the stats numbers
+        return team.getMembers().length > 0
+            //a team can have 0 games while a team member can have some games played, which is clearly invalid
+            && (team.getWins() > 0 || team.getLosses() > 0 || team.getTies() > 0);
     }
 
     private void updateTeamMembers(BlizzardTeamMember[] bMembers, Season season, Team team)

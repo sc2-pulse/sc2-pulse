@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
@@ -55,9 +56,14 @@ public class StatsServiceTest
     }
 
     @Test
-    public void testEmptyTeam()
+    public void testInvalidTeam()
     {
-        ss.updateTeams(new BlizzardTeam[]{new BlizzardTeam()}, mock(Season.class), mock(League.class),
+        BlizzardTeam noMembersTeam = new BlizzardTeam();
+        noMembersTeam.setWins(1);
+        BlizzardTeam zeroGamesTeam = new BlizzardTeam();
+        zeroGamesTeam.setMembers(new BlizzardTeamMember[]{new BlizzardTeamMember()});
+
+        ss.updateTeams(new BlizzardTeam[]{noMembersTeam, zeroGamesTeam}, mock(Season.class), mock(League.class),
             mock(LeagueTier.class), mock(Division.class));
 
         verify(teamDAO, never()).merge(any());
