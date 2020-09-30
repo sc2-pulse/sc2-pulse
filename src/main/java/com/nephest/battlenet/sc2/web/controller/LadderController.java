@@ -10,8 +10,12 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
+import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
@@ -239,7 +243,7 @@ public class LadderController
     }
 
     @GetMapping("/seasons")
-    public List<LadderSeason> getSeasons()
+    public List<Season> getSeasons()
     {
         return ladderSearch.findSeasonList();
     }

@@ -7,7 +7,10 @@ import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
-import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -485,27 +488,27 @@ public class LadderSearchDAOIT
     @Test
     public void testFindSeasons()
     {
-        List<LadderSeason> seasons = search.findSeasonList();
+        List<Season> seasons = search.findSeasonList();
 
         assertEquals(5, seasons.size());
 
-        assertEquals(DEFAULT_SEASON_ID, seasons.get(4).getId());
+        assertEquals(DEFAULT_SEASON_ID, seasons.get(4).getBattlenetId());
         assertEquals(DEFAULT_SEASON_YEAR, seasons.get(4).getYear());
         assertEquals(DEFAULT_SEASON_NUMBER, seasons.get(4).getNumber());
 
-        assertEquals(DEFAULT_SEASON_ID + 1, seasons.get(3).getId());
+        assertEquals(DEFAULT_SEASON_ID + 1, seasons.get(3).getBattlenetId());
         assertEquals(DEFAULT_SEASON_YEAR + 1, seasons.get(3).getYear());
         assertEquals(DEFAULT_SEASON_NUMBER + 1, seasons.get(3).getNumber());
 
-        assertEquals(DEFAULT_SEASON_ID + 2, seasons.get(2).getId());
+        assertEquals(DEFAULT_SEASON_ID + 2, seasons.get(2).getBattlenetId());
         assertEquals(DEFAULT_SEASON_YEAR + 2, seasons.get(2).getYear());
         assertEquals(DEFAULT_SEASON_NUMBER + 2, seasons.get(2).getNumber());
 
-        assertEquals(10, seasons.get(1).getId());
+        assertEquals(10, seasons.get(1).getBattlenetId());
         assertEquals(2020, seasons.get(1).getYear());
         assertEquals(1, seasons.get(1).getNumber());
 
-        assertEquals(11, seasons.get(0).getId());
+        assertEquals(11, seasons.get(0).getBattlenetId());
         assertEquals(2020, seasons.get(0).getYear());
         assertEquals(2, seasons.get(0).getNumber());
     }

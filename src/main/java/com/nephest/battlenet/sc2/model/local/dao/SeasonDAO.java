@@ -33,9 +33,16 @@ public class SeasonDAO
 
     private static final String FIND_LIST_BY_REGION = "SELECT "
         + "id AS \"season.id\", battlenet_id AS \"season.battlenet_id\", region AS \"season.region\", "
-        + "year AS \"season.year\", number AS \"season.number\""
+        + "year AS \"season.year\", number AS \"season.number\" "
         + "FROM season "
         + "WHERE region=:region "
+        + "ORDER BY battlenet_id DESC";
+
+    private static final String FIND_LIST_BY_FIRST_BATTELENET_ID =
+        "SELECT DISTINCT ON (battlenet_id) "
+        + "id AS \"season.id\", battlenet_id AS \"season.battlenet_id\", region AS \"season.region\", "
+        + "year AS \"season.year\", number AS \"season.number\" "
+        + "FROM season "
         + "ORDER BY battlenet_id DESC";
 
     private static final String FIND_MAX_BATTLENET_ID_QUERY =
@@ -98,6 +105,11 @@ public class SeasonDAO
         MapSqlParameterSource params
             = new MapSqlParameterSource("region", conversionService.convert(region, Integer.class));
         return template.query(FIND_LIST_BY_REGION, params, STD_ROW_MAPPER);
+    }
+
+    public List<Season> findListByFirstBattlenetId()
+    {
+        return template.query(FIND_LIST_BY_FIRST_BATTELENET_ID, STD_ROW_MAPPER);
     }
 
     @Cacheable(cacheNames="search-season-last")

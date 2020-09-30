@@ -6,8 +6,8 @@ class SeasonUtil
 
     static seasonIdTranslator(id)
     {
-        const season = Session.currentSeasons.filter((s)=>s.id == id)[0];
-        return `${season.year} season ${season.number} (${season.id})`;
+        const season = Session.currentSeasons.filter((s)=>s.battlenetId == id)[0];
+        return `${season.year} season ${season.number} (${season.battlenetId})`;
     }
 
     static getSeasons()
@@ -31,7 +31,7 @@ class SeasonUtil
                 const option = document.createElement("option");
                 option.setAttribute("label", season.year + " s" + season.number);
                 option.textContent = `${season.year} s${season.number}`;
-                option.setAttribute("value", season.id);
+                option.setAttribute("value", season.battlenetId);
                 seasonPicker.appendChild(option);
             }
         }

@@ -7,13 +7,9 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.Account;
-import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.LeagueTier;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderSeason;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -24,7 +20,6 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -172,27 +167,11 @@ public class LadderSearchDAO
         + "team.rating DESC, team.id ASC, "
         + "player_character.id ASC ";
 
-    private static final String FIND_SEASON_LIST =
-        "SELECT DISTINCT "
-        + "battlenet_id, year, number "
-        + "FROM season "
-        + "ORDER BY battlenet_id DESC";
-
-
-
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
     private SeasonDAO seasonDAO;
 
     private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_EXTRACTOR= this::mapTeams;
-
-    private static final RowMapper<LadderSeason> FIND_SEASON_LIST_ROW_MAPPER =
-    (rs, num)-> new LadderSeason
-    (
-        rs.getLong("battlenet_id"),
-        rs.getInt("year"),
-        rs.getInt("number")
-    );
 
     private int resultsPerPage = 100;
 
@@ -450,13 +429,9 @@ public class LadderSearchDAO
     (
         cacheNames="search-seasons"
     )
-    public List<LadderSeason> findSeasonList()
+    public List<Season> findSeasonList()
     {
-        return template.query
-        (
-            FIND_SEASON_LIST,
-            FIND_SEASON_LIST_ROW_MAPPER
-        );
+        return seasonDAO.findListByFirstBattlenetId();
     }
 
     public List<LadderTeam> findCharacterTeams(long id)
