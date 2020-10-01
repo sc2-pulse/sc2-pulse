@@ -85,12 +85,19 @@ public class LadderSearchDAOIT
         }
 
         List<Season> seasons = new ArrayList<>();
-        for(Region region : REGIONS) seasons.add(new Season(null, DEFAULT_SEASON_ID, region, DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER));
-        for(Region region : REGIONS) seasons.add(new Season(null, DEFAULT_SEASON_ID + 1, region,
-            DEFAULT_SEASON_YEAR + 1, DEFAULT_SEASON_NUMBER + 1));
+        for(Region region : REGIONS) seasons.add(new Season(
+            null, DEFAULT_SEASON_ID, region,
+            DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER,
+            DEFAULT_SEASON_START, DEFAULT_SEASON_END
+        ));
+        for(Region region : REGIONS) seasons.add(new Season(
+            null, DEFAULT_SEASON_ID + 1, region,
+            DEFAULT_SEASON_YEAR + 1, DEFAULT_SEASON_NUMBER + 1,
+            DEFAULT_SEASON_START.plusMonths(1), DEFAULT_SEASON_END.plusMonths(1)));
         List<Season> emptySeasons = new ArrayList<>();
         for(Region region : REGIONS) emptySeasons.add(new Season(null, DEFAULT_SEASON_ID + 2, region,
-            DEFAULT_SEASON_YEAR + 2, DEFAULT_SEASON_NUMBER + 2));
+            DEFAULT_SEASON_YEAR + 2, DEFAULT_SEASON_NUMBER + 2,
+            DEFAULT_SEASON_START.plusMonths(2), DEFAULT_SEASON_END.plusMonths(2)));
 
         generator.generateSeason
         (
@@ -112,9 +119,12 @@ public class LadderSearchDAOIT
         );
 
         //a bunch of empty seasons for season finder testing
-        seasonDAO.merge(new Season(null, 10, Region.EU, 2020, 1));
-        seasonDAO.merge(new Season(null, 11, Region.US, 2020, 2));
-        seasonDAO.merge(new Season(null, 11, Region.EU, 2020, 2));
+        seasonDAO.merge(new Season(null, 10, Region.EU, 2020, 1,
+            DEFAULT_SEASON_START.plusMonths(3), DEFAULT_SEASON_END.plusMonths(3)));
+        seasonDAO.merge(new Season(null, 11, Region.US, 2020, 2,
+            DEFAULT_SEASON_START.plusMonths(4), DEFAULT_SEASON_END.plusMonths(4)));
+        seasonDAO.merge(new Season(null, 11, Region.EU, 2020, 2,
+            DEFAULT_SEASON_START.plusMonths(4), DEFAULT_SEASON_END.plusMonths(4)));
 
         //a team with OLD players, should not be included in the queue_stats player_base.
         //counting only NEW players.
@@ -495,22 +505,32 @@ public class LadderSearchDAOIT
         assertEquals(DEFAULT_SEASON_ID, seasons.get(4).getBattlenetId());
         assertEquals(DEFAULT_SEASON_YEAR, seasons.get(4).getYear());
         assertEquals(DEFAULT_SEASON_NUMBER, seasons.get(4).getNumber());
+        assertEquals(DEFAULT_SEASON_START, seasons.get(4).getStart());
+        assertEquals(DEFAULT_SEASON_END, seasons.get(4).getEnd());
 
         assertEquals(DEFAULT_SEASON_ID + 1, seasons.get(3).getBattlenetId());
         assertEquals(DEFAULT_SEASON_YEAR + 1, seasons.get(3).getYear());
         assertEquals(DEFAULT_SEASON_NUMBER + 1, seasons.get(3).getNumber());
+        assertEquals(DEFAULT_SEASON_START.plusMonths(1), seasons.get(3).getStart());
+        assertEquals(DEFAULT_SEASON_END.plusMonths(1), seasons.get(3).getEnd());
 
         assertEquals(DEFAULT_SEASON_ID + 2, seasons.get(2).getBattlenetId());
         assertEquals(DEFAULT_SEASON_YEAR + 2, seasons.get(2).getYear());
         assertEquals(DEFAULT_SEASON_NUMBER + 2, seasons.get(2).getNumber());
+        assertEquals(DEFAULT_SEASON_START.plusMonths(2), seasons.get(2).getStart());
+        assertEquals(DEFAULT_SEASON_END.plusMonths(2), seasons.get(2).getEnd());
 
         assertEquals(10, seasons.get(1).getBattlenetId());
         assertEquals(2020, seasons.get(1).getYear());
         assertEquals(1, seasons.get(1).getNumber());
+        assertEquals(DEFAULT_SEASON_START.plusMonths(3), seasons.get(1).getStart());
+        assertEquals(DEFAULT_SEASON_END.plusMonths(3), seasons.get(1).getEnd());
 
         assertEquals(11, seasons.get(0).getBattlenetId());
         assertEquals(2020, seasons.get(0).getYear());
         assertEquals(2, seasons.get(0).getNumber());
+        assertEquals(DEFAULT_SEASON_START.plusMonths(4), seasons.get(0).getStart());
+        assertEquals(DEFAULT_SEASON_END.plusMonths(4), seasons.get(0).getEnd());
     }
 
 }

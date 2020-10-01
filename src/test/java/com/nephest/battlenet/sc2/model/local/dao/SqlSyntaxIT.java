@@ -22,6 +22,7 @@ import javax.sql.DataSource;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -83,8 +84,8 @@ public class SqlSyntaxIT
     public void testSqlSyntax()
     {
         Region region = Region.EU;
-        seasonDAO.create(new Season(null, 40, region, 2020, 1));
-        seasonDAO.merge(new Season(null, 40, region, 2019, 2));
+        seasonDAO.create(new Season(null, 40, region, 2020, 1, LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1)));
+        seasonDAO.merge(new Season(null, 40, region, 2019, 2, LocalDate.of(2019, 2, 1), LocalDate.of(2019, 3, 1)));
         List<Season> seasons = seasonDAO.findListByRegion(region);
         assertEquals(1, seasons.size());
         Season season = seasons.get(0);

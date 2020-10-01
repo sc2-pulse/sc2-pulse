@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 import java.util.Objects;
 
 public class Season
@@ -15,7 +16,7 @@ extends BaseSeason
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private Long id;
 
@@ -33,10 +34,12 @@ implements java.io.Serializable
         Integer battlenetId,
         Region region,
         Integer year,
-        Integer number
+        Integer number,
+        LocalDate start,
+        LocalDate end
     )
     {
-        super(year, number);
+        super(year, number, start, end);
         this.id = id;
         this.battlenetId = battlenetId;
         this.region = region;
@@ -50,7 +53,9 @@ implements java.io.Serializable
             season.getId(),
             region,
             season.getYear(),
-            season.getNumber()
+            season.getNumber(),
+            season.getStart(),
+            season.getEnd()
         );
     }
 

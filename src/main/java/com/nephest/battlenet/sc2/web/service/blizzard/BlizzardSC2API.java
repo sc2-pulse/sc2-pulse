@@ -26,6 +26,7 @@ import reactor.netty.tcp.TcpClient;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.function.Function;
@@ -46,24 +47,25 @@ public class BlizzardSC2API
     public static final long lastSeason = 42;
     public static final int firstSeasonNumber = 3;
     public static final int firstSeasonYear = 2016;
+    //historical season data is taken from liquipedia.net
     public static final Map<Integer, BlizzardSeason> MMR_SEASONS = Stream.of
     (
-        new BlizzardSeason(29, 2016, 5),
-        new BlizzardSeason(30, 2016, 6),
-        new BlizzardSeason(31, 2017, 1),
-        new BlizzardSeason(32, 2017, 2),
-        new BlizzardSeason(33, 2017, 3),
-        new BlizzardSeason(34, 2017, 4),
-        new BlizzardSeason(35, 2018, 1),
-        new BlizzardSeason(36, 2018, 2),
-        new BlizzardSeason(37, 2018, 3),
-        new BlizzardSeason(38, 2018, 4),
-        new BlizzardSeason(39, 2019, 1),
-        new BlizzardSeason(40, 2019, 2),
-        new BlizzardSeason(41, 2019, 3),
-        new BlizzardSeason(42, 2019, 4),
-        new BlizzardSeason(43, 2020, 1),
-        new BlizzardSeason(44, 2020, 2)
+        new BlizzardSeason(29, 2016, 5, LocalDate.of(2016, 10, 18), LocalDate.of(2016, 11, 22)),
+        new BlizzardSeason(30, 2016, 6, LocalDate.of(2016, 11, 22), LocalDate.of(2017, 1, 24)),
+        new BlizzardSeason(31, 2017, 1, LocalDate.of(2017, 1, 24), LocalDate.of(2017, 5, 2)),
+        new BlizzardSeason(32, 2017, 2, LocalDate.of(2017, 5, 2), LocalDate.of(2017, 7, 19)),
+        new BlizzardSeason(33, 2017, 3, LocalDate.of(2017, 7, 19), LocalDate.of(2017, 10, 19)),
+        new BlizzardSeason(34, 2017, 4, LocalDate.of(2017, 10, 19), LocalDate.of(2018, 1, 23)),
+        new BlizzardSeason(35, 2018, 1, LocalDate.of(2018, 1, 23), LocalDate.of(2018, 5, 15)),
+        new BlizzardSeason(36, 2018, 2, LocalDate.of(2018, 5, 15), LocalDate.of(2018, 8, 14)),
+        new BlizzardSeason(37, 2018, 3, LocalDate.of(2018, 8,14), LocalDate.of(2018, 11, 20)),
+        new BlizzardSeason(38, 2018, 4, LocalDate.of(2018, 11, 20), LocalDate.of(2019, 1, 22)),
+        new BlizzardSeason(39, 2019, 1, LocalDate.of(2019, 1, 22), LocalDate.of(2019, 5, 22)),
+        new BlizzardSeason(40, 2019, 2, LocalDate.of(2019, 5, 22), LocalDate.of(2019, 8, 22)),
+        new BlizzardSeason(41, 2019, 3, LocalDate.of(2019, 8, 22), LocalDate.of(2019, 11, 25)),
+        new BlizzardSeason(42, 2019, 4, LocalDate.of(2019, 11,25), LocalDate.of(2020, 3, 17)),
+        new BlizzardSeason(43, 2020, 1, LocalDate.of(2020, 3, 17), LocalDate.of(2020, 6, 10)),
+        new BlizzardSeason(44, 2020, 2, LocalDate.of(2020, 6, 10), LocalDate.of(2020, 10, 1))
     ).collect(toUnmodifiableMap(BlizzardSeason::getId, Function.identity()));
     public static final long LAST_SEASON = MMR_SEASONS.keySet().stream().max(Comparator.naturalOrder()).get();
     public static final int RETRY_COUNT = 3;
@@ -131,6 +133,7 @@ public class BlizzardSC2API
         return client;
     }
 
+    //there is no previous season metadata in the upstream api
     public static BlizzardSeason getSeason(Integer id)
     {
         return MMR_SEASONS.get(id);

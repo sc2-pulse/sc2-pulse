@@ -12,6 +12,7 @@ import org.springframework.test.jdbc.JdbcTestUtils;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,8 @@ public class SeasonGenerator
     public static final int DEFAULT_SEASON_ID = 1;
     public static final int DEFAULT_SEASON_YEAR = 2020;
     public static final int DEFAULT_SEASON_NUMBER = 1;
+    public static final LocalDate DEFAULT_SEASON_START = LocalDate.of(2020, 1, 1);
+    public static final LocalDate DEFAULT_SEASON_END = DEFAULT_SEASON_START.plusMonths(1);
     public static final int DEFAULT_REALM = 1;
 
     @Autowired
@@ -67,7 +70,11 @@ public class SeasonGenerator
         List<Season> seasons = new ArrayList<>();
         for(Region region : regions)
         {
-            seasons.add(seasonDAO.create(new Season(null, DEFAULT_SEASON_ID, region, DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER)));
+            seasons.add(seasonDAO.create(new Season(
+                null, DEFAULT_SEASON_ID, region,
+                DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER,
+                DEFAULT_SEASON_START, DEFAULT_SEASON_END
+            )));
         }
         generateSeason(seasons, leagues, queueTypes, teamType, tierType, teamsPerLeague);
     }

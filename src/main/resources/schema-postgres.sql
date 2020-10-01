@@ -67,6 +67,8 @@ CREATE TABLE "season"
     "battlenet_id" SMALLINT NOT NULL,
     "year" SMALLINT NOT NULL,
     "number" SMALLINT NOT NULL,
+    "start" DATE NOT NULL,
+    "end" DATE NOT NULL,
 
     PRIMARY KEY ("id"),
 

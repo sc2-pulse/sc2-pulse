@@ -56,6 +56,8 @@ public class BlizzardSC2APIIT
         assertNotNull(season.getId());
         assertNotNull(season.getNumber());
         assertNotNull(season.getYear());
+        assertNotNull(season.getStart());
+        assertNotNull(season.getEnd());
     }
 
     @Test @Order(2)

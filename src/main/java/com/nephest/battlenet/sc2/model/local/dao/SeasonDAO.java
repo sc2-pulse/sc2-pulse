@@ -16,24 +16,28 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @Repository
 public class SeasonDAO
 {
     private static final String CREATE_QUERY = "INSERT INTO season "
-        + "(battlenet_id, region, year, number) "
-        + "VALUES (:battlenetId, :region, :year, :number)";
+        + "(battlenet_id, region, year, number, \"start\", \"end\") "
+        + "VALUES (:battlenetId, :region, :year, :number, :start, :end)";
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
         + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
         + "year=excluded.year, "
-        + "number=excluded.number";
+        + "number=excluded.number, "
+        + "\"start\"=excluded.start, "
+        + "\"end\"=excluded.end";
 
     private static final String FIND_LIST_BY_REGION = "SELECT "
         + "id AS \"season.id\", battlenet_id AS \"season.battlenet_id\", region AS \"season.region\", "
-        + "year AS \"season.year\", number AS \"season.number\" "
+        + "year AS \"season.year\", number AS \"season.number\", "
+        + "\"start\" AS \"season.start\", \"end\" AS \"season.end\" "
         + "FROM season "
         + "WHERE region=:region "
         + "ORDER BY battlenet_id DESC";
@@ -41,7 +45,8 @@ public class SeasonDAO
     private static final String FIND_LIST_BY_FIRST_BATTELENET_ID =
         "SELECT DISTINCT ON (battlenet_id) "
         + "id AS \"season.id\", battlenet_id AS \"season.battlenet_id\", region AS \"season.region\", "
-        + "year AS \"season.year\", number AS \"season.number\" "
+        + "year AS \"season.year\", number AS \"season.number\", "
+        + "\"start\" AS \"season.start\", \"end\" AS \"season.end\" "
         + "FROM season "
         + "ORDER BY battlenet_id DESC";
 
@@ -58,7 +63,9 @@ public class SeasonDAO
         rs.getInt("season.battlenet_id"),
         conversionService.convert(rs.getInt("season.region"), Region.class),
         rs.getInt("season.year"),
-        rs.getInt("season.number")
+        rs.getInt("season.number"),
+        rs.getObject("season.start", LocalDate.class),
+        rs.getObject("season.end", LocalDate.class)
     );
 
 
@@ -97,7 +104,9 @@ public class SeasonDAO
             .addValue("battlenetId", season.getBattlenetId())
             .addValue("region", conversionService.convert(season.getRegion(), Integer.class))
             .addValue("year", season.getYear())
-            .addValue("number", season.getNumber());
+            .addValue("number", season.getNumber())
+            .addValue("start", season.getStart())
+            .addValue("end", season.getEnd());
     }
 
     public List<Season> findListByRegion(Region region)

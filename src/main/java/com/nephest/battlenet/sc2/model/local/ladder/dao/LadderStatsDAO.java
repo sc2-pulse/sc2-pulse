@@ -36,6 +36,7 @@ public class LadderStatsDAO
         + "season.region AS \"season.region\","
         + "season.year AS \"season.year\","
         + "season.number AS \"season.number\","
+        + "\"start\" AS \"season.start\", \"end\" AS \"season.end\", "
         + "league.id AS \"league.id\","
         + "league.season_id AS \"league.season_id\","
         + "league.type AS \"league.type\","

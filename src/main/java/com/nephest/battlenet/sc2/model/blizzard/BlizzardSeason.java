@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nephest.battlenet.sc2.model.BaseSeason;
 
 import javax.validation.constraints.NotNull;
+import java.time.LocalDate;
 
 public class BlizzardSeason
 extends BaseSeason
@@ -22,10 +23,12 @@ extends BaseSeason
     (
         Integer id,
         Integer year,
-        Integer number
+        Integer number,
+        LocalDate start,
+        LocalDate end
     )
     {
-        super(year, number);
+        super(year, number, start, end);
         this.id = id;
     }
 

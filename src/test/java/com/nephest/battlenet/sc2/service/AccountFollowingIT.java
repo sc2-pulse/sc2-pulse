@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -116,8 +117,8 @@ public class AccountFollowingIT
     throws Exception
     {
         Region region = Region.EU;
-        Season season1 = new Season(null, 1, region, 2020, 1);
-        Season season2 = new Season(null, 2, region, 2020, 2);
+        Season season1 = new Season(null, 1, region, 2020, 1, LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));
+        Season season2 = new Season(null, 2, region, 2020, 2, LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1));
         //generate some noise
         seasonGenerator.generateSeason
         (
