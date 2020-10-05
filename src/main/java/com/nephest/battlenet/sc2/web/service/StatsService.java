@@ -271,11 +271,22 @@ public class StatsService
         Integer seasonId = null;
         for(Region region : Region.values())
         {
-            BlizzardSeason bSeason = api.getCurrentSeason(region).block();
-            Season season = seasonDao.merge(Season.of(bSeason, region));
-            updateLeagues(bSeason, season);
-            seasonId = season.getBattlenetId();
-            LOG.debug("Updated leagues: {} {}", seasonId, region);
+            /*
+               After a new season has started there is a period of time when some endpoints could return a 404
+               response. Treating such situations as valid and skipping the affected regions.
+             */
+            try
+            {
+                BlizzardSeason bSeason = api.getCurrentSeason(region).block();
+                Season season = seasonDao.merge(Season.of(bSeason, region));
+                updateLeagues(bSeason, season);
+                seasonId = season.getBattlenetId();
+                LOG.debug("Updated leagues: {} {}", seasonId, region);
+            }
+            catch(WebClientResponseException.NotFound ex)
+            {
+                LOG.warn("Current season not found ({}, {})", region, ex.getRequest().getURI());
+            }
         }
         if(seasonId != null)
         {
