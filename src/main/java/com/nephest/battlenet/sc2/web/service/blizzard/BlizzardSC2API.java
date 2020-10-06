@@ -14,12 +14,15 @@ import com.nephest.battlenet.sc2.model.local.League;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
@@ -41,6 +44,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 @Service
 public class BlizzardSC2API
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(BlizzardSC2API.class);
 
     //first mmr season
     public static final long firstSeason = 29;
@@ -157,10 +162,11 @@ public class BlizzardSC2API
         BlizzardSeason season,
         BlizzardLeague.LeagueType leagueType,
         QueueType queueType,
-        TeamType teamType
+        TeamType teamType,
+        boolean currentSeason
     )
     {
-        return getWebClient()
+        Mono<BlizzardLeague> mono =  getWebClient()
             .get()
             .uri
             (
@@ -174,6 +180,38 @@ public class BlizzardSC2API
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
             .retryWhen(RETRY);
+
+        /*
+           After a new season has started there is a period of time when this endpoint could return a 404
+           response. Treating such situations as valid and returning an empty league as the upstream should.
+         */
+        if(currentSeason) mono = mono.onErrorReturn
+        (
+            (t)->
+            {
+                if(t.getCause() != null && t.getCause() instanceof WebClientResponseException.NotFound)
+                {
+                    WebClientResponseException.NotFound nfe = (WebClientResponseException.NotFound) t.getCause();
+                    LOG.warn("Current league not found. New season started recently? ({})", nfe.getRequest().getURI());
+                    return true;
+                }
+                return false;
+            },
+            BlizzardLeague.createEmpty(leagueType, queueType, teamType)
+        );
+        return mono;
+    }
+
+    public Mono<BlizzardLeague> getLeague
+    (
+        Region region,
+        BlizzardSeason season,
+        BlizzardLeague.LeagueType leagueType,
+        QueueType queueType,
+        TeamType teamType
+    )
+    {
+        return getLeague(region, season, leagueType, queueType, teamType, false);
     }
 
     public Mono<BlizzardLadder> getLadder

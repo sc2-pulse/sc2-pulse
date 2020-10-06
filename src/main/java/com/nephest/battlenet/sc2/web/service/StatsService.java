@@ -262,7 +262,7 @@ public class StatsService
     {
         BlizzardSeason bSeason = BlizzardSC2API.getSeason(seasonId);
         Season season = seasonDao.merge(Season.of(bSeason, region));
-        updateLeagues(bSeason, season);
+        updateLeagues(bSeason, season, false);
         LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
 
@@ -271,22 +271,11 @@ public class StatsService
         Integer seasonId = null;
         for(Region region : Region.values())
         {
-            /*
-               After a new season has started there is a period of time when some endpoints could return a 404
-               response. Treating such situations as valid and skipping the affected regions.
-             */
-            try
-            {
-                BlizzardSeason bSeason = api.getCurrentSeason(region).block();
-                Season season = seasonDao.merge(Season.of(bSeason, region));
-                updateLeagues(bSeason, season);
-                seasonId = season.getBattlenetId();
-                LOG.debug("Updated leagues: {} {}", seasonId, region);
-            }
-            catch(WebClientResponseException.NotFound ex)
-            {
-                LOG.warn("Current season not found ({}, {})", region, ex.getRequest().getURI());
-            }
+            BlizzardSeason bSeason = api.getCurrentSeason(region).block();
+            Season season = seasonDao.merge(Season.of(bSeason, region));
+            updateLeagues(bSeason, season, true);
+            seasonId = season.getBattlenetId();
+            LOG.debug("Updated leagues: {} {}", seasonId, region);
         }
         if(seasonId != null)
         {
@@ -295,7 +284,7 @@ public class StatsService
         }
     }
 
-    private void updateLeagues(BlizzardSeason bSeason, Season season)
+    private void updateLeagues(BlizzardSeason bSeason, Season season, boolean currentSeason)
     {
         for (League.LeagueType leagueType : League.LeagueType.values())
         {
@@ -309,7 +298,8 @@ public class StatsService
                     (
                         season.getRegion(),
                         bSeason,
-                        leagueType, queueType, teamType
+                        leagueType, queueType, teamType,
+                        currentSeason
                     ).block();
                     League league = League.of(season, bLeague);
 
