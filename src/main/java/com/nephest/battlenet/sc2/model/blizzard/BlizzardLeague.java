@@ -35,6 +35,11 @@ extends BaseLeague
         this.tiers = tiers;
     }
 
+    public static BlizzardLeague createEmpty(LeagueType type, QueueType queueType, TeamType teamType)
+    {
+        return new BlizzardLeague(type, queueType, teamType, new BlizzardLeagueTier[]{});
+    }
+
     public void setTiers(BlizzardLeagueTier[] tiers)
     {
         this.tiers = tiers;
