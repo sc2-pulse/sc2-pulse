@@ -146,6 +146,13 @@ class Util
         });
     }
 
+    static parseIsoDate(str)
+    {
+        const split = str.split("-");
+        //-1 cause of Date constructor accepts month index but day number
+        return new Date(split[0], split[1] - 1, split[2]);
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
