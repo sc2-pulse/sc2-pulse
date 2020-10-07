@@ -115,6 +115,20 @@
                 </li>
                 <li class="nav-item">
                     <a
+                        id="stats-day-tab"
+                        class="nav-link"
+                        data-toggle="pill"
+                        data-target="#stats-day"
+                        href="#stats-day"
+                        role="tab"
+                        aria-controls="stats-day"
+                        aria-selected="false"
+                    >
+                        Activity
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
                         id="stats-race-tab"
                         class="nav-link"
                         data-toggle="pill"
@@ -258,6 +272,39 @@
                             <tbody><tr></tr></tbody>
                         </table>
                         <div class="container-chart"><canvas id="player-count-global-chart" class="c-chart"></canvas></div>
+                    </section>
+                </div>
+            </section>
+            <section id="stats-day" class="tab-pane fade c-height-linked" data-view-title="Daily activity Stats">
+                <h3>Activity stats(stats per day)</h3>
+                <div class="row no-gutters">
+                    <section id="player-count-daily-activity-tier" class="col-lg-6 mb-3">
+                        <h4>Activity tier player count
+                            (
+                                <img
+                                        th:src="@{/static/icon/misc/filter.svg}"
+                                        alt="Some filters are not applicable: region, league"
+                                        title="Some filters are not applicable: region, league"
+                                        data-toggle="tooltip"
+                                />
+                                <img
+                                        th:src="@{/static/icon/misc/info.svg}"
+                                        alt="Games per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
+                                        title="Games per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
+                                        data-toggle="tooltip"
+                                />
+                            )
+                        </h4>
+                        <table
+                                id="player-count-daily-activity-tier-table"
+                                class="chartable"
+                                data-chart-type="line"
+                                data-chart-id="player-count-daily-activity-tier-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="player-count-daily-activity-tier-chart" class="c-chart"></canvas></div>
                     </section>
                 </div>
             </section>

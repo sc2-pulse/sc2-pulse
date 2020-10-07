@@ -18,6 +18,12 @@ class StatsUtil
     static updateQueueStatsView()
     {
         const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.QUEUE_STATS);
+        StatsUtil.updateQueueStatsPlayerCount(searchResult);
+        StatsUtil.updateQueueStatsActivity(searchResult);
+    }
+
+    static updateQueueStatsPlayerCount(searchResult)
+    {
         const playerCount = {};
         for(let i = 0; i < searchResult.length; i++)
         {
@@ -39,6 +45,27 @@ class StatsUtil
             document.getElementById("player-count-global-table"),
             playerCount,
             (a, b)=>EnumUtil.enumOfName(a, AGE_DISTRIBUTION).order - EnumUtil.enumOfName(b, AGE_DISTRIBUTION).order,
+            null,
+            SeasonUtil.seasonIdTranslator
+        );
+    }
+
+    static updateQueueStatsActivity(searchResult)
+    {
+        const activity = {};
+        for(let i = 0; i < searchResult.length; i++)
+        {
+            const seasonStats = searchResult[i];
+            activity[seasonStats.season] = {};
+            activity[seasonStats.season]["low"] = seasonStats.lowActivityPlayerCount;
+            activity[seasonStats.season]["medium"] = seasonStats.mediumActivityPlayerCount;
+            activity[seasonStats.season]["high"] = seasonStats.highActivityPlayerCount;
+        }
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("player-count-daily-activity-tier-table"),
+            activity,
+            (a, b)=>EnumUtil.enumOfName(a, INTENSITY).order - EnumUtil.enumOfName(b, INTENSITY).order,
             null,
             SeasonUtil.seasonIdTranslator
         );
