@@ -55,6 +55,13 @@ const AGE_DISTRIBUTION = Object.freeze
     NEW: {name: "new", order: 3}
 });
 
+const INTENSITY = Object.freeze
+({
+  LOW: {name: "low", order: 1},
+  MEDIUM: {name: "medium", order: 2},
+  HIGH: {name: "high", order: 3}
+});
+
 const VIEW = Object.freeze
 ({
     GLOBAL: {name: "global", order: 1},
