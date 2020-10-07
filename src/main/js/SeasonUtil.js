@@ -21,6 +21,7 @@ class SeasonUtil
 
     static updateSeasons(seasons)
     {
+        SeasonUtil.updateSeasonsDuration(seasons);
         Session.currentSeasons = seasons;
         SeasonUtil.updateSeasonsTabs(seasons);
         for(const seasonPicker of document.querySelectorAll(".season-picker"))
@@ -34,6 +35,18 @@ class SeasonUtil
                 option.setAttribute("value", season.battlenetId);
                 seasonPicker.appendChild(option);
             }
+        }
+    }
+
+    static updateSeasonsDuration(seasons)
+    {
+        for(const season of seasons)
+        {
+            const startDate = Util.parseIsoDate(season.start);
+            let endDate = Util.parseIsoDate(season.end);
+            const now = new Date();
+            if(now - endDate < 0) endDate = now;
+            season["days"] = (endDate - startDate) / (1000 * 60 * 60 * 24);
         }
     }
 
