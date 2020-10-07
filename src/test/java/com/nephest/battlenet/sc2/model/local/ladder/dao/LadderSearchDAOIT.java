@@ -472,6 +472,9 @@ public class LadderSearchDAOIT
             assertEquals(PLAYERS_TOTAL * (i + 1), queueStats.get(i).getPlayerBase());
             assertEquals(PLAYERS_TOTAL, queueStats.get(i).getPlayerCount());
         }
+        assertEquals(12, queueStats.get(0).getLowActivityPlayerCount());
+        assertEquals(28, queueStats.get(0).getMediumActivityPlayerCount());
+        assertEquals(PLAYERS_TOTAL - 28 - 12, queueStats.get(0).getHighActivityPlayerCount());
 
         assertEquals(1, queueStats.get(2).getPlayerCount());
         //last season consists of old players, so values should be the same

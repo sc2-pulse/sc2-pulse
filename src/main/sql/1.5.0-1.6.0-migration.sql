@@ -26,3 +26,8 @@ UPDATE "season" SET "start" = '2020-06-10', "end" = '2020-10-01' WHERE "battlene
 ALTER TABLE "season"
     ALTER COLUMN "start" DROP DEFAULT,
     ALTER COLUMN "end" DROP DEFAULT;
+
+ALTER TABLE "queue_stats"
+    ADD COLUMN "low_activity_player_count" INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN "medium_activity_player_count" INTEGER NOT NULL DEFAULT 0,
+    ADD COLUMN "high_activity_player_count" INTEGER NOT NULL DEFAULT 0;

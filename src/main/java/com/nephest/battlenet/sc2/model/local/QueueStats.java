@@ -13,7 +13,7 @@ public class QueueStats
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private Long id;
 
@@ -31,6 +31,15 @@ implements java.io.Serializable
 
     @NotNull
     private Integer playerCount;
+
+    @NotNull
+    private Integer lowActivityPlayerCount = 0;
+
+    @NotNull
+    private Integer mediumActivityPlayerCount = 0;
+
+    @NotNull
+    private Integer highActivityPlayerCount = 0;
 
     public QueueStats
     (
@@ -135,4 +144,35 @@ implements java.io.Serializable
     {
         this.playerCount = playerCount;
     }
+
+    public Integer getLowActivityPlayerCount()
+    {
+        return lowActivityPlayerCount;
+    }
+
+    public void setLowActivityPlayerCount(Integer lowActivityPlayerCount)
+    {
+        this.lowActivityPlayerCount = lowActivityPlayerCount;
+    }
+
+    public Integer getMediumActivityPlayerCount()
+    {
+        return mediumActivityPlayerCount;
+    }
+
+    public void setMediumActivityPlayerCount(Integer mediumActivityPlayerCount)
+    {
+        this.mediumActivityPlayerCount = mediumActivityPlayerCount;
+    }
+
+    public Integer getHighActivityPlayerCount()
+    {
+        return highActivityPlayerCount;
+    }
+
+    public void setHighActivityPlayerCount(Integer highActivityPlayerCount)
+    {
+        this.highActivityPlayerCount = highActivityPlayerCount;
+    }
+
 }

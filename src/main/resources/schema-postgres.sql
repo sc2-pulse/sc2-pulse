@@ -203,6 +203,9 @@ CREATE TABLE "queue_stats"
     "team_type" SMALLINT NOT NULL,
     "player_base" BIGINT NOT NULL,
     "player_count" INTEGER NOT NULL,
+    "low_activity_player_count" INTEGER NOT NULL DEFAULT 0,
+    "medium_activity_player_count" INTEGER NOT NULL DEFAULT 0,
+    "high_activity_player_count" INTEGER NOT NULL DEFAULT 0,
 
     PRIMARY KEY ("id"),
 

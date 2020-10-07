@@ -77,10 +77,51 @@ public class QueueStatsDAO
         "SELECT id AS \"queue_stats.id\", season AS \"queue_stats.season\", "
         + "queue_type AS \"queue_stats.queue_type\", team_type AS \"queue_stats.team_type\", "
         + "player_base AS \"queue_stats.player_base\", "
-        + "player_count AS \"queue_stats.player_count\" "
+        + "player_count AS \"queue_stats.player_count\", "
+        + "low_activity_player_count AS \"queue_stats.low_activity_player_count\", "
+        + "medium_activity_player_count AS \"queue_stats.medium_activity_player_count\", "
+        + "high_activity_player_count AS \"queue_stats.high_activity_player_count\" "
         + "FROM queue_stats "
         + "WHERE queue_type=:queueType AND team_type=:teamType "
         + "ORDER BY season";
+
+    private static final String UPDATE_PLAYER_ACTIVITY_QUERY_TEMPLATE =
+        "WITH "
+        + "day AS (SELECT DISTINCT ON (battlenet_id) \"end\" - \"start\" AS count FROM season WHERE battlenet_id = :seasonId), "
+
+        + "player AS "
+        + "("
+            + "SELECT team.queue_type, team.team_type "
+            + "FROM account "
+            + "INNER JOIN player_character ON account.id = player_character.account_id "
+            + "INNER JOIN team_member ON player_character.id = team_member.player_character_id "
+            + "INNER JOIN team ON team_member.team_id = team.id "
+            + "CROSS JOIN day "
+            + "WHERE team.season = :seasonId "
+            + "GROUP BY team.queue_type, team.team_type, account.id "
+            + "HAVING (SUM(team.wins) + SUM(team.losses) + SUM(team.ties))::decimal / MAX(day.count)::decimal %2$s "
+        + "), "
+
+        + "player_count AS "
+        + "("
+            + "SELECT COUNT(*) AS count, player.queue_type, player.team_type "
+            + "FROM player "
+            + "GROUP BY player.queue_type, player.team_type "
+        + ") "
+
+        + "UPDATE queue_stats "
+        + "SET %1$s_activity_player_count = player_count.count "
+        + "FROM player_count "
+        + "WHERE queue_stats.queue_type = player_count.queue_type "
+        + "AND queue_stats.team_type = player_count.team_type "
+        + "AND queue_stats.season = :seasonId";
+
+    private static final String UPDATE_LOW_PLAYER_ACTIVITY_QUERY =
+        String.format(UPDATE_PLAYER_ACTIVITY_QUERY_TEMPLATE, "low", "< 0.3");
+    private static final String UPDATE_MEDIUM_PLAYER_ACTIVITY_QUERY =
+        String.format(UPDATE_PLAYER_ACTIVITY_QUERY_TEMPLATE, "medium", "BETWEEN 0.3 AND 1");
+    private static final String UPDATE_HIGH_PLAYER_ACTIVITY_QUERY =
+        String.format(UPDATE_PLAYER_ACTIVITY_QUERY_TEMPLATE, "high", "> 1");
 
     public final RowMapper<QueueStats> STD_ROW_MAPPER;
 
@@ -96,15 +137,21 @@ public class QueueStatsDAO
     {
         this.template = template;
         this.conversionService = conversionService;
-        this.STD_ROW_MAPPER = (rs, num) -> new QueueStats
-        (
-            rs.getLong("queue_stats.id"),
-            rs.getInt("queue_stats.season"),
-            conversionService.convert(rs.getInt("queue_stats.queue_type"), QueueType.class),
-            conversionService.convert(rs.getInt("queue_stats.team_type"), TeamType.class),
-            rs.getLong("queue_stats.player_base"),
-            rs.getInt("queue_stats.player_count")
-        );
+        this.STD_ROW_MAPPER = (rs, num) ->
+        {
+            QueueStats qs = new QueueStats(
+                rs.getLong("queue_stats.id"),
+                rs.getInt("queue_stats.season"),
+                conversionService.convert(rs.getInt("queue_stats.queue_type"), QueueType.class),
+                conversionService.convert(rs.getInt("queue_stats.team_type"), TeamType.class),
+                rs.getLong("queue_stats.player_base"),
+                rs.getInt("queue_stats.player_count")
+            );
+            qs.setLowActivityPlayerCount(rs.getInt("queue_stats.low_activity_player_count"));
+            qs.setMediumActivityPlayerCount(rs.getInt("queue_stats.medium_activity_player_count"));
+            qs.setHighActivityPlayerCount(rs.getInt("queue_stats.high_activity_player_count"));
+            return qs;
+        };
     }
 
     public void calculateForSeason(int season)
@@ -113,7 +160,10 @@ public class QueueStatsDAO
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_QUERY, params);
         template.update(CALCULATE_SEASON_PLAYER_BASE_MERGE_QUERY, params);
-        LOG.debug("Calculated queue stats for {} season", new Object[]{season});
+        template.update(UPDATE_LOW_PLAYER_ACTIVITY_QUERY, params);
+        template.update(UPDATE_MEDIUM_PLAYER_ACTIVITY_QUERY, params);
+        template.update(UPDATE_HIGH_PLAYER_ACTIVITY_QUERY, params);
+        LOG.debug("Calculated queue stats for {} season", season);
     }
 
     public void mergeCalculateForSeason(int season)
@@ -122,7 +172,10 @@ public class QueueStatsDAO
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_MERGE_QUERY, params);
         template.update(CALCULATE_SEASON_PLAYER_BASE_MERGE_QUERY, params);
-        LOG.debug("Calculated (merged) queue stats for {} season", new Object[]{season});
+        template.update(UPDATE_LOW_PLAYER_ACTIVITY_QUERY, params);
+        template.update(UPDATE_MEDIUM_PLAYER_ACTIVITY_QUERY, params);
+        template.update(UPDATE_HIGH_PLAYER_ACTIVITY_QUERY, params);
+        LOG.debug("Calculated (merged) queue stats for {} season", season);
     }
 
     public List<QueueStats> findQueueStats(QueueType queueType, TeamType teamType)
