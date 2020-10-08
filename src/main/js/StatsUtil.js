@@ -48,6 +48,14 @@ class StatsUtil
             null,
             SeasonUtil.seasonIdTranslator
         );
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("player-count-day-table"),
+            Util.forObjectValues(StatsUtil.calculateDailyStats(playerCount), v=>Math.round(v)),
+            (a, b)=>EnumUtil.enumOfName(a, AGE_DISTRIBUTION).order - EnumUtil.enumOfName(b, AGE_DISTRIBUTION).order,
+            null,
+            SeasonUtil.seasonIdTranslator
+        );
     }
 
     static updateQueueStatsActivity(searchResult)
@@ -109,6 +117,18 @@ class StatsUtil
             (document.getElementById("games-played-global-table"), globalResult.gamesPlayed, null, null, SeasonUtil.seasonIdTranslator);
         TableUtil.updateColRowTable
             (document.getElementById("team-count-global-table"), globalResult.teamCount, null, null, SeasonUtil.seasonIdTranslator);
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("games-played-day-table"),
+            Util.forObjectValues(StatsUtil.calculateDailyStats(globalResult.gamesPlayed), v=>Math.round(v)),
+            null, null, SeasonUtil.seasonIdTranslator
+        );
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("team-count-day-table"),
+            Util.forObjectValues(StatsUtil.calculateDailyStats(globalResult.teamCount), v=>Math.round(v)),
+            null, null, SeasonUtil.seasonIdTranslator
+        );
 
         TableUtil.updateColRowTable
         (
@@ -229,6 +249,21 @@ class StatsUtil
         return fetch(ROOT_CONTEXT_PATH + "/api/ladder/stats/bundle")
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.BUNDLE, json); res(json);}));
+    }
+
+    static calculateDailyStats(stats)
+    {
+        const dailyStats = {};
+        for(const [seasonId, seasonStats] of Object.entries(stats))
+        {
+            dailyStats[seasonId] = {};
+            const season = Session.currentSeasons.filter(s=>s.battlenetId == seasonId)[0];
+            for(const [key, val] of Object.entries(seasonStats))
+            {
+                dailyStats[seasonId][key] = val / season.days;
+            }
+        }
+        return dailyStats;
     }
 
 

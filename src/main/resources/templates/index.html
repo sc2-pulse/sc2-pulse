@@ -278,6 +278,52 @@
             <section id="stats-day" class="tab-pane fade c-height-linked" data-view-title="Daily activity Stats">
                 <h3>Activity stats(stats per day)</h3>
                 <div class="row no-gutters">
+                    <section id="games-played-day" class="col-lg-6 mb-3">
+                        <h4>Games played per day</h4>
+                        <table
+                                id="games-played-day-table"
+                                class="chartable"
+                                data-chart-type="line"
+                                data-chart-id="games-played-day-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="games-played-day-chart" class="c-chart"></canvas></div>
+                    </section>
+                    <section id="team-count-day" class="col-lg-6 mb-3">
+                        <h4>New teams(season) per day</h4>
+                        <table
+                                id="team-count-day-table"
+                                class="chartable"
+                                data-chart-type="line"
+                                data-chart-id="team-count-day-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="team-count-day-chart" class="c-chart"></canvas></div>
+                    </section>
+                    <section id="player-count-day" class="col-lg-6 mb-3">
+                        <h4>New players(season) per day
+                            (<img
+                                    th:src="@{/static/icon/misc/filter.svg}"
+                                    alt="Some filters are not applicable: region, league"
+                                    title="Some filters are not applicable: region, league"
+                                    data-toggle="tooltip"
+                            />)
+                        </h4>
+                        <table
+                                id="player-count-day-table"
+                                class="chartable"
+                                data-chart-type="line"
+                                data-chart-id="player-count-day-chart"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="player-count-day-chart" class="c-chart"></canvas></div>
+                    </section>
                     <section id="player-count-daily-activity-tier" class="col-lg-6 mb-3">
                         <h4>Activity tier player count
                             (
