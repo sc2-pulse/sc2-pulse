@@ -153,6 +153,22 @@ class Util
         return new Date(split[0], split[1] - 1, split[2]);
     }
 
+    static forObjectValues(obj, func)
+    {
+        for([key, val] of Object.entries(obj))
+        {
+            if(typeof val !== "object")
+            {
+                obj[key] = func(val);
+            }
+            else
+            {
+                Util.forObjectValues(obj[key], func);
+            }
+        }
+        return obj;
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
