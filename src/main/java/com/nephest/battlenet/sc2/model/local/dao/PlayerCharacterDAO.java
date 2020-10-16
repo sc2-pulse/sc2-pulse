@@ -23,6 +23,7 @@ public class PlayerCharacterDAO
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
         + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
+        + "account_id=excluded.account_id, "
         + "realm=excluded.realm, "
         + "name=excluded.name";
 
