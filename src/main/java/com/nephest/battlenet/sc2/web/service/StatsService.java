@@ -129,14 +129,14 @@ public class StatsService
             for (Integer season : BlizzardSC2API.MMR_SEASONS.keySet().stream().sorted().collect(Collectors.toList()))
             {
                 updateSeason(season);
-                LOG.info("Updated season {}", new Object[]{season});
+                LOG.info("Updated season {}", season);
             }
             playerCharacterStatsDAO.mergeCalculateGlobal();
             postgreSQLUtils.analyze();
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
-            LOG.info("Updated all after {} seconds", new Object[]{seconds});
+            LOG.info("Updated all after {} seconds", seconds);
         }
         catch(RuntimeException ex)
         {
@@ -183,7 +183,7 @@ public class StatsService
                 for (Integer season : seasons)
                 {
                     updateSeason(season);
-                    LOG.info("Updated season {}", new Object[]{season});
+                    LOG.info("Updated season {}", season);
                 }
                 playerCharacterStatsDAO.mergeCalculateGlobal();
                 postgreSQLUtils.analyze();
@@ -191,7 +191,7 @@ public class StatsService
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
-            LOG.info("Updated missing after {} seconds", new Object[]{seconds});
+            LOG.info("Updated missing after {} seconds", seconds);
         }
         catch(RuntimeException ex)
         {
@@ -230,7 +230,7 @@ public class StatsService
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
-            LOG.info("Updated current after {} seconds", new Object[]{seconds});
+            LOG.info("Updated current after {} seconds", seconds);
         }
         catch(RuntimeException ex)
         {
@@ -263,7 +263,7 @@ public class StatsService
         BlizzardSeason bSeason = BlizzardSC2API.getSeason(seasonId);
         Season season = seasonDao.merge(Season.of(bSeason, region));
         updateLeagues(bSeason, season);
-        LOG.debug("Updated leagues: {} {}", new Object[]{seasonId, region});
+        LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
 
     private void updateCurrentSeason()
@@ -275,7 +275,7 @@ public class StatsService
             Season season = seasonDao.merge(Season.of(bSeason, region));
             updateLeagues(bSeason, season);
             seasonId = season.getBattlenetId();
-            LOG.debug("Updated leagues: {} {}", new Object[]{seasonId, region});
+            LOG.debug("Updated leagues: {} {}", seasonId, region);
         }
         if(seasonId != null)
         {
@@ -389,9 +389,7 @@ public class StatsService
                     */
                     LOG.info
                     (
-                        "Skipped invalid division {}",
-                        new Object[]{division.getBattlenetId()}
-                    );
+                        "Skipped invalid division {}", division.getBattlenetId());
                 }
                 else
                 {
@@ -436,7 +434,7 @@ public class StatsService
             //blizzard can send invalid member without account sometimes. Ignoring these entries
             if (bMember.getAccount() == null) continue;
 
-            Account account = Account.of(bMember.getAccount());
+            Account account = Account.of(bMember.getAccount(), season.getRegion());
             accountDao.merge(account);
 
             PlayerCharacter character = PlayerCharacter.of(account, season.getRegion(), bMember.getCharacter());

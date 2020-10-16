@@ -38,7 +38,8 @@ implements WithSecurityContextFactory<WithBlizzardMockUser>
         for(String role : withMockUser.roles()) authorityList.add(new SimpleGrantedAuthority("ROLE_" + role));
 
         OAuth2User principal =
-            new BlizzardOidcUser(mock(OidcUser.class), accountDAO.merge(new Account(null, withMockUser.username())));
+            new BlizzardOidcUser(mock(OidcUser.class), accountDAO.merge(new Account(
+                null, withMockUser.partition(), withMockUser.username())));
         Authentication auth = new OAuth2AuthenticationToken(principal, authorityList, withMockUser.username());
         SecurityContext ctxt = SecurityContextHolder.createEmptyContext();
         ctxt.setAuthentication(auth);

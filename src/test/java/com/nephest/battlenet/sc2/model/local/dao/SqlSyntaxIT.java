@@ -4,10 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
-import com.nephest.battlenet.sc2.model.BaseLeagueTier;
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -124,8 +121,8 @@ public class SqlSyntaxIT
         assertEquals(2, team.getTies());
         assertEquals(2, team.getPoints());
 
-        accountDAO.create(new Account(null, "tag#1"));
-        Account account = accountDAO.merge(new Account(null, "newtag#2"));
+        accountDAO.create(new Account(null, Partition.GLOBAL, "tag#1"));
+        Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "newtag#2"));
         assertEquals("newtag#2", account.getBattleTag());
         accountDAO.removeExpiredByPrivacy();
 

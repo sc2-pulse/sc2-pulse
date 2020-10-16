@@ -103,7 +103,7 @@ public class LadderSearchIndependentIT
 
         //create what matters
         Division bronze1 = divisionDAO.findListByLadder(season1.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
-        Account acc = accountDAO.create(new Account(null, "refaccount#123"));
+        Account acc = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount#123"));
         PlayerCharacter character1 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc.getId(), region, 9998L, 1, "refchar1#123"));
         PlayerCharacter character2 = playerCharacterDAO
@@ -181,7 +181,7 @@ public class LadderSearchIndependentIT
         Division gold2 = divisionDAO.findListByLadder(season2.getBattlenetId(), region, BaseLeague.LeagueType.GOLD, QueueType.LOTV_4V4, TEAM_TYPE, TIER_TYPE).get(0);
         Division bronze1v1 = divisionDAO.findListByLadder(season1.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE, TIER_TYPE).get(0);
 
-        Account[] accounts = seasonGenerator.generateAccounts("refacc", 4);
+        Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "refacc", 4);
         PlayerCharacter[] characters = seasonGenerator.generateCharacters("refchar", accounts, region, 10000);
 
         Team team1 = seasonGenerator.createTeam

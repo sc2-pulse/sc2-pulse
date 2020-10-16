@@ -5,9 +5,9 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +27,7 @@ public class LadderCharacterDAO
     private static final String FIND_DISTINCT_CHARACTER_FORMAT =
         "SELECT "
         + "MAX(account.id) AS \"account.id\", "
+        + "MAX(account.partition) AS \"account.partition\", "
         + "MAX(account.battle_tag) AS \"account.battle_tag\", "
         + "player_character_stats.player_character_id, "
         + "MAX(player_character.region) AS \"player_character.region\", "
@@ -75,45 +76,49 @@ public class LadderCharacterDAO
     );
 
     private final NamedParameterJdbcTemplate template;
-    private ConversionService conversionService;
+    private final ConversionService conversionService;
+    private final AccountDAO accountDAO;
 
-    private final RowMapper<LadderDistinctCharacter> DISTINCT_CHARACTER_ROW_MAPPER =
-    (rs, num)->
-    {
-        Integer gamesPlayed = rs.getInt("games_played");
-        int raceInt = rs.getInt("race");
-        Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
-        return new LadderDistinctCharacter
-            (
-                conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
-                rs.getInt("rating_max"),
-                new Account(rs.getLong("account.id"), rs.getString("account.battle_tag")),
-                new PlayerCharacter
-                    (
-                        rs.getLong("player_character_id"),
-                        rs.getLong("account.id"),
-                        conversionService.convert(rs.getInt("player_character.region"), Region.class),
-                        rs.getLong("player_character.battlenet_id"),
-                        rs.getInt("player_character.realm"),
-                        rs.getString("player_character.name")
-                    ),
-                race == Race.TERRAN ? gamesPlayed : null,
-                race == Race.PROTOSS ? gamesPlayed : null,
-                race == Race.ZERG ? gamesPlayed : null,
-                race == Race.RANDOM ? gamesPlayed : null,
-                gamesPlayed
-            );
-    };
+    private final RowMapper<LadderDistinctCharacter> DISTINCT_CHARACTER_ROW_MAPPER;
 
     @Autowired
     public LadderCharacterDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService,
+        @Autowired AccountDAO accountDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
+        this.accountDAO = accountDAO;
+        DISTINCT_CHARACTER_ROW_MAPPER =
+        (rs, num)->
+        {
+            Integer gamesPlayed = rs.getInt("games_played");
+            int raceInt = rs.getInt("race");
+            Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
+            return new LadderDistinctCharacter
+                (
+                    conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
+                    rs.getInt("rating_max"),
+                    accountDAO.getStdRowMapper().mapRow(rs, num),
+                    new PlayerCharacter
+                        (
+                            rs.getLong("player_character_id"),
+                            rs.getLong("account.id"),
+                            conversionService.convert(rs.getInt("player_character.region"), Region.class),
+                            rs.getLong("player_character.battlenet_id"),
+                            rs.getInt("player_character.realm"),
+                            rs.getString("player_character.name")
+                        ),
+                    race == Race.TERRAN ? gamesPlayed : null,
+                    race == Race.PROTOSS ? gamesPlayed : null,
+                    race == Race.ZERG ? gamesPlayed : null,
+                    race == Race.RANDOM ? gamesPlayed : null,
+                    gamesPlayed
+                );
+        };
     }
 
     public List<LadderDistinctCharacter> findDistinctCharactersByName(String name)

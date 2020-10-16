@@ -7,7 +7,11 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
@@ -47,7 +51,9 @@ public class LadderSearchDAO
         + "team.battlenet_id as \"team.battlenet_id\", "
         + "team.rating, team.wins, team.losses, team.ties, "
         + "team.global_rank, team.region_rank, team.league_rank, "
-        + "account.id AS \"account.id\", account.battle_tag,"
+        + "account.id AS \"account.id\","
+        + "account.partition AS \"account.partition\","
+        + "account.battle_tag AS \"account.battle_tag\","
         + "player_character.id AS \"player_character.id\", "
         + "player_character.region AS \"player_character.region\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", player_character.realm, player_character.name, "
@@ -170,6 +176,7 @@ public class LadderSearchDAO
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
     private SeasonDAO seasonDAO;
+    private AccountDAO accountDAO;
 
     private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_EXTRACTOR= this::mapTeams;
 
@@ -188,13 +195,15 @@ public class LadderSearchDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         @Autowired LadderUtil ladderUtil,
-        @Autowired SeasonDAO seasonDAO
+        @Autowired SeasonDAO seasonDAO,
+        @Autowired AccountDAO accountDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
         this.ladderUtil = ladderUtil;
         this.seasonDAO = seasonDAO;
+        this.accountDAO = accountDAO;
     }
 
     protected void setResultsPerPage(int resultsPerPage)
@@ -263,7 +272,7 @@ public class LadderSearchDAO
 
             LadderTeamMember member = new LadderTeamMember
             (
-                new Account(rs.getLong("account.id"), rs.getString("battle_tag")),
+                accountDAO.getStdRowMapper().mapRow(rs, 0),
                 new PlayerCharacter
                 (
                     rs.getLong("player_character.id"),

@@ -99,7 +99,7 @@ public class PlayerCharacterStatsDAOIT
         Division gold2 = divisionDAO.findListByLadder(season2.getBattlenetId(), region, BaseLeague.LeagueType.GOLD, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
 
         //create ref data that actually matters
-        Account acc = accountDAO.create(new Account(null, "refaccount#123"));
+        Account acc = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount#123"));
         PlayerCharacter character = playerCharacterDAO
             .create(new PlayerCharacter(null, acc.getId(), region, 9999L, 1, "refchar#123"));
         createTeam(season1, Race.TERRAN, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, BigInteger.valueOf(9999L), 1L, character);

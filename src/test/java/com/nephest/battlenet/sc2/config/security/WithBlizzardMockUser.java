@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.config.security;
 
+import com.nephest.battlenet.sc2.model.Partition;
 import org.springframework.security.test.context.support.WithSecurityContext;
 
 import java.lang.annotation.Retention;
@@ -12,6 +13,7 @@ import java.lang.annotation.RetentionPolicy;
 @WithSecurityContext(factory = AccountSecurityContextFactory.class)
 public @interface WithBlizzardMockUser
 {
+    Partition partition();
     String username();
     String[] roles() default {"USER"};
 }

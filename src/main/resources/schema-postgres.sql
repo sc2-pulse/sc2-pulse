@@ -21,13 +21,14 @@ CREATE TABLE "account"
 (
 
     "id" BIGSERIAL,
+    "partition" SMALLINT NOT NULL,
     "battle_tag" VARCHAR(30) NOT NULL,
     "updated" TIMESTAMP NOT NULL,
 
     PRIMARY KEY ("id"),
 
-    CONSTRAINT "uq_account_battle_tag"
-        UNIQUE ("battle_tag")
+    CONSTRAINT "uq_account_partition_battle_tag"
+        UNIQUE ("partition", "battle_tag")
 
 );
 

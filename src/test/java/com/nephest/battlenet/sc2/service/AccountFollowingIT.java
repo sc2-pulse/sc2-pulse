@@ -92,7 +92,7 @@ public class AccountFollowingIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            account = accountDAO.merge(new Account(null, BATTLETAG));
+            account = accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
             mvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
@@ -112,7 +112,7 @@ public class AccountFollowingIT
     }
 
     @Test
-    @WithBlizzardMockUser(username = BATTLETAG)
+    @WithBlizzardMockUser(partition = Partition.GLOBAL, username = BATTLETAG)
     public void testFollowing()
     throws Exception
     {
@@ -137,7 +137,7 @@ public class AccountFollowingIT
         PlayerCharacter character2 = playerCharacterDAO
             .create(new PlayerCharacter(null, account.getId(), region, 9999L, 1, "refchar2#123"));
         //acc and char to be a part of the team
-        Account memberAccount = accountDAO.merge(new Account(null, "memberacc#123"));
+        Account memberAccount = accountDAO.merge(new Account(null, Partition.GLOBAL, "memberacc#123"));
         PlayerCharacter memberCharacter = playerCharacterDAO
             .create(new PlayerCharacter(null, memberAccount.getId(), region, 9997L, 1, "memberchar#123"));
         Team team1 = new Team
@@ -230,25 +230,25 @@ public class AccountFollowingIT
             + "\"members\":[{\"terranGamesPlayed\":100,\"protossGamesPlayed\":0,\"zergGamesPlayed\":0,"
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"refchar1#123\",\"id\":281,"
             + "\"accountId\":1,\"region\":\"EU\",\"battlenetId\":9998},"
-            + "\"account\":{\"battleTag\":\"refaccount#123\"}}]},"
+            + "\"account\":{\"partition\":\"GLOBAL\",\"battleTag\":\"refaccount#123\"}}]},"
 
             + "{\"rating\":100,\"wins\":100,\"losses\":0,\"id\":71,"
             + "\"region\":\"EU\",\"league\":{\"type\":0,\"queueType\":204,\"teamType\":0},\"tierType\":0,"
             + "\"members\":[{\"terranGamesPlayed\":100,\"protossGamesPlayed\":0,\"zergGamesPlayed\":0,"
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"refchar1#123\",\"id\":281,"
             + "\"accountId\":1,\"region\":\"EU\",\"battlenetId\":9998},"
-            + "\"account\":{\"battleTag\":\"refaccount#123\"}},"
+            + "\"account\":{\"partition\":\"GLOBAL\",\"battleTag\":\"refaccount#123\"}},"
             + "{\"terranGamesPlayed\":0,\"protossGamesPlayed\":0,\"zergGamesPlayed\":100,"
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"memberchar#123\",\"id\":283,"
             + "\"accountId\":283,\"region\":\"EU\",\"battlenetId\":9997},"
-            + "\"account\":{\"battleTag\":\"memberacc#123\"}}]},"
+            + "\"account\":{\"partition\":\"GLOBAL\",\"battleTag\":\"memberacc#123\"}}]},"
 
             + "{\"rating\":99,\"wins\":100,\"losses\":0,\"id\":73,"
             + "\"region\":\"EU\",\"league\":{\"type\":0,\"queueType\":204,\"teamType\":0},\"tierType\":0,"
             + "\"members\":[{\"terranGamesPlayed\":100,\"protossGamesPlayed\":0,\"zergGamesPlayed\":0,"
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"refchar2#123\",\"id\":282,"
             + "\"accountId\":1,\"region\":\"EU\",\"battlenetId\":9999},"
-            + "\"account\":{\"battleTag\":\"refaccount#123\"}}]}]\n";
+            + "\"account\":{\"partition\":\"GLOBAL\",\"battleTag\":\"refaccount#123\"}}]}]\n";
         String url = "/api/my/following/ladder?season=2&queue=LOTV_4V4&team-type=ARRANGED&eu=true&bro=true";
         mvc.perform(get(url).contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
