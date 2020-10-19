@@ -82,7 +82,7 @@ class ElementUtil
         img.setAttribute("src", `${RESOURCE_PATH}icon/${prefix}${name}.svg`);
         img.setAttribute("alt", name);
         img.setAttribute("title", name);
-        for(const clazz of classes) img.classList.add(clazz);
+        img.setAttribute("class", classes);
         return img;
     }
 
@@ -181,7 +181,7 @@ class ElementUtil
         }
         else
         {
-            raceRace.appendChild(ElementUtil.createImage("race/", raceName, ["table-image", "table-image-square"]));
+            raceRace.appendChild(ElementUtil.createImage("race/", raceName, "table-image table-image-square"));
         }
         raceRow.insertCell().classList.add("player-stats-mmr", "player-stats-" + raceName + "-mmr");
         raceRow.insertCell().classList.add("player-stats-league", "player-stats-" + raceName + "-league");

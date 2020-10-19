@@ -19,7 +19,7 @@ class TeamUtil
             TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, i);
             row.insertCell().appendChild(document.createTextNode(team.rating));
             row.insertCell().appendChild(TeamUtil.createLeagueDiv(team));
-            row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), ["table-image-long"]));
+            row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), "table-image-long"));
             row.appendChild(TeamUtil.createMembersCell(team));
             TeamUtil.appendGamesInfo(row.insertCell(), team);
             row.insertCell().appendChild(document.createTextNode(Math.round( team.wins / (team.wins + team.losses) * 100) ));
@@ -210,7 +210,7 @@ class TeamUtil
             for(const [race, val] of percentageSorted.entries())
             {
                 if(val == 0) continue;
-                racesElem.appendChild(ElementUtil.createImage("race/", race.name, ["table-image", "table-image-square"]));
+                racesElem.appendChild(ElementUtil.createImage("race/", race.name, "table-image table-image-square"));
                 if(val < 100)
                 {
                     const racePercent = document.createElement("span");
@@ -243,8 +243,8 @@ class TeamUtil
         const league = EnumUtil.enumOfId(team.league.type, LEAGUE);
         const leagueDiv = document.createElement("div");
         leagueDiv.classList.add("text-nowrap");
-        leagueDiv.appendChild(ElementUtil.createImage("league/", league.name, ["table-image", "table-image-square", "mr-1"]));
-        leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (team.tierType + 1), ["table-image-additional"]));
+        leagueDiv.appendChild(ElementUtil.createImage("league/", league.name, "table-image table-image-square mr-1"));
+        leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (team.tierType + 1), "table-image-additional"));
         return leagueDiv;
     }
 

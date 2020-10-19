@@ -205,7 +205,7 @@ class StatsUtil
         {
             const th = document.createElement("th");
             th.setAttribute("scope", "col");
-            th.appendChild(ElementUtil.createImage("flag/", region.toLowerCase(), ["table-image", "table-image-long"]));
+            th.appendChild(ElementUtil.createImage("flag/", region.toLowerCase(), "table-image table-image-long"));
             headers.appendChild(th);
         }
         for(const [leagueId, leagueObj] of Object.entries(searchResult[Object.keys(searchResult)[0]]).sort((a, b)=>b[0] - a[0]))
@@ -218,8 +218,8 @@ class StatsUtil
                 th.setAttribute("scope", "row");
                 const leagueDiv = document.createElement("div");
                 leagueDiv.classList.add("text-nowrap");
-                leagueDiv.appendChild(ElementUtil.createImage("league/", league.name, ["table-image", "table-image-square", "mr-1"]));
-                leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (1 + + tierId), ["table-image-additional"]));
+                leagueDiv.appendChild(ElementUtil.createImage("league/", league.name, "table-image table-image-square mr-1"));
+                leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (1 + + tierId), "table-image-additional"));
                 th.appendChild(leagueDiv);
                 tr.appendChild(th);
                 for(const region of Object.keys(searchResult))

@@ -192,7 +192,7 @@ class CharacterUtil
             raceStats.getElementsByClassName("player-stats-" + raceName + "-games")[0].textContent = stats.gamesPlayed;
             const leagueStats = raceStats.getElementsByClassName("player-stats-" + raceName + "-league")[0];
             ElementUtil.removeChildren(leagueStats);
-            leagueStats.appendChild(ElementUtil.createImage("league/", league.name, ["table-image", "table-image-square"]));
+            leagueStats.appendChild(ElementUtil.createImage("league/", league.name, "table-image table-image-square"));
             raceStats.classList.remove("d-none");
             card.classList.remove("d-none");
         }
@@ -254,8 +254,8 @@ class CharacterUtil
         {
             const character = searchResult[i];
             const row = tbody.insertRow();
-            row.insertCell().appendChild(ElementUtil.createImage("flag/", character.members.character.region.toLowerCase(), ["table-image-long"]));
-            row.insertCell().appendChild(ElementUtil.createImage("league/", EnumUtil.enumOfId(character.leagueMax, LEAGUE).name, ["table-image", "table-image-square", "mr-1"]));
+            row.insertCell().appendChild(ElementUtil.createImage("flag/", character.members.character.region.toLowerCase(), "table-image-long"));
+            row.insertCell().appendChild(ElementUtil.createImage("league/", EnumUtil.enumOfId(character.leagueMax, LEAGUE).name, "table-image table-image-square mr-1"));
             row.insertCell().appendChild(document.createTextNode(character.ratingMax));
             row.insertCell().appendChild(document.createTextNode(character.totalGamesPlayed))
             const membersCell = row.insertCell();
