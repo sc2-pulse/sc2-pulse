@@ -83,7 +83,7 @@ class HistoryUtil
 
     static showAnchoredTabs()
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         const params = new URLSearchParams(window.location.search);
         const hashes = params.getAll("t");
         const promises = [];
@@ -101,13 +101,13 @@ class HistoryUtil
                 $(element).tab('show')
             }
         }
-        return Promise.all(promises).then(e=>new Promise((res, rej)=>{Util.setGeneratingStatus("success"); res();}));
+        return Promise.all(promises).then(e=>new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}));
     }
 
     static restoreState(e)
     {
         if(e != null && e.state == null) return;
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         Session.isHistorical = true;
         promises = [];
         lazyPromises = [];
@@ -131,7 +131,7 @@ class HistoryUtil
             }))
             .then(e => new Promise((res, rej)=>{
                 HistoryUtil.updateActiveTabs();
-                Util.setGeneratingStatus("success");
+                Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }));
 
@@ -187,7 +187,7 @@ class HistoryUtil
             HistoryUtil.updateActiveTabs();
             if(document.querySelector("#main-tabs .nav-link.active").getAttribute("data-target") === "#about")
                 ElementUtil.removeNofollowRels("about");
-            Util.setGeneratingStatus("success");
+            Util.setGeneratingStatus(STATUS.SUCCESS);
             if(scrollTo != null) Util.scrollIntoViewById(scrollTo);
             res();
         }));

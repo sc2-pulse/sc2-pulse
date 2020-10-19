@@ -6,7 +6,7 @@ class FollowUtil
 
     static follow()
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
         return fetch("api/my/following/" + id, {method: "POST"})
@@ -20,13 +20,13 @@ class FollowUtil
                     return FollowUtil.getMyFollowing();
                 }
             )
-            .then(o => new Promise((res, rej)=>{Util.setGeneratingStatus("success"); res();}))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .then(o => new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static unfollow()
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
         return fetch("api/my/following/" + id, {method: "DELETE"})
@@ -40,17 +40,17 @@ class FollowUtil
                     return FollowUtil.getMyFollowing();
                 }
             )
-            .then(o => new Promise((res, rej)=>{Util.setGeneratingStatus("success"); res();}))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .then(o => new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static getMyFollowing()
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         return fetch("api/my/following")
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{Session.currentFollowing = json; Util.setGeneratingStatus("success"); res();}))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .then(json => new Promise((res, rej)=>{Session.currentFollowing = json; Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static enhanceFollowButtons()

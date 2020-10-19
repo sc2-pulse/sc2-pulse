@@ -19,7 +19,7 @@ class Session
         }
         else
         {
-            Util.setGeneratingStatus("error", error.message);
+            Util.setGeneratingStatus(STATUS.ERROR, error.message);
         }
     }
 
@@ -27,7 +27,7 @@ class Session
     {
         if(Session.currentAccount != null)
         {
-            Util.setGeneratingStatus("success");
+            Util.setGeneratingStatus(STATUS.SUCCESS);
             $("#error-session").modal();
         }
         else
@@ -38,7 +38,7 @@ class Session
 
     static doRenewBlizzardRegistration()
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         window.location.href=ROOT_CONTEXT_PATH + "oauth2/authorization/" + Util.getCookie("oauth-reg");
     }
 
@@ -83,11 +83,11 @@ class PersonalUtil
 {
     static getMyAccount()
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         const request = "api/my/account";
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{PersonalUtil.updateMyAccount(json); Util.setGeneratingStatus("success"); res()}))
+            .then(json => new Promise((res, rej)=>{PersonalUtil.updateMyAccount(json); Util.setGeneratingStatus(STATUS.SUCCESS); res()}))
             .catch(error => Session.onPersonalException(error));
     }
 

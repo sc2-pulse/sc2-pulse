@@ -53,14 +53,14 @@ class CharacterUtil
 
     static updateCharacterTeams(id)
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updateCharacterTeamsModel(id)
             .then(jsons => new Promise((res, rej)=>{
                 CharacterUtil.updateCharacterTeamsView();
-                Util.setGeneratingStatus("success");
+                Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static updateCharacterInfo(searchResultFull, id)
@@ -215,10 +215,10 @@ class CharacterUtil
 
     static updateCharacterStats(id)
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         CharacterUtil.updateCharacterStatsModel(id)
-            .then(json => new Promise((res, rej)=>{CharacterUtil.updateCharacterStatsView(); Util.setGeneratingStatus("success"); res();}))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .then(json => new Promise((res, rej)=>{CharacterUtil.updateCharacterStatsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static findCharactersByName()
@@ -276,7 +276,7 @@ class CharacterUtil
 
     static updateCharacterSearch(name)
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         const tabs = new URLSearchParams(window.location.search).getAll("t");
         const searchParams = new URLSearchParams();
         searchParams.append("type", "search");
@@ -286,12 +286,12 @@ class CharacterUtil
         return CharacterUtil.updateCharacterSearchModel(name)
             .then(json => new Promise((res, rej)=>{
                 CharacterUtil.updateCharacterSearchView();
-                Util.setGeneratingStatus("success");
+                Util.setGeneratingStatus(STATUS.SUCCESS);
                 if(!Session.isHistorical) HistoryUtil.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString());
                 Session.currentSearchParams = stringParams;
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static updatePersonalCharactersModel()
@@ -311,14 +311,14 @@ class CharacterUtil
 
     static updatePersonalCharacters()
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updatePersonalCharactersModel()
             .then(json => new Promise((res, rej)=>{
                 CharacterUtil.updatePersonalCharactersView();
-                Util.setGeneratingStatus("success");
+                Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static enhanceSearchForm()

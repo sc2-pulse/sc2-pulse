@@ -12,11 +12,11 @@ class SeasonUtil
 
     static getSeasons()
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         return fetch("api/seasons")
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{SeasonUtil.updateSeasons(json); Util.setGeneratingStatus("success"); res();}))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .then(json => new Promise((res, rej)=>{SeasonUtil.updateSeasons(json); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static updateSeasons(seasons)

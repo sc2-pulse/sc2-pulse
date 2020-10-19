@@ -38,7 +38,7 @@ class LadderUtil
 
     static updateLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         const tabs = new URLSearchParams(window.location.search).getAll("t");
         const params =
         {
@@ -57,7 +57,7 @@ class LadderUtil
         return LadderUtil.updateLadderModel(params, formParams, ratingAnchor, idAnchor, forward, count)
             .then(e => new Promise((res, rej)=>{
                 LadderUtil.updateLadderView();
-                Util.setGeneratingStatus("success", null, "generated-info-all");
+                Util.setGeneratingStatus(STATUS.SUCCESS, null, "generated-info-all");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
                 Session.currentSeason = searchParams.get("season");
                 Session.currentTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
@@ -65,7 +65,7 @@ class LadderUtil
                 Session.currentSearchParams = stringParams;
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static updateMyLadderModel(formParams)
@@ -99,7 +99,7 @@ class LadderUtil
 
     static updateMyLadder(formParams)
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
 
         const tabs = new URLSearchParams(window.location.search).getAll("t");
         const params = {form: formParams}
@@ -111,7 +111,7 @@ class LadderUtil
         return LadderUtil.updateMyLadderModel(formParams)
             .then(jsons => new Promise((res, rej)=>{
                 LadderUtil.updateMyLadderView();
-                Util.setGeneratingStatus("success", null, "following-ladder");
+                Util.setGeneratingStatus(STATUS.SUCCESS, null, "following-ladder");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
                 Session.currentPersonalSeasonSeason = searchParams.get("season");
                 Session.currentPersonalTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
@@ -119,7 +119,7 @@ class LadderUtil
                 Session.currentSearchParams = stringParams;
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus("error", error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static ladderPaginationPageClick(evt)

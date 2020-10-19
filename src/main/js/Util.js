@@ -27,24 +27,24 @@ class Util
     {
         switch(status)
         {
-            case "begin":
+            case STATUS.BEGIN:
                 Session.currentRequests++;
                 if (Session.currentRequests > 1) return;
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), true);
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-success"), false);
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-error"), false);
             break;
-            case "success":
-            case "error":
+            case STATUS.SUCCESS:
+            case STATUS.ERROR:
                 Session.currentRequests--;
-                if(status === "error")
+                if(status === STATUS.ERROR)
                 {
                     document.getElementById("error-generation-text").textContent = errorText;
                     $("#error-generation").modal();
                 }
                 if(Session.currentRequests > 0) return;
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
-                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-" + status), true);
+                ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-" + status.name), true);
                 Session.isHistorical = false;
             break;
         }

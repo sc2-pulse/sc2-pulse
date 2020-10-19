@@ -82,3 +82,10 @@ const VIEW_DATA = Object.freeze
     CHARACTER_STATS: {name: "character-stats", order: 6},
     VAR: {name: "var", order: 7}
 });
+
+const STATUS = Object.freeze
+({
+  BEGIN: {name: "begin", order: 1},
+  SUCCESS: {name: "success", order: 2},
+  ERROR: {name: "error", order: 3}
+});

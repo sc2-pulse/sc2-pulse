@@ -81,10 +81,10 @@ class StatsUtil
 
     static updateQueueStats(formParams)
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateQueueStatsModel(formParams)
-            .then(json => new Promise((res, rej)=>{StatsUtil.updateQueueStatsView(); Util.setGeneratingStatus("success"); res();}))
-            .catch(e => Util.setGeneratingStatus("error", e.message));
+            .then(json => new Promise((res, rej)=>{StatsUtil.updateQueueStatsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message));
     }
 
     static updateLadderStatsModel(formParams)
@@ -174,10 +174,10 @@ class StatsUtil
 
     static updateLadderStats(formParams)
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateLadderStatsModel(formParams)
-            .then(json => new Promise((res, rej)=>{StatsUtil.updateLadderStatsView(); Util.setGeneratingStatus("success"); res();}))
-            .catch(e => Util.setGeneratingStatus("error", e.message));
+            .then(json => new Promise((res, rej)=>{StatsUtil.updateLadderStatsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message));
     }
 
     static updateLeagueBoundsModel(formParams)
@@ -238,10 +238,10 @@ class StatsUtil
 
     static updateLeagueBounds(formParams)
     {
-        Util.setGeneratingStatus("begin");
+        Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateLeagueBoundsModel(formParams)
-            .then(json => new Promise((res, rej)=>{StatsUtil.updateLeagueBoundsView(); Util.setGeneratingStatus("success"); res();}))
-            .catch(e => Util.setGeneratingStatus("error", e.message));
+            .then(json => new Promise((res, rej)=>{StatsUtil.updateLeagueBoundsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message));
     }
 
     static updateBundleModel()
