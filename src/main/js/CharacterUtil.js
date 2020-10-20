@@ -131,8 +131,8 @@ class CharacterUtil
             return rv;
         }, {});
 
-        const navs = document.getElementById("character-teams-section").getElementsByClassName("nav-item");
-        const panes = document.getElementById("character-teams-section").getElementsByClassName("tab-pane");
+        const navs = document.querySelectorAll("#character-teams-section .nav-item");
+        const panes = document.querySelectorAll("#character-teams-section .tab-pane");
         let shown = false;
         let ix = 0;
 

@@ -41,7 +41,7 @@ class TableUtil
 
     static updateColRowTable(table, data, sorter = null, headTranslator = null, rowTranslator = null)
     {
-        const headRow = table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0];
+        const headRow = table.querySelector(":scope thead tr");
         ElementUtil.removeChildren(headRow);
         //row header padding
         headRow.appendChild(document.createElement("th"));
@@ -89,8 +89,8 @@ class TableUtil
 
     static updateGenericTable(table, data, sorter = null, translator = null)
     {
-        const headRow = table.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0];
-        const bodyRow = table.getElementsByTagName("tbody")[0].getElementsByTagName("tr")[0];
+        const headRow = table.querySelector(":scope thead tr");
+        const bodyRow = table.querySelector(":scope tbody tr");
         ElementUtil.removeChildren(headRow);
         ElementUtil.removeChildren(bodyRow);
         for(const [header, value] of Object.entries(data).sort(sorter == null ? (a, b)=>b[0].localeCompare(a[0]) : sorter))
@@ -134,10 +134,10 @@ class TableUtil
         const rowHeaders = [];
         const allVals = [];
         const colors = [];
-        const headings = elem.getElementsByTagName("thead")[0].getElementsByTagName("tr")[0].getElementsByTagName("th");
+        const headings = elem.querySelectorAll(":scope thead th");
         const rows = mode === "foot"
-            ? elem.getElementsByTagName("tfoot")[0].getElementsByTagName("tr")
-            : elem.getElementsByTagName("tbody")[0].getElementsByTagName("tr");
+            ? elem.querySelectorAll(":scope tfoot tr")
+            : elem.querySelectorAll(":scope tbody tr");
         const startIx = rows[0].getElementsByTagName("th").length > 0 ? 1 : 0;
         for (let i = startIx; i < headings.length; i++)
         {
