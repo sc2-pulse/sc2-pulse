@@ -261,7 +261,8 @@ class ChartUtil
             const style = mutation.target.getAttribute("style");
             if(!style.includes("width: 0") && !style.includes("height: 0"))
             {
-                ChartUtil.linkChartTabsHeight(mutation.target);
+                if(mutation.target.classList.contains("c-ref"))
+                    ChartUtil.linkChartTabsHeight(mutation.target);
                 ElementUtil.resolveElementPromise(mutation.target.id);
             }
         }
