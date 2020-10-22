@@ -17,12 +17,12 @@ class TeamUtil
             row.setAttribute("data-team-id", team.id);
             if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
             TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, i);
-            row.insertCell().appendChild(document.createTextNode(team.rating));
+            row.insertCell().textContent = team.rating;
             row.insertCell().appendChild(TeamUtil.createLeagueDiv(team));
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), "table-image-long"));
             row.appendChild(TeamUtil.createMembersCell(team));
             TeamUtil.appendGamesInfo(row.insertCell(), team);
-            row.insertCell().appendChild(document.createTextNode(Math.round( team.wins / (team.wins + team.losses) * 100) ));
+            row.insertCell().textContent = Math.round( team.wins / (team.wins + team.losses) * 100);
         }
 
         $(table).popover
@@ -120,20 +120,20 @@ class TeamUtil
     static createRankRow(team, scope, teamCount)
     {
         const row = document.createElement("tr");
-        TableUtil.createRowTh(row).appendChild(document.createTextNode(scope));
+        TableUtil.createRowTh(row).textContent = scope;
 
         const rank = team[scope + "Rank"];
         if(!Util.isUndefinedRank(rank))
         {
-            row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(rank)));
-            row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(teamCount)));
-            row.insertCell().appendChild(document.createTextNode(Util.DECIMAL_FORMAT.format((rank / teamCount) * 100)));
+            row.insertCell().textContent = Util.NUMBER_FORMAT.format(rank);
+            row.insertCell().textContent = Util.NUMBER_FORMAT.format(teamCount);
+            row.insertCell().textContent = Util.DECIMAL_FORMAT.format((rank / teamCount) * 100);
         }
         else
         {
-            row.insertCell().appendChild(document.createTextNode("-"));
-            row.insertCell().appendChild(document.createTextNode(Util.NUMBER_FORMAT.format(teamCount)));
-            row.insertCell().appendChild(document.createTextNode("-"));
+            row.insertCell().textContent = "-";
+            row.insertCell().textContent = Util.NUMBER_FORMAT.format(teamCount);
+            row.insertCell().textContent = "-";
         }
 
         return row;

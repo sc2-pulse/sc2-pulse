@@ -256,8 +256,8 @@ class CharacterUtil
             const row = tbody.insertRow();
             row.insertCell().appendChild(ElementUtil.createImage("flag/", character.members.character.region.toLowerCase(), "table-image-long"));
             row.insertCell().appendChild(ElementUtil.createImage("league/", EnumUtil.enumOfId(character.leagueMax, LEAGUE).name, "table-image table-image-square mr-1"));
-            row.insertCell().appendChild(document.createTextNode(character.ratingMax));
-            row.insertCell().appendChild(document.createTextNode(character.totalGamesPlayed))
+            row.insertCell().textContent = character.ratingMax;
+            row.insertCell().textContent = character.totalGamesPlayed;
             const membersCell = row.insertCell();
             membersCell.classList.add("complex", "cell-main");
             const mRow = document.createElement("span");

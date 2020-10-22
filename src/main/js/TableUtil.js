@@ -55,7 +55,7 @@ class TableUtil
             headCell.setAttribute("scope", "col");
             const headerTranslated = headTranslator == null ? header : headTranslator(header);
             headCell.setAttribute("data-chart-color", headerTranslated.toLowerCase());
-            headCell.appendChild(document.createTextNode(headerTranslated));
+            headCell.textContent = headerTranslated;
             headRow.appendChild(headCell);
         }
         for(const[rowHeader, rowData] of Object.entries(data))
@@ -64,10 +64,10 @@ class TableUtil
             const rowHeadCell = document.createElement("th");
             const rowHeaderTranslated = rowTranslator == null ? rowHeader : rowTranslator(rowHeader);
             rowHeadCell.setAttribute("scope", "row");
-            rowHeadCell.appendChild(document.createTextNode(rowHeaderTranslated));
+            rowHeadCell.textContent = rowHeaderTranslated;
             bodyRow.appendChild(rowHeadCell);
             for(const header of headers)
-                bodyRow.insertCell().appendChild(document.createTextNode(rowData[header] != null ? rowData[header] : "0"));
+                bodyRow.insertCell().textContent = rowData[header] != null ? rowData[header] : "0";
             tBody.appendChild(bodyRow);
             rowIx++;
         }
@@ -98,10 +98,10 @@ class TableUtil
             const headCell = document.createElement("th");
             const headerTranslated = translator == null ? header : translator(header);
             headCell.setAttribute("data-chart-color", headerTranslated.toLowerCase());
-            headCell.appendChild(document.createTextNode(headerTranslated));
+            headCell.textContent = headerTranslated;
             headRow.appendChild(headCell);
 
-            bodyRow.insertCell().appendChild(document.createTextNode(value));
+            bodyRow.insertCell().textContent = value;
         }
         table.setAttribute("data-last-updated", Date.now());
     }
@@ -172,8 +172,8 @@ class TableUtil
     static createSimpleRow(object, property)
     {
         const row = document.createElement("tr");
-        TableUtil.createRowTh(row).appendChild(document.createTextNode(property));
-        row.insertCell().appendChild(document.createTextNode(object[property]));
+        TableUtil.createRowTh(row).textContent = property;
+        row.insertCell().textContent = object[property];
         return row;
     }
 
