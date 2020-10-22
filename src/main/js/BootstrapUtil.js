@@ -17,7 +17,9 @@ class BootstrapUtil
 
     static enhanceTabs()
     {
-        $('.nav-pills a').on('shown.bs.tab', BootstrapUtil.showTab);
+        $('.nav-pills a')
+            .on('show.bs.tab', BootstrapUtil.onTabShow)
+            .on('shown.bs.tab', BootstrapUtil.showTab);
         for(const a of document.querySelectorAll('#stats .nav-pills a'))
         {
             ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateLadderTitle);
@@ -29,6 +31,16 @@ class BootstrapUtil
             ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateCharacterTitle);
             ElementUtil.DESCRIPTION_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateCharacterDescription);
         }
+    }
+
+    static renderTabContent(tab)
+    {
+        ChartUtil.updateChartableTab(tab);
+    }
+
+    static onTabShow(e)
+    {
+        BootstrapUtil.renderTabContent(e.target);
     }
 
     static showTab(e)

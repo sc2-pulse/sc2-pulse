@@ -233,6 +233,32 @@ class ChartUtil
         }
     }
 
+    static updateChartableTab(tab)
+    {
+        const chartables = document.querySelectorAll(tab.getAttribute("data-target") + " .chartable");
+        if (chartables.length == 0) return;
+
+        const content = document.querySelector(tab.getAttribute("data-target"));
+        const updatedMax = ChartUtil.getChartableTabUpdatedMax(tab);
+        if(updatedMax == 0 || updatedMax == content.getAttribute("data-chartable-last-updated")) return;
+
+        for(const chartable of chartables)
+        {
+            if(chartable.getAttribute("data-last-updated") != null) ChartUtil.updateChartable(chartable);
+        }
+        ChartUtil.linkChartTabsHeight(document.getElementById(chartables[0].getAttribute("data-chart-id")));
+
+        content.setAttribute("data-chartable-last-updated", updatedMax);
+    }
+
+    static getChartableTabUpdatedMax(tab)
+    {
+        var max = 0;
+        for(const chartable of document.querySelectorAll(tab.getAttribute("data-target") + " .chartable"))
+            max = Math.max(max, chartable.getAttribute("data-last-updated"));
+        return max;
+    }
+
     static observeChartables()
     {
         for(const chartable of document.getElementsByClassName("chartable"))
@@ -243,9 +269,12 @@ class ChartUtil
 
     static onChartableMutation(mutations, observer)
     {
+        if(Session.isHistorical) return;
+
         for(const mutation of mutations)
         {
-            ChartUtil.updateChartable(mutation.target);
+            if(mutation.target.closest(".tab-pane").classList.contains("active"))
+                ChartUtil.updateChartable(mutation.target);
         }
     }
 
