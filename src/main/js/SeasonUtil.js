@@ -30,8 +30,8 @@ class SeasonUtil
             for(const season of seasons)
             {
                 const option = document.createElement("option");
-                option.setAttribute("label", season.year + " s" + season.number);
-                option.textContent = `${season.year} s${season.number}`;
+                option.setAttribute("label", season.descriptiveName);
+                option.textContent = season.descriptiveName;
                 option.setAttribute("value", season.battlenetId);
                 seasonPicker.appendChild(option);
             }
