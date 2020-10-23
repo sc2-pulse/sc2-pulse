@@ -21,7 +21,6 @@ class SeasonUtil
 
     static updateSeasons(seasons)
     {
-        SeasonUtil.updateSeasonsDuration(seasons);
         Session.currentSeasons = seasons;
         for(const season of seasons) SeasonUtil.updateSeasonMeta(season);
         SeasonUtil.updateSeasonsTabs(seasons);
@@ -39,16 +38,13 @@ class SeasonUtil
         }
     }
 
-    static updateSeasonsDuration(seasons)
+    static updateSeasonDuration(season)
     {
-        for(const season of seasons)
-        {
-            const startDate = Util.parseIsoDate(season.start);
-            let endDate = Util.parseIsoDate(season.end);
-            const now = new Date();
-            if(now - endDate < 0) endDate = now;
-            season["days"] = (endDate - startDate) / (1000 * 60 * 60 * 24);
-        }
+        const startDate = Util.parseIsoDate(season.start);
+        let endDate = Util.parseIsoDate(season.end);
+        const now = new Date();
+        if(now - endDate < 0) endDate = now;
+        season["days"] = (endDate - startDate) / (1000 * 60 * 60 * 24);
     }
 
     static updateSeasonDescription(season)
@@ -58,6 +54,7 @@ class SeasonUtil
 
     static updateSeasonMeta(season)
     {
+        SeasonUtil.updateSeasonDuration(season);
         SeasonUtil.updateSeasonDescription(season);
     }
 
