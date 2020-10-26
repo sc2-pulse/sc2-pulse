@@ -22,6 +22,7 @@ UPDATE "season" SET "start" = '2019-08-22', "end" = '2019-11-25' WHERE "battlene
 UPDATE "season" SET "start" = '2019-11-25', "end" = '2020-03-17' WHERE "battlenet_id" = 42;
 UPDATE "season" SET "start" = '2020-03-17', "end" = '2020-06-10' WHERE "battlenet_id" = 43;
 UPDATE "season" SET "start" = '2020-06-10', "end" = '2020-10-01' WHERE "battlenet_id" = 44;
+UPDATE "season" SET "start" = '2020-10-01', "end" = '2021-01-26' WHERE "battlenet_id" = 45;
 
 ALTER TABLE "season"
     ALTER COLUMN "start" DROP DEFAULT,

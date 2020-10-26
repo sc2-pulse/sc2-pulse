@@ -65,7 +65,8 @@ public class BlizzardSC2API
         new BlizzardSeason(41, 2019, 3, LocalDate.of(2019, 8, 22), LocalDate.of(2019, 11, 25)),
         new BlizzardSeason(42, 2019, 4, LocalDate.of(2019, 11,25), LocalDate.of(2020, 3, 17)),
         new BlizzardSeason(43, 2020, 1, LocalDate.of(2020, 3, 17), LocalDate.of(2020, 6, 10)),
-        new BlizzardSeason(44, 2020, 2, LocalDate.of(2020, 6, 10), LocalDate.of(2020, 10, 1))
+        new BlizzardSeason(44, 2020, 2, LocalDate.of(2020, 6, 10), LocalDate.of(2020, 10, 1)),
+        new BlizzardSeason(45, 2020, 3, LocalDate.of(2020, 10, 1), LocalDate.of(2021, 1, 26))
     ).collect(toUnmodifiableMap(BlizzardSeason::getId, Function.identity()));
     public static final long LAST_SEASON = MMR_SEASONS.keySet().stream().max(Comparator.naturalOrder()).get();
     public static final int RETRY_COUNT = 3;
