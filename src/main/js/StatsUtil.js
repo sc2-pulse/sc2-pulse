@@ -253,6 +253,7 @@ class StatsUtil
 
     static calculateDailyStats(stats)
     {
+        SeasonUtil.updateSeasonDuration(Session.currentSeasons[0]);
         const dailyStats = {};
         for(const [seasonId, seasonStats] of Object.entries(stats))
         {
