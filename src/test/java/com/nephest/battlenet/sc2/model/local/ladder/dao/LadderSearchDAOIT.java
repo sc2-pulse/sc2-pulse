@@ -439,8 +439,6 @@ public class LadderSearchDAOIT
             TEAM_TYPE
         );
         assertEquals(3, statsMap.size());
-        List<QueueStats> queueStats = ladderStatsDAO.findQueueStats(QUEUE_TYPE, TEAM_TYPE);
-        assertEquals(3, queueStats.size());
 
         int teamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
         int regionTeamCount = SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
@@ -469,9 +467,22 @@ public class LadderSearchDAOIT
             {
                 assertEquals((race.ordinal() + 1) * teamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE), stats.getRaceGamesPlayed().get(race));
             }
+        }
+
+    }
+
+    @Test
+    public void testQueueStats()
+    {
+        List<QueueStats> queueStats = ladderStatsDAO.findQueueStats(QUEUE_TYPE, TEAM_TYPE);
+        assertEquals(3, queueStats.size());
+
+        for(int i = 0; i < queueStats.size() - 1; i++)
+        {
             assertEquals(PLAYERS_TOTAL * (i + 1), queueStats.get(i).getPlayerBase());
             assertEquals(PLAYERS_TOTAL, queueStats.get(i).getPlayerCount());
         }
+
         assertEquals(12, queueStats.get(0).getLowActivityPlayerCount());
         assertEquals(28, queueStats.get(0).getMediumActivityPlayerCount());
         assertEquals(PLAYERS_TOTAL - 28 - 12, queueStats.get(0).getHighActivityPlayerCount());
