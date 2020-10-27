@@ -87,7 +87,9 @@ public class QueueStatsDAO
 
     private static final String UPDATE_PLAYER_ACTIVITY_QUERY_TEMPLATE =
         "WITH "
-        + "day AS (SELECT DISTINCT ON (battlenet_id) \"end\" - \"start\" AS count FROM season WHERE battlenet_id = :seasonId), "
+        + "day AS (SELECT DISTINCT ON (battlenet_id) "
+        + "CASE WHEN \"end\">current_date THEN current_date - \"start\" ELSE \"end\" - \"start\" END AS count "
+        + "FROM season WHERE battlenet_id = :seasonId), "
 
         + "player AS "
         + "("

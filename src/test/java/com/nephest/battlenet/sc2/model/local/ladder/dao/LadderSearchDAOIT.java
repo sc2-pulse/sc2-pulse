@@ -26,6 +26,7 @@ import javax.sql.DataSource;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -63,6 +64,12 @@ public class LadderSearchDAOIT
 
     @Autowired
     private LadderStatsDAO ladderStatsDAO;
+
+    @Autowired
+    private SeasonDAO seasonDAO;
+
+    @Autowired
+    private QueueStatsDAO queueStatsDAO;
 
     @BeforeAll
     public static void beforeAll
@@ -483,13 +490,30 @@ public class LadderSearchDAOIT
             assertEquals(PLAYERS_TOTAL, queueStats.get(i).getPlayerCount());
         }
 
+        assertEquals(1, queueStats.get(2).getPlayerCount());
+        //last season consists of old players, so values should be the same
+        assertEquals(queueStats.get(1).getPlayerBase(), queueStats.get(2).getPlayerBase());
+
         assertEquals(12, queueStats.get(0).getLowActivityPlayerCount());
         assertEquals(28, queueStats.get(0).getMediumActivityPlayerCount());
         assertEquals(PLAYERS_TOTAL - 28 - 12, queueStats.get(0).getHighActivityPlayerCount());
 
-        assertEquals(1, queueStats.get(2).getPlayerCount());
-        //last season consists of old players, so values should be the same
-        assertEquals(queueStats.get(1).getPlayerBase(), queueStats.get(2).getPlayerBase());
+        for(Region region : REGIONS) seasonDAO.merge(new Season(
+            null, DEFAULT_SEASON_ID, region,
+            DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER, LocalDate.now().minusDays(15), LocalDate.now().plusDays(15)
+        ));
+
+        queueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
+        List<QueueStats> queueStatsCur = ladderStatsDAO.findQueueStats(QUEUE_TYPE, TEAM_TYPE);
+        assertEquals(4, queueStatsCur.get(0).getLowActivityPlayerCount());
+        assertEquals(16, queueStatsCur.get(0).getMediumActivityPlayerCount());
+        assertEquals(PLAYERS_TOTAL - 4 - 16, queueStatsCur.get(0).getHighActivityPlayerCount());
+
+        for(Region region : REGIONS) seasonDAO.merge(new Season(
+            null, DEFAULT_SEASON_ID, region,
+            DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER, DEFAULT_SEASON_START, DEFAULT_SEASON_END
+        ));
+
     }
 
     @Test
