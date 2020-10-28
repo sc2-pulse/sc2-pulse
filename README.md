@@ -1,5 +1,5 @@
 # About
-SC2 Pulse is fast and flexible StarCraft&reg;2 stats aggregator. It is a Spring Boot web application.
+SC2 Pulse is fast and flexible StarCraft&reg;2 ladder statistics aggregator. It is a Spring Boot web application.
 The [reference website](https://www.nephest.com/sc2/) (runs the latest release) is available 24/7.
 ## Features
 * Flexible, user defined filters
@@ -11,14 +11,10 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * Log in with a BattleNet account
     * Easy access to personal stats
     * Create a personal ladder out of your favourite players
-* Activity stats
-    * Parameters: games played, team count
-    * Global numbers
-    * Race, region, league distribution
-    * All filters
-* Population stats
-    * New, old, total player count
-    * Team format and team type filters
+* Built-in statistics
+    * Player count, team count, games played
+    * League, region, race distribution
+    * Daily activity
 * Tier MMR ranges
 * Barcode unmasking
 ## Disclamier
