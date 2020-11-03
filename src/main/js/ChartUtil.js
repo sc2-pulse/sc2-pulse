@@ -31,7 +31,19 @@ class ChartUtil
                     {
                         xAxes:
                         [{
-                            display: false,
+                            gridLines: {display: false},
+                            ticks:
+                            {
+                                callback: (val, valIx, vals)=>
+                                {
+                                    const indexOfStart = val.indexOf("(");
+                                    const indexOfEnd = val.indexOf(")");
+                                    if(indexOfStart == -1 || indexOfEnd == -1 || indexOfStart > indexOfEnd) return val;
+
+                                    return val.substring(indexOfStart + 1, indexOfEnd);
+                                },
+                                maxRotation: 90
+                            },
                             stacked: stacked === "true" ? true : false
                         }],
                         yAxes:
