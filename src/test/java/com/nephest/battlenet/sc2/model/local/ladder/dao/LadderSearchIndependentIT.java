@@ -148,13 +148,24 @@ public class LadderSearchIndependentIT
         assertEquals(100, char1.getTotalGamesPlayed());
 
         List<LadderDistinctCharacter> byAccount = ladderCharacterDAO.findDistinctCharactersByAccountId(acc.getId());
+        verifyCharacterAccountStats(byAccount);
+    }
+
+    private void verifyCharacterAccountStats(List<LadderDistinctCharacter> byAccount)
+    {
         assertEquals(2, byAccount.size());
-        LadderDistinctCharacter char11 = byAccount.get(1);
-        assertEquals("refchar1#123", char11.getMembers().getCharacter().getName());
         //sorted by rating max
+        LadderDistinctCharacter char11 = byAccount.get(1);
+        assertEquals("refaccount#123", char11.getMembers().getAccount().getBattleTag());
+        assertEquals("refchar1#123", char11.getMembers().getCharacter().getName());
+        assertEquals(BaseLeague.LeagueType.BRONZE, char11.getLeagueMax());
+        assertEquals(100, char11.getRatingMax());
+        assertEquals(100, char11.getTotalGamesPlayed());
+
         LadderDistinctCharacter char12 = byAccount.get(0);
+        assertEquals("refaccount#123", char12.getMembers().getAccount().getBattleTag());
         assertEquals("refchar2#123", char12.getMembers().getCharacter().getName());
-        assertEquals(BaseLeague.LeagueType.BRONZE, char1.getLeagueMax());
+        assertEquals(BaseLeague.LeagueType.BRONZE, char12.getLeagueMax());
         assertEquals(101, char12.getRatingMax());
         assertEquals(100, char12.getTotalGamesPlayed());
     }
