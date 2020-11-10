@@ -463,10 +463,18 @@
                  data-view-description="Find a StarCraft2 player by name. Info includes: full profile, best race, best MMR, BattleTag."
         >
             <header>
-                <h2>Find player by name</h2>
+                <h2>
+                    Find player by name or BattleTag
+                    <img
+                            th:src="@{/static/icon/misc/info.svg}"
+                            alt="Search is case-sensitive for exact BattleTags(tAg#1234)"
+                            title="Search is case-sensitive for exact BattleTags(tAg#1234)"
+                            data-toggle="tooltip"
+                    />
+                </h2>
                 <form id="form-search" class="form-inline justify-content-center">
-                    <label class="sr-only" for="search-player-name">Name</label>
-                    <input type="text" class="form-control mb-3" id="search-player-name" name="name" placeholder="Name" required="required"/>
+                    <label class="sr-only" for="search-player-name">Name or BattleTag</label>
+                    <input type="text" class="form-control mb-3" id="search-player-name" name="name" placeholder="Name or BattleTag" required="required"/>
                     <button class="btn btn-primary mb-3" type="submit">
                         <span>Find</span>
                     </button>
@@ -478,9 +486,9 @@
                         <thead>
                         <tr>
                             <th scope="col">Region</th>
-                            <th scope="col">Highest League</th>
-                            <th scope="col">Highest Rating</th>
-                            <th scope="col">Bracket games</th>
+                            <th scope="col">League</th>
+                            <th scope="col">MMR</th>
+                            <th scope="col">Games</th>
                             <th scope="col">Player</th>
                         </tr>
                         </thead>

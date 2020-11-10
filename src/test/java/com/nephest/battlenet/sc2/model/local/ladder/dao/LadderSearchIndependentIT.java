@@ -149,6 +149,10 @@ public class LadderSearchIndependentIT
 
         List<LadderDistinctCharacter> byAccount = ladderCharacterDAO.findDistinctCharactersByAccountId(acc.getId());
         verifyCharacterAccountStats(byAccount);
+        List<LadderDistinctCharacter> byAccountName = ladderCharacterDAO.findDistinctCharactersByName("refaccount");
+        verifyCharacterAccountStats(byAccountName);
+        List<LadderDistinctCharacter> byFullAccountName = ladderCharacterDAO.findDistinctCharactersByName("refaccount#123");
+        verifyCharacterAccountStats(byFullAccountName);
     }
 
     private void verifyCharacterAccountStats(List<LadderDistinctCharacter> byAccount)

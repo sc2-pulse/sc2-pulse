@@ -33,6 +33,7 @@ CREATE TABLE "account"
 );
 
 CREATE INDEX "ix_account_updated" ON "account"("updated");
+CREATE INDEX "ix_account_battle_tag" ON "account"(LOWER("battle_tag") text_pattern_ops);
 
 CREATE TABLE "player_character"
 (
