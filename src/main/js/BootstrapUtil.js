@@ -86,6 +86,15 @@ class BootstrapUtil
         });
     }
 
+    static showGenericModal(header, body = "")
+    {
+        const modal = document.querySelector("#modal-generic");
+        modal.querySelector(":scope .modal-title").textContent = header;
+        modal.querySelector(":scope .modal-body").textContent = body;
+        modal.setAttribute("data-view-title", header);
+        return BootstrapUtil.showModal("modal-generic");
+    }
+
     static showModal(id)
     {
         return new Promise((res, rej)=>{
