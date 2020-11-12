@@ -60,6 +60,7 @@ class Session
 
 }
 
+Session.isSilent = false;
 Session.currentRequests = 0;
 Session.currentSeasons = null;
 Session.currentSeason = null;

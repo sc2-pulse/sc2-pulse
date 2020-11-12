@@ -40,7 +40,7 @@ class Util
                 if(status === STATUS.ERROR)
                 {
                     document.getElementById("error-generation-text").textContent = errorText;
-                    $("#error-generation").modal();
+                    if(!Session.isSilent) $("#error-generation").modal();
                 }
                 if(Session.currentRequests > 0) return;
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
