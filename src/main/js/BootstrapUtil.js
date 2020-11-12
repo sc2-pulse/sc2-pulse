@@ -132,7 +132,7 @@ class BootstrapUtil
         $(".modal")
             .on("hidden.bs.modal", e=>{
                 ElementUtil.resolveElementPromise(e.target.id);
-                if(!Session.isHistorical)
+                if(!Session.isHistorical && !modal.classList.contains("c-no-history"))
                 {
                     HistoryUtil.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
                     document.title = Session.lastNonModalTitle;
@@ -150,14 +150,17 @@ class BootstrapUtil
 
     static onModalShown(modal)
     {
-        if(!Session.isHistorical && modal.getAttribute("data-modal-singleton") != null)
-            HistoryUtil.pushState({}, modal.getAttribute("data-view-title"), "?type=modal&id=" + modal.id + "&m=1");
-        if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
-        const prev = HistoryUtil.previousTitleAndUrl();
-        if(!prev[1].includes("m=1"))
+        if(!modal.classList.contains("c-no-history"))
         {
-            Session.lastNonModalTitle = prev[0];
-            Session.lastNonModalParams = prev[1];
+            if(!Session.isHistorical && modal.getAttribute("data-modal-singleton") != null)
+                HistoryUtil.pushState({}, modal.getAttribute("data-view-title"), "?type=modal&id=" + modal.id + "&m=1");
+            if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
+            const prev = HistoryUtil.previousTitleAndUrl();
+            if(!prev[1].includes("m=1"))
+            {
+                Session.lastNonModalTitle = prev[0];
+                Session.lastNonModalParams = prev[1];
+            }
         }
         ElementUtil.resolveElementPromise(modal.id);
     }
