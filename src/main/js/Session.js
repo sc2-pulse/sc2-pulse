@@ -39,7 +39,11 @@ class Session
     static doRenewBlizzardRegistration()
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        window.location.href=ROOT_CONTEXT_PATH + "oauth2/authorization/" + Util.getCookie("oauth-reg");
+        Session.isSilent = true;
+        BootstrapUtil.hideActiveModal().then(e=>BootstrapUtil.showGenericModal(
+            "BattleNet authorization...",
+            "Fetching your BattleNet identity and permissions. It usually takes ~5 seconds for BattleNet to respond, please standby."))
+            .then(e=>window.location.href=ROOT_CONTEXT_PATH + "oauth2/authorization/" + Util.getCookie("oauth-reg"));
     }
 
     static updateMyInfoThen()
