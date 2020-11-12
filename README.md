@@ -66,6 +66,9 @@ spring.datasource.jndi-name=java:comp/env/jdbc/dsname
 ```
 You can use the ```src/main/resources/application-private.properties``` file (ignored by git, used by config) 
 for private/local application properties
+
+You can use the [latest DB dump](https://www.nephest.com/sc2/dl/db-dump) to kickstart the deployment. You are free to
+use the DB dump for non-commercial purposes if you credit the [reference website](https://www.nephest.com/sc2/).
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
 ## Contributing
