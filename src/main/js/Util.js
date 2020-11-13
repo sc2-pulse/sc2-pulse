@@ -169,6 +169,11 @@ class Util
         return obj;
     }
 
+    static getCurrentPathInContext()
+    {
+        return "/" + window.location.pathname.substring(ROOT_CONTEXT_PATH.length);
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
