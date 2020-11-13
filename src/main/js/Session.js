@@ -8,14 +8,14 @@ class Session
     {
         if(!document.cookie.includes("oauth-reg")) return Promise.resolve(1);
         return PersonalUtil.getMyAccount()
-            .then(e=>Session.updateMyInfoThen());
+            .then(e=>{Session.updateMyInfoThen(); return e});
     }
 
     static onPersonalException(error)
     {
         if (error.message.startsWith("401") && document.cookie.includes("oauth-reg"))
         {
-            Session.renewBlizzardRegistration();
+            return Session.renewBlizzardRegistration();
         }
         else
         {
@@ -32,7 +32,7 @@ class Session
         }
         else
         {
-            Session.doRenewBlizzardRegistration();
+            return Session.doRenewBlizzardRegistration();
         }
     }
 
@@ -40,10 +40,10 @@ class Session
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         Session.isSilent = true;
-        BootstrapUtil.hideActiveModal().then(e=>BootstrapUtil.showGenericModal(
+        return BootstrapUtil.hideActiveModal().then(e=>BootstrapUtil.showGenericModal(
             "BattleNet authorization...",
             "Fetching your BattleNet identity and permissions. It usually takes ~5 seconds for BattleNet to respond, please standby."))
-            .then(e=>window.location.href=ROOT_CONTEXT_PATH + "oauth2/authorization/" + Util.getCookie("oauth-reg"));
+            .then(e=>{window.location.href=ROOT_CONTEXT_PATH + "oauth2/authorization/" + Util.getCookie("oauth-reg"); return "reauth"});
     }
 
     static updateMyInfoThen()
