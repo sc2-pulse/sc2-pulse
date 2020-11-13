@@ -22,7 +22,7 @@ class SC2Restful
             }
         )
             .then(e=>Promise.all([Session.getMyInfo(), SeasonUtil.getSeasons()]))
-            .then(o=>{Session.currentStateRestoration = HistoryUtil.restoreState(null);});
+            .then(o=>{if(o[0] != "reauth") Session.currentStateRestoration = HistoryUtil.restoreState(null);});
     }
 
     static initAll()
