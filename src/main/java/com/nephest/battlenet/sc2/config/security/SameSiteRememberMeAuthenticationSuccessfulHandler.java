@@ -3,13 +3,16 @@
 
 package com.nephest.battlenet.sc2.config.security;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.SavedRequestAwareAuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.WebUtils;
 
 import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -25,9 +28,13 @@ public class SameSiteRememberMeAuthenticationSuccessfulHandler
 extends SavedRequestAwareAuthenticationSuccessHandler
 {
 
+    public static final String PRE_AUTH_PATH_COOKIE_NAME = "pre-auth-path";
     public static final String COOKIE_NAME = "oauth-reg";
     //30 days according to a bluepost
     public static final int COOKIE_MAX_AGE = 3600 * 24 * 30;
+
+    @Autowired
+    private ServletContext servletContext;
 
     @Value("${spring.security.oauth2.client.provider.battlenet-eu.issuer-uri:#{''}}")
     private String issuerEu;
@@ -57,8 +64,6 @@ extends SavedRequestAwareAuthenticationSuccessHandler
 
     public SameSiteRememberMeAuthenticationSuccessfulHandler()
     {
-        setAlwaysUseDefaultTargetUrl(true);
-        setDefaultTargetUrl("/?t=personal&t=personal-characters");
     }
 
     @PostConstruct
@@ -70,6 +75,26 @@ extends SavedRequestAwareAuthenticationSuccessHandler
         iss.put(regKr, issuerKr);
         iss.put(regCn, issuerCn);
         issuers = Collections.unmodifiableMap(iss);
+
+        setRedirectStrategy((req, resp, url)->
+        {
+            Cookie preAuthPathCookie = WebUtils.getCookie(req, PRE_AUTH_PATH_COOKIE_NAME);
+            if(preAuthPathCookie == null)
+            {
+                addSameSiteCookieAttribute(resp);
+                resp.sendRedirect(servletContext.getContextPath() + "/?t=personal&t=personal-characters");
+            }
+            else
+            {
+                Cookie deleteCookie = new Cookie(PRE_AUTH_PATH_COOKIE_NAME, null);
+                deleteCookie.setMaxAge(0);
+                deleteCookie.setPath(servletContext.getContextPath() + "/");
+                deleteCookie.setSecure(true);
+                resp.addCookie(deleteCookie);
+                addSameSiteCookieAttribute(resp);
+                resp.sendRedirect(resp.encodeRedirectURL(servletContext.getContextPath() + preAuthPathCookie.getValue()));
+            }
+        });
     }
 
     @Override
@@ -94,7 +119,6 @@ extends SavedRequestAwareAuthenticationSuccessHandler
             cookie.setMaxAge(COOKIE_MAX_AGE);
             cookie.setPath(request.getContextPath() + "/"); // + / for correctly deleting the cookie in security config
         response.addCookie(cookie);
-        addSameSiteCookieAttribute(response);
         super.onAuthenticationSuccess(request, response, authentication);
     }
 

@@ -40,6 +40,10 @@ class Session
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         Session.isSilent = true;
+        document.cookie = "pre-auth-path=" + encodeURI(Util.getCurrentPathInContext() + window.location.search)
+            + ";path=" + ROOT_CONTEXT_PATH
+            + ";max-age=300"
+            + ";secure;SameSite=Lax";
         return BootstrapUtil.hideActiveModal().then(e=>BootstrapUtil.showGenericModal(
             "BattleNet authorization...",
             "Fetching your BattleNet identity and permissions. It usually takes ~5 seconds for BattleNet to respond, please standby."))
