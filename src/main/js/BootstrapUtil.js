@@ -141,7 +141,7 @@ class BootstrapUtil
         $(".modal")
             .on("hidden.bs.modal", e=>{
                 ElementUtil.resolveElementPromise(e.target.id);
-                if(!Session.isHistorical && !modal.classList.contains("c-no-history"))
+                if(!Session.isHistorical && !e.target.classList.contains("c-no-history"))
                 {
                     HistoryUtil.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
                     document.title = Session.lastNonModalTitle;
