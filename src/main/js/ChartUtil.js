@@ -33,7 +33,7 @@ class ChartUtil
                     {
                         xAxes:
                         [{
-                            scaleLabel: {display: xTitle == null ? false : true, labelString: xTitle},
+                            scaleLabel: {display: false, labelString: xTitle},
                             gridLines: {display: false},
                             ticks:
                             {
@@ -52,7 +52,7 @@ class ChartUtil
                         }],
                         yAxes:
                         [{
-                            scaleLabel: {display: yTitle == null ? false : true, labelString: yTitle},
+                            scaleLabel: {display: false, labelString: yTitle},
                            // ticks:{beginAtZero: true},
                             ticks: {callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val)},
                             stacked: stacked === "true" ? true : false
