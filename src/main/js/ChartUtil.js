@@ -45,7 +45,8 @@ class ChartUtil
 
                                     return val.substring(indexOfStart + 1, indexOfEnd);
                                 },
-                                maxRotation: 0
+                                maxRotation: 0,
+                                autoSkipPadding: 20
                             },
                             stacked: stacked === "true" ? true : false
                         }],
