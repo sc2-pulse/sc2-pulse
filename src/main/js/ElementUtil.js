@@ -238,7 +238,7 @@ class ElementUtil
 
     static generateLadderTitle(params, includeSeason = true)
     {
-        return `${Session.currentTeamType.secondaryName} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(params)}${includeSeason ? ", " + SeasonUtil.seasonIdTranslator(Session.currentSeason) : ""}`;
+        return `${Session.currentTeamType.secondaryName} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(params)}${includeSeason ? ", " + Session.currentSeasons.find(s=>s.battlenetId == Session.currentSeason).descriptiveName : ""}`;
     }
 
     static generateCharacterTitle(params)
@@ -287,7 +287,7 @@ class ElementUtil
         }
 
         desc += ". " + Session.currentTeamType.secondaryName + " " + Session.currentTeamFormat.name
-        + (includeSeason ? (", " + SeasonUtil.seasonIdTranslator(Session.currentSeason)) : "")
+        + (includeSeason ? (", " + Session.currentSeasons.find(s=>s.battlenetId == Session.currentSeason).descriptiveName) : "")
         +  ".";
         return desc;
     }

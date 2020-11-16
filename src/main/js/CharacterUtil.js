@@ -144,7 +144,7 @@ class CharacterUtil
             const link = nav.getElementsByClassName("nav-link")[0];
             const pane = panes[ix];
             const seasonFull = Session.currentSeasons.find(s=>s.battlenetId == season);
-            const linkText = seasonFull.year + " s" + seasonFull.number;
+            const linkText = seasonFull.descriptiveName;
             link.textContent = linkText;
             pane.querySelector(":scope table h4").textContent =
                 seasonFull.year + " season " + seasonFull.number + " teams";
