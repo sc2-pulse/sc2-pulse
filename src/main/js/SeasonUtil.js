@@ -7,7 +7,9 @@ class SeasonUtil
     static seasonIdTranslator(id)
     {
         const season = Session.currentSeasons.filter((s)=>s.battlenetId == id)[0];
-        return `${season.year} season ${season.number} (${season.battlenetId})`;
+        const seasonEnd = Util.parseIsoDate(season.end);
+        const endDate = seasonEnd.getTime() - Date.now() > 0 ? new Date() : seasonEnd;
+        return `${season.year} season ${season.number} (${season.battlenetId}) (${Util.MONTH_DATE_FORMAT.format(endDate)})`;
     }
 
     static getSeasons()
