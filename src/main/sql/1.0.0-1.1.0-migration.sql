@@ -1,3 +1,7 @@
+-- Copyright (C) 2020 Oleksandr Masniuk and contributors
+-- SPDX-License-Identifier: AGPL-3.0-or-later
+---
+
 DROP INDEX "ix_player_character_name";
 CREATE INDEX "ix_player_character_name" ON "player_character"(LOWER("name") text_pattern_ops);
 
