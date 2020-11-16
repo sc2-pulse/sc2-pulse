@@ -493,21 +493,7 @@
                 </form>
             </header>
             <div id="search-result-all" class="d-none">
-                <div class="table-responsive">
-                    <table id="search-table" class="table table-sm table-hover">
-                        <thead>
-                        <tr>
-                            <th scope="col">Region</th>
-                            <th scope="col">League</th>
-                            <th scope="col">MMR</th>
-                            <th scope="col">Games</th>
-                            <th scope="col">Player</th>
-                        </tr>
-                        </thead>
-                        <tbody>
-                        </tbody>
-                    </table>
-                </div>
+                <div th:replace="~{fragments/player-search-table :: table('search-table', null)}"></div>
             </div>
         </section>
         <section id="personal" class="tab-pane fade"
@@ -578,22 +564,7 @@
                             data-view-name="personal-characters"
                             data-view-title="Personal characters"
                     >
-                        <div class="table-responsive">
-                            <table id="personal-characters-table" class="table table-sm table-hover">
-                                <caption><h3>Your characters</h3></caption>
-                                <thead>
-                                <tr>
-                                    <th scope="col">Region</th>
-                                    <th scope="col">Highest League</th>
-                                    <th scope="col">Highest Rating</th>
-                                    <th scope="col">Bracket games</th>
-                                    <th scope="col">Player</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                </tbody>
-                            </table>
-                        </div>
+                        <div th:replace="~{fragments/player-search-table :: table('personal-characters-table', 'Your characters')}"></div>
                     </section>
                     <section id="personal-account" class="tab-pane fade" data-view-title="Personal account">
                         <h3>Account</h3>

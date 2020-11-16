@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pulse</title>
+</head>
+<body>
+<div class="table-responsive" th:fragment="table (id, caption)">
+    <table
+        th:id="${id}"
+        class="table table-sm table-hover"
+    >
+        <caption th:if="${caption}"><h3 th:text="${caption}">Caption</h3></caption>
+        <thead>
+            <tr>
+                <th scope="col">Region</th>
+                <th scope="col">League</th>
+                <th scope="col">MMR</th>
+                <th scope="col">Games</th>
+                <th scope="col">Player</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
