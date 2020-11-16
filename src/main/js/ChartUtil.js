@@ -9,6 +9,8 @@ class ChartUtil
         const type = chartable.getAttribute("data-chart-type");
         const stacked = chartable.getAttribute("data-chart-stacked");
         const title = chartable.getAttribute("data-chart-title");
+        const xTitle = chartable.getAttribute("data-chart-x-title");
+        const yTitle = chartable.getAttribute("data-chart-y-title");
         const tooltipPercentage = chartable.getAttribute("data-chart-tooltip-percentage");
         const tooltipSort = chartable.getAttribute("data-chart-tooltip-sort");
         const ctx = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
@@ -31,6 +33,7 @@ class ChartUtil
                     {
                         xAxes:
                         [{
+                            scaleLabel: {display: xTitle == null ? false : true, labelString: xTitle},
                             gridLines: {display: false},
                             ticks:
                             {
@@ -48,6 +51,7 @@ class ChartUtil
                         }],
                         yAxes:
                         [{
+                            scaleLabel: {display: yTitle == null ? false : true, labelString: yTitle},
                            // ticks:{beginAtZero: true},
                             ticks: {callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val)},
                             stacked: stacked === "true" ? true : false
