@@ -360,6 +360,14 @@
                         <div class="container-chart"><canvas id="player-count-daily-activity-tier-chart" class="c-chart"></canvas></div>
                     </section>
                 </div>
+                <p>
+                    This sections contains normalized global stats. These are the stats as if all seasons have the same duration.
+                    The main idea here is to highlight the dynamics
+                    rather then absolute numbers. Seasons have a different length, so longer seasons will inevitably have
+                    higher numbers, creating misleading positive bumps in the charts. This stats section normalizes
+                    the stats by dividing global numbers by season duration(in days), which results in smoother
+                    graphs.
+                </p>
             </section>
             <section id="stats-race" class="tab-pane fade c-height-linked" data-view-title="Race distribution">
                 <h3>Race distribution</h3>
@@ -472,18 +480,10 @@
         <section id="search" class="tab-pane fade"
                  data-view-name="player-search"
                  data-view-title="Player search"
-                 data-view-description="Find a StarCraft2 player by name. Info includes: full profile, best race, best MMR, BattleTag."
+                 data-view-description="Find a StarCraft2 player by name or BattleTag. Info includes: full profile, best race, best MMR, games played, BattleTag."
         >
             <header>
-                <h2>
-                    Find player by name or BattleTag
-                    <img
-                            th:src="@{/static/icon/misc/info.svg}"
-                            alt="Search is case-sensitive for exact BattleTags(tAg#1234)"
-                            title="Search is case-sensitive for exact BattleTags(tAg#1234)"
-                            data-toggle="tooltip"
-                    />
-                </h2>
+                <h2>Find player by name or BattleTag</h2>
                 <form id="form-search" class="form-inline justify-content-center">
                     <label class="sr-only" for="search-player-name">Name or BattleTag</label>
                     <input type="text" class="form-control mb-3" id="search-player-name" name="name" placeholder="Name or BattleTag" required="required"/>
@@ -492,6 +492,10 @@
                     </button>
                 </form>
             </header>
+            <p>
+                Search is case-sensitive for exact BattleTags(tAg#1234 not equals TaG#1234), case-insensitive otherwise(name equals NaMe). The helping stats
+                are selected from player's best bracket(by MMR) and race(by games played).
+            </p>
             <div id="search-result-all" class="d-none">
                 <div th:replace="~{fragments/player-search-table :: table('search-table', null)}"></div>
             </div>
@@ -581,6 +585,11 @@
                     >
                         <h3><a id="following-generator-collapse" class="c-dropdown" href="#form-following-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-following-ladder">Filters</a></h3>
                         <div th:replace="~{fragments/generator-form :: form('form-following-ladder', 'following-generator-collapse', 'following-ladder')}"></div>
+                        <p>This ladder consists of players you follow. You can follow a player by clicking the "Follow"
+                            button in the player summary section(click on a player name to get there). When following a player,
+                            you will follow all of their profiles in all regions. You can follow
+                            <span th:text="${@accountFollowingService.getFollowingMax()}" th:remove="tag"></span> players max.
+                        </p>
                         <div id="following-ladder-container" class="table-responsive d-none">
                             <table id="following-ladder" class="table table-sm table-hover" data-ladder-rank-show="true">
                                 <thead>
