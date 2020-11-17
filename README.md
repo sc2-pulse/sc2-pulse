@@ -26,6 +26,7 @@ This is not an official Blizzard Entertainment&reg; application.
 * Java 11
 * PostgreSQL 11
 * Maven 3
+* BattleNet API access keys(you must use your own keys)
 
 ## Building
 A real PostgreSQL database is required for some integration tests.
