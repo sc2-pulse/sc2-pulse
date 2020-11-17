@@ -359,6 +359,35 @@
                         </table>
                         <div class="container-chart"><canvas id="player-count-day-chart" class="c-chart"></canvas></div>
                     </section>
+                    <section id="player-count-daily-activity-tier-day" class="col-lg-6 mb-3">
+                        <h4>New players per day by activity tier
+                            (
+                                <img
+                                        th:src="@{/static/icon/misc/filter.svg}"
+                                        alt="Some filters are not applicable: region, league"
+                                        title="Some filters are not applicable: region, league"
+                                        data-toggle="tooltip"
+                                />
+                                <img
+                                        th:src="@{/static/icon/misc/info.svg}"
+                                        alt="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
+                                        title="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
+                                        data-toggle="tooltip"
+                                />
+                            )
+                        </h4>
+                        <table
+                                id="player-count-daily-activity-tier-day-table"
+                                class="chartable"
+                                data-chart-type="line"
+                                data-chart-id="player-count-daily-activity-tier-day-chart"
+                                data-chart-x-title="Date" data-chart-y-title="Players/day"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="player-count-daily-activity-tier-day-chart" class="c-chart"></canvas></div>
+                    </section>
                 </div>
                 <p>
                     This sections contains normalized global stats. These are the stats as if all seasons have the same duration.

@@ -77,6 +77,14 @@ class StatsUtil
             null,
             SeasonUtil.seasonIdTranslator
         );
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("player-count-daily-activity-tier-day-table"),
+            Util.forObjectValues(StatsUtil.calculateDailyStats(activity), v=>Math.round(v)),
+            (a, b)=>EnumUtil.enumOfName(a, INTENSITY).order - EnumUtil.enumOfName(b, INTENSITY).order,
+            null,
+            SeasonUtil.seasonIdTranslator
+        );
     }
 
     static updateQueueStats(formParams)
