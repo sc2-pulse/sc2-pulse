@@ -86,10 +86,18 @@ class BootstrapUtil
         });
     }
 
-    static showGenericModal(header, body = "")
+    static showGenericModal(header, body = "", spinner = false)
     {
         const modal = document.querySelector("#modal-generic");
-        modal.querySelector(":scope .modal-title").textContent = header;
+        modal.querySelector(":scope .modal-title .title-text").textContent = header;
+        if(spinner)
+        {
+            modal.querySelector(":scope .modal-title .spinner-border").classList.remove("d-none");
+        }
+        else
+        {
+            modal.querySelector(":scope .modal-title .spinner-border").classList.add("d-none");
+        }
         modal.querySelector(":scope .modal-body").textContent = body;
         modal.setAttribute("data-view-title", header);
         return BootstrapUtil.showModal("modal-generic");
