@@ -11,24 +11,17 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.League;
-import io.netty.channel.ChannelOption;
-import io.netty.handler.timeout.ReadTimeoutHandler;
-import io.netty.handler.timeout.WriteTimeoutHandler;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
-import reactor.netty.http.client.HttpClient;
-import reactor.netty.tcp.TcpClient;
-import reactor.util.retry.Retry;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.Map;
@@ -74,15 +67,6 @@ public class BlizzardSC2API
         new BlizzardSeason(45, 2020, 3, LocalDate.of(2020, 10, 1), LocalDate.of(2021, 1, 26))
     ).collect(toUnmodifiableMap(BlizzardSeason::getId, Function.identity()));
     public static final long LAST_SEASON = MMR_SEASONS.keySet().stream().max(Comparator.naturalOrder()).get();
-    public static final int RETRY_COUNT = 3;
-    public static final Duration CONNECT_TIMEOUT = Duration.ofMillis(10000);
-    public static final Duration IO_TIMEOUT = Duration.ofMillis(10000);
-    public static final Duration RETRY_DURATION_MIN = Duration.ofMillis(300);
-    public static final Duration RETRY_DURATION_MAX = Duration.ofMillis(1000);
-    public static final Retry RETRY = Retry
-        .backoff(RETRY_COUNT, RETRY_DURATION_MIN).maxBackoff(RETRY_DURATION_MAX)
-        .filter(t->true)
-        .transientErrors(true);
 
     private WebClient client;
     private String regionUri;
@@ -109,19 +93,7 @@ public class BlizzardSC2API
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
         oauth2Client.setDefaultClientRegistrationId("sc2-sys");
-        TcpClient timeoutClient = TcpClient.create()
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECT_TIMEOUT.toMillis())
-            .doOnConnected
-            (
-                c-> c.addHandlerLast(new ReadTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
-                .addHandlerLast(new WriteTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
-            );
-        HttpClient httpClient = HttpClient.from(timeoutClient)
-            .compress(true);
-        client = WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(httpClient))
-            .apply(oauth2Client.oauth2Configuration())
-            .build();
+        client = WebServiceUtil.getWebClientBuilder().apply(oauth2Client.oauth2Configuration()).build();
     }
 
     protected void setRegionUri(String uri)
@@ -153,7 +125,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
-            .retryWhen(RETRY);
+            .retryWhen(WebServiceUtil.RETRY);
     }
 
     public Mono<BlizzardLeague> getLeague
@@ -179,7 +151,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
-            .retryWhen(RETRY);
+            .retryWhen(WebServiceUtil.RETRY);
 
         /*
            After a new season has started there is a period of time when this endpoint could return a 404
@@ -230,7 +202,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
-            .retryWhen(RETRY);
+            .retryWhen(WebServiceUtil.RETRY);
     }
 
 }
