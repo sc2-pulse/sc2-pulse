@@ -693,16 +693,28 @@
                             </ul>
                         </li>
                         <li>Tier MMR ranges</li>
-                        <li>Barcode unmasking</li>
+                        <li>sc2revealed.com and aligulac.com integration
+                            <ul>
+                                <li>Barcode unmasking</li>
+                                <li>Pro player stats</li>
+                                <li>Social media links</li>
+                            </ul>
+                        </li>
                     </ul>
                 </section>
                 <aside>
                     <section>
                         <h3>Wanna more cool stats?</h3>
                         <dl>
+                            <dt><a href="http://sc2revealed.com/" rel="noopener noreferrer nofollow" target="_blank">sc2revealed</a></dt>
+                            <dd>This project links real pro players to their ladder accounts. It also has a lot of meta info,
+                            such as social media links, online streams, etc.. Help this project to identify ladder accounts, and
+                            that info will also show up here.<br/>
+                            This site uses sc2revealed.com data to get pro player stats and unmask the barcodes.</dd>
                             <dt><a href="http://aligulac.com/" rel="noopener noreferrer nofollow" target="_blank">aligulac</a></dt>
                             <dd>An open source project about pro scene. Features custom rating, events, match results, total earnings and more.
-                            Absolutely amazing resource. It also has a DB dump if you want to run some queries.</dd>
+                            Absolutely amazing resource. It also has a DB dump if you want to run some queries.<br/>
+                            This site uses aligulac.com data to get more info about pro players.</dd>
                             <dt><a href="https://www.rankedftw.com/" rel="noopener noreferrer nofollow" target="_blank">rankedftw</a></dt>
                             <dd>One of THE original stats sites. It was(and still is) the place to go after the sc2ranks.com shutdown.
                                 The core feature is a team rank progression throughout the seasons, which was priceless during the pre MMR era.
@@ -834,6 +846,20 @@
                                         History
                                     </a>
                                 </li>
+                                <li class="nav-item">
+                                    <a
+                                        id="player-stats-player-tab"
+                                        class="nav-link"
+                                        data-toggle="pill"
+                                        data-target="#player-stats-player"
+                                        href="#player-stats-player"
+                                        role="tab"
+                                        aria-controls="player-stats-player"
+                                        aria-selected="false"
+                                    >
+                                        Player
+                                    </a>
+                                </li>
                             </ul>
                         </nav>
                         <div id="player-stats-all" class="tab-content">
@@ -848,15 +874,6 @@
                                         </p>
                                     </aside>
                                 </section>
-                                <section>
-                                    <h3>Links</h3>
-                                    <ul>
-                                        <li><a id="battlenet-profile-link" href="#" target="_blank" rel="noopener noreferrer">Battle.net&reg; profile</a></li>
-                                        <li>BattleTag: <span id="player-info-battletag"></span></li>
-                                    </ul>
-                                    <button id="follow-button" type="button" class="btn btn-primary d-none">Follow</button>
-                                    <button id="unfollow-button" type="button" class="btn btn-primary d-none">Unfollow</button>
-                                </section>
                             </section>
                             <section id="player-stats-history" class="tab-pane fade" data-view-title="History">
                                 <section id="character-teams-section">
@@ -864,6 +881,62 @@
                                     <select id="teams-season-select" class="form-control mb-2 text-center"></select>
                                 </section>
                             </section>
+                            <section id="player-stats-player" class="tab-pane fade" data-view-title="Player info">
+                                <section id="pro-player-info" class="pro-player-info">
+                                    <h3>Pro player info</h3>
+                                    <table class="table c-table-simple m-auto">
+                                        <tbody>
+                                            <tr id="pro-player-name" class="pro-player-info"><th scope="row">Name</th><td></td></tr>
+                                            <tr id="pro-player-birthday" class="pro-player-info"><th scope="row">Birthday</th><td></td></tr>
+                                            <tr id="pro-player-country" class="pro-player-info"><th scope="row">Country</th><td></td></tr>
+                                            <tr id="pro-player-team" class="pro-player-info"><th scope="row">Team</th><td></td></tr>
+                                            <tr id="pro-player-earnings" class="pro-player-info"><th scope="row">Earnings</th><td></td></tr>
+                                        </tbody>
+                                    </table>
+                                </section>
+                                    <section>
+                                        <h3>Links</h3>
+                                        <ul class="list-inline text-center">
+                                            <li class="list-inline-item mr-3 pro-player-info"><a id="link-liquipedia" class="social-media mb-3" href="#" target="_blank" rel="noopener noreferrer">
+                                                <img th:src="@{/static/icon/logo/liquipedia.svg}" alt="Liquipedia"/>
+                                            </a></li>
+                                            <li class="list-inline-item mr-3 pro-player-info"><a id="link-aligulac" class="social-media mb-3" href="#" target="_blank" rel="noopener noreferrer">
+                                                <span>&sum;</span>
+                                            </a></li>
+                                            <li class="list-inline-item mr-3 pro-player-info"><a id="link-instagram" class="social-media mb-3" href="#" target="_blank" rel="noopener noreferrer">
+                                                <img th:src="@{/static/icon/logo/instagram.svg}" alt="Instagram"/>
+                                            </a></li>
+                                            <li class="list-inline-item mr-3 pro-player-info"><a id="link-twitter" class="social-media mb-3" href="#" target="_blank" rel="noopener noreferrer">
+                                                <img th:src="@{/static/icon/logo/twitter.svg}" alt="Twitter"/>
+                                            </a></li>
+                                            <li class="list-inline-item mr-3 pro-player-info"><a id="link-twitch" class="social-media mb-3" href="#" target="_blank" rel="noopener noreferrer">
+                                                <img th:src="@{/static/icon/logo/twitch.svg}" alt="Twitch"/>
+                                            </a></li>
+                                            <li class="list-inline-item mr-3 pro-player-info"><a id="link-youtube" class="social-media mb-3" href="#" target="_blank" rel="noopener noreferrer">
+                                                <img th:src="@{/static/icon/logo/youtube.svg}" alt="Youtube"/>
+                                            </a></li>
+                                            <li class="list-inline-item mr-3 pro-player-info"><a id="link-discord" class="social-media mb-3" href="#" target="_blank" rel="noopener noreferrer">
+                                                <img th:src="@{/static/icon/logo/discord.svg}" alt="Discord"/>
+                                            </a></li>
+                                            <li class="list-inline-item mr-3"><a id="link-sc2" class="social-media mb-3" href="#" target="_blank" rel="noopener noreferrer">
+                                                <img th:src="@{/static/icon/logo/sc2.svg}" alt="SC2"/>
+                                            </a></li>
+                                            <li class="list-inline-item mr-3"><span id="link-battletag" class="social-media mb-3">
+                                                <img th:src="@{/static/icon/logo/battlenet.svg}" alt="BattleTag" title="BattleTag"/>
+                                            <span></span>
+                                            </span></li>
+                                        </ul>
+                                    </section>
+                                    <section>
+                                        <button id="follow-button" type="button" class="btn btn-primary d-none">Follow</button>
+                                        <button id="unfollow-button" type="button" class="btn btn-primary d-none">Unfollow</button>
+                                    </section>
+                                    <section>
+                                        Found incorrect information? Do you know who this player is? Report this to
+                                        <a href="http://sc2revealed.com/" rel="noopener noreferrer" target="_blank">sc2revealed</a>
+                                        and your info will show up here too.
+                                    </section>
+                                </section>
                         </div>
                     </div>
                     <div class="modal-footer">

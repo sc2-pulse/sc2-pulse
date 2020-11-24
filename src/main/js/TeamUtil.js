@@ -176,8 +176,12 @@ class TeamUtil
         playerLink.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=character&id=${member.character.id}&m=1&t=player-stats-summary`);
         playerLink.setAttribute("data-character-id", member.character.id);
         playerLink.addEventListener("click", CharacterUtil.showCharacterInfo);
-        playerLink.appendChild(TeamUtil.createRacesElem(team, member));
-        playerLink.appendChild(TeamUtil.createNameElem(team, member));
+        const container = document.createElement("span");
+        container.classList.add("player-link-container");
+        if(member.proNickname != null) container.classList.add("player-pro");
+        container.appendChild(TeamUtil.createRacesElem(team, member));
+        container.appendChild(TeamUtil.createNameElem(team, member));
+        playerLink.appendChild(container);
         return playerLink
     }
 
@@ -185,7 +189,7 @@ class TeamUtil
     {
         const nameElem = document.createElement("span");
         nameElem.classList.add("player-name");
-        nameElem.textContent = Util.unmaskBarcode(member.character, member.account);
+        nameElem.textContent = Util.unmaskName(member);
         return nameElem
     }
 

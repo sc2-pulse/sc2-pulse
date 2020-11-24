@@ -215,6 +215,53 @@ th.hoverable span
     border-bottom: 0;
 }
 
+.social-media img
+{
+  height: 2em;
+}
+
+.social-media
+{
+  color: black;
+}
+
+.social-media:hover
+{
+  text-decoration: none;
+}
+
+#link-aligulac
+{
+  font-size: 1.9em;
+  width: 1em;
+  display: inline-block;
+}
+
+#link-aligulac span
+{
+  vertical-align: middle;
+}
+
+#link-battletag img
+{
+    height: 2.6em;
+}
+
+.player-pro::after
+{
+  content: "PRO";
+  color: white;
+  background-color: #007bff;
+  display: inline-block;
+  margin-left: 0.5em;
+  padding: 0.2em 0.4em;
+  border-radius: 0.5em;
+  border: #007bff solid 0.1em;
+  font-size: 0.6em;
+  font-weight: bold;
+  vertical-align: middle;
+}
+
 .collapsing
 {
     transition: none;

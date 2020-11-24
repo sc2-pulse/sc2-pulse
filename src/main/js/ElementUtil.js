@@ -295,7 +295,7 @@ class ElementUtil
     static generateCharacterDescription(params)
     {
         const name = document.querySelector("#player-info-title-name").textContent;
-        const battletag = document.querySelector("#player-info-battletag").textContent;
+        const battletag = document.querySelector("#link-battletag span").textContent;
 
         return `${name}/${battletag} career best MMR for all brackets/races. BattleNet profile and all seasons history`;
     }

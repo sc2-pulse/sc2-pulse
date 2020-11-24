@@ -16,7 +16,10 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * League, region, race distribution
     * Daily activity
 * Tier MMR ranges
-* Barcode unmasking
+* [sc2revealed](http://sc2revealed.com/) and [aligulac](http://aligulac.com/) integration
+    * Barcode unmasking
+    * Pro player stats
+    * Social media links
 ## Disclamier
 I use this project for learning, it is not production-ready.
 
@@ -27,6 +30,7 @@ This is not an official Blizzard Entertainment&reg; application.
 * PostgreSQL 11
 * Maven 3
 * BattleNet API access keys(you must use your own keys)
+* Aligulac API key(you must use your own key)
 
 ## Building
 A real PostgreSQL database is required for some integration tests.
@@ -41,6 +45,7 @@ spring.datasource.password=pasword
 spring.datasource.url=jdbc:postgresql://localhost:5432/db_name
 spring.security.oauth2.client.registration.sc2-sys.client-id={client_id}
 spring.security.oauth2.client.registration.sc2-sys.client-secret={client_secret}
+com.nephest.battlenet.sc2.aligulac.api.key={api_key}
 ```
 
 By default, maven will build a spring boot war archive. You can use it with any 
@@ -59,6 +64,7 @@ spring.security.oauth2.client.registration.sc2-lg-kr.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-kr.client-secret = {client_secret}
 spring.security.oauth2.client.registration.sc2-lg-cn.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-cn.client-secret = {client_secret}
+com.nephest.battlenet.sc2.aligulac.api.key={api_key}
 ```
 
 By default, DataSource must be configured in a web container:

@@ -46,7 +46,7 @@ class CharacterUtil
     {
         const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
         const searchResult = {result: Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams};
-        CharacterUtil.updateCharacterInfo(searchResult, id);
+        CharacterUtil.updateCharacterInfo(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH), id);
         CharacterUtil.updateCharacterTeamsSection(searchResult);
     }
 
@@ -63,9 +63,9 @@ class CharacterUtil
             .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
-    static updateCharacterInfo(searchResultFull, id)
+    static updateCharacterInfo(commonCharacter, id)
     {
-        const searchResult = searchResultFull.result;
+        const searchResult = commonCharacter.teams;
         const member = searchResult[0].members.filter(m=>m.character.id == id)[0];
         const account = member.account;
         const character = member.character;
@@ -86,9 +86,9 @@ class CharacterUtil
             }
         }
 
-        CharacterUtil.updateCharacterInfoName(character, account);
+        CharacterUtil.updateCharacterInfoName(member);
         const region = EnumUtil.enumOfName(character.region, REGION);
-        const profileLinkElement = document.getElementById("battlenet-profile-link");
+        const profileLinkElement = document.getElementById("link-sc2");
         if(region == REGION.CN)
         {
             //the upstream site is not supporting the CN region.
@@ -100,27 +100,74 @@ class CharacterUtil
             profileLinkElement.setAttribute("href", profileLink);
             profileLinkElement.parentElement.classList.remove("d-none");
         }
-        document.getElementById("player-info-battletag").textContent = account.battleTag;
+        document.querySelector("#link-battletag span").textContent = account.battleTag;
+        CharacterUtil.updateCharacterProInfo(commonCharacter);
     }
 
-    static updateCharacterInfoName(character, account)
+    static updateCharacterProInfo(commonCharacter)
+    {
+        for(const el of document.querySelectorAll(".pro-player-info")) el.classList.add("d-none");
+        if(commonCharacter.proPlayer.proPlayer == null) return;
+
+        const proPlayer = commonCharacter.proPlayer;
+        document.querySelector("#pro-player-info").classList.remove("d-none");
+        CharacterUtil.setProPlayerField("#pro-player-name", "td", proPlayer.proPlayer.name);
+        CharacterUtil.setProPlayerField("#pro-player-birthday", "td", proPlayer.proPlayer.birthday != null
+            ? Util.DATE_FORMAT.format(Util.parseIsoDate(proPlayer.proPlayer.birthday)) : null);
+        CharacterUtil.setProPlayerField("#pro-player-country", "td", proPlayer.proPlayer.country);
+        CharacterUtil.setProPlayerField("#pro-player-earnings", "td", proPlayer.proPlayer.earnings != null
+            ? "$" + Util.NUMBER_FORMAT.format(proPlayer.proPlayer.earnings) : null);
+        if(proPlayer.proTeam != null)
+        {
+            CharacterUtil.setProPlayerField("#pro-player-team", "td", proPlayer.proTeam.name);
+        }
+        for(const link of proPlayer.links)
+        {
+            const linkEl = document.querySelector("#link-" + link.type.toLowerCase());
+            if(linkEl == null) continue;
+            linkEl.setAttribute("href", link.url);
+            linkEl.parentElement.classList.remove("d-none");
+        }
+
+    }
+
+    static setProPlayerField(selector, sub, val)
+    {
+        if(val != null)
+        {
+            const nameEl = document.querySelector(selector);
+            nameEl.querySelector(":scope " + sub).textContent = val;
+            nameEl.classList.remove("d-none");
+        }
+    }
+
+    static updateCharacterInfoName(member)
     {
         let charName;
         let charNameAdditional;
-        const hashIx = character.name.indexOf("#");
-        const nameNoHash = character.name.substring(0, hashIx);
-        if(!Util.isBarcode(nameNoHash))
+        const hashIx = member.character.name.indexOf("#");
+        const nameNoHash = member.character.name.substring(0, hashIx);
+        if(!Util.needToUnmaskName(nameNoHash, member.proNickname))
         {
             charName = nameNoHash;
-            charNameAdditional = character.name.substring(hashIx);
+            charNameAdditional = member.character.name.substring(hashIx);
         }
         else
         {
-            charName = Util.unmaskBarcode(character, account);
-            charNameAdditional = `(${character.name})`;
+            charName = Util.unmaskName(member);
+            charNameAdditional = `(${member.character.name})`;
         }
         document.getElementById("player-info-title-name").textContent = charName;
-        document.getElementById("player-info-title-name-additional").textContent = charNameAdditional;
+        const additionalNameElem = document.getElementById("player-info-title-name-additional");
+        additionalNameElem.textContent = charNameAdditional;
+        if(member.proNickname != null)
+        {
+            additionalNameElem.classList.add("player-pro");
+        }
+        else
+        {
+            additionalNameElem.classList.remove("player-pro");
+        }
     }
 
     static updateCharacterTeamsSection(searchResultFull)
@@ -247,7 +294,7 @@ class CharacterUtil
             const bTag = document.createElement("span");
             bTag.classList.add("c-divider", "battle-tag");
             bTag.textContent = character.members.account.battleTag;
-            mInfo.getElementsByClassName("player-link")[0].appendChild(bTag);
+            mInfo.getElementsByClassName("player-link-container")[0].appendChild(bTag);
             mRow.appendChild(mInfo);
             membersCell.appendChild(mRow);
             tbody.appendChild(row);

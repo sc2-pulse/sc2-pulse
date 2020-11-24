@@ -121,16 +121,18 @@ class Util
         return str + Array(maxLen - str.length).fill(tail).join("");
     }
 
-    static isBarcode(name)
+    static needToUnmaskName(name, proNickname)
     {
-        return  Util.BARCODE_REGEX.test(name);
+        return proNickname != null || Util.BARCODE_REGEX.test(name);
     }
 
-    static unmaskBarcode(character, account)
+    static unmaskName(member)
     {
-        const name = character.name.substring(0, character.name.indexOf("#"));
-        return Util.isBarcode(name)
-            ? account.battleTag.substring(0, account.battleTag.indexOf("#"))
+        if(member.proNickname != null)
+            return (member.proTeam != null ? "[" + member.proTeam + "]" : "") + member.proNickname;
+        const name = member.character.name.substring(0, member.character.name.indexOf("#"));
+        return Util.needToUnmaskName(name, member.proNickname)
+            ? member.account.battleTag.substring(0, member.account.battleTag.indexOf("#"))
             : name;
     }
 

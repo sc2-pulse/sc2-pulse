@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResul
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,9 @@ public class LadderController
 
     @Autowired
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
+
+    @Autowired
+    private LadderProPlayerDAO ladderProPlayerDAO;
 
     @GetMapping("/ladder")
     public PagedSearchResult<List<LadderTeam>> getLadder
@@ -258,7 +262,8 @@ public class LadderController
         return new CommonCharacter
         (
             ladderSearch.findCharacterTeams(id),
-            playerCharacterStatsDAO.findGlobalList(id)
+            playerCharacterStatsDAO.findGlobalList(id),
+            ladderProPlayerDAO.getProPlayerByCharacterId(id)
         );
     }
 

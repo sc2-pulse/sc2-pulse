@@ -51,6 +51,8 @@ public class LadderSearchDAO
         + "team.battlenet_id as \"team.battlenet_id\", "
         + "team.rating, team.wins, team.losses, team.ties, "
         + "team.global_rank, team.region_rank, team.league_rank, "
+        + "pro_player.nickname AS \"pro_player.nickname\", "
+        + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\","
         + "account.id AS \"account.id\","
         + "account.partition AS \"account.partition\","
         + "account.battle_tag AS \"account.battle_tag\","
@@ -60,11 +62,18 @@ public class LadderSearchDAO
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played ";
 
-    private static final String LADDER_SEARCH_TEAM_FROM =
+    private static final String LADDER_SEARCH_TEAM_FROM_SHORT =
         "FROM team_member "
         + "INNER JOIN team ON team_member.team_id=team.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id ";
+
+    private static final String LADDER_SEARCH_TEAM_FROM =
+        LADDER_SEARCH_TEAM_FROM_SHORT
+        + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
+        + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
+        + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
+        + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id ";
 
     private static final String LADDER_SEARCH_TEAM_WHERE =
         "WHERE "
@@ -97,6 +106,10 @@ public class LadderSearchDAO
         + "INNER JOIN team ON team_member.team_id=team.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
+        + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
+        + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
+        + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
+        + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
         + "ORDER BY team.rating %1$s, team.id %1$s ";
 
     private static final String FIND_TEAM_MEMBERS_LATE_QUERY =
@@ -120,16 +133,17 @@ public class LadderSearchDAO
         String.format(FIND_TEAM_MEMBERS_FORMAT, "ASC");
 
     private static final String FIND_FOLLOWING_TEAM_MEMBERS =
-        FIND_TEAM_MEMBERS_BASE
-        + LADDER_SEARCH_TEAM_FROM
-        + "INNER JOIN "
+        "WITH following_team AS"
         + "("
             + "SELECT DISTINCT(team.id) "
-            + LADDER_SEARCH_TEAM_FROM
+            + LADDER_SEARCH_TEAM_FROM_SHORT
             + "INNER JOIN account_following ON account.id=account_following.following_account_id "
             + LADDER_SEARCH_TEAM_WHERE
             + "AND account_following.account_id=:accountId "
-        + ") following_teams ON team.id=following_teams.id "
+        + ") "
+        + FIND_TEAM_MEMBERS_BASE
+        + LADDER_SEARCH_TEAM_FROM
+        + "INNER JOIN following_team ON team.id=following_team.id "
         + "ORDER BY team.rating DESC, team.id DESC";
 
     private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =
@@ -153,21 +167,29 @@ public class LadderSearchDAO
         + LADDER_SEARCH_TEAM_WHERE;
 
     private static final String FIND_CARACTER_TEAM_MEMBERS_QUERY =
-        FIND_TEAM_MEMBERS_BASE
-
-        + LADDER_SEARCH_TEAM_FROM
-        + "INNER JOIN season ON season.battlenet_id=team.season AND season.region=team.region "
-
-        + "WHERE team.id IN"
-        + "("
+        "WITH team_filtered AS "
+        + "( "
             + "SELECT "
             + "team.id "
             + "FROM team "
             + "INNER JOIN team_member ON team_member.team_id=team.id "
             + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
             + "WHERE "
-            + "player_character.id=:playerCharacterId"
-        +") "
+            + "player_character.id=:playerCharacterId "
+        + ")"
+        + FIND_TEAM_MEMBERS_BASE
+
+        + "FROM team_filtered "
+        + "INNER JOIN team ON team_filtered.id=team.id "
+        + "INNER JOIN team_member ON team.id = team_member.team_id "
+        + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
+        + "INNER JOIN account ON player_character.account_id=account.id "
+        + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
+        + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
+        + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
+        + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
+        + "INNER JOIN season ON season.battlenet_id=team.season AND season.region=team.region "
+
         + "ORDER BY team.season DESC, "
         + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
         + "team.rating DESC, team.id ASC, "
@@ -282,6 +304,8 @@ public class LadderSearchDAO
                     rs.getInt("realm"),
                     rs.getString("name")
                 ),
+                rs.getString("pro_player.nickname"),
+                rs.getString("pro_player.team"),
                 (Integer) rs.getObject("terran_games_played"),
                 (Integer) rs.getObject("protoss_games_played"),
                 (Integer) rs.getObject("zerg_games_played"),

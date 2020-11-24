@@ -46,6 +46,8 @@ public class LadderCharacterDAO
     + ") "
 
     + "SELECT "
+    + "pro_player.nickname AS \"pro_player.nickname\", "
+    + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\","
     + "account.id AS \"account.id\", "
     + "account.partition AS \"account.partition\", "
     + "account.battle_tag AS \"account.battle_tag\", "
@@ -63,18 +65,29 @@ public class LadderCharacterDAO
     + "INNER JOIN player_character ON player_character.id = player_character_stats_filtered.player_character_id "
     + "INNER JOIN account ON player_character.account_id = account.id "
     + "INNER JOIN player_character_stats ON player_character_stats_filtered.id = player_character_stats.id "
+    + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
+    + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
+    + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
+    + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
 
     + "ORDER BY rating_max DESC";
 
-    private static final String FIND_DISTINCT_CHARACTER_BY_NAME_OR_BATTLE_TAG_QUERY = String.format
+    private static final String FIND_DISTINCT_CHARACTER_BY_NAME_OR_BATTLE_TAG_OR_PRO_NICKNAME_QUERY = String.format
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
-        "WHERE LOWER(player_character.name) LIKE LOWER(:name) "
+        "WHERE LOWER(player_character.name) LIKE LOWER(:likeName) "
         + "UNION "
         + "SELECT player_character.id "
         + "FROM player_character "
         + "INNER JOIN account ON player_character.account_id = account.id "
-        + "WHERE LOWER(account.battle_tag) LIKE LOWER(:name) "
+        + "WHERE LOWER(account.battle_tag) LIKE LOWER(:likeName) "
+        + "UNION "
+        + "SELECT player_character.id "
+        + "FROM player_character "
+        + "INNER JOIN account ON player_character.account_id = account.id "
+        + "LEFT JOIN pro_player_account ON account.id = pro_player_account.account_id "
+        + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
+        + "WHERE LOWER(pro_player.nickname)=LOWER(:name)"
     );
     private static final String FIND_DISTINCT_CHARACTER_BY_FULL_BATTLE_TAG_QUERY = String.format
     (
@@ -126,6 +139,8 @@ public class LadderCharacterDAO
                             rs.getInt("player_character.realm"),
                             rs.getString("player_character.name")
                         ),
+                    rs.getString("pro_player.nickname"),
+                    rs.getString("pro_player.team"),
                     race == Race.TERRAN ? gamesPlayed : null,
                     race == Race.PROTOSS ? gamesPlayed : null,
                     race == Race.ZERG ? gamesPlayed : null,
@@ -139,16 +154,17 @@ public class LadderCharacterDAO
     {
         boolean isBattleTag = name.contains("#");
         if(isBattleTag) return findDistinctCharactersByFullBattleTag(name);
-        return findDistinctCharactersByNameOrBattletag(name);
+        return findDistinctCharactersByNameOrBattletagOrProNickname(name);
     }
 
-    private List<LadderDistinctCharacter> findDistinctCharactersByNameOrBattletag(String name)
+    private List<LadderDistinctCharacter> findDistinctCharactersByNameOrBattletagOrProNickname(String name)
     {
-        name = PostgreSQLUtils.escapeLikePattern(name) + "#%";
+        String likeName = PostgreSQLUtils.escapeLikePattern(name) + "#%";
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("name", name);
+            .addValue("name", name)
+            .addValue("likeName", likeName);
         return template
-            .query(FIND_DISTINCT_CHARACTER_BY_NAME_OR_BATTLE_TAG_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+            .query(FIND_DISTINCT_CHARACTER_BY_NAME_OR_BATTLE_TAG_OR_PRO_NICKNAME_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
 
     private List<LadderDistinctCharacter> findDistinctCharactersByFullBattleTag(String battleTag)

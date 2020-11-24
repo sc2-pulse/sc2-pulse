@@ -30,6 +30,8 @@ public class LadderDistinctCharacter
         Integer ratingMax,
         Account account,
         PlayerCharacter character,
+        String proNickname,
+        String proTeam,
         Integer terranGamesPlayed,
         Integer protossGamesPlayed,
         Integer zergGamesPlayed,
@@ -44,6 +46,8 @@ public class LadderDistinctCharacter
         (
             account,
             character,
+            proNickname,
+            proTeam,
             terranGamesPlayed,
             protossGamesPlayed,
             zergGamesPlayed,

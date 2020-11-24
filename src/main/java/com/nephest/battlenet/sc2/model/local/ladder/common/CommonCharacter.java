@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.ladder.common;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 
 import javax.validation.constraints.NotNull;
@@ -18,13 +19,16 @@ public class CommonCharacter
     @NotNull
     private final List<PlayerCharacterStats> stats;
 
+    private final LadderProPlayer proPlayer;
+
     public CommonCharacter
     (
-        @NotNull List<LadderTeam> teams, @NotNull List<PlayerCharacterStats> stats
+        @NotNull List<LadderTeam> teams, @NotNull List<PlayerCharacterStats> stats, LadderProPlayer proPlayer
     )
     {
         this.teams = teams;
         this.stats = stats;
+        this.proPlayer = proPlayer;
     }
 
     public List<LadderTeam> getTeams()
@@ -35,6 +39,11 @@ public class CommonCharacter
     public List<PlayerCharacterStats> getStats()
     {
         return stats;
+    }
+
+    public LadderProPlayer getProPlayer()
+    {
+        return proPlayer;
     }
 
 }

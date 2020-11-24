@@ -65,6 +65,12 @@ public class LadderSearchIndependentIT
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
 
+    @Autowired
+    private ProPlayerDAO proPlayerDAO;
+
+    @Autowired
+    private ProPlayerAccountDAO proPlayerAccountDAO;
+
     @BeforeEach
     public void beforeAll(@Autowired DataSource dataSource)
     throws SQLException
@@ -104,6 +110,9 @@ public class LadderSearchIndependentIT
         //create what matters
         Division bronze1 = divisionDAO.findListByLadder(season1.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
         Account acc = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount#123"));
+        ProPlayer proPlayer = new ProPlayer(null, new byte[]{0x1, 0x2}, "refnickname", "pro name");
+        proPlayerDAO.merge(proPlayer);
+        proPlayerAccountDAO.link(proPlayer.getId(), acc.getBattleTag());
         PlayerCharacter character1 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc.getId(), region, 9998L, 1, "refchar1#123"));
         PlayerCharacter character2 = playerCharacterDAO
@@ -151,6 +160,8 @@ public class LadderSearchIndependentIT
         verifyCharacterAccountStats(byAccount);
         List<LadderDistinctCharacter> byAccountName = ladderCharacterDAO.findDistinctCharactersByName("refaccount");
         verifyCharacterAccountStats(byAccountName);
+        List<LadderDistinctCharacter> byProNickname = ladderCharacterDAO.findDistinctCharactersByName("refnickname");
+        verifyCharacterAccountStats(byProNickname);
         List<LadderDistinctCharacter> byFullAccountName = ladderCharacterDAO.findDistinctCharactersByName("refaccount#123");
         verifyCharacterAccountStats(byFullAccountName);
     }

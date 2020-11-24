@@ -1,3 +1,8 @@
+DROP TABLE IF EXISTS "pro_team_member" CASCADE;
+DROP TABLE IF EXISTS "pro_team" CASCADE;
+DROP TABLE IF EXISTS "pro_player_account" CASCADE;
+DROP TABLE IF EXISTS "social_media_link" CASCADE;
+DROP TABLE IF EXISTS "pro_player" CASCADE;
 DROP TABLE IF EXISTS "queue_stats" CASCADE;
 DROP TABLE IF EXISTS "league_stats" CASCADE;
 DROP TABLE IF EXISTS "account_following" CASCADE;
