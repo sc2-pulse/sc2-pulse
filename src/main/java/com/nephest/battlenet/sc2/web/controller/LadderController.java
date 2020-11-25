@@ -16,6 +16,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
@@ -246,6 +247,19 @@ public class LadderController
     public List<Season> getSeasons()
     {
         return ladderSearch.findSeasonList();
+    }
+
+    @GetMapping("/character/{id}/common")
+    public CommonCharacter getCommonCharacter
+    (
+        @PathVariable("id") long id
+    )
+    {
+        return new CommonCharacter
+        (
+            ladderSearch.findCharacterTeams(id),
+            playerCharacterStatsDAO.findGlobalList(id)
+        );
     }
 
     @GetMapping("/character/{id}/teams")

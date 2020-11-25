@@ -18,8 +18,7 @@ class CharacterUtil
         searchParams.append("m", "1");
         for(const tab of tabs) searchParams.append("t", tab);
         promises.push(BootstrapUtil.hideActiveModal(["player-info", "error-generation"]));
-        promises.push(CharacterUtil.updateCharacterTeams(id));
-        promises.push(CharacterUtil.updateCharacterStats(id));
+        promises.push(CharacterUtil.updateCharacter(id));
 
         return Promise.all(promises)
             .then(o=>new Promise((res, rej)=>{
@@ -30,14 +29,14 @@ class CharacterUtil
             .then(e=>BootstrapUtil.showModal("player-info"));
     }
 
-    static updateCharacterTeamsModel(id)
+    static updateCharacterModel(id)
     {
-        const request = "api/character/" + id + "/teams";
-        const characterTeamsPromise =
+        const request = "api/character/" + id + "/common";
+        const characterPromise =
             fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-        return Promise.all([characterTeamsPromise, StatsUtil.updateBundleModel()])
+        return Promise.all([characterPromise, StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
-                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, {result: jsons[0]});
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, jsons[0]);
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, id);
                 res(jsons);
              }));
@@ -46,17 +45,18 @@ class CharacterUtil
     static updateCharacterTeamsView()
     {
         const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
-        const searchResult = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        const searchResult = {result: Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams};
         CharacterUtil.updateCharacterInfo(searchResult, id);
         CharacterUtil.updateCharacterTeamsSection(searchResult);
     }
 
-    static updateCharacterTeams(id)
+    static updateCharacter(id)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return CharacterUtil.updateCharacterTeamsModel(id)
+        return CharacterUtil.updateCharacterModel(id)
             .then(jsons => new Promise((res, rej)=>{
                 CharacterUtil.updateCharacterTeamsView();
+                CharacterUtil.updateCharacterStatsView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
@@ -164,21 +164,9 @@ class CharacterUtil
         ElementUtil.updateTabSelect(document.getElementById("teams-season-select"), navs);
     }
 
-    static updateCharacterStatsModel(id)
-    {
-        const request = "api/character/" + id + "/stats";
-        return fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{
-                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.CHARACTER_STATS, json);
-                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, id);
-                res(json);
-            }));
-    }
-
     static updateCharacterStatsView()
     {
-        const searchResult = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.CHARACTER_STATS);
+        const searchResult = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).stats;
         for(const statsSection of document.getElementsByClassName("player-stats-dynamic")) statsSection.classList.add("d-none");
         for(const stats of searchResult)
         {
@@ -211,14 +199,6 @@ class CharacterUtil
             const mmrCol = table.querySelectorAll("th")[1];
             TableUtil.sortTable(table, [mmrCol, gamesCol]);
         }
-    }
-
-    static updateCharacterStats(id)
-    {
-        Util.setGeneratingStatus(STATUS.BEGIN);
-        CharacterUtil.updateCharacterStatsModel(id)
-            .then(json => new Promise((res, rej)=>{CharacterUtil.updateCharacterStatsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
     }
 
     static findCharactersByName()
