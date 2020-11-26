@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service.blizzard;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -72,9 +73,9 @@ public class BlizzardSC2API
     private String regionUri;
 
     @Autowired
-    public BlizzardSC2API(OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
+    public BlizzardSC2API(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
     {
-        initWebClient(auth2AuthorizedClientManager);
+        initWebClient(objectMapper, auth2AuthorizedClientManager);
     }
 
     public static boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
@@ -88,12 +89,12 @@ public class BlizzardSC2API
         return leagueType != GRANDMASTER || queueType.getTeamFormat() == ARCHON || queueType.getTeamFormat() == _1V1;
     }
 
-    private void initWebClient(OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
+    private void initWebClient(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
     {
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
         oauth2Client.setDefaultClientRegistrationId("sc2-sys");
-        client = WebServiceUtil.getWebClientBuilder().apply(oauth2Client.oauth2Configuration()).build();
+        client = WebServiceUtil.getWebClientBuilder(objectMapper, -1).apply(oauth2Client.oauth2Configuration()).build();
     }
 
     protected void setRegionUri(String uri)

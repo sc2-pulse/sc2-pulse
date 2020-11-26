@@ -3,10 +3,15 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.http.codec.json.Jackson2JsonDecoder;
+import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
@@ -14,6 +19,7 @@ import reactor.util.retry.Retry;
 
 import java.time.Duration;
 
+@Service
 public class WebServiceUtil
 {
 
@@ -29,7 +35,7 @@ public class WebServiceUtil
         .filter(t->true)
         .transientErrors(true);
 
-    public static WebClient.Builder getWebClientBuilder()
+    public static WebClient.Builder getWebClientBuilder(ObjectMapper objectMapper, int inMemorySize)
     {
         TcpClient timeoutClient = TcpClient.create()
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECT_TIMEOUT.toMillis())
@@ -41,7 +47,13 @@ public class WebServiceUtil
         HttpClient httpClient = HttpClient.from(timeoutClient)
             .compress(true);
         return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(httpClient));
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .exchangeStrategies(ExchangeStrategies.builder().codecs(conf->
+            {
+                conf.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
+                conf.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+                if(inMemorySize > 0) conf.defaultCodecs().maxInMemorySize(inMemorySize);
+            }).build());
     }
 
 }
