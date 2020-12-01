@@ -113,6 +113,17 @@ caption
     text-align: center;
 }
 
+.c-table-simple
+{
+    width: initial;
+}
+
+.c-table-simple td, .c-table-simple th
+{
+    text-align: left;
+}
+
+
 .table .cell-main
 {
     width: 100%;
