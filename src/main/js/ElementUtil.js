@@ -189,68 +189,28 @@ class ElementUtil
         return raceRow;
     }
 
-    static updateTabLinks(params)
+    static getTabTitle(hash)
     {
-        for(link of document.querySelectorAll(".nav-pills:not(.nav-pills-main) a[data-target]"))
-            link.setAttribute("href", link.getAttribute("data-target"));
+        if(hash == null) return "";
 
-        const paramsNoTabs = new URLSearchParams(params);
-        paramsNoTabs.delete("t");
-        const paramsNoTabsStr = paramsNoTabs.toString();
-
-        let root = "";
-        switch(paramsNoTabs.get("type"))
-        {
-            case "ladder":
-                root = "#stats";
-                break;
-            case "character":
-                root = "#player-info";
-                break;
-            default:
-                return;
-        }
-
-        for(link of document.querySelectorAll(root + " .nav-pills a"))
-        {
-            const curParams = new URLSearchParams(paramsNoTabsStr);
-            const tabChain = [];
-            let curTab = document.querySelector(link.getAttribute("data-target"));
-            while(curTab != null)
-            {
-                tabChain.push(curTab.id);
-                curTab = curTab.parentElement.closest(".tab-pane");
-            }
-            for(let i = tabChain.length - 1; i > -1; i--)
-                curParams.append("t", tabChain[i]);
-            link.setAttribute("href", "?" + curParams.toString());
-        }
+        return document.querySelector(hash).getAttribute("data-view-title");
     }
 
-    static getTabTitle(params)
+    static generateLadderTitle(params, hash, includeSeason = true)
     {
-        const tabs = params.getAll("t");
-        if(tabs.length < 1) return "";
-
-        const tab = tabs[tabs.length - 1];
-        return document.querySelector("#" + tab).getAttribute("data-view-title");
+        return `${Session.currentTeamType.secondaryName} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(hash)}${includeSeason ? ", " + Session.currentSeasons.find(s=>s.battlenetId == Session.currentSeason).descriptiveName : ""}`;
     }
 
-    static generateLadderTitle(params, includeSeason = true)
-    {
-        return `${Session.currentTeamType.secondaryName} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(params)}${includeSeason ? ", " + Session.currentSeasons.find(s=>s.battlenetId == Session.currentSeason).descriptiveName : ""}`;
-    }
-
-    static generateCharacterTitle(params)
+    static generateCharacterTitle(params, hash)
     {
         const name = document.querySelector("#player-info-title-name").textContent;
         const nameAdditional = document.querySelector("#player-info-title-name-additional").textContent;
-        return `${name}${nameAdditional} ${ElementUtil.getTabTitle(params)}`;
+        return `${name}${nameAdditional} ${ElementUtil.getTabTitle(hash)}`;
     }
 
-    static generateLadderDescription(params, includeSeason = true)
+    static generateLadderDescription(params, hash, includeSeason = true)
     {
-        let desc = ElementUtil.getTabTitle(params);
+        let desc = ElementUtil.getTabTitle(hash);
 
         if(desc == "MMR Ladder")
         {
@@ -292,7 +252,7 @@ class ElementUtil
         return desc;
     }
 
-    static generateCharacterDescription(params)
+    static generateCharacterDescription(params, hash)
     {
         const name = document.querySelector("#player-info-title-name").textContent;
         const battletag = document.querySelector("#link-battletag span").textContent;
@@ -300,21 +260,21 @@ class ElementUtil
         return `${name}/${battletag} career best MMR for all brackets/races. BattleNet profile and all seasons history`;
     }
 
-    static generateGenericTitle(constructors, params, dataTarget, attrSuffix)
+    static generateGenericTitle(constructors, params, hash, dataTarget, attrSuffix)
     {
         const titleConstructor = constructors.get(dataTarget);
         return titleConstructor != null
-            ? titleConstructor(params)
+            ? titleConstructor(params, hash)
             : (document.querySelector(dataTarget).getAttribute("data-view-" + attrSuffix)
                 || document.querySelector(dataTarget).getAttribute("data-view-title"));
     }
 
-    static updateTitleAndDescription(params, dataTarget)
+    static updateTitleAndDescription(params, hash, dataTarget)
     {
-        const generatedTitle = ElementUtil.generateGenericTitle(ElementUtil.TITLE_CONSTRUCTORS, params, dataTarget, "title");
+        const generatedTitle = ElementUtil.generateGenericTitle(ElementUtil.TITLE_CONSTRUCTORS, params, hash, dataTarget, "title");
         document.title = generatedTitle ? (generatedTitle + " - " + SC2Restful.SITE_NAME) : SC2Restful.SITE_NAME;
         document.querySelector('meta[name="description"]').setAttribute("content",
-            ElementUtil.generateGenericTitle(ElementUtil.DESCRIPTION_CONSTRUCTORS, params, dataTarget, "description"));
+            ElementUtil.generateGenericTitle(ElementUtil.DESCRIPTION_CONSTRUCTORS, params, hash, dataTarget, "description"));
     }
 
     static setMainContent(id)

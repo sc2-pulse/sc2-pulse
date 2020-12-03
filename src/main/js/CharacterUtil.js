@@ -10,19 +10,17 @@ class CharacterUtil
         const id = explicitId || e.currentTarget.getAttribute("data-character-id");
 
         const promises = [];
-        const tabs = new URLSearchParams(Session.locationSearch()).getAll("t");
         const searchParams = new URLSearchParams();
         searchParams.append("type", "character");
         searchParams.append("id", id);
         const stringParams = searchParams.toString();
         searchParams.append("m", "1");
-        for(const tab of tabs) searchParams.append("t", tab);
         promises.push(BootstrapUtil.hideActiveModal(["player-info", "error-generation"]));
         promises.push(CharacterUtil.updateCharacter(id));
 
         return Promise.all(promises)
             .then(o=>new Promise((res, rej)=>{
-                if(!Session.isHistorical) HistoryUtil.pushState({type: "character", id: id}, document.title, "?" + searchParams.toString());
+                if(!Session.isHistorical) HistoryUtil.pushState({type: "character", id: id}, document.title, "?" + searchParams.toString() + "#player-stats-summary");
                 Session.currentSearchParams = stringParams;
                 res();
             }))
@@ -303,17 +301,15 @@ class CharacterUtil
     static updateCharacterSearch(name)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        const tabs = new URLSearchParams(Session.locationSearch()).getAll("t");
         const searchParams = new URLSearchParams();
         searchParams.append("type", "search");
         searchParams.append("name", name);
         const stringParams = searchParams.toString();
-        for(const tab of tabs) searchParams.append("t", tab);
         return CharacterUtil.updateCharacterSearchModel(name)
             .then(json => new Promise((res, rej)=>{
                 CharacterUtil.updateCharacterSearchView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
-                if(!Session.isHistorical) HistoryUtil.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString());
+                if(!Session.isHistorical) HistoryUtil.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString() + "#search");
                 Session.currentSearchParams = stringParams;
                 res();
             }))

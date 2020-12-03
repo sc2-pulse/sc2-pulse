@@ -7,7 +7,7 @@ class HistoryUtil
     static replaceState(obj, title, params)
     {
         Session.titleAndUrlHistory[Session.titleAndUrlHistory.length - 1] = [title, params];
-        obj.locationSearch = params;
+        HistoryUtil.setObjectLocation(obj, params);
         HistoryUtil.updateState(obj, title, params, true);
     }
 
@@ -15,8 +15,22 @@ class HistoryUtil
     {
         Session.titleAndUrlHistory.push([title, params]);
         if(Session.titleAndUrlHistory.length > 2) Session.titleAndUrlHistory.shift();
-        obj.locationSearch = params;
+        HistoryUtil.setObjectLocation(obj, params);
         HistoryUtil.updateState(obj, title, params, false);
+    }
+
+    static setObjectLocation(obj, params)
+    {
+        const hashIx = params.indexOf("#");
+        if(hashIx == -1)
+        {
+            obj.locationSearch = params;
+        }
+        else
+        {
+            obj.locationSearch = params.substring(0, hashIx);
+            obj.locationHash = params.substring(hashIx)
+        }
     }
 
     static previousTitleAndUrl()
@@ -28,84 +42,136 @@ class HistoryUtil
 
     static updateState(obj, title, paramsStr, replace)
     {
-        ElementUtil.updateTabLinks(paramsStr);
-        const params = new URLSearchParams(paramsStr);
-        const newTabs = params.getAll("t");
-        let dataTarget = newTabs.length == 0
-            ? "#" + document.querySelector(".modal.show").id
-            : (newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2]);
-        const modal = document.querySelector(dataTarget).closest(".modal");
-        dataTarget = modal == null ? dataTarget : "#" + modal.id;
-        const tablessParams = new URLSearchParams(paramsStr);
-        tablessParams.delete("t");
-        Session.sectionParams.set(dataTarget, tablessParams.toString());
-        RichDataUtil.enrich(params);
+        const hashIx = paramsStr.indexOf("#");
+        const hash = hashIx > -1 ? paramsStr.substring(hashIx + 1) : null;
+        HistoryUtil.setParentSectionParameters(hash, paramsStr);
         if(Session.isHistorical) return;
         if(replace)
         {
-            history.replaceState(obj, title, "?" + params.toString());
+            history.replaceState(obj, title, paramsStr);
         }
         else
         {
-            history.pushState(obj, title, "?" + params.toString());
+            history.pushState(obj, title, paramsStr);
         }
+
+    }
+
+    static setParentSectionParameters(deepestTabId, paramsStr)
+    {
+        const params = new URLSearchParams(paramsStr);
+        const tabs = [];
+        let parentTab;
+        if(deepestTabId != null)
+        {
+            let prevTab = document.getElementById(deepestTabId);
+            tabs.push(prevTab);
+            while(true)
+            {
+                const curTab = prevTab.parentNode.closest(".tab-pane");
+                if(curTab == null || curTab == prevTab) break;
+                tabs.push(curTab);
+                if(tabs.length == 2) break;
+                prevTab = curTab;
+            }
+            parentTab = tabs.length == 1 ? tabs[0] : tabs[1];
+        }
+        let dataTarget;
+        if(params.get("type") == "modal")
+        {
+            dataTarget = "#" + params.get("id");
+        }
+        else
+        {
+            dataTarget = tabs.length == 0
+                ? "#" + document.querySelector(".modal.show").id
+                : "#" + parentTab.id;
+            const modal = document.querySelector(dataTarget).closest(".modal");
+            dataTarget = modal == null ? dataTarget : "#" + modal.id;
+        }
+        Session.sectionParams.set(dataTarget, paramsStr.split("#")[0]);
+    }
+
+    static getDeepestTabId(el)
+    {
+        let hash = null;
+        const tabs = el.querySelectorAll(":scope .nav-pills a.active");
+        for(let i = tabs.length - 1; i > -1; i--)
+        {
+            const tab = tabs[i];
+            if(tab.offsetParent != null)
+            {
+                hash = tab.getAttribute("data-target").substring(1);
+                break;
+            }
+        }
+        return hash;
+    }
+
+    static formatSearchString(search, hash)
+    {
+        if(search == "?") search = "";
+        return (search != null && search.length > 0 ? "?" + search : "?")
+            + (hash != null && hash.length > 0 ? "#" + hash : "");
     }
 
     static initActiveTabs()
     {
-        const params = new URLSearchParams(Session.locationSearch());
-        const hashes = params.getAll("t");
-        if(hashes.length > 0) return; //tabs are explicit, do not touch them
+        const locationSearch = Session.locationSearch();
+        if(locationSearch.indexOf("#") != -1 && locationSearch.indexOf("#") != locationSearch.length - 1)
+            return; //tabs are explicit, do not touch them
 
-        for(const tab of document.querySelectorAll(".nav-pills a.active"))
-                if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
+        const params = new URLSearchParams(locationSearch);
         if(params.get("m") != 1)
         {
-            Session.lastNonModalParams =  "?" + params.toString();
+            Session.lastNonModalParams =  locationSearch;
             Session.lastNonModalTitle = document.title;
         }
-        HistoryUtil.replaceState({}, document.title, "?" + params.toString());
+        HistoryUtil.replaceState({}, document.title,
+            HistoryUtil.formatSearchString(params.toString(), HistoryUtil.getDeepestTabId(document)));
     }
 
     static updateActiveTabs()
     {
         const modal = document.querySelector(".modal.show");
         const modalOnly = modal != null;
-        const params = new URLSearchParams(Session.locationSearch());
-        params.delete("t");
-        const tabs = modalOnly
-            ? document.querySelectorAll(".modal.show .nav-pills a.active")
-            : document.querySelectorAll(".nav-pills a.active");
-        for(const tab of tabs)
-            if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
-        const newTabs = params.getAll("t");
-        const dataTarget = "#" + (newTabs.length > 0 ? newTabs[newTabs.length - 1] : modal.id);
+        const hash = modalOnly
+            ? HistoryUtil.getDeepestTabId(modal)
+            : HistoryUtil.getDeepestTabId(document);
+        const dataTarget = "#" + (hash != null ? hash : modal.id);
         ElementUtil.setMainContent(dataTarget);
-        ElementUtil.updateTitleAndDescription(params, dataTarget);
-        HistoryUtil.replaceState({}, document.title, "?" + params.toString());
+        ElementUtil.updateTitleAndDescription(new URLSearchParams(Session.locationSearch()), "#" + hash, dataTarget);
+        const params = new URLSearchParams(Session.locationSearch());
+
+        HistoryUtil.replaceState({}, document.title,
+            HistoryUtil.formatSearchString(params.toString(), HistoryUtil.getDeepestTabId(document)));
     }
 
     static showAnchoredTabs()
     {
+        if(Session.locationHash() == null || Session.locationHash().length == 0) return Promise.resolve();
+
         Util.setGeneratingStatus(STATUS.BEGIN);
-        const params = new URLSearchParams(Session.locationSearch());
-        const hashes = params.getAll("t");
         const promises = [];
-        for(const hash of hashes)
+        let prevTab = document.querySelector(Session.locationHash());
+        HistoryUtil.showAnchoredTab(prevTab, promises);
+        while(true)
         {
-            const element = document.querySelector('.nav-pills a[data-target="#' + hash + '"]');
-            if(!element.classList.contains("active"))
-            {
-                for(const chart of document.querySelectorAll("#" + hash + " > * > * > * > .c-chart"))
-                {
-                    if(chart.style.width.startsWith("0"))
-                        promises.push(new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(chart.id, res)));
-                }
-                if(element.offsetParent != null) promises.push(new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(hash, res)));
-                $(element).tab('show')
-            }
+            const curTab = prevTab.parentNode.closest(".tab-pane");
+            if(curTab == null || curTab == prevTab) break;
+            HistoryUtil.showAnchoredTab(curTab, promises);
+            prevTab = curTab;
         }
         return Promise.all(promises).then(e=>new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}));
+    }
+
+    static showAnchoredTab(tab, promises)
+    {
+        const tabEl = document.querySelector('.nav-pills a[data-target="#' + tab.id + '"]');
+        if(tabEl.classList.contains("active")) return;
+
+        if(tabEl.offsetParent != null) promises.push(new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(tab.id, res)));
+        $(tabEl).tab('show');
     }
 
     static restoreState(e)
@@ -121,20 +187,21 @@ class HistoryUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         Session.isHistorical = true;
         const locationSearch = (e != null && e.state.locationSearch != null) ? e.state.locationSearch : window.location.search;
+        const hash = (e != null && e.state.locationHash != null) ? e.state.locationHash : window.location.hash;
         Session.currentRestorationSearch =  locationSearch;
+        Session.currentRestorationHash = hash;
         promises = [];
         lazyPromises = [];
         lazyPromises.push(e=>HistoryUtil.showAnchoredTabs());
         const params = new URLSearchParams(locationSearch);
-        const tabs = params.getAll("t"); params.delete("t");
         const isModal = params.get("m"); params.delete("m");
         const stringParams = params.toString();
         if(Session.currentSearchParams === stringParams) return Promise.all(promises)
             .then(e => {const ap = []; for(lp of lazyPromises) ap.push(lp()); return Promise.all(ap);})
             .then(e => new Promise((res, rej)=>{
-                if(tabs.length > 0 && isModal != null)
+                if(hash != null && hash.length > 0 && isModal != null)
                 {
-                    const lastModal = document.getElementById(tabs[tabs.length - 1]).closest(".modal");
+                    const lastModal = document.querySelector(hash).closest(".modal");
                     if(lastModal != null) BootstrapUtil.showModal(lastModal.id).then(e=>res());
                 }
                 else

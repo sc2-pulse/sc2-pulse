@@ -72,6 +72,11 @@ class Session
         return Session.isHistorical ? Session.currentRestorationSearch : window.location.search;
     }
 
+    static locationHash()
+    {
+        return Session.isHistorical ? Session.currentRestorationHash : window.location.hash;
+    }
+
 }
 
 Session.isSilent = false;
@@ -89,9 +94,10 @@ Session.currentSearchParams = null;
 Session.isHistorical = false;
 Session.currentStateRestoration = Promise.resolve();
 Session.currentRestorationSearch = null;
-Session.lastNonModalParams = "?t=stats";
+Session.currentRestorationHash = null;
+Session.lastNonModalParams = "?#stats";
 Session.lastNonModalTitle = "Stats";
-Session.titleAndUrlHistory = [["Stats", "?t=stats"]];
+Session.titleAndUrlHistory = [["Stats", "?#stats"]];
 
 Session.sectionParams = new Map();
 

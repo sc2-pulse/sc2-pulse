@@ -63,10 +63,11 @@ class BootstrapUtil
 
         const parentParamsStr = Session.sectionParams.get(parentDataTarget);
         const fullParams = new URLSearchParams(parentParamsStr == null ? "" : parentParamsStr);
-        for(const t of newTabs) fullParams.append("t", t);
 
-        ElementUtil.updateTitleAndDescription(fullParams, lastDataTarget);
-        HistoryUtil.pushState({}, document.title, "?" + fullParams.toString());
+        const hash = HistoryUtil.getDeepestTabId(document.querySelector(modal != null ? "#" + modal.id : "body"));
+        ElementUtil.updateTitleAndDescription(fullParams, "#" + hash, lastDataTarget);
+
+        HistoryUtil.pushState({}, document.title, HistoryUtil.formatSearchString(fullParams.toString(), hash));
     }
 
     static hideCollapsible(id)

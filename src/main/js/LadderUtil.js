@@ -39,7 +39,6 @@ class LadderUtil
     static updateLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        const tabs = new URLSearchParams(Session.locationSearch()).getAll("t");
         const params =
         {
             form: formParams,
@@ -52,13 +51,12 @@ class LadderUtil
         searchParams.append("type", "ladder");
         for(const [param, val] of Object.entries(params)) if(param != "form") searchParams.append(param, val);
         const stringParams = searchParams.toString();
-        for(const tab of tabs) searchParams.append("t", tab);
 
         return LadderUtil.updateLadderModel(params, formParams, ratingAnchor, idAnchor, forward, count)
             .then(e => new Promise((res, rej)=>{
                 LadderUtil.updateLadderView();
                 Util.setGeneratingStatus(STATUS.SUCCESS, null, "generated-info-all");
-                if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
+                if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString() + "#ladder-top");
                 Session.currentSeason = searchParams.get("season");
                 Session.currentTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
                 Session.currentTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
@@ -101,18 +99,16 @@ class LadderUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
 
-        const tabs = new URLSearchParams(Session.locationSearch()).getAll("t");
         const params = {form: formParams}
         const searchParams = new URLSearchParams(formParams);
         searchParams.append("type", "following-ladder");
         const stringParams = searchParams.toString();
-        for(const tab of tabs) searchParams.append("t", tab);
 
         return LadderUtil.updateMyLadderModel(formParams)
             .then(jsons => new Promise((res, rej)=>{
                 LadderUtil.updateMyLadderView();
                 Util.setGeneratingStatus(STATUS.SUCCESS, null, "following-ladder");
-                if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString());
+                if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString() + "#personal-following");
                 Session.currentPersonalSeasonSeason = searchParams.get("season");
                 Session.currentPersonalTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
                 Session.currentPersonalTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
