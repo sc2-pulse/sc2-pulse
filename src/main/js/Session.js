@@ -67,6 +67,11 @@ class Session
         }
     }
 
+    static locationSearch()
+    {
+        return Session.isHistorial ? Session.currentRestorationSearch : window.location.search;
+    }
+
 }
 
 Session.isSilent = false;
@@ -82,7 +87,8 @@ Session.currentAccount = null;
 Session.currentFollowing = null;
 Session.currentSearchParams = null;
 Session.isHistorical = false;
-Session.currentStateRestoration = null;
+Session.currentStateRestoration = Promise.resolve();
+Session.currentRestorationSearch = null;
 Session.lastNonModalParams = "?t=stats";
 Session.lastNonModalTitle = "Stats";
 Session.titleAndUrlHistory = [["Stats", "?t=stats"]];

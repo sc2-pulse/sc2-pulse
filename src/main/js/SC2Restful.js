@@ -6,7 +6,7 @@ class SC2Restful
 
     static start()
     {
-        window.addEventListener("popstate", e=>{Session.currentStateRestoration = Session.currentStateRestoration.then(r=>HistoryUtil.restoreState(e))});
+        window.addEventListener("popstate", e=>{HistoryUtil.restoreState(e)});
         return new Promise
         (
             (res, rej)=>

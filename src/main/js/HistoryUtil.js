@@ -7,12 +7,14 @@ class HistoryUtil
     static replaceState(obj, title, params)
     {
         Session.titleAndUrlHistory[Session.titleAndUrlHistory.length - 1] = [title, params];
+        obj.locationSearch = params;
         HistoryUtil.updateState(obj, title, params, true);
     }
 
     static pushState(obj, title, params)
     {
         Session.titleAndUrlHistory.push([title, params]);
+        obj.locationSearch = params;
         HistoryUtil.updateState(obj, title, params, false);
     }
 
@@ -37,6 +39,7 @@ class HistoryUtil
         tablessParams.delete("t");
         Session.sectionParams.set(dataTarget, tablessParams.toString());
         RichDataUtil.enrich(params);
+        if(Session.isHistorical) return;
         if(replace)
         {
             history.replaceState(obj, title, "?" + params.toString());
@@ -49,7 +52,7 @@ class HistoryUtil
 
     static initActiveTabs()
     {
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(Session.locationSearch());
         const hashes = params.getAll("t");
         if(hashes.length > 0) return; //tabs are explicit, do not touch them
 
@@ -67,7 +70,7 @@ class HistoryUtil
     {
         const modal = document.querySelector(".modal.show");
         const modalOnly = modal != null;
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(Session.locationSearch());
         params.delete("t");
         const tabs = modalOnly
             ? document.querySelectorAll(".modal.show .nav-pills a.active")
@@ -84,7 +87,7 @@ class HistoryUtil
     static showAnchoredTabs()
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(Session.locationSearch());
         const hashes = params.getAll("t");
         const promises = [];
         for(const hash of hashes)
@@ -106,13 +109,22 @@ class HistoryUtil
 
     static restoreState(e)
     {
+        Session.currentStateRestoration = Session.currentStateRestoration != null
+            ? Session.currentStateRestoration.then(r=>HistoryUtil.doRestoreState(e))
+            : HistoryUtil.doRestoreState(e);
+    }
+
+    static doRestoreState(e)
+    {
         if(e != null && e.state == null) return;
         Util.setGeneratingStatus(STATUS.BEGIN);
         Session.isHistorical = true;
+        const locationSearch = (e != null && e.state.locationSearch != null) ? e.state.locationSearch : window.location.search;
+        Session.currentRestorationSearch =  locationSearch;
         promises = [];
         lazyPromises = [];
         lazyPromises.push(e=>HistoryUtil.showAnchoredTabs());
-        const params = new URLSearchParams(window.location.search);
+        const params = new URLSearchParams(locationSearch);
         const tabs = params.getAll("t"); params.delete("t");
         const isModal = params.get("m"); params.delete("m");
         const stringParams = params.toString();

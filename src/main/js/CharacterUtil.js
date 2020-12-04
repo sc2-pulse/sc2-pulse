@@ -10,7 +10,7 @@ class CharacterUtil
         const id = explicitId || e.currentTarget.getAttribute("data-character-id");
 
         const promises = [];
-        const tabs = new URLSearchParams(window.location.search).getAll("t");
+        const tabs = new URLSearchParams(Session.locationSearch()).getAll("t");
         const searchParams = new URLSearchParams();
         searchParams.append("type", "character");
         searchParams.append("id", id);
@@ -304,7 +304,7 @@ class CharacterUtil
     static updateCharacterSearch(name)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        const tabs = new URLSearchParams(window.location.search).getAll("t");
+        const tabs = new URLSearchParams(Session.locationSearch()).getAll("t");
         const searchParams = new URLSearchParams();
         searchParams.append("type", "search");
         searchParams.append("name", name);

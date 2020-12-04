@@ -39,7 +39,7 @@ class LadderUtil
     static updateLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        const tabs = new URLSearchParams(window.location.search).getAll("t");
+        const tabs = new URLSearchParams(Session.locationSearch()).getAll("t");
         const params =
         {
             form: formParams,
@@ -101,7 +101,7 @@ class LadderUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
 
-        const tabs = new URLSearchParams(window.location.search).getAll("t");
+        const tabs = new URLSearchParams(Session.locationSearch()).getAll("t");
         const params = {form: formParams}
         const searchParams = new URLSearchParams(formParams);
         searchParams.append("type", "following-ladder");
