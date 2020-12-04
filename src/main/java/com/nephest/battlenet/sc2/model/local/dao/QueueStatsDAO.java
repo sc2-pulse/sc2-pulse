@@ -125,7 +125,7 @@ public class QueueStatsDAO
     private static final String UPDATE_HIGH_PLAYER_ACTIVITY_QUERY =
         String.format(UPDATE_PLAYER_ACTIVITY_QUERY_TEMPLATE, "high", "> 1");
 
-    public final RowMapper<QueueStats> STD_ROW_MAPPER;
+    private static RowMapper<QueueStats> STD_ROW_MAPPER;
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -139,9 +139,15 @@ public class QueueStatsDAO
     {
         this.template = template;
         this.conversionService = conversionService;
-        this.STD_ROW_MAPPER = (rs, num) ->
+        initMappers(conversionService);
+    }
+
+    private static void initMappers(ConversionService conversionService)
+    {
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num) ->
         {
-            QueueStats qs = new QueueStats(
+            QueueStats qs = new QueueStats
+            (
                 rs.getLong("queue_stats.id"),
                 rs.getInt("queue_stats.season"),
                 conversionService.convert(rs.getInt("queue_stats.queue_type"), QueueType.class),
@@ -154,6 +160,11 @@ public class QueueStatsDAO
             qs.setHighActivityPlayerCount(rs.getInt("queue_stats.high_activity_player_count"));
             return qs;
         };
+    }
+
+    public static RowMapper<QueueStats> getStdRowMapper()
+    {
+        return STD_ROW_MAPPER;
     }
 
     public void calculateForSeason(int season)

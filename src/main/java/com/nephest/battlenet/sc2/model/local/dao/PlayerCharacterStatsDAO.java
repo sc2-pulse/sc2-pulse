@@ -110,26 +110,9 @@ public class PlayerCharacterStatsDAO
         + "WHERE player_character_id = :playerCharacterId AND season_id is NULL ";
 
     private final NamedParameterJdbcTemplate template;
-    private ConversionService conversionService;
+    private final ConversionService conversionService;
 
-    public final RowMapper<PlayerCharacterStats> STD_ROW_MAPPER = (rs, num) ->
-    {
-        rs.getInt("race");
-        Race race = rs.wasNull() ? null : conversionService.convert(rs.getInt("race"), Race.class);
-        return new PlayerCharacterStats
-        (
-            rs.getLong("id"),
-            rs.getLong("player_character_id"),
-            rs.getLong("season_id"),
-            conversionService.convert(rs.getInt("queue_type"), QueueType.class),
-            conversionService.convert(rs.getInt("team_type"), TeamType.class),
-            race,
-            rs.getInt("rating_max"),
-            conversionService.convert(rs.getInt("league_max"), BaseLeague.LeagueType.class),
-            rs.getInt("games_played"),
-            rs.getObject("updated", OffsetDateTime.class)
-        );
-    };
+    private static RowMapper<PlayerCharacterStats> STD_ROW_MAPPER;
 
     public PlayerCharacterStatsDAO
     (
@@ -140,6 +123,7 @@ public class PlayerCharacterStatsDAO
         this.template = template;
         this.conversionService = conversionService;
         initQueries(conversionService);
+        initMappers(conversionService);
     }
 
     private static void initQueries(ConversionService conversionService)
@@ -166,13 +150,40 @@ public class PlayerCharacterStatsDAO
         return Collections.unmodifiableMap(queries);
     }
 
+    private static void initMappers(ConversionService conversionService)
+    {
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num) ->
+        {
+            rs.getInt("race");
+            Race race = rs.wasNull() ? null : conversionService.convert(rs.getInt("race"), Race.class);
+            return new PlayerCharacterStats
+            (
+                rs.getLong("id"),
+                rs.getLong("player_character_id"),
+                rs.getLong("season_id"),
+                conversionService.convert(rs.getInt("queue_type"), QueueType.class),
+                conversionService.convert(rs.getInt("team_type"), TeamType.class),
+                race,
+                rs.getInt("rating_max"),
+                conversionService.convert(rs.getInt("league_max"), BaseLeague.LeagueType.class),
+                rs.getInt("games_played"),
+                rs.getObject("updated", OffsetDateTime.class)
+            );
+        };
+    }
+
+    public static RowMapper<PlayerCharacterStats> getStdRowMapper()
+    {
+        return STD_ROW_MAPPER;
+    }
+
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void calculate(int season)
     {
         SqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
         for(Race race : Race.values()) template.update(CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race), params);
         template.update(CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
-        LOG.debug("Calculated player character stats for {} season", new Object[]{season});
+        LOG.debug("Calculated player character stats for {} season", season);
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
@@ -182,7 +193,7 @@ public class PlayerCharacterStatsDAO
         for(Race race : Race.values()) template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race),
             params);
         template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
-        LOG.debug("Calculated (merged) player character stats for {} season", new Object[]{season});
+        LOG.debug("Calculated (merged) player character stats for {} season", season);
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)

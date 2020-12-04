@@ -4,10 +4,9 @@
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.Race;
-import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +50,8 @@ public class LadderCharacterDAO
     + "account.id AS \"account.id\", "
     + "account.partition AS \"account.partition\", "
     + "account.battle_tag AS \"account.battle_tag\", "
-    + "player_character_stats.player_character_id, "
+    + "player_character.id AS \"player_character.id\","
+    + "player_character.account_id AS \"player_character.account_id\","
     + "player_character.region AS \"player_character.region\", "
     + "player_character.battlenet_id AS \"player_character.battlenet_id\", "
     + "player_character.realm AS \"player_character.realm\", "
@@ -104,7 +104,6 @@ public class LadderCharacterDAO
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
-    private final AccountDAO accountDAO;
 
     private final RowMapper<LadderDistinctCharacter> DISTINCT_CHARACTER_ROW_MAPPER;
 
@@ -112,13 +111,11 @@ public class LadderCharacterDAO
     public LadderCharacterDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService,
-        @Autowired AccountDAO accountDAO
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService
     )
     {
         this.template = template;
         this.conversionService = conversionService;
-        this.accountDAO = accountDAO;
         DISTINCT_CHARACTER_ROW_MAPPER =
         (rs, num)->
         {
@@ -126,27 +123,19 @@ public class LadderCharacterDAO
             int raceInt = rs.getInt("race");
             Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
             return new LadderDistinctCharacter
-                (
-                    conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
-                    rs.getInt("rating_max"),
-                    accountDAO.getStdRowMapper().mapRow(rs, num),
-                    new PlayerCharacter
-                        (
-                            rs.getLong("player_character_id"),
-                            rs.getLong("account.id"),
-                            conversionService.convert(rs.getInt("player_character.region"), Region.class),
-                            rs.getLong("player_character.battlenet_id"),
-                            rs.getInt("player_character.realm"),
-                            rs.getString("player_character.name")
-                        ),
-                    rs.getString("pro_player.nickname"),
-                    rs.getString("pro_player.team"),
-                    race == Race.TERRAN ? gamesPlayed : null,
-                    race == Race.PROTOSS ? gamesPlayed : null,
-                    race == Race.ZERG ? gamesPlayed : null,
-                    race == Race.RANDOM ? gamesPlayed : null,
-                    gamesPlayed
-                );
+            (
+                conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
+                rs.getInt("rating_max"),
+                AccountDAO.getStdRowMapper().mapRow(rs, num),
+                PlayerCharacterDAO.getStdRowMapper().mapRow(rs, num),
+                rs.getString("pro_player.nickname"),
+                rs.getString("pro_player.team"),
+                race == Race.TERRAN ? gamesPlayed : null,
+                race == Race.PROTOSS ? gamesPlayed : null,
+                race == Race.ZERG ? gamesPlayed : null,
+                race == Race.RANDOM ? gamesPlayed : null,
+                gamesPlayed
+            );
         };
     }
 

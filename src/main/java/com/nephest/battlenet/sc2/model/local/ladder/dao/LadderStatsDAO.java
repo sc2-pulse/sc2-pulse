@@ -80,8 +80,6 @@ public class LadderStatsDAO
     private final NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
     private final LadderUtil ladderUtil;
-    private SeasonDAO seasonDAO;
-    private LeagueDAO leagueDAO;
     private final QueueStatsDAO queueStatsDAO;
 
     private final ResultSetExtractor<Map<Integer, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>>>
@@ -92,8 +90,8 @@ public class LadderStatsDAO
             int num = 1;
             while(rs.next())
             {
-                Season season = seasonDAO.getStandardRowMapper().mapRow(rs, num);
-                League league = leagueDAO.getStandardRowMapper().mapRow(rs, num);
+                Season season = SeasonDAO.getStdRowMapper().mapRow(rs, num);
+                League league = LeagueDAO.getStdRowMapper().mapRow(rs, num);
                 LeagueStats leagueStats = LeagueStatsDAO.STD_ROW_MAPPER.mapRow(rs, num);
                 Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>> regionResults =
                     result.computeIfAbsent(season.getBattlenetId(), (reg)->new EnumMap<>(Region.class));
@@ -136,22 +134,13 @@ public class LadderStatsDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         @Autowired LadderUtil ladderUtil,
-        @Autowired SeasonDAO seasonDAO,
-        @Autowired LeagueDAO leagueDAO,
         @Autowired QueueStatsDAO queueStatsDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
         this.ladderUtil = ladderUtil;
-        this.seasonDAO = seasonDAO;
-        this.leagueDAO = leagueDAO;
         this.queueStatsDAO = queueStatsDAO;
-    }
-
-    public SeasonDAO getSeasonDAO()
-    {
-        return seasonDAO;
     }
 
     @Cacheable

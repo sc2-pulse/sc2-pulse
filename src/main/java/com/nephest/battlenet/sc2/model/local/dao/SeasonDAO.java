@@ -54,19 +54,9 @@ public class SeasonDAO
         "SELECT MAX(battlenet_id) FROM season";
 
     private final NamedParameterJdbcTemplate template;
-    private ConversionService conversionService;
+    private final ConversionService conversionService;
 
-    private final RowMapper<Season> STD_ROW_MAPPER =
-    (rs, num)-> new Season
-    (
-        rs.getLong("season.id"),
-        rs.getInt("season.battlenet_id"),
-        conversionService.convert(rs.getInt("season.region"), Region.class),
-        rs.getInt("season.year"),
-        rs.getInt("season.number"),
-        rs.getObject("season.start", LocalDate.class),
-        rs.getObject("season.end", LocalDate.class)
-    );
+    private static RowMapper<Season> STD_ROW_MAPPER;
 
 
     @Autowired
@@ -78,6 +68,27 @@ public class SeasonDAO
     {
         this.template = template;
         this.conversionService = conversionService;
+        initMappers(conversionService);
+    }
+
+    private static void initMappers(ConversionService conversionService)
+    {
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER =
+        (rs, num)-> new Season
+        (
+            rs.getLong("season.id"),
+            rs.getInt("season.battlenet_id"),
+            conversionService.convert(rs.getInt("season.region"), Region.class),
+            rs.getInt("season.year"),
+            rs.getInt("season.number"),
+            rs.getObject("season.start", LocalDate.class),
+            rs.getObject("season.end", LocalDate.class)
+        );
+    }
+
+    public static RowMapper<Season> getStdRowMapper()
+    {
+        return STD_ROW_MAPPER;
     }
 
     public Season create(Season season)

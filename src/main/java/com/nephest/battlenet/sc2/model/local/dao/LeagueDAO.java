@@ -30,16 +30,9 @@ public class LeagueDAO
         + "type=excluded.type";
 
     private final NamedParameterJdbcTemplate template;
-    private ConversionService conversionService;
+    private final ConversionService conversionService;
 
-    private final RowMapper<League> STD_ROW_MAPPER = (rs, num)-> new League
-    (
-        rs.getLong("league.id"),
-        rs.getLong("league.season_id"),
-        conversionService.convert(rs.getInt("league.type"), BaseLeague.LeagueType.class),
-        conversionService.convert(rs.getInt("league.queue_type"), QueueType.class),
-        conversionService.convert(rs.getInt("league.team_type"), TeamType.class)
-    );
+    private static RowMapper<League> STD_ROW_MAPPER;
 
     @Autowired
     public LeagueDAO
@@ -50,6 +43,24 @@ public class LeagueDAO
     {
         this.template = template;
         this.conversionService = conversionService;
+        initMappers(conversionService);
+    }
+
+    private void initMappers(ConversionService conversionService)
+    {
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num)-> new League
+        (
+            rs.getLong("league.id"),
+            rs.getLong("league.season_id"),
+            conversionService.convert(rs.getInt("league.type"), BaseLeague.LeagueType.class),
+            conversionService.convert(rs.getInt("league.queue_type"), QueueType.class),
+            conversionService.convert(rs.getInt("league.team_type"), TeamType.class)
+        );
+    }
+
+    public static RowMapper<League> getStdRowMapper()
+    {
+        return STD_ROW_MAPPER;
     }
 
     public League create(League league)
@@ -77,11 +88,6 @@ public class LeagueDAO
             .addValue("type", conversionService.convert(league.getType(), Integer.class))
             .addValue("queueType", conversionService.convert(league.getQueueType(), Integer.class))
             .addValue("teamType", conversionService.convert(league.getTeamType(), Integer.class));
-    }
-
-    public RowMapper<League> getStandardRowMapper()
-    {
-        return STD_ROW_MAPPER;
     }
 
 }

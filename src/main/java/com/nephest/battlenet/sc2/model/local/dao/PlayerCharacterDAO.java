@@ -3,10 +3,12 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -27,6 +29,8 @@ public class PlayerCharacterDAO
         + "realm=excluded.realm, "
         + "name=excluded.name";
 
+    private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
+
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
 
@@ -39,6 +43,25 @@ public class PlayerCharacterDAO
     {
         this.template = template;
         this.conversionService = conversionService;
+        initMappers(conversionService);
+    }
+
+    private static void initMappers(ConversionService conversionService)
+    {
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)-> new PlayerCharacter
+        (
+            rs.getLong("player_character.id"),
+            rs.getLong("player_character.account_id"),
+            conversionService.convert(rs.getInt("player_character.region"), Region.class),
+            rs.getLong("player_character.battlenet_id"),
+            rs.getInt("player_character.realm"),
+            rs.getString("player_character.name")
+        );
+    }
+
+    public static RowMapper<PlayerCharacter> getStdRowMapper()
+    {
+        return STD_ROW_MAPPER;
     }
 
     public PlayerCharacter create(PlayerCharacter character)

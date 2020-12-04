@@ -37,7 +37,7 @@ public class AccountDAO
     private final ConversionService conversionService;
     private final PostgreSQLUtils postgreSQLUtils;
 
-    private final RowMapper<Account> STD_ROW_MAPPER;
+    private static RowMapper<Account> STD_ROW_MAPPER;
 
     @Autowired
     public AccountDAO
@@ -50,7 +50,12 @@ public class AccountDAO
         this.template = template;
         this.conversionService = conversionService;
         this.postgreSQLUtils = postgreSQLUtils;
-        STD_ROW_MAPPER = (rs, num)-> new Account
+        initMappers(conversionService);
+    }
+
+    private void initMappers(ConversionService conversionService)
+    {
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num)-> new Account
         (
             rs.getLong("account.id"),
             conversionService.convert(rs.getInt("account.partition"), Partition.class),
@@ -58,7 +63,7 @@ public class AccountDAO
         );
     }
 
-    public RowMapper<Account> getStdRowMapper()
+    public static RowMapper<Account> getStdRowMapper()
     {
         return STD_ROW_MAPPER;
     }
