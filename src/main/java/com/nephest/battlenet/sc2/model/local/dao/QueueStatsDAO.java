@@ -27,6 +27,17 @@ public class QueueStatsDAO
 
     private  static final Logger LOG = LoggerFactory.getLogger(QueueStatsDAO.class);
 
+    public static final String STD_SELECT =
+        "queue_stats.id AS \"queue_stats.id\", "
+        + "queue_stats.season AS \"queue_stats.season\", "
+        + "queue_stats.queue_type AS \"queue_stats.queue_type\", "
+        + "queue_stats.team_type AS \"queue_stats.team_type\", "
+        + "queue_stats.player_base AS \"queue_stats.player_base\", "
+        + "queue_stats.player_count AS \"queue_stats.player_count\", "
+        + "queue_stats.low_activity_player_count AS \"queue_stats.low_activity_player_count\", "
+        + "queue_stats.medium_activity_player_count AS \"queue_stats.medium_activity_player_count\", "
+        + "queue_stats.high_activity_player_count AS \"queue_stats.high_activity_player_count\" ";
+
     private static final String CALCULATE_SEASON_PLAYER_BASE_QUERY =
         "WITH count_all "
         + "AS"
@@ -74,13 +85,7 @@ public class QueueStatsDAO
         + "player_count=excluded.player_count";
 
     private static final String FIND_QUEUE_STATS_BY_QUEUE_TYPE_AND_TEAM_TYPE =
-        "SELECT id AS \"queue_stats.id\", season AS \"queue_stats.season\", "
-        + "queue_type AS \"queue_stats.queue_type\", team_type AS \"queue_stats.team_type\", "
-        + "player_base AS \"queue_stats.player_base\", "
-        + "player_count AS \"queue_stats.player_count\", "
-        + "low_activity_player_count AS \"queue_stats.low_activity_player_count\", "
-        + "medium_activity_player_count AS \"queue_stats.medium_activity_player_count\", "
-        + "high_activity_player_count AS \"queue_stats.high_activity_player_count\" "
+        "SELECT " + STD_SELECT
         + "FROM queue_stats "
         + "WHERE queue_type=:queueType AND team_type=:teamType "
         + "ORDER BY season";

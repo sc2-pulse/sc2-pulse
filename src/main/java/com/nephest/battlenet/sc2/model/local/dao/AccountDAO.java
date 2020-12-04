@@ -21,6 +21,12 @@ import java.util.Collections;
 @Repository
 public class AccountDAO
 {
+    public static final String STD_SELECT =
+        "account.id AS \"account.id\", "
+        + "account.partition AS \"account.partition\", "
+        + "account.battle_tag AS \"account.battle_tag\", "
+        + "account.updated AS \"account.updated\" ";
+
     private static final String CREATE_QUERY = "INSERT INTO account "
         + "(partition, battle_tag, updated) "
         + "VALUES (:partition, :battleTag, :updated)";

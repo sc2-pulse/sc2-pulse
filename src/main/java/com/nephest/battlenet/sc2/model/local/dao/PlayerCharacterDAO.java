@@ -18,6 +18,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PlayerCharacterDAO
 {
+    public static final String STD_SELECT =
+        "player_character.id AS \"player_character.id\", "
+        + "player_character.account_id AS \"player_character.account_id\", "
+        + "player_character.region AS \"player_character.region\", "
+        + "player_character.battlenet_id AS \"player_character.battlenet_id\", "
+        + "player_character.realm AS \"player_character.realm\", "
+        + "player_character.name AS \"player_character.name\" ";
+
     private static final String CREATE_QUERY = "INSERT INTO player_character "
         + "(account_id, region, battlenet_id, realm, name) "
         + "VALUES (:accountId, :region, :battlenetId, :realm, :name)";

@@ -10,10 +10,7 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -42,26 +39,11 @@ public class LadderSearchDAO
 
     private static final String FIND_TEAM_MEMBERS_BASE =
         "SELECT "
-        + "team.season AS \"team.season\", "
-        + "team.region AS \"team.region\", "
-        + "team.league_type, team.queue_type, team.team_type, "
-        + "team.tier_type, "
-        + "team.id as \"team.id\", "
-        + "team.division_id as \"team.division_id\", "
-        + "team.battlenet_id as \"team.battlenet_id\", "
-        + "team.rating, team.wins, team.losses, team.ties, "
-        + "team.global_rank, team.region_rank, team.league_rank, "
+        + TeamDAO.STD_SELECT + ", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\","
-        + "account.id AS \"account.id\","
-        + "account.partition AS \"account.partition\","
-        + "account.battle_tag AS \"account.battle_tag\","
-        + "player_character.id AS \"player_character.id\", "
-        + "player_character.account_id AS \"player_character.account_id\", "
-        + "player_character.region AS \"player_character.region\", "
-        + "player_character.battlenet_id AS \"player_character.battlenet_id\", "
-        + "player_character.realm AS \"player_character.realm\", "
-        + "player_character.name AS \"player_character.name\", "
+        + AccountDAO.STD_SELECT + ", "
+        + PlayerCharacterDAO.STD_SELECT + ", "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played ";
 
@@ -273,21 +255,21 @@ public class LadderSearchDAO
                     conversionService.convert(rs.getInt("team.region"), Region.class),
                     new BaseLeague
                     (
-                        conversionService.convert(rs.getInt("league_type"), League.LeagueType.class),
-                        conversionService.convert(rs.getInt("queue_type"), QueueType.class),
-                        conversionService.convert(rs.getInt("team_type"), TeamType.class)
+                        conversionService.convert(rs.getInt("team.league_type"), League.LeagueType.class),
+                        conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
+                        conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
                     ),
-                    conversionService.convert(rs.getInt("tier_type"), LeagueTier.LeagueTierType.class),
+                    conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
                     rs.getLong("team.division_id"),
                     ((BigDecimal) rs.getObject("team.battlenet_id")).toBigInteger(),
-                    rs.getLong("rating"),
-                    rs.getInt("wins"), rs.getInt("losses"), rs.getInt("ties"),
+                    rs.getLong("team.rating"),
+                    rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
                     null,
                     members
                 );
-                team.setGlobalRank(rs.getInt("global_rank"));
-                team.setRegionRank(rs.getInt("region_rank"));
-                team.setLeagueRank(rs.getInt("league_rank"));
+                team.setGlobalRank(rs.getInt("team.global_rank"));
+                team.setRegionRank(rs.getInt("team.region_rank"));
+                team.setLeagueRank(rs.getInt("team.league_rank"));
                 teams.add(team);
                 lastTeamId = teamId;
             }

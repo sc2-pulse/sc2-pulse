@@ -22,6 +22,14 @@ public class LeagueStatsDAO
 
     private static final Logger LOG = LoggerFactory.getLogger(LeagueStatsDAO.class);
 
+    public static final String STD_SELECT =
+        "league_stats.league_id AS \"league_stats.league_id\","
+        + "league_stats.team_count AS \"league_stats.team_count\", "
+        + "league_stats.terran_games_played AS \"league_stats.terran_games_played\", "
+        + "league_stats.protoss_games_played AS \"league_stats.protoss_games_played\", "
+        + "league_stats.zerg_games_played AS \"league_stats.zerg_games_played\", "
+        + "league_stats.random_games_played AS \"league_stats.random_games_played\" ";
+
     private static final String CALCULATE_SEASON_STATS_QUERY =
         "INSERT INTO league_stats "
         + "(league_id, team_count, terran_games_played, protoss_games_played, zerg_games_played, random_games_played) "
@@ -56,9 +64,11 @@ public class LeagueStatsDAO
     public static final RowMapper<LeagueStats> STD_ROW_MAPPER = (rs, num) -> new LeagueStats
     (
         rs.getLong("league_stats.league_id"),
-        rs.getInt("team_count"),
-        rs.getInt("terran_games_played"), rs.getInt("protoss_games_played"), rs.getInt("zerg_games_played"),
-        rs.getInt("random_games_played")
+        rs.getInt("league_stats.team_count"),
+        rs.getInt("league_stats.terran_games_played"),
+        rs.getInt("league_stats.protoss_games_played"),
+        rs.getInt("league_stats.zerg_games_played"),
+        rs.getInt("league_stats.random_games_played")
     );
 
 
@@ -79,7 +89,7 @@ public class LeagueStatsDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_QUERY, params);
-        LOG.debug("Calculated league stats for {} season", new Object[]{season});
+        LOG.debug("Calculated league stats for {} season", season);
     }
 
     public void mergeCalculateForSeason(int season)
@@ -87,7 +97,7 @@ public class LeagueStatsDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("seasonId", season);
         template.update(CALCULATE_SEASON_STATS_MERGE_QUERY, params);
-        LOG.debug("Calculated (merged) league stats for {} season", new Object[]{season});
+        LOG.debug("Calculated (merged) league stats for {} season", season);
     }
 
 }

@@ -22,6 +22,15 @@ import java.util.List;
 @Repository
 public class SeasonDAO
 {
+    public static final String STD_SELECT =
+        "season.id AS \"season.id\","
+        + "season.battlenet_id AS \"season.battlenet_id\","
+        + "season.region AS \"season.region\","
+        + "season.year AS \"season.year\","
+        + "season.number AS \"season.number\","
+        + "season.\"start\" AS \"season.start\", "
+        + "season.\"end\" AS \"season.end\" ";
+
     private static final String CREATE_QUERY = "INSERT INTO season "
         + "(battlenet_id, region, year, number, \"start\", \"end\") "
         + "VALUES (:battlenetId, :region, :year, :number, :start, :end)";
@@ -35,18 +44,14 @@ public class SeasonDAO
         + "\"end\"=excluded.end";
 
     private static final String FIND_LIST_BY_REGION = "SELECT "
-        + "id AS \"season.id\", battlenet_id AS \"season.battlenet_id\", region AS \"season.region\", "
-        + "year AS \"season.year\", number AS \"season.number\", "
-        + "\"start\" AS \"season.start\", \"end\" AS \"season.end\" "
+        + STD_SELECT
         + "FROM season "
         + "WHERE region=:region "
         + "ORDER BY battlenet_id DESC";
 
     private static final String FIND_LIST_BY_FIRST_BATTELENET_ID =
         "SELECT DISTINCT ON (battlenet_id) "
-        + "id AS \"season.id\", battlenet_id AS \"season.battlenet_id\", region AS \"season.region\", "
-        + "year AS \"season.year\", number AS \"season.number\", "
-        + "\"start\" AS \"season.start\", \"end\" AS \"season.end\" "
+        + STD_SELECT
         + "FROM season "
         + "ORDER BY battlenet_id DESC";
 

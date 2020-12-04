@@ -31,24 +31,9 @@ public class LadderStatsDAO
 
     private static final String LADDER_SEARCH_STATS_QUERY =
         "SELECT "
-        + "season.id AS \"season.id\","
-        + "season.battlenet_id AS \"season.battlenet_id\","
-        + "season.region AS \"season.region\","
-        + "season.year AS \"season.year\","
-        + "season.number AS \"season.number\","
-        + "\"start\" AS \"season.start\", \"end\" AS \"season.end\", "
-        + "league.id AS \"league.id\","
-        + "league.season_id AS \"league.season_id\","
-        + "league.type AS \"league.type\","
-        + "league.queue_type AS \"league.queue_type\","
-        + "league.team_type AS \"league.team_type\","
-        + "league_stats.league_id AS \"league_stats.league_id\","
-        + "league_stats.team_count, "
-        + "league_stats.terran_games_played, "
-        + "league_stats.protoss_games_played, "
-        + "league_stats.zerg_games_played, "
-        + "league_stats.random_games_played "
-
+        + SeasonDAO.STD_SELECT + ", "
+        + LeagueDAO.STD_SELECT + ", "
+        + LeagueStatsDAO.STD_SELECT
 
         + "FROM league_stats "
         + "INNER JOIN league ON league_stats.league_id=league.id "

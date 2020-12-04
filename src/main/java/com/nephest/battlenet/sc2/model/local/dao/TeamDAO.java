@@ -23,6 +23,24 @@ public class TeamDAO
 
     private  static final Logger LOG = LoggerFactory.getLogger(TeamDAO.class);
 
+    public static final String STD_SELECT =
+        "team.id AS \"team.id\", "
+        + "team.division_id AS \"team.division_id\", "
+        + "team.battlenet_id AS \"team.battlenet_id\", "
+        + "team.season AS \"team.season\", "
+        + "team.region AS \"team.region\", "
+        + "team.league_type AS \"team.league_type\", "
+        + "team.queue_type AS \"team.queue_type\", "
+        + "team.team_type AS \"team.team_type\", "
+        + "team.tier_type AS \"team.tier_type\", "
+        + "team.rating AS \"team.rating\", "
+        + "team.wins AS \"team.wins\", "
+        + "team.losses AS \"team.losses\", "
+        + "team.ties AS \"team.ties\", "
+        + "team.global_rank AS \"team.global_rank\", "
+        + "team.region_rank AS \"team.region_rank\", "
+        + "team.league_rank AS \"team.league_rank\" ";
+
     private static final String CREATE_QUERY = "INSERT INTO team "
         + "("
             + "division_id, battlenet_id, "
@@ -109,7 +127,7 @@ public class TeamDAO
         template.update(CALCULATE_GLOBAL_RANK_QUERY, params);
         template.update(CALCULATE_REGION_RANK_QUERY, params);
         template.update(CALCULATE_LEAGUE_RANK_QUERY, params);
-        LOG.debug("Calculated team ranks for {} season", new Object[]{season});
+        LOG.debug("Calculated team ranks for {} season", season);
     }
 
     private MapSqlParameterSource createParameterSource(Team team)

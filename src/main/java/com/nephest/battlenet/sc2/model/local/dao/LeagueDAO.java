@@ -20,6 +20,13 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class LeagueDAO
 {
+    public static final String STD_SELECT =
+        "league.id AS \"league.id\","
+        + "league.season_id AS \"league.season_id\","
+        + "league.type AS \"league.type\","
+        + "league.queue_type AS \"league.queue_type\","
+        + "league.team_type AS \"league.team_type\" ";
+
     private static final String CREATE_QUERY = "INSERT INTO league "
         + "(season_id, type, queue_type, team_type) "
         + "VALUES (:seasonId, :type, :queueType, :teamType)";
