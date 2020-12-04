@@ -14,6 +14,7 @@ class HistoryUtil
     static pushState(obj, title, params)
     {
         Session.titleAndUrlHistory.push([title, params]);
+        if(Session.titleAndUrlHistory.length > 2) Session.titleAndUrlHistory.shift();
         obj.locationSearch = params;
         HistoryUtil.updateState(obj, title, params, false);
     }
