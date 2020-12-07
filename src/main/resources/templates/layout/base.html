@@ -3,6 +3,15 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:fragment="layout (title, content, script)" lang="en">
 <head>
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PL1L36TKM6"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-PL1L36TKM6');
+    </script>
     <title th:replace="${title}">SC2 Pulse</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
@@ -57,6 +66,8 @@
                             <dd>Your IP address and URL are recorded for technical purposes</dd>
                             <dt>Cookies</dt>
                             <dd>This site is using cookies to prevent you from authenticating on every request</dd>
+                            <dt>Google Analytics</dt>
+                            <dd>This site is using Google Analytics to collect usage statistics and to provide a better experience</dd>
                             <dt>Battle.net&reg; Account ID, Battle.net&reg; BattleTag</dt>
                             <dd>Only the BattleTag is required for authentication, but Battle.net&reg; will ask you for the id permission anyway</dd>
                             <dt>Battle.net&reg; Account Identity</dt>
@@ -65,6 +76,11 @@
                             <dd>We use only StartCraft&reg;2 leaderboards, which are
                                 <a href="https://us.forums.blizzard.com/en/blizzard/t/data-protection-notice-and-faq/609/2"
                                    target="_blank" rel="noopener noreferrer nofollow">deemed as public data(section 15)</a></dd>
+                            <dt>Optionality</dt>
+                            <dd>You can disable many of these technologies in your browser's settings or by not using
+                            the personal(my) section of this site. Even though your general experience will be untouched,
+                            the analytics and cookies are very useful for me, so I ask you to leave them enabled. It's up
+                            to you.</dd>
                             <dt>NO WARRANTY</dt>
                             <dd>SC2 PULSE PROVIDES THE DATA “AS IS,” AND “AS AVAILABLE,” AND THE ENTIRE RISK AS TO SATISFACTORY QUALITY, PERFORMANCE, ACCURACY, AND EFFORT IS WITH YOU.</dd>
                         </dl>
