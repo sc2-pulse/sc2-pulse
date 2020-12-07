@@ -49,6 +49,7 @@ public class BlizzardSC2API
     //historical season data is taken from liquipedia.net
     public static final Map<Integer, BlizzardSeason> MMR_SEASONS = Stream.of
     (
+        new BlizzardSeason(28, 2016, 4, LocalDate.of(2016, 7, 12), LocalDate.of(2016, 10, 18)),
         new BlizzardSeason(29, 2016, 5, LocalDate.of(2016, 10, 18), LocalDate.of(2016, 11, 22)),
         new BlizzardSeason(30, 2016, 6, LocalDate.of(2016, 11, 22), LocalDate.of(2017, 1, 24)),
         new BlizzardSeason(31, 2017, 1, LocalDate.of(2017, 1, 24), LocalDate.of(2017, 5, 2)),
