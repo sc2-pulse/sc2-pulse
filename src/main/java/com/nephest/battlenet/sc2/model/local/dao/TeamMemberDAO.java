@@ -50,6 +50,17 @@ public class TeamMemberDAO
         return member;
     }
 
+    public int[] merge(TeamMember... members)
+    {
+        MapSqlParameterSource[] params = new MapSqlParameterSource[members.length];
+        for(int i = 0; i < members.length; i++)
+        {
+            params[i] = createParameterSource(members[i]);
+        }
+
+        return template.batchUpdate(MERGE_QUERY, params);
+    }
+
     private MapSqlParameterSource createParameterSource(TeamMember member)
     {
         return new MapSqlParameterSource()

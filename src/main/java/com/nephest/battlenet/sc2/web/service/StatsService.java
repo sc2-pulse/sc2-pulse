@@ -21,7 +21,9 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 
@@ -409,15 +411,18 @@ public class StatsService
         Division division
     )
     {
+        Set<TeamMember> members = new HashSet<>(bTeams.length
+            * league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType()), 1f);
         for (BlizzardTeam bTeam : bTeams)
         {
             if(isValidTeam(bTeam))
             {
                 Team team = Team.of(season, league, tier, division, bTeam);
                 teamDao.merge(team);
-                updateTeamMembers(bTeam.getMembers(), season, team);
+                extractTeamMembers(bTeam.getMembers(), members, season, team);
             }
         }
+        if(members.size() > 0) teamMemberDao.merge(members.toArray(TeamMember[]::new));
     }
 
     private boolean isValidTeam(BlizzardTeam team)
@@ -428,7 +433,7 @@ public class StatsService
             && (team.getWins() > 0 || team.getLosses() > 0 || team.getTies() > 0);
     }
 
-    private void updateTeamMembers(BlizzardTeamMember[] bMembers, Season season, Team team)
+    private void extractTeamMembers(BlizzardTeamMember[] bMembers, Set<TeamMember> dest, Season season, Team team)
     {
         for (BlizzardTeamMember bMember : bMembers)
         {
@@ -442,7 +447,7 @@ public class StatsService
             playerCharacterDao.merge(character);
 
             TeamMember member = TeamMember.of(team, character, bMember.getRaces());
-            teamMemberDao.merge(member);
+            dest.add(member);
         }
     }
 
