@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.validation.Validator;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
@@ -31,7 +32,8 @@ public class StatsServiceTest
     public void beforeEach()
     {
         teamDAO = mock(TeamDAO.class);
-        ss = new StatsService(null, null, null, null, null, teamDAO, null, null, null, null, null, null, null);
+        ss = new StatsService(null, null, null, null, null, teamDAO, null, null, null, null, null, null, null,
+            mock(Validator.class));
         StatsService nss = mock(StatsService.class);
         ss.setNestedService(nss);
     }

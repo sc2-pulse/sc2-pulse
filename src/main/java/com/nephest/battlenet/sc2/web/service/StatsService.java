@@ -19,6 +19,9 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.HashSet;
@@ -53,6 +56,7 @@ public class StatsService
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private PostgreSQLUtils postgreSQLUtils;
+    private Validator validator;
 
     private final AtomicBoolean isUpdating = new AtomicBoolean(false);
 
@@ -73,7 +77,8 @@ public class StatsService
         QueueStatsDAO queueStatsDAO,
         LeagueStatsDAO leagueStatsDao,
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
-        PostgreSQLUtils postgreSQLUtils
+        PostgreSQLUtils postgreSQLUtils,
+        Validator validator
     )
     {
         this.api = api;
@@ -89,6 +94,7 @@ public class StatsService
         this.leagueStatsDao = leagueStatsDao;
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.postgreSQLUtils = postgreSQLUtils;
+        this.validator = validator;
     }
 
     protected void setNestedService(StatsService statsService)
@@ -415,7 +421,9 @@ public class StatsService
             * league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType()), 1f);
         for (BlizzardTeam bTeam : bTeams)
         {
-            if(isValidTeam(bTeam))
+            Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
+            validator.validate(bTeam, errors);
+            if(!errors.hasErrors() && isValidTeam(bTeam))
             {
                 Team team = Team.of(season, league, tier, division, bTeam);
                 teamDao.merge(team);
@@ -425,6 +433,7 @@ public class StatsService
         if(members.size() > 0) teamMemberDao.merge(members.toArray(TeamMember[]::new));
     }
 
+    //cross field validation
     private boolean isValidTeam(BlizzardTeam team)
     {
         //empty team is messing with the stats numbers
