@@ -66,6 +66,7 @@ public class LadderStatsDAO
     private ConversionService conversionService;
     private final LadderUtil ladderUtil;
     private final QueueStatsDAO queueStatsDAO;
+    public final SeasonDAO seasonDAO;
 
     private final ResultSetExtractor<Map<Integer, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>>>
         LADDER_STATS_EXTRACTOR =
@@ -119,13 +120,15 @@ public class LadderStatsDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         @Autowired LadderUtil ladderUtil,
-        @Autowired QueueStatsDAO queueStatsDAO
+        @Autowired QueueStatsDAO queueStatsDAO,
+        @Autowired SeasonDAO seasonDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
         this.ladderUtil = ladderUtil;
         this.queueStatsDAO = queueStatsDAO;
+        this.seasonDAO = seasonDAO;
     }
 
     @Cacheable
