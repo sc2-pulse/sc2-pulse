@@ -341,14 +341,6 @@ public class LadderSearchDAO
         List<LadderTeam> teams = template
             .query(q, params, LADDER_TEAM_EXTRACTOR);
         if(reversed) Collections.reverse(teams);
-        /*
-            Blizzard sometimes returns invalid team members and they are ignored
-            by the corresponding service. It is very rare, but in such occasion
-            it is possible to have non full team(3 members out of 4, etc.) to be fetched.
-            It can lead to fetching some strain team members into the result set.
-            Ignoring such team members to return consistent results.
-        */
-        if(teams.size() > getResultsPerPage()) teams = teams.subList(0, getResultsPerPage());
 
         return new PagedSearchResult<>(teamCount, (long) getResultsPerPage(), page, teams);
     }
@@ -390,14 +382,6 @@ public class LadderSearchDAO
         List<LadderTeam> teams = template
             .query(q, params, LADDER_TEAM_EXTRACTOR);
         if(!forward) Collections.reverse(teams);
-        /*
-            Blizzard sometimes returns invalid team members and they are ignored
-            by the corresponding service. It is very rare, but in such occasion
-            it is possible to have non full team(3 members out of 4, etc.) to be fetched.
-            It can lead to fetching some strain team members into the result set.
-            Ignoring such team members to return consistent results.
-        */
-        if(teams.size() > getResultsPerPage()) teams = teams.subList(0, getResultsPerPage());
 
         return new PagedSearchResult<>(teamCount, (long) getResultsPerPage(), finalPage, teams);
     }

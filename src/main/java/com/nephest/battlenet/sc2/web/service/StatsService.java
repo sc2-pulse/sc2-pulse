@@ -417,13 +417,13 @@ public class StatsService
         Division division
     )
     {
-        Set<TeamMember> members = new HashSet<>(bTeams.length
-            * league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType()), 1f);
+        int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
+        Set<TeamMember> members = new HashSet<>(bTeams.length * memberCount, 1f);
         for (BlizzardTeam bTeam : bTeams)
         {
             Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
             validator.validate(bTeam, errors);
-            if(!errors.hasErrors() && isValidTeam(bTeam))
+            if(!errors.hasErrors() && isValidTeam(bTeam, memberCount))
             {
                 Team team = Team.of(season, league, tier, division, bTeam);
                 teamDao.merge(team);
@@ -434,10 +434,14 @@ public class StatsService
     }
 
     //cross field validation
-    private boolean isValidTeam(BlizzardTeam team)
+    private boolean isValidTeam(BlizzardTeam team, int expectedMemberCount)
     {
-        //empty team is messing with the stats numbers
-        return team.getMembers().length > 0
+        /*
+            empty teams are messing with the stats numbers
+            there are ~0.1% of partial teams, which is a number low enough to consider such teams invalid
+            this probably has something to do with players revoking their information from blizzard services
+         */
+        return team.getMembers().length == expectedMemberCount
             //a team can have 0 games while a team member can have some games played, which is clearly invalid
             && (team.getWins() > 0 || team.getLosses() > 0 || team.getTies() > 0);
     }

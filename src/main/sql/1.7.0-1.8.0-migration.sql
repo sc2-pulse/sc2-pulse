@@ -95,3 +95,43 @@ CREATE TABLE "pro_team_member"
 );
 
 CREATE INDEX "pro_team_member_updated" ON "pro_team_member"("updated");
+
+WITH team_filtered AS
+(
+    SELECT DISTINCT(team.id)
+    FROM team_member INNER JOIN team ON team_member.team_id = team.id
+    WHERE team.season IS NOT NULL AND team.queue_type = 202 AND team.team_type = 0
+    GROUP BY team.id HAVING COUNT(*) != 2
+)
+DELETE FROM team USING team_filtered
+WHERE team.id = team_filtered.id;
+
+WITH team_filtered AS
+(
+    SELECT DISTINCT(team.id)
+    FROM team_member INNER JOIN team ON team_member.team_id = team.id
+    WHERE team.season IS NOT NULL AND team.queue_type = 203 AND team.team_type = 0
+    GROUP BY team.id HAVING COUNT(*) != 3
+)
+DELETE FROM team USING team_filtered
+WHERE team.id = team_filtered.id;
+
+WITH team_filtered AS
+(
+    SELECT DISTINCT(team.id)
+    FROM team_member INNER JOIN team ON team_member.team_id = team.id
+    WHERE team.season IS NOT NULL AND team.queue_type = 204 AND team.team_type = 0
+    GROUP BY team.id HAVING COUNT(*) != 4
+)
+DELETE FROM team USING team_filtered
+WHERE team.id = team_filtered.id;
+
+WITH team_filtered AS
+(
+    SELECT DISTINCT(team.id)
+    FROM team_member INNER JOIN team ON team_member.team_id = team.id
+    WHERE team.season IS NOT NULL AND team.queue_type = 206 AND team.team_type = 0
+    GROUP BY team.id HAVING COUNT(*) != 2
+)
+DELETE FROM team USING team_filtered
+WHERE team.id = team_filtered.id;
