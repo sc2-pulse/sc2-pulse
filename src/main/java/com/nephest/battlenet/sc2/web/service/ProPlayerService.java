@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -57,6 +58,7 @@ public class ProPlayerService
         this.aligulacAPI = aligulacAPI;
     }
 
+    @CacheEvict(cacheNames={"pro-player-characters"}, allEntries=true)
     @Transactional
     (
         propagation = Propagation.REQUIRES_NEW

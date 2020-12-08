@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -14,6 +15,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+
+import java.util.List;
 
 @Repository
 public class PlayerCharacterDAO
@@ -36,6 +39,12 @@ public class PlayerCharacterDAO
         + "account_id=excluded.account_id, "
         + "realm=excluded.realm, "
         + "name=excluded.name";
+
+    private static final String FIND_PRO_PLAYER_CHARACTER_IDS =
+        "SELECT player_character.id FROM player_character "
+        + "INNER JOIN account ON player_character.account_id = account.id "
+        + "INNER JOIN pro_player_account ON account.id = pro_player_account.account_id "
+        + "ORDER BY player_character.id";
 
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
 
@@ -98,6 +107,12 @@ public class PlayerCharacterDAO
             .addValue("battlenetId", character.getBattlenetId())
             .addValue("realm", character.getRealm())
             .addValue("name", character.getName());
+    }
+
+    @Cacheable(cacheNames = "pro-player-characters")
+    public List<Long> findProPlayerCharacterIds()
+    {
+        return template.query(FIND_PRO_PLAYER_CHARACTER_IDS, DAOUtils.LONG_MAPPER);
     }
 
 }
