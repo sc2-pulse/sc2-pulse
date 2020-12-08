@@ -225,7 +225,7 @@ th.hoverable span
   color: black;
 }
 
-.social-media:hover
+.social-media:hover, .player-link:hover
 {
   text-decoration: none;
 }
@@ -233,6 +233,7 @@ th.hoverable span
 #link-aligulac
 {
   font-size: 1.9em;
+  font-family: serif;
   width: 1em;
   display: inline-block;
 }
