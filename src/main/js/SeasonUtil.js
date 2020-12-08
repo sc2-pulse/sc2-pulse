@@ -75,9 +75,6 @@ class SeasonUtil
             TableUtil.hoverableColumnHeader(headers[1]);
             TableUtil.hoverableColumnHeader(headers[6]);
             table.getElementsByTagName("table")[0].setAttribute("data-ladder-format-show", "true");
-            const tableCaption = document.createElement("caption");
-            tableCaption.appendChild(document.createElement("h4"));
-            table.childNodes[0].prepend(tableCaption);
             pane.appendChild(table);
         }
         teamSection.appendChild(seasonPills.pane);

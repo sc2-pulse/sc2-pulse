@@ -194,8 +194,6 @@ class CharacterUtil
             const seasonFull = Session.currentSeasons.find(s=>s.battlenetId == season);
             const linkText = seasonFull.descriptiveName;
             link.textContent = linkText;
-            pane.querySelector(":scope table h4").textContent =
-                seasonFull.year + " season " + seasonFull.number + " teams";
             if(!shown)
             {
                 if(Session.currentSeason == null || season == Session.currentSeason || ix == groupedEntries.length - 1)
