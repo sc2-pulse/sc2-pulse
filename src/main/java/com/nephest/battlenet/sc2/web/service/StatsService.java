@@ -10,7 +10,6 @@ import com.nephest.battlenet.sc2.model.Version;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
-import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,7 +54,6 @@ public class StatsService
     private QueueStatsDAO queueStatsDAO;
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
-    private PostgreSQLUtils postgreSQLUtils;
     private Validator validator;
 
     private final AtomicBoolean isUpdating = new AtomicBoolean(false);
@@ -77,7 +75,6 @@ public class StatsService
         QueueStatsDAO queueStatsDAO,
         LeagueStatsDAO leagueStatsDao,
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
-        PostgreSQLUtils postgreSQLUtils,
         Validator validator
     )
     {
@@ -93,7 +90,6 @@ public class StatsService
         this.queueStatsDAO = queueStatsDAO;
         this.leagueStatsDao = leagueStatsDao;
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
-        this.postgreSQLUtils = postgreSQLUtils;
         this.validator = validator;
     }
 
@@ -140,7 +136,6 @@ public class StatsService
                 LOG.info("Updated season {}", season);
             }
             playerCharacterStatsDAO.mergeCalculateGlobal();
-            postgreSQLUtils.analyze();
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
@@ -194,7 +189,6 @@ public class StatsService
                     LOG.info("Updated season {}", season);
                 }
                 playerCharacterStatsDAO.mergeCalculateGlobal();
-                postgreSQLUtils.analyze();
             }
 
             isUpdating.set(false);
@@ -234,7 +228,6 @@ public class StatsService
             long start = System.currentTimeMillis();
 
             updateCurrentSeason();
-            postgreSQLUtils.analyze();
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;

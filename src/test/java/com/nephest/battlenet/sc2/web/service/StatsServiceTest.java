@@ -32,7 +32,7 @@ public class StatsServiceTest
     public void beforeEach()
     {
         teamDAO = mock(TeamDAO.class);
-        ss = new StatsService(null, null, null, null, null, teamDAO, null, null, null, null, null, null, null,
+        ss = new StatsService(null, null, null, null, null, teamDAO, null, null, null, null, null, null,
             mock(Validator.class));
         StatsService nss = mock(StatsService.class);
         ss.setNestedService(nss);
