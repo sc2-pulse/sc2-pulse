@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 
 public final class DAOUtils
 {
@@ -25,6 +26,13 @@ public final class DAOUtils
     {
         rs.next();
         int val = rs.getInt(1);
+        return rs.wasNull() ? null : val;
+    };
+
+    public static final RowMapper<Long> LONG_MAPPER =
+    (rs, ix)->
+    {
+        Long val = rs.getLong(1);
         return rs.wasNull() ? null : val;
     };
 
