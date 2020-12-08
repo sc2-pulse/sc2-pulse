@@ -7,6 +7,9 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 
 public final class DAOUtils
 {
+
+    public static final String REMOVE_OUTDATED_TEMPLATE = "DELETE FROM %1$s WHERE updated < NOW() - INTERVAL '%2$s'";
+
     private DAOUtils(){}
 
     public static final ResultSetExtractor<Long> LONG_EXTRACTOR =
