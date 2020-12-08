@@ -69,7 +69,7 @@ class Session
 
     static locationSearch()
     {
-        return Session.isHistorial ? Session.currentRestorationSearch : window.location.search;
+        return Session.isHistorical ? Session.currentRestorationSearch : window.location.search;
     }
 
 }
