@@ -865,7 +865,15 @@
                         <div id="player-stats-all" class="tab-content">
                             <section id="player-stats-summary" class="tab-pane fade show active" data-view-title="Summary">
                                 <section id="player-stats">
-                                    <h3>Career summary</h3>
+                                    <h3>
+                                        Career summary
+                                        <img
+                                            th:src="@{/static/icon/misc/info.svg}"
+                                            alt="Highest MMR, league, and total games played for all seasons"
+                                            title="Highest MMR, league, and total games played for all seasons"
+                                            data-toggle="tooltip"
+                                        />
+                                    </h3>
                                     <div id="player-stats-container" class="card-deck"></div>
                                     <aside>
                                         <p class="text-secondary">
