@@ -110,9 +110,8 @@ class HistoryUtil
 
     static formatSearchString(search, hash)
     {
-        if(search == "?") search = "";
-        return (search != null && search.length > 0 ? "?" + search : "?")
-            + (hash != null && hash.length > 0 ? "#" + hash : "");
+        return (search != null && search.length > 0 ? (search.startsWith("?") ? search : "?" + search) : "?")
+            + (hash != null && hash.length > 0 ? (hash.startsWith("#") ? hash : "#" + hash) : "");
     }
 
     static initActiveTabs()
