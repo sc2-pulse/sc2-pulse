@@ -65,6 +65,10 @@ public class ProPlayerService
     {
         updateRevealed();
         updateAligulac();
+        proTeamMemberDAO.removeExpired();
+        proTeamDAO.removeExpired();
+        proPlayerAccountDAO.removeExpired();
+        proPlayerDAO.removeExpired();
     }
 
     private void updateRevealed()

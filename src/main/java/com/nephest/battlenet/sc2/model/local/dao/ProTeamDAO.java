@@ -17,6 +17,7 @@ import java.time.OffsetDateTime;
 
 @Repository
 public class ProTeamDAO
+extends StandardDAO
 {
 
     private static RowMapper<ProTeam> STD_ROW_MAPPER;
@@ -44,6 +45,7 @@ public class ProTeamDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
+        super(template, "pro_team", "30 DAYS");
         this.template = template;
         initMappers();
     }

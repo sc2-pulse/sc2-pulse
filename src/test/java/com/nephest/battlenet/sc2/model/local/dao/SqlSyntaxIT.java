@@ -56,6 +56,18 @@ public class SqlSyntaxIT
     @Autowired
     private LeagueStatsDAO leagueStatsDAO;
 
+    @Autowired
+    private ProPlayerDAO proPlayerDAO;
+
+    @Autowired
+    private ProTeamDAO proTeamDAO;
+
+    @Autowired
+    private ProTeamMemberDAO proTeamMemberDAO;
+
+    @Autowired
+    private ProPlayerAccountDAO proPlayerAccountDAO;
+
     @BeforeAll
     public static void beforeAll(@Autowired DataSource dataSource)
     throws SQLException
@@ -141,6 +153,11 @@ public class SqlSyntaxIT
 
         leagueStatsDAO.calculateForSeason(40);
         leagueStatsDAO.mergeCalculateForSeason(40);
+
+        proPlayerAccountDAO.removeExpired();
+        proPlayerDAO.removeExpired();
+        proTeamDAO.removeExpired();
+        proTeamMemberDAO.removeExpired();
     }
 
 }

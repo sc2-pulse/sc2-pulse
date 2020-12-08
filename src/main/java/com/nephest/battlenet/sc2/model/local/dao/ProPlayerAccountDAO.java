@@ -17,6 +17,7 @@ import java.time.OffsetDateTime;
 
 @Repository
 public class ProPlayerAccountDAO
+extends StandardDAO
 {
 
     private static RowMapper<ProPlayerAccount> STD_ROW_MAPPER;
@@ -53,6 +54,7 @@ public class ProPlayerAccountDAO
         @Qualifier("sc2StatsConversionService") ConversionService conversionService
     )
     {
+        super(template, "pro_player_account", "30 DAYS");
         this.template = template;
         this.conversionService = conversionService;
         initMappers();

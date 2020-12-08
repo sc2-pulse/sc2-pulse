@@ -19,6 +19,7 @@ import java.util.List;
 
 @Repository
 public class ProPlayerDAO
+extends StandardDAO
 {
 
     private static RowMapper<ProPlayer> STD_ROW_MAPPER;
@@ -57,6 +58,7 @@ public class ProPlayerDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
+        super(template, "pro_player", "30 DAYS");
         this.template = template;
         initMappers();
     }

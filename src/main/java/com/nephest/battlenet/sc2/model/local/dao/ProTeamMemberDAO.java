@@ -14,6 +14,7 @@ import java.time.OffsetDateTime;
 
 @Repository
 public class ProTeamMemberDAO
+extends StandardDAO
 {
 
     private static final String CREATE_QUERY =
@@ -32,6 +33,7 @@ public class ProTeamMemberDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
+        super(template, "pro_team_member", "30 DAYS");
         this.template = template;
     }
 
