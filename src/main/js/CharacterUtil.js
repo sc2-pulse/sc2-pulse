@@ -109,6 +109,7 @@ class CharacterUtil
         for(const el of document.querySelectorAll(".pro-player-info")) el.classList.add("d-none");
         if(commonCharacter.proPlayer.proPlayer == null) return;
 
+        for(const link of document.querySelectorAll("#revealed-report [rel~=nofollow]")) link.relList.remove("nofollow");
         const proPlayer = commonCharacter.proPlayer;
         document.querySelector("#pro-player-info").classList.remove("d-none");
         CharacterUtil.setProPlayerField("#pro-player-name", "td", proPlayer.proPlayer.name);
