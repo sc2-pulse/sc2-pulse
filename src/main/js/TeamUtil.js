@@ -173,7 +173,7 @@ class TeamUtil
         playerLink.classList.add("player-link", "w-100", "h-100", "d-inline-block");
         if(Session.currentFollowing != null && Object.values(Session.currentFollowing).filter(val=>val.followingAccountId == member.account.id).length > 0)
             playerLink.classList.add("text-success");
-        playerLink.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=character&id=${member.character.id}&m=1&t=player-stats-summary`);
+        playerLink.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=character&id=${member.character.id}&m=1`);
         playerLink.setAttribute("data-character-id", member.character.id);
         playerLink.addEventListener("click", CharacterUtil.showCharacterInfo);
         const container = document.createElement("span");
