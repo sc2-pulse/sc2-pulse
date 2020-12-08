@@ -134,16 +134,17 @@ class HistoryUtil
     {
         const modal = document.querySelector(".modal.show");
         const modalOnly = modal != null;
+        const deepestDocumentTab = HistoryUtil.getDeepestTabId(document);
         const hash = modalOnly
             ? HistoryUtil.getDeepestTabId(modal)
-            : HistoryUtil.getDeepestTabId(document);
+            : deepestDocumentTab;
         const dataTarget = "#" + (hash != null ? hash : modal.id);
         ElementUtil.setMainContent(dataTarget);
         ElementUtil.updateTitleAndDescription(new URLSearchParams(Session.locationSearch()), "#" + hash, dataTarget);
-        const params = new URLSearchParams(Session.locationSearch());
 
         HistoryUtil.replaceState({}, document.title,
-            HistoryUtil.formatSearchString(params.toString(), HistoryUtil.getDeepestTabId(document)));
+            HistoryUtil.formatSearchString(Session.locationSearch(),
+                hash != null ? hash : deepestDocumentTab));
     }
 
     static showAnchoredTabs()
