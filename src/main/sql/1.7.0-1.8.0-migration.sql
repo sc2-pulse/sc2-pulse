@@ -96,6 +96,17 @@ CREATE TABLE "pro_team_member"
 
 CREATE INDEX "pro_team_member_updated" ON "pro_team_member"("updated");
 
+DELETE FROM account WHERE battle_tag = '';
+
+WITH team_filtered AS
+(
+    SELECT DISTINCT(team.id)
+    FROM team_member INNER JOIN team ON team_member.team_id = team.id
+    GROUP BY team.id HAVING COUNT(*) = 0
+)
+DELETE FROM team USING team_filtered
+WHERE team.id = team_filtered.id;
+
 WITH team_filtered AS
 (
     SELECT DISTINCT(team.id)
