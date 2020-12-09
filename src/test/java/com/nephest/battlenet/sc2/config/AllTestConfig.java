@@ -21,7 +21,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
     excludeFilters =
     {
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Application.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class)
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class)
     }
 )
 @Import(CoreTestConfig.class)
