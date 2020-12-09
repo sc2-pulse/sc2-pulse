@@ -117,7 +117,7 @@ class HistoryUtil
     static initActiveTabs()
     {
         const locationSearch = Session.locationSearch();
-        if(locationSearch.indexOf("#") != -1 && locationSearch.indexOf("#") != locationSearch.length - 1)
+        if(Session.locationHash() != null && Session.locationHash().length > 1)
             return; //tabs are explicit, do not touch them
 
         const params = new URLSearchParams(locationSearch);
