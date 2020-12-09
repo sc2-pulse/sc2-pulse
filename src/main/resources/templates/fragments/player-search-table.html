@@ -12,7 +12,17 @@
         th:id="${id}"
         class="table table-sm table-hover"
     >
-        <caption th:if="${caption}"><h3 th:text="${caption}">Caption</h3></caption>
+        <caption th:if="${caption}">
+            <h3>
+            <th:block th:text="${caption}"></th:block>
+            <img
+                    th:src="@{/static/icon/misc/info.svg}"
+                    alt="The stats are selected from player's best bracket/race for all seasons"
+                    title="The stats are selected from player's best bracket/race for all seasons"
+                    data-toggle="tooltip"
+            />
+            </h3>
+        </caption>
         <thead>
             <tr>
                 <th scope="col">Region</th>

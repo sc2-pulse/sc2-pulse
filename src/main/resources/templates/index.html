@@ -522,11 +522,10 @@
                 </form>
             </header>
             <p>
-                Search is case-sensitive for exact BattleTags(tAg#1234 not equals TaG#1234), case-insensitive otherwise(name equals NaMe). The helping stats
-                are selected from player's best bracket(by MMR) and race(by games played).
+                Search is case-sensitive for exact BattleTags(tAg#1234 not equals TaG#1234), case-insensitive otherwise(name equals NaMe).
             </p>
             <div id="search-result-all" class="d-none">
-                <div th:replace="~{fragments/player-search-table :: table('search-table', null)}"></div>
+                <div th:replace="~{fragments/player-search-table :: table('search-table', 'Players')}"></div>
             </div>
         </section>
         <section id="personal" class="tab-pane fade"
