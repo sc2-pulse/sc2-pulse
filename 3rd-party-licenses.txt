@@ -28,3 +28,15 @@ You can use this package under one of these two licenses: CC BY 4.0 or GPL.
 
 http://creativecommons.org/licenses/by/4.0/
 http://www.gnu.org/licenses/gpl.html
+
+# liquipedia.net icons
+
+http://creativecommons.org/licenses/by-sa/3.0/us/
+
+# aligulac.com data
+
+It is free to use for non-commercial purposes if you credit this website when doing so.
+
+# sc2revealed.com data
+If anyone is interested in using the the SC2 Revealed API for their own projects, contact me
+[DavidChan](http://twitter.com/DavidChan).
