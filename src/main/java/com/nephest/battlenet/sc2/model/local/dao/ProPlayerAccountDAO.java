@@ -42,6 +42,9 @@ extends StandardDAO
         + "INNER JOIN player_character ON player_character.account_id = account.id "
         + "WHERE partition = :partition AND player_character.id = :playerCharacterId "
         + MERGE_CLAUSE;
+    private static final String DELETE_BY_BATTLE_TAG_QUERY =
+        "DELETE FROM pro_player_account WHERE pro_player_id = :proPlayerId "
+            + "AND account_id = :accountId";
 
 
     private final NamedParameterJdbcTemplate template;
@@ -123,6 +126,14 @@ extends StandardDAO
                 .addValue("partition", conversionService.convert(Partition.GLOBAL, Integer.class));
 
         return template.batchUpdate(LINK_BY_PLAYER_CHARACTER_ID_QUERY, params);
+    }
+
+    public int unlink(Long proPlayerId, Long accountId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("proPlayerId", proPlayerId)
+            .addValue("accountId", accountId);
+        return template.update(DELETE_BY_BATTLE_TAG_QUERY, params);
     }
 
 }
