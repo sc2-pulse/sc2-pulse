@@ -196,7 +196,7 @@ class CharacterUtil
             link.textContent = linkText;
             if(!shown)
             {
-                if(Session.currentSeason == null || season == Session.currentSeason || ix == groupedEntries.length - 1)
+                if(season == Session.currentSeason || ix == groupedEntries.length - 1)
                 {
                     $(link).tab("show");
                     shown = true;
