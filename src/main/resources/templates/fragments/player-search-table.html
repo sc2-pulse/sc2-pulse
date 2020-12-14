@@ -7,10 +7,10 @@
     <title>Pulse</title>
 </head>
 <body>
-<div class="table-responsive" th:fragment="table (id, caption)">
+<div class="table-responsive" th:fragment="table (id, caption, class)">
     <table
         th:id="${id}"
-        class="table table-sm table-hover"
+        th:class="${'table table-sm table-hover ' + class}"
     >
         <caption th:if="${caption}">
             <h3>

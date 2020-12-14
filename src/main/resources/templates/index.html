@@ -525,7 +525,7 @@
                 Search is case-sensitive for exact BattleTags(tAg#1234 not equals TaG#1234), case-insensitive otherwise(name equals NaMe).
             </p>
             <div id="search-result-all" class="d-none">
-                <div th:replace="~{fragments/player-search-table :: table('search-table', 'Players')}"></div>
+                <div th:replace="~{fragments/player-search-table :: table('search-table', 'Players', '')}"></div>
             </div>
         </section>
         <section id="personal" class="tab-pane fade"
@@ -596,7 +596,7 @@
                             data-view-name="personal-characters"
                             data-view-title="Personal characters"
                     >
-                        <div th:replace="~{fragments/player-search-table :: table('personal-characters-table', 'Your characters')}"></div>
+                        <div th:replace="~{fragments/player-search-table :: table('personal-characters-table', 'Your characters', '')}"></div>
                     </section>
                     <section id="personal-account" class="tab-pane fade" data-view-title="Personal account">
                         <h3>Account</h3>
@@ -903,7 +903,7 @@
                                 </section>
                             </section>
                             <section id="player-stats-characters" class="tab-pane fade" data-view-title="Linked characters">
-                                <div th:replace="~{fragments/player-search-table :: table('linked-characters-table', 'Linked characters')}"></div>
+                                <div th:replace="~{fragments/player-search-table :: table('linked-characters-table', 'Linked characters', '')}"></div>
                             </section>
                             <section id="player-stats-player" class="tab-pane fade" data-view-title="Player info">
                                 <section id="pro-player-info" class="pro-player-info">
