@@ -172,6 +172,16 @@ th.hoverable span
     width: 1.2em;
 }
 
+.table-selectable-row tr
+{
+    border-left: transparent 0.20rem solid;
+}
+
+.table-selectable-row tr.active
+{
+    border-left: #007bff 0.20rem solid;
+}
+
 .race-percentage:after
 {
     content: "/";
