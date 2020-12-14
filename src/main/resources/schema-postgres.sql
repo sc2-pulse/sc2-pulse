@@ -283,8 +283,8 @@ CREATE TABLE "pro_player"
         UNIQUE("revealed_id")
 );
 
-CREATE INDEX "pro_player_updated" ON "pro_player"("updated");
-CREATE INDEX "pro_player_nickname" ON "pro_player"(LOWER("nickname"));
+CREATE INDEX "ix_pro_player_updated" ON "pro_player"("updated");
+CREATE INDEX "ix_pro_player_nickname" ON "pro_player"(LOWER("nickname"));
 
 CREATE TABLE "social_media_link"
 (
@@ -301,7 +301,7 @@ CREATE TABLE "social_media_link"
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE INDEX "social_media_link_updated" ON "social_media_link"("updated");
+CREATE INDEX "ix_social_media_link_updated" ON "social_media_link"("updated");
 
 CREATE TABLE "pro_player_account"
 (
@@ -322,7 +322,7 @@ CREATE TABLE "pro_player_account"
 
 );
 
-CREATE INDEX "pro_player_account_updated" ON "pro_player_account"("updated");
+CREATE INDEX "ix_pro_player_account_updated" ON "pro_player_account"("updated");
 
 CREATE TABLE "pro_team"
 (
@@ -336,7 +336,7 @@ CREATE TABLE "pro_team"
 );
 
 CREATE UNIQUE INDEX "uq_pro_team_name" ON "pro_team"(LOWER(REPLACE("name", ' ', '')));
-CREATE INDEX "pro_team_updated" ON "pro_team"("updated");
+CREATE INDEX "ix_pro_team_updated" ON "pro_team"("updated");
 
 CREATE TABLE "pro_team_member"
 (
@@ -356,4 +356,4 @@ CREATE TABLE "pro_team_member"
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-CREATE INDEX "pro_team_member_updated" ON "pro_team_member"("updated");
+CREATE INDEX "ix_pro_team_member_updated" ON "pro_team_member"("updated");
