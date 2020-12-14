@@ -34,7 +34,9 @@ class CharacterUtil
             fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
         return Promise.all([characterPromise, StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
-                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, jsons[0]);
+                const searchStd = jsons[0];
+                searchStd.result = jsons[0].teams;
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, searchStd);
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, id);
                 res(jsons);
              }));
