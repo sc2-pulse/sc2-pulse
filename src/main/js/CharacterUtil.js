@@ -57,6 +57,7 @@ class CharacterUtil
             .then(jsons => new Promise((res, rej)=>{
                 CharacterUtil.updateCharacterTeamsView();
                 CharacterUtil.updateCharacterStatsView();
+                CharacterUtil.updateCharacterLinkedCharactersView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
@@ -245,6 +246,15 @@ class CharacterUtil
             const mmrCol = table.querySelectorAll("th")[1];
             TableUtil.sortTable(table, [mmrCol, gamesCol]);
         }
+    }
+
+    static updateCharacterLinkedCharactersView()
+    {
+        CharacterUtil.updateCharacters
+        (
+            document.getElementById("linked-characters-table"),
+            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedDistinctCharacters
+        );
     }
 
     static findCharactersByName()

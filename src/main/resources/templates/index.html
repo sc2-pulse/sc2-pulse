@@ -847,6 +847,20 @@
                                 </li>
                                 <li class="nav-item">
                                     <a
+                                            id="player-stats-characters-tab"
+                                            class="nav-link"
+                                            data-toggle="pill"
+                                            data-target="#player-stats-characters"
+                                            href="#player-stats-characters"
+                                            role="tab"
+                                            aria-controls="player-stats-characters"
+                                            aria-selected="false"
+                                    >
+                                        Characters
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a
                                         id="player-stats-player-tab"
                                         class="nav-link"
                                         data-toggle="pill"
@@ -887,6 +901,9 @@
                                     <h3>Teams</h3>
                                     <select id="teams-season-select" class="form-control mb-2 text-center"></select>
                                 </section>
+                            </section>
+                            <section id="player-stats-characters" class="tab-pane fade" data-view-title="Linked characters">
+                                <div th:replace="~{fragments/player-search-table :: table('linked-characters-table', 'Linked characters')}"></div>
                             </section>
                             <section id="player-stats-player" class="tab-pane fade" data-view-title="Player info">
                                 <section id="pro-player-info" class="pro-player-info">
