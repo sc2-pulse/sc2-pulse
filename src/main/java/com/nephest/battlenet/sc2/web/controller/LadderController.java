@@ -262,6 +262,7 @@ public class LadderController
         return new CommonCharacter
         (
             ladderSearch.findCharacterTeams(id),
+            ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id),
             playerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id)
         );

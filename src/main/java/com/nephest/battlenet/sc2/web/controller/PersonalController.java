@@ -48,7 +48,7 @@ public class PersonalController
     @GetMapping("/characters")
     public List<LadderDistinctCharacter> getCharacters(@AuthenticationPrincipal BlizzardOidcUser user)
     {
-        return ladderCharacterDAO.findDistinctCharactersByAccountId(user.getAccount().getId());
+        return ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(user.getAccount().getId());
     }
 
     @PostMapping("/following/{id}")
