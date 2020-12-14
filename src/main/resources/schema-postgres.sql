@@ -322,6 +322,7 @@ CREATE TABLE "pro_player_account"
 
 );
 
+CREATE INDEX "ix_pro_player_account_pro_player_id" ON "pro_player_account"("pro_player_id");
 CREATE INDEX "ix_pro_player_account_updated" ON "pro_player_account"("updated");
 
 CREATE TABLE "pro_team"
@@ -356,4 +357,5 @@ CREATE TABLE "pro_team_member"
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE INDEX "ix_pro_team_member_pro_team_id" ON "pro_team_member"("pro_team_id");
 CREATE INDEX "ix_pro_team_member_updated" ON "pro_team_member"("updated");

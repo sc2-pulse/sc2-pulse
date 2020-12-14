@@ -188,6 +188,23 @@ public class LadderSearchIndependentIT
         assertEquals(character1.getId(), proCharacterIds.get(0));
         assertEquals(character2.getId(), proCharacterIds.get(1));
         assertEquals(character3.getId(), proCharacterIds.get(2));
+
+        //all chars of the same pro player are linked
+        List<LadderDistinctCharacter> linked =
+            ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(character3.getId());
+        verifyProCharacterAccountStats(linked);
+        List<LadderDistinctCharacter> linkedByAccount =
+            ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(acc2.getId());
+        verifyProCharacterAccountStats(linkedByAccount);
+        //all chars of the same account are linked
+        proPlayerAccountDAO.unlink(proPlayer.getId(), acc.getId());
+        proPlayerAccountDAO.unlink(proPlayer.getId(), acc2.getId());
+        List<LadderDistinctCharacter> linkedNoPro =
+            ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(character1.getId());
+        verifyCharacterAccountStats(linkedNoPro);
+        List<LadderDistinctCharacter> linkedByAccountNoPro =
+            ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(acc.getId());
+        verifyCharacterAccountStats(linkedByAccountNoPro);
     }
 
     private void verifyCharacterAccountStats(List<LadderDistinctCharacter> byAccount)

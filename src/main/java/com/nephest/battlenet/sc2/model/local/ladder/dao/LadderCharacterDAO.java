@@ -24,7 +24,7 @@ public class LadderCharacterDAO
 {
 
     private static final String FIND_DISTINCT_CHARACTER_FORMAT =
-    "WITH "
+    "WITH %2$s "
     + "player_character_filtered AS "
     + "( "
         + "SELECT player_character.id "
@@ -80,19 +80,58 @@ public class LadderCharacterDAO
         + "INNER JOIN account ON player_character.account_id = account.id "
         + "LEFT JOIN pro_player_account ON account.id = pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
-        + "WHERE LOWER(pro_player.nickname)=LOWER(:name)"
+        + "WHERE LOWER(pro_player.nickname)=LOWER(:name)", ""
     );
     private static final String FIND_DISTINCT_CHARACTER_BY_FULL_BATTLE_TAG_QUERY = String.format
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
         "INNER JOIN account ON player_character.account_id = account.id "
-        + "WHERE account.battle_tag = :battleTag "
+        + "WHERE account.battle_tag = :battleTag ", ""
     );
     private static final String FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY = String.format
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
         "INNER JOIN account ON player_character.account_id=account.id "
-        + "WHERE account.id = :accountId "
+        + "WHERE account.id = :accountId ", ""
+    );
+
+    private static final String FIND_LINKED_DISTINCT_CHARACTERS_TEMPLATE = String.format
+    (
+        FIND_DISTINCT_CHARACTER_FORMAT,
+        "INNER JOIN account ON player_character.account_id=account.id "
+        + "INNER JOIN account_filtered ON account_filtered.id=account.id "
+        + "UNION "
+        + "SELECT player_character.id "
+        + "FROM pro_player_filtered "
+        + "INNER JOIN pro_player_account ON pro_player_filtered.id = pro_player_account.pro_player_id "
+        + "INNER JOIN account ON pro_player_account.account_id = account.id "
+        + "INNER JOIN player_character ON account.id = player_character.account_id",
+
+        "pro_player_filtered AS "
+        + "("
+            + "SELECT pro_player.id FROM pro_player "
+            + "INNER JOIN pro_player_account ON pro_player.id = pro_player_account.pro_player_id "
+            + "INNER JOIN account ON pro_player_account.account_id=account.id "
+            + "%1$s"
+        + "),"
+        + "account_filtered AS "
+        + "("
+            + "SELECT account.id FROM account "
+            + "%1$s"
+        + "),"
+    );
+
+    private static final String FIND_LINKED_DISTINCT_CHARACTERS_BY_PLAYER_CHARACTER_ID_QUERY = String.format
+    (
+        FIND_LINKED_DISTINCT_CHARACTERS_TEMPLATE,
+        "INNER JOIN player_character ON account.id = player_character.account_id "
+        + "WHERE player_character.id = :playerCharacterId"
+    );
+
+    private static final String FIND_LINKED_DISTINCT_CHARACTERS_BY_ACCOUNT_ID_QUERY = String.format
+    (
+        FIND_LINKED_DISTINCT_CHARACTERS_TEMPLATE,
+        "WHERE account.id = :accountId"
     );
 
     private final NamedParameterJdbcTemplate template;
@@ -163,6 +202,22 @@ public class LadderCharacterDAO
             .addValue("accountId", accountId);
         return template
             .query(FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+    }
+
+    public List<LadderDistinctCharacter> findLinkedDistinctCharactersByCharacterId(Long playerCharacterId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("playerCharacterId", playerCharacterId);
+        return template
+            .query(FIND_LINKED_DISTINCT_CHARACTERS_BY_PLAYER_CHARACTER_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+    }
+
+    public List<LadderDistinctCharacter> findLinkedDistinctCharactersByAccountId(Long accountId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("accountId", accountId);
+        return template
+            .query(FIND_LINKED_DISTINCT_CHARACTERS_BY_ACCOUNT_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
 
 }
