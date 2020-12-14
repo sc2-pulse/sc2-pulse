@@ -57,7 +57,7 @@ class CharacterUtil
             .then(jsons => new Promise((res, rej)=>{
                 CharacterUtil.updateCharacterTeamsView();
                 CharacterUtil.updateCharacterStatsView();
-                CharacterUtil.updateCharacterLinkedCharactersView();
+                CharacterUtil.updateCharacterLinkedCharactersView(id);
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
@@ -248,13 +248,13 @@ class CharacterUtil
         }
     }
 
-    static updateCharacterLinkedCharactersView()
+    static updateCharacterLinkedCharactersView(id)
     {
-        CharacterUtil.updateCharacters
-        (
-            document.getElementById("linked-characters-table"),
-            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedDistinctCharacters
-        );
+        const table = document.getElementById("linked-characters-table");
+        for(const tr of table.querySelectorAll(":scope tr.active")) tr.classList.remove("active");
+        const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        CharacterUtil.updateCharacters(table, commonCharacter.linkedDistinctCharacters);
+        table.querySelector(':scope a[data-character-id="' + id + '"]').closest("tr").classList.add("active");
     }
 
     static findCharactersByName()
