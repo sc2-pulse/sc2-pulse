@@ -3,12 +3,17 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.util.BookmarkedResult;
+import com.nephest.battlenet.sc2.model.util.SimpleBookmarkedResultSetExtractor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -52,7 +57,22 @@ public class PlayerCharacterDAO
         + "INNER JOIN pro_player_account ON account.id = pro_player_account.account_id "
         + "ORDER BY player_character.id";
 
+    private static final String FIND_TOP_PLAYER_CHARACTERS =
+        "SELECT "
+        + "team.id AS \"team.id\", team.rating AS \"team.rating\", "
+        + PlayerCharacterDAO.STD_SELECT + " FROM player_character "
+        + "INNER JOIN team_member ON player_character.id = team_member.player_character_id "
+        + "INNER JOIN team ON team_member.team_id = team.id "
+
+        + "WHERE team.season = :season AND team.region IS NOT NULL AND team.league_type IS NOT NULL "
+        + "AND team.queue_type = :queueType AND team.team_type = :teamType "
+        + "AND (team.rating, team.id) < (:ratingAnchor, :idAnchor) "
+
+        + "ORDER BY team.rating DESC, team.id DESC, player_character.id DESC "
+        + "LIMIT :limit";
+
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
+    private static ResultSetExtractor<BookmarkedResult<List<PlayerCharacter>>> BOOKMARKED_STD_ROW_EXTRACTOR;
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -80,6 +100,9 @@ public class PlayerCharacterDAO
             rs.getInt("player_character.realm"),
             rs.getString("player_character.name")
         );
+
+        if(BOOKMARKED_STD_ROW_EXTRACTOR == null) BOOKMARKED_STD_ROW_EXTRACTOR
+            = new SimpleBookmarkedResultSetExtractor<>(STD_ROW_MAPPER, "team.rating", "team.id");
     }
 
     public static RowMapper<PlayerCharacter> getStdRowMapper()
@@ -124,6 +147,26 @@ public class PlayerCharacterDAO
     public List<PlayerCharacter> findProPlayerCharacters()
     {
         return template.query(FIND_PRO_PLAYER_CHARACTERS, PlayerCharacterDAO.getStdRowMapper());
+    }
+
+    public BookmarkedResult<List<PlayerCharacter>> findTopPlayerCharacters
+    (
+        int season,
+        QueueType queueType,
+        TeamType teamType,
+        int count,
+        BookmarkedResult<List<PlayerCharacter>> bookmarkedResult
+    )
+    {
+        Long[] bookmark = bookmarkedResult == null ? null : bookmarkedResult.getBookmark();
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("teamType", conversionService.convert(teamType, Integer.class))
+            .addValue("limit", count)
+            .addValue("idAnchor", bookmark != null ? bookmark[1] : 0L)
+            .addValue("ratingAnchor", bookmark != null ? bookmark[0] : 99999L);
+        return template.query(FIND_TOP_PLAYER_CHARACTERS, params, BOOKMARKED_STD_ROW_EXTRACTOR);
     }
 
 }
