@@ -25,4 +25,9 @@ public class StandardDAO
         return template.update(REMOVE_EXPIRED_QUERY, Collections.emptyMap());
     }
 
+    public NamedParameterJdbcTemplate getTemplate()
+    {
+        return template;
+    }
+
 }
