@@ -188,6 +188,11 @@ public class LadderSearchIndependentIT
         assertEquals(character1.getId(), proCharacterIds.get(0));
         assertEquals(character2.getId(), proCharacterIds.get(1));
         assertEquals(character3.getId(), proCharacterIds.get(2));
+        List<PlayerCharacter> proCharacters = playerCharacterDAO.findProPlayerCharacters();
+        assertEquals(3, proCharacterIds.size());
+        assertEquals(character1, proCharacters.get(0));
+        assertEquals(character2, proCharacters.get(1));
+        assertEquals(character3, proCharacters.get(2));
 
         //all chars of the same pro player are linked
         List<LadderDistinctCharacter> linked =

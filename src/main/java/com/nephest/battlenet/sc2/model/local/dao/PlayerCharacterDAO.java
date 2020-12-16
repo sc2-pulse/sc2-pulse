@@ -46,6 +46,12 @@ public class PlayerCharacterDAO
         + "INNER JOIN pro_player_account ON account.id = pro_player_account.account_id "
         + "ORDER BY player_character.id";
 
+    private static final String FIND_PRO_PLAYER_CHARACTERS =
+        "SELECT " + PlayerCharacterDAO.STD_SELECT + " FROM player_character "
+        + "INNER JOIN account ON player_character.account_id = account.id "
+        + "INNER JOIN pro_player_account ON account.id = pro_player_account.account_id "
+        + "ORDER BY player_character.id";
+
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
 
     private final NamedParameterJdbcTemplate template;
@@ -113,6 +119,11 @@ public class PlayerCharacterDAO
     public List<Long> findProPlayerCharacterIds()
     {
         return template.query(FIND_PRO_PLAYER_CHARACTER_IDS, DAOUtils.LONG_MAPPER);
+    }
+
+    public List<PlayerCharacter> findProPlayerCharacters()
+    {
+        return template.query(FIND_PRO_PLAYER_CHARACTERS, PlayerCharacterDAO.getStdRowMapper());
     }
 
 }
