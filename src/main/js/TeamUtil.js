@@ -179,13 +179,13 @@ class TeamUtil
         const container = document.createElement("span");
         container.classList.add("player-link-container");
         if(member.proNickname != null) container.classList.add("player-pro");
-        container.appendChild(TeamUtil.createRacesElem(team, member));
-        container.appendChild(TeamUtil.createNameElem(team, member));
+        container.appendChild(TeamUtil.createRacesElem(member));
+        container.appendChild(TeamUtil.createNameElem(member));
         playerLink.appendChild(container);
         return playerLink
     }
 
-    static createNameElem(team, member)
+    static createNameElem(member)
     {
         const nameElem = document.createElement("span");
         nameElem.classList.add("player-name");
@@ -193,7 +193,7 @@ class TeamUtil
         return nameElem
     }
 
-    static createRacesElem(team, member)
+    static createRacesElem(member)
     {
         const games = new Map();
         games.set(RACE.TERRAN, typeof member.terranGamesPlayed === "undefined" ? 0 : member.terranGamesPlayed);
