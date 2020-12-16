@@ -17,10 +17,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -48,6 +45,9 @@ public class LadderController
 
     @Autowired
     private LadderProPlayerDAO ladderProPlayerDAO;
+
+    @Autowired
+    private LadderMatchDAO ladderMatchDAO;
 
     @GetMapping("/ladder")
     public PagedSearchResult<List<LadderTeam>> getLadder
@@ -264,7 +264,8 @@ public class LadderController
             ladderSearch.findCharacterTeams(id),
             ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id),
             playerCharacterStatsDAO.findGlobalList(id),
-            ladderProPlayerDAO.getProPlayerByCharacterId(id)
+            ladderProPlayerDAO.getProPlayerByCharacterId(id),
+            ladderMatchDAO.findMatchesByCharacterId(id)
         );
     }
 
