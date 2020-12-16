@@ -63,6 +63,8 @@ extends SpringBootServletInitializer
         service.addConverter(new IntegerToTeamTypeConverter());
         service.addConverter(new IntegerToRaceConverter());
         service.addConverter(new IntegerToSocialMediaConverter());
+        service.addConverter(new IntegerToMatchTypeConverter());
+        service.addConverter(new IntegerToDecisionConverter());
         return service;
     }
 

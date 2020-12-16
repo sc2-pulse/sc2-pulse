@@ -8,8 +8,10 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.Order;
@@ -17,8 +19,13 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import java.util.Set;
+
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
 
 @SpringBootTest(classes = {AllTestConfig.class})
@@ -31,9 +38,19 @@ public class BlizzardSC2APIIT
     public static final String VALID_SEASON = "{\"seasonId\": 1, \"year\": 2010, \"number\": 1}";
     public static final String VALID_LEAGUE = "{\"type\": 0, \"queueType\": 201, \"teamType\": 0, \"tier\": []}";
     public static final String VALID_LADDER = "{\"team\": []}";
+    public static final String VALID_MATCHES = "{\"matches\": []}";
 
+    public static final PlayerCharacter SERRAL =
+        new PlayerCharacter(null, null, Region.EU, 315071L, 1, "Serral");
+    public static final PlayerCharacter HEROMARINE =
+        new PlayerCharacter(null, null, Region.EU, 7069585L, 1, "Heromarine");
+    public static final PlayerCharacter MARU =
+        new PlayerCharacter(null, null, Region.KR, 4582362L, 1, "Maru");
     @Autowired
     private BlizzardSC2API api;
+
+    @Autowired
+    private Validator validator;
 
     @Test @Order(1)
     public void testFetch()
@@ -48,6 +65,23 @@ public class BlizzardSC2APIIT
     }
 
     @Test @Order(2)
+    public void testFetchMatches()
+    {
+        api.getMatches(Set.of(SERRAL, HEROMARINE, MARU))
+            .sequential()
+            .doOnNext((m)->
+            {
+                assertTrue(m.getT1().getMatches().length > 0);
+                for(BlizzardMatch match : m.getT1().getMatches())
+                {
+                    Errors errors = new BeanPropertyBindingResult(match, match.toString());
+                    validator.validate(match, errors);
+                    assertFalse(errors.hasErrors());
+                }
+            }).blockLast();
+    }
+
+    @Test @Order(3)
     public void testRetrying()
     throws Exception
     {
@@ -70,6 +104,7 @@ public class BlizzardSC2APIIT
             VALID_LEAGUE, server, RETRY_COUNT
         );
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, mock(BlizzardTierDivision.class)), VALID_LADDER, server, RETRY_COUNT);
+        WebServiceTestUtil.testRetrying(api.getMatches(SERRAL), VALID_MATCHES, server, RETRY_COUNT);
         server.shutdown();
     }
 

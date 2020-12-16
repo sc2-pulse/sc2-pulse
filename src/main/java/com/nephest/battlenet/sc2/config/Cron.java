@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +23,9 @@ public class Cron
     private ProPlayerService proPlayerService;
 
     @Autowired
+    private MatchService matchService;
+
+    @Autowired
     private LadderSearchDAO ladderSearchDAO;
 
     @Autowired
@@ -33,6 +37,7 @@ public class Cron
         statsService.updateMissing();
         statsService.updateCurrent();
         proPlayerService.update();
+        matchService.update();
         postgreSQLUtils.vacuum();
         postgreSQLUtils.analyze();
         ladderSearchDAO.precache();

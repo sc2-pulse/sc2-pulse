@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.Startup;
 import com.nephest.battlenet.sc2.config.security.SameSiteRememberMeAuthenticationSuccessfulHandler;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
+import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardSC2API.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SameSiteRememberMeAuthenticationSuccessfulHandler.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatsService.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = MatchService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class)
     }

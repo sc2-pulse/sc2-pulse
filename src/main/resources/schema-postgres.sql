@@ -359,3 +359,39 @@ CREATE TABLE "pro_team_member"
 
 CREATE INDEX "ix_pro_team_member_pro_team_id" ON "pro_team_member"("pro_team_id");
 CREATE INDEX "ix_pro_team_member_updated" ON "pro_team_member"("updated");
+
+CREATE TABLE "match"
+(
+    "id" BIGSERIAL,
+    "date" TIMESTAMP WITH TIME ZONE NOT NULL,
+    "type" SMALLINT NOT NULL,
+    "map" VARCHAR(100) NOT NULL,
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY ("id"),
+
+    CONSTRAINT "uq_match_date_type_map"
+        UNIQUE("date", "type", "map")
+);
+
+CREATE INDEX "ix_match_updated" ON "match"("updated");
+
+CREATE TABLE "match_participant"
+(
+    "match_id" BIGINT NOT NULL,
+    "player_character_id" BIGINT NOT NULL,
+    "decision" SMALLINT NOT NULL,
+
+    PRIMARY KEY ("match_id", "player_character_id"),
+
+    CONSTRAINT "fk_match_participant_match_id"
+        FOREIGN KEY ("match_id")
+        REFERENCES "match"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_match_participant_player_character_id"
+        FOREIGN KEY ("player_character_id")
+        REFERENCES "player_character"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX "ix_match_participant_player_character_id" ON "match_participant"("player_character_id");

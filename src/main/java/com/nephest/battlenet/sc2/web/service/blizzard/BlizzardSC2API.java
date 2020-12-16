@@ -7,11 +7,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +19,12 @@ import org.springframework.security.oauth2.client.web.reactive.function.client.S
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.ParallelFlux;
+import reactor.core.scheduler.Schedulers;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import java.time.LocalDate;
 import java.util.Comparator;
@@ -207,6 +210,36 @@ public class BlizzardSC2API
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
             .retryWhen(WebServiceUtil.RETRY);
+    }
+
+    public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)
+    {
+        return getWebClient()
+            .get()
+            .uri
+            (
+                regionUri != null
+                    ? regionUri
+                    : (playerCharacter.getRegion().getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}/matches"),
+                playerCharacter.getRegion().getId(),
+                playerCharacter.getRealm(),
+                playerCharacter.getBattlenetId()
+            )
+            .accept(APPLICATION_JSON)
+            .retrieve()
+            .bodyToMono(BlizzardMatches.class)
+            .zipWith(Mono.just(playerCharacter))
+            .retryWhen(WebServiceUtil.RETRY)
+            .onErrorReturn((t)->t.getCause() != null && t.getCause() instanceof WebClientResponseException.NotFound,
+                Tuples.of(new BlizzardMatches(), playerCharacter));
+    }
+
+    public ParallelFlux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(Iterable<? extends PlayerCharacter> playerCharacters)
+    {
+        return Flux.fromIterable(playerCharacters)
+            .parallel()
+            .runOn(Schedulers.boundedElastic())
+            .flatMap(this::getMatches, false, REQUESTS_PER_SECOND_CAP);
     }
 
 }
