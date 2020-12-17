@@ -54,6 +54,7 @@ class CharacterUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updateCharacterModel(id)
+            .then(o => CharacterUtil.updateCharacterMatchesView())
             .then(jsons => new Promise((res, rej)=>{
                 CharacterUtil.updateCharacterTeamsView();
                 CharacterUtil.updateCharacterStatsView();
@@ -255,6 +256,76 @@ class CharacterUtil
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
         CharacterUtil.updateCharacters(table, commonCharacter.linkedDistinctCharacters);
         table.querySelector(':scope a[data-character-id="' + id + '"]').closest("tr").classList.add("active");
+    }
+
+    static updateCharacterMatchesView()
+    {
+        const tab = document.querySelector("#player-stats-matches-tab");
+        const tabNav = tab.closest(".nav-item");
+        const pane = document.querySelector("#player-stats-matches");
+        const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        const matches = commonCharacter.matches;
+        //show only for pros
+        if(!commonCharacter.proPlayer.proPlayer)
+        {
+           tabNav.classList.add("d-none");
+           pane.classList.add("d-none");
+           if(tab.classList.contains("active")) return BootstrapUtil.showTab("player-stats-summary-tab");
+        }
+        else
+        {
+            tabNav.classList.remove("d-none");
+            pane.classList.remove("d-none");
+            const tBody = document.querySelector("#matches tbody");
+            ElementUtil.removeChildren(tBody);
+            //filter out partial matches
+            const validMatches = matches.filter(m=>m.participants.length > 1);
+            for(const match of validMatches)
+            {
+                const participantsGrouped = Util.groupBy(match.participants, p=>p.participant.decision);
+                //filter out collisions and matches without winners
+                if
+                (
+                    !participantsGrouped.get("WIN")
+                    || !participantsGrouped.get("LOSS")
+                    || participantsGrouped.get("WIN").length == 0
+                    || participantsGrouped.get("WIN").length != participantsGrouped.get("LOSS").length
+                ) continue;
+
+                const tr = document.createElement("tr");
+                tr.insertCell().textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(match.match.date));
+                tr.insertCell().textContent = match.match.type.replace(/_/g, "");
+                tr.insertCell().textContent = match.match.map;
+                const participantsRow = document.createElement("div");
+                participantsRow.classList.add("row", "no-gutters", "text-left");
+                tr.insertCell().appendChild(participantsRow);
+
+                //winner-loser-winner-loser
+                let winner = true;
+                const winLossLen = participantsGrouped.get("WIN").length + participantsGrouped.get("LOSS").length;
+                for(let i = 0; i < winLossLen; i++)
+                {
+                    const participant = winner ? participantsGrouped.get("WIN").pop() : participantsGrouped.get("LOSS").pop();
+                    participantsRow.appendChild(CharacterUtil.createMatchParticipant(match, participant));
+                    winner = !winner;
+                }
+                tBody.appendChild(tr);
+            }
+        }
+        return Promise.resolve();
+    }
+
+    static createMatchParticipant(match, participant)
+    {
+        const info = TeamUtil.createMemberInfo({members: match.participants}, participant.teamMember, false);
+        const container = info.querySelector(":scope .player-link-container");
+        const decision = document.createElement("span");
+        decision.classList.add("match-decision", "mr-3", "font-weight-bold");
+        if(participant.participant.decision == "WIN") decision.classList.add("text-success");
+        if(participant.participant.decision == "LOSS") decision.classList.add("text-danger");
+        decision.textContent = participant.participant.decision;
+        container.prepend(decision);
+        return info;
     }
 
     static findCharactersByName()
