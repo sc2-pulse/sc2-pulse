@@ -159,15 +159,15 @@ class TeamUtil
         return gamesTable;
     }
 
-    static createMemberInfo(team, member)
+    static createMemberInfo(team, member, appendRaces = true)
     {
         const result = document.createElement("span");
         result.classList.add("team-member-info", "col-lg-" + (team.members.length > 1 ? "6" : "12"), "col-md-12");
-        result.appendChild(TeamUtil.createPlayerLink(team, member));
+        result.appendChild(TeamUtil.createPlayerLink(team, member, appendRaces));
         return result;
     }
 
-    static createPlayerLink(team, member)
+    static createPlayerLink(team, member, appendRaces)
     {
         const playerLink = document.createElement("a");
         playerLink.classList.add("player-link", "w-100", "h-100", "d-inline-block");
@@ -179,7 +179,7 @@ class TeamUtil
         const container = document.createElement("span");
         container.classList.add("player-link-container");
         if(member.proNickname != null) container.classList.add("player-pro");
-        container.appendChild(TeamUtil.createRacesElem(member));
+        if(appendRaces) container.appendChild(TeamUtil.createRacesElem(member));
         container.appendChild(TeamUtil.createNameElem(member));
         playerLink.appendChild(container);
         return playerLink
