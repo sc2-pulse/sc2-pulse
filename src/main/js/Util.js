@@ -155,6 +155,11 @@ class Util
         return new Date(split[0], split[1] - 1, split[2]);
     }
 
+    static parseIsoDateTime(str)
+    {
+        return new Date(str);
+    }
+
     static forObjectValues(obj, func)
     {
         for([key, val] of Object.entries(obj))
@@ -194,3 +199,5 @@ Util.NUMBER_FORMAT = new Intl.NumberFormat(navigator.language);
 Util.DECIMAL_FORMAT = new Intl.NumberFormat(navigator.language, {minimumFractionDigits: 2, maximumFractionDigits: 2});
 Util.MONTH_DATE_FORMAT = new Intl.DateTimeFormat(navigator.language, {month: "2-digit", year: "numeric"});
 Util.DATE_FORMAT = new Intl.DateTimeFormat(navigator.language, {day: "2-digit", month: "2-digit", year: "numeric"});
+Util.DATE_TIME_FORMAT = new Intl.DateTimeFormat(navigator.language, {day: "2-digit", month: "2-digit", year: "numeric",
+    hour: "2-digit", minute: "2-digit", second: "2-digit"});
