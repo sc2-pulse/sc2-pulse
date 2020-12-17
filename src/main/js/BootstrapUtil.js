@@ -38,6 +38,21 @@ class BootstrapUtil
         ChartUtil.updateChartableTab(tab);
     }
 
+    static showTab(id)
+    {
+        const tab = document.getElementById(id);
+        if(tab.classList.contains("active")) return Promise.resolve();
+        if(tab.offsetParent == null)
+        {
+            $(tab).tab('show');
+            return Promise.resolve();
+        }
+
+        const promise = new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(tab.id, res));
+        $(tab).tab('show');
+        return promise;
+    }
+
     static onTabShow(e)
     {
         BootstrapUtil.renderTabContent(e.target);
