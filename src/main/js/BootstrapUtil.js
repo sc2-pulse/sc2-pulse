@@ -19,7 +19,7 @@ class BootstrapUtil
     {
         $('.nav-pills a')
             .on('show.bs.tab', BootstrapUtil.onTabShow)
-            .on('shown.bs.tab', BootstrapUtil.showTab);
+            .on('shown.bs.tab', BootstrapUtil.onTabShown);
         for(const a of document.querySelectorAll('#stats .nav-pills a'))
         {
             ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateLadderTitle);
@@ -43,7 +43,7 @@ class BootstrapUtil
         BootstrapUtil.renderTabContent(e.target);
     }
 
-    static showTab(e)
+    static onTabShown(e)
     {
         const dataTarget = e.target.getAttribute("data-target");
         ElementUtil.resolveElementPromise(dataTarget.substring(1));
