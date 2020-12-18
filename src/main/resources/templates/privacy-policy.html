@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _)}">
+<head>
+    <title>Privacy policy - SC2 Pulse</title>
+    <meta name="description" content="Privacy policy"/>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: content(~{::section})}">
+    <section>
+    <h2>Privacy Policy</h2>
+    <dl>
+        <dt>Personal Data</dt>
+        <dd>No personal data is collected</dd>
+        <dt>Technical data</dt>
+        <dd>Your IP address and URL are recorded for technical purposes</dd>
+        <dt>Cookies</dt>
+        <dd>This site is using cookies to prevent you from authenticating on every request</dd>
+        <dt>Google Analytics</dt>
+        <dd>This site is using Google Analytics to collect usage statistics and to provide a better experience</dd>
+        <dt>Battle.net&reg; Account ID, Battle.net&reg; BattleTag</dt>
+        <dd>Only the BattleTag is required for authentication, but Battle.net&reg; will ask you for the id permission anyway</dd>
+        <dt>Battle.net&reg; Account Identity</dt>
+        <dd>This information is used within the OpenID&reg; protocol. Required for easy and secure authentication</dd>
+        <dt>Data Protection Policy</dt>
+        <dd>We use only StartCraft&reg;2 leaderboards, which are
+            <a href="https://us.forums.blizzard.com/en/blizzard/t/data-protection-notice-and-faq/609/2"
+               target="_blank" rel="noopener noreferrer nofollow">deemed as public data(section 15)</a></dd>
+        <dt>Optionality</dt>
+        <dd>You can disable many of these technologies in your browser's settings or by not using
+            the personal(my) section of this site. Even though your general experience will be untouched,
+            the analytics and cookies are very useful for me, so I ask you to leave them enabled. It's up
+            to you.</dd>
+        <dt>NO WARRANTY</dt>
+        <dd>SC2 PULSE PROVIDES THE DATA “AS IS,” AND “AS AVAILABLE,” AND THE ENTIRE RISK AS TO SATISFACTORY QUALITY, PERFORMANCE, ACCURACY, AND EFFORT IS WITH YOU.</dd>
+    </dl>
+    </section>
+</div>
+</body>
+</html>

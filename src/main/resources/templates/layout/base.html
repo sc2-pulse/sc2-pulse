@@ -47,55 +47,11 @@
                 </div>
             </div>
         </div>
-        <!-- Modal privacy-->
-        <div class="modal fade" id="privacy-policy" tabindex="-1" role="dialog" aria-labelledby="privacy-policy-title" aria-hidden="true"
-            data-view-title="Privacy Policy" data-modal-singleton="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h2 class="modal-title" id="privacy-policy-title">Privacy Policy</h2>
-                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                            <span aria-hidden="true">&times;</span>
-                        </button>
-                    </div>
-                    <div class="modal-body">
-                        <dl>
-                            <dt>Personal Data</dt>
-                            <dd>No personal data is collected</dd>
-                            <dt>Technical data</dt>
-                            <dd>Your IP address and URL are recorded for technical purposes</dd>
-                            <dt>Cookies</dt>
-                            <dd>This site is using cookies to prevent you from authenticating on every request</dd>
-                            <dt>Google Analytics</dt>
-                            <dd>This site is using Google Analytics to collect usage statistics and to provide a better experience</dd>
-                            <dt>Battle.net&reg; Account ID, Battle.net&reg; BattleTag</dt>
-                            <dd>Only the BattleTag is required for authentication, but Battle.net&reg; will ask you for the id permission anyway</dd>
-                            <dt>Battle.net&reg; Account Identity</dt>
-                            <dd>This information is used within the OpenID&reg; protocol. Required for easy and secure authentication</dd>
-                            <dt>Data Protection Policy</dt>
-                            <dd>We use only StartCraft&reg;2 leaderboards, which are
-                                <a href="https://us.forums.blizzard.com/en/blizzard/t/data-protection-notice-and-faq/609/2"
-                                   target="_blank" rel="noopener noreferrer nofollow">deemed as public data(section 15)</a></dd>
-                            <dt>Optionality</dt>
-                            <dd>You can disable many of these technologies in your browser's settings or by not using
-                            the personal(my) section of this site. Even though your general experience will be untouched,
-                            the analytics and cookies are very useful for me, so I ask you to leave them enabled. It's up
-                            to you.</dd>
-                            <dt>NO WARRANTY</dt>
-                            <dd>SC2 PULSE PROVIDES THE DATA “AS IS,” AND “AS AVAILABLE,” AND THE ENTIRE RISK AS TO SATISFACTORY QUALITY, PERFORMANCE, ACCURACY, AND EFFORT IS WITH YOU.</dd>
-                        </dl>
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
     <footer>
         <div class="container text-secondary">
             <address class="c-divider d-inline-block mb-3"><a href="https://nephest.com/" class="text-secondary" target="_blank" rel="noopener noreferrer">Nephest</a></address>
-            <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="?type=modal&id=privacy-policy&m=1" class="text-secondary" data-toggle="modal" data-target="#privacy-policy">Privacy Policy</a></span>
+            <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/privacy-policy}" class="text-secondary">Privacy Policy</a></span>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a href="https://github.com/nephest/sc2-pulse" class="text-secondary" target="_blank" rel="noopener noreferrer">Github</a></span>
         </div>
     </footer>
