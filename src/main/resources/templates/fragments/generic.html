@@ -11,5 +11,9 @@
             <p class="text-secondary" th:include="${description}"></p>
             <a href="/" th:href="@{/}">Back to home</a>
         </section>
+        <section class="mt-3 mb-3 text-center" th:fragment="content (content)">
+            <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}" alt="Pulse"/><span> SC2 Pulse</span></a></h1>
+            <section th:replace="${content}"></section>
+        </section>
     </body>
 </html>
