@@ -187,21 +187,28 @@ class TeamUtil
 
     static createNameElem(member)
     {
-        const unmaskedName = Util.unmaskName(member);
+        const unmasked = Util.unmaskName(member);
         const nameContainer = document.createElement("span");
         nameContainer.classList.add("player-name-container");
 
+        if(unmasked.unmaskedTeam != null)
+        {
+            const teamElem = document.createElement("span");
+            teamElem.classList.add("player-team");
+            teamElem.textContent = unmasked.unmaskedTeam;
+            nameContainer.appendChild(teamElem);
+        }
+
         const nameElem = document.createElement("span");
         nameElem.classList.add("player-name");
-        nameElem.textContent = unmaskedName;
+        nameElem.textContent = unmasked.unmaskedName;
         nameContainer.appendChild(nameElem);
 
-        const maskedName = member.character.name.substring(0, member.character.name.indexOf("#"));
-        if(maskedName.toLowerCase() != unmaskedName.toLowerCase())
+        if(unmasked.maskedName.toLowerCase() != unmasked.unmaskedName.toLowerCase())
         {
             const maskedNameElem = document.createElement("span");
             maskedNameElem.classList.add("player-name-masked");
-            maskedNameElem.textContent = maskedName;
+            maskedNameElem.textContent = unmasked.maskedName;
             nameContainer.appendChild(maskedNameElem);
         }
         return nameContainer;

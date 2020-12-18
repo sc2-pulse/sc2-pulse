@@ -182,6 +182,16 @@ th.hoverable span
     border-left: #007bff 0.20rem solid;
 }
 
+.player-team:before
+{
+  content: "[";
+}
+
+.player-team:after
+{
+  content: "]";
+}
+
 .player-name-masked
 {
   color: gray ;

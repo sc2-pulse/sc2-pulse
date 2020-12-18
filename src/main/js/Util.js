@@ -128,12 +128,15 @@ class Util
 
     static unmaskName(member)
     {
+        const maskedName = member.character.name.substring(0, member.character.name.indexOf("#"));
         if(member.proNickname != null)
-            return (member.proTeam != null ? "[" + member.proTeam + "]" : "") + member.proNickname;
-        const name = member.character.name.substring(0, member.character.name.indexOf("#"));
-        return Util.needToUnmaskName(name, member.proNickname)
-            ? member.account.battleTag.substring(0, member.account.battleTag.indexOf("#"))
-            : name;
+            return {maskedName: maskedName, unmaskedName: member.proNickname, ...(member.proTeam != null && {unmaskedTeam: member.proTeam})};
+
+        return {maskedName: maskedName,
+            unmaskedName: Util.needToUnmaskName(maskedName, member.proNickname)
+                ? member.account.battleTag.substring(0, member.account.battleTag.indexOf("#"))
+                : maskedName
+        };
     }
 
     static isUndefinedRank(rank)

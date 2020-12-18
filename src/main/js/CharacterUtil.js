@@ -157,7 +157,8 @@ class CharacterUtil
         }
         else
         {
-            charName = Util.unmaskName(member);
+            const unmasked = Util.unmaskName(member);
+            charName = (unmasked.unmaskedTeam != null ? "[" + unmasked.unmaskedTeam + "]" : "") + unmasked.unmaskedName
             charNameAdditional = `(${member.character.name})`;
         }
         document.getElementById("player-info-title-name").textContent = charName;
