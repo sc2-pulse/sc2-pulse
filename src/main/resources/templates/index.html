@@ -53,20 +53,6 @@
                             My
                         </a>
                     </li>
-                    <li class="nav-item">
-                        <a
-                            id="about-tab"
-                            class="nav-link"
-                            data-toggle="pill"
-                            data-target="#about"
-                            href="#about"
-                            role="tab"
-                            aria-controls="about"
-                            aria-selected="false"
-                        >
-                            About
-                        </a>
-                    </li>
                 </ul>
             </nav>
             <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}"  alt="Pulse"/><span> SC2 Pulse</span></a></h1>
@@ -652,107 +638,7 @@
                 </div>
             </div>
         </section>
-        <section id="about" class="tab-pane fade"
-                 data-view-title="About"
-                 data-view-description="A quick summary of what this site is about + some useful links."
-        >
-            <section>
-                <header>
-                    <h2>What is this site?</h2>
-                    <p>
-                        Wanna know something about the StarCraft&reg;2 player base? Is it alive? How big is it? SC2 Pulse has
-                        all the answers.
-                    </p>
-                </header>
-                <section>
-                    <h3>Features</h3>
-                    <ul>
-                        <li>Flexible, user defined filters</li>
-                        <li>All seasons, races, team formats
-                        <li>
-                            Player profile
-                            <ul>
-                                <li>Career summary</li>
-                                <li>History: all teams and seasons</li>
-                            </ul>
-                        </li>
-                        <li>
-                            BattleNet integration
-                            <ul>
-                                <li>Log in with a BattleNet account</li>
-                                <li>Easy access to personal statistics</li>
-                                <li>Create a personal ladder out of your favourite players</li>
-                            </ul>
-                        </li>
-                        <li>
-                            Statistics
-                            <ul>
-                                <li>Player count, team count, games played</li>
-                                <li>League, region, race distribution</li>
-                                <li>Daily activity</li>
-                            </ul>
-                        </li>
-                        <li>Tier MMR ranges</li>
-                        <li>sc2revealed.com and aligulac.com integration
-                            <ul>
-                                <li>Barcode unmasking</li>
-                                <li>Pro player stats</li>
-                                <li>Social media links</li>
-                            </ul>
-                        </li>
-                    </ul>
-                </section>
-                <aside>
-                    <section>
-                        <h3>Wanna more cool stats?</h3>
-                        <dl>
-                            <dt><a href="http://sc2revealed.com/" rel="noopener noreferrer nofollow" target="_blank">sc2revealed</a></dt>
-                            <dd>This project links real pro players to their ladder accounts. It also has a lot of meta info,
-                            such as social media links, online streams, etc.. Help this project to identify ladder accounts, and
-                            that info will also show up here.<br/>
-                            This site uses sc2revealed.com data to get pro player stats and unmask the barcodes.</dd>
-                            <dt><a href="http://aligulac.com/" rel="noopener noreferrer nofollow" target="_blank">aligulac</a></dt>
-                            <dd>An open source project about pro scene. Features custom rating, events, match results, total earnings and more.
-                            Absolutely amazing resource. It also has a DB dump if you want to run some queries.<br/>
-                            This site uses aligulac.com data to get more info about pro players.</dd>
-                            <dt><a href="https://www.rankedftw.com/" rel="noopener noreferrer nofollow" target="_blank">rankedftw</a></dt>
-                            <dd>One of THE original stats sites. It was(and still is) the place to go after the sc2ranks.com shutdown.
-                                The core feature is a team rank progression throughout the seasons, which was priceless during the pre MMR era.
-                                The project is open source too! Check it out.</dd>
-                            <dt><a href="https://sc2replaystats.com/" rel="noopener noreferrer nofollow" target="_blank">sc2replaystats</a></dt>
-                            <dd>A different take on stats aggregation. It uses replay files submitted by users, which gives an access to
-                                numerous interesting stats that are not available via the standard API.</dd>
-                            <dt><a href="https://liquipedia.net/starcraft2/" rel="noopener noreferrer nofollow" target="_blank">liquipedia</a></dt>
-                            <dd>Wiki-style resource with a lot of meta info, which includes: competitive scene, general game info, latest patches.<br/>
-                            This sites uses the liquipedia logo.</dd>
-                        </dl>
-                    </section>
-                </aside>
-                <section>
-                    <h3>Tech</h3>
-                    <section>
-                        <h4>DB dump</h4>
-                        <p>
-                            You are free to use the <a th:href="@{/dl/db-dump}">DB dump</a> for non-commercial purposes
-                            if you credit the original site(nephest.com/sc2).
-                        </p>
-                    </section>
-                </section>
-                <section>
-                    <h3>Notice</h3>
-                    <p>
-                        This site is using <a href="https://develop.battle.net/" target="_blank" rel="noopener noreferrer nofollow">Battle.net&reg; API</a>. I am not affiliated with
-                        Blizzard Entertainment&reg; in any way, shape or form. This is not an official Blizzard site.
-                    </p>
-                    <aside>
-                        <p>
-                            Battle.net, Blizzard Entertainment and StarCraft are trademarks or registered trademarks
-                            of Blizzard Entertainment, Inc. in the U.S. and/or other countries.
-                        </p>
-                    </aside>
-                </section>
-            </section>
-        </section>
+
         </div><!--Tab content-->
         <div class="c-divider-hr"></div>
         <!-- Modal error-->
