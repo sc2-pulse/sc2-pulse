@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:fragment="layout (title, content, script)" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:fragment="layout (title, description, content, script)" lang="en">
 <head>
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PL1L36TKM6"></script>
@@ -15,7 +15,7 @@
     <title th:replace="${title}">SC2 Pulse</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
-    <meta name="description" content="Flexible StarCraft&reg;2 stats aggregator for any team format"/>
+    <meta th:replace="${description}" name="description" content="Flexible StarCraft&reg;2 stats aggregator for any team format"/>
     <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
     <link rel="stylesheet" th:href="@{/static/sc2.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"/>
     <link rel="icon" type="image/png" sizes="128x128" th:href="@{/static/icon/misc/favicon-128.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
