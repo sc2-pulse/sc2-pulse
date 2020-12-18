@@ -257,7 +257,7 @@ class ElementUtil
         const name = document.querySelector("#player-info-title-name").textContent;
         const battletag = document.querySelector("#link-battletag span").textContent;
 
-        return `${name}/${battletag} career best MMR for all brackets/races. BattleNet profile and all seasons history`;
+        return `${name}/${battletag} career best MMR for all brackets/races, all seasons teams, profile links. Social media links, match history, personal info for pro players`;
     }
 
     static generateGenericTitle(constructors, params, hash, dataTarget, attrSuffix)
