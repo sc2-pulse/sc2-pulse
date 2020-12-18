@@ -182,6 +182,22 @@ th.hoverable span
     border-left: #007bff 0.20rem solid;
 }
 
+.player-name-masked
+{
+  color: gray ;
+  font-size: 0.8em;
+}
+
+.player-name-masked:before
+{
+  content: " (";
+}
+
+.player-name-masked:after
+{
+  content: ")";
+}
+
 .race-percentage:after
 {
     content: "/";
@@ -261,13 +277,12 @@ th.hoverable span
 .player-pro::after
 {
   content: "PRO";
-  color: white;
-  background-color: #007bff;
+  color: grey;
   display: inline-block;
   margin-left: 0.5em;
-  padding: 0.2em 0.4em;
+  padding: 0.2em;
   border-radius: 0.5em;
-  border: #007bff solid 0.1em;
+  border: rgba(128, 128, 128, 0.6) solid 0.1em;
   font-size: 0.6em;
   font-weight: bold;
   vertical-align: middle;

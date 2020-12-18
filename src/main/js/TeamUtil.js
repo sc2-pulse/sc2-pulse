@@ -187,10 +187,24 @@ class TeamUtil
 
     static createNameElem(member)
     {
+        const unmaskedName = Util.unmaskName(member);
+        const nameContainer = document.createElement("span");
+        nameContainer.classList.add("player-name-container");
+
         const nameElem = document.createElement("span");
         nameElem.classList.add("player-name");
-        nameElem.textContent = Util.unmaskName(member);
-        return nameElem
+        nameElem.textContent = unmaskedName;
+        nameContainer.appendChild(nameElem);
+
+        const maskedName = member.character.name.substring(0, member.character.name.indexOf("#"));
+        if(maskedName.toLowerCase() != unmaskedName.toLowerCase())
+        {
+            const maskedNameElem = document.createElement("span");
+            maskedNameElem.classList.add("player-name-masked");
+            maskedNameElem.textContent = maskedName;
+            nameContainer.appendChild(maskedNameElem);
+        }
+        return nameContainer;
     }
 
     static createRacesElem(member)

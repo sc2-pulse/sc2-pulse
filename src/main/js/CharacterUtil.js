@@ -370,7 +370,7 @@ class CharacterUtil
             const mRow = document.createElement("span");
             mRow.classList.add("row", "no-gutters");
             const mInfo = TeamUtil.createMemberInfo(character, character.members);
-            mInfo.getElementsByClassName("player-name")[0].classList.add("c-divider");
+            mInfo.getElementsByClassName("player-name-container")[0].classList.add("c-divider");
             const bTag = document.createElement("span");
             bTag.classList.add("c-divider", "battle-tag");
             bTag.textContent = character.members.account.battleTag;
