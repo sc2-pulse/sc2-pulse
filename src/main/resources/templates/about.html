@@ -89,6 +89,30 @@
                     if you credit the original site(nephest.com/sc2).
                 </p>
             </section>
+            <section>
+                <h4>API</h4>
+                <p>
+                    You are free to use the API for non-commercial purposes if you credit the original site(nephest.com/sc2).
+                    API endpoints are pretty self explanatory, there are no special params or hidden points, anything
+                    you can use is already used by the website, so grab whatever data you like. Just be reasonable with
+                    your request rate.
+                </p>
+                <p>
+                    Here are some basic endpoints for the reference
+                    <dl>
+                        <dt><code><a th:href="@{/api/ladder/stats/bundle}" target="_blank" rel="noopener noreferrer nofollow">/api/ladder/stats/bundle</a></code></dt>
+                        <dd>Ladder stats. These are games played and team count numbers, divided into region, league, race sections</dd>
+                        <dt><code><a th:href="@{/api/ladder/stats/queue/LOTV_1V1/ARRANGED}" target="_blank" rel="noopener noreferrer nofollow">/api/ladder/stats/queue/LOTV_1V1/ARRANGED</a></code></dt>
+                        <dd>Queue stats. These stats are mainly for player numbers, because player is a cross region/league/race entity.
+                        This data contains global player base and player count, that is further divided into activity tiers</dd>
+                        <dt><code><a th:href="@{/api/ladder/league/bounds?season=45&queue=LOTV_1V1&team-type=ARRANGED&us=true&eu=true&kr=true&cn=true&bro=true&sil=true&gol=true&pla=true&dia=true&mas=true&gra=true}" target="_blank" rel="noopener noreferrer nofollow">/api/ladder/league/bounds</a></code></dt>
+                        <dd>MMR bounds for one season.</dd>
+                        <dt><code><a th:href="@{/api/character/236695/common}" target="_blank" rel="noopener noreferrer nofollow">/api/character/236695/common</a></code></dt>
+                        <dd>Everything that you can see in the player information section. MMR summary, all seasons teams, linked characters,
+                        matches and pro stats for pro players</dd>
+                    </dl>
+                </p>
+            </section>
         </section>
         <section>
             <h3>Notice</h3>
