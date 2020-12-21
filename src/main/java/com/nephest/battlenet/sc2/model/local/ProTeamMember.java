@@ -48,7 +48,7 @@ implements java.io.Serializable
     @Override
     public String toString()
     {
-        return String.format("%s[%s]", getClass().getSimpleName(), getProPlayerId());
+        return String.format("%s[%s]", ProTeamMember.class.getSimpleName(), getProPlayerId());
     }
 
     public Long getProTeamId()

@@ -65,7 +65,7 @@ implements java.io.Serializable
         return String.format
         (
             "%s[%s %s]",
-            getClass().getSimpleName(),
+            Division.class.getSimpleName(),
             getTierId(), getBattlenetId()
         );
     }

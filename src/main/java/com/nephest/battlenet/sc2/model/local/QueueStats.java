@@ -80,7 +80,7 @@ implements java.io.Serializable
         return String.format
         (
             "%s[%s %s %s]",
-            getClass().getSimpleName(),
+            QueueStats.class.getSimpleName(),
             getSeason(), getQueueType().toString(), getTeamType().toString()
         );
     }

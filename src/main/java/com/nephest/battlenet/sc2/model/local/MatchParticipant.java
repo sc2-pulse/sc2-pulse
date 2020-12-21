@@ -59,7 +59,7 @@ implements java.io.Serializable
     @Override
     public String toString()
     {
-        return String.format("%s[%s %s]", getClass().getSimpleName(), matchId, playerCharacterId);
+        return String.format("%s[%s %s]", MatchParticipant.class.getSimpleName(), matchId, playerCharacterId);
     }
 
     public Long getMatchId()

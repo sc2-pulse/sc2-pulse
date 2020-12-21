@@ -46,7 +46,7 @@ implements Serializable
         return String.format
         (
             "%s[%s %s]",
-            getClass().getSimpleName(), getAccountId(), getFollowingAccountId()
+            AccountFollowing.class.getSimpleName(), getAccountId(), getFollowingAccountId()
         );
     }
 

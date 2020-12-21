@@ -74,7 +74,7 @@ implements java.io.Serializable
     @Override
     public String toString()
     {
-        return String.format("%s[%s]", getClass().getSimpleName(), getUniqueName());
+        return String.format("%s[%s]", ProTeam.class.getSimpleName(), getUniqueName());
     }
 
     public Long getId()

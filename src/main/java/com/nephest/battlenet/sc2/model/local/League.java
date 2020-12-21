@@ -74,7 +74,7 @@ implements java.io.Serializable
         return String.format
         (
             "%s[%s %s %s %s]",
-            getClass().getSimpleName(),
+            League.class.getSimpleName(),
             getSeasonId(),
             getType().toString(),
             getQueueType().toString(),

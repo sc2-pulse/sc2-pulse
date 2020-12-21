@@ -49,7 +49,7 @@ implements java.io.Serializable
         return String.format
         (
             "%s[%s %s]",
-            getClass().getSimpleName(),
+            ProPlayerAccount.class.getSimpleName(),
             proPlayerId, accountId
         );
     }

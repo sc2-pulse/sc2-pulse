@@ -118,7 +118,7 @@ implements java.io.Serializable
         return String.format
         (
             "%s[%s %s %s]",
-            getClass().getSimpleName(),
+            Team.class.getSimpleName(),
             getSeason(), getRegion().toString(), getBattlenetId()
         );
     }

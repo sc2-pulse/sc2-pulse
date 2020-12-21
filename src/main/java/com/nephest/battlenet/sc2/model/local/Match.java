@@ -55,7 +55,7 @@ implements java.io.Serializable
     @Override
     public String toString()
     {
-        return String.format("%s[%s %s %s]", getClass().getSimpleName(), getDate(), getType(), getMap());
+        return String.format("%s[%s %s %s]", Match.class.getSimpleName(), getDate(), getType(), getMap());
     }
 
     public Long getId()

@@ -99,7 +99,7 @@ implements Serializable
         return String.format
         (
             "%s[%s %s %s %s %s]",
-            getClass().getSimpleName(),
+            PlayerCharacterStats.class.getSimpleName(),
             getPlayerCharacterId(),
             getSeasonId(),
             getQueueType(),

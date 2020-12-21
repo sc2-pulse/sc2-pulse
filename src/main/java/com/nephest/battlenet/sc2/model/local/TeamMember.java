@@ -96,7 +96,7 @@ implements java.io.Serializable
         return String.format
         (
             "%s[%s %s]",
-            getClass().getSimpleName(),
+            TeamMember.class.getSimpleName(),
             getTeamId(), getCharacterId()
         );
     }

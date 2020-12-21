@@ -78,7 +78,7 @@ implements java.io.Serializable
         return String.format
         (
             "%s[%s]",
-            getClass().getSimpleName(),
+            ProPlayer.class.getSimpleName(),
             Arrays.toString(revealedId)
         );
     }

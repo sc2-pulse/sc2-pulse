@@ -60,7 +60,7 @@ implements java.io.Serializable
         return String.format
         (
             "%s[%s %s]",
-            getClass().getSimpleName(),
+            SocialMediaLink.class.getSimpleName(),
             getProPlayerId(), getType()
         );
     }
