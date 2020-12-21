@@ -9,9 +9,11 @@ import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+@Profile("!maintenance")
 @Component
 public class Cron
 {
