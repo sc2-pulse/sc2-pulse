@@ -7,7 +7,7 @@ CREATE TABLE "account"
     "id" BIGSERIAL,
     "partition" SMALLINT NOT NULL,
     "battle_tag" VARCHAR(30) NOT NULL,
-    "updated" TIMESTAMP NOT NULL,
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL,
 
     PRIMARY KEY ("id"),
 
@@ -227,7 +227,7 @@ CREATE TABLE "player_character_stats"
     "rating_max" SMALLINT NOT NULL,
     "league_max" SMALLINT NOT NULL,
     "games_played" INTEGER NOT NULL,
-    "updated" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
 
@@ -275,7 +275,7 @@ CREATE TABLE "pro_player"
     "team" VARCHAR(50),
     "birthday" DATE,
     "earnings" INTEGER,
-    "updated" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
 
@@ -291,7 +291,7 @@ CREATE TABLE "social_media_link"
     "pro_player_id" BIGINT NOT NULL,
     "type" SMALLINT NOT NULL,
     "url" VARCHAR(255) NOT NULL,
-    "updated" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY("pro_player_id", "type"),
 
@@ -307,7 +307,7 @@ CREATE TABLE "pro_player_account"
 (
     "pro_player_id" BIGINT NOT NULL,
     "account_id" BIGINT NOT NULL,
-    "updated" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY("account_id"),
 
@@ -331,7 +331,7 @@ CREATE TABLE "pro_team"
     "aligulac_id" BIGINT,
     "name" VARCHAR(50) NOT NULL,
     "short_name" VARCHAR(50),
-    "updated" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY("id")
 );
@@ -343,7 +343,7 @@ CREATE TABLE "pro_team_member"
 (
     "pro_team_id" BIGINT NOT NULL,
     "pro_player_id" BIGINT NOT NULL,
-    "updated" TIMESTAMP NOT NULL DEFAULT NOW(),
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("pro_player_id"),
 
