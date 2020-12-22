@@ -6,7 +6,7 @@ CREATE INDEX "ix_pro_player_account_pro_player_id" ON "pro_player_account"("pro_
 CREATE INDEX "ix_pro_team_member_pro_team_id" ON "pro_team_member"("pro_team_id");
 
 ALTER TABLE "account" ALTER COLUMN "updated" TYPE TIMESTAMP WITH TIME ZONE;
-ALTER TABLE "player_character_stats" ALTER COLUMN "updated" TYPE TIMESTAMP WITH TIME ZONE USING "updated"::timestamptz;
+ALTER TABLE "player_character_stats" ALTER COLUMN "updated" TYPE TIMESTAMP WITH TIME ZONE;
 ALTER TABLE "pro_player" ALTER COLUMN "updated" TYPE TIMESTAMP WITH TIME ZONE;
 ALTER TABLE "social_media_link" ALTER COLUMN "updated" TYPE TIMESTAMP WITH TIME ZONE;
 ALTER TABLE "pro_player_account" ALTER COLUMN "updated" TYPE TIMESTAMP WITH TIME ZONE;
