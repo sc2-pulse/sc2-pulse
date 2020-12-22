@@ -32,28 +32,40 @@ This is not an official Blizzard Entertainment&reg; application.
 * BattleNet API access keys(you must use your own keys)
 * Aligulac API key(you must use your own key)
 
-## Building
+## Testing
+Run the tests to ensure that you have a valid environment set up. You must also pass the tests
+before creating a PR.
+
 A real PostgreSQL database is required for some integration tests.
-This should be only a testing db, as **tests will drop/create** the schema.
+**This should be only a testing db, as tests will drop/create the schema. Do not use your real DB.**
 
 You can use the ```src/test/resources/application-private.properties``` file (ignored by git, used by a test config) 
 to create a simple test config: 
 
 ```
-spring.datasource.username=name
-spring.datasource.password=pasword
-spring.datasource.url=jdbc:postgresql://localhost:5432/db_name
+spring.datasource.username={name}
+spring.datasource.password={pasword}
+spring.datasource.url=jdbc:postgresql://localhost:5432/{test_db_name}
 spring.security.oauth2.client.registration.sc2-sys.client-id={client_id}
 spring.security.oauth2.client.registration.sc2-sys.client-secret={client_secret}
 com.nephest.battlenet.sc2.aligulac.api.key={api_key}
 ```
 
-By default, maven will build a spring boot war archive. You can use it with any 
-relevant web container.
+To run all the tests execute the following command in a terminal
+```
+mvn verify
+```
 
 ## Running
+The `dev` profile will help you to start the local server. Reload a browser tab to instantly see resource modifications.
+Build project to hotswap(if possible) the new classes.
+
 You must set the following application properties:
 ```
+server.port={port}
+spring.datasource.username={name}
+spring.datasource.password={pasword}
+spring.datasource.url=jdbc:postgresql://localhost:5432/{db_name}
 spring.security.oauth2.client.registration.sc2-sys.client-id={client_id}
 spring.security.oauth2.client.registration.sc2-sys.client-secret={client_secret}
 spring.security.oauth2.client.registration.sc2-lg-eu.client-id = {client_id}
@@ -67,15 +79,19 @@ spring.security.oauth2.client.registration.sc2-lg-cn.client-secret = {client_sec
 com.nephest.battlenet.sc2.aligulac.api.key={api_key}
 ```
 
-By default, DataSource must be configured in a web container:
-```
-spring.datasource.jndi-name=java:comp/env/jdbc/dsname
-```
 You can use the ```src/main/resources/application-private.properties``` file (ignored by git, used by config) 
 for private/local application properties
 
 You can use the [latest DB dump](https://www.nephest.com/sc2/dl/db-dump) to kickstart the deployment. You are free to
-use the DB dump for non-commercial purposes if you credit the [reference website](https://www.nephest.com/sc2/).
+use the DB dump for non-commercial purposes if you credit the [reference website](https://www.nephest.com/sc2/). Bear in
+mind that some tables may be empty due to privacy policy.
+
+You can also use a [DB init script](src/main/resources/schema-postgres.sql) to have an empty DB if you wish so.
+
+To run the local server execute the following command in a terminal
+```
+mvn spring-boot:run
+```
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
 ## Contributing
