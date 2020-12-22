@@ -62,7 +62,7 @@ class CharacterUtil
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
     }
 
     static updateCharacterInfo(commonCharacter, id)
@@ -397,7 +397,7 @@ class CharacterUtil
                 Session.currentSearchParams = stringParams;
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
     }
 
     static updatePersonalCharactersModel()
@@ -424,7 +424,7 @@ class CharacterUtil
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
     }
 
     static enhanceSearchForm()

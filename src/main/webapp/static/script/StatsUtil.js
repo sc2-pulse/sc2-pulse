@@ -92,7 +92,7 @@ class StatsUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateQueueStatsModel(formParams)
             .then(json => new Promise((res, rej)=>{StatsUtil.updateQueueStatsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
-            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message));
+            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message, e));
     }
 
     static updateLadderStatsModel(formParams)
@@ -185,7 +185,7 @@ class StatsUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateLadderStatsModel(formParams)
             .then(json => new Promise((res, rej)=>{StatsUtil.updateLadderStatsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
-            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message));
+            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message, e));
     }
 
     static updateLeagueBoundsModel(formParams)
@@ -249,7 +249,7 @@ class StatsUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateLeagueBoundsModel(formParams)
             .then(json => new Promise((res, rej)=>{StatsUtil.updateLeagueBoundsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
-            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message));
+            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message, e));
     }
 
     static updateBundleModel()

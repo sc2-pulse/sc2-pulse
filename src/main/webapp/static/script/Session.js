@@ -19,7 +19,7 @@ class Session
         }
         else
         {
-            Util.setGeneratingStatus(STATUS.ERROR, error.message);
+            Util.setGeneratingStatus(STATUS.ERROR, error.message, error);
         }
     }
 

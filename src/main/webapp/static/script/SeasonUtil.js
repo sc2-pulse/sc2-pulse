@@ -18,7 +18,7 @@ class SeasonUtil
         return fetch("api/seasons")
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{SeasonUtil.updateSeasons(json); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
     }
 
     static updateSeasons(seasons)

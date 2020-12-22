@@ -23,7 +23,7 @@ class Util
         return Util.urlencodeFormData(fd);
     }
 
-    static setGeneratingStatus(status, errorText = "Error")
+    static setGeneratingStatus(status, errorText = "Error", error = null)
     {
         switch(status)
         {
@@ -39,6 +39,7 @@ class Util
                 Session.currentRequests--;
                 if(status === STATUS.ERROR)
                 {
+                    if(DEBUG == true) console.log(error);
                     document.getElementById("error-generation-text").textContent = errorText;
                     if(!Session.isSilent) $("#error-generation").modal();
                 }

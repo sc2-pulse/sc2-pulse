@@ -21,7 +21,7 @@ class FollowUtil
                 }
             )
             .then(o => new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
     }
 
     static unfollow()
@@ -41,7 +41,7 @@ class FollowUtil
                 }
             )
             .then(o => new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
     }
 
     static getMyFollowing()
@@ -50,7 +50,7 @@ class FollowUtil
         return fetch("api/my/following")
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Session.currentFollowing = json; Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message));
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
     }
 
     static enhanceFollowButtons()
