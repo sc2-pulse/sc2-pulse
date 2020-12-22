@@ -404,7 +404,8 @@ public class LadderSearchDAO
     public void precache()
     {
         for(int season : BlizzardSC2API.MMR_SEASONS.keySet()) precacheSeason(season);
-        precacheSeason(seasonDAO.getMaxBattlenetId());
+        Integer maxSeason = seasonDAO.getMaxBattlenetId();
+        if (maxSeason != null) precacheSeason(maxSeason);
     }
 
     private void precacheSeason(int season)
