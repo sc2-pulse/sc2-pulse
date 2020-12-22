@@ -71,7 +71,6 @@ class PaginationUtil
         for(let i = 2, curDynamicPage = leftStart; i < dynamicCount + 2; i++, curDynamicPage++ )
         {
             const forward = curDynamicPage > currentPage;
-            const curTeam = forward ? teams[teams.length - 1] : teams[0];
             const curCount = Math.abs(curDynamicPage - currentPage);
             const active = curDynamicPage <= lastPage && curDynamicPage != currentPage;
             PaginationUtil.updatePaginationPage(pages.item(i), params, PAGE_TYPE.GENERAL, forward, curCount, currentPage, (active || curDynamicPage == currentPage) ? curDynamicPage : "", active, curDynamicPage == currentPage);
@@ -122,7 +121,7 @@ class PaginationUtil
                 pageParams = forward ? params.forward : params.backward;
                 break;
         }
-        for(let [key, val] of pageParams) page.setAttribute("data-page-" + key, val);
+        for(const [key, val] of pageParams) page.setAttribute("data-page-" + key, val);
 
         page.setAttribute("data-page-forward", forward);
         page.setAttribute("data-page-count", count);

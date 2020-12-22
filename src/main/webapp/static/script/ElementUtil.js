@@ -285,16 +285,16 @@ class ElementUtil
 
     static removeNofollowRels(rootId)
     {
-        for(a of document.getElementById(rootId).querySelectorAll(':scope a[rel~="nofollow"]'))
+        for(const a of document.getElementById(rootId).querySelectorAll(':scope a[rel~="nofollow"]'))
             a.relList.remove("nofollow");
     }
 
     static removeParentAndChildrenAttributes(elem, attrs)
     {
-        for(attr of attrs)
+        for(const attr of attrs)
         {
             elem.removeAttribute(attr);
-            for(e of elem.querySelectorAll(":scope [" + attr + "]")) e.removeAttribute(attr);
+            for(const e of elem.querySelectorAll(":scope [" + attr + "]")) e.removeAttribute(attr);
         }
     }
 

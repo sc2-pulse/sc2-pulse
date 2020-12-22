@@ -190,14 +190,14 @@ class HistoryUtil
         const hash = (e != null && e.state.locationHash != null) ? e.state.locationHash : window.location.hash;
         Session.currentRestorationSearch =  locationSearch;
         Session.currentRestorationHash = hash;
-        promises = [];
-        lazyPromises = [];
+        const promises = [];
+        const lazyPromises = [];
         lazyPromises.push(e=>HistoryUtil.showAnchoredTabs());
         const params = new URLSearchParams(locationSearch);
         const isModal = params.get("m"); params.delete("m");
         const stringParams = params.toString();
         if(Session.currentSearchParams === stringParams) return Promise.all(promises)
-            .then(e => {const ap = []; for(lp of lazyPromises) ap.push(lp()); return Promise.all(ap);})
+            .then(e => {const ap = []; for(const lp of lazyPromises) ap.push(lp()); return Promise.all(ap);})
             .then(e => new Promise((res, rej)=>{
                 if(hash != null && hash.length > 0 && isModal != null)
                 {
@@ -262,7 +262,7 @@ class HistoryUtil
         }
 
         return Promise.all(promises)
-        .then(e => {const ap = []; for(lp of lazyPromises) ap.push(lp()); return Promise.all(ap)})
+        .then(e => {const ap = []; for(const lp of lazyPromises) ap.push(lp()); return Promise.all(ap)})
         .then(e => new Promise((res, rej)=>{
             HistoryUtil.updateActiveTabs();
             Util.setGeneratingStatus(STATUS.SUCCESS);

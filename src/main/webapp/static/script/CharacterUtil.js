@@ -177,7 +177,7 @@ class CharacterUtil
     static updateCharacterTeamsSection(searchResultFull)
     {
         const searchResult = searchResultFull.result;
-        grouped = searchResult.reduce(function(rv, x) {
+        const grouped = searchResult.reduce(function(rv, x) {
             (rv[x["season"]] = rv[x["season"]] || []).push(x);
             return rv;
         }, {});

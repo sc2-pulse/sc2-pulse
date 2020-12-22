@@ -302,7 +302,7 @@ class ChartUtil
 
     static onChartMutation(mutations, observer)
     {
-        for(mutation of mutations)
+        for(const mutation of mutations)
         {
             const style = mutation.target.getAttribute("style");
             if(!style.includes("width: 0") && !style.includes("height: 0"))

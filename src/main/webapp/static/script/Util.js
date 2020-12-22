@@ -166,7 +166,7 @@ class Util
 
     static forObjectValues(obj, func)
     {
-        for([key, val] of Object.entries(obj))
+        for(const [key, val] of Object.entries(obj))
         {
             if(typeof val !== "object")
             {

@@ -113,7 +113,7 @@ class TableUtil
         const tbody = table.querySelector('tbody');
         const thsArray = Array.from(ths[0].parentNode.children);
         const ixs = [];
-        for(th of ths) ixs.push(thsArray.indexOf(th));
+        for(const th of ths) ixs.push(thsArray.indexOf(th));
         Array.from(tbody.querySelectorAll('tr'))
             .sort(TableUtil.tableComparer(ixs, false))
             .forEach(tr => tbody.appendChild(tr));

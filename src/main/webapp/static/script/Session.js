@@ -57,13 +57,13 @@ class Session
         {
             CharacterUtil.updatePersonalCharacters();
             FollowUtil.getMyFollowing();
-            for(e of document.querySelectorAll(".login-anonymous")) e.classList.add("d-none");
-            for(e of document.querySelectorAll(".login-user")) e.classList.remove("d-none");
+            for(const e of document.querySelectorAll(".login-anonymous")) e.classList.add("d-none");
+            for(const e of document.querySelectorAll(".login-user")) e.classList.remove("d-none");
         }
         else
         {
-            for(e of document.querySelectorAll(".login-anonymous")) e.classList.remove("d-none");
-            for(e of document.querySelectorAll(".login-user")) e.classList.add("d-none");
+            for(const e of document.querySelectorAll(".login-anonymous")) e.classList.remove("d-none");
+            for(const e of document.querySelectorAll(".login-user")) e.classList.add("d-none");
         }
     }
 
