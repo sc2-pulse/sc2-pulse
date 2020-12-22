@@ -7,6 +7,7 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
 * Player profile
     * Career summary
     * History: all teams and seasons
+    * Linked profiles
 * BattleNet integration
     * Log in with a BattleNet account
     * Easy access to personal stats
@@ -16,10 +17,11 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * League, region, race distribution
     * Daily activity
 * Tier MMR ranges
-* [sc2revealed](http://sc2revealed.com/) and [aligulac](http://aligulac.com/) integration
+* Pro player info, [sc2revealed](http://sc2revealed.com/) and [aligulac](http://aligulac.com/) integration
     * Barcode unmasking
     * Pro player stats
     * Social media links
+    * Match history
 ## Disclamier
 I use this project for learning, it is not production-ready.
 
