@@ -12,7 +12,7 @@
   <groupId>com.nephest.battlenet.sc2</groupId>
   <artifactId>sc2-webapp</artifactId>
   <version>1.9.0-SNAPSHOT</version>
-  <packaging>war</packaging>
+  <packaging>${packaging.type}</packaging>
 
   <name>SC2 Pulse</name>
   <url>https://www.nephest.com/sc2/</url>
@@ -78,13 +78,6 @@
     </dependency>
 
     <dependency>
-      <groupId>org.postgresql</groupId>
-      <artifactId>postgresql</artifactId>
-      <version>42.2.18</version>
-      <scope>test</scope>
-    </dependency>
-
-    <dependency>
         <groupId>org.springframework.security</groupId>
         <artifactId>spring-security-test</artifactId>
         <scope>test</scope>
@@ -104,12 +97,6 @@
     <dependency>
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-webflux</artifactId>
-    </dependency>
-
-    <dependency>
-        <groupId>org.springframework.boot</groupId>
-        <artifactId>spring-boot-starter-tomcat</artifactId>
-        <scope>provided</scope>
     </dependency>
 
     <dependency>
@@ -168,6 +155,109 @@
     </dependency>
 
   </dependencies>
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <packaging.type>jar</packaging.type>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.postgresql</groupId>
+                    <artifactId>postgresql</artifactId>
+                    <version>42.2.18</version>
+                </dependency>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                </dependency>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-devtools</artifactId>
+                    <optional>true</optional>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <profiles>
+                                <profile>default</profile>
+                                <profile>dev</profile>
+                            </profiles>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <packaging.type>war</packaging.type>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.postgresql</groupId>
+                    <artifactId>postgresql</artifactId>
+                    <version>42.2.18</version>
+                    <scope>test</scope>
+                </dependency>
+                <dependency>
+                    <groupId>org.springframework.boot</groupId>
+                    <artifactId>spring-boot-starter-tomcat</artifactId>
+                    <scope>provided</scope>
+                </dependency>
+            </dependencies>
+            <build>
+                <plugins>
+                    <plugin>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>3.2.3</version>
+                        <configuration>
+                            <archive>
+                                <manifest>
+                                    <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+                                    <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+                                </manifest>
+                            </archive>
+                        </configuration>
+                    </plugin>
+                    <plugin>
+                        <artifactId>maven-antrun-plugin</artifactId>
+                        <version>3.0.0</version>
+                        <executions>
+                            <execution>
+                                <phase>prepare-package</phase>
+                                <goals><goal>run</goal></goals>
+                            </execution>
+                        </executions>
+                        <configuration>
+                            <target>
+                                <java classname="com.google.javascript.jscomp.CommandLineRunner" fork="true">
+                                    <classpath>
+                                        <path refid="maven.plugin.classpath"/>
+                                    </classpath>
+                                    <arg line="--compilation_level SIMPLE_OPTIMIZATIONS --language_in ECMASCRIPT_2020 --js ${basedir}/src/main/webapp/static/script/*.js --js_output_file ${basedir}/target/sc2-webapp/static/script/sc2-restful.min.js"/>
+                                </java>
+                            </target>
+                        </configuration>
+                        <dependencies>
+                            <dependency>
+                                <groupId>com.google.javascript</groupId>
+                                <artifactId>closure-compiler</artifactId>
+                                <version>v20200517</version>
+                            </dependency>
+                        </dependencies>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
   <build>
     <finalName>sc2-webapp</finalName>
     <pluginManagement><!-- lock down plugins versions to avoid using Maven defaults (may be moved to parent pom) -->
@@ -243,45 +333,6 @@
                     </goals>
                 </execution>
             </executions>
-        </plugin>
-        <plugin>
-            <artifactId>maven-war-plugin</artifactId>
-            <version>3.2.3</version>
-            <configuration>
-                <archive>
-                    <manifest>
-                        <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
-                        <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
-                    </manifest>
-                </archive>
-            </configuration>
-        </plugin>
-        <plugin>
-            <artifactId>maven-antrun-plugin</artifactId>
-            <version>3.0.0</version>
-            <executions>
-                <execution>
-                    <phase>prepare-package</phase>
-                    <goals><goal>run</goal></goals>
-                </execution>
-            </executions>
-            <configuration>
-                <target>
-                    <java classname="com.google.javascript.jscomp.CommandLineRunner" fork="true">
-                        <classpath>
-                            <path refid="maven.plugin.classpath"/>
-                        </classpath>
-                        <arg line="--compilation_level SIMPLE_OPTIMIZATIONS --language_in ECMASCRIPT_2020 --js ${basedir}/src/main/webapp/static/script/*.js --js_output_file ${basedir}/target/sc2-webapp/static/script/sc2-restful.min.js"/>
-                    </java>
-                </target>
-            </configuration>
-            <dependencies>
-                <dependency>
-                    <groupId>com.google.javascript</groupId>
-                    <artifactId>closure-compiler</artifactId>
-                    <version>v20200517</version>
-                </dependency>
-            </dependencies>
         </plugin>
     </plugins>
   </build>
