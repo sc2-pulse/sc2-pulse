@@ -63,6 +63,7 @@
     <script th:inline="javascript">
         const ROOT_CONTEXT_PATH = /*[[@{/}]]*/ '';
         const RESOURCE_PATH = ROOT_CONTEXT_PATH + "static/";
+        const DEBUG = /*[[${#arrays.contains(@environment.getActiveProfiles(), 'dev')}]]*/ '';
     </script>
     <th:block th:replace="${script}" />
 </body>
