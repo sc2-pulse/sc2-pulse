@@ -127,8 +127,15 @@ public class LadderSearchDAO
             + "AND account_following.account_id=:accountId "
         + ") "
         + FIND_TEAM_MEMBERS_BASE
-        + LADDER_SEARCH_TEAM_FROM
-        + "INNER JOIN following_team ON team.id=following_team.id "
+        + "FROM following_team "
+        + "INNER JOIN team ON following_team.id = team.id "
+        + "INNER JOIN team_member ON team_member.team_id = team.id "
+        + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
+        + "INNER JOIN account ON player_character.account_id=account.id "
+        + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
+        + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
+        + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
+        + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
         + "ORDER BY team.rating DESC, team.id DESC";
 
     private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =
