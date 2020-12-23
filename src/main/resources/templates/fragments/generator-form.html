@@ -34,7 +34,7 @@
         </div>
     </div>
 
-    <div>
+    <div class="group-checkbox" data-name="region">
         <div class="form-group form-check form-check-inline">
             <input th:id="${id} + '-us'" class="form-check-input" type="checkbox" name="us" value="true" checked="checked" />
             <label class="form-check-label" th:for="${id} + '-us'">
@@ -77,7 +77,7 @@
         </div>
     </div>
 
-    <div>
+    <div class="group-checkbox" data-name="league">
         <div class="form-group form-check form-check-inline">
             <input th:id="${id} + '-bro'" class="form-check-input" type="checkbox" name="bro" value="true" checked="checked" />
             <label class="form-check-label" th:for="${id} + '-bro'">
@@ -149,6 +149,8 @@
             </label>
         </div>
     </div>
+
+    <div class="error-out text-danger font-weight-bold mb-3"></div>
 
     <button class="btn btn-primary mb-3" type="submit">
         <span>Apply</span>

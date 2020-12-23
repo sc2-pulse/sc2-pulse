@@ -139,6 +139,7 @@ class LadderUtil
         form.addEventListener("submit", function(evt)
             {
                 evt.preventDefault();
+                if(!FormUtil.verifyForm(form, form.querySelector(":scope .error-out"))) return;
                 Session.currentSeason = document.getElementById("form-ladder-season-picker").value;
                 Session.currentTeamFormat = EnumUtil.enumOfFullName(document.getElementById("form-ladder-team-format-picker").value, TEAM_FORMAT);
                 Session.currentTeamType = EnumUtil.enumOfName(document.getElementById("form-ladder-team-type-picker").value, TEAM_TYPE);
@@ -158,6 +159,7 @@ class LadderUtil
              function(evt)
             {
                 evt.preventDefault();
+                if(!FormUtil.verifyForm(form, form.querySelector(":scope .error-out"))) return;
                 Session.currentPersonalSeason = document.getElementById("form-following-ladder-season-picker").value;
                 Session.currentPersonalTeamFormat = EnumUtil.enumOfFullName(document.getElementById("form-following-ladder-team-format-picker").value, TEAM_FORMAT);
                 Session.currentPersonalTeamType = EnumUtil.enumOfName(document.getElementById("form-following-ladder-team-type-picker").value, TEAM_TYPE);
