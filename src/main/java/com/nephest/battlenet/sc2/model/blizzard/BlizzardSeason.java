@@ -14,7 +14,6 @@ extends BaseSeason
 {
 
     @NotNull
-    @JsonProperty("seasonId")
     private Integer id;
 
     public BlizzardSeason(){}
@@ -32,6 +31,7 @@ extends BaseSeason
         this.id = id;
     }
 
+    @JsonProperty("seasonId")
     public void setId(Integer id)
     {
         this.id = id;
