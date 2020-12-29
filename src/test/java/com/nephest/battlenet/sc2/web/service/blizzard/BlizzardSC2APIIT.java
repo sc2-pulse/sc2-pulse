@@ -64,6 +64,13 @@ public class BlizzardSC2APIIT
         Errors errors = new BeanPropertyBindingResult(historicalSeason, historicalSeason.toString());
         validator.validate(historicalSeason, errors);
         assertFalse(errors.hasErrors());
+
+        //45 was the last season when this test was written
+        BlizzardSeason lastSeason = api.getLastSeason(Region.EU);
+        assertTrue(lastSeason.getId() > 44);
+        BlizzardSeason currentSeason = api.getCurrentOrLastSeason(Region.EU).block();
+        assertTrue(currentSeason.getId() > 44);
+
     }
 
     @Test @Order(2)
