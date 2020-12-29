@@ -114,10 +114,20 @@ public class BlizzardSC2API
         return client;
     }
 
-    //there is no previous season metadata in the upstream api
     public static BlizzardSeason getStaticSeason(Integer id)
     {
         return MMR_SEASONS.get(id);
+    }
+
+    public Mono<BlizzardDataSeason> getSeason(Region region, Integer id)
+    {
+        return getWebClient()
+            .get()
+            .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "data/sc2/season/{0}"), id)
+            .accept(APPLICATION_JSON)
+            .retrieve()
+            .bodyToMono(BlizzardDataSeason.class)
+            .retryWhen(WebServiceUtil.RETRY);
     }
 
     public Mono<BlizzardSeason> getCurrentSeason(Region region)
