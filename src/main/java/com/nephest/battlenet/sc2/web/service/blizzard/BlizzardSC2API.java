@@ -27,7 +27,6 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
 import java.time.LocalDate;
-import java.util.Comparator;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -69,7 +68,6 @@ public class BlizzardSC2API
         new BlizzardSeason(44, 2020, 2, LocalDate.of(2020, 6, 10), LocalDate.of(2020, 10, 1)),
         new BlizzardSeason(45, 2020, 3, LocalDate.of(2020, 10, 1), LocalDate.of(2021, 1, 26))
     ).collect(toUnmodifiableMap(BlizzardSeason::getId, Function.identity()));
-    public static final long LAST_SEASON = MMR_SEASONS.keySet().stream().max(Comparator.naturalOrder()).get();
 
     private WebClient client;
     private String regionUri;

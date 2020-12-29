@@ -3,17 +3,21 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
-import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import javax.servlet.*;
-import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 
-@WebFilter("/")
+@Component
 public class ParameterBasedRobotsDenyFilter
 implements Filter
 {
+
+    @Autowired
+    private SeasonDAO seasonDAO;
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
@@ -38,7 +42,7 @@ implements Filter
         if(seasonStr == null) return false;
 
         int season = Integer.parseInt(seasonStr);
-        return season < BlizzardSC2API.LAST_SEASON;
+        return season < seasonDAO.getMaxBattlenetId();
     }
 
     private boolean isAllowedCharacterParams(ServletRequest req)

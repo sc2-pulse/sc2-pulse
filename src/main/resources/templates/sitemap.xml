@@ -3,7 +3,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:th="http://www.thymeleaf.org">
     <th:block th:with="absoluteUrl=${#httpServletRequest.scheme}+'://'+${#httpServletRequest.serverName}+${#httpServletRequest.contextPath}">
-        <th:block th:with="currentSeason=${T(com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API).LAST_SEASON}">
+        <th:block th:with="currentSeason=${@seasonDAO.getMaxBattlenetId()}">
                 <th:block th:each="queueType : ${T(com.nephest.battlenet.sc2.model.QueueType).getTypes(T(com.nephest.battlenet.sc2.model.Version).LOTV)}">
                     <th:block th:each="teamType : ${T(com.nephest.battlenet.sc2.model.TeamType).values()}">
                         <url th:if="${T(com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API)
