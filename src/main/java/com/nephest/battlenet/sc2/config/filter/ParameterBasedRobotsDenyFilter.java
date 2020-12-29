@@ -9,7 +9,6 @@ import org.springframework.stereotype.Component;
 
 import javax.servlet.*;
 import javax.servlet.http.HttpServletResponse;
-import java.util.Arrays;
 
 @Component
 public class ParameterBasedRobotsDenyFilter
@@ -33,7 +32,7 @@ implements Filter
 
     private boolean mustDeny(ServletRequest req)
     {
-        return isOldSeason(req) || !isAllowedCharacterParams(req);
+        return isOldSeason(req) || hasDeprecatedParams(req);
     }
 
     private boolean isOldSeason(ServletRequest req)
@@ -45,29 +44,21 @@ implements Filter
         return season < seasonDAO.getMaxBattlenetId();
     }
 
-    private boolean isAllowedCharacterParams(ServletRequest req)
+    private boolean hasDeprecatedParams(ServletRequest req)
     {
-        boolean result = true;
-        if(isCharacterType(req)) result = isCharacterSummaryTabExclusively(req);
-        return result;
+        return hasTabParam(req) || hasModalTypeParam(req);
     }
 
-    private boolean isCharacterType(ServletRequest req)
+    private boolean hasTabParam(ServletRequest req)
+    {
+        String[] tabs = req.getParameterValues("t");
+        return tabs != null && tabs.length > 0;
+    }
+
+    private boolean hasModalTypeParam(ServletRequest req)
     {
         String type = req.getParameter("type");
-        return type != null && type.equals("character");
-    }
-
-    private boolean isCharacterHistoryTab(ServletRequest req)
-    {
-        String[] tabs = req.getParameterValues("t");
-        return tabs != null && Arrays.asList(tabs).contains("player-stats-history");
-    }
-
-    private boolean isCharacterSummaryTabExclusively(ServletRequest req)
-    {
-        String[] tabs = req.getParameterValues("t");
-        return tabs != null && tabs.length == 1 && tabs[0].equals("player-stats-summary");
+        return type != null && type.equals("modal");
     }
 
 }
