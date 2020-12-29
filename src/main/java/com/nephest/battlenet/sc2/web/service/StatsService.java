@@ -24,10 +24,8 @@ import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 
 @Service
 public class StatsService
@@ -130,7 +128,8 @@ public class StatsService
         try
         {
             long start = System.currentTimeMillis();
-            for (Integer season : BlizzardSC2API.MMR_SEASONS.keySet().stream().sorted().collect(Collectors.toList()))
+            int lastSeasonIx = api.getLastSeason(Region.EU).getId() + 1;
+            for(int season = BlizzardSC2API.FIRST_SEASON; season < lastSeasonIx; season++)
             {
                 updateSeason(season);
                 LOG.info("Updated season {}", season);
@@ -140,60 +139,6 @@ public class StatsService
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
             LOG.info("Updated all after {} seconds", seconds);
-        }
-        catch(RuntimeException ex)
-        {
-            isUpdating.set(false);
-            throw ex;
-        }
-
-        return true;
-    }
-
-    @CacheEvict
-    (
-        cacheNames=
-            {
-                "search-seasons", "search-season-last",
-                "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle", "search-team-count",
-                "search-ladder-league-bounds", "search-ladder-season",
-                "search-ladder-stats-queue"
-            },
-        allEntries=true
-    )
-    public boolean updateMissing()
-    {
-        if(!isUpdating.compareAndSet(false, true))
-        {
-            LOG.info("Service is already updating");
-            return false;
-        }
-
-        try
-        {
-            Integer lastSeason = seasonDao.getMaxBattlenetId();
-            final Integer lastSeasonFinal = lastSeason == null ? 0 : lastSeason;
-            List<Integer> seasons = BlizzardSC2API.MMR_SEASONS.keySet()
-                .stream()
-                .filter((id) -> id > lastSeasonFinal)
-                .sorted()
-                .collect(Collectors.toList());
-
-            long start = System.currentTimeMillis();
-
-            if (!seasons.isEmpty())
-            {
-                for (Integer season : seasons)
-                {
-                    updateSeason(season);
-                    LOG.info("Updated season {}", season);
-                }
-                playerCharacterStatsDAO.mergeCalculateGlobal();
-            }
-
-            isUpdating.set(false);
-            long seconds = (System.currentTimeMillis() - start) / 1000;
-            LOG.info("Updated missing after {} seconds", seconds);
         }
         catch(RuntimeException ex)
         {

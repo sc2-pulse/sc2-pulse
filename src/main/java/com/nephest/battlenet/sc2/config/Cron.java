@@ -36,7 +36,6 @@ public class Cron
     @Scheduled(cron="0 0 3 * * *")
     public void updateSeasons()
     {
-        statsService.updateMissing();
         statsService.updateCurrent();
         proPlayerService.update();
         matchService.update();

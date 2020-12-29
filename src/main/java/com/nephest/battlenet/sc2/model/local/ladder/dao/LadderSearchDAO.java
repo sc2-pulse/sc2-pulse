@@ -14,7 +14,6 @@ import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
-import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -410,9 +409,7 @@ public class LadderSearchDAO
 
     public void precache()
     {
-        for(int season : BlizzardSC2API.MMR_SEASONS.keySet()) precacheSeason(season);
-        Integer maxSeason = seasonDAO.getMaxBattlenetId();
-        if (maxSeason != null) precacheSeason(maxSeason);
+        for(Season season : seasonDAO.findListByFirstBattlenetId()) precacheSeason(season.getBattlenetId());
     }
 
     private void precacheSeason(int season)

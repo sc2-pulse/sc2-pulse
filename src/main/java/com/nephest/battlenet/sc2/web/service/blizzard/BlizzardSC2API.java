@@ -26,15 +26,9 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
-import java.time.LocalDate;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Stream;
-
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
 import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
 import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
-import static java.util.stream.Collectors.toUnmodifiableMap;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Service
@@ -46,28 +40,6 @@ public class BlizzardSC2API
     public static final int REQUESTS_PER_SECOND_CAP = 100;
     public static final int REQUESTS_PER_HOUR_CAP = 36000;
     public static final int FIRST_SEASON = 28;
-    //historical season data is taken from liquipedia.net
-    public static final Map<Integer, BlizzardSeason> MMR_SEASONS = Stream.of
-    (
-        new BlizzardSeason(28, 2016, 4, LocalDate.of(2016, 7, 12), LocalDate.of(2016, 10, 18)),
-        new BlizzardSeason(29, 2016, 5, LocalDate.of(2016, 10, 18), LocalDate.of(2016, 11, 22)),
-        new BlizzardSeason(30, 2016, 6, LocalDate.of(2016, 11, 22), LocalDate.of(2017, 1, 24)),
-        new BlizzardSeason(31, 2017, 1, LocalDate.of(2017, 1, 24), LocalDate.of(2017, 5, 2)),
-        new BlizzardSeason(32, 2017, 2, LocalDate.of(2017, 5, 2), LocalDate.of(2017, 7, 19)),
-        new BlizzardSeason(33, 2017, 3, LocalDate.of(2017, 7, 19), LocalDate.of(2017, 10, 19)),
-        new BlizzardSeason(34, 2017, 4, LocalDate.of(2017, 10, 19), LocalDate.of(2018, 1, 23)),
-        new BlizzardSeason(35, 2018, 1, LocalDate.of(2018, 1, 23), LocalDate.of(2018, 5, 15)),
-        new BlizzardSeason(36, 2018, 2, LocalDate.of(2018, 5, 15), LocalDate.of(2018, 8, 14)),
-        new BlizzardSeason(37, 2018, 3, LocalDate.of(2018, 8,14), LocalDate.of(2018, 11, 20)),
-        new BlizzardSeason(38, 2018, 4, LocalDate.of(2018, 11, 20), LocalDate.of(2019, 1, 22)),
-        new BlizzardSeason(39, 2019, 1, LocalDate.of(2019, 1, 22), LocalDate.of(2019, 5, 22)),
-        new BlizzardSeason(40, 2019, 2, LocalDate.of(2019, 5, 22), LocalDate.of(2019, 8, 22)),
-        new BlizzardSeason(41, 2019, 3, LocalDate.of(2019, 8, 22), LocalDate.of(2019, 11, 25)),
-        new BlizzardSeason(42, 2019, 4, LocalDate.of(2019, 11,25), LocalDate.of(2020, 3, 17)),
-        new BlizzardSeason(43, 2020, 1, LocalDate.of(2020, 3, 17), LocalDate.of(2020, 6, 10)),
-        new BlizzardSeason(44, 2020, 2, LocalDate.of(2020, 6, 10), LocalDate.of(2020, 10, 1)),
-        new BlizzardSeason(45, 2020, 3, LocalDate.of(2020, 10, 1), LocalDate.of(2021, 1, 26))
-    ).collect(toUnmodifiableMap(BlizzardSeason::getId, Function.identity()));
 
     private WebClient client;
     private String regionUri;
@@ -110,11 +82,6 @@ public class BlizzardSC2API
     protected WebClient getWebClient()
     {
         return client;
-    }
-
-    public static BlizzardSeason getStaticSeason(Integer id)
-    {
-        return MMR_SEASONS.get(id);
     }
 
     public Mono<BlizzardDataSeason> getSeason(Region region, Integer id)

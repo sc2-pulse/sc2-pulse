@@ -43,7 +43,6 @@ public class StatsServiceTest
     {
         ss.setIsUpdating(true);
         assertFalse(ss.updateAll());
-        assertFalse(ss.updateMissing());
         assertFalse(ss.updateCurrent());
     }
 
@@ -51,9 +50,6 @@ public class StatsServiceTest
     public void testIsUpdatingFlagResetOnException()
     {
         try{ss.updateAll();} catch(Exception ex){}
-        assertFalse(ss.isUpdating());
-
-        try{ss.updateMissing();} catch(Exception ex){}
         assertFalse(ss.isUpdating());
 
         try{ss.updateCurrent();} catch(Exception ex){}
