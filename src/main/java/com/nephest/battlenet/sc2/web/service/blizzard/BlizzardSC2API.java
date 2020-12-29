@@ -119,7 +119,7 @@ public class BlizzardSC2API
     }
 
     //there is no previous season metadata in the upstream api
-    public static BlizzardSeason getSeason(Integer id)
+    public static BlizzardSeason getStaticSeason(Integer id)
     {
         return MMR_SEASONS.get(id);
     }

@@ -261,7 +261,7 @@ public class StatsService
 
     private void updateSeason(Region region, int seasonId)
     {
-        BlizzardSeason bSeason = BlizzardSC2API.getSeason(seasonId);
+        BlizzardSeason bSeason = BlizzardSC2API.getStaticSeason(seasonId);
         Season season = seasonDao.merge(Season.of(bSeason, region));
         updateLeagues(bSeason, season, false);
         LOG.debug("Updated leagues: {} {}", seasonId, region);
