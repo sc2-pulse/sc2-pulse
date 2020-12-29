@@ -261,7 +261,7 @@ public class StatsService
 
     private void updateSeason(Region region, int seasonId)
     {
-        BlizzardSeason bSeason = BlizzardSC2API.getStaticSeason(seasonId);
+        BlizzardSeason bSeason = api.getSeason(region, seasonId).block();
         Season season = seasonDao.merge(Season.of(bSeason, region));
         updateLeagues(bSeason, season, false);
         LOG.debug("Updated leagues: {} {}", seasonId, region);
@@ -272,7 +272,7 @@ public class StatsService
         Integer seasonId = null;
         for(Region region : Region.values())
         {
-            BlizzardSeason bSeason = api.getCurrentSeason(region).block();
+            BlizzardSeason bSeason = api.getCurrentOrLastSeason(region).block();
             Season season = seasonDao.merge(Season.of(bSeason, region));
             updateLeagues(bSeason, season, true);
             seasonId = season.getBattlenetId();
