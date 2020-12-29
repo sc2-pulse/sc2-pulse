@@ -94,7 +94,8 @@ public class QueueStatsDAO
         "WITH "
         + "day AS (SELECT DISTINCT ON (battlenet_id) "
         + "CASE WHEN \"end\">current_date THEN current_date - \"start\" ELSE \"end\" - \"start\" END AS count "
-        + "FROM season WHERE battlenet_id = :seasonId), "
+        + "FROM season WHERE battlenet_id = :seasonId "
+        + "ORDER BY battlenet_id DESC, region DESC), "
 
         + "player AS "
         + "("

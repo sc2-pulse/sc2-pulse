@@ -53,7 +53,7 @@ public class SeasonDAO
         "SELECT DISTINCT ON (battlenet_id) "
         + STD_SELECT
         + "FROM season "
-        + "ORDER BY battlenet_id DESC";
+        + "ORDER BY battlenet_id DESC, region DESC";
 
     private static final String FIND_MAX_BATTLENET_ID_QUERY =
         "SELECT MAX(battlenet_id) FROM season";
