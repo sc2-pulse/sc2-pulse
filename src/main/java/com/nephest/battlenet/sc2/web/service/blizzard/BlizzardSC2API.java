@@ -46,11 +46,7 @@ public class BlizzardSC2API
 
     public static final int REQUESTS_PER_SECOND_CAP = 100;
     public static final int REQUESTS_PER_HOUR_CAP = 36000;
-    //first mmr season
-    public static final long firstSeason = 29;
-    public static final long lastSeason = 42;
-    public static final int firstSeasonNumber = 3;
-    public static final int firstSeasonYear = 2016;
+    public static final int FIRST_SEASON = 28;
     //historical season data is taken from liquipedia.net
     public static final Map<Integer, BlizzardSeason> MMR_SEASONS = Stream.of
     (
