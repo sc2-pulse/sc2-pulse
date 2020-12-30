@@ -7,7 +7,10 @@ import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.blizzard.*;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import okhttp3.mockwebserver.MockWebServer;
@@ -60,7 +63,7 @@ public class BlizzardSC2APIIT
         assertNotNull(season.getStart());
         assertNotNull(season.getEnd());
 
-        BlizzardDataSeason historicalSeason = api.getSeason(Region.EU, 40).block();
+        BlizzardSeason historicalSeason = api.getSeason(Region.EU, 40).block();
         Errors errors = new BeanPropertyBindingResult(historicalSeason, historicalSeason.toString());
         validator.validate(historicalSeason, errors);
         assertFalse(errors.hasErrors());

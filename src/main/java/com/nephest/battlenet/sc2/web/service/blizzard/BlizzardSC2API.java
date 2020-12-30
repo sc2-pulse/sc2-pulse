@@ -84,14 +84,14 @@ public class BlizzardSC2API
         return client;
     }
 
-    public Mono<BlizzardDataSeason> getSeason(Region region, Integer id)
+    public Mono<BlizzardSeason> getSeason(Region region, Integer id)
     {
         return getWebClient()
             .get()
             .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "data/sc2/season/{0}"), id)
             .accept(APPLICATION_JSON)
             .retrieve()
-            .bodyToMono(BlizzardDataSeason.class)
+            .bodyToMono(BlizzardDataSeason.class).cast(BlizzardSeason.class)
             .retryWhen(WebServiceUtil.RETRY);
     }
 
