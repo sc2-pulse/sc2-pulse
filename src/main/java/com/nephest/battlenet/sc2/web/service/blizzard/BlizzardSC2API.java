@@ -106,25 +106,22 @@ public class BlizzardSC2API
             .retryWhen(WebServiceUtil.RETRY);
     }
 
-    public BlizzardSeason getLastSeason(Region region)
+    public Mono<BlizzardSeason> getLastSeason(Region region)
     {
-        BlizzardSeason lastSeason = null;
-        for(int i = FIRST_SEASON; true; i++)
-        {
-            BlizzardSeason s = getSeason(region, i).onErrorResume((t)->Mono.empty()).block();
-            if(s == null) break;
+        return chainSeasonMono(region, BlizzardSC2API.FIRST_SEASON);
+    }
 
-            lastSeason = s;
-        }
-        if(lastSeason == null) throw new IllegalStateException("Could not fetch the last season. API is broken?");
-
-        return lastSeason;
+    private Mono<BlizzardSeason> chainSeasonMono(Region region, int season)
+    {
+        return Mono.defer(()->getSeason(region, season)
+            .then(chainSeasonMono(region, season + 1))
+            .onErrorResume((t)->getSeason(region, season - 1).onErrorResume((t1)->Mono.empty())));
     }
 
     //current season endpoint can return the 500/503 code sometimes
     public Mono<BlizzardSeason> getCurrentOrLastSeason(Region region)
     {
-        return getCurrentSeason(region).onErrorResume((t)->Mono.just(getLastSeason(region)));
+        return getCurrentSeason(region).onErrorResume((t)->getLastSeason(region));
     }
 
     public Mono<BlizzardLeague> getLeague

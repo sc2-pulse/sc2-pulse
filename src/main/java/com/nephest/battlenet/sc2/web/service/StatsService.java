@@ -128,7 +128,7 @@ public class StatsService
         try
         {
             long start = System.currentTimeMillis();
-            int lastSeasonIx = api.getLastSeason(Region.EU).getId() + 1;
+            int lastSeasonIx = api.getLastSeason(Region.EU).block().getId() + 1;
             for(int season = BlizzardSC2API.FIRST_SEASON; season < lastSeasonIx; season++)
             {
                 updateSeason(season);
