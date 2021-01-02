@@ -39,6 +39,10 @@ public class BlizzardSC2API
 
     public static final int REQUESTS_PER_SECOND_CAP = 100;
     public static final int REQUESTS_PER_HOUR_CAP = 36000;
+    public static final double REQUEST_RATE_COEFF = 0.9;
+    public static final int SAFE_REQUESTS_PER_SECOND_CAP =
+        (int) Math.round(REQUESTS_PER_SECOND_CAP * REQUEST_RATE_COEFF);
+    public static final int SAFE_REQUESTS_PER_HOUR_CAP = (int) Math.round(REQUESTS_PER_HOUR_CAP * REQUEST_RATE_COEFF);
     public static final int FIRST_SEASON = 28;
 
     private WebClient client;
@@ -228,7 +232,7 @@ public class BlizzardSC2API
         return Flux.fromIterable(playerCharacters)
             .parallel()
             .runOn(Schedulers.boundedElastic())
-            .flatMap(this::getMatches, false, REQUESTS_PER_SECOND_CAP);
+            .flatMap(this::getMatches, false, SAFE_REQUESTS_PER_SECOND_CAP);
     }
 
 }
