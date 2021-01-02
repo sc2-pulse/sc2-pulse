@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -223,8 +224,9 @@ public class BlizzardSC2API
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
             .retryWhen(WebServiceUtil.RETRY)
-            .onErrorReturn((t)->t.getCause() != null && t.getCause() instanceof WebClientResponseException.NotFound,
-                Tuples.of(new BlizzardMatches(), playerCharacter));
+            //API can be broken randomly, accepting this as a normal behavior
+            .doOnError(t->LOG.error(ExceptionUtils.getRootCauseMessage(t)))
+            .onErrorReturn(Tuples.of(new BlizzardMatches(), playerCharacter));
     }
 
     public ParallelFlux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(Iterable<? extends PlayerCharacter> playerCharacters)
