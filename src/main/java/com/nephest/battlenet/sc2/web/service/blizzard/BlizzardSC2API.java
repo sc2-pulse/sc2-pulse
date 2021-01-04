@@ -214,7 +214,8 @@ public class BlizzardSC2API
             (
                 regionUri != null
                     ? regionUri
-                    : (playerCharacter.getRegion().getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}/matches"),
+                    //EU is the most stable host for matches currently, might change it in the future
+                    : (Region.EU.getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}/matches"),
                 playerCharacter.getRegion().getId(),
                 playerCharacter.getRealm(),
                 playerCharacter.getBattlenetId()
