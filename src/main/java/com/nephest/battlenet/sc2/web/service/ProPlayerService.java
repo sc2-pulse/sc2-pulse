@@ -10,6 +10,8 @@ import com.nephest.battlenet.sc2.model.local.ProTeamMember;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
@@ -24,6 +26,8 @@ import java.util.List;
 @Service
 public class ProPlayerService
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ProPlayerService.class);
 
     private final ProPlayerDAO proPlayerDAO;
     private final ProTeamDAO proTeamDAO;
@@ -71,6 +75,7 @@ public class ProPlayerService
         proTeamDAO.removeExpired();
         proPlayerAccountDAO.removeExpired();
         proPlayerDAO.removeExpired();
+        LOG.info("Updated pro players");
     }
 
     private void updateRevealed()
