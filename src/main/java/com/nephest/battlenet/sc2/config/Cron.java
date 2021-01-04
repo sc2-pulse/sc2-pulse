@@ -8,20 +8,19 @@ import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 @Profile("!maintenance")
 @Component
 public class Cron
 {
 
-    private static final Logger LOG = Logger.getLogger(Cron.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(Cron.class);
 
     @Autowired
     private StatsService statsService;
@@ -50,7 +49,7 @@ public class Cron
         catch(RuntimeException ex)
         {
             //API can be broken randomly. All we can do at this point is log the exception.
-            LOG.log(Level.SEVERE, ex.getMessage(), ex);
+            LOG.error(ex.getMessage(), ex);
         }
         finally
         {

@@ -12,17 +12,18 @@ import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.logging.Logger;
 
 @Service
 public class MatchService
 {
 
-    private static final Logger LOG = Logger.getLogger(MatchService.class.getName());
+    private static final Logger LOG = LoggerFactory.getLogger(MatchService.class);
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
