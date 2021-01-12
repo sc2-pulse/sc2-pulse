@@ -21,6 +21,11 @@ import java.util.List;
 public class DivisionDAO
 {
 
+    public static final String STD_SELECT =
+        "division.id AS \"division.id\", "
+        + "division.league_tier_id AS \"division.league_tier_id\", "
+        + "division.battlenet_id AS \"division.battlenet_id\" ";
+
     private static final String CREATE_QUERY = "INSERT INTO division "
         + "(league_tier_id, battlenet_id) "
         + "VALUES (:leagueTierId, :battlenetId)";
@@ -31,7 +36,7 @@ public class DivisionDAO
         + "battlenet_id=excluded.battlenet_id";
 
     private static final String FIND_LIST_BY_LADDER =
-        "SELECT division.id, division.league_tier_id, division.battlenet_id "
+        "SELECT " + STD_SELECT
         + "FROM division "
         + "INNER JOIN league_tier ON division.league_tier_id=league_tier.id "
         + "INNER JOIN league ON league_tier.league_id=league.id "
@@ -45,9 +50,9 @@ public class DivisionDAO
 
     public final RowMapper<Division> STD_ROW_MAPPER = (rs, num)-> new Division
     (
-        rs.getLong("id"),
-        rs.getLong("league_tier_id"),
-        rs.getLong("battlenet_id")
+        rs.getLong("division.id"),
+        rs.getLong("division.league_tier_id"),
+        rs.getLong("division.battlenet_id")
     );
 
     @Autowired
