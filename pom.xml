@@ -11,7 +11,7 @@
     </parent>
   <groupId>com.nephest.battlenet.sc2</groupId>
   <artifactId>sc2-webapp</artifactId>
-  <version>1.9.0</version>
+  <version>1.10.0-SNAPSHOT</version>
   <packaging>${packaging.type}</packaging>
 
   <name>SC2 Pulse</name>
