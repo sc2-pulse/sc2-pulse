@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
+import com.nephest.battlenet.sc2.model.Race;
+
 public class BaseLocalTeamMember
 implements java.io.Serializable
 {
@@ -68,6 +70,25 @@ implements java.io.Serializable
     public Integer getRandomGamesPlayed()
     {
         return randomGamesPlayed;
+    }
+    
+    public void setGamesPlayed(Race race, Integer gamesPlayed)
+    {
+        switch(race)
+        {
+            case TERRAN:
+                setTerranGamesPlayed(gamesPlayed);
+                break;
+            case PROTOSS:
+                setProtossGamesPlayed(gamesPlayed);
+                break;
+            case ZERG:
+                setZergGamesPlayed(gamesPlayed);
+                break;
+            case RANDOM:
+                setRandomGamesPlayed(gamesPlayed);
+                break;
+        }
     }
 
 }

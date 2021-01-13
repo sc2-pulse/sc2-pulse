@@ -52,23 +52,7 @@ implements java.io.Serializable
         tm.setTeamId(team.getId());
         tm.setCharacterId(character.getId());
         for(BlizzardTeamMemberRace race : races)
-        {
-            switch(race.getRace())
-            {
-                case TERRAN:
-                    tm.setTerranGamesPlayed(race.getGamesPlayed());
-                    break;
-                case PROTOSS:
-                    tm.setProtossGamesPlayed(race.getGamesPlayed());
-                    break;
-                case ZERG:
-                    tm.setZergGamesPlayed(race.getGamesPlayed());
-                    break;
-                case RANDOM:
-                    tm.setRandomGamesPlayed(race.getGamesPlayed());
-                    break;
-            }
-        }
+            tm.setGamesPlayed(race.getRace(), race.getGamesPlayed());
         return tm;
     }
 
