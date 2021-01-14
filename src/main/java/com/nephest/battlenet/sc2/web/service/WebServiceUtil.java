@@ -7,12 +7,14 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
 import reactor.util.retry.Retry;
@@ -33,6 +35,10 @@ public class WebServiceUtil
     public static final Retry RETRY = Retry
         .backoff(RETRY_COUNT, RETRY_DURATION_MIN).maxBackoff(RETRY_DURATION_MAX)
         .filter(t->true)
+        .transientErrors(true);
+    public static final Retry RETRY_SKIP_NOT_FOUND = Retry
+        .backoff(RETRY_COUNT, RETRY_DURATION_MIN).maxBackoff(RETRY_DURATION_MAX)
+        .filter(t->!(ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound))
         .transientErrors(true);
 
     public static WebClient.Builder getWebClientBuilder(ObjectMapper objectMapper, int inMemorySize)
