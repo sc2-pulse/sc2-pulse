@@ -22,7 +22,7 @@ implements Identifiable
     {
         for(Race race : Race.values())
         {
-            if(race.getName().equals(name)) return race;
+            if(race.getName().equalsIgnoreCase(name)) return race;
         }
         throw new IllegalArgumentException("Invalid name");
     }
