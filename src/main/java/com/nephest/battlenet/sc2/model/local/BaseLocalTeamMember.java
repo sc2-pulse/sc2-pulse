@@ -3,7 +3,9 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nephest.battlenet.sc2.model.Race;
+import org.apache.commons.lang3.ObjectUtils;
 
 public class BaseLocalTeamMember
 implements java.io.Serializable
@@ -89,6 +91,41 @@ implements java.io.Serializable
                 setRandomGamesPlayed(gamesPlayed);
                 break;
         }
+    }
+
+    public Integer getGamesPlayed(Race race)
+    {
+        Integer result = null;
+        switch(race)
+        {
+            case TERRAN:
+                result = getTerranGamesPlayed();
+                break;
+            case PROTOSS:
+                result = getProtossGamesPlayed();
+                break;
+            case ZERG:
+                result = getZergGamesPlayed();
+                break;
+            case RANDOM:
+                result = getRandomGamesPlayed();
+                break;
+        }
+        return result;
+    }
+
+    @JsonIgnore
+    public Race getFavoriteRace()
+    {
+        Integer highestCount = getTerranGamesPlayed();
+        Race result = Race.TERRAN;
+        for(Race race : Race.values())
+        {
+            Integer raceGames = getGamesPlayed(race);
+            if(ObjectUtils.compare(raceGames, highestCount) > 0)
+                {result = race; highestCount = raceGames;}
+        }
+        return result;
     }
 
 }
