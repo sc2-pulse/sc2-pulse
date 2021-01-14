@@ -14,13 +14,21 @@ public class BaseLeague
     implements Identifiable
     {
 
-        BRONZE(0), SILVER(1), GOLD(2), PLATINUM(3), DIAMOND(4), MASTER(5), GRANDMASTER(6);
+        BRONZE(0, "bronze"),
+        SILVER(1, "silver"),
+        GOLD(2, "gold"),
+        PLATINUM(3, "platinum"),
+        DIAMOND(4, "diamond"),
+        MASTER(5, "master"),
+        GRANDMASTER(6, "grandmaster");
 
         private final int id;
+        private final String name;
 
-        LeagueType(int id)
+        LeagueType(int id, String name)
         {
             this.id = id;
+            this.name = name;
         }
 
         public static LeagueType from(int id)
@@ -32,11 +40,25 @@ public class BaseLeague
             throw new IllegalArgumentException("Invalid id");
         }
 
+        public static LeagueType from(String name)
+        {
+            for (LeagueType type : LeagueType.values())
+            {
+                if (type.getName().equalsIgnoreCase(name)) return type;
+            }
+            throw new IllegalArgumentException("Invalid name");
+        }
+
         @Override
         @JsonValue
         public int getId()
         {
             return id;
+        }
+
+        public String getName()
+        {
+            return name;
         }
 
     }
