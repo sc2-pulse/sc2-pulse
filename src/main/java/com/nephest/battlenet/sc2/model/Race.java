@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.model;
 
+import com.fasterxml.jackson.annotation.JsonCreator;
+
 public enum Race
 implements Identifiable
 {
@@ -18,6 +20,7 @@ implements Identifiable
         this.name = name;
     }
 
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     public static Race from(String name)
     {
         for(Race race : Race.values())
