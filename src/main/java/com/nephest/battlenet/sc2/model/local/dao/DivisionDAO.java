@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -16,7 +17,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
+import java.util.*;
 
 @Repository
 public class DivisionDAO
@@ -55,6 +56,57 @@ public class DivisionDAO
         + "AND league.type=:leagueType AND league.queue_type=:queueType AND league.team_type=:teamType "
         + "AND league_tier.type=:tierType";
 
+    private static final String FIND_PROFILE_IDS =
+        "WITH team_filter AS "
+        + "( "
+            + "SELECT DISTINCT ON (team.division_id) team.id, team.division_id "
+            + "FROM team "
+            + "WHERE "
+            + "team.season=:season "
+            + "AND team.region=:region "
+            + "AND team.league_type IN (:leagues) "
+            + "AND team.queue_type=:queueType "
+            + "AND team.team_type=:teamType "
+            //select a player who is less likely to promote to next division
+            + "ORDER BY team.division_id DESC, team.rating DESC"
+        + "), "
+        + "team_member_filter AS "
+        + "( "
+            + "SELECT DISTINCT ON (team_filter.id) team_member.player_character_id, team_filter.division_id "
+            + "FROM team_filter "
+            + "INNER JOIN team_member ON team_filter.id = team_member.team_id "
+        + ") "
+        + "SELECT " + STD_SELECT + ", " + PlayerCharacterDAO.STD_SELECT
+        + "FROM team_member_filter "
+        + "INNER JOIN division ON team_member_filter.division_id = division.id "
+        + "INNER JOIN player_character ON team_member_filter.player_character_id = player_character.id ORDER BY " 
+        + "division.battlenet_id";
+
+    private static final String FIND_LAST_DIVISION_BATTLENET_ID =
+        "SELECT MAX(division.battlenet_id) "
+        + "FROM division "
+        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
+        + "INNER JOIN league ON league_tier.league_id = league.id "
+        + "INNER JOIN season ON league.season_id = season.id "
+        + "WHERE "
+        + "season.battlenet_id=:season "
+        + "AND season.region=:region "
+        + "AND league.queue_type = :queueType "
+        + "AND league.team_type = :teamType";
+
+    private static final String FIND_DIVISION =
+        "SELECT " + STD_SELECT
+        + "FROM division "
+        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
+        + "INNER JOIN league ON league_tier.league_id = league.id "
+        + "INNER JOIN season ON league.season_id = season.id "
+        + "WHERE "
+        + "season.battlenet_id=:season "
+        + "AND season.region=:region "
+        + "AND league.queue_type = :queueType "
+        + "AND league.team_type = :teamType "
+        + "AND division.battlenet_id=:divisionBattlenetId";
+
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
 
@@ -69,6 +121,14 @@ public class DivisionDAO
     {
         if(!rs.next()) return null;
         return STD_ROW_MAPPER.mapRow(rs, 0);
+    };
+
+    public static final ResultSetExtractor<Map<Division, PlayerCharacter>> PROFILE_IDS_EXTRACTOR = (rs)->
+    {
+        Map<Division, PlayerCharacter> result = new HashMap<>();
+        while(rs.next())
+            result.put(STD_ROW_MAPPER.mapRow(rs, 0), PlayerCharacterDAO.getStdRowMapper().mapRow(rs, 0));
+        return result;
     };
 
     @Autowired
@@ -134,6 +194,60 @@ public class DivisionDAO
                 .addValue("tierType", conversionService.convert(tierType, Integer.class)),
             STD_ROW_MAPPER
         );
+    }
+
+    public Optional<Division> findDivision
+    (
+        int season,
+        Region region,
+        QueueType queueType,
+        TeamType teamType,
+        long battlenetId
+    )
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("teamType", conversionService.convert(teamType, Integer.class))
+            .addValue("divisionBattlenetId", battlenetId);
+        return Optional.ofNullable(template.query(FIND_DIVISION, params, DivisionDAO.STD_EXTRACTOR));
+    }
+
+    public Optional<Long> findLastDivision
+    (
+        int season,
+        Region region,
+        QueueType queueType,
+        TeamType teamType
+    )
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("teamType", conversionService.convert(teamType, Integer.class));
+        return Optional.ofNullable(template.query(FIND_LAST_DIVISION_BATTLENET_ID, params, DAOUtils.LONG_EXTRACTOR));
+    }
+
+    public Map<Division, PlayerCharacter> findProfileDivisionIds
+    (
+        int season,
+        Region region,
+        BaseLeague.LeagueType[] leagues,
+        QueueType queueType,
+        TeamType teamType
+    )
+    {
+        Set<Integer> leagueInts = new HashSet<>(leagues.length, 1F);
+        for (BaseLeague.LeagueType league : leagues) leagueInts.add(conversionService.convert(league, Integer.class));
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("leagues", leagueInts)
+            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("teamType", conversionService.convert(teamType, Integer.class));
+        return template.query(FIND_PROFILE_IDS, params, PROFILE_IDS_EXTRACTOR);
     }
 
 }
