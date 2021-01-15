@@ -18,6 +18,7 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
+import reactor.util.function.Tuples;
 
 import java.util.*;
 
@@ -61,6 +62,23 @@ public class AlternativeLadderService
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 150;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
+
+    public void updateSeason(Season season, BaseLeague.LeagueType[] leagues)
+    {
+        Map<Division, PlayerCharacter> ladderIds = divisionDao.findProfileDivisionIds
+        (
+            season.getBattlenetId(),
+            season.getRegion(),
+            leagues,
+            QueueType.LOTV_1V1, TeamType.ARRANGED
+        );
+        for(Map.Entry<Division, PlayerCharacter> id : ladderIds.entrySet())
+        {
+            BlizzardPlayerCharacter character = new BlizzardPlayerCharacter(
+                id.getValue().getBattlenetId(), id.getValue().getRealm(), id.getValue().getName());
+            saveProfileLadder(season, Tuples.of(season.getRegion(), character, id.getKey().getBattlenetId()));
+        }
+    }
 
     public void discoverSeason(Season season)
     {
