@@ -48,21 +48,25 @@ public class TeamDAO
         + "team.region_rank AS \"team.region_rank\", "
         + "team.league_rank AS \"team.league_rank\" ";
 
-    private static final String CREATE_QUERY = "INSERT INTO team "
+    private static final String CREATE_TEMPLATE = "INSERT INTO team "
         + "("
-            + "division_id, battlenet_id, "
+            + "%1$sdivision_id, battlenet_id, "
             + "season, region, league_type, queue_type, team_type, tier_type, "
             + "rating, points, wins, losses, ties"
         + ") "
         + "VALUES ("
-            + ":divisionId, :battlenetId, "
+            + "%2$s:divisionId, :battlenetId, "
             + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
             + ":rating, :points, :wins, :losses, :ties"
         + ")";
 
-    private static final String MERGE_QUERY = CREATE_QUERY
-        + " "
-        + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
+    private static final String CREATE_QUERY = String.format(CREATE_TEMPLATE, "", "");
+    private static final String CREATE_WITH_ID_QUERY = String.format(CREATE_TEMPLATE, "id, ", ":id, ");
+
+    private static final String MERGE_TEMPLATE =
+        " "
+        + "ON CONFLICT(%1$s) DO UPDATE SET "
+        + "%2$s"
         + "division_id=excluded.division_id, "
         + "season=excluded.season, "
         + "league_type=excluded.league_type, "
@@ -74,6 +78,15 @@ public class TeamDAO
         + "wins=excluded.wins, "
         + "losses=excluded.losses, "
         + "ties=excluded.ties";
+
+    private static final String MERGE_QUERY = CREATE_QUERY + String.format(MERGE_TEMPLATE, "region, battlenet_id", "");
+
+    private static final String MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
+        + String.format(MERGE_TEMPLATE, "id",
+            "region=excluded.region, "
+            + "battlenet_id = excluded.battlenet_id, ");
+
+    private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
 
     private static final String CALCULATE_RANK_TEMPLATE =
         "WITH cte AS"
@@ -176,6 +189,20 @@ public class TeamDAO
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
         team.setId(keyHolder.getKey().longValue());
         return team;
+    }
+
+    public Team mergeById(Team team)
+    {
+        MapSqlParameterSource params = createParameterSource(team);
+        params.addValue("id", team.getId());
+        template.update(MERGE_BY_ID_QUERY, params);
+        return team;
+    }
+
+    public Optional<Team> findById(long id)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
+        return Optional.ofNullable(template.query(FIND_BY_ID_QUERY, params, getStdExtractor()));
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)

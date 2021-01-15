@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -104,8 +105,10 @@ public class SqlSyntaxIT
 
         leagueDAO.create(new League(null, season.getId(), League.LeagueType.BRONZE, QueueType.HOTS_1V1, TeamType.ARRANGED));
         League league = leagueDAO.merge(new League(null, season.getId(), League.LeagueType.BRONZE, QueueType.HOTS_1V1, TeamType.ARRANGED));
+        League league2 = leagueDAO.merge(new League(null, season.getId(), League.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED));
         leagueTierDAO.create(new LeagueTier(null, league.getId(), LeagueTier.LeagueTierType.FIRST, 0, 1));
         LeagueTier tier = leagueTierDAO.merge(new LeagueTier(null, league.getId(), LeagueTier.LeagueTierType.FIRST, 1, 2));
+        LeagueTier tier2 = leagueTierDAO.merge(new LeagueTier(null, league2.getId(), LeagueTier.LeagueTierType.SECOND, 1, 2));
         assertEquals(1, tier.getMinRating());
         assertEquals(2, tier.getMaxRating());
 
@@ -114,6 +117,13 @@ public class SqlSyntaxIT
         Division divFound = divisionDAO
             .findListByLadder(40, region, League.LeagueType.BRONZE, QueueType.HOTS_1V1, TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST).get(0);
         assertEquals(division, divFound);
+        Division division2 = divisionDAO.merge(new Division(null, tier.getId(), 2L));
+        divisionDAO.mergeById(new Division(division2.getId(), tier2.getId(), 3L));
+        Division div2Found = divisionDAO
+            .findListByLadder(40, region, League.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED,BaseLeagueTier.LeagueTierType.SECOND).get(0);
+        assertEquals(tier2.getId(), div2Found.getTierId());
+        assertEquals(3L, div2Found.getBattlenetId());
+
 
         Team newTeam = new Team
         (
@@ -125,6 +135,11 @@ public class SqlSyntaxIT
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.ONE,
             2L, 2, 2, 2, 2
         );
+        Team mergedByIdTeam = new Team
+        (
+            null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(), division2.getId(), BigInteger.TEN,
+            3L, 3, 3, 3, 3
+        );
         teamDAO.create(newTeam);
         Team team = teamDAO.merge(mergedTeam);
         assertEquals(2, team.getRating());
@@ -132,6 +147,21 @@ public class SqlSyntaxIT
         assertEquals(2, team.getLosses());
         assertEquals(2, team.getTies());
         assertEquals(2, team.getPoints());
+        mergedByIdTeam.setId(team.getId());
+        teamDAO.mergeById(mergedByIdTeam);
+        Team foundTeam = teamDAO.findById(mergedByIdTeam.getId()).orElse(null);
+        assertNotNull(foundTeam);
+        assertEquals(league2.getType(), foundTeam.getLeague().getType());
+        assertEquals(league2.getQueueType(), foundTeam.getLeague().getQueueType());
+        assertEquals(league2.getTeamType(), foundTeam.getLeague().getTeamType());
+        assertEquals(tier2.getType(), foundTeam.getTierType());
+        assertEquals(division2.getId(), foundTeam.getDivisionId());
+        assertEquals(BigInteger.TEN, foundTeam.getBattlenetId());
+        assertEquals(3, foundTeam.getRating());
+        assertEquals(3, foundTeam.getWins());
+        assertEquals(3, foundTeam.getLosses());
+        assertEquals(3, foundTeam.getTies());
+        assertEquals(3, foundTeam.getPoints());
 
         accountDAO.create(new Account(null, Partition.GLOBAL, "tag#1"));
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "newtag#2"));

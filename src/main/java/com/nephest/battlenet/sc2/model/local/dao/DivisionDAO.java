@@ -27,14 +27,23 @@ public class DivisionDAO
         + "division.league_tier_id AS \"division.league_tier_id\", "
         + "division.battlenet_id AS \"division.battlenet_id\" ";
 
-    private static final String CREATE_QUERY = "INSERT INTO division "
-        + "(league_tier_id, battlenet_id) "
-        + "VALUES (:leagueTierId, :battlenetId)";
+    private static final String CREATE_TEMPLATE = "INSERT INTO division "
+        + "(%1$sleague_tier_id, battlenet_id) "
+        + "VALUES (%2$s:leagueTierId, :battlenetId)";
+
+    private static final String CREATE_QUERY = String.format(CREATE_TEMPLATE, "", "");
+    private static final String CREATE_WITH_ID_QUERY = String.format(CREATE_TEMPLATE, "id, ", ":id, ");
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
         + "ON CONFLICT(league_tier_id, battlenet_id) DO UPDATE SET "
         + "battlenet_id=excluded.battlenet_id";
+
+    private static final String MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
+        + " "
+        + "ON CONFLICT(id) DO UPDATE SET "
+        + "battlenet_id=excluded.battlenet_id,"
+        + "league_tier_id=excluded.league_tier_id";
 
     private static final String FIND_LIST_BY_LADDER =
         "SELECT " + STD_SELECT
@@ -88,6 +97,14 @@ public class DivisionDAO
         MapSqlParameterSource params = createPamarameterSource(division);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
         division.setId(keyHolder.getKey().longValue());
+        return division;
+    }
+
+    public Division mergeById(Division division)
+    {
+        MapSqlParameterSource params = createPamarameterSource(division);
+        params.addValue("id", division.getId());
+        template.update(MERGE_BY_ID_QUERY, params);
         return division;
     }
 
