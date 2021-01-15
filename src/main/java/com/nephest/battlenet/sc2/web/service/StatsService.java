@@ -24,6 +24,8 @@ import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -317,8 +319,7 @@ public class StatsService
         for (int i = from; i < to; i++)
         {
             BlizzardTierDivision bDivision = divisions[i];
-            Division division = Division.of(tier, bDivision);
-            divisionDao.merge(division);
+            Division division = saveDivision(season, league, tier, bDivision);
             try
             {
                 updateTeams(api.getLadder(season.getRegion(), bDivision).block().getTeams(), season, league, tier, division);
@@ -346,6 +347,29 @@ public class StatsService
         }
     }
 
+    private Division saveDivision
+    (
+        Season season,
+        League league,
+        LeagueTier tier,
+        BlizzardTierDivision bDivision
+    )
+    {
+        //alternative ladder update updates only 1v1
+        if(league.getQueueType() != QueueType.LOTV_1V1) return divisionDao.merge(Division.of(tier, bDivision));
+
+        /*
+            Alternative ladder update doesn't have tier info, so it creates divisions with the default tier.
+            Find such divisions and update their tier.
+         */
+        Division division = divisionDao.findDivision(
+            season.getBattlenetId(), season.getRegion(), QueueType.LOTV_1V1, TeamType.ARRANGED, bDivision.getLadderId())
+            .orElseGet(()->Division.of(tier, bDivision));
+        division.setTierId(tier.getId());
+
+        return division.getId() != null ? divisionDao.mergeById(division) : divisionDao.merge(division);
+    }
+
     protected void updateTeams
     (
         BlizzardTeam[] bTeams,
@@ -363,12 +387,53 @@ public class StatsService
             validator.validate(bTeam, errors);
             if(!errors.hasErrors() && isValidTeam(bTeam, memberCount))
             {
-                Team team = Team.of(season, league, tier, division, bTeam);
-                teamDao.merge(team);
+                Team team = saveTeam(season, league, tier, division, bTeam);
                 extractTeamMembers(bTeam.getMembers(), members, season, team);
             }
         }
         if(members.size() > 0) teamMemberDao.merge(members.toArray(TeamMember[]::new));
+    }
+
+    private Team saveTeam
+    (
+        Season season,
+        League league,
+        LeagueTier tier,
+        Division division,
+        BlizzardTeam bTeam
+    )
+    {
+        //alternative ladder update updates only 1v1
+        if(league.getQueueType() != QueueType.LOTV_1V1) return teamDao.merge(Team.of(season, league, tier, division,bTeam));
+
+        //alternative ladder does not have battlenet id, find such teams and update them
+        PlayerCharacter playerCharacter =
+            playerCharacterDao.findByRegionAndBattlenetId(season.getRegion(), bTeam.getMembers()[0].getCharacter().getId())
+            .orElse((null));
+        if(playerCharacter == null) return teamDao.merge(Team.of(season, league, tier, division,bTeam));
+
+        BaseLocalTeamMember member = new BaseLocalTeamMember();
+        for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
+            member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
+        Map.Entry<Team, List<TeamMember>> teamEntry = teamDao
+            .find1v1TeamByFavoriteRace(season.getBattlenetId(), playerCharacter, member.getFavoriteRace()).orElse(null);
+        if(teamEntry != null)
+        {
+            Team team = teamEntry.getKey();
+
+            team.setLeague(league);
+            team.setTierType(tier.getType());
+            team.setDivisionId(division.getId());
+            team.setBattlenetId(bTeam.getId());
+            team.setRating(bTeam.getRating());
+            team.setPoints(bTeam.getPoints());
+            team.setWins(bTeam.getWins());
+            team.setLosses(bTeam.getLosses());
+            team.setTies(bTeam.getTies());
+            return teamDao.mergeById(team);
+        }
+
+        return teamDao.merge(Team.of(season, league, tier, division,bTeam));
     }
 
     //cross field validation

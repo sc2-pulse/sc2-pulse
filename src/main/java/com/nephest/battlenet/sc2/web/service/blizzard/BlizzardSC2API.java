@@ -3,7 +3,10 @@
 
 package com.nephest.battlenet.sc2.web.service.blizzard;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -25,6 +28,7 @@ import reactor.core.publisher.Mono;
 import reactor.core.publisher.ParallelFlux;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
@@ -206,6 +210,76 @@ public class BlizzardSC2API
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
             .retryWhen(WebServiceUtil.RETRY);
+    }
+
+    public Mono<Tuple3<Region, BlizzardPlayerCharacter, Long>> getProfileLadderId(Region region, long ladderId)
+    {
+        return getWebClient()
+            .get()
+            .uri
+            (
+                regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/legacy/ladder/{0}/{1}"),
+                region.getId(), ladderId
+            )
+            .accept(APPLICATION_JSON)
+            .retrieve()
+            .bodyToMono(String.class)
+            .map((s)->
+            {
+                BlizzardPlayerCharacter character = null;
+                try
+                {
+                    JsonNode members = objectMapper.readTree(s).at("/ladderMembers");
+                    character = objectMapper
+                        //select a player that is less likely to promote
+                        .treeToValue(members.get(members.size() - 1).get("character"), BlizzardPlayerCharacter.class);
+                }
+                catch (JsonProcessingException e)
+                {
+                    throw new IllegalStateException("Invalid json structure", e);
+                }
+                return Tuples.of(region, character, ladderId);
+            })
+            .retryWhen(WebServiceUtil.RETRY_SKIP_NOT_FOUND);
+    }
+
+    public Mono<BlizzardProfileLadder> getProfile1v1Ladder(Region region, BlizzardPlayerCharacter character, long ladderId)
+    {
+        return getWebClient()
+            .get()
+            .uri
+            (
+                regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/profile/{0}/{1}/{2}/ladder/{1}"),
+                region.getId(), character.getRealm(), character.getId(), ladderId
+            )
+            .accept(APPLICATION_JSON)
+            .retrieve()
+            .bodyToMono(String.class)
+            .flatMap((s)->
+            {
+                try
+                {
+                    return Mono.justOrEmpty(extractProfileLadder(s));
+                }
+                catch (JsonProcessingException e)
+                {
+                    throw new IllegalStateException("Invalid json structure", e);
+                }
+            })
+            .retryWhen(WebServiceUtil.RETRY_SKIP_NOT_FOUND);
+    }
+
+    private BlizzardProfileLadder extractProfileLadder(String s)
+    throws JsonProcessingException
+    {
+        JsonNode root = objectMapper.readTree(s);
+
+        if(!objectMapper.treeToValue(root.at("/currentLadderMembership"), BlizzardLadderMembership.class).getLocalizedGameMode()
+            .toLowerCase().contains("1v1")) return null;
+
+        return new BlizzardProfileLadder(
+            objectMapper.treeToValue(root.at("/ladderTeams"), BlizzardProfileTeam[].class),
+            BaseLeague.LeagueType.from(root.at("/league").asText()));
     }
 
     public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)

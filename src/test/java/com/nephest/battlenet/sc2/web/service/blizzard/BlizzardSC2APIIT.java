@@ -4,13 +4,11 @@
 package com.nephest.battlenet.sc2.web.service.blizzard;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import okhttp3.mockwebserver.MockWebServer;
@@ -22,6 +20,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import reactor.util.function.Tuple3;
 
 import java.util.Set;
 
@@ -39,6 +38,11 @@ public class BlizzardSC2APIIT
     public static final String VALID_LEAGUE = "{\"type\": 0, \"queueType\": 201, \"teamType\": 0, \"tier\": []}";
     public static final String VALID_LADDER = "{\"team\": []}";
     public static final String VALID_MATCHES = "{\"matches\": []}";
+    public static final String VALID_LEGACY_LADDER = "{\"ladderMembers\":[{\"character\":{\"id\":\"11445546\","
+        + "\"realm\":1,\"region\":1,\"displayName\":\"Dexter\",\"clanName\":\"\",\"clanTag\":\"\","
+        + "\"profilePath\":\"/profile/1/1/11445546\"}}]}";
+    public static final String VALID_PROFILE_LADDER = "{\"ladderTeams\":[],\"league\":\"silver\","
+        + "\"currentLadderMembership\":{\"ladderId\":\"292783\",\"localizedGameMode\":\"1v1 Silver\"}}";
 
     public static final PlayerCharacter SERRAL =
         new PlayerCharacter(null, null, Region.EU, 315071L, 1, "Serral");
@@ -46,6 +50,7 @@ public class BlizzardSC2APIIT
         new PlayerCharacter(null, null, Region.EU, 7069585L, 1, "Heromarine");
     public static final PlayerCharacter MARU =
         new PlayerCharacter(null, null, Region.KR, 4582362L, 1, "Maru");
+    public static final BlizzardPlayerCharacter BLIZZARD_CHARACTER = new BlizzardPlayerCharacter(1L, 1, "Name#123");
     @Autowired
     private BlizzardSC2API api;
 
@@ -74,6 +79,27 @@ public class BlizzardSC2APIIT
         BlizzardSeason currentSeason = api.getCurrentOrLastSeason(Region.EU).block();
         assertTrue(currentSeason.getId() > 44);
 
+        testFetchAlternative();
+    }
+
+    private void testFetchAlternative()
+    {
+        Tuple3<Region, BlizzardPlayerCharacter, Long> ladderId = api.getProfileLadderId(Region.US, 292783).block();
+        assertEquals(Region.US, ladderId.getT1());
+        assertEquals(292783, ladderId.getT3());
+        assertNotNull(ladderId.getT2());
+
+        Errors errors = new BeanPropertyBindingResult(ladderId.getT2(), ladderId.getT2().toString());
+        validator.validate(ladderId.getT2(), errors);
+        assertFalse(errors.hasErrors());
+
+        BlizzardProfileLadder ladder = api.getProfile1v1Ladder(ladderId.getT1(), ladderId.getT2(), ladderId.getT3()).block();
+        BlizzardProfileTeam[] teams = ladder.getLadderTeams();
+        assertTrue(teams.length > 0);
+        Errors teamErrors = new BeanPropertyBindingResult(teams, teams.toString());
+        validator.validate(teams, teamErrors);
+        assertFalse(teamErrors.hasErrors());
+        assertEquals(BaseLeague.LeagueType.SILVER, ladder.getLeagueType());
     }
 
     @Test @Order(2)
@@ -117,6 +143,9 @@ public class BlizzardSC2APIIT
         );
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, mock(BlizzardTierDivision.class)), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getMatches(SERRAL), VALID_MATCHES, server, RETRY_COUNT);
+        WebServiceTestUtil.testRetrying(api.getProfileLadderId(Region.US, 292783), VALID_LEGACY_LADDER, server, RETRY_COUNT);
+        WebServiceTestUtil.testRetrying(api.getProfile1v1Ladder(Region.US, BLIZZARD_CHARACTER, 292783),
+            VALID_PROFILE_LADDER, server, RETRY_COUNT);
         server.shutdown();
     }
 
