@@ -48,11 +48,13 @@ public class BlizzardSC2API
 
     private WebClient client;
     private String regionUri;
+    private final ObjectMapper objectMapper;
 
     @Autowired
     public BlizzardSC2API(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
     {
         initWebClient(objectMapper, auth2AuthorizedClientManager);
+        this.objectMapper = objectMapper;
     }
 
     public static boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
