@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
@@ -42,17 +43,17 @@ public class StatsServiceTest
     public void testAlreadyUpdating()
     {
         ss.setIsUpdating(true);
-        assertFalse(ss.updateAll());
-        assertFalse(ss.updateCurrent());
+        assertFalse(ss.updateAll(Region.values(), QueueType.values(), BaseLeague.LeagueType.values()));
+        assertFalse(ss.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values()));
     }
 
     @Test
     public void testIsUpdatingFlagResetOnException()
     {
-        try{ss.updateAll();} catch(Exception ex){}
+        try{ss.updateAll(Region.values(), QueueType.values(), BaseLeague.LeagueType.values());} catch(Exception ex){}
         assertFalse(ss.isUpdating());
 
-        try{ss.updateCurrent();} catch(Exception ex){}
+        try{ss.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values());} catch(Exception ex){}
         assertFalse(ss.isUpdating());
     }
 

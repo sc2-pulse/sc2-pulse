@@ -3,10 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.Version;
+import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
@@ -119,7 +116,7 @@ public class StatsService
         },
         allEntries=true
     )
-    public boolean updateAll()
+    public boolean updateAll(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         if(!isUpdating.compareAndSet(false, true))
         {
@@ -133,7 +130,7 @@ public class StatsService
             int lastSeasonIx = api.getLastSeason(Region.EU).block().getId() + 1;
             for(int season = BlizzardSC2API.FIRST_SEASON; season < lastSeasonIx; season++)
             {
-                updateSeason(season);
+                updateSeason(season, regions, queues, leagues);
                 LOG.info("Updated season {}", season);
             }
             playerCharacterStatsDAO.mergeCalculateGlobal();
@@ -162,7 +159,7 @@ public class StatsService
         },
         allEntries=true
     )
-    public boolean updateCurrent()
+    public boolean updateCurrent(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         if(!isUpdating.compareAndSet(false, true))
         {
@@ -174,7 +171,7 @@ public class StatsService
         {
             long start = System.currentTimeMillis();
 
-            updateCurrentSeason();
+            updateCurrentSeason(regions, queues, leagues);
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
@@ -189,11 +186,11 @@ public class StatsService
         return true;
     }
 
-    private void updateSeason(int seasonId)
+    private void updateSeason(int seasonId, Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
-        for(Region region : Region.values())
+        for(Region region : regions)
         {
-            updateSeason(region, seasonId);
+            updateSeason(region, seasonId, queues, leagues);
         }
         updateSeasonStats(seasonId);
     }
@@ -206,37 +203,44 @@ public class StatsService
         teamDao.updateRanks(seasonId);
     }
 
-    private void updateSeason(Region region, int seasonId)
+    private void updateSeason(Region region, int seasonId, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         BlizzardSeason bSeason = api.getSeason(region, seasonId).block();
         Season season = seasonDao.merge(Season.of(bSeason, region));
-        updateLeagues(bSeason, season, false);
+        updateLeagues(bSeason, season, queues, leagues, false);
         LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
 
-    private void updateCurrentSeason()
+    private void updateCurrentSeason(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         Integer seasonId = null;
-        for(Region region : Region.values())
+        for(Region region : regions)
         {
             BlizzardSeason bSeason = api.getCurrentOrLastSeason(region).block();
             Season season = seasonDao.merge(Season.of(bSeason, region));
-            updateLeagues(bSeason, season, true);
+            updateLeagues(bSeason, season, queues, leagues, true);
             seasonId = season.getBattlenetId();
             LOG.debug("Updated leagues: {} {}", seasonId, region);
         }
-        if(seasonId != null)
+        if(seasonId != null && leagues.length == BaseLeague.LeagueType.values().length)
         {
             updateSeasonStats(seasonId);
             playerCharacterStatsDAO.mergeCalculateGlobal();
         }
     }
 
-    private void updateLeagues(BlizzardSeason bSeason, Season season, boolean currentSeason)
+    private void updateLeagues
+    (
+        BlizzardSeason bSeason,
+        Season season,
+        QueueType[] queues,
+        BaseLeague.LeagueType[] leagues,
+        boolean currentSeason
+    )
     {
-        for (League.LeagueType leagueType : League.LeagueType.values())
+        for (League.LeagueType leagueType : leagues)
         {
-            for (QueueType queueType : QueueType.getTypes(VERSION))
+            for (QueueType queueType : queues)
             {
                 for (TeamType teamType : TeamType.values())
                 {

@@ -3,6 +3,9 @@
 
 package com.nephest.battlenet.sc2.config;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.MatchService;
@@ -42,7 +45,7 @@ public class Cron
     {
         try
         {
-            statsService.updateCurrent();
+            statsService.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values());
             proPlayerService.update();
             matchService.update();
         }
