@@ -148,12 +148,24 @@ public class StatsService
         return true;
     }
 
+    @CacheEvict(cacheNames = "search-team-count")
+    public void evictCurrentSeasonTeamCountCache
+    (
+        int season,
+        Set<Region> regions,
+        Set<League.LeagueType> leagueTypes,
+        QueueType queueType,
+        TeamType teamType
+    )
+    {
+    }
+
     @CacheEvict
     (
         cacheNames=
         {
             "search-seasons", "search-season-last",
-            "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle", "search-team-count",
+            "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle",
             "search-ladder-league-bounds", "search-ladder-season",
             "search-ladder-stats-queue"
         },
@@ -226,6 +238,19 @@ public class StatsService
         {
             updateSeasonStats(seasonId);
             playerCharacterStatsDAO.mergeCalculateGlobal();
+            resetTeamCountCache(seasonId, queues);
+        }
+    }
+
+    private void resetTeamCountCache(int seasonId, QueueType[] queues)
+    {
+        for(QueueType queue : queues)
+        {
+            for(TeamType teamType : TeamType.values())
+            {
+                statsService.evictCurrentSeasonTeamCountCache(seasonId,
+                    Set.of(Region.values()), Set.of(BaseLeague.LeagueType.values()), queue, teamType);
+            }
         }
     }
 
