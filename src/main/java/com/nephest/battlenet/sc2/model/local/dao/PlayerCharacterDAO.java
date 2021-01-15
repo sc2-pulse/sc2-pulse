@@ -72,6 +72,7 @@ public class PlayerCharacterDAO
         + "LIMIT :limit";
 
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
+    private static ResultSetExtractor<PlayerCharacter> STD_EXTRACTOR;
     private static ResultSetExtractor<BookmarkedResult<List<PlayerCharacter>>> BOOKMARKED_STD_ROW_EXTRACTOR;
 
     private final NamedParameterJdbcTemplate template;
@@ -101,6 +102,12 @@ public class PlayerCharacterDAO
             rs.getString("player_character.name")
         );
 
+        if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
+        {
+            if(!rs.next()) return null;
+            return getStdRowMapper().mapRow(rs, 0);
+        };
+
         if(BOOKMARKED_STD_ROW_EXTRACTOR == null) BOOKMARKED_STD_ROW_EXTRACTOR
             = new SimpleBookmarkedResultSetExtractor<>(STD_ROW_MAPPER, "team.rating", "team.id");
     }
@@ -108,6 +115,11 @@ public class PlayerCharacterDAO
     public static RowMapper<PlayerCharacter> getStdRowMapper()
     {
         return STD_ROW_MAPPER;
+    }
+
+    public static ResultSetExtractor<PlayerCharacter> getStdExtractor()
+    {
+        return STD_EXTRACTOR;
     }
 
     public PlayerCharacter create(PlayerCharacter character)

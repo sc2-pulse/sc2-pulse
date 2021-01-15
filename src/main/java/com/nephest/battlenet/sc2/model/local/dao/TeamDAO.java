@@ -3,12 +3,15 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.local.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
@@ -16,6 +19,9 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.util.*;
 
 @Repository
 public class TeamDAO
@@ -87,6 +93,19 @@ public class TeamDAO
     private static final String CALCULATE_LEAGUE_RANK_QUERY =
         String.format(CALCULATE_RANK_TEMPLATE, "league", ", league_type");
 
+    private static RowMapper<Team> STD_ROW_MAPPER;
+    private static ResultSetExtractor<Team> STD_EXTRACTOR;
+
+    public static final ResultSetExtractor<Optional<Map.Entry<Team, List<TeamMember>>>> BY_FAVOURITE_RACE_EXTRACTOR =
+    (rs)->
+    {
+        if(!rs.next()) return Optional.empty();
+
+        return Optional.of(new AbstractMap.SimpleEntry<Team,List<TeamMember>>(
+            TeamDAO.getStdRowMapper().mapRow(rs, 0),
+            List.of(TeamMemberDAO.STD_ROW_MAPPER.mapRow(rs, 0))));
+    };
+
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -100,6 +119,44 @@ public class TeamDAO
     {
         this.template = template;
         this.conversionService = conversionService;
+        initMappers(conversionService);
+    }
+
+    private static void initMappers(ConversionService conversionService)
+    {
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)-> new Team
+        (
+            rs.getLong("team.id"),
+            rs.getInt("team.season"),
+            conversionService.convert(rs.getInt("team.region"), Region.class),
+            new BaseLeague
+            (
+                conversionService.convert(rs.getInt("team.league_type"), League.LeagueType.class),
+                conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
+                conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
+            ),
+            conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
+            rs.getLong("team.division_id"),
+            ((BigDecimal) rs.getObject("team.battlenet_id")).toBigInteger(),
+            rs.getLong("team.rating"),
+            rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
+            rs.getInt("team.points")
+        );
+        if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
+        {
+            if(!rs.next()) return null;
+            return getStdRowMapper().mapRow(rs, 0);
+        };
+    }
+
+    public static RowMapper<Team> getStdRowMapper()
+    {
+        return STD_ROW_MAPPER;
+    }
+
+    public static ResultSetExtractor<Team> getStdExtractor()
+    {
+        return STD_EXTRACTOR;
     }
 
     public Team create(Team team)

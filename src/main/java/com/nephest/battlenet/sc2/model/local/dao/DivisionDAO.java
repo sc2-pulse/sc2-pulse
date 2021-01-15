@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.local.Division;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -48,12 +49,18 @@ public class DivisionDAO
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
 
-    public final RowMapper<Division> STD_ROW_MAPPER = (rs, num)-> new Division
+    public static final RowMapper<Division> STD_ROW_MAPPER = (rs, num)-> new Division
     (
         rs.getLong("division.id"),
         rs.getLong("division.league_tier_id"),
         rs.getLong("division.battlenet_id")
     );
+
+    public static final ResultSetExtractor<Division> STD_EXTRACTOR = (rs)->
+    {
+        if(!rs.next()) return null;
+        return STD_ROW_MAPPER.mapRow(rs, 0);
+    };
 
     @Autowired
     public DivisionDAO
