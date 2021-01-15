@@ -43,6 +43,7 @@ public class TeamDAO
         + "team.wins AS \"team.wins\", "
         + "team.losses AS \"team.losses\", "
         + "team.ties AS \"team.ties\", "
+        + "team.points AS \"team.points\", "
         + "team.global_rank AS \"team.global_rank\", "
         + "team.region_rank AS \"team.region_rank\", "
         + "team.league_rank AS \"team.league_rank\" ";
