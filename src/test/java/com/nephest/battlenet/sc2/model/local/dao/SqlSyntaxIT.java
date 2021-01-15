@@ -178,6 +178,8 @@ public class SqlSyntaxIT
             .merge(new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 2, "newname#2"));
         assertEquals(2, character.getRealm());
         assertEquals("newname#2", character.getName());
+        assertEquals(character,
+            playerCharacterDAO.findByRegionAndBattlenetId(character.getRegion(), character.getBattlenetId()).get());
 
         teamMemberDAO.create(new TeamMember(zergTeam.getId(), character.getId(), 0, 0, 6, 0));
         teamMemberDAO.create(new TeamMember(team.getId(), character.getId(), 1, 1, 1, 1));

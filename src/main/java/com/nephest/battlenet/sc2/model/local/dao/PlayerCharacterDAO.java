@@ -22,6 +22,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class PlayerCharacterDAO
@@ -70,6 +71,11 @@ public class PlayerCharacterDAO
 
         + "ORDER BY team.rating DESC, team.id DESC, player_character.id DESC "
         + "LIMIT :limit";
+
+    private static final String FIND_BY_REGION_AND_BATTLENET_ID = "SELECT " + STD_SELECT
+        + "FROM player_character "
+        + "WHERE region=:region "
+        + "AND battlenet_id=:battlenetId";
 
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
     private static ResultSetExtractor<PlayerCharacter> STD_EXTRACTOR;
@@ -179,6 +185,14 @@ public class PlayerCharacterDAO
             .addValue("idAnchor", bookmark != null ? bookmark[1] : 0L)
             .addValue("ratingAnchor", bookmark != null ? bookmark[0] : 99999L);
         return template.query(FIND_TOP_PLAYER_CHARACTERS, params, BOOKMARKED_STD_ROW_EXTRACTOR);
+    }
+
+    public Optional<PlayerCharacter> findByRegionAndBattlenetId(Region region, long battlenetId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("battlenetId", battlenetId);
+        return Optional.ofNullable(template.query(FIND_BY_REGION_AND_BATTLENET_ID, params, getStdExtractor()));
     }
 
 }
