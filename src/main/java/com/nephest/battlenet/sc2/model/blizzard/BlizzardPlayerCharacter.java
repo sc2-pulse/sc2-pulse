@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.blizzard;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 
 import javax.validation.constraints.NotNull;
@@ -30,6 +31,13 @@ extends BasePlayerCharacter
     public Long getId()
     {
         return id;
+    }
+
+    @Override
+    @JsonAlias("displayName")
+    public void setName(String name)
+    {
+        super.setName(name);
     }
 
 }
