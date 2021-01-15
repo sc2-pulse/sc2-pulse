@@ -101,6 +101,8 @@ public class TeamDAO
         + "WHERE team.id = cte.id "
         + "AND team.%1$s_rank != cte.rnk";
 
+    private static final Map<Race, String> FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES = new EnumMap<>(Race.class);
+
     private static final String CALCULATE_GLOBAL_RANK_QUERY = String.format(CALCULATE_RANK_TEMPLATE, "global", "");
     private static final String CALCULATE_REGION_RANK_QUERY =
         String.format(CALCULATE_RANK_TEMPLATE, "region", ", region");
@@ -134,6 +136,7 @@ public class TeamDAO
         this.template = template;
         this.conversionService = conversionService;
         initMappers(conversionService);
+        initQueries(conversionService);
     }
 
     private static void initMappers(ConversionService conversionService)
@@ -161,6 +164,25 @@ public class TeamDAO
             if(!rs.next()) return null;
             return getStdRowMapper().mapRow(rs, 0);
         };
+    }
+
+    private static void initQueries(ConversionService conversionService)
+    {
+        if(FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES.isEmpty())
+        {
+            String template =
+                "SELECT " + TeamDAO.STD_SELECT + ", " + TeamMemberDAO.STD_SELECT
+                    + "FROM team_member "
+                    + "INNER JOIN team ON team_member.team_id = team.id "
+                    + "WHERE team_member.player_character_id = :playerCharacterId "
+                    + "AND team_member.%1$s_games_played > 0 "
+                    + "AND team.season = :season "
+                    + "AND team.region = :region "
+                    + "AND team.queue_type = " + conversionService.convert(QueueType.LOTV_1V1, Integer.class) + " "
+                    + "AND team.team_type = " + conversionService.convert(TeamType.ARRANGED, Integer.class);
+            for(Race race : Race.values()) FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES.put(
+                race, String.format(template, race.getName().toLowerCase()));
+        }
     }
 
     public static RowMapper<Team> getStdRowMapper()
@@ -213,6 +235,20 @@ public class TeamDAO
         template.update(CALCULATE_REGION_RANK_QUERY, params);
         template.update(CALCULATE_LEAGUE_RANK_QUERY, params);
         LOG.debug("Calculated team ranks for {} season", season);
+    }
+
+    public Optional<Map.Entry<Team, List<TeamMember>>> find1v1TeamByFavoriteRace
+    (
+        int season,
+        PlayerCharacter playerCharacter,
+        Race race
+    )
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("region", conversionService.convert(playerCharacter.getRegion(), Integer.class))
+            .addValue("playerCharacterId", playerCharacter.getId());
+        return template.query(FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES.get(race), params, BY_FAVOURITE_RACE_EXTRACTOR);
     }
 
     private MapSqlParameterSource createParameterSource(Team team)

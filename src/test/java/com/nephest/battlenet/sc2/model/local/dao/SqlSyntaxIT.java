@@ -22,8 +22,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -140,7 +139,13 @@ public class SqlSyntaxIT
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(), division2.getId(), BigInteger.TEN,
             3L, 3, 3, 3, 3
         );
+        Team zergTeam = new Team
+        (
+            null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(), division2.getId(), BigInteger.TWO,
+            4L, 3, 3, 0, 3
+        );
         teamDAO.create(newTeam);
+        teamDAO.create(zergTeam);
         Team team = teamDAO.merge(mergedTeam);
         assertEquals(2, team.getRating());
         assertEquals(2, team.getWins());
@@ -174,12 +179,18 @@ public class SqlSyntaxIT
         assertEquals(2, character.getRealm());
         assertEquals("newname#2", character.getName());
 
+        teamMemberDAO.create(new TeamMember(zergTeam.getId(), character.getId(), 0, 0, 6, 0));
         teamMemberDAO.create(new TeamMember(team.getId(), character.getId(), 1, 1, 1, 1));
-        TeamMember teamMember = teamMemberDAO.merge(new TeamMember(team.getId(), character.getId(), 2, 2, 2, 2));
-        assertEquals(2, teamMember.getTerranGamesPlayed());
-        assertEquals(2, teamMember.getProtossGamesPlayed());
-        assertEquals(2, teamMember.getZergGamesPlayed());
-        assertEquals(2, teamMember.getRandomGamesPlayed());
+        TeamMember teamMember = teamMemberDAO.merge(new TeamMember(team.getId(), character.getId(), 8, 0, 0, 0));
+        assertEquals(8, teamMember.getTerranGamesPlayed());
+        assertEquals(0, teamMember.getProtossGamesPlayed());
+        assertEquals(0, teamMember.getZergGamesPlayed());
+        assertEquals(0, teamMember.getRandomGamesPlayed());
+
+        assertEquals(zergTeam.getId(),
+            teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
+        assertEquals(team.getId(),teamDAO.find1v1TeamByFavoriteRace(40, character, Race.TERRAN).get().getKey().getId());
+        assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.PROTOSS).isEmpty());
 
         leagueStatsDAO.calculateForSeason(40);
         leagueStatsDAO.mergeCalculateForSeason(40);
