@@ -5,10 +5,13 @@ package com.nephest.battlenet.sc2;
 
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.context.annotation.Profile;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.Executor;
 
 @Profile("!maintenance")
 @Component
@@ -19,9 +22,12 @@ implements ApplicationRunner
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
 
+    @Autowired @Qualifier("taskScheduler")
+    private Executor executor;
+
     @Override
     public void run(ApplicationArguments args)
     {
-        ladderSearchDAO.precache();
+        executor.execute(()->ladderSearchDAO.precache());
     }
 }
