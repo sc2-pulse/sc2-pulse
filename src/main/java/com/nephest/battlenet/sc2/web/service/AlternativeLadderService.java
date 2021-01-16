@@ -26,6 +26,7 @@ import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -95,14 +96,14 @@ public class AlternativeLadderService
     public void discoverSeason(Season season)
     {
         LOG.info("Discovering {} ladders", season);
-        List<Tuple3<Region, BlizzardPlayerCharacter, Long>> profileIds = get1v1ProfileLadderIds(season);
+        ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter, Long>> profileIds = get1v1ProfileLadderIds(season);
         LOG.info("{} {} ladders found", profileIds.size(), season);
         for(Tuple3<Region, BlizzardPlayerCharacter, Long> id : profileIds) saveProfileLadder(season, id);
     }
 
-    private List<Tuple3<Region, BlizzardPlayerCharacter, Long>> get1v1ProfileLadderIds(Season season)
+    private ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter, Long>> get1v1ProfileLadderIds(Season season)
     {
-        List<Tuple3<Region, BlizzardPlayerCharacter, Long>> profileLadderIds = new ArrayList<>();
+        ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter, Long>> profileLadderIds = new ConcurrentLinkedQueue<>();
         long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion(),
             QueueType.LOTV_1V1, TeamType.ARRANGED).orElse(FIRST_DIVISION_ID) + 1;
         AtomicInteger discovered = new AtomicInteger(1);
