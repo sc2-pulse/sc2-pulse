@@ -279,11 +279,6 @@ th.hoverable span
   vertical-align: middle;
 }
 
-#link-battletag img
-{
-    height: 2.6em;
-}
-
 .player-pro::after
 {
   content: "PRO";
