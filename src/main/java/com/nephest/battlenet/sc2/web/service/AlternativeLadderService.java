@@ -16,11 +16,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
 public class AlternativeLadderService
@@ -60,7 +60,7 @@ public class AlternativeLadderService
         this.validator = validator;
     }
 
-    public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 150;
+    public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 50;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
     public void updateSeason(Season season, BaseLeague.LeagueType[] leagues)
@@ -89,16 +89,21 @@ public class AlternativeLadderService
     private List<Tuple3<Region, BlizzardPlayerCharacter, Long>> get1v1ProfileLadderIds(Season season)
     {
         List<Tuple3<Region, BlizzardPlayerCharacter, Long>> profileLadderIds = new ArrayList<>();
-        int errorCount = 0;
         long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion(),
-            QueueType.LOTV_1V1, TeamType.ARRANGED).orElse(FIRST_DIVISION_ID);
-        while(errorCount < ALTERNATIVE_LADDER_ERROR_THRESHOLD)
+            QueueType.LOTV_1V1, TeamType.ARRANGED).orElse(FIRST_DIVISION_ID) + 1;
+        AtomicInteger discovered = new AtomicInteger(1);
+        while(discovered.get() > 0)
         {
-            lastDivision++;
-            Tuple3<Region, BlizzardPlayerCharacter, Long> id = api.getProfileLadderId(season.getRegion(), lastDivision)
-                .onErrorResume(t-> Mono.empty())
-                .block();
-            if(id == null) {errorCount++;} else {profileLadderIds.add(id); errorCount = 0;}
+            discovered.set(0);
+            api.getProfileLadderIds(season.getRegion(), lastDivision,lastDivision + ALTERNATIVE_LADDER_ERROR_THRESHOLD)
+                .doOnNext((id)->{
+                    profileLadderIds.add(id);
+                    discovered.getAndIncrement();
+                })
+                .sequential()
+                .blockLast();
+
+            lastDivision+=ALTERNATIVE_LADDER_ERROR_THRESHOLD;
         }
         return profileLadderIds;
     }

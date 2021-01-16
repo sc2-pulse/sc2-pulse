@@ -31,6 +31,8 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
+import java.util.stream.LongStream;
+
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
 import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
 import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
@@ -241,7 +243,17 @@ public class BlizzardSC2API
                 }
                 return Tuples.of(region, character, ladderId);
             })
+            .doOnError(t->LOG.error(ExceptionUtils.getRootCauseMessage(t)))
             .retryWhen(WebServiceUtil.RETRY_SKIP_NOT_FOUND);
+    }
+
+    public ParallelFlux<Tuple3<Region, BlizzardPlayerCharacter, Long>> getProfileLadderIds
+    (Region region, long from, long toExcluded)
+    {
+        return Flux.fromStream(LongStream.range(from, toExcluded).boxed())
+            .parallel()
+            .runOn(Schedulers.boundedElastic())
+            .flatMap(l->getProfileLadderId(region, l).onErrorResume((t)->Mono.empty()), true, SAFE_REQUESTS_PER_SECOND_CAP);
     }
 
     public Mono<BlizzardProfileLadder> getProfile1v1Ladder(Region region, BlizzardPlayerCharacter character, long ladderId)
