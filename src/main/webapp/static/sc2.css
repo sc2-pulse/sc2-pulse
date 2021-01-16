@@ -378,7 +378,17 @@ th.hoverable span
     overflow-y: scroll;
 }
 
-.modal-header, .modal-footer
+.modal-header
+{
+    background-color: #343a40;
+}
+
+.modal-header, .modal-header .close
+{
+    color: white;
+}
+
+.modal-footer
 {
     background-color: #fcfcfc;
 }
