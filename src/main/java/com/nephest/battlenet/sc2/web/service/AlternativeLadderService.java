@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeamMember;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
@@ -123,7 +125,9 @@ public class AlternativeLadderService
 
     private void saveProfileLadder(Season season, Tuple3<Region, BlizzardPlayerCharacter, Long> id)
     {
-        BlizzardProfileLadder ladder = api.getProfile1v1Ladder(id.getT1(), id.getT2(), id.getT3()).block();
+        //this ladder is prone to errors, skip errors, try to get as much data as possible before failing
+        BlizzardProfileLadder ladder = api.getProfile1v1Ladder(id.getT1(), id.getT2(), id.getT3())
+            .onErrorResume(t->{LOG.error(ExceptionUtils.getRootCauseMessage(t)); return Mono.empty();}).block();
         //ladder might be null if it isn't a 1v1 ladder
         if(ladder == null) return;
 
