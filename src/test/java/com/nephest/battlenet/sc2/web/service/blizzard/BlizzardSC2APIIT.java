@@ -21,6 +21,7 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import reactor.util.function.Tuple3;
+import reactor.util.function.Tuples;
 
 import java.util.Set;
 
@@ -93,7 +94,8 @@ public class BlizzardSC2APIIT
         validator.validate(ladderId.getT2(), errors);
         assertFalse(errors.hasErrors());
 
-        BlizzardProfileLadder ladder = api.getProfile1v1Ladder(ladderId.getT1(), ladderId.getT2(), ladderId.getT3()).block();
+        BlizzardProfileLadder ladder = api
+            .getProfile1v1Ladder(Tuples.of(ladderId.getT1(), ladderId.getT2(), ladderId.getT3())).block();
         BlizzardProfileTeam[] teams = ladder.getLadderTeams();
         assertTrue(teams.length > 0);
         Errors teamErrors = new BeanPropertyBindingResult(teams, teams.toString());
@@ -144,7 +146,7 @@ public class BlizzardSC2APIIT
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, mock(BlizzardTierDivision.class)), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getMatches(SERRAL), VALID_MATCHES, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderId(Region.US, 292783), VALID_LEGACY_LADDER, server, RETRY_COUNT);
-        WebServiceTestUtil.testRetrying(api.getProfile1v1Ladder(Region.US, BLIZZARD_CHARACTER, 292783),
+        WebServiceTestUtil.testRetrying(api.getProfile1v1Ladder(Tuples.of(Region.US, BLIZZARD_CHARACTER, 292783L)),
             VALID_PROFILE_LADDER, server, RETRY_COUNT);
         server.shutdown();
     }

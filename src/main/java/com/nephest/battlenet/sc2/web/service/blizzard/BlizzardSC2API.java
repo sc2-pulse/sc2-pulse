@@ -256,14 +256,16 @@ public class BlizzardSC2API
             .flatMap(l->getProfileLadderId(region, l).onErrorResume((t)->Mono.empty()), true, SAFE_REQUESTS_PER_SECOND_CAP);
     }
 
-    public Mono<BlizzardProfileLadder> getProfile1v1Ladder(Region region, BlizzardPlayerCharacter character, long ladderId)
+    public Mono<BlizzardProfileLadder> getProfile1v1Ladder(Tuple3<Region, BlizzardPlayerCharacter, Long> id)
     {
+        Region region = id.getT1();
+        BlizzardPlayerCharacter character = id.getT2();
         return getWebClient()
             .get()
             .uri
             (
                 regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/profile/{0}/{1}/{2}/ladder/{1}"),
-                region.getId(), character.getRealm(), character.getId(), ladderId
+                region.getId(), character.getRealm(), character.getId(), id.getT3()
             )
             .accept(APPLICATION_JSON)
             .retrieve()

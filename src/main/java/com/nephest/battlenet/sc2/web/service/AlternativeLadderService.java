@@ -127,7 +127,7 @@ public class AlternativeLadderService
     private void saveProfileLadder(Season season, Tuple3<Region, BlizzardPlayerCharacter, Long> id)
     {
         //this ladder is prone to errors, skip errors, try to get as much data as possible before failing
-        BlizzardProfileLadder ladder = api.getProfile1v1Ladder(id.getT1(), id.getT2(), id.getT3())
+        BlizzardProfileLadder ladder = api.getProfile1v1Ladder(id)
             .onErrorResume(t->{LOG.error(ExceptionUtils.getRootCauseMessage(t)); return Mono.empty();}).block();
         //ladder might be null if it isn't a 1v1 ladder
         if(ladder == null) return;
