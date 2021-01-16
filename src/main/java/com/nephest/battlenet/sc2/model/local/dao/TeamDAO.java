@@ -141,24 +141,28 @@ public class TeamDAO
 
     private static void initMappers(ConversionService conversionService)
     {
-        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)-> new Team
-        (
-            rs.getLong("team.id"),
-            rs.getInt("team.season"),
-            conversionService.convert(rs.getInt("team.region"), Region.class),
-            new BaseLeague
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)->
+        {
+            BigDecimal idDec = (BigDecimal) rs.getObject("team.battlenet_id");
+            return new Team
             (
-                conversionService.convert(rs.getInt("team.league_type"), League.LeagueType.class),
-                conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
-                conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
-            ),
-            conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
-            rs.getLong("team.division_id"),
-            ((BigDecimal) rs.getObject("team.battlenet_id")).toBigInteger(),
-            rs.getLong("team.rating"),
-            rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
-            rs.getInt("team.points")
-        );
+                rs.getLong("team.id"),
+                rs.getInt("team.season"),
+                conversionService.convert(rs.getInt("team.region"), Region.class),
+                new BaseLeague
+                    (
+                        conversionService.convert(rs.getInt("team.league_type"), League.LeagueType.class),
+                        conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
+                        conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
+                    ),
+                conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
+                rs.getLong("team.division_id"),
+                idDec == null ? null : idDec.toBigInteger(),
+                rs.getLong("team.rating"),
+                rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
+                rs.getInt("team.points")
+            );
+        };
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
         {
             if(!rs.next()) return null;

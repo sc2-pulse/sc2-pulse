@@ -22,7 +22,6 @@ implements java.io.Serializable
     @NotNull
     private Long divisionId;
 
-    @NotNull
     private BigInteger battlenetId;
 
     @NotNull
@@ -96,20 +95,18 @@ implements java.io.Serializable
     @Override
     public int hashCode()
     {
-        return Objects.hash(getSeason(), getRegion(), getBattlenetId());
+        return Objects.hash(getBattlenetId(), getSeason(), getRegion());
     }
 
     @Override
-    public boolean equals(Object other)
+    public boolean equals(Object o)
     {
-        if(other == null) return false;
-        if(other == this) return true;
-        if( !(other instanceof Team) ) return false;
-
-        Team otherTeam = (Team) other;
-        return getSeason().equals(otherTeam.getSeason())
-            && getRegion() == otherTeam.getRegion()
-            && getBattlenetId().equals(otherTeam.getBattlenetId());
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Team team = (Team) o;
+        return Objects.equals(getBattlenetId(), team.getBattlenetId())
+            && getSeason().equals(team.getSeason())
+            && getRegion() == team.getRegion();
     }
 
     @Override
