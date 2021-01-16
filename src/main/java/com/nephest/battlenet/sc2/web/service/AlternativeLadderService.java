@@ -13,6 +13,8 @@ import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
@@ -27,6 +29,9 @@ public class AlternativeLadderService
 {
 
     public static final long FIRST_DIVISION_ID = 33080L;
+
+    @Autowired
+    private AlternativeLadderService alternativeLadderService;
 
     private final BlizzardSC2API api;
     private final LeagueDAO leagueDao;
@@ -114,10 +119,11 @@ public class AlternativeLadderService
         //ladder might be null if it isn't a 1v1 ladder
         if(ladder == null) return;
 
-        updateTeams(season, id, ladder);
+        alternativeLadderService.updateTeams(season, id, ladder);
     }
 
-    private void updateTeams(Season season, Tuple3<Region, BlizzardPlayerCharacter, Long> id, BlizzardProfileLadder ladder)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateTeams(Season season, Tuple3<Region, BlizzardPlayerCharacter, Long> id, BlizzardProfileLadder ladder)
     {
         Division division = getOrCreate1v1Division(season, ladder.getLeagueType(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
