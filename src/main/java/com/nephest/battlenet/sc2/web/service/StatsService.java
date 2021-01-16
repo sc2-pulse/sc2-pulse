@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -39,6 +40,10 @@ public class StatsService
     @Autowired
     private StatsService statsService;
 
+    @Value("${com.nephest.battlenet.sc2.ladder.alternative:#{'false'}}")
+    private String alternative;
+
+    private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
     private SeasonDAO seasonDao;
     private LeagueDAO leagueDao;
@@ -60,6 +65,7 @@ public class StatsService
     @Autowired
     public StatsService
     (
+        AlternativeLadderService alternativeLadderService,
         BlizzardSC2API api,
         SeasonDAO seasonDao,
         LeagueDAO leagueDao,
@@ -75,6 +81,7 @@ public class StatsService
         Validator validator
     )
     {
+        this.alternativeLadderService = alternativeLadderService;
         this.api = api;
         this.seasonDao = seasonDao;
         this.leagueDao = leagueDao;
@@ -230,7 +237,7 @@ public class StatsService
         {
             BlizzardSeason bSeason = api.getCurrentOrLastSeason(region).block();
             Season season = seasonDao.merge(Season.of(bSeason, region));
-            updateLeagues(bSeason, season, queues, leagues, true);
+            updateOrAlternativeUpdate(bSeason, season, queues, leagues, true);
             seasonId = season.getBattlenetId();
             LOG.debug("Updated leagues: {} {}", seasonId, region);
         }
@@ -239,6 +246,26 @@ public class StatsService
             updateSeasonStats(seasonId);
             playerCharacterStatsDAO.mergeCalculateGlobal();
             resetTeamCountCache(seasonId, queues);
+        }
+    }
+
+    private void updateOrAlternativeUpdate
+    (BlizzardSeason bSeason, Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean currentSeason)
+    {
+        if(!alternative.equals("true"))
+        {
+            updateLeagues(bSeason, season, queues, leagues, currentSeason);
+        }
+        else
+        {
+            if(leagues.length < BaseLeague.LeagueType.values().length)
+            {
+                alternativeLadderService.updateSeason(season, leagues);
+            }
+            else
+            {
+                alternativeLadderService.discoverSeason(season);
+            }
         }
     }
 
