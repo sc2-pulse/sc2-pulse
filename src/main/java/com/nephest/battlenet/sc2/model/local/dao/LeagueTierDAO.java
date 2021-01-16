@@ -3,7 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -15,6 +15,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+
+import java.util.Optional;
 
 @Repository
 public class LeagueTierDAO
@@ -36,6 +38,17 @@ public class LeagueTierDAO
         + "ON CONFLICT(league_id, type) DO UPDATE SET "
         + "min_rating=excluded.min_rating, "
         + "max_rating=excluded.max_rating";
+
+    private static final String FIND_BY_LADDER_QUERY =
+        "SELECT " + STD_SELECT + " FROM league_tier "
+        + "INNER JOIN league ON league_tier.league_id = league.id "
+        + "INNER JOIN season ON league.season_id = season.id "
+        + "WHERE season.battlenet_id = :season "
+        + "AND season.region = :region "
+        + "AND league.type = :leagueType "
+        + "AND league.queue_type = :queueType "
+        + "AND league.team_type = :teamType "
+        + "AND league_tier.type = :tierType";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -107,6 +120,19 @@ public class LeagueTierDAO
             .addValue("type", conversionService.convert(tier.getType(), Integer.class))
             .addValue("minRating", tier.getMinRating())
             .addValue("maxRating", tier.getMaxRating());
+    }
+
+    public Optional<LeagueTier> findByLadder
+    (int season, Region region, BaseLeague.LeagueType leagueType, QueueType queueType, TeamType teamType, BaseLeagueTier.LeagueTierType tierType)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("leagueType", conversionService.convert(leagueType, Integer.class))
+            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("teamType", conversionService.convert(teamType, Integer.class))
+            .addValue("tierType", conversionService.convert(tierType, Integer.class));
+        return Optional.ofNullable(template.query(FIND_BY_LADDER_QUERY, params, getStdExtractor()));
     }
 
 }

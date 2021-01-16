@@ -110,6 +110,12 @@ public class SqlSyntaxIT
         LeagueTier tier2 = leagueTierDAO.merge(new LeagueTier(null, league2.getId(), LeagueTier.LeagueTierType.SECOND, 1, 2));
         assertEquals(1, tier.getMinRating());
         assertEquals(2, tier.getMaxRating());
+        LeagueTier tierFound = leagueTierDAO
+            .findByLadder(40, region, league.getType(), league.getQueueType(), league.getTeamType(), tier.getType()).orElse(null);
+        assertNotNull(tierFound);
+        assertEquals(1, tierFound.getMinRating());
+        assertEquals(2, tierFound.getMaxRating());
+        assertEquals(tier, tierFound);
 
         divisionDAO.create(new Division(null, tier.getId(), 1L));
         Division division = divisionDAO.merge(new Division(null, tier.getId(), 1L));
