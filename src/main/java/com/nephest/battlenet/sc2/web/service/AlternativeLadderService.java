@@ -11,6 +11,8 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeamMember;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -27,6 +29,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Service
 public class AlternativeLadderService
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(AlternativeLadderService.class);
 
     public static final long FIRST_DIVISION_ID = 33080L;
 
@@ -70,6 +74,7 @@ public class AlternativeLadderService
 
     public void updateSeason(Season season, BaseLeague.LeagueType[] leagues)
     {
+        LOG.debug("Updating season {}", season);
         Map<Division, PlayerCharacter> ladderIds = divisionDao.findProfileDivisionIds
         (
             season.getBattlenetId(),
@@ -87,7 +92,9 @@ public class AlternativeLadderService
 
     public void discoverSeason(Season season)
     {
+        LOG.info("Discovering {} ladders", season);
         List<Tuple3<Region, BlizzardPlayerCharacter, Long>> profileIds = get1v1ProfileLadderIds(season);
+        LOG.info("{} {} ladders found", profileIds.size(), season);
         for(Tuple3<Region, BlizzardPlayerCharacter, Long> id : profileIds) saveProfileLadder(season, id);
     }
 
@@ -104,6 +111,7 @@ public class AlternativeLadderService
                 .doOnNext((id)->{
                     profileLadderIds.add(id);
                     discovered.getAndIncrement();
+                    LOG.debug("Ladder discovered: {} {}", id.getT1(), id.getT3());
                 })
                 .sequential()
                 .blockLast();
@@ -151,6 +159,7 @@ public class AlternativeLadderService
             members.add(member);
         }
         if(members.size() > 0) teamMemberDao.merge(members.toArray(new TeamMember[0]));
+        LOG.debug("Ladder saved: {} {}", id.getT1(), id.getT3());
     }
 
     private Division getOrCreate1v1Division(Season season, BaseLeague.LeagueType leagueType, long battlenetId)
