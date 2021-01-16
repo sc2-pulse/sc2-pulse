@@ -155,17 +155,8 @@ public class StatsService
         return true;
     }
 
-    @CacheEvict(cacheNames = "search-team-count")
-    public void evictCurrentSeasonTeamCountCache
-    (
-        int season,
-        Set<Region> regions,
-        Set<League.LeagueType> leagueTypes,
-        QueueType queueType,
-        TeamType teamType
-    )
-    {
-    }
+    @CacheEvict(cacheNames = "search-team-count", allEntries = true)
+    public void evictCurrentSeasonTeamCountCache(){}
 
     @CacheEvict
     (
@@ -245,7 +236,7 @@ public class StatsService
         {
             updateSeasonStats(seasonId);
             playerCharacterStatsDAO.mergeCalculateGlobal();
-            resetTeamCountCache(seasonId, queues);
+            statsService.evictCurrentSeasonTeamCountCache();
         }
     }
 
@@ -265,18 +256,6 @@ public class StatsService
             else
             {
                 alternativeLadderService.discoverSeason(season);
-            }
-        }
-    }
-
-    private void resetTeamCountCache(int seasonId, QueueType[] queues)
-    {
-        for(QueueType queue : queues)
-        {
-            for(TeamType teamType : TeamType.values())
-            {
-                statsService.evictCurrentSeasonTeamCountCache(seasonId,
-                    Set.of(Region.values()), Set.of(BaseLeague.LeagueType.values()), queue, teamType);
             }
         }
     }
