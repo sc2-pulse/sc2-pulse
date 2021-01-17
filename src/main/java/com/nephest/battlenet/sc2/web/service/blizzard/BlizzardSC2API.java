@@ -297,6 +297,17 @@ public class BlizzardSC2API
             BaseLeague.LeagueType.from(root.at("/league").asText()));
     }
 
+    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter, Long>>> getProfile1v1Ladders
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter, Long>> ids)
+    {
+        return Flux.fromIterable(ids)
+            .parallel()
+            .runOn(Schedulers.boundedElastic())
+            .flatMap(id->getProfile1v1Ladder(id)
+                .onErrorResume(t->{LOG.error(ExceptionUtils.getRootCauseMessage(t)); return Mono.empty();})
+                .zipWith(Mono.just(id)), true, SAFE_REQUESTS_PER_SECOND_CAP);
+    }
+
     public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)
     {
         return getWebClient()
