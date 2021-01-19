@@ -62,4 +62,32 @@ public class Cron
         }
     }
 
+    @Scheduled(cron="0 */30 0-1,4-11,13-23 * * *")
+    public void updateTop()
+    {
+        try
+        {
+            statsService.updateCurrent
+            (
+                new Region[]{Region.US, Region.EU, Region.KR},
+                new QueueType[]{QueueType.LOTV_1V1},
+                new BaseLeague.LeagueType[]
+                {
+                    BaseLeague.LeagueType.GRANDMASTER,
+                    BaseLeague.LeagueType.MASTER,
+                    BaseLeague.LeagueType.DIAMOND
+                }
+            );
+        }
+        catch(RuntimeException ex)
+        {
+            //API can be broken randomly. All we can do at this point is log the exception.
+            LOG.error(ex.getMessage(), ex);
+        }
+        finally
+        {
+            ladderSearchDAO.precache();
+        }
+    }
+
 }
