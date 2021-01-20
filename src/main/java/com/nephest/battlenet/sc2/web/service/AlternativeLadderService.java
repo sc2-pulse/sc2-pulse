@@ -156,6 +156,8 @@ public class AlternativeLadderService
 
             Map.Entry<Team, List<TeamMember>> teamEntry =
                 updateOrCreate1v1Team(season, playerCharacter, bTeam, ladder.getLeagueType(), division);
+            //old team, nothing to update
+            if(teamEntry.getKey() == null) continue;
             TeamMember member = teamEntry.getValue().get(0);
             member.setGamesPlayed(bMember.getFavoriteRace(), bTeam.getWins() + bTeam.getLosses());
             members.add(member);
@@ -220,7 +222,7 @@ public class AlternativeLadderService
             team.setWins(bTeam.getWins());
             team.setLosses(bTeam.getLosses());
             team.setPoints(bTeam.getPoints());
-            teamDao.mergeById(team);
+            if(teamDao.mergeById(team) == null) return new AbstractMap.SimpleEntry<>(null, null);
             return teamEntry;
         }
 

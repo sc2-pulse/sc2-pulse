@@ -430,6 +430,8 @@ public class StatsService
             if(!errors.hasErrors() && isValidTeam(bTeam, memberCount))
             {
                 Team team = saveTeam(season, league, tier, division, bTeam);
+                //old team, nothing to update
+                if(team == null) continue;
                 extractTeamMembers(bTeam.getMembers(), members, season, team);
             }
         }

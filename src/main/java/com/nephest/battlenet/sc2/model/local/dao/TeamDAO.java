@@ -78,7 +78,8 @@ public class TeamDAO
         + "points=excluded.points, "
         + "wins=excluded.wins, "
         + "losses=excluded.losses, "
-        + "ties=excluded.ties";
+        + "ties=excluded.ties "
+        + "WHERE team.wins + team.losses + team.ties <> excluded.wins + excluded.losses + excluded.ties";
 
     private static final String MERGE_QUERY = CREATE_QUERY + String.format(MERGE_TEMPLATE, "region, battlenet_id", "");
 
@@ -213,21 +214,30 @@ public class TeamDAO
         return team;
     }
 
+    /*
+        Profile ladders do not have last played field, so the only way to filter out the teams is comparing total
+        games played when inserting a team into the db.
+        Returning nulls here to tell that there were no modifications made, so the update chain could be interrupted
+     */
     public Team merge(Team team)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(team);
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        team.setId(keyHolder.getKey().longValue());
-        return team;
+        int updated = template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
+        if(updated > 0)
+        {
+            team.setId(keyHolder.getKey().longValue());
+            return team;
+        }
+        return null;
     }
 
     public Team mergeById(Team team)
     {
         MapSqlParameterSource params = createParameterSource(team);
         params.addValue("id", team.getId());
-        template.update(MERGE_BY_ID_QUERY, params);
-        return team;
+        if(template.update(MERGE_BY_ID_QUERY, params) > 0) return team;
+        return null;
     }
 
     public Optional<Team> findById(long id)

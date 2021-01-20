@@ -140,6 +140,11 @@ public class SqlSyntaxIT
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.ONE,
             2L, 2, 2, 2, 2
         );
+        Team sameTeam = new Team
+        (
+            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.ONE,
+            2L, 2, 2, 2, 2
+        );
         Team mergedByIdTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(), division2.getId(), BigInteger.TEN,
@@ -153,14 +158,18 @@ public class SqlSyntaxIT
         teamDAO.create(newTeam);
         teamDAO.create(zergTeam);
         Team team = teamDAO.merge(mergedTeam);
+        assertNotNull(team.getId());
         assertEquals(2, team.getRating());
         assertEquals(2, team.getWins());
         assertEquals(2, team.getLosses());
         assertEquals(2, team.getTies());
         assertEquals(2, team.getPoints());
+        assertNull(teamDAO.merge(team));
+        assertNull(teamDAO.merge(sameTeam));
         mergedByIdTeam.setId(team.getId());
         teamDAO.mergeById(mergedByIdTeam);
         Team foundTeam = teamDAO.findById(mergedByIdTeam.getId()).orElse(null);
+        assertEquals(mergedByIdTeam.getId(), foundTeam.getId());
         assertNotNull(foundTeam);
         assertEquals(league2.getType(), foundTeam.getLeague().getType());
         assertEquals(league2.getQueueType(), foundTeam.getLeague().getQueueType());
