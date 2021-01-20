@@ -181,6 +181,26 @@ CREATE TABLE "team_member"
 
 CREATE INDEX "ix_fk_team_member_player_character_id" ON "team_member"("player_character_id");
 
+CREATE TABLE "team_state"
+(
+    "team_id" BIGINT NOT NULL,
+    "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "division_id" BIGINT NOT NULL,
+    "games" SMALLINT NOT NULL,
+    "rating" SMALLINT NOT NULL,
+
+    PRIMARY KEY ("team_id", "timestamp"),
+
+    CONSTRAINT "fk_team_state_team_id"
+        FOREIGN KEY ("team_id")
+        REFERENCES "team"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_team_state_division_id"
+        FOREIGN KEY ("division_id")
+        REFERENCES "division"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE "queue_stats"
 (
     "id" BIGSERIAL,

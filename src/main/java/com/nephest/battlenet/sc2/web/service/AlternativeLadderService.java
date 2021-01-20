@@ -42,6 +42,7 @@ public class AlternativeLadderService
     private final LeagueTierDAO leagueTierDao;
     private final DivisionDAO divisionDao;
     private final TeamDAO teamDao;
+    private final TeamStateDAO teamStateDAO;
     private final PlayerCharacterDAO playerCharacterDao;
     private final TeamMemberDAO teamMemberDao;
     private final Validator validator;
@@ -54,6 +55,7 @@ public class AlternativeLadderService
         LeagueTierDAO leagueTierDao,
         DivisionDAO divisionDao,
         TeamDAO teamDao,
+        TeamStateDAO teamStateDAO,
         PlayerCharacterDAO playerCharacterDao,
         TeamMemberDAO teamMemberDao,
         Validator validator
@@ -64,6 +66,7 @@ public class AlternativeLadderService
         this.leagueTierDao = leagueTierDao;
         this.divisionDao = divisionDao;
         this.teamDao = teamDao;
+        this.teamStateDAO = teamStateDAO;
         this.playerCharacterDao = playerCharacterDao;
         this.teamMemberDao = teamMemberDao;
         this.validator = validator;
@@ -137,6 +140,7 @@ public class AlternativeLadderService
     {
         Division division = getOrCreate1v1Division(season, ladder.getLeagueType(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
+        Set<TeamState> states = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
         for(BlizzardProfileTeam bTeam : ladder.getLadderTeams())
         {
             Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
@@ -161,8 +165,10 @@ public class AlternativeLadderService
             TeamMember member = teamEntry.getValue().get(0);
             member.setGamesPlayed(bMember.getFavoriteRace(), bTeam.getWins() + bTeam.getLosses());
             members.add(member);
+            states.add(TeamState.of(teamEntry.getKey()));
         }
         if(members.size() > 0) teamMemberDao.merge(members.toArray(new TeamMember[0]));
+        teamStateDAO.saveState(states.toArray(TeamState[]::new));
         LOG.debug("Ladder saved: {} {}", id.getT1(), id.getT3());
     }
 

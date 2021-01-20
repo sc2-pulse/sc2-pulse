@@ -49,6 +49,9 @@ public class LadderController
     @Autowired
     private LadderMatchDAO ladderMatchDAO;
 
+    @Autowired
+    private LadderTeamStateDAO ladderTeamStateDAO;
+
     @GetMapping("/ladder")
     public PagedSearchResult<List<LadderTeam>> getLadder
     (
@@ -265,7 +268,8 @@ public class LadderController
             ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id),
             playerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
-            ladderMatchDAO.findMatchesByCharacterId(id)
+            ladderMatchDAO.findMatchesByCharacterId(id),
+            ladderTeamStateDAO.find(id)
         );
     }
 

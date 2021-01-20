@@ -50,6 +50,7 @@ public class StatsService
     private LeagueTierDAO leagueTierDao;
     private DivisionDAO divisionDao;
     private TeamDAO teamDao;
+    private TeamStateDAO teamStateDAO;
     private AccountDAO accountDao;
     private PlayerCharacterDAO playerCharacterDao;
     private TeamMemberDAO teamMemberDao;
@@ -72,6 +73,7 @@ public class StatsService
         LeagueTierDAO leagueTierDao,
         DivisionDAO divisionDao,
         TeamDAO teamDao,
+        TeamStateDAO teamStateDAO,
         AccountDAO accountDao,
         PlayerCharacterDAO playerCharacterDao,
         TeamMemberDAO teamMemberDao,
@@ -88,6 +90,7 @@ public class StatsService
         this.leagueTierDao = leagueTierDao;
         this.divisionDao = divisionDao;
         this.teamDao = teamDao;
+        this.teamStateDAO = teamStateDAO;
         this.accountDao = accountDao;
         this.playerCharacterDao = playerCharacterDao;
         this.teamMemberDao = teamMemberDao;
@@ -423,6 +426,7 @@ public class StatsService
     {
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         Set<TeamMember> members = new HashSet<>(bTeams.length * memberCount, 1f);
+        Set<TeamState> states = new HashSet<>(bTeams.length, 1f);
         for (BlizzardTeam bTeam : bTeams)
         {
             Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
@@ -433,9 +437,11 @@ public class StatsService
                 //old team, nothing to update
                 if(team == null) continue;
                 extractTeamMembers(bTeam.getMembers(), members, season, team);
+                states.add(TeamState.of(team));
             }
         }
         if(members.size() > 0) teamMemberDao.merge(members.toArray(TeamMember[]::new));
+        if(states.size() > 0) teamStateDAO.saveState(states.toArray(TeamState[]::new));
     }
 
     private Team saveTeam
