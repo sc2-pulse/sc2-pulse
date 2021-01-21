@@ -138,6 +138,8 @@ class TableUtil
         const rows = mode === "foot"
             ? elem.querySelectorAll(":scope tfoot tr")
             : elem.querySelectorAll(":scope tbody tr");
+        if(rows.length == 0) return {headers: headers, rowHeaders: rowHeaders, values: allVals, colors: colors};
+
         const startIx = rows[0].getElementsByTagName("th").length > 0 ? 1 : 0;
         for (let i = startIx; i < headings.length; i++)
         {
