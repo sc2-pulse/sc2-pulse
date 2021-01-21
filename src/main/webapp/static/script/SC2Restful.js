@@ -37,6 +37,7 @@ class SC2Restful
         BootstrapUtil.enhanceCollapsibles();
         LadderUtil.enhanceLadderForm();
         CharacterUtil.enhanceSearchForm();
+        CharacterUtil.enhanceMmrForm();
         LadderUtil.enhanceMyLadderForm();
         FollowUtil.enhanceFollowButtons();
         BootstrapUtil.enhanceTabs();

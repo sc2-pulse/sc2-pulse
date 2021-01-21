@@ -59,6 +59,7 @@ class CharacterUtil
                 CharacterUtil.updateCharacterTeamsView();
                 CharacterUtil.updateCharacterStatsView();
                 CharacterUtil.updateCharacterLinkedCharactersView(id);
+                CharacterUtil.updateCharacterMmrHistoryView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
@@ -250,6 +251,49 @@ class CharacterUtil
         }
     }
 
+    static updateCharacterMmrHistoryView()
+    {
+        const queueFilterSelect = document.getElementById("mmr-queue-filter");
+        const queue = EnumUtil.enumOfFullName(queueFilterSelect.options[queueFilterSelect.selectedIndex].value, TEAM_FORMAT);
+        const queueFilter = queue.code;
+        const excludeStart = document.getElementById("mmr-exclude-start").value || 0;
+        const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
+
+        const mmrHistory = CharacterUtil.filterMmrHistory(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history,
+            queueFilter, excludeStart, excludeEnd);
+        const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime);
+        const data = [];
+        for(const [dateTime, histories] of mmrHistoryGroped.entries())
+        {
+            data[dateTime] = {};
+            for(const history of histories) data[dateTime][history.race] = history.teamState.rating;
+        }
+
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("player-stats-mmr-table"),
+            data,
+            (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order,
+            (name)=>EnumUtil.enumOfName(name, RACE).name,
+            (dateTime)=>
+            {
+                const dateTimeObj = Util.parseIsoDateTime(dateTime);
+                return Util.DATE_TIME_FORMAT.format(dateTimeObj) + " (" + Util.DATE_FORMAT.format(dateTimeObj) + ")"
+            }
+        );
+        document.getElementById("mmr-history-filters").textContent =
+            "(" + queue.name + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
+              + mmrHistory.length  + " entries)";
+    }
+
+    static filterMmrHistory(history, queueFilter, excludeStart, excludeEnd)
+    {
+        let filtered = history.filter(h=>h.league.queueType == queueFilter && h.league.teamType == 0);
+        if(excludeEnd > 0)
+            filtered = filtered.filter(h=>h.teamState.rating < excludeStart || h.teamState.rating >= excludeEnd);
+        return filtered;
+    }
+
     static updateCharacterLinkedCharactersView(id)
     {
         const table = document.getElementById("linked-characters-table");
@@ -436,6 +480,23 @@ class CharacterUtil
                 CharacterUtil.findCharactersByName();
             }
         );
+    }
+
+    static enhanceMmrForm()
+    {
+        document.getElementById("mmr-queue-filter").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
+        document.getElementById("mmr-exclude-start").addEventListener("input", evt=>
+        {
+            const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
+            if(prev != null)  window.clearTimeout(prev);
+            ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT))
+        });
+        document.getElementById("mmr-exclude-end").addEventListener("input", evt=>
+        {
+            const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
+            if(prev != null)  window.clearTimeout(prev);
+            ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT))
+        });
     }
 
 }

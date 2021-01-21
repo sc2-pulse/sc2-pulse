@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::section}, ~{::#script-additional})}">
 <head>
     <title>Stats - SC2 Pulse</title>
@@ -729,6 +730,20 @@
                                 </li>
                                 <li class="nav-item">
                                     <a
+                                            id="player-stats-mmr-tab"
+                                            class="nav-link"
+                                            data-toggle="pill"
+                                            data-target="#player-stats-mmr"
+                                            href="#player-stats-mmr"
+                                            role="tab"
+                                            aria-controls="player-stats-mmr"
+                                            aria-selected="false"
+                                    >
+                                        MMR
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a
                                             id="player-stats-history-tab"
                                             class="nav-link"
                                             data-toggle="pill"
@@ -804,6 +819,54 @@
                                             > 90% of games as a specific race
                                         </p>
                                     </aside>
+                                </section>
+                            </section>
+                            <section id="player-stats-mmr" class="tab-pane fade" data-view-title="MMR history">
+                                <section id="character-mmr-section">
+                                    <h3>Solo MMR history
+                                        <span class="fullscreen-toggle align-middle" data-target="player-stats-mmr"></span></h3>
+                                    <div id="mmr-history-filters"></div>
+                                    <form>
+                                        <div class="form-row">
+                                        <div class="form-group col">
+                                            <label for="mmr-queue-filter" class="text-nowrap">Team format</label>
+                                            <select id="mmr-queue-filter" class="form-control text-center">
+                                                <option value="LOTV_1V1" selected="selected">1V1</option>
+                                                <option value="LOTV_2V2">2V2</option>
+                                                <option value="LOTV_3V3">3V3</option>
+                                                <option value="LOTV_4V4">4V4</option>
+                                            </select>
+                                        </div>
+                                        <div class="form-group col">
+                                            <label for="mmr-exclude-start" class="text-nowrap">Exclude from</label>
+                                            <input id="mmr-exclude-start" class="form-control text-center" type="number" min="0" list="mmr-range-list"/>
+                                        </div>
+                                        <div class="form-group col">
+                                            <label for="mmr-exclude-end" class="text-nowrap">Exclude to</label>
+                                            <input id="mmr-exclude-end" class="form-control text-center" type="number" min="0" list="mmr-range-list">
+                                        </div>
+                                        <datalist id="mmr-range-list">
+                                            <option value="3000">
+                                            <option value="4000">
+                                            <option value="5000">
+                                            <option value="6000">
+                                            <option value="7000">
+                                        </datalist>
+                                        </div>
+                                    </form>
+                                    <table
+                                            id="player-stats-mmr-table"
+                                            class="chartable"
+                                            data-chart-type="line"
+                                            data-chart-tooltip-percentage="false"
+                                            data-chart-id="player-stats-mmr-chart"
+                                            data-chart-x-title="Date" data-chart-y-title="MMR"
+                                            data-chart-performance="fast"
+                                    >
+                                        <thead><tr></tr></thead>
+                                        <tbody><tr></tr></tbody>
+                                    </table>
+                                    <div id="player-stats-mmr-chart-container" class="container-chart"><canvas id="player-stats-mmr-chart" class="c-chart"></canvas></div>
                                 </section>
                             </section>
                             <section id="player-stats-history" class="tab-pane fade" data-view-title="Teams">
