@@ -298,6 +298,23 @@ class ElementUtil
         }
     }
 
+    static enhanceFullscreenToggles()
+    {
+        for(const toggle of document.querySelectorAll(".fullscreen-toggle")) toggle.addEventListener("click", ElementUtil.onFullScreenToggle);
+    }
+
+    static onFullScreenToggle(evt)
+    {
+        if(document.fullscreenElement == null)
+        {
+            document.getElementById(evt.target.getAttribute("data-target")).requestFullscreen();
+        }
+        else
+        {
+            document.exitFullscreen();
+        }
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();

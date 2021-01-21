@@ -408,6 +408,23 @@ th.hoverable span
     text-align: left;
 }
 
+:fullscreen
+{
+    background-color: white;
+}
+
+.fullscreen-toggle
+{
+    content: url("icon/misc/enlarge.svg");
+    cursor: pointer;
+    height: 1em;
+}
+
+:fullscreen .fullscreen-toggle
+{
+    content: url("icon/misc/shrink.svg");
+}
+
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;
