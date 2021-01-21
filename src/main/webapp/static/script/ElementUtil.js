@@ -318,6 +318,7 @@ class ElementUtil
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
+ElementUtil.INPUT_TIMEOUTS = new Map();
 ElementUtil.TITLE_CONSTRUCTORS = new Map();
 ElementUtil.DESCRIPTION_CONSTRUCTORS = new Map();
 ElementUtil.NEGATION_PREFIX = "neg-";
