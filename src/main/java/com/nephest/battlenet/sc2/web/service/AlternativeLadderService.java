@@ -153,10 +153,11 @@ public class AlternativeLadderService
             //skip new players for now
             if(playerCharacter == null) continue;
 
-            String name = playerCharacter.getName().startsWith(bMember.getName())
-                ? playerCharacter.getName() : bMember.getName() + "#1";
-            playerCharacter.setName(name);
-            playerCharacterDao.merge(playerCharacter);
+            if(!playerCharacter.getName().startsWith(bMember.getName()))
+            {
+                playerCharacter.setName(bMember.getName() + "#1");
+                playerCharacterDao.merge(playerCharacter);
+            }
 
             Map.Entry<Team, List<TeamMember>> teamEntry =
                 updateOrCreate1v1Team(season, playerCharacter, bTeam, ladder.getLeagueType(), division);
