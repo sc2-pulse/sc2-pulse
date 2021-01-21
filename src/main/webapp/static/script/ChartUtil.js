@@ -6,34 +6,41 @@ class ChartUtil
 
     static createChart(chartable)
     {
-        const type = chartable.getAttribute("data-chart-type");
-        const stacked = chartable.getAttribute("data-chart-stacked");
-        const title = chartable.getAttribute("data-chart-title");
-        const xTitle = chartable.getAttribute("data-chart-x-title");
-        const yTitle = chartable.getAttribute("data-chart-y-title");
-        const tooltipPercentage = chartable.getAttribute("data-chart-tooltip-percentage");
-        const tooltipSort = chartable.getAttribute("data-chart-tooltip-sort");
-        const ctx = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
-        const data = ChartUtil.collectChartJSData(chartable);
-        ChartUtil.decorateChartData(data, type);
+        const config = {};
+        config["type"] = chartable.getAttribute("data-chart-type");
+        config["stacked"] = chartable.getAttribute("data-chart-stacked");
+        config["title"] = chartable.getAttribute("data-chart-title");
+        config["xTitle"] = chartable.getAttribute("data-chart-x-title");
+        config["yTitle"] = chartable.getAttribute("data-chart-y-title");
+        config["tooltipPercentage"] = chartable.getAttribute("data-chart-tooltip-percentage");
+        config["tooltipSort"] = chartable.getAttribute("data-chart-tooltip-sort");
+        config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
+        config["data"] = ChartUtil.collectChartJSData(chartable);
+
+        ChartUtil.CHARTS.set(chartable.id, ChartUtil.createGenericChart(config));
+    }
+
+    static createGenericChart(config)
+    {
+        ChartUtil.decorateChartData(config.data, config.type);
         const chart = new Chart
         (
-            ctx,
+            config.ctx,
             {
-                type: type == "line" ? "lineVCursor" : type,
-                data: data,
+                type: config.type == "line" ? "lineVCursor" : config.type,
+                data: config.data,
                 options:
                 {
                     title:
                     {
-                        display: title == null ? false : true,
-                        text: title
+                        display: config.title == null ? false : true,
+                        text: config.title
                     },
                     scales:
                     {
                         xAxes:
                         [{
-                            scaleLabel: {display: false, labelString: xTitle},
+                            scaleLabel: {display: false, labelString: config.xTitle},
                             gridLines: {display: false},
                             ticks:
                             {
@@ -48,19 +55,19 @@ class ChartUtil
                                 maxRotation: 0,
                                 autoSkipPadding: 20
                             },
-                            stacked: stacked === "true" ? true : false
+                            stacked: config.stacked === "true" ? true : false
                         }],
                         yAxes:
                         [{
-                            scaleLabel: {display: false, labelString: yTitle},
+                            scaleLabel: {display: false, labelString: config.yTitle},
                            // ticks:{beginAtZero: true},
                             ticks: {callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val)},
-                            stacked: stacked === "true" ? true : false
+                            stacked: config.stacked === "true" ? true : false
                         }]
                     },
                     hover:
                     {
-                        mode: (data.customMeta.type === "pie" || data.customMeta === "doughnut")
+                        mode: (config.data.customMeta.type === "pie" || config.data.customMeta === "doughnut")
                             ? "dataset"
                             : "index",
                         position: "nearest",
@@ -70,22 +77,22 @@ class ChartUtil
                     tooltips:
                     {
                         bodyFontFamily: "'Liberation Mono', monospace",
-                        mode: (data.customMeta.type === "pie" || data.customMeta === "doughnut")
+                        mode: (config.data.customMeta.type === "pie" || config.data.customMeta === "doughnut")
                             ? "dataset"
                             : "index",
                         position: "nearest",
                         intersect: false,
                         callbacks:
                         {
-                            label: tooltipPercentage === "true" ? ChartUtil.addTooltipPercentage : ChartUtil.formatTooltip
+                            label: config.tooltipPercentage === "true" ? ChartUtil.addTooltipPercentage : ChartUtil.formatTooltip
                         },
-                        ...(tooltipSort === "reverse") && {itemSort: ChartUtil.sortTooltipReversed}
+                        ...(config.tooltipSort === "reverse") && {itemSort: ChartUtil.sortTooltipReversed}
                     },
                     layout: {padding: {right: 15}}
                 }
             }
         );
-        ChartUtil.CHARTS.set(chartable.id, chart);
+        return chart;
     }
 
     static formatTooltip(tooltipItem, data)
