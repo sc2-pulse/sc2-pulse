@@ -1,8 +1,10 @@
-<!DOCTYPE html>
-<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:fragment="layout (title, description, content, script)" lang="en">
 <head>
+    <th:block th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')}">
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-PL1L36TKM6"></script>
     <script>
@@ -12,6 +14,7 @@
 
         gtag('config', 'G-PL1L36TKM6');
     </script>
+    </th:block>
     <title th:replace="${title}">SC2 Pulse</title>
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
