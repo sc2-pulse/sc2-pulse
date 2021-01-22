@@ -67,7 +67,7 @@ class TableUtil
             rowHeadCell.textContent = rowHeaderTranslated;
             bodyRow.appendChild(rowHeadCell);
             for(const header of headers)
-                bodyRow.insertCell().textContent = rowData[header] != null ? rowData[header] : "0";
+                bodyRow.insertCell().textContent = rowData[header] != null ? rowData[header] : "";
             tBody.appendChild(bodyRow);
             rowIx++;
         }
