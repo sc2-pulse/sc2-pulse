@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.blizzard;
@@ -298,14 +298,20 @@ public class BlizzardSC2API
     }
 
     public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter, Long>>> getProfile1v1Ladders
-    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter, Long>> ids)
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter, Long>> ids, int concurrency)
     {
         return Flux.fromIterable(ids)
             .parallel()
             .runOn(Schedulers.boundedElastic())
             .flatMap(id->getProfile1v1Ladder(id)
                 .onErrorResume(t->{LOG.error(ExceptionUtils.getRootCauseMessage(t)); return Mono.empty();})
-                .zipWith(Mono.just(id)), true, SAFE_REQUESTS_PER_SECOND_CAP);
+                .zipWith(Mono.just(id)), true, concurrency);
+    }
+
+    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter, Long>>> getProfile1v1Ladders
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter, Long>> ids)
+    {
+        return getProfile1v1Ladders(ids, SAFE_REQUESTS_PER_SECOND_CAP);
     }
 
     public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)
