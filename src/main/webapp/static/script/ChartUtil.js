@@ -23,7 +23,7 @@ class ChartUtil
 
     static createGenericChart(config)
     {
-        ChartUtil.decorateChartData(config.data, config.type);
+        ChartUtil.decorateChartData(config.data, config);
         const chart = new Chart
         (
             config.ctx,
@@ -98,6 +98,7 @@ class ChartUtil
                 }
             }
         );
+        chart.customConfig = config;
         return chart;
     }
 
@@ -146,11 +147,11 @@ class ChartUtil
             : (b.index - a.index);
     }
 
-    static decorateChartData(data, type)
+    static decorateChartData(data, config)
     {
         for (let i = 0; i < data.datasets.length; i++)
         {
-            if (type === "lineVCursor" || type === "line")
+            if (config.type === "lineVCursor" || config.type === "line")
             {
                 data.datasets[i]["borderWidth"] = 2;
                 data.datasets[i]["pointRadius"] = 0;
@@ -161,7 +162,7 @@ class ChartUtil
                 //data.datasets[i]["pointBorderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
                 data.datasets[i]["backgroundColor"] = "rgba(0, 0, 0, 0)";
             }
-            else if(type === "doughnut" || type === "pie")
+            else if(config.type === "doughnut" || config.type === "pie")
             {
                 const dataColors = [];
                 const dataEmptyColors = [];
@@ -244,7 +245,7 @@ class ChartUtil
         }
         else
         {
-            ChartUtil.decorateChartData(data, chart.config.type);
+            ChartUtil.decorateChartData(data, chart.customConfig);
             chart.data = data;
         }
         chart.update();
