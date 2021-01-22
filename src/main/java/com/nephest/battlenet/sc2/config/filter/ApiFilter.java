@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.filter;
@@ -17,7 +17,7 @@ implements Filter
     throws java.io.IOException, ServletException
     {
         HttpServletResponse hresp = (HttpServletResponse) resp;
-        hresp.setHeader("Cache-Control", "max-age=3600");
+        hresp.setHeader("Cache-Control", "max-age=300");
         chain.doFilter(req, resp);
     }
 
