@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -26,6 +26,7 @@ import reactor.util.function.Tuples;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 public class AlternativeLadderService
@@ -77,30 +78,21 @@ public class AlternativeLadderService
     public void updateSeason(Season season, BaseLeague.LeagueType[] leagues)
     {
         LOG.debug("Updating season {}", season);
-        Map<Division, PlayerCharacter> ladderIds = divisionDao.findProfileDivisionIds
+        List<Tuple3<Region, BlizzardPlayerCharacter, Long>> ids = divisionDao.findProfileDivisionIds
         (
             season.getBattlenetId(),
             season.getRegion(),
             leagues,
             QueueType.LOTV_1V1, TeamType.ARRANGED
-        );
-        List<Tuple3<Region, BlizzardPlayerCharacter, Long>> batch = new ArrayList<>(BATCH_SIZE);
-        for(Map.Entry<Division, PlayerCharacter> id : ladderIds.entrySet())
+        ).entrySet().stream().map(id->
         {
             BlizzardPlayerCharacter character = new BlizzardPlayerCharacter(
                 id.getValue().getBattlenetId(), id.getValue().getRealm(), id.getValue().getName());
-            batch.add(Tuples.of(season.getRegion(), character, id.getKey().getBattlenetId()));
-            if(batch.size() == BATCH_SIZE) updateBatch(season, batch);
-        }
-        if(!batch.isEmpty()) updateBatch(season, batch);
-    }
-
-    private void updateBatch(Season season, List<Tuple3<Region, BlizzardPlayerCharacter, Long>> ids)
-    {
-        api.getProfile1v1Ladders(ids)
+            return Tuples.of(season.getRegion(), character, id.getKey().getBattlenetId());
+        }).collect(Collectors.toList());
+        api.getProfile1v1Ladders(ids, BATCH_SIZE)
             .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
             .sequential().blockLast();
-        ids.clear();
     }
 
     public void discoverSeason(Season season)
@@ -108,13 +100,9 @@ public class AlternativeLadderService
         LOG.info("Discovering {} ladders", season);
         ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter, Long>> profileIds = get1v1ProfileLadderIds(season);
         LOG.info("{} {} ladders found", profileIds.size(), season);
-        List<Tuple3<Region, BlizzardPlayerCharacter, Long>> batch = new ArrayList<>(BATCH_SIZE);
-        for(Tuple3<Region, BlizzardPlayerCharacter, Long> id : profileIds)
-        {
-            batch.add(id);
-            if(batch.size() == BATCH_SIZE) updateBatch(season, batch);
-        }
-        if(!batch.isEmpty()) updateBatch(season, batch);
+        api.getProfile1v1Ladders(profileIds, BATCH_SIZE)
+            .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
+            .sequential().blockLast();
     }
 
     private ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter, Long>> get1v1ProfileLadderIds(Season season)
