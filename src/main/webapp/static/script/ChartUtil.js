@@ -67,6 +67,7 @@ class ChartUtil
                             stacked: config.stacked === "true" ? true : false
                         }]
                     },
+                    spanGaps: true,
                     hover:
                     {
                         mode: (config.data.customMeta.type === "pie" || config.data.customMeta === "doughnut")
