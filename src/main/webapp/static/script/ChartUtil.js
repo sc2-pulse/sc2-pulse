@@ -15,6 +15,7 @@ class ChartUtil
         config["tooltipPercentage"] = chartable.getAttribute("data-chart-tooltip-percentage");
         config["tooltipSort"] = chartable.getAttribute("data-chart-tooltip-sort");
         config["performance"] = chartable.getAttribute("data-chart-performance");
+        config["pointRadius"] = chartable.getAttribute("data-chart-point-radius");
         config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
         config["data"] = ChartUtil.collectChartJSData(chartable);
 
@@ -154,7 +155,7 @@ class ChartUtil
             if (config.type === "lineVCursor" || config.type === "line")
             {
                 data.datasets[i]["borderWidth"] = 2;
-                data.datasets[i]["pointRadius"] = 0;
+                data.datasets[i]["pointRadius"] = config.pointRadius != null ? parseFloat(config.pointRadius) : 0;
                 data.datasets[i]["hoverPointRadius"] = 2;
 
                 data.datasets[i]["borderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
