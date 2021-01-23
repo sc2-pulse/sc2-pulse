@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.dao;
@@ -20,6 +20,7 @@ import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -86,6 +87,19 @@ public class StandardDataReadonlyIT
         //grandmaster
         assertEquals(6, divisionDAO.findLastDivision(SeasonGenerator.DEFAULT_SEASON_ID,
             Region.US, QueueType.LOTV_1V1, TeamType.ARRANGED).get());
+
+        List<Long> longIds = divisionDAO.findDivisionIds
+        (
+            SeasonGenerator.DEFAULT_SEASON_ID,
+            Region.US,
+            new BaseLeague.LeagueType[]{BaseLeague.LeagueType.DIAMOND, BaseLeague.LeagueType.MASTER},
+            QueueType.LOTV_1V1,
+            TeamType.ARRANGED
+        );
+        assertEquals(2, ids.size());
+        longIds.sort(Comparator.naturalOrder());
+        assertEquals(orderedIds.get(0).getKey().getId(), longIds.get(0));
+        assertEquals(orderedIds.get(1).getKey().getId(), longIds.get(1));
     }
 
 }

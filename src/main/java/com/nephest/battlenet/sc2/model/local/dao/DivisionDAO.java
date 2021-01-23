@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -18,6 +18,7 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class DivisionDAO
@@ -81,6 +82,18 @@ public class DivisionDAO
         + "INNER JOIN division ON team_member_filter.division_id = division.id "
         + "INNER JOIN player_character ON team_member_filter.player_character_id = player_character.id ORDER BY " 
         + "division.battlenet_id";
+    private static final String FIND_DIVISION_IDS =
+        "SELECT division.id "
+        + "FROM division "
+        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
+        + "INNER JOIN league ON league_tier.league_id = league.id "
+        + "INNER JOIN season ON league.season_id = season.id "
+        + "WHERE "
+        + "season.battlenet_id=:season "
+        + "AND season.region=:region "
+        + "AND league.type IN (:leagues) "
+        + "AND league.queue_type = :queueType "
+        + "AND league.team_type = :teamType ";
 
     private static final String FIND_LAST_DIVISION_BATTLENET_ID =
         "SELECT MAX(division.battlenet_id) "
@@ -248,6 +261,27 @@ public class DivisionDAO
             .addValue("queueType", conversionService.convert(queueType, Integer.class))
             .addValue("teamType", conversionService.convert(teamType, Integer.class));
         return template.query(FIND_PROFILE_IDS, params, PROFILE_IDS_EXTRACTOR);
+    }
+
+    public List<Long> findDivisionIds
+    (
+        int season,
+        Region region,
+        BaseLeague.LeagueType[] leagues,
+        QueueType queueType,
+        TeamType teamType
+    )
+    {
+        Set<Integer> leagueInts = Arrays.stream(leagues)
+            .map(l->conversionService.convert(l, Integer.class))
+            .collect(Collectors.toSet());
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("leagues", leagueInts)
+            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("teamType", conversionService.convert(teamType, Integer.class));
+        return template.query(FIND_DIVISION_IDS, params, DAOUtils.LONG_MAPPER);
     }
 
 }
