@@ -118,7 +118,24 @@ class ChartUtil
             label = labels[tooltipItem.datasetIndex];
         }
         label = Util.addStringTail(label, labels, " ");
-        label += " " + Util.NUMBER_FORMAT.format(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]);
+        const rawData = ChartUtil.CHART_RAW_DATA.get(data.customMeta.id);
+        if(rawData != null)
+        {
+            const additional = rawData.additionalDataGetter(rawData.data, tooltipItem.index, tooltipItem.datasetIndex);
+            if(additional.constructor === Array)
+            {
+                additional.unshift(label);
+                label = additional;
+            }
+            else
+            {
+                label += " " + additional;
+            }
+        }
+        else
+        {
+            label += " " + Util.NUMBER_FORMAT.format(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]);
+        }
         return label;
     }
 
@@ -346,6 +363,7 @@ class ChartUtil
 }
 
 ChartUtil.CHARTS = new Map();
+ChartUtil.CHART_RAW_DATA = new Map();
 
 ChartUtil.CHARTABLE_OBSERVER_CONFIG =
     {
