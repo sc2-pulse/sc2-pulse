@@ -259,6 +259,15 @@ public class BlizzardSC2API
             .flatMap(l->getProfileLadderId(region, l).onErrorResume((t)->Mono.empty()), true, SAFE_REQUESTS_PER_SECOND_CAP);
     }
 
+    public ParallelFlux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
+    (Region region, Iterable<? extends Long> ids)
+    {
+        return Flux.fromIterable(ids)
+            .parallel()
+            .runOn(Schedulers.boundedElastic())
+            .flatMap(l->getProfileLadderId(region, l).onErrorResume((t)->Mono.empty()), true, SAFE_REQUESTS_PER_SECOND_CAP);
+    }
+
     public Mono<BlizzardProfileLadder> getProfile1v1Ladder(Tuple3<Region, BlizzardPlayerCharacter[], Long> id)
     {
         return chainProfileLadderMono(id, 0);
