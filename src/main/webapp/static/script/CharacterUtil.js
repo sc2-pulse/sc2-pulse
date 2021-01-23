@@ -263,12 +263,14 @@ class CharacterUtil
             queueFilter, excludeStart, excludeEnd);
         const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime);
         const data = [];
+        const rawData = [];
         for(const [dateTime, histories] of mmrHistoryGroped.entries())
         {
+            rawData.push(histories);
             data[dateTime] = {};
             for(const history of histories) data[dateTime][history.race] = history.teamState.rating;
         }
-
+        ChartUtil.CHART_RAW_DATA.set("player-stats-mmr-table", {data: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
         TableUtil.updateColRowTable
         (
             document.getElementById("player-stats-mmr-table"),
@@ -284,6 +286,20 @@ class CharacterUtil
         document.getElementById("mmr-history-filters").textContent =
             "(" + queue.name + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
+    }
+
+    static getAdditionalMmrHistoryData(data, ix1, ix2)
+    {
+        const curData = Object.values(data)[ix1]
+            .sort((a, b)=>EnumUtil.enumOfName(a.race, RACE).order - EnumUtil.enumOfName(b.race, RACE).order)[0]
+        const lines = [];
+        lines.push("mmr:    " + curData.teamState.rating);
+        lines.push("games:  " + curData.teamState.games);
+        lines.push("league: " +  EnumUtil.enumOfId(curData.league.type, LEAGUE).name)
+            + (ALTERNATIVE_UPDATE ? "" : " " + (curData.tier + 1));
+        lines.push("season: " + curData.season);
+
+        return lines;
     }
 
     static filterMmrHistory(history, queueFilter, excludeStart, excludeEnd)
