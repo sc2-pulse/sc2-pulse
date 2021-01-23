@@ -219,6 +219,7 @@ class ChartUtil
             customColors: tableData.colors,
             customMeta:
             {
+                id: elem.id,
                 type: type
             }
         }
