@@ -31,6 +31,7 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
+import java.util.Arrays;
 import java.util.stream.LongStream;
 
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
@@ -284,7 +285,7 @@ public class BlizzardSC2API
         );
     }
 
-    private Mono<BlizzardProfileLadder> getProfileLadderMono(Region region, BlizzardPlayerCharacter character, long id)
+    protected Mono<BlizzardProfileLadder> getProfileLadderMono(Region region, BlizzardPlayerCharacter character,long id)
     {
         return getWebClient()
             .get()
@@ -300,7 +301,7 @@ public class BlizzardSC2API
             {
                 try
                 {
-                    return Mono.justOrEmpty(extractProfileLadder(s));
+                    return Mono.justOrEmpty(extractProfileLadder(s, id));
                 }
                 catch (JsonProcessingException e)
                 {
@@ -310,13 +311,20 @@ public class BlizzardSC2API
             .retryWhen(WebServiceUtil.RETRY_SKIP_NOT_FOUND);
     }
 
-    private BlizzardProfileLadder extractProfileLadder(String s)
+    private BlizzardProfileLadder extractProfileLadder(String s, long ladderId)
     throws JsonProcessingException
     {
         JsonNode root = objectMapper.readTree(s);
 
-        if(!objectMapper.treeToValue(root.at("/currentLadderMembership"), BlizzardLadderMembership.class).getLocalizedGameMode()
-            .toLowerCase().contains("1v1")) return null;
+        BlizzardLadderMembership[] memberships = objectMapper.treeToValue(root.at("/allLadderMemberships"), BlizzardLadderMembership[].class);
+        BlizzardLadderMembership currentMembership = Arrays.stream(memberships)
+            .filter(m->m.getLadderId().equals(ladderId) && m.getLocalizedGameMode().toLowerCase().contains("1v1"))
+            .findAny().orElse(null);
+        if(currentMembership == null)
+        {
+            LOG.warn("Current ladder membership not found {}", ladderId);
+            return null;
+        }
 
         return new BlizzardProfileLadder(
             objectMapper.treeToValue(root.at("/ladderTeams"), BlizzardProfileTeam[].class),

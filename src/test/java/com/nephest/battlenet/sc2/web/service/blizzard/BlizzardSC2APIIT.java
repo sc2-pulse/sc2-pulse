@@ -43,7 +43,7 @@ public class BlizzardSC2APIIT
         + "\"realm\":1,\"region\":1,\"displayName\":\"Dexter\",\"clanName\":\"\",\"clanTag\":\"\","
         + "\"profilePath\":\"/profile/1/1/11445546\"}}]}";
     public static final String VALID_PROFILE_LADDER = "{\"ladderTeams\":[],\"league\":\"silver\","
-        + "\"currentLadderMembership\":{\"ladderId\":\"292783\",\"localizedGameMode\":\"1v1 Silver\"}}";
+        + "\"allLadderMemberships\":[{\"ladderId\":\"292783\",\"localizedGameMode\":\"1v1 Silver\"}]}";
 
     public static final PlayerCharacter SERRAL =
         new PlayerCharacter(null, null, Region.EU, 315071L, 1, "Serral");
@@ -146,8 +146,8 @@ public class BlizzardSC2APIIT
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, mock(BlizzardTierDivision.class)), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getMatches(SERRAL), VALID_MATCHES, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderId(Region.US, 292783), VALID_LEGACY_LADDER, server, RETRY_COUNT);
-        WebServiceTestUtil.testRetrying(api.getProfile1v1Ladder(Tuples.of(Region.US,
-            new BlizzardPlayerCharacter[]{BLIZZARD_CHARACTER},292783L)), VALID_PROFILE_LADDER, server, RETRY_COUNT);
+        WebServiceTestUtil.testRetrying(api.getProfileLadderMono(Region.US, BLIZZARD_CHARACTER, 292783L),
+            VALID_PROFILE_LADDER, server, RETRY_COUNT);
         server.shutdown();
     }
 
