@@ -21,12 +21,10 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import reactor.util.function.Tuple3;
-import reactor.util.function.Tuples;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 @Service
 public class AlternativeLadderService
@@ -78,20 +76,19 @@ public class AlternativeLadderService
     public void updateSeason(Season season, BaseLeague.LeagueType[] leagues)
     {
         LOG.debug("Updating season {}", season);
-        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids = divisionDao.findProfileDivisionIds
+        List<Long> divisions = divisionDao.findDivisionIds
         (
             season.getBattlenetId(),
             season.getRegion(),
             leagues,
             QueueType.LOTV_1V1, TeamType.ARRANGED
-        ).entrySet().stream().map(id->
-        {
-            BlizzardPlayerCharacter character = new BlizzardPlayerCharacter(
-                id.getValue().getBattlenetId(), id.getValue().getRealm(), id.getValue().getName());
-            return Tuples.of(season.getRegion(),
-                new BlizzardPlayerCharacter[]{character}, id.getKey().getBattlenetId());
-        }).collect(Collectors.toList());
-        api.getProfile1v1Ladders(ids, BATCH_SIZE)
+        );
+        ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
+            new ConcurrentLinkedQueue<>();
+        api.getProfileLadderIds(season.getRegion(), divisions)
+            .doOnNext(profileLadderIds::add)
+            .sequential().blockLast();
+        api.getProfile1v1Ladders(profileLadderIds, BATCH_SIZE)
             .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
             .sequential().blockLast();
     }
