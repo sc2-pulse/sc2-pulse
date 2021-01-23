@@ -215,7 +215,7 @@ public class BlizzardSC2API
             .retryWhen(WebServiceUtil.RETRY);
     }
 
-    public Mono<Tuple3<Region, BlizzardPlayerCharacter, Long>> getProfileLadderId(Region region, long ladderId)
+    public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region region, long ladderId)
     {
         return getWebClient()
             .get()
@@ -229,25 +229,28 @@ public class BlizzardSC2API
             .bodyToMono(String.class)
             .map((s)->
             {
-                BlizzardPlayerCharacter character = null;
+                BlizzardPlayerCharacter[] characters = new BlizzardPlayerCharacter[3];
                 try
                 {
                     JsonNode members = objectMapper.readTree(s).at("/ladderMembers");
-                    character = objectMapper
-                        //select a player that is less likely to promote
+                    characters[0] = objectMapper
                         .treeToValue(members.get(members.size() - 1).get("character"), BlizzardPlayerCharacter.class);
+                    characters[0] = objectMapper
+                        .treeToValue(members.get(members.size() / 2).get("character"), BlizzardPlayerCharacter.class);
+                    characters[0] = objectMapper
+                        .treeToValue(members.get(0).get("character"), BlizzardPlayerCharacter.class);
                 }
                 catch (JsonProcessingException e)
                 {
                     throw new IllegalStateException("Invalid json structure", e);
                 }
-                return Tuples.of(region, character, ladderId);
+                return Tuples.of(region, characters, ladderId);
             })
             .doOnError(t->LOG.error(ExceptionUtils.getRootCauseMessage(t)))
             .retryWhen(WebServiceUtil.RETRY_SKIP_NOT_FOUND);
     }
 
-    public ParallelFlux<Tuple3<Region, BlizzardPlayerCharacter, Long>> getProfileLadderIds
+    public ParallelFlux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
     (Region region, long from, long toExcluded)
     {
         return Flux.fromStream(LongStream.range(from, toExcluded).boxed())
@@ -256,17 +259,31 @@ public class BlizzardSC2API
             .flatMap(l->getProfileLadderId(region, l).onErrorResume((t)->Mono.empty()), true, SAFE_REQUESTS_PER_SECOND_CAP);
     }
 
-    public Mono<BlizzardProfileLadder> getProfile1v1Ladder(Tuple3<Region, BlizzardPlayerCharacter, Long> id)
+    public Mono<BlizzardProfileLadder> getProfile1v1Ladder(Tuple3<Region, BlizzardPlayerCharacter[], Long> id)
     {
-        Region region = id.getT1();
-        BlizzardPlayerCharacter character = id.getT2();
+        return chainProfileLadderMono(id, 0);
+    }
+
+    private Mono<BlizzardProfileLadder> chainProfileLadderMono
+    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, int ix)
+    {
+        return Mono.defer(()->ix == id.getT2().length ? Mono.empty() : getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3())
+            .onErrorResume((t)->{
+                LOG.error(ExceptionUtils.getRootCauseMessage(t));
+                return chainProfileLadderMono(id, ix + 1);
+            })
+        );
+    }
+
+    private Mono<BlizzardProfileLadder> getProfileLadderMono(Region region, BlizzardPlayerCharacter character, long id)
+    {
         return getWebClient()
             .get()
             .uri
-            (
-                regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/profile/{0}/{1}/{2}/ladder/{1}"),
-                region.getId(), character.getRealm(), character.getId(), id.getT3()
-            )
+                (
+                    regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/profile/{0}/{1}/{2}/ladder/{1}"),
+                    region.getId(), character.getRealm(), character.getId(), id
+                )
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(String.class)
@@ -297,8 +314,8 @@ public class BlizzardSC2API
             BaseLeague.LeagueType.from(root.at("/league").asText()));
     }
 
-    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter, Long>>> getProfile1v1Ladders
-    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter, Long>> ids, int concurrency)
+    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfile1v1Ladders
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, int concurrency)
     {
         return Flux.fromIterable(ids)
             .parallel()
@@ -308,8 +325,8 @@ public class BlizzardSC2API
                 .zipWith(Mono.just(id)), true, concurrency);
     }
 
-    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter, Long>>> getProfile1v1Ladders
-    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter, Long>> ids)
+    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfile1v1Ladders
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids)
     {
         return getProfile1v1Ladders(ids, SAFE_REQUESTS_PER_SECOND_CAP);
     }
