@@ -232,11 +232,18 @@ public class StatsService
             seasonId = season.getBattlenetId();
             LOG.debug("Updated leagues: {} {}", seasonId, region);
         }
-        if(seasonId != null && leagues.length == BaseLeague.LeagueType.values().length)
+        if(seasonId != null)
         {
-            updateSeasonStats(seasonId, regions, queues, leagues);
-            playerCharacterStatsDAO.mergeCalculateGlobal();
-            statsService.evictCurrentSeasonTeamCountCache();
+            if(leagues.length == BaseLeague.LeagueType.values().length)
+            {
+                updateSeasonStats(seasonId, regions, queues, leagues);
+                playerCharacterStatsDAO.mergeCalculateGlobal();
+                statsService.evictCurrentSeasonTeamCountCache();
+            }
+            else
+            {
+                teamDao.updateRanks(seasonId, regions, queues, TeamType.values(), leagues);
+            }
         }
     }
 
