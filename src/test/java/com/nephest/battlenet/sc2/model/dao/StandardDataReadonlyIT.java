@@ -98,8 +98,8 @@ public class StandardDataReadonlyIT
         );
         assertEquals(2, ids.size());
         longIds.sort(Comparator.naturalOrder());
-        assertEquals(orderedIds.get(0).getKey().getId(), longIds.get(0));
-        assertEquals(orderedIds.get(1).getKey().getId(), longIds.get(1));
+        assertEquals(orderedIds.get(0).getKey().getBattlenetId(), longIds.get(0));
+        assertEquals(orderedIds.get(1).getKey().getBattlenetId(), longIds.get(1));
     }
 
 }

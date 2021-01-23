@@ -82,8 +82,8 @@ public class DivisionDAO
         + "INNER JOIN division ON team_member_filter.division_id = division.id "
         + "INNER JOIN player_character ON team_member_filter.player_character_id = player_character.id ORDER BY " 
         + "division.battlenet_id";
-    private static final String FIND_DIVISION_IDS =
-        "SELECT division.id "
+    private static final String FIND_DIVISION_BATTLENET_IDS =
+        "SELECT division.battlenet_id "
         + "FROM division "
         + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
         + "INNER JOIN league ON league_tier.league_id = league.id "
@@ -281,7 +281,7 @@ public class DivisionDAO
             .addValue("leagues", leagueInts)
             .addValue("queueType", conversionService.convert(queueType, Integer.class))
             .addValue("teamType", conversionService.convert(teamType, Integer.class));
-        return template.query(FIND_DIVISION_IDS, params, DAOUtils.LONG_MAPPER);
+        return template.query(FIND_DIVISION_BATTLENET_IDS, params, DAOUtils.LONG_MAPPER);
     }
 
 }
