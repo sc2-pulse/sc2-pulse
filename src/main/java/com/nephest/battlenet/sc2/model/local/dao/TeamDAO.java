@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class TeamDAO
@@ -94,6 +95,10 @@ public class TeamDAO
             + "SELECT id, RANK() OVER(PARTITION BY queue_type, team_type%2$s ORDER BY rating DESC, id DESC) as rnk "
             + "FROM team "
             + "WHERE season = :season "
+            + "AND region IN (:regions) "
+            + "AND queue_type IN (:queueTypes) "
+            + "AND team_type IN (:teamTypes) "
+            + "AND league_type IN (:leagueTypes) "
         + ")"
         + "UPDATE team "
         + "set %1$s_rank=cte.rnk "
@@ -232,13 +237,67 @@ public class TeamDAO
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void updateRanks(int season)
+    public void updateRanks
+    (int season, Region[] regions, QueueType[] queues, TeamType[] teams, BaseLeague.LeagueType[] leagues)
     {
-        MapSqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
-        template.update(CALCULATE_GLOBAL_RANK_QUERY, params);
-        template.update(CALCULATE_REGION_RANK_QUERY, params);
-        template.update(CALCULATE_LEAGUE_RANK_QUERY, params);
+        Set<Integer> regionsInt = Arrays.stream(regions)
+            .map(r->conversionService.convert(r, Integer.class))
+            .collect(Collectors.toSet());
+        Set<Integer> queuesInt = Arrays.stream(queues)
+            .map(q->conversionService.convert(q, Integer.class))
+            .collect(Collectors.toSet());
+        Set<Integer> teamsInt = Arrays.stream(teams)
+            .map(t->conversionService.convert(t, Integer.class))
+            .collect(Collectors.toSet());
+        Set<Integer> leaguesInt = Arrays.stream(leagues)
+            .map(l->conversionService.convert(l, Integer.class))
+            .collect(Collectors.toSet());
+        updateGlobalRanks(season, queuesInt, teamsInt);
+        updateRegionRanks(season, regionsInt, queuesInt, teamsInt);
+        updateLeagueRanks(season, leaguesInt, queuesInt, teamsInt);
+
         LOG.debug("Calculated team ranks for {} season", season);
+    }
+
+    private void updateGlobalRanks(int season, Set<Integer> queues, Set<Integer> teams)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("regions", Arrays.stream(Region.values())
+                .map(r->conversionService.convert(r, Integer.class))
+                .collect(Collectors.toSet()))
+            .addValue("queueTypes", queues)
+            .addValue("teamTypes", teams)
+            .addValue("leagueTypes", Arrays.stream(BaseLeague.LeagueType.values())
+                .map(l->conversionService.convert(l, Integer.class))
+                .collect(Collectors.toSet()));
+        template.update(CALCULATE_GLOBAL_RANK_QUERY, params);
+    }
+
+    private void updateRegionRanks(int season, Set<Integer> regions, Set<Integer> queues, Set<Integer> teams)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("regions", regions)
+            .addValue("queueTypes", queues)
+            .addValue("teamTypes", teams)
+            .addValue("leagueTypes", Arrays.stream(BaseLeague.LeagueType.values())
+                .map(l->conversionService.convert(l, Integer.class))
+                .collect(Collectors.toSet()));
+        template.update(CALCULATE_REGION_RANK_QUERY, params);
+    }
+
+    private void updateLeagueRanks(int season, Set<Integer> leagues, Set<Integer> queues, Set<Integer> teams)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("regions", Arrays.stream(Region.values())
+                .map(r->conversionService.convert(r, Integer.class))
+                .collect(Collectors.toSet()))
+            .addValue("queueTypes", queues)
+            .addValue("teamTypes", teams)
+            .addValue("leagueTypes", leagues);
+        template.update(CALCULATE_LEAGUE_RANK_QUERY, params);
     }
 
     public Optional<Map.Entry<Team, List<TeamMember>>> find1v1TeamByFavoriteRace

@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -202,15 +202,15 @@ public class StatsService
         {
             updateSeason(region, seasonId, queues, leagues);
         }
-        updateSeasonStats(seasonId);
+        updateSeasonStats(seasonId, regions, queues, leagues);
     }
 
-    private void updateSeasonStats(int seasonId)
+    private void updateSeasonStats(int seasonId, Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         queueStatsDAO.mergeCalculateForSeason(seasonId);
         leagueStatsDao.mergeCalculateForSeason(seasonId);
         playerCharacterStatsDAO.mergeCalculate(seasonId);
-        teamDao.updateRanks(seasonId);
+        teamDao.updateRanks(seasonId, regions, queues, TeamType.values(), leagues);
     }
 
     private void updateSeason(Region region, int seasonId, QueueType[] queues, BaseLeague.LeagueType[] leagues)
@@ -234,7 +234,7 @@ public class StatsService
         }
         if(seasonId != null && leagues.length == BaseLeague.LeagueType.values().length)
         {
-            updateSeasonStats(seasonId);
+            updateSeasonStats(seasonId, regions, queues, leagues);
             playerCharacterStatsDAO.mergeCalculateGlobal();
             statsService.evictCurrentSeasonTeamCountCache();
         }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -147,9 +147,13 @@ public class LadderSearchDAOIT
         //old player
         teamMemberDAO.create(new TeamMember(team.getId(), 1L, 1, 2, 3, 4));
 
-        teamDAO.updateRanks(DEFAULT_SEASON_ID);
-        teamDAO.updateRanks(DEFAULT_SEASON_ID + 1);
-        teamDAO.updateRanks(DEFAULT_SEASON_ID + 2);
+        Region[] regions = REGIONS.toArray(Region[]::new);
+        QueueType[] queues = new QueueType[]{QUEUE_TYPE};
+        TeamType[] teams = new TeamType[]{TEAM_TYPE};
+        BaseLeague.LeagueType[] leagues = LEAGUES_SET.toArray(BaseLeague.LeagueType[]::new);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID, regions, queues, teams, leagues);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID + 1, regions, queues, teams, leagues);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID + 2, regions, queues, teams, leagues);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
