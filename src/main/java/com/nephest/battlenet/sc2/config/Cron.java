@@ -40,8 +40,37 @@ public class Cron
     @Autowired
     private PostgreSQLUtils postgreSQLUtils;
 
-    @Scheduled(cron="0 0 3 * * *")
+    @Scheduled(cron="0 0 7 * * *")
     public void updateSeasons()
+    {
+        doUpdateSeasons();
+    }
+
+    @Scheduled(cron="0 */30 0-5,8-23 * * MON-TUE,THU-SUN")
+    public void updateTop()
+    {
+        doUpdateTop();
+    }
+
+    @Scheduled(cron="0 0 6 * * *")
+    public void updateTopPreDiscovery()
+    {
+        doUpdateTop();
+    }
+
+    @Scheduled(cron="0 */30 0-5,8-11,13-23 * * WED")
+    public void updateTopWed()
+    {
+        doUpdateTop();
+    }
+
+    @Scheduled(cron="0 0 12 * * WED")
+    public void updateTopPreMaintenance()
+    {
+        doUpdateTop();
+    }
+
+    private void doUpdateSeasons()
     {
         try
         {
@@ -62,8 +91,7 @@ public class Cron
         }
     }
 
-    @Scheduled(cron="0 */30 0-1,4-11,13-23 * * *")
-    public void updateTop()
+    private void doUpdateTop()
     {
         try
         {
