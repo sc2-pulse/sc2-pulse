@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -15,11 +15,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.tcp.TcpClient;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.util.function.Function;
 
 @Service
 public class WebServiceUtil
@@ -60,6 +62,23 @@ public class WebServiceUtil
                 conf.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
                 if(inMemorySize > 0) conf.defaultCodecs().maxInMemorySize(inMemorySize);
             }).build());
+    }
+
+    public static <T> Mono<T> getRateDelayedMono
+    (Mono<T> mono, Function<? super Throwable,? extends Mono<? extends T>> fallback, int fullDelay)
+    {
+        long start = System.currentTimeMillis();
+        return mono.delayUntil(r->Mono.just(r)
+            .delaySubscription(Duration.ofMillis(Math.max(0, fullDelay - (System.currentTimeMillis() - start))))
+        )
+        .onErrorResume(t->Mono.empty()
+            .delaySubscription(Duration.ofMillis(Math.max(0, fullDelay - (System.currentTimeMillis() - start))))
+            .then(fallback.apply(t)));
+    }
+
+    public static <T> Mono<T> getRateDelayedMono(Mono<T> mono, int fullDelay)
+    {
+        return getRateDelayedMono(mono, t->Mono.empty(), fullDelay);
     }
 
 }
