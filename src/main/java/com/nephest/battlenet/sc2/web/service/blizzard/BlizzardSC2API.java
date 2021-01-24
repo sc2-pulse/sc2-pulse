@@ -317,7 +317,7 @@ public class BlizzardSC2API
             {
                 try
                 {
-                    return Mono.justOrEmpty(extractProfileLadder(s, id));
+                    return extractProfileLadder(s, id);
                 }
                 catch (JsonProcessingException e)
                 {
@@ -327,7 +327,7 @@ public class BlizzardSC2API
             .retryWhen(WebServiceUtil.RETRY_SKIP_NOT_FOUND);
     }
 
-    private BlizzardProfileLadder extractProfileLadder(String s, long ladderId)
+    private Mono<BlizzardProfileLadder> extractProfileLadder(String s, long ladderId)
     throws JsonProcessingException
     {
         JsonNode root = objectMapper.readTree(s);
@@ -339,13 +339,14 @@ public class BlizzardSC2API
         if(currentMembership == null)
         {
             LOG.warn("Current ladder membership not found {}", ladderId);
-            return null;
+            return Mono.error(new IllegalStateException("Current ladder membership not found. Player moved to a new division?"));
         }
-        if (!currentMembership.getLocalizedGameMode().toLowerCase().contains("1v1")) return null;
+        if (!currentMembership.getLocalizedGameMode().toLowerCase().contains("1v1")) return Mono.empty();
 
-        return new BlizzardProfileLadder(
+        BlizzardProfileLadder ladder = new BlizzardProfileLadder(
             objectMapper.treeToValue(root.at("/ladderTeams"), BlizzardProfileTeam[].class),
             BaseLeague.LeagueType.from(root.at("/league").asText()));
+        return Mono.just(ladder);
     }
 
     public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfile1v1Ladders
