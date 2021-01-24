@@ -75,9 +75,10 @@ public class BlizzardSC2APIIT
         assertFalse(errors.hasErrors());
 
         //45 was the last season when this test was written
-        BlizzardSeason lastSeason = api.getLastSeason(Region.EU).block();
-        assertTrue(lastSeason.getId() > 44);
-        BlizzardSeason currentSeason = api.getCurrentOrLastSeason(Region.EU).block();
+        assertTrue(api.getLastSeason(Region.EU, 45).block().getId() > 44);
+        assertTrue(api.getLastSeason(Region.EU, 44).block().getId() > 44);
+        assertNull(api.getLastSeason(Region.EU, 999999).block());
+        BlizzardSeason currentSeason = api.getCurrentOrLastSeason(Region.EU, 45).block();
         assertTrue(currentSeason.getId() > 44);
 
         testFetchAlternative();

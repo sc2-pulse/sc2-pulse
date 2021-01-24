@@ -137,7 +137,7 @@ public class StatsService
         try
         {
             long start = System.currentTimeMillis();
-            int lastSeasonIx = api.getLastSeason(Region.EU).block().getId() + 1;
+            int lastSeasonIx = api.getLastSeason(Region.EU, seasonDao.getMaxBattlenetId()).block().getId() + 1;
             for(int season = BlizzardSC2API.FIRST_SEASON; season < lastSeasonIx; season++)
             {
                 updateSeason(season, regions, queues, leagues);
@@ -229,7 +229,7 @@ public class StatsService
         Integer seasonId = null;
         for(Region region : regions)
         {
-            BlizzardSeason bSeason = api.getCurrentOrLastSeason(region).block();
+            BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, seasonDao.getMaxBattlenetId()).block();
             Season season = seasonDao.merge(Season.of(bSeason, region));
             updateOrAlternativeUpdate(bSeason, season, queues, leagues, true);
             seasonId = season.getBattlenetId();

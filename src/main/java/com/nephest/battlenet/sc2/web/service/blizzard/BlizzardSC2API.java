@@ -121,22 +121,24 @@ public class BlizzardSC2API
             .retryWhen(WebServiceUtil.RETRY);
     }
 
-    public Mono<BlizzardSeason> getLastSeason(Region region)
+    public Mono<BlizzardSeason> getLastSeason(Region region, int startFrom)
     {
-        return chainSeasonMono(region, BlizzardSC2API.FIRST_SEASON);
+        return chainSeasonMono(region, startFrom, startFrom);
     }
 
-    private Mono<BlizzardSeason> chainSeasonMono(Region region, int season)
+    private Mono<BlizzardSeason> chainSeasonMono(Region region, int season, int startFrom)
     {
         return Mono.defer(()->getSeason(region, season)
-            .then(chainSeasonMono(region, season + 1))
-            .onErrorResume((t)->getSeason(region, season - 1).onErrorResume((t1)->Mono.empty())));
+            .then(chainSeasonMono(region, season + 1, startFrom))
+            .onErrorResume(
+                (t)->season <= startFrom ? Mono.empty() : getSeason(region, season - 1)
+                    .onErrorResume((t1)->Mono.empty())));
     }
 
     //current season endpoint can return the 500/503 code sometimes
-    public Mono<BlizzardSeason> getCurrentOrLastSeason(Region region)
+    public Mono<BlizzardSeason> getCurrentOrLastSeason(Region region, int startFrom)
     {
-        return getCurrentSeason(region).onErrorResume((t)->getLastSeason(region));
+        return getCurrentSeason(region).onErrorResume((t)->getLastSeason(region, startFrom));
     }
 
     public Mono<BlizzardLeague> getLeague
