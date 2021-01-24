@@ -240,9 +240,9 @@ public class BlizzardSC2API
                     JsonNode members = objectMapper.readTree(s).at("/ladderMembers");
                     characters[0] = objectMapper
                         .treeToValue(members.get(members.size() - 1).get("character"), BlizzardPlayerCharacter.class);
-                    characters[0] = objectMapper
+                    characters[1] = objectMapper
                         .treeToValue(members.get(members.size() / 2).get("character"), BlizzardPlayerCharacter.class);
-                    characters[0] = objectMapper
+                    characters[2] = objectMapper
                         .treeToValue(members.get(0).get("character"), BlizzardPlayerCharacter.class);
                 }
                 catch (JsonProcessingException e)

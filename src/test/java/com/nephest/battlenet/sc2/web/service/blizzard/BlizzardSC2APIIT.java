@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.validation.Validator;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
+import java.util.Arrays;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -90,6 +92,7 @@ public class BlizzardSC2APIIT
         assertEquals(Region.US, ladderId.getT1());
         assertEquals(292783, ladderId.getT3());
         assertNotNull(ladderId.getT2());
+        Arrays.stream(ladderId.getT2()).forEach(Assertions::assertNotNull);
 
         Errors errors = new BeanPropertyBindingResult(ladderId.getT2(), ladderId.getT2().toString());
         validator.validate(ladderId.getT2(), errors);
@@ -103,6 +106,13 @@ public class BlizzardSC2APIIT
         validator.validate(teams, teamErrors);
         assertFalse(teamErrors.hasErrors());
         assertEquals(BaseLeague.LeagueType.SILVER, ladder.getLeagueType());
+
+        api.getProfile1v1Ladder(Tuples.of(Region.EU, new BlizzardPlayerCharacter[]{
+            new BlizzardPlayerCharacter(1L, 1, "Name#123"),
+            new BlizzardPlayerCharacter(2L, 2, "Name2#123"),
+            new BlizzardPlayerCharacter(3L, 3, "Name#123")},
+        1L))
+        .block();
     }
 
     @Test @Order(2)
