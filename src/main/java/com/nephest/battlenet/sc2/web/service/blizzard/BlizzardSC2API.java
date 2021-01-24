@@ -279,12 +279,22 @@ public class BlizzardSC2API
     private Mono<BlizzardProfileLadder> chainProfileLadderMono
     (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, int ix)
     {
-        return Mono.defer(()->ix == id.getT2().length ? Mono.empty() : getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3())
-            .onErrorResume((t)->{
-                LOG.error(ExceptionUtils.getRootCauseMessage(t));
-                return chainProfileLadderMono(id, ix + 1);
-            })
-        );
+        int prevIx = ix - 1;
+        if(ix > 0) LOG.warn("Profile ladder not found {} times: {}/{}/{}",
+            ix, id.getT2()[prevIx].getRealm(), id.getT2()[prevIx].getId(), id.getT3());
+        return Mono.defer(()->
+        {
+            if(ix < id.getT2().length)
+            {
+                return getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3())
+                    .onErrorResume((t)->{
+                        LOG.debug(ExceptionUtils.getRootCauseMessage(t));
+                        return chainProfileLadderMono(id, ix + 1);
+                    });
+            }
+            LOG.error("Profile ladder not found {}/{}/{}", id.getT2()[prevIx].getRealm(), id.getT2()[prevIx].getId(), id.getT3());
+            return Mono.empty();
+        });
     }
 
     protected Mono<BlizzardProfileLadder> getProfileLadderMono(Region region, BlizzardPlayerCharacter character,long id)
@@ -320,13 +330,14 @@ public class BlizzardSC2API
 
         BlizzardLadderMembership[] memberships = objectMapper.treeToValue(root.at("/allLadderMemberships"), BlizzardLadderMembership[].class);
         BlizzardLadderMembership currentMembership = Arrays.stream(memberships)
-            .filter(m->m.getLadderId().equals(ladderId) && m.getLocalizedGameMode().toLowerCase().contains("1v1"))
+            .filter(m->m.getLadderId().equals(ladderId))
             .findAny().orElse(null);
         if(currentMembership == null)
         {
             LOG.warn("Current ladder membership not found {}", ladderId);
             return null;
         }
+        if (!currentMembership.getLocalizedGameMode().toLowerCase().contains("1v1")) return null;
 
         return new BlizzardProfileLadder(
             objectMapper.treeToValue(root.at("/ladderTeams"), BlizzardProfileTeam[].class),
