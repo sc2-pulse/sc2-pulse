@@ -50,6 +50,8 @@ public class BlizzardSC2API
     public static final double REQUEST_RATE_COEFF = 0.9;
     public static final int SAFE_REQUESTS_PER_SECOND_CAP =
         (int) Math.round(REQUESTS_PER_SECOND_CAP * REQUEST_RATE_COEFF);
+    public static final int DELAY = 1000;
+    public static final int CONCURRENCY = SAFE_REQUESTS_PER_SECOND_CAP / Runtime.getRuntime().availableProcessors();
     public static final int SAFE_REQUESTS_PER_HOUR_CAP = (int) Math.round(REQUESTS_PER_HOUR_CAP * REQUEST_RATE_COEFF);
     public static final int FIRST_SEASON = 28;
 
@@ -257,18 +259,20 @@ public class BlizzardSC2API
     (Region region, long from, long toExcluded)
     {
         return Flux.fromStream(LongStream.range(from, toExcluded).boxed())
-            .parallel()
+            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(l->getProfileLadderId(region, l).onErrorResume((t)->Mono.empty()), true, SAFE_REQUESTS_PER_SECOND_CAP);
+            .flatMap(l->WebServiceUtil.getRateDelayedMono(getProfileLadderId(region, l), DELAY),
+                true, 1);
     }
 
     public ParallelFlux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
     (Region region, Iterable<? extends Long> ids)
     {
         return Flux.fromIterable(ids)
-            .parallel()
+            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(l->getProfileLadderId(region, l).onErrorResume((t)->Mono.empty()), true, SAFE_REQUESTS_PER_SECOND_CAP);
+            .flatMap(l->WebServiceUtil.getRateDelayedMono(getProfileLadderId(region, l), DELAY),
+                true, 1);
     }
 
     public Mono<BlizzardProfileLadder> getProfile1v1Ladder(Tuple3<Region, BlizzardPlayerCharacter[], Long> id)
@@ -345,14 +349,18 @@ public class BlizzardSC2API
     }
 
     public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfile1v1Ladders
-    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, int concurrency)
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, int rps)
     {
         return Flux.fromIterable(ids)
-            .parallel()
+            .parallel(rps)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(id->getProfile1v1Ladder(id)
-                .onErrorResume(t->{LOG.error(ExceptionUtils.getRootCauseMessage(t)); return Mono.empty();})
-                .zipWith(Mono.just(id)), true, concurrency);
+            .flatMap(id->WebServiceUtil
+                .getRateDelayedMono(
+                    getProfile1v1Ladder(id),
+                    t->{LOG.error(t.getMessage(), t); return Mono.empty();},
+                    DELAY)
+                .zipWith(Mono.just(id)),
+                true, 1);
     }
 
     public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfile1v1Ladders
@@ -388,9 +396,9 @@ public class BlizzardSC2API
     public ParallelFlux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(Iterable<? extends PlayerCharacter> playerCharacters)
     {
         return Flux.fromIterable(playerCharacters)
-            .parallel()
+            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(this::getMatches, false, SAFE_REQUESTS_PER_SECOND_CAP);
+            .flatMap(p->WebServiceUtil.getRateDelayedMono(getMatches(p), DELAY), false, 1);
     }
 
 }
