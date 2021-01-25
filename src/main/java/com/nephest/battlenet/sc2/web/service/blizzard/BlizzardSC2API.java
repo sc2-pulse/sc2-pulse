@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.web.service.NoRetryException;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -297,7 +298,7 @@ public class BlizzardSC2API
                     });
             }
             LOG.error("Profile ladder not found {}/{}/{}", id.getT2()[prevIx].getRealm(), id.getT2()[prevIx].getId(), id.getT3());
-            return Mono.empty();
+            return Mono.error(new NoRetryException("Profile ladder not found"));
         });
     }
 
@@ -339,9 +340,10 @@ public class BlizzardSC2API
         if(currentMembership == null)
         {
             LOG.warn("Current ladder membership not found {}", ladderId);
-            return Mono.error(new IllegalStateException("Current ladder membership not found. Player moved to a new division?"));
+            return Mono.error(new NoRetryException("Current ladder membership not found. Player moved to a new division?"));
         }
-        if (!currentMembership.getLocalizedGameMode().toLowerCase().contains("1v1")) return Mono.empty();
+        if (!currentMembership.getLocalizedGameMode().toLowerCase().contains("1v1"))
+            return Mono.error(new NoRetryException("Invalid game mode: " + currentMembership.getLocalizedGameMode()));
 
         BlizzardProfileLadder ladder = new BlizzardProfileLadder(
             objectMapper.treeToValue(root.at("/ladderTeams"), BlizzardProfileTeam[].class),
@@ -358,7 +360,8 @@ public class BlizzardSC2API
             .flatMap(id->WebServiceUtil
                 .getRateDelayedMono(
                     getProfile1v1Ladder(id),
-                    t->{LOG.error(t.getMessage(), t); return Mono.empty();},
+                    t->{if(!(ExceptionUtils.getRootCause(t) instanceof NoRetryException)) LOG.error(t.getMessage(), t);
+                        return Mono.empty();},
                     DELAY)
                 .zipWith(Mono.just(id)),
                 true, 1);

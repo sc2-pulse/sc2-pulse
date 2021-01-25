@@ -21,6 +21,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
@@ -112,6 +113,7 @@ public class BlizzardSC2APIIT
             new BlizzardPlayerCharacter(2L, 2, "Name2#123"),
             new BlizzardPlayerCharacter(3L, 3, "Name#123")},
         1L))
+        .onErrorResume(t->Mono.empty())
         .block();
     }
 
