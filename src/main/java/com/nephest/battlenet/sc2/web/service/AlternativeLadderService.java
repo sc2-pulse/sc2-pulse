@@ -73,7 +73,7 @@ public class AlternativeLadderService
     }
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 50;
-    public static final int BATCH_SIZE = 10;
+    public static final int BATCH_SIZE = 30;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
     public void updateSeason(Season season, BaseLeague.LeagueType[] leagues)
