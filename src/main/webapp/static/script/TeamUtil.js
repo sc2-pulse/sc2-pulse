@@ -275,4 +275,16 @@ class TeamUtil
         return leagueDiv;
     }
 
+    static getFavoriteRace(member)
+    {
+        let highestCount = member.terranGamesPlayed || 0;
+        let result = RACE.TERRAN;
+        for(const race of Object.values(RACE))
+        {
+            const raceGames = member[race.name + "GamesPlayed"] || 0;
+            if(raceGames > highestCount) {result = race; highestCount = raceGames;}
+        }
+        return result;
+    }
+
 }
