@@ -288,10 +288,13 @@ class CharacterUtil
               + mmrHistory.length  + " entries)";
     }
 
-    static getAdditionalMmrHistoryData(data, ix1, ix2)
+    static getAdditionalMmrHistoryData(data, dataset, ix1, ix2)
     {
-        const curData = Object.values(data)[ix1]
-            .sort((a, b)=>EnumUtil.enumOfName(a.race, RACE).order - EnumUtil.enumOfName(b.race, RACE).order)[0]
+        const races = [];
+        dataset.datasets.forEach(d=>races.push(d.label.toUpperCase()));
+        races.sort((a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order);
+        const race = races[ix2];
+        const curData = Object.values(data)[ix1].find(d=>d.race == race);
         const lines = [];
         lines.push("mmr:    " + curData.teamState.rating);
         lines.push("games:  " + curData.teamState.games);

@@ -121,7 +121,7 @@ class ChartUtil
         const rawData = ChartUtil.CHART_RAW_DATA.get(data.customMeta.id);
         if(rawData != null)
         {
-            const additional = rawData.additionalDataGetter(rawData.data, tooltipItem.index, tooltipItem.datasetIndex);
+            const additional = rawData.additionalDataGetter(rawData.data, data, tooltipItem.index, tooltipItem.datasetIndex);
             if(additional.constructor === Array)
             {
                 additional.unshift(label);
