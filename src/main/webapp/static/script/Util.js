@@ -223,3 +223,4 @@ Util.MONTH_DATE_FORMAT = new Intl.DateTimeFormat(navigator.language, {month: "2-
 Util.DATE_FORMAT = new Intl.DateTimeFormat(navigator.language, {day: "2-digit", month: "2-digit", year: "numeric"});
 Util.DATE_TIME_FORMAT = new Intl.DateTimeFormat(navigator.language, {day: "2-digit", month: "2-digit", year: "numeric",
     hour: "2-digit", minute: "2-digit", second: "2-digit"});
+Util.DAY_MILLIS = 86400000;
