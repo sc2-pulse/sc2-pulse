@@ -258,10 +258,16 @@ class CharacterUtil
         const queueFilter = queue.code;
         const excludeStart = document.getElementById("mmr-exclude-start").value || 0;
         const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
+        const changesOnly = document.getElementById("mmr-changes-only").checked;
 
-        const mmrHistory = CharacterUtil.filterMmrHistory(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history,
+        let mmrHistory = CharacterUtil.filterMmrHistory(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history,
             queueFilter, excludeStart, excludeEnd);
-        const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime);
+        mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
+        if(changesOnly !== true) mmrHistory = CharacterUtil.injectMmrFlatLines(
+            mmrHistory,
+            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams,
+            queueFilter);
+        const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime.getTime());
         const data = [];
         const rawData = [];
         for(const [dateTime, histories] of mmrHistoryGroped.entries())
@@ -279,13 +285,137 @@ class CharacterUtil
             (name)=>EnumUtil.enumOfName(name, RACE).name,
             (dateTime)=>
             {
-                const dateTimeObj = Util.parseIsoDateTime(dateTime);
+                const dateTimeObj = new Date(parseInt(dateTime));
                 return Util.DATE_TIME_FORMAT.format(dateTimeObj) + " (" + Util.DATE_FORMAT.format(dateTimeObj) + ")"
             }
         );
         document.getElementById("mmr-history-filters").textContent =
             "(" + queue.name + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
+    }
+
+    static injectMmrFlatLines(history, teams, queueFilter)
+    {
+        const firstDate = CharacterUtil.calculateFirstMmrDate();
+        const historyByRace = Util.groupBy(history, h=>h.race);
+        const injected = [];
+        //use the same datetime to correctly group the points by timestamp later
+        const now = new Date();
+        CharacterUtil.injectLatestTeamMmrSnapshots(historyByRace, teams, queueFilter, injected, firstDate);
+        for(const raceHistory of historyByRace.values()) {
+            CharacterUtil.injectMmrHistoryHeader(raceHistory, injected, firstDate);
+            CharacterUtil.fillMmrGaps(raceHistory, injected, now);
+            raceHistory.sort((a, b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
+            CharacterUtil.injectMmrHistoryTail(raceHistory, injected, now);
+        }
+        return history.concat(injected).sort((a, b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
+    }
+
+    static injectLatestTeamMmrSnapshots(racialHistory, teams, queueFilter, injectArray, firstDate)
+    {
+        const teamsFiltered = teams.filter(t=>t.league.queueType == queueFilter && t.league.teamType == 0);
+        for(const race of Object.values(RACE))
+        {
+            const history = racialHistory.get(race.name.toUpperCase());
+            const len = history ? history.length : 0;
+            //skip if there is an actual history or there are no teams at all
+            if(len > 0 || teams.length == 0) continue;
+
+            let teamsRacial = teamsFiltered
+                .filter(t=>TeamUtil.getFavoriteRace(t.members[0]) == race)
+                //desc
+                .sort((a, b)=>b.season - a.season);
+            if(teamsRacial.length == 0) continue;
+
+            const snap = CharacterUtil.createTeamSnapshot(teamsRacial[0], firstDate);
+            racialHistory.set(race.name, [snap]);
+            injectArray.push(snap);
+        }
+    }
+
+    static injectMmrHistoryHeader(history, injectArray, firstDate)
+    {
+        if(history.length == 0) return;
+        if(Math.abs(history[0].teamState.dateTime.getTime() - firstDate.getTime()) < 2000) return;
+
+        const snap = CharacterUtil.cloneMmrPoint(history[0], firstDate);
+        history.splice(0, 0, snap);
+        injectArray.push(snap);
+    }
+
+    static fillMmrGaps(history, injected, now)
+    {
+        const curInjected = [];
+        for(let i = 0; i < history.length; i++)
+        {
+            const cur = history[i];
+            const prev = history[i == 0 ? 0 : i - 1];
+            const toInject = Math.floor((cur.teamState.dateTime.getTime() - prev.teamState.dateTime.getTime()) / Util.DAY_MILLIS);
+            CharacterUtil.injectMmrPoints(history, curInjected, prev, toInject);
+        }
+        Array.prototype.push.apply(injected, curInjected);
+        Array.prototype.push.apply(history, curInjected);
+    }
+
+    static injectMmrHistoryTail(history, injected, now)
+    {
+        const curInjected = [];
+        CharacterUtil.injectMmrPoints(history, curInjected, history[history.length - 1],
+            Math.floor((now.getTime() - history[history.length - 1].teamState.dateTime.getTime()) / Util.DAY_MILLIS));
+        const lastPoint = curInjected.length > 0 ? curInjected[curInjected.length - 1] : history[history.length - 1];
+        if(lastPoint.teamState.dateTime.getTime() < now.getTime()) curInjected.push(CharacterUtil.cloneMmrPoint(lastPoint, now));
+        Array.prototype.push.apply(injected, curInjected);
+        Array.prototype.push.apply(history, curInjected);
+    }
+
+    static injectMmrPoints(history, injectArray, refPoint, toInject)
+    {
+        for(let ii = 0; ii < toInject; ii++)
+        {
+            const date = new Date(refPoint.teamState.dateTime.getTime() + (Util.DAY_MILLIS * (ii + 1)) );
+            date.setHours(0);
+            date.setMinutes(0);
+            date.setSeconds(0, 0);
+            const point = CharacterUtil.cloneMmrPoint(refPoint, date);
+            injectArray.push(point);
+        }
+    }
+
+    static createTeamSnapshot(team, dateTime)
+    {
+        return {
+            teamState: {
+                teamId: team.id,
+                dateTime: dateTime,
+                divisionId: team.divisionId,
+                games: team.wins + team.losses + team.ties,
+                rating: team.rating
+            },
+            race: TeamUtil.getFavoriteRace(team.members[0]).name.toUpperCase(),
+            league: {
+                type: team.league.type,
+                teamType: team.league.teamType,
+                queueType: team.league.queueType
+            },
+            tier: team.tierType,
+            season: team.season,
+            generated: true
+        };
+    }
+
+    static cloneMmrPoint(refPoint, dateTime)
+    {
+        const copy = Object.assign({}, refPoint);
+        copy.teamState = Object.assign({}, copy.teamState,  {dateTime: dateTime});
+        copy.generated = true;
+        return copy;
+    }
+
+    static calculateFirstMmrDate()
+    {
+        const firstDateMax = new Date(Date.now() - Util.DAY_MILLIS * SC2Restful.MMR_HISTORY_DAYS_MAX);
+        return SC2Restful.MMR_HISTORY_START_DATE.getTime() - firstDateMax.getTime() > 0
+            ? SC2Restful.MMR_HISTORY_START_DATE : firstDateMax;
     }
 
     static getAdditionalMmrHistoryData(data, dataset, ix1, ix2)
@@ -516,6 +646,7 @@ class CharacterUtil
             if(prev != null)  window.clearTimeout(prev);
             ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT))
         });
+        document.getElementById("mmr-changes-only").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
     }
 
 }
