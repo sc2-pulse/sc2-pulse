@@ -259,14 +259,18 @@ class CharacterUtil
         const excludeStart = document.getElementById("mmr-exclude-start").value || 0;
         const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
         const changesOnly = document.getElementById("mmr-changes-only").checked;
+        const bestRaceOnly = document.getElementById("mmr-best-race").checked;
 
         let mmrHistory = CharacterUtil.filterMmrHistory(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history,
             queueFilter, excludeStart, excludeEnd);
         mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
+        const historyByRace = Util.groupBy(mmrHistory, h=>h.race);
         if(changesOnly !== true) mmrHistory = CharacterUtil.injectMmrFlatLines(
             mmrHistory,
+            historyByRace,
             Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams,
             queueFilter);
+        if(bestRaceOnly === true) mmrHistory = CharacterUtil.filterMmrHistoryBestRace(historyByRace);
         const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime.getTime());
         const data = [];
         const rawData = [];
@@ -294,10 +298,9 @@ class CharacterUtil
               + mmrHistory.length  + " entries)";
     }
 
-    static injectMmrFlatLines(history, teams, queueFilter)
+    static injectMmrFlatLines(history, historyByRace, teams, queueFilter)
     {
         const firstDate = CharacterUtil.calculateFirstMmrDate();
-        const historyByRace = Util.groupBy(history, h=>h.race);
         const injected = [];
         //use the same datetime to correctly group the points by timestamp later
         const now = new Date();
@@ -441,6 +444,27 @@ class CharacterUtil
         if(excludeEnd > 0)
             filtered = filtered.filter(h=>h.teamState.rating < excludeStart || h.teamState.rating >= excludeEnd);
         return filtered;
+    }
+
+    static filterMmrHistoryBestRace(racialHistory)
+    {
+        if(racialHistory.length == 0) return [];
+        let top = -1;
+        let result = null;
+        for(const [race, vals] of racialHistory.entries())
+        {
+            const curTop = vals[vals.length - 1].teamState.rating;
+            if(curTop > top)
+            {
+                top = curTop;
+                result = race;
+            }
+        }
+        for(const race of Object.values(RACE)) {
+            if(race != result) racialHistory.delete(race);
+        }
+
+        return racialHistory.get(result) ? racialHistory.get(result) : [];
     }
 
     static updateCharacterLinkedCharactersView(id)
@@ -647,6 +671,7 @@ class CharacterUtil
             ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT))
         });
         document.getElementById("mmr-changes-only").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
+        document.getElementById("mmr-best-race").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
     }
 
 }
