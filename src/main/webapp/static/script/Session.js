@@ -77,6 +77,37 @@ class Session
         return Session.isHistorical ? Session.currentRestorationHash : window.location.hash;
     }
 
+    static restoreState()
+    {
+        for(const elem of document.querySelectorAll(".serializable"))
+        {
+            const savedState = localStorage.getItem(elem.id);
+            if(savedState == null) continue;
+
+            if(elem.getAttribute("type") == "checkbox") {
+                if(savedState == "true") {
+                    elem.setAttribute("checked", "checked");
+                } else {
+                    elem.removeAttribute("checked");
+                }
+            } else {
+                elem.setAttribute("value", savedState);
+            }
+        }
+    }
+
+    static enhanceSerializable()
+    {
+        for(const elem of document.querySelectorAll(".serializable"))
+        {
+            if(elem.getAttribute("type") == "checkbox") {
+                elem.addEventListener("change", e=>localStorage.setItem(elem.id, elem.checked));
+            } else {
+                elem.addEventListener("change", e=>localStorage.setItem(elem.id, elem.value));
+            }
+        }
+    }
+
 }
 
 Session.isSilent = false;

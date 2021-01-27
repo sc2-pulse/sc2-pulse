@@ -12,6 +12,7 @@ class SC2Restful
             (res, rej)=>
             {
                 SC2Restful.initAll();
+                Session.restoreState();
                 SC2Restful.enhanceAll();
                 ChartUtil.observeChartables();
                 PaginationUtil.createPaginations();
@@ -45,6 +46,7 @@ class SC2Restful
         BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
         BootstrapUtil.enhanceTooltips();
         ElementUtil.enhanceFullscreenToggles();
+        Session.enhanceSerializable();
     }
 
 }
