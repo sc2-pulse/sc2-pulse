@@ -411,6 +411,8 @@ th.hoverable span
 :fullscreen
 {
     background-color: white;
+    overflow-y: auto;
+    overflow-x: hidden
 }
 
 .fullscreen-toggle
