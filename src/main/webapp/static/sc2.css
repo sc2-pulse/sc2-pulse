@@ -450,3 +450,11 @@ th.hoverable span
         max-width: 1140px;
     }
 }
+
+@media (max-width: 1200px) {
+    .modal-complex {
+        max-width: initial;
+        margin-left: 0.5rem;
+        margin-right: 0.5rem;
+    }
+}
