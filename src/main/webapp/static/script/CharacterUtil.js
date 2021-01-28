@@ -290,7 +290,7 @@ class CharacterUtil
             (dateTime)=>
             {
                 const dateTimeObj = new Date(parseInt(dateTime));
-                return Util.DATE_TIME_FORMAT.format(dateTimeObj) + " (" + Util.DATE_FORMAT.format(dateTimeObj) + ")"
+                return Util.DATE_TIME_FORMAT.format(dateTimeObj);
             }
         );
         document.getElementById("mmr-history-filters").textContent =
