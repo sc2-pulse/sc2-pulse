@@ -280,7 +280,7 @@ class CharacterUtil
             data[dateTime] = {};
             for(const history of histories) data[dateTime][history.race] = history.teamState.rating;
         }
-        ChartUtil.CHART_RAW_DATA.set("player-stats-mmr-table", {data: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
+        ChartUtil.CHART_RAW_DATA.set("player-stats-mmr-table", {rawData: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
         TableUtil.updateColRowTable
         (
             document.getElementById("player-stats-mmr-table"),
