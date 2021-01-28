@@ -18,6 +18,7 @@ class ChartUtil
         config["pointRadius"] = chartable.getAttribute("data-chart-point-radius");
         config["xType"] = chartable.getAttribute("data-chart-x-type");
         config["xTimeUnit"] = chartable.getAttribute("data-chart-x-time-unit");
+        config["beginAtZero"] = chartable.getAttribute("data-chart-begin-at-zero");
         config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
         config["data"] = ChartUtil.collectChartJSData(chartable);
 
@@ -69,8 +70,11 @@ class ChartUtil
                         yAxes:
                         [{
                             scaleLabel: {display: false, labelString: config.yTitle},
-                           // ticks:{beginAtZero: true},
-                            ticks: {callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val)},
+                            ticks:
+                            {
+                                callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val),
+                                beginAtZero: config.beginAtZero === "true" ? true : false
+                            },
                             stacked: config.stacked === "true" ? true : false
                         }]
                     },
