@@ -163,6 +163,27 @@ class TableUtil
         return {headers: headers, rowHeaders: rowHeaders, values: allVals, colors: colors};
     }
 
+    static updateVirtualColRowTable(table, data, dataSetter, sorter = null, headTranslator = null, rowTranslator = null)
+    {
+        const rawHeaders = TableUtil.collectHeaders(data).sort(sorter == null ? (a, b)=>b[0].localeCompare(a[0]) : sorter);
+        const headers = [];
+        const colors = [];
+        const rowHeaders = [];
+        const allVals = [];
+        rawHeaders.forEach(rawHeader=>{
+            const header = headTranslator == null ? rawHeader : headTranslator(rawHeader);
+            headers.push(header);
+            colors.push(header.toLowerCase());
+            allVals.push([]);
+        });
+        for(const [rowHeader, vals] of Object.entries(data)) {
+            rowHeaders.push(rowTranslator == null ? rowHeader : rowTranslator(rowHeader));
+            for(let hIx = 0; hIx < rawHeaders.length; hIx ++) allVals[hIx].push(vals[rawHeaders[hIx]]);
+        }
+        dataSetter({headers: headers, rowHeaders: rowHeaders, values: allVals, colors: colors});
+        table.setAttribute("data-last-updated", Date.now());
+    }
+
     static hoverableColumnHeader(thead)
     {
         const oldText = thead.textContent;

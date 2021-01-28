@@ -214,7 +214,10 @@ class ChartUtil
     {
         const type = elem.getAttribute("data-chart-type");
         const stacked = elem.getAttribute("data-chart-stacked");
-        const tableData = TableUtil.collectTableData(elem);
+        const direct = elem.getAttribute("data-chart-direct");
+        const tableData = direct === "true"
+            ? ChartUtil.CHART_RAW_DATA.get(elem.id).data
+            : TableUtil.collectTableData(elem);
         const datasets = [];
         if(type !== "doughnut" && type !== "pie")
         {
