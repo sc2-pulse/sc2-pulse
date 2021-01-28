@@ -7,7 +7,7 @@ class SeasonUtil
     static seasonIdTranslator(id)
     {
         const season = Session.currentSeasons.filter((s)=>s.battlenetId == id)[0];
-        const seasonEnd = Util.parseIsoDate(season.end);
+        const seasonEnd = season.end;
         const endDate = seasonEnd.getTime() - Date.now() > 0 ? new Date() : seasonEnd;
         return `${season.year} season ${season.number} (${season.battlenetId}) (${Util.MONTH_DATE_FORMAT.format(endDate)})`;
     }
@@ -24,6 +24,7 @@ class SeasonUtil
     static updateSeasons(seasons)
     {
         Session.currentSeasons = seasons;
+        Session.currentSeasonsMap = Util.groupBy(seasons, s=>s.battlenetId);
         for(const season of seasons) SeasonUtil.updateSeasonMeta(season);
         SeasonUtil.updateSeasonsTabs(seasons);
         for(const seasonPicker of document.querySelectorAll(".season-picker"))
@@ -42,11 +43,7 @@ class SeasonUtil
 
     static updateSeasonDuration(season)
     {
-        const startDate = Util.parseIsoDate(season.start);
-        let endDate = Util.parseIsoDate(season.end);
-        const now = new Date();
-        if(now - endDate < 0) endDate = now;
-        season["days"] = (endDate - startDate) / (1000 * 60 * 60 * 24);
+        season["days"] = (season.end - season.start) / (1000 * 60 * 60 * 24);
     }
 
     static updateSeasonDescription(season)
@@ -54,8 +51,19 @@ class SeasonUtil
         season.descriptiveName = SeasonUtil.seasonIdTranslator(season.battlenetId);
     }
 
+    static updateSeasonDates(season)
+    {
+        const startDate = Util.parseIsoDate(season.start);
+        let endDate = Util.parseIsoDate(season.end);
+        const now = new Date();
+        if(now - endDate < 0) endDate = now;
+        season.start = startDate;
+        season.end = endDate;
+    }
+
     static updateSeasonMeta(season)
     {
+        SeasonUtil.updateSeasonDates(season);
         SeasonUtil.updateSeasonDuration(season);
         SeasonUtil.updateSeasonDescription(season);
     }

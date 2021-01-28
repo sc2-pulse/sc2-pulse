@@ -113,6 +113,7 @@ class Session
 Session.isSilent = false;
 Session.currentRequests = 0;
 Session.currentSeasons = null;
+Session.currentSeasonsMap = null;
 Session.currentSeason = null;
 Session.currentTeamFormat = null;
 Session.currentTeamType = null;
