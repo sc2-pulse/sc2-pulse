@@ -98,20 +98,28 @@ public class AlternativeLadderService
 
     public void discoverSeason(Season season)
     {
+        long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion(),
+            QueueType.LOTV_1V1, TeamType.ARRANGED).orElse(FIRST_DIVISION_ID) + 1;
+        discoverSeason(season, lastDivision);
+    }
+
+    private void discoverSeason(Season season, long lastDivision)
+    {
         LOG.info("Discovering {} ladders", season);
-        ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds = get1v1ProfileLadderIds(season);
+
+        ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds =
+            get1v1ProfileLadderIds(season, lastDivision);
         LOG.info("{} {} ladders found", profileIds.size(), season);
         api.getProfile1v1Ladders(profileIds, BATCH_SIZE)
             .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
             .sequential().blockLast();
     }
 
-    private ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> get1v1ProfileLadderIds(Season season)
+    private ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> get1v1ProfileLadderIds
+    (Season season, long lastDivision)
     {
         ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
         new ConcurrentLinkedQueue<>();
-        long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion(),
-            QueueType.LOTV_1V1, TeamType.ARRANGED).orElse(FIRST_DIVISION_ID) + 1;
         AtomicInteger discovered = new AtomicInteger(1);
         while(discovered.get() > 0)
         {
