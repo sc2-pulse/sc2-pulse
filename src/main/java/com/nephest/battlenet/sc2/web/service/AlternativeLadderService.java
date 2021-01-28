@@ -31,6 +31,12 @@ public class AlternativeLadderService
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(AlternativeLadderService.class);
+    private static final Map<Region, Integer> SMART_DISCOVERY_MAX = Collections.unmodifiableMap(Map.of(
+        Region.US, 200,
+        Region.EU, 200,
+        Region.KR, 50,
+        Region.CN, 100
+    ));
 
     public static final long FIRST_DIVISION_ID = 33080L;
 
@@ -96,10 +102,34 @@ public class AlternativeLadderService
             .sequential().blockLast();
     }
 
+    public void updateThenSmartDiscoverSeason(Season season, BaseLeague.LeagueType[] leagues)
+    {
+        int divisionCount = divisionDao.getDivisionCount(season.getBattlenetId(), season.getRegion(), leagues, QueueType.LOTV_1V1, TeamType.ARRANGED);
+        if(divisionCount < SMART_DISCOVERY_MAX.get(season.getRegion()))
+        {
+            updateThenContinueDiscoverSeason(season, leagues);
+        }
+        else
+        {
+            updateSeason(season, leagues);
+        }
+    }
+
     public void discoverSeason(Season season)
     {
         long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion(),
             QueueType.LOTV_1V1, TeamType.ARRANGED).orElse(FIRST_DIVISION_ID) + 1;
+        discoverSeason(season, lastDivision);
+    }
+
+    public void updateThenContinueDiscoverSeason(Season season, BaseLeague.LeagueType[] leagues)
+    {
+        updateSeason(season, leagues);
+        long lastDivision = divisionDao
+            .findLastDivision(season.getBattlenetId(), season.getRegion(), QueueType.LOTV_1V1, TeamType.ARRANGED)
+            .orElseGet(()->divisionDao
+                .findLastDivision(season.getBattlenetId() - 1, season.getRegion(),QueueType.LOTV_1V1, TeamType.ARRANGED)
+                .orElse(FIRST_DIVISION_ID)) + 1;
         discoverSeason(season, lastDivision);
     }
 

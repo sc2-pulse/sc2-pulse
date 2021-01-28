@@ -261,11 +261,11 @@ public class StatsService
         {
             if(leagues.length < BaseLeague.LeagueType.values().length)
             {
-                alternativeLadderService.updateSeason(season, leagues);
+                alternativeLadderService.updateThenSmartDiscoverSeason(season, leagues);
             }
             else
             {
-                alternativeLadderService.discoverSeason(season);
+                alternativeLadderService.updateThenContinueDiscoverSeason(season, leagues);
             }
         }
     }
