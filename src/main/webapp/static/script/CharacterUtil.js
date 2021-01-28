@@ -313,7 +313,11 @@ class CharacterUtil
 
     static injectLatestTeamMmrSnapshots(racialHistory, teams, queueFilter, injectArray, firstDate)
     {
-        const teamsFiltered = teams.filter(t=>t.league.queueType == queueFilter && t.league.teamType == 0);
+        const teamsFiltered = teams.filter(t=>
+            t.league.queueType == queueFilter
+            && t.league.teamType == 0
+            && Session.currentSeasonsMap.get(t.season)[0].end.getTime() > firstDate.getTime()
+        );
         for(const race of Object.values(RACE))
         {
             const history = racialHistory.get(race.name.toUpperCase());
@@ -335,8 +339,9 @@ class CharacterUtil
 
     static injectMmrHistoryHeader(history, injectArray, firstDate)
     {
-        if(history.length == 0) return;
-        if(Math.abs(history[0].teamState.dateTime.getTime() - firstDate.getTime()) < 2000) return;
+        if(history.length == 0
+            || Math.abs(history[0].teamState.dateTime.getTime() - firstDate.getTime()) < 2000
+            || Session.currentSeasonsMap.get(history[0].season)[0].start.getTime() > firstDate.getTime()) return;
 
         const snap = CharacterUtil.cloneMmrPoint(history[0], firstDate);
         history.splice(0, 0, snap);
@@ -363,16 +368,23 @@ class CharacterUtil
         CharacterUtil.injectMmrPoints(history, curInjected, history[history.length - 1],
             Math.floor((now.getTime() - history[history.length - 1].teamState.dateTime.getTime()) / Util.DAY_MILLIS));
         const lastPoint = curInjected.length > 0 ? curInjected[curInjected.length - 1] : history[history.length - 1];
-        if(lastPoint.teamState.dateTime.getTime() < now.getTime()) curInjected.push(CharacterUtil.cloneMmrPoint(lastPoint, now));
+        const lastPointMaxDateTime = Session.currentSeasonsMap.get(lastPoint.season)[0].end;
+        if(lastPoint.teamState.dateTime.getTime() < lastPointMaxDateTime.getTime())
+             curInjected.push(CharacterUtil.cloneMmrPoint(lastPoint, lastPointMaxDateTime));
         Array.prototype.push.apply(injected, curInjected);
         Array.prototype.push.apply(history, curInjected);
     }
 
     static injectMmrPoints(history, injectArray, refPoint, toInject)
     {
+        const maxDate = Session.currentSeasonsMap.get(refPoint.season)[0].end;
         for(let ii = 0; ii < toInject; ii++)
         {
-            const date = new Date(refPoint.teamState.dateTime.getTime() + (Util.DAY_MILLIS * (ii + 1)) );
+            let date = new Date(refPoint.teamState.dateTime.getTime() + (Util.DAY_MILLIS * (ii + 1)) );
+            if(date.getTime() > maxDate.getTime()) {
+                date = maxDate;
+                ii = toInject;
+            }
             date.setHours(0);
             date.setMinutes(0);
             date.setSeconds(0, 0);
