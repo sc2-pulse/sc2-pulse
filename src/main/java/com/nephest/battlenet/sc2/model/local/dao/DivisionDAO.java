@@ -119,6 +119,18 @@ public class DivisionDAO
         + "AND league.queue_type = :queueType "
         + "AND league.team_type = :teamType "
         + "AND division.battlenet_id=:divisionBattlenetId";
+    private static final String FIND_DIVISION_COUNT =
+        "SELECT COUNT(*) "
+        + "FROM division "
+        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
+        + "INNER JOIN league ON league_tier.league_id = league.id "
+        + "INNER JOIN season ON league.season_id = season.id "
+        + "WHERE "
+        + "season.battlenet_id=:season "
+        + "AND season.region=:region "
+        + "AND league.type IN (:leagues) "
+        + "AND league.queue_type = :queueType "
+        + "AND league.team_type = :teamType ";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -282,6 +294,27 @@ public class DivisionDAO
             .addValue("queueType", conversionService.convert(queueType, Integer.class))
             .addValue("teamType", conversionService.convert(teamType, Integer.class));
         return template.query(FIND_DIVISION_BATTLENET_IDS, params, DAOUtils.LONG_MAPPER);
+    }
+
+    public int getDivisionCount
+    (
+        int season,
+        Region region,
+        BaseLeague.LeagueType[] leagues,
+        QueueType queueType,
+        TeamType teamType
+    )
+    {
+        Set<Integer> leagueInts = Arrays.stream(leagues)
+            .map(l->conversionService.convert(l, Integer.class))
+            .collect(Collectors.toSet());
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("leagues", leagueInts)
+            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("teamType", conversionService.convert(teamType, Integer.class));
+        return template.query(FIND_DIVISION_COUNT, params, DAOUtils.INT_EXTRACTOR);
     }
 
 }

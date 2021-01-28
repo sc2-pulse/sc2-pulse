@@ -100,6 +100,16 @@ public class StandardDataReadonlyIT
         longIds.sort(Comparator.naturalOrder());
         assertEquals(orderedIds.get(0).getKey().getBattlenetId(), longIds.get(0));
         assertEquals(orderedIds.get(1).getKey().getBattlenetId(), longIds.get(1));
+
+        int count = divisionDAO.getDivisionCount
+        (
+            SeasonGenerator.DEFAULT_SEASON_ID,
+            Region.US,
+            new BaseLeague.LeagueType[]{BaseLeague.LeagueType.DIAMOND, BaseLeague.LeagueType.MASTER},
+            QueueType.LOTV_1V1,
+            TeamType.ARRANGED
+        );
+        assertEquals(2, count);
     }
 
 }
