@@ -370,6 +370,32 @@ class ChartUtil
         for(const relTab of tabs) relTab.style.minHeight = maxHeight + "px";
     }
 
+    static enhanceZoomToggles()
+    {
+        document.querySelectorAll(".chart-zoom-toggle").forEach(t=>{
+            const chartable = document.getElementById(t.getAttribute("data-chartable"));
+            ChartUtil.changeZoomState(chartable, t.checked);
+            t.addEventListener("change", e=>{
+                const chartable = document.getElementById(e.target.getAttribute("data-chartable"));
+                ChartUtil.changeZoomState(chartable, t.checked);
+            });
+        });
+    }
+
+    static changeZoomState(chartable, zoom)
+    {
+        const chart = ChartUtil.CHARTS.get(chartable.id);
+        if(!zoom) {
+            chartable.setAttribute("data-chart-begin-at-zero", "true");
+            if(chart != null) chart.options.scales.yAxes.forEach(y=>y.ticks.beginAtZero = true);
+        }
+        else {
+            chartable.setAttribute("data-chart-begin-at-zero", "false");
+            if(chart != null) chart.options.scales.yAxes.forEach(y=>y.ticks.beginAtZero = false);
+        }
+        if(chart != null) chart.update();
+    }
+
 }
 
 ChartUtil.CHARTS = new Map();

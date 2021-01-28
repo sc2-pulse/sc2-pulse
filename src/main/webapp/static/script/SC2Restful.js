@@ -47,6 +47,7 @@ class SC2Restful
         BootstrapUtil.enhanceTooltips();
         ElementUtil.enhanceFullscreenToggles();
         Session.enhanceSerializable();
+        ChartUtil.enhanceZoomToggles();
     }
 
 }
