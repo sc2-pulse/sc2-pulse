@@ -16,6 +16,8 @@ class ChartUtil
         config["tooltipSort"] = chartable.getAttribute("data-chart-tooltip-sort");
         config["performance"] = chartable.getAttribute("data-chart-performance");
         config["pointRadius"] = chartable.getAttribute("data-chart-point-radius");
+        config["xType"] = chartable.getAttribute("data-chart-x-type");
+        config["xTimeUnit"] = chartable.getAttribute("data-chart-x-time-unit");
         config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
         config["data"] = ChartUtil.collectChartJSData(chartable);
 
@@ -58,7 +60,11 @@ class ChartUtil
                                 autoSkipPadding: 20,
                               //  ...(config.performance === "fast") && {sampleSize: 50}
                             },
-                            stacked: config.stacked === "true" ? true : false
+                            stacked: config.stacked === "true" ? true : false,
+                            ...(config.xType === "time") && {
+                                type: "time",
+                                time: {unit: config.xTimeUnit}
+                            }
                         }],
                         yAxes:
                         [{
