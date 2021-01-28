@@ -281,17 +281,14 @@ class CharacterUtil
             for(const history of histories) data[dateTime][history.race] = history.teamState.rating;
         }
         ChartUtil.CHART_RAW_DATA.set("player-stats-mmr-table", {rawData: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
-        TableUtil.updateColRowTable
+        TableUtil.updateVirtualColRowTable
         (
             document.getElementById("player-stats-mmr-table"),
             data,
+            (tableData=>ChartUtil.CHART_RAW_DATA.get("player-stats-mmr-table").data = tableData),
             (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order,
             (name)=>EnumUtil.enumOfName(name, RACE).name,
-            (dateTime)=>
-            {
-                const dateTimeObj = new Date(parseInt(dateTime));
-                return Util.DATE_TIME_FORMAT.format(dateTimeObj);
-            }
+            (dateTime)=>new Date(parseInt(dateTime))
         );
         document.getElementById("mmr-history-filters").textContent =
             "(" + queue.name + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
