@@ -221,6 +221,23 @@ public class BlizzardSC2API
             .retryWhen(WebServiceUtil.RETRY);
     }
 
+    public ParallelFlux<Tuple2<BlizzardLadder, BlizzardTierDivision>> getLadders
+    (
+        Region region,
+        BlizzardTierDivision[] divisions
+    )
+    {
+        return Flux.fromArray(divisions)
+            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
+            .runOn(Schedulers.boundedElastic())
+            .flatMap(d->WebServiceUtil.getRateDelayedMono(
+                    getLadder(region, d).zipWith(Mono.just(d)),
+                    t->{if(!(ExceptionUtils.getRootCause(t) instanceof NoRetryException)) LOG.error(t.getMessage(), t);
+                        return Mono.empty();},
+                    DELAY),
+                true, 1);
+    }
+
     public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region region, long ladderId)
     {
         return getWebClient()
