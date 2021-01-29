@@ -54,6 +54,7 @@ public class StatsService
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private Validator validator;
+    private boolean ignoreAlternativeData;
 
     private final AtomicBoolean isUpdating = new AtomicBoolean(false);
     private final Map<Integer, Instant> lastLeagueUpdates = new HashMap<>();
@@ -110,6 +111,13 @@ public class StatsService
     public boolean isUpdating()
     {
         return isUpdating.get();
+    }
+
+    @Autowired
+    protected void setIgnoreAlternativeData
+    (@Value("${com.nephest.battlenet.sc2.ladder.ignoreAlternativeData:#{'false'}}") boolean ignoreAlternativeData)
+    {
+        this.ignoreAlternativeData = ignoreAlternativeData;
     }
 
     @CacheEvict
@@ -355,7 +363,8 @@ public class StatsService
     )
     {
         //alternative ladder update updates only 1v1
-        if(league.getQueueType() != QueueType.LOTV_1V1) return divisionDao.merge(Division.of(tier, bDivision));
+        if(ignoreAlternativeData || league.getQueueType() != QueueType.LOTV_1V1)
+            return divisionDao.merge(Division.of(tier, bDivision));
 
         /*
             Alternative ladder update doesn't have tier info, so it creates divisions with the default tier.
@@ -411,7 +420,8 @@ public class StatsService
     )
     {
         //alternative ladder update updates only 1v1
-        if(league.getQueueType() != QueueType.LOTV_1V1) return teamDao.merge(Team.of(season, league, tier, division,bTeam));
+        if(ignoreAlternativeData || league.getQueueType() != QueueType.LOTV_1V1)
+            return teamDao.merge(Team.of(season, league, tier, division,bTeam));
 
         //alternative ladder does not have battlenet id, find such teams and update them
         PlayerCharacter playerCharacter =
