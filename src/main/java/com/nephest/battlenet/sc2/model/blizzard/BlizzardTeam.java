@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
+import java.time.Instant;
 
 @JsonNaming(SnakeCaseStrategy.class)
 public class BlizzardTeam
@@ -26,17 +27,21 @@ extends BlizzardBaseTeam
     @JsonProperty("member")
     private BlizzardTeamMember[] members = EMPTY_TEAM_MEMBER_ARRAY;
 
+    @NotNull
+    private Instant lastPlayedTimeStamp = Instant.now();
+
     public BlizzardTeam(){super();}
 
     public BlizzardTeam
     (
-        BigInteger id, BlizzardTeamMember[] members,
+        BigInteger id, BlizzardTeamMember[] members, Instant lastPlayedTimeStamp,
         Long rating, Integer wins, Integer loses, Integer ties, Integer points
     )
     {
         super(rating, wins, loses, ties, points);
         this.id = id;
         this.members = members;
+        this.lastPlayedTimeStamp = lastPlayedTimeStamp;
     }
 
     public void setId(BigInteger id)
@@ -59,4 +64,13 @@ extends BlizzardBaseTeam
         return members;
     }
 
+    public Instant getLastPlayedTimeStamp()
+    {
+        return lastPlayedTimeStamp;
+    }
+
+    public void setLastPlayedTimeStamp(Instant lastPlayedTimeStamp)
+    {
+        this.lastPlayedTimeStamp = lastPlayedTimeStamp;
+    }
 }
