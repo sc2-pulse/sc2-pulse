@@ -265,7 +265,7 @@ public class StatsService
             }
             else
             {
-                alternativeLadderService.updateThenContinueDiscoverSeason(season, leagues);
+                alternativeLadderService.discoverSeason(season);
             }
         }
     }
