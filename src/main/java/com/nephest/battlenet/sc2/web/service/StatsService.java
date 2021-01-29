@@ -19,7 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.util.function.Tuple2;
 
 import java.util.HashSet;
 import java.util.List;
@@ -309,42 +309,22 @@ public class StatsService
         {
             LeagueTier tier = LeagueTier.of(league, bTier);
             leagueTierDao.merge(tier);
-            updateDivisions(bTier, season, league, tier);
+            updateDivisions(bTier.getDivisions(), season, league, tier);
         }
     }
 
-
-    protected void updateDivisions(BlizzardLeagueTier bTier, Season season, League league, LeagueTier tier)
+    private void updateDivisions
+    (
+        BlizzardTierDivision[] divisions,
+        Season season,
+        League league,
+        LeagueTier tier
+    )
     {
-        int from = 0;
-        int perTransaction =
-            MEMBERS_PER_TRANSACTION /
-            //members in one division
-            (league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType()) * 100);
-        perTransaction = perTransaction == 0 ? 1 : perTransaction;
-        int to = from + perTransaction;
-        to = Math.min(to, bTier.getDivisions().length);
-        while(from < bTier.getDivisions().length)
-        {
-            /*
-                All retry settings are configured on lower level APIs
-                We can encounter an exception here in a rare occasion
-                like transaction timeout. Retry it once to prevent whole season retry
-            */
-            try
-            {
-                statsService.updateDivisions(bTier.getDivisions(), season, league, tier, from, to);
-            }
-            catch(Exception ex)
-            {
-                LOG.error(ex.getMessage(), ex);
-                LOG.info("Retrying transaction");
-                statsService.updateDivisions(bTier.getDivisions(), season, league, tier, from, to);
-            }
-            from += perTransaction;
-            to += perTransaction;
-            to = Math.min(to, bTier.getDivisions().length);
-        }
+        api.getLadders(season.getRegion(), divisions)
+            .doOnNext(t->statsService.saveLadder(season, league, tier, t))
+            .sequential()
+            .blockLast();
     }
 
     @Transactional
@@ -352,47 +332,20 @@ public class StatsService
         //isolation = Isolation.READ_COMMITTED,
         propagation = Propagation.REQUIRES_NEW
     )
-    public void updateDivisions
+    public void saveLadder
     (
-        BlizzardTierDivision[] divisions,
         Season season,
         League league,
         LeagueTier tier,
-        int from, int to
+        Tuple2<BlizzardLadder, BlizzardTierDivision> t
     )
     {
-        for (int i = from; i < to; i++)
-        {
-            BlizzardTierDivision bDivision = divisions[i];
-            Division division = saveDivision(season, league, tier, bDivision);
-            try
-            {
-                updateTeams(api.getLadder(season.getRegion(), bDivision).block().getTeams(), season, league, tier, division);
-                //A lot of garbage here, hint the GC
-                System.gc();
-            }
-            catch(RuntimeException ex)
-            {
-                if(ex.getCause() != null && ex.getCause() instanceof WebClientResponseException)
-                {
-                    /*
-                        api is retrying failed requests
-                        if exception is thrown there is nothing we can do
-                        skip failed division
-                    */
-                    LOG.info
-                    (
-                        "Skipped invalid division {}", division.getBattlenetId());
-                }
-                else
-                {
-                    throw ex;
-                }
-            }
-        }
+        BlizzardTierDivision bDivision = t.getT2();
+        Division division = saveDivision(season, league, tier, bDivision);
+        updateTeams(t.getT1().getTeams(), season, league, tier, division);
     }
 
-    private Division saveDivision
+    public Division saveDivision
     (
         Season season,
         League league,
