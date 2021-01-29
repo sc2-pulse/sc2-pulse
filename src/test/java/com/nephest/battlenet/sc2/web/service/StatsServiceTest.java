@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -17,6 +17,8 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.validation.Validator;
+
+import java.time.Instant;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
@@ -67,7 +69,7 @@ public class StatsServiceTest
 
         ss.updateTeams(new BlizzardTeam[]{noMembersTeam, zeroGamesTeam}, mock(Season.class),
             new League(1L, 1L, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            mock(LeagueTier.class), mock(Division.class));
+            mock(LeagueTier.class), mock(Division.class), Instant.now());
 
         verify(teamDAO, never()).merge(any());
     }

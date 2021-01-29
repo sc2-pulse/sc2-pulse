@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -20,6 +20,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.validation.Validator;
+
+import java.time.Instant;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -58,7 +60,7 @@ public class StatsServiceIT
 
         statsService.updateTeams(new BlizzardTeam[]{noBattletagTeam}, mock(Season.class),
             new League(1L, 1L, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            mock(LeagueTier.class), mock(Division.class));
+            mock(LeagueTier.class), mock(Division.class), Instant.now());
 
         verify(teamDAO, never()).merge(any());
     }

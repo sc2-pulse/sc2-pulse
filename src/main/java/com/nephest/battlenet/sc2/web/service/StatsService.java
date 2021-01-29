@@ -21,10 +21,8 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import reactor.util.function.Tuple2;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.time.Instant;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Service
@@ -34,8 +32,6 @@ public class StatsService
     private static final Logger LOG = LoggerFactory.getLogger(StatsService.class);
 
     public static final Version VERSION = Version.LOTV;
-    public static final int UPDATE_ALL_MAX_TRIES = 5;
-    public static final int MEMBERS_PER_TRANSACTION = 400;
 
     @Autowired
     private StatsService statsService;
@@ -60,6 +56,7 @@ public class StatsService
     private Validator validator;
 
     private final AtomicBoolean isUpdating = new AtomicBoolean(false);
+    private final Map<Integer, Instant> lastLeagueUpdates = new HashMap<>();
 
     public StatsService(){}
 
@@ -182,10 +179,12 @@ public class StatsService
 
         try
         {
+            Instant startInstant = Instant.now();
             long start = System.currentTimeMillis();
 
             updateCurrentSeason(regions, queues, leagues);
 
+            lastLeagueUpdates.put(leagues.length, startInstant);
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
             LOG.info("Updated current after {} seconds", seconds);
@@ -297,19 +296,19 @@ public class StatsService
                     League league = League.of(season, bLeague);
 
                     leagueDao.merge(league);
-                    updateLeagueTiers(bLeague, season, league);
+                    updateLeagueTiers(bLeague, season, league, lastLeagueUpdates.get(leagues.length));
                 }
             }
         }
     }
 
-    private void updateLeagueTiers(BlizzardLeague bLeague, Season season, League league)
+    private void updateLeagueTiers(BlizzardLeague bLeague, Season season, League league, Instant lastUpdateStart)
     {
         for (BlizzardLeagueTier bTier : bLeague.getTiers())
         {
             LeagueTier tier = LeagueTier.of(league, bTier);
             leagueTierDao.merge(tier);
-            updateDivisions(bTier.getDivisions(), season, league, tier);
+            updateDivisions(bTier.getDivisions(), season, league, tier, lastUpdateStart);
         }
     }
 
@@ -318,11 +317,12 @@ public class StatsService
         BlizzardTierDivision[] divisions,
         Season season,
         League league,
-        LeagueTier tier
+        LeagueTier tier,
+        Instant lastUpdateStart
     )
     {
         api.getLadders(season.getRegion(), divisions)
-            .doOnNext(t->statsService.saveLadder(season, league, tier, t))
+            .doOnNext(t->statsService.saveLadder(season, league, tier, t, lastUpdateStart))
             .sequential()
             .blockLast();
     }
@@ -337,12 +337,13 @@ public class StatsService
         Season season,
         League league,
         LeagueTier tier,
-        Tuple2<BlizzardLadder, BlizzardTierDivision> t
+        Tuple2<BlizzardLadder, BlizzardTierDivision> t,
+        Instant lastUpdateStart
     )
     {
         BlizzardTierDivision bDivision = t.getT2();
         Division division = saveDivision(season, league, tier, bDivision);
-        updateTeams(t.getT1().getTeams(), season, league, tier, division);
+        updateTeams(t.getT1().getTeams(), season, league, tier, division, lastUpdateStart);
     }
 
     public Division saveDivision
@@ -374,9 +375,12 @@ public class StatsService
         Season season,
         League league,
         LeagueTier tier,
-        Division division
+        Division division,
+        Instant lastUpdateStart
     )
     {
+        if(lastUpdateStart != null) bTeams = Arrays.stream(bTeams)
+            .filter(t->t.getLastPlayedTimeStamp().isAfter(lastUpdateStart)).toArray(BlizzardTeam[]::new);
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         Set<TeamMember> members = new HashSet<>(bTeams.length * memberCount, 1f);
         Set<TeamState> states = new HashSet<>(bTeams.length, 1f);
