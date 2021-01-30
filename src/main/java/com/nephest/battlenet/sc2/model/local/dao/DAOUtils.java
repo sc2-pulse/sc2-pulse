@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -10,6 +10,7 @@ public final class DAOUtils
 {
 
     public static final String REMOVE_OUTDATED_TEMPLATE = "DELETE FROM %1$s WHERE updated < NOW() - INTERVAL '%2$s'";
+    public static final int[] EMPTY_INT_ARRAY = new int[0];
 
     private DAOUtils(){}
 
