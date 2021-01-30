@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategy.SnakeCaseStrategy;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 @JsonNaming(SnakeCaseStrategy.class)
 public class BlizzardLadder
@@ -20,11 +21,15 @@ public class BlizzardLadder
     @JsonProperty("team")
     private BlizzardTeam[] teams = EMPTY_TEAM_ARRAY;
 
+    @NotNull @Valid
+    private BlizzardLadderLeague league;
+
     public BlizzardLadder(){}
 
-    public BlizzardLadder(BlizzardTeam[] teams)
+    public BlizzardLadder(@Valid BlizzardTeam[] teams, @NotNull @Valid BlizzardLadderLeague league)
     {
         this.teams = teams;
+        this.league = league;
     }
 
     public void setTeams(BlizzardTeam[] teams)
@@ -35,6 +40,16 @@ public class BlizzardLadder
     public BlizzardTeam[] getTeams()
     {
         return teams;
+    }
+
+    public BlizzardLadderLeague getLeague()
+    {
+        return league;
+    }
+
+    public void setLeague(BlizzardLadderLeague league)
+    {
+        this.league = league;
     }
 
 }
