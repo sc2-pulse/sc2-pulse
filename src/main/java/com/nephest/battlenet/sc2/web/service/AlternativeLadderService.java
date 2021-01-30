@@ -211,20 +211,27 @@ public class AlternativeLadderService
         LOG.debug("Ladder saved: {} {}", id.getT1(), id.getT3());
     }
 
-    private Division getOrCreate1v1Division(Season season, BaseLeague.LeagueType leagueType, long battlenetId)
+    public Division getOrCreate1v1Division
+    (Season season, QueueType queueType, TeamType teamType, BaseLeague.LeagueType leagueType, long battlenetId)
     {
         return divisionDao
-            .findDivision(season.getBattlenetId(), season.getRegion(), QueueType.LOTV_1V1, TeamType.ARRANGED,battlenetId)
-            .orElseGet(()->create1v1Division(season, leagueType, battlenetId));
+            .findDivision(season.getBattlenetId(), season.getRegion(), queueType, teamType, battlenetId)
+            .orElseGet(()->create1v1Division(season, queueType, teamType, leagueType, battlenetId));
     }
 
-    private Division create1v1Division(Season season, BaseLeague.LeagueType leagueType, long battlenetId)
+    private Division getOrCreate1v1Division(Season season, BaseLeague.LeagueType leagueType, long battlenetId)
+    {
+        return getOrCreate1v1Division(season, QueueType.LOTV_1V1, TeamType.ARRANGED, leagueType, battlenetId);
+    }
+
+    private Division create1v1Division
+    (Season season, QueueType queueType, TeamType teamType, BaseLeague.LeagueType leagueType, long battlenetId)
     {
         LeagueTier tier = leagueTierDao.findByLadder(
-            season.getBattlenetId(), season.getRegion(), leagueType, QueueType.LOTV_1V1,TeamType.ARRANGED, ALTERNATIVE_TIER)
+            season.getBattlenetId(), season.getRegion(), leagueType, queueType, teamType, ALTERNATIVE_TIER)
             .orElseGet(()->{
                 League league = leagueDao
-                    .merge(new League(null, season.getId(), leagueType, QueueType.LOTV_1V1, TeamType.ARRANGED));
+                    .merge(new League(null, season.getId(), leagueType, queueType, teamType));
                 return leagueTierDao.merge(new LeagueTier(null, league.getId(), ALTERNATIVE_TIER, 0, 0));
             });
 
