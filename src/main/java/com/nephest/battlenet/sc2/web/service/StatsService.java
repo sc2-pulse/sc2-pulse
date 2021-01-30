@@ -439,6 +439,7 @@ public class StatsService
         if(teamEntry != null)
         {
             Team team = teamEntry.getKey();
+            boolean wasAlternative = team.getBattlenetId() == null;
 
             team.setLeague(league);
             team.setTierType(tier.getType());
@@ -449,7 +450,7 @@ public class StatsService
             team.setWins(bTeam.getWins());
             team.setLosses(bTeam.getLosses());
             team.setTies(bTeam.getTies());
-            return teamDao.mergeById(team);
+            return wasAlternative ? teamDao.mergeById(team) : teamDao.merge(team);
         }
 
         return teamDao.merge(Team.of(season, league, tier, division,bTeam));
