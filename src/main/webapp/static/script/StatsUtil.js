@@ -232,12 +232,24 @@ class StatsUtil
                 tr.appendChild(th);
                 for(const region of Object.keys(searchResult))
                 {
-                    const range = searchResult[region][leagueId][tierId];
-                    const td = document.createElement("td");
-                    td.textContent = league === LEAGUE.GRANDMASTER
-                        ? "Top 200"
-                        : (range[0] + "-" + range[1]);
-                    tr.appendChild(td);
+                    if
+                    (
+                        searchResult[region] == null
+                        || searchResult[region][leagueId] == null
+                        || searchResult[region][leagueId][tierId] == null
+                    )
+                    {
+                        tr.appendChild(document.createElement("td"));
+                    }
+                    else
+                    {
+                        const range = searchResult[region][leagueId][tierId];
+                        const td = document.createElement("td");
+                        td.textContent = league === LEAGUE.GRANDMASTER
+                            ? "Top 200"
+                            : (range[0] + "-" + range[1]);
+                        tr.appendChild(td);
+                    }
                 }
                 body.appendChild(tr);
             }
