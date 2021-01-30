@@ -74,7 +74,12 @@ public class Cron
     {
         try
         {
-            statsService.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values());
+            statsService.updateCurrent
+            (
+                Region.values(),
+                QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
+                BaseLeague.LeagueType.values()
+            );
             proPlayerService.update();
             matchService.update();
         }
