@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -165,9 +165,10 @@ public class SqlSyntaxIT
         assertEquals(2, team.getTies());
         assertEquals(2, team.getPoints());
         assertNull(teamDAO.merge(team));
+        assertNotNull(teamDAO.mergeById(team, true));
         assertNull(teamDAO.merge(sameTeam));
         mergedByIdTeam.setId(team.getId());
-        teamDAO.mergeById(mergedByIdTeam);
+        teamDAO.mergeById(mergedByIdTeam, false);
         Team foundTeam = teamDAO.findById(mergedByIdTeam.getId()).orElse(null);
         assertEquals(mergedByIdTeam.getId(), foundTeam.getId());
         assertNotNull(foundTeam);

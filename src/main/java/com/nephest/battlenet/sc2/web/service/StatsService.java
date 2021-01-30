@@ -41,6 +41,9 @@ public class StatsService
     @Value("${com.nephest.battlenet.sc2.ladder.alternative:#{'false'}}")
     private String alternative;
 
+    @Value("${com.nephest.battlenet.sc2.ladder.forceUpdate:#{'false'}}")
+    private boolean forceUpdate;
+
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
     private SeasonDAO seasonDao;
@@ -450,7 +453,7 @@ public class StatsService
             team.setWins(bTeam.getWins());
             team.setLosses(bTeam.getLosses());
             team.setTies(bTeam.getTies());
-            return wasAlternative ? teamDao.mergeById(team) : teamDao.merge(team);
+            return wasAlternative ? teamDao.mergeById(team, forceUpdate) : teamDao.merge(team);
         }
 
         return teamDao.merge(Team.of(season, league, tier, division,bTeam));

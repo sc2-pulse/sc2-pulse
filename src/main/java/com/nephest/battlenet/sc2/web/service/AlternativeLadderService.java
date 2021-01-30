@@ -267,7 +267,7 @@ public class AlternativeLadderService
             team.setWins(bTeam.getWins());
             team.setLosses(bTeam.getLosses());
             team.setPoints(bTeam.getPoints());
-            if(teamDao.mergeById(team) == null) return new AbstractMap.SimpleEntry<>(null, null);
+            if(teamDao.mergeById(team, false) == null) return new AbstractMap.SimpleEntry<>(null, null);
             return teamEntry;
         }
 

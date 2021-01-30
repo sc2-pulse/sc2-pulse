@@ -78,15 +78,18 @@ public class TeamDAO
         + "points=excluded.points, "
         + "wins=excluded.wins, "
         + "losses=excluded.losses, "
-        + "ties=excluded.ties "
-        + "WHERE team.wins + team.losses + team.ties <> excluded.wins + excluded.losses + excluded.ties";
+        + "ties=excluded.ties ";
+    private static final String MERGE_CONDITION =
+        "WHERE team.wins + team.losses + team.ties <> excluded.wins + excluded.losses + excluded.ties";
 
-    private static final String MERGE_QUERY = CREATE_QUERY + String.format(MERGE_TEMPLATE, "region, battlenet_id", "");
+    private static final String MERGE_QUERY = CREATE_QUERY
+        + String.format(MERGE_TEMPLATE + MERGE_CONDITION, "region, battlenet_id", "");
 
     private static final String MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
-        + String.format(MERGE_TEMPLATE, "id",
-            "region=excluded.region, "
-            + "battlenet_id = excluded.battlenet_id, ");
+        + String.format(MERGE_TEMPLATE + MERGE_CONDITION, "id",
+            "region=excluded.region, battlenet_id = excluded.battlenet_id, ");
+    private static final String FORCE_MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
+        + String.format(MERGE_TEMPLATE, "id", "region=excluded.region, battlenet_id = excluded.battlenet_id, ");
 
     private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
 
@@ -232,11 +235,11 @@ public class TeamDAO
         return null;
     }
 
-    public Team mergeById(Team team)
+    public Team mergeById(Team team, boolean force)
     {
         MapSqlParameterSource params = createParameterSource(team);
         params.addValue("id", team.getId());
-        if(template.update(MERGE_BY_ID_QUERY, params) > 0) return team;
+        if(template.update(force ? FORCE_MERGE_BY_ID_QUERY : MERGE_BY_ID_QUERY, params) > 0) return team;
         return null;
     }
 
