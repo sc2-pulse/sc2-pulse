@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -92,6 +92,8 @@ extends StandardDAO
 
     public int[] merge(ProTeam... proTeams)
     {
+        if(proTeams.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
+
         MapSqlParameterSource[] params = new MapSqlParameterSource[proTeams.length];
         for(int i = 0; i < proTeams.length; i++)
         {
