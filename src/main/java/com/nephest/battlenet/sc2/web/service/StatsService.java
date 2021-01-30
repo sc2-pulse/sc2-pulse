@@ -20,6 +20,8 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuples;
 
 import java.time.Instant;
 import java.util.*;
@@ -391,7 +393,7 @@ public class StatsService
         if(lastUpdateStart != null) bTeams = Arrays.stream(bTeams)
             .filter(t->t.getLastPlayedTimeStamp().isAfter(lastUpdateStart)).toArray(BlizzardTeam[]::new);
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
-        Set<TeamMember> members = new HashSet<>(bTeams.length * memberCount, 1f);
+        List<Tuple3<Account, PlayerCharacter, TeamMember>> members = new ArrayList<>(bTeams.length * memberCount);
         Set<TeamState> states = new HashSet<>(bTeams.length, 1f);
         for (BlizzardTeam bTeam : bTeams)
         {
@@ -406,7 +408,7 @@ public class StatsService
                 states.add(TeamState.of(team));
             }
         }
-        if(members.size() > 0) teamMemberDao.merge(members.toArray(TeamMember[]::new));
+        saveMembersConcurrently(members);
         if(states.size() > 0) teamStateDAO.saveState(states.toArray(TeamState[]::new));
     }
 
@@ -466,7 +468,13 @@ public class StatsService
             && (team.getWins() > 0 || team.getLosses() > 0 || team.getTies() > 0);
     }
 
-    private void extractTeamMembers(BlizzardTeamMember[] bMembers, Set<TeamMember> dest, Season season, Team team)
+    private void extractTeamMembers
+    (
+        BlizzardTeamMember[] bMembers,
+        List<Tuple3<Account, PlayerCharacter, TeamMember>> members,
+        Season season,
+        Team team
+    )
     {
         for (BlizzardTeamMember bMember : bMembers)
         {
@@ -474,14 +482,35 @@ public class StatsService
             if (bMember.getAccount() == null) continue;
 
             Account account = Account.of(bMember.getAccount(), season.getRegion());
-            accountDao.merge(account);
-
             PlayerCharacter character = PlayerCharacter.of(account, season.getRegion(), bMember.getCharacter());
-            playerCharacterDao.merge(character);
-
             TeamMember member = TeamMember.of(team, character, bMember.getRaces());
-            dest.add(member);
+            members.add(Tuples.of(account, character, member));
         }
+    }
+
+    //this ensures the consistent order for concurrent entities(accounts and players)
+    private void saveMembersConcurrently(List<Tuple3<Account, PlayerCharacter, TeamMember>> members)
+    {
+        if(members.size() == 0) return;
+
+        Set<TeamMember> teamMembers = new HashSet<>(members.size(), 1.0F);
+
+        members.sort(Comparator.comparing(a -> a.getT1().getBattleTag()));
+        for(Tuple3<Account, PlayerCharacter, TeamMember> curMembers : members) accountDao.merge(curMembers.getT1());
+
+        members.sort(Comparator.comparing(a -> a.getT2().getBattlenetId()));
+        for(Tuple3<Account, PlayerCharacter, TeamMember> curMembers : members)
+        {
+            Account account = curMembers.getT1();
+
+            curMembers.getT2().setAccountId(account.getId());
+            PlayerCharacter character = playerCharacterDao.merge(curMembers.getT2());
+
+            curMembers.getT3().setCharacterId(character.getId());
+            teamMembers.add(curMembers.getT3());
+        }
+
+        if(teamMembers.size() > 0) teamMemberDao.merge(teamMembers.toArray(teamMembers.toArray(new TeamMember[0])));
     }
 
 }
