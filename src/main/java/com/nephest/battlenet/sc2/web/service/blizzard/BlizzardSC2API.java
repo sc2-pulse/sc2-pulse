@@ -205,20 +205,43 @@ public class BlizzardSC2API
     public Mono<BlizzardLadder> getLadder
     (
         Region region,
-        BlizzardTierDivision division
+        Long id
     )
     {
         return getWebClient()
             .get()
-            .uri
-            (
-                regionUri != null ? regionUri : (region.getBaseUrl() + "data/sc2/ladder/{0}"),
-                division.getLadderId()
-            )
+            .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "data/sc2/ladder/{0}"), id)
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
             .retryWhen(WebServiceUtil.RETRY);
+    }
+
+    public ParallelFlux<Tuple2<BlizzardLadder, Long>> getLadders
+    (
+        Region region,
+        Long[] divisions
+    )
+    {
+        return Flux.fromArray(divisions)
+            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
+            .runOn(Schedulers.boundedElastic())
+            .flatMap(d->WebServiceUtil.getRateDelayedMono(
+                getLadder(region, d).zipWith(Mono.just(d)),
+                t->{if(!(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
+                        LOG.error(ExceptionUtils.getRootCauseMessage(t));
+                    return Mono.empty();},
+                DELAY),
+                true, 1);
+    }
+
+    public Mono<BlizzardLadder> getLadder
+    (
+        Region region,
+        BlizzardTierDivision division
+    )
+    {
+        return getLadder(region, division.getLadderId());
     }
 
     public ParallelFlux<Tuple2<BlizzardLadder, BlizzardTierDivision>> getLadders
