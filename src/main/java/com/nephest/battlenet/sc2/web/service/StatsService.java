@@ -211,6 +211,33 @@ public class StatsService
         return true;
     }
 
+    public void updateLadders(int seasonId, Region region, Long[] ids)
+    {
+        Season season = seasonDao.merge(Season.of(api.getSeason(region, seasonId).block(), region));
+        api.getLadders(region, ids)
+            .doOnNext(l->statsService.saveLadder(season, l.getT1(), l.getT2(), alternativeLadderService))
+        .sequential()
+        .blockLast();
+
+    }
+
+    @Transactional
+    (
+        //isolation = Isolation.READ_COMMITTED,
+        propagation = Propagation.REQUIRES_NEW
+    )
+    public void saveLadder(Season season, BlizzardLadder bLadder, long id,AlternativeLadderService alternativeLadderService)
+    {
+        BlizzardLadderLeagueKey lKey = bLadder.getLeague().getLeagueKey();
+        if(!lKey.getSeasonId().equals(season.getBattlenetId())) return;
+
+        League league = new League(null, null, lKey.getLeagueId(), lKey.getQueueId(), lKey.getTeamType());
+        LeagueTier tier = new LeagueTier(null, null, AlternativeLadderService.ALTERNATIVE_TIER, 0, 0);
+        Division division = alternativeLadderService.getOrCreate1v1Division(
+            season, lKey.getQueueId(), lKey.getTeamType(), lKey.getLeagueId(), id);
+        updateTeams(bLadder.getTeams(), season, league, tier, division, null);
+    }
+
     private void updateSeason(int seasonId, Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         for(Region region : regions)
