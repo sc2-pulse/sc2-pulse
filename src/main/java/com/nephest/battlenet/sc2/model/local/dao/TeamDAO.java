@@ -80,7 +80,7 @@ public class TeamDAO
         + "losses=excluded.losses, "
         + "ties=excluded.ties ";
     private static final String MERGE_CONDITION =
-        "WHERE team.wins + team.losses + team.ties <> excluded.wins + excluded.losses + excluded.ties";
+        "WHERE team.wins + team.losses + team.ties < excluded.wins + excluded.losses + excluded.ties";
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + String.format(MERGE_TEMPLATE + MERGE_CONDITION, "region, battlenet_id", "");
