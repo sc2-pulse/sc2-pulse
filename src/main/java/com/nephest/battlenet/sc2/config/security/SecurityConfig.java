@@ -51,6 +51,8 @@ extends WebSecurityConfigurerAdapter
                     new AntPathRequestMatcher("/api/my/**")
                 )
             .and().authorizeRequests()
+                 .antMatchers("/actuator/**").hasRole(SC2PulseAuthority.ADMIN.getName())
+            .and().authorizeRequests()
                 .antMatchers("/api/my/**").authenticated()
             .and().logout()
                 .logoutSuccessUrl("/?t=stats")
