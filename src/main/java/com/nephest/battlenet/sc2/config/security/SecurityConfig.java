@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.config.security;
 import com.nephest.battlenet.sc2.config.filter.RobotsDenyFilter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -31,6 +32,12 @@ extends WebSecurityConfigurerAdapter
     @Autowired
     private SameSiteRememberMeAuthenticationSuccessfulHandler sameSiteRememberMeAuthenticationSuccessfulHandler;
 
+    @Value("${com.nephest.battlenet.sc2.admin.btag:#{''}}")
+    private String adminBattletag;
+
+    @Value("${com.nephest.battlenet.sc2.admin.partition:#{'-1'}}")
+    private int adminPartition;
+
     @Override
     public void configure(HttpSecurity http)
     throws Exception
@@ -51,7 +58,7 @@ extends WebSecurityConfigurerAdapter
             .and().oauth2Login()
                 .loginPage("/#personal")
                 .successHandler(sameSiteRememberMeAuthenticationSuccessfulHandler)
-                .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO));
+                .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, adminBattletag, adminPartition));
     }
 
     @Bean

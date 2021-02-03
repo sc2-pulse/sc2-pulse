@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.config.security;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -21,10 +23,14 @@ implements OAuth2UserService<OidcUserRequest, OidcUser>
     private final OidcUserService service = new OidcUserService();
 
     private final AccountDAO accountDAO;
+    private final String adminBattletag;
+    private final int adminPartition;
 
-    public BlizzardOidcUserService(AccountDAO accountDAO)
+    public BlizzardOidcUserService(AccountDAO accountDAO, String adminBattletag, int adminPartition)
     {
         this.accountDAO = accountDAO;
+        this.adminBattletag = adminBattletag;
+        this.adminPartition = adminPartition;
     }
 
     @Override
@@ -38,6 +44,11 @@ implements OAuth2UserService<OidcUserRequest, OidcUser>
             Partition.ofIssuer((URL) user.getAttribute("iss")),
             user.getAttribute("battle_tag"))
         );
-        return new BlizzardOidcUser(user, account);
+        GrantedAuthority[] authorities = adminBattletag == null || adminBattletag.isEmpty()
+            ? new GrantedAuthority[0]
+            : account.getBattleTag().equals(adminBattletag) && account.getPartition().getId() == adminPartition
+                ? new GrantedAuthority[]{new SimpleGrantedAuthority(SC2PulseAuthority.ADMIN.getRoleName())}
+                : new GrantedAuthority[0];
+        return new BlizzardOidcUser(user, account, authorities);
     }
 }
