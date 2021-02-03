@@ -38,8 +38,8 @@ public class StatsService
     @Autowired
     private StatsService statsService;
 
-    @Value("${com.nephest.battlenet.sc2.ladder.alternative:#{'false'}}")
-    private String alternative;
+    @Value("${com.nephest.battlenet.sc2.ladder.alternative.regions:#{''}}")
+    private Set<Region> alternativeRegions;
 
     @Value("${com.nephest.battlenet.sc2.ladder.forceUpdate:#{'false'}}")
     private boolean forceUpdate;
@@ -116,6 +116,11 @@ public class StatsService
     public boolean isUpdating()
     {
         return isUpdating.get();
+    }
+
+    public Set<Region> getAlternativeRegions()
+    {
+        return alternativeRegions;
     }
 
     @Autowired
@@ -292,7 +297,7 @@ public class StatsService
     private void updateOrAlternativeUpdate
     (BlizzardSeason bSeason, Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean currentSeason)
     {
-        if(!alternative.equals("true"))
+        if(!isAlternativeUpdate(season.getRegion(), currentSeason))
         {
             updateLeagues(bSeason, season, queues, leagues, currentSeason);
         }
@@ -307,6 +312,11 @@ public class StatsService
                 alternativeLadderService.discoverSeason(season);
             }
         }
+    }
+
+    private boolean isAlternativeUpdate(Region region, boolean currentSeason)
+    {
+        return alternativeRegions.contains(region) && currentSeason;
     }
 
     private void updateLeagues

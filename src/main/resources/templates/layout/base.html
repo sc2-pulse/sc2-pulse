@@ -68,7 +68,8 @@
         const ROOT_CONTEXT_PATH = /*[[@{/}]]*/ '';
         const RESOURCE_PATH = ROOT_CONTEXT_PATH + "static/";
         const DEBUG = /*[[${#arrays.contains(@environment.getActiveProfiles(), 'dev')}]]*/ '';
-        const ALTERNATIVE_UPDATE = /*[[${#strings.equals(@environment.getProperty('com.nephest.battlenet.sc2.ladder.alternative'), 'true')}]]*/ '';
+        const ALTERNATIVE_UPDATE_REGIONS_STR = /*[[${@environment.getProperty('com.nephest.battlenet.sc2.ladder.alternative.regions')}]]*/ '';
+        const ALTERNATIVE_UPDATE_REGIONS = ALTERNATIVE_UPDATE_REGIONS_STR.split(",");
     </script>
     <th:block th:replace="${script}" />
 </body>

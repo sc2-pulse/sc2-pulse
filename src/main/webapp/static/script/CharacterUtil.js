@@ -441,7 +441,7 @@ class CharacterUtil
         lines.push("mmr:    " + curData.teamState.rating);
         lines.push("games:  " + curData.teamState.games);
         lines.push("league: " +  EnumUtil.enumOfId(curData.league.type, LEAGUE).name)
-            + (ALTERNATIVE_UPDATE ? "" : " " + (curData.tier + 1));
+            + (ALTERNATIVE_UPDATE_REGIONS.length > 0 ? "" : " " + (curData.tier + 1));
         lines.push("season: " + curData.season);
 
         return lines;

@@ -268,11 +268,17 @@ class TeamUtil
         const league = EnumUtil.enumOfId(team.league.type, LEAGUE);
         const leagueDiv = document.createElement("div");
         leagueDiv.classList.add("text-nowrap");
-        leagueDiv.appendChild(ElementUtil.createImage("league/", league.name,
-            "table-image table-image-square" + (ALTERNATIVE_UPDATE ? "" : " mr-1")));
-        if(!ALTERNATIVE_UPDATE)
-            leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (team.tierType + 1), "table-image-additional"));
+        leagueDiv.appendChild(ElementUtil.createImage("league/", league.name, "table-image table-image-square mr-1"));
+            leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (team.tierType + 1),
+                "table-image-additional" + (TeamUtil.isAlternativelyUpdatedTeam(team) ? " invisible" : "")));
         return leagueDiv;
+    }
+
+    static isAlternativelyUpdatedTeam(team)
+    {
+        return ALTERNATIVE_UPDATE_REGIONS.length > 0
+            && ALTERNATIVE_UPDATE_REGIONS.includes(team.region)
+            && Session.currentSeasonsMap.get(team.season + 1) == null; //is last season
     }
 
     static getFavoriteRace(member)
