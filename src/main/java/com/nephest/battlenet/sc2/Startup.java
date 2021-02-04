@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2;
 
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.web.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
@@ -22,6 +23,9 @@ implements ApplicationRunner
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
 
+    @Autowired
+    private StatsService statsService;
+
     @Autowired @Qualifier("taskScheduler")
     private Executor executor;
 
@@ -29,5 +33,6 @@ implements ApplicationRunner
     public void run(ApplicationArguments args)
     {
         executor.execute(()->ladderSearchDAO.precache());
+        executor.execute(()->statsService.checkStaleData());
     }
 }

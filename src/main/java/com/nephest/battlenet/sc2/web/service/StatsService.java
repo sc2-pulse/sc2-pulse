@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple5;
@@ -36,6 +37,7 @@ public class StatsService
     private static final Logger LOG = LoggerFactory.getLogger(StatsService.class);
 
     public static final Version VERSION = Version.LOTV;
+    public static final int STALE_LADDER_TOLERANCE = 3;
 
     @Autowired
     private StatsService statsService;
@@ -202,6 +204,7 @@ public class StatsService
             Instant startInstant = Instant.now();
             long start = System.currentTimeMillis();
 
+            checkStaleData();
             updateCurrentSeason(regions, queues, leagues);
 
             lastLeagueUpdates.put(leagues.length, startInstant);
@@ -583,6 +586,26 @@ public class StatsService
             .sequential()
             .blockLast();
         return max.get();
+    }
+
+    public void checkStaleData()
+    {
+        for(Region region : Region.values())
+        {
+            BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, seasonDao.getMaxBattlenetId()).block();
+            long maxId = getMaxLadderId(bSeason, region);
+            api.getProfileLadderId(region, maxId + STALE_LADDER_TOLERANCE)
+                .doOnNext(l->{
+                    LOG.warn("Stale data detected for {}, adding this region to alternative update", region);
+                    alternativeRegions.add(region);
+                })
+                .onErrorResume(t->{
+                    if(alternativeRegions.remove(region))
+                        LOG.info("{} now returns fresh data, removed it for alternative update", region);
+                    return Mono.empty();
+                })
+                .block();
+        }
     }
 
 }
