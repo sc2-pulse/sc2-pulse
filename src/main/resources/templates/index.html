@@ -63,7 +63,7 @@
                         th:src="@{/static/icon/misc/info.svg}"
                         alt="1v1 only, no tiers, some info may be missing"
                         th:title="${'1v1 only, no tiers, some info may be missing. Affected regions: '
-                            + @environment.getProperty('com.nephest.battlenet.sc2.ladder.alternative.regions')}"
+                            + #strings.toString(@statsService.getAlternativeRegions())}"
                         data-toggle="tooltip"
                 />
             </th:div>
