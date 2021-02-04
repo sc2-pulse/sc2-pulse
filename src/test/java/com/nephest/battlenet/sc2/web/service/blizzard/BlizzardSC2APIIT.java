@@ -21,6 +21,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
@@ -141,6 +142,7 @@ public class BlizzardSC2APIIT
         MockWebServer server = new MockWebServer();
         server.start();
         api.setRegionUri(server.url("/someurl").uri().toString());
+        WebClient oldWebClient = api.getWebClient();
         api.setWebClient(WebServiceTestUtil.createTimeoutClient());
 
         WebServiceTestUtil.testRetrying(api.getCurrentSeason(Region.EU), VALID_SEASON, server, RETRY_COUNT);
@@ -163,6 +165,9 @@ public class BlizzardSC2APIIT
         WebServiceTestUtil.testRetrying(api.getProfileLadderMono(Region.US, BLIZZARD_CHARACTER, 292783L),
             VALID_PROFILE_LADDER, server, RETRY_COUNT);
         server.shutdown();
+
+        api.setRegionUri(null);
+        api.setWebClient(oldWebClient);
     }
 
 }
