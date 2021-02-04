@@ -4,16 +4,14 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Race;
-import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +21,7 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -34,6 +33,12 @@ public class StatsServiceIT
 
     private StatsService statsService;
     private TeamDAO teamDAO;
+
+    @Autowired
+    private StatsService realStatsService;
+
+    @Autowired
+    private BlizzardSC2API api;
 
     @BeforeEach
     public void beforeEach(@Autowired Validator validator)
@@ -63,6 +68,14 @@ public class StatsServiceIT
             mock(LeagueTier.class), mock(Division.class), Instant.now());
 
         verify(teamDAO, never()).merge(any());
+    }
+
+    @Test
+    public void testMaxLadderId()
+    {
+        Region region = Region.US;
+        BlizzardSeason bSeason = api.getSeason(region, 44).block();
+        assertEquals(292761, realStatsService.getMaxLadderId(bSeason, region));
     }
 
 }

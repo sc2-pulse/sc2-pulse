@@ -21,11 +21,13 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple5;
 import reactor.util.function.Tuples;
 
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicLong;
 
 @Service
 public class StatsService
@@ -552,6 +554,35 @@ public class StatsService
         }
 
         if(teamMembers.size() > 0) teamMemberDao.merge(teamMembers.toArray(teamMembers.toArray(new TeamMember[0])));
+    }
+
+    public long getMaxLadderId(BlizzardSeason bSeason, Region region)
+    {
+        List<Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> leagueIds = new ArrayList<>();
+        for(BaseLeague.LeagueType league : BaseLeague.LeagueType.values())
+        {
+            for(QueueType queue : QueueType.getTypes(VERSION))
+            {
+                for(TeamType team : TeamType.values())
+                {
+                    if(!BlizzardSC2API.isValidCombination(league, queue, team)) continue;
+
+                    leagueIds.add(Tuples.of(region, bSeason, league, queue, team));
+                }
+            }
+        }
+
+        AtomicLong max = new AtomicLong(-1);
+        api.getLeagues(leagueIds, true)
+            .doOnNext(l->{
+                long maxId = Arrays.stream(l.getTiers())
+                    .flatMapToLong(t->Arrays.stream(t.getDivisions()).mapToLong(BlizzardTierDivision::getLadderId))
+                    .max().orElse(-1L);
+                max.getAndUpdate(c->Math.max(c, maxId));
+            })
+            .sequential()
+            .blockLast();
+        return max.get();
     }
 
 }
