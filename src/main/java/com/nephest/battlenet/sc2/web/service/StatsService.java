@@ -596,12 +596,12 @@ public class StatsService
             long maxId = getMaxLadderId(bSeason, region);
             api.getProfileLadderId(region, maxId + STALE_LADDER_TOLERANCE)
                 .doOnNext(l->{
-                    LOG.warn("Stale data detected for {}, adding this region to alternative update", region);
-                    alternativeRegions.add(region);
+                    if(alternativeRegions.add(region))
+                        LOG.warn("Stale data detected for {}, added this region to alternative update", region);
                 })
                 .onErrorResume(t->{
                     if(alternativeRegions.remove(region))
-                        LOG.info("{} now returns fresh data, removed it for alternative update", region);
+                        LOG.info("{} now returns fresh data, removed it from alternative update", region);
                     return Mono.empty();
                 })
                 .block();
