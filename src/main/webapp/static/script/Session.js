@@ -40,7 +40,7 @@ class Session
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         Session.isSilent = true;
-        document.cookie = "pre-auth-path=" + encodeURI(Util.getCurrentPathInContext() + window.location.search)
+        document.cookie = "pre-auth-path=" + encodeURI(Util.getCurrentPathInContext() + window.location.search + window.location.hash)
             + ";path=" + ROOT_CONTEXT_PATH
             + ";max-age=300"
             + ";secure;SameSite=Lax";

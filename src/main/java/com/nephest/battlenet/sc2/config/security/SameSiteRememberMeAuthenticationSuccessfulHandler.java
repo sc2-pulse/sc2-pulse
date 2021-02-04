@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -82,7 +82,7 @@ extends SavedRequestAwareAuthenticationSuccessHandler
             if(preAuthPathCookie == null)
             {
                 addSameSiteCookieAttribute(resp);
-                resp.sendRedirect(servletContext.getContextPath() + "/?t=personal&t=personal-characters");
+                resp.sendRedirect(servletContext.getContextPath() + "/?#personal-characters");
             }
             else
             {

@@ -55,10 +55,10 @@ extends WebSecurityConfigurerAdapter
             .and().authorizeRequests()
                 .antMatchers("/api/my/**").authenticated()
             .and().logout()
-                .logoutSuccessUrl("/?t=stats")
+                .logoutSuccessUrl("/?#stats")
                 .deleteCookies(SameSiteRememberMeAuthenticationSuccessfulHandler.COOKIE_NAME)
             .and().oauth2Login()
-                .loginPage("/#personal")
+                .loginPage("/?#personal")
                 .successHandler(sameSiteRememberMeAuthenticationSuccessfulHandler)
                 .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, adminBattletag, adminPartition));
     }
