@@ -90,9 +90,13 @@ public class BlizzardSC2APIIT
 
     private void testFetchAlternative()
     {
-        Tuple3<Region, BlizzardPlayerCharacter[], Long> ladderId = api.getProfileLadderId(Region.US, 292783).block();
+        BlizzardSeason bSeason = api.getCurrentOrLastSeason(Region.US, 46).block();
+        long ladderLongId = api.getLeague(Region.US, bSeason, BaseLeague.LeagueType.DIAMOND, QueueType.LOTV_1V1,TeamType.ARRANGED, true)
+            .block()
+            .getTiers()[0].getDivisions()[0].getLadderId();
+        Tuple3<Region, BlizzardPlayerCharacter[], Long> ladderId = api.getProfileLadderId(Region.US, ladderLongId).block();
         assertEquals(Region.US, ladderId.getT1());
-        assertEquals(292783, ladderId.getT3());
+        assertEquals(ladderLongId, ladderId.getT3());
         assertNotNull(ladderId.getT2());
         Arrays.stream(ladderId.getT2()).forEach(Assertions::assertNotNull);
 
@@ -107,7 +111,7 @@ public class BlizzardSC2APIIT
         Errors teamErrors = new BeanPropertyBindingResult(teams, teams.toString());
         validator.validate(teams, teamErrors);
         assertFalse(teamErrors.hasErrors());
-        assertEquals(BaseLeague.LeagueType.SILVER, ladder.getLeagueType());
+        assertEquals(BaseLeague.LeagueType.DIAMOND, ladder.getLeagueType());
 
         api.getProfile1v1Ladder(Tuples.of(Region.EU, new BlizzardPlayerCharacter[]{
             new BlizzardPlayerCharacter(1L, 1, "Name#123"),
