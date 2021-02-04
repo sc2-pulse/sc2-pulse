@@ -30,6 +30,7 @@ import reactor.core.publisher.ParallelFlux;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple5;
 import reactor.util.function.Tuples;
 
 import java.util.Arrays;
@@ -200,6 +201,21 @@ public class BlizzardSC2API
     )
     {
         return getLeague(region, season, leagueType, queueType, teamType, false);
+    }
+
+    public ParallelFlux<BlizzardLeague> getLeagues
+    (Iterable<? extends Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> ids, boolean cur)
+    {
+        return Flux.fromIterable(ids)
+            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
+            .runOn(Schedulers.boundedElastic())
+            .flatMap(id->WebServiceUtil.getRateDelayedMono(
+                getLeague(id.getT1(), id.getT2(), id.getT3(), id.getT4(), id.getT5(), cur),
+                t->{if(!(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
+                    LOG.error(ExceptionUtils.getRootCauseMessage(t));
+                    return Mono.empty();},
+                DELAY),
+                true, 1);
     }
 
     public Mono<BlizzardLadder> getLadder
