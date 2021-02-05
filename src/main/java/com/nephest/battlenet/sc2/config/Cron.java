@@ -46,25 +46,25 @@ public class Cron
         doUpdateSeasons();
     }
 
-    @Scheduled(cron="0 */30 0-5,8-23 * * MON-TUE,THU-SUN")
+    @Scheduled(cron="0 */15 0-5,8-23 * * MON-TUE,THU-SUN")
     public void updateTop()
     {
         doUpdateTop();
     }
 
-    @Scheduled(cron="0 0 6 * * *")
+    @Scheduled(cron="0 0,15,30 6 * * *")
     public void updateTopPreDiscovery()
     {
         doUpdateTop();
     }
 
-    @Scheduled(cron="0 */30 0-5,8-11,13-23 * * WED")
+    @Scheduled(cron="0 */15 0-5,8-11,13-23 * * WED")
     public void updateTopWed()
     {
         doUpdateTop();
     }
 
-    @Scheduled(cron="0 0 12 * * WED")
+    @Scheduled(cron="0 0,15 12 * * WED")
     public void updateTopPreMaintenance()
     {
         doUpdateTop();
@@ -108,7 +108,8 @@ public class Cron
                 {
                     BaseLeague.LeagueType.GRANDMASTER,
                     BaseLeague.LeagueType.MASTER,
-                    BaseLeague.LeagueType.DIAMOND
+                    BaseLeague.LeagueType.DIAMOND,
+                    BaseLeague.LeagueType.PLATINUM,
                 }
             );
         }
