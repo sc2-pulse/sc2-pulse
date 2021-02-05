@@ -6,7 +6,7 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
 * All seasons, races, team formats
 * Player profile
     * Career summary
-    * History: all teams and seasons
+    * History: all teams and seasons, mmr chart
     * Linked profiles
 * BattleNet integration
     * Log in with a BattleNet account
@@ -94,6 +94,15 @@ To run the local server execute the following command in a terminal
 ```
 mvn spring-boot:run
 ```
+## Alternative update
+The Blizzard API can sometimes break and return stale data. The app checks the API state before every update and will
+switch the endpoint route if any problems are found. This happens automatically and individually for each region,
+so you can have a situation when KR region uses the alternative route, while other regions use the usual route.
+
+Alternative update limitations:
+* 1v1 only
+* no league tiers
+* no new players
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
 ## Contributing
