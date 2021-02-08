@@ -256,13 +256,14 @@ class CharacterUtil
         const queueFilterSelect = document.getElementById("mmr-queue-filter");
         const queue = EnumUtil.enumOfFullName(queueFilterSelect.options[queueFilterSelect.selectedIndex].value, TEAM_FORMAT);
         const queueFilter = queue.code;
+        const teamTypeFilter = queue == TEAM_FORMAT._1V1 ? TEAM_TYPE.ARRANGED.code : TEAM_TYPE.RANDOM.code;
         const excludeStart = document.getElementById("mmr-exclude-start").value || 0;
         const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
         const changesOnly = document.getElementById("mmr-changes-only").checked;
         const bestRaceOnly = document.getElementById("mmr-best-race").checked;
 
         let mmrHistory = CharacterUtil.filterMmrHistory(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history,
-            queueFilter, excludeStart, excludeEnd);
+            queueFilter, teamTypeFilter, excludeStart, excludeEnd);
         mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
         if(queue !== TEAM_FORMAT._1V1) mmrHistory.forEach(h=>h.race = "ALL");
         const historyByRace = Util.groupBy(mmrHistory, h=>h.race);
@@ -270,7 +271,8 @@ class CharacterUtil
             mmrHistory,
             historyByRace,
             Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams,
-            queueFilter);
+            queueFilter,
+            teamTypeFilter);
         if(bestRaceOnly === true) mmrHistory = CharacterUtil.filterMmrHistoryBestRace(historyByRace);
         const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime.getTime());
         const data = [];
@@ -298,13 +300,13 @@ class CharacterUtil
               + mmrHistory.length  + " entries)";
     }
 
-    static injectMmrFlatLines(history, historyByRace, teams, queueFilter)
+    static injectMmrFlatLines(history, historyByRace, teams, queueFilter, teamTypeFilter)
     {
         const firstDate = CharacterUtil.calculateFirstMmrDate();
         const injected = [];
         //use the same datetime to correctly group the points by timestamp later
         const now = new Date();
-        CharacterUtil.injectLatestTeamMmrSnapshots(historyByRace, teams, queueFilter, injected, firstDate);
+        CharacterUtil.injectLatestTeamMmrSnapshots(historyByRace, teams, queueFilter, teamTypeFilter, injected, firstDate);
         for(const raceHistory of historyByRace.values()) {
             CharacterUtil.injectMmrHistoryHeader(raceHistory, injected, firstDate);
             CharacterUtil.fillMmrGaps(raceHistory, injected, now);
@@ -314,11 +316,11 @@ class CharacterUtil
         return history.concat(injected).sort((a, b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
     }
 
-    static injectLatestTeamMmrSnapshots(racialHistory, teams, queueFilter, injectArray, firstDate)
+    static injectLatestTeamMmrSnapshots(racialHistory, teams, queueFilter, teamTypeFilter, injectArray, firstDate)
     {
         const teamsFiltered = teams.filter(t=>
             t.league.queueType == queueFilter
-            && t.league.teamType == 0
+            && t.league.teamType == teamTypeFilter
             && Session.currentSeasonsMap.get(t.season)[0].end.getTime() > firstDate.getTime()
         );
         if(teamsFiltered.length == 0) return;
@@ -469,9 +471,9 @@ class CharacterUtil
         return lines;
     }
 
-    static filterMmrHistory(history, queueFilter, excludeStart, excludeEnd)
+    static filterMmrHistory(history, queueFilter, teamTypeFilter, excludeStart, excludeEnd)
     {
-        let filtered = history.filter(h=>h.league.queueType == queueFilter && h.league.teamType == 0);
+        let filtered = history.filter(h=>h.league.queueType == queueFilter && h.league.teamType == teamTypeFilter);
         if(excludeEnd > 0)
             filtered = filtered.filter(h=>h.teamState.rating < excludeStart || h.teamState.rating >= excludeEnd);
         return filtered;
