@@ -84,6 +84,8 @@ public class TeamDAO
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + String.format(MERGE_TEMPLATE + MERGE_CONDITION, "region, battlenet_id", "");
+    private static final String FORCE_MERGE_QUERY = CREATE_QUERY
+        + String.format(MERGE_TEMPLATE, "region, battlenet_id", "");
 
     private static final String MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
         + String.format(MERGE_TEMPLATE + MERGE_CONDITION, "id",
@@ -222,17 +224,22 @@ public class TeamDAO
         games played when inserting a team into the db.
         Returning nulls here to tell that there were no modifications made, so the update chain could be interrupted
      */
-    public Team merge(Team team)
+    public Team merge(Team team, boolean force)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(team);
-        int updated = template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
+        int updated = template.update(force ? FORCE_MERGE_QUERY : MERGE_QUERY, params, keyHolder, new String[]{"id"});
         if(updated > 0)
         {
             team.setId(keyHolder.getKey().longValue());
             return team;
         }
         return null;
+    }
+
+    public Team merge(Team team)
+    {
+        return merge(team, false);
     }
 
     public Team mergeById(Team team, boolean force)

@@ -166,6 +166,7 @@ public class SqlSyntaxIT
         assertEquals(2, team.getPoints());
         assertNull(teamDAO.merge(team));
         assertNotNull(teamDAO.mergeById(team, true));
+        assertNotNull(teamDAO.merge(team, true));
         assertNull(teamDAO.merge(sameTeam));
         mergedByIdTeam.setId(team.getId());
         teamDAO.mergeById(mergedByIdTeam, false);
