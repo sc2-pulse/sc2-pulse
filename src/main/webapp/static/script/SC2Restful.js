@@ -55,6 +55,7 @@ class SC2Restful
 SC2Restful.COLORS = new Map
 ([
     ["global", "#007bff"],
+    ["all", "#007bff"],
     ["old", "#dc3545"],
     ["new", "#28a745"],
     ["low", "#28a745"],
