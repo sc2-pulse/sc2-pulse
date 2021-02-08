@@ -195,7 +195,7 @@ public class SqlSyntaxIT
         assertEquals(2, character.getRealm());
         assertEquals("newname#2", character.getName());
         assertEquals(character,
-            playerCharacterDAO.findByRegionAndBattlenetId(character.getRegion(), character.getBattlenetId()).get());
+            playerCharacterDAO.find(character.getRegion(), character.getRealm(), character.getBattlenetId()).get());
 
         teamMemberDAO.create(new TeamMember(zergTeam.getId(), character.getId(), 0, 0, 6, 0));
         teamMemberDAO.create(new TeamMember(team.getId(), character.getId(), 1, 1, 1, 1));

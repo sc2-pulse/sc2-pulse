@@ -472,7 +472,10 @@ public class StatsService
 
         //alternative ladder does not have battlenet id, find such teams and update them
         PlayerCharacter playerCharacter =
-            playerCharacterDao.findByRegionAndBattlenetId(season.getRegion(), bTeam.getMembers()[0].getCharacter().getId())
+            playerCharacterDao.find(
+                season.getRegion(),
+                bTeam.getMembers()[0].getCharacter().getRealm(),
+                bTeam.getMembers()[0].getCharacter().getId())
             .orElse((null));
         if(playerCharacter == null) return teamDao.merge(Team.of(season, league, tier, division,bTeam));
 

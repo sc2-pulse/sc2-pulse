@@ -23,3 +23,7 @@ CREATE TABLE "team_state"
         REFERENCES "division"("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+ALTER TABLE "player_character"
+DROP CONSTRAINT "uq_player_character_region_battlenet_id",
+ADD CONSTRAINT "uq_player_character_region_realm_battlenet_id" UNIQUE ("region", "realm", "battlenet_id");

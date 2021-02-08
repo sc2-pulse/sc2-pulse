@@ -186,8 +186,8 @@ public class AlternativeLadderService
             if(errors.hasErrors() || !isValidTeam(bTeam, 1)) continue;
 
             BlizzardProfileTeamMember bMember = bTeam.getTeamMembers()[0];
-            PlayerCharacter playerCharacter = playerCharacterDao
-                .findByRegionAndBattlenetId(id.getT1(), bMember.getId()).orElse(null);
+            PlayerCharacter playerCharacter = playerCharacterDao.find(id.getT1(), bMember.getRealm(), bMember.getId())
+                .orElse(null);
             //skip new players for now
             if(playerCharacter == null) continue;
 

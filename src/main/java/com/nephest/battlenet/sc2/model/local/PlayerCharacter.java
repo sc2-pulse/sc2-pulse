@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -15,7 +15,7 @@ extends BasePlayerCharacter
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private Long id;
 
@@ -55,7 +55,7 @@ implements java.io.Serializable
     @Override
     public int hashCode()
     {
-        return Objects.hash(getRegion(), getBattlenetId());
+        return Objects.hash(getRegion(), getRealm(), getBattlenetId());
     }
 
     @Override
@@ -67,6 +67,7 @@ implements java.io.Serializable
 
         PlayerCharacter otherPlayerCharacter = (PlayerCharacter) other;
         return getRegion() == otherPlayerCharacter.getRegion()
+            && getRealm().equals(otherPlayerCharacter.getRealm())
             && getBattlenetId().equals(otherPlayerCharacter.getBattlenetId());
     }
 
@@ -75,9 +76,9 @@ implements java.io.Serializable
     {
         return String.format
         (
-            "%s[%s %s]",
+            "%s[%s %s %s]",
             PlayerCharacter.class.getSimpleName(),
-            getRegion().name(), getBattlenetId()
+            getRegion().name(), getRealm(), getBattlenetId()
         );
     }
 

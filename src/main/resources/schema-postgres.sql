@@ -36,8 +36,8 @@ CREATE TABLE "player_character"
         REFERENCES "account"("id")
         ON DELETE CASCADE ON UPDATE CASCADE,
 
-    CONSTRAINT "uq_player_character_region_battlenet_id"
-        UNIQUE ("region", "battlenet_id")
+    CONSTRAINT "uq_player_character_region_realm_battlenet_id"
+        UNIQUE ("region", "realm", "battlenet_id")
 
 );
 

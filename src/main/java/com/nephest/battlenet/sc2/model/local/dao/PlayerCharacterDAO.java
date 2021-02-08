@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -41,9 +41,8 @@ public class PlayerCharacterDAO
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
-        + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
+        + "ON CONFLICT(region, realm, battlenet_id) DO UPDATE SET "
         + "account_id=excluded.account_id, "
-        + "realm=excluded.realm, "
         + "name=excluded.name";
 
     private static final String FIND_PRO_PLAYER_CHARACTER_IDS =
@@ -72,9 +71,10 @@ public class PlayerCharacterDAO
         + "ORDER BY team.rating DESC, team.id DESC, player_character.id DESC "
         + "LIMIT :limit";
 
-    private static final String FIND_BY_REGION_AND_BATTLENET_ID = "SELECT " + STD_SELECT
+    private static final String FIND_BY_REGION_AND_REALM_AND_BATTLENET_ID = "SELECT " + STD_SELECT
         + "FROM player_character "
         + "WHERE region=:region "
+        + "AND realm=:realm "
         + "AND battlenet_id=:battlenetId";
 
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
@@ -187,12 +187,13 @@ public class PlayerCharacterDAO
         return template.query(FIND_TOP_PLAYER_CHARACTERS, params, BOOKMARKED_STD_ROW_EXTRACTOR);
     }
 
-    public Optional<PlayerCharacter> findByRegionAndBattlenetId(Region region, long battlenetId)
+    public Optional<PlayerCharacter> find(Region region, int realm, long battlenetId)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("realm", realm)
             .addValue("battlenetId", battlenetId);
-        return Optional.ofNullable(template.query(FIND_BY_REGION_AND_BATTLENET_ID, params, getStdExtractor()));
+        return Optional.ofNullable(template.query(FIND_BY_REGION_AND_REALM_AND_BATTLENET_ID, params, getStdExtractor()));
     }
 
 }
