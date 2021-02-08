@@ -264,6 +264,7 @@ class CharacterUtil
         let mmrHistory = CharacterUtil.filterMmrHistory(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history,
             queueFilter, excludeStart, excludeEnd);
         mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
+        if(queue !== TEAM_FORMAT._1V1) mmrHistory.forEach(h=>h.race = "ALL");
         const historyByRace = Util.groupBy(mmrHistory, h=>h.race);
         if(changesOnly !== true) mmrHistory = CharacterUtil.injectMmrFlatLines(
             mmrHistory,
@@ -286,8 +287,10 @@ class CharacterUtil
             document.getElementById("player-stats-mmr-table"),
             data,
             (tableData=>ChartUtil.CHART_RAW_DATA.get("player-stats-mmr-table").data = tableData),
-            (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order,
-            (name)=>EnumUtil.enumOfName(name, RACE).name,
+            queue == TEAM_FORMAT._1V1
+                ? (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order
+                : null,
+            queue == TEAM_FORMAT._1V1 ? (name)=>EnumUtil.enumOfName(name, RACE).name : (name)=>name.toLowerCase(),
             (dateTime)=>new Date(parseInt(dateTime))
         );
         document.getElementById("mmr-history-filters").textContent =
@@ -318,21 +321,40 @@ class CharacterUtil
             && t.league.teamType == 0
             && Session.currentSeasonsMap.get(t.season)[0].end.getTime() > firstDate.getTime()
         );
-        for(const race of Object.values(RACE))
+        if(teamsFiltered.length == 0) return;
+
+        if(queueFilter == TEAM_FORMAT._1V1.code)
         {
-            const history = racialHistory.get(race.name.toUpperCase());
+            for(const race of Object.values(RACE))
+            {
+                const history = racialHistory.get(race.name.toUpperCase());
+                const len = history ? history.length : 0;
+                //skip if there is an actual history
+                if(len > 0) continue;
+
+                let teamsRacial = teamsFiltered
+                    .filter(t=>TeamUtil.getFavoriteRace(t.members[0]) == race)
+                    //desc
+                    .sort((a, b)=>b.season - a.season);
+                if(teamsRacial.length == 0) continue;
+
+                const snap = CharacterUtil.createTeamSnapshot(teamsRacial[0], firstDate);
+                racialHistory.set(race.name, [snap]);
+                injectArray.push(snap);
+            }
+        }
+        else
+        {
+            const history = racialHistory.get("ALL");
             const len = history ? history.length : 0;
             //skip if there is an actual history or there are no teams at all
-            if(len > 0 || teams.length == 0) continue;
+            if(len > 0) return;
 
-            let teamsRacial = teamsFiltered
-                .filter(t=>TeamUtil.getFavoriteRace(t.members[0]) == race)
-                //desc
-                .sort((a, b)=>b.season - a.season);
-            if(teamsRacial.length == 0) continue;
+            let teamsRacial = teamsFiltered.sort((a, b)=>b.season - a.season);
 
             const snap = CharacterUtil.createTeamSnapshot(teamsRacial[0], firstDate);
-            racialHistory.set(race.name, [snap]);
+            snap.race = "ALL";
+            racialHistory.set("ALL", [snap]);
             injectArray.push(snap);
         }
     }
