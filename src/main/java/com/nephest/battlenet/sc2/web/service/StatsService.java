@@ -440,6 +440,7 @@ public class StatsService
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members = new ArrayList<>(bTeams.length * memberCount);
         Set<TeamState> states = new HashSet<>(bTeams.length, 1f);
+        Integer curSeason = seasonDao.getMaxBattlenetId() == null ? 0 : seasonDao.getMaxBattlenetId();
         for (BlizzardTeam bTeam : bTeams)
         {
             Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
@@ -450,7 +451,7 @@ public class StatsService
                 //old team, nothing to update
                 if(team == null) continue;
                 extractTeamMembers(bTeam.getMembers(), members, season, team);
-                states.add(TeamState.of(team));
+                if(season.getBattlenetId().equals(curSeason)) states.add(TeamState.of(team));
             }
         }
         saveMembersConcurrently(members);

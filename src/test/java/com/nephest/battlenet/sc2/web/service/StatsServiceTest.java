@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -35,8 +36,8 @@ public class StatsServiceTest
     public void beforeEach()
     {
         teamDAO = mock(TeamDAO.class);
-        ss = new StatsService(null, null, null, null, null, null, teamDAO, null, null, null, null, null, null, null,
-            mock(Validator.class));
+        ss = new StatsService(null, null, mock(SeasonDAO.class), null, null, null, teamDAO, null, null, null, null,
+            null, null,null, mock(Validator.class));
         StatsService nss = mock(StatsService.class);
         ss.setNestedService(nss);
     }
