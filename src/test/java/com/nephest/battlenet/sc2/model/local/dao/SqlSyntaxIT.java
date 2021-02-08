@@ -217,6 +217,9 @@ public class SqlSyntaxIT
         proPlayerDAO.removeExpired();
         proTeamDAO.removeExpired();
         proTeamMemberDAO.removeExpired();
+
+        teamMemberDAO.removeByTeamId(zergTeam.getId());
+        assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).isEmpty());
     }
 
 }

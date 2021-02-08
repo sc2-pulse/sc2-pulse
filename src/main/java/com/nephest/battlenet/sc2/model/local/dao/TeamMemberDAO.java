@@ -34,6 +34,8 @@ public class TeamMemberDAO
         + "zerg_games_played=excluded.zerg_games_played, "
         + "random_games_played=excluded.random_games_played";
 
+    private static final String DELETE_BY_TEAM_ID_QUERY = "DELETE FROM team_member WHERE team_id = :teamId";
+
     private final NamedParameterJdbcTemplate template;
 
     public static final RowMapper<TeamMember> STD_ROW_MAPPER = (rs, i)-> new TeamMember
@@ -80,6 +82,14 @@ public class TeamMemberDAO
         }
 
         return template.batchUpdate(MERGE_QUERY, params);
+    }
+
+    public int removeByTeamId(long teamId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("teamId", teamId);
+
+        return template.update(DELETE_BY_TEAM_ID_QUERY, params);
     }
 
     private MapSqlParameterSource createParameterSource(TeamMember member)
