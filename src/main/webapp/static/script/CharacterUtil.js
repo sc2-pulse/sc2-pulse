@@ -506,7 +506,8 @@ class CharacterUtil
         for(const tr of table.querySelectorAll(":scope tr.active")) tr.classList.remove("active");
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
         CharacterUtil.updateCharacters(table, commonCharacter.linkedDistinctCharacters);
-        table.querySelector(':scope a[data-character-id="' + id + '"]').closest("tr").classList.add("active");
+        const activeCharAnchor = table.querySelector(':scope a[data-character-id="' + id + '"]');
+        if(activeCharAnchor != null) activeCharAnchor.closest("tr").classList.add("active");
     }
 
     static updateCharacterMatchesView()
