@@ -26,6 +26,7 @@ import reactor.util.function.Tuple5;
 import reactor.util.function.Tuples;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -162,7 +163,7 @@ public class StatsService
                 updateSeason(season, regions, queues, leagues);
                 LOG.info("Updated season {}", season);
             }
-            playerCharacterStatsDAO.mergeCalculateGlobal();
+            playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusYears(1));
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
@@ -289,7 +290,7 @@ public class StatsService
             if(leagues.length == BaseLeague.LeagueType.values().length)
             {
                 updateSeasonStats(seasonId, regions, queues, leagues);
-                playerCharacterStatsDAO.mergeCalculateGlobal();
+                playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusHours(1));
                 statsService.evictCurrentSeasonTeamCountCache();
             }
             else

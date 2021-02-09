@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -20,6 +20,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -112,8 +113,8 @@ public class PlayerCharacterStatsDAOIT
         playerCharacterStatsDAO.mergeCalculate(season1.getBattlenetId()); //just for testing, not actually required
         playerCharacterStatsDAO.calculate(season2.getBattlenetId());
         playerCharacterStatsDAO.mergeCalculate(season2.getBattlenetId()); //just for testing, not actually required
-        playerCharacterStatsDAO.calculateGlobal();
-        playerCharacterStatsDAO.mergeCalculateGlobal(); //just for testing, not actually required
+        playerCharacterStatsDAO.calculateGlobal(OffsetDateTime.now().minusHours(1));
+        playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusHours(1)); //just for testing, not actually required
         Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats =
             playerCharacterStatsDAO.findGlobalMap(character.getId());
 

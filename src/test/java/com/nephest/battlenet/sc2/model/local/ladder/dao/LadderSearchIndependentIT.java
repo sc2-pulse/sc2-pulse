@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -23,6 +23,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -163,7 +164,7 @@ public class LadderSearchIndependentIT
         );
         teamMemberDAO.create(member3);
         playerCharacterStatsDAO.mergeCalculate(season1.getBattlenetId());
-        playerCharacterStatsDAO.mergeCalculateGlobal();
+        playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusHours(1));
 
         List<LadderDistinctCharacter> byName = ladderCharacterDAO.findDistinctCharactersByName("refchar1");
         assertEquals(1, byName.size());

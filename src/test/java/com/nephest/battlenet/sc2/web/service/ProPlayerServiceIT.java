@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -35,6 +35,7 @@ import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -99,7 +100,7 @@ public class ProPlayerServiceIT
             5
         );
         playerCharacterStatsDAO.mergeCalculate(SeasonGenerator.DEFAULT_SEASON_ID);
-        playerCharacterStatsDAO.mergeCalculateGlobal();
+        playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusHours(1));
     }
 
     @AfterAll

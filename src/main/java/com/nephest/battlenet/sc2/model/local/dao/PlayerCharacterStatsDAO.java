@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -91,7 +91,7 @@ public class PlayerCharacterStatsDAO
         + "FROM player_character_stats "
         + "WHERE season_id IS NOT NULL "
         + "GROUP BY player_character_id, race, queue_type, team_type "
-        + "HAVING MAX(updated) > NOW() - INTERVAL '1 HOURS'";
+        + "HAVING MAX(updated) > :updatedMin";
     public static final String CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS =
         CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS + MERGE_TEMPLATE;
 
@@ -197,16 +197,20 @@ public class PlayerCharacterStatsDAO
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void calculateGlobal()
+    public void calculateGlobal(OffsetDateTime updatedMin)
     {
-        template.getJdbcTemplate().update(CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS);
+        SqlParameterSource params = new MapSqlParameterSource()
+            .addValue("updatedMin", updatedMin);
+        template.update(CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS, params);
         LOG.debug("Calculated player character global stats");
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void mergeCalculateGlobal()
+    public void mergeCalculateGlobal(OffsetDateTime updatedMin)
     {
-        template.getJdbcTemplate().update(CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS);
+        SqlParameterSource params = new MapSqlParameterSource()
+            .addValue("updatedMin", updatedMin);
+        template.update(CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS, params);
         LOG.debug("Calculated (merged) player character global stats");
     }
 
