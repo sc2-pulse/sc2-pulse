@@ -25,6 +25,14 @@ public class Cron
 
     private static final Logger LOG = LoggerFactory.getLogger(Cron.class);
 
+    private static final BaseLeague.LeagueType[] NORMAL_LEAGUES = BaseLeague.LeagueType.values();
+    private static final BaseLeague.LeagueType[] ALTERNATIVE_LEAGUES = new BaseLeague.LeagueType[]
+    {
+        BaseLeague.LeagueType.GRANDMASTER,
+        BaseLeague.LeagueType.MASTER,
+        BaseLeague.LeagueType.DIAMOND
+    };
+
     @Autowired
     private StatsService statsService;
 
@@ -104,13 +112,10 @@ public class Cron
             (
                 new Region[]{Region.US, Region.EU, Region.KR},
                 new QueueType[]{QueueType.LOTV_1V1},
-                new BaseLeague.LeagueType[]
-                {
-                    BaseLeague.LeagueType.GRANDMASTER,
-                    BaseLeague.LeagueType.MASTER,
-                    BaseLeague.LeagueType.DIAMOND,
-                    BaseLeague.LeagueType.PLATINUM,
-                }
+                statsService.getAlternativeRegions().contains(Region.EU)
+                    || statsService.getAlternativeRegions().contains(Region.US)
+                        ? ALTERNATIVE_LEAGUES
+                        : NORMAL_LEAGUES
             );
         }
         catch(RuntimeException ex)
