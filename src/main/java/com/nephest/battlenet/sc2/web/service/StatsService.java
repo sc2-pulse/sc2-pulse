@@ -354,7 +354,9 @@ public class StatsService
                     League league = League.of(season, bLeague);
 
                     leagueDao.merge(league);
-                    updateLeagueTiers(bLeague, season, league, lastLeagueUpdates.get(queues.length));
+                    updateLeagueTiers(
+                        bLeague, season, league,
+                        currentSeason ? lastLeagueUpdates.get(queues.length) : null);
                 }
             }
         }
