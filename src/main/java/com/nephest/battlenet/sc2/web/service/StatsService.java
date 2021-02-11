@@ -208,7 +208,7 @@ public class StatsService
             checkStaleData();
             updateCurrentSeason(regions, queues, leagues);
 
-            lastLeagueUpdates.put(leagues.length, startInstant);
+            lastLeagueUpdates.put(queues.length, startInstant);
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
             LOG.info("Updated current after {} seconds", seconds);
@@ -287,7 +287,7 @@ public class StatsService
         }
         if(seasonId != null)
         {
-            if(leagues.length == BaseLeague.LeagueType.values().length)
+            if(queues.length == QueueType.getTypes(VERSION).size())
             {
                 updateSeasonStats(seasonId, regions, queues, leagues);
                 playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusHours(1));
@@ -311,7 +311,7 @@ public class StatsService
         }
         else
         {
-            if(leagues.length < BaseLeague.LeagueType.values().length)
+            if(queues.length < QueueType.getTypes(VERSION).size())
             {
                 alternativeLadderService.updateThenSmartDiscoverSeason(season, leagues);
             }
@@ -354,7 +354,7 @@ public class StatsService
                     League league = League.of(season, bLeague);
 
                     leagueDao.merge(league);
-                    updateLeagueTiers(bLeague, season, league, lastLeagueUpdates.get(leagues.length));
+                    updateLeagueTiers(bLeague, season, league, lastLeagueUpdates.get(queues.length));
                 }
             }
         }
