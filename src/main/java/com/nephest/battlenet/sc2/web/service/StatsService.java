@@ -295,7 +295,9 @@ public class StatsService
             }
             else
             {
+                leagueStatsDao.mergeCalculateForSeason(seasonId);
                 teamDao.updateRanks(seasonId, regions, queues, TeamType.values(), leagues);
+                statsService.evictCurrentSeasonTeamCountCache();
             }
         }
     }
