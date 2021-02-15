@@ -135,14 +135,18 @@ public class BlizzardSC2API
         return Mono.defer(()->getSeason(region, season)
             .then(chainSeasonMono(region, season + 1, startFrom))
             .onErrorResume(
-                (t)->season <= startFrom ? Mono.empty() : getSeason(region, season - 1)
-                    .onErrorResume((t1)->Mono.empty())));
+                (t)->season <= startFrom
+                    ? Mono.error(new IllegalStateException(String.format("Last season not found %s %s", season, startFrom), t))
+                    : getSeason(region, season - 1)));
     }
 
     //current season endpoint can return the 500/503 code sometimes
     public Mono<BlizzardSeason> getCurrentOrLastSeason(Region region, int startFrom)
     {
-        return getCurrentSeason(region).onErrorResume((t)->getLastSeason(region, startFrom));
+        return getCurrentSeason(region).onErrorResume((t)->{
+            LOG.error(ExceptionUtils.getRootCauseMessage(t));
+            return getLastSeason(region, startFrom);
+        });
     }
 
     public Mono<BlizzardLeague> getLeague

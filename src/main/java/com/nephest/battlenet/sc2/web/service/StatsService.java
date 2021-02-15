@@ -277,13 +277,21 @@ public class StatsService
     private void updateCurrentSeason(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         Integer seasonId = null;
+        int maxSeason = seasonDao.getMaxBattlenetId();
         for(Region region : regions)
         {
-            BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, seasonDao.getMaxBattlenetId()).block();
-            Season season = seasonDao.merge(Season.of(bSeason, region));
-            updateOrAlternativeUpdate(bSeason, season, queues, leagues, true);
-            seasonId = season.getBattlenetId();
-            LOG.debug("Updated leagues: {} {}", seasonId, region);
+            try
+            {
+                BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
+                Season season = seasonDao.merge(Season.of(bSeason, region));
+                updateOrAlternativeUpdate(bSeason, season, queues, leagues, true);
+                seasonId = season.getBattlenetId();
+                LOG.debug("Updated leagues: {} {}", seasonId, region);
+            }
+            catch(RuntimeException ex)
+            {
+                LOG.error(ex.getMessage(), ex);
+            }
         }
         if(seasonId != null)
         {
@@ -599,21 +607,29 @@ public class StatsService
 
     public void checkStaleData()
     {
+        int maxSeason = seasonDao.getMaxBattlenetId();
         for(Region region : Region.values())
         {
-            BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, seasonDao.getMaxBattlenetId()).block();
-            long maxId = getMaxLadderId(bSeason, region);
-            api.getProfileLadderId(region, maxId + STALE_LADDER_TOLERANCE)
-                .doOnNext(l->{
-                    if(alternativeRegions.add(region))
-                        LOG.warn("Stale data detected for {}, added this region to alternative update", region);
-                })
-                .onErrorResume(t->{
-                    if(alternativeRegions.remove(region))
-                        LOG.info("{} now returns fresh data, removed it from alternative update", region);
-                    return Mono.empty();
-                })
-                .block();
+            try
+            {
+                BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
+                long maxId = getMaxLadderId(bSeason, region);
+                api.getProfileLadderId(region, maxId + STALE_LADDER_TOLERANCE)
+                    .doOnNext(l->{
+                        if(alternativeRegions.add(region))
+                            LOG.warn("Stale data detected for {}, added this region to alternative update", region);
+                    })
+                    .onErrorResume(t->{
+                        if(alternativeRegions.remove(region))
+                            LOG.info("{} now returns fresh data, removed it from alternative update", region);
+                        return Mono.empty();
+                    })
+                    .block();
+            }
+            catch(RuntimeException ex)
+            {
+                LOG.error(ex.getMessage(), ex);
+            }
         }
     }
 
