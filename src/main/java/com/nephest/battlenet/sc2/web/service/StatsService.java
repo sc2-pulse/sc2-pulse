@@ -128,6 +128,11 @@ public class StatsService
         return alternativeRegions;
     }
 
+    public Map<Integer, Instant> getLastLeagueUpdates()
+    {
+        return lastLeagueUpdates;
+    }
+
     @Autowired
     protected void setIgnoreAlternativeData
     (@Value("${com.nephest.battlenet.sc2.ladder.ignoreAlternativeData:#{'false'}}") boolean ignoreAlternativeData)
