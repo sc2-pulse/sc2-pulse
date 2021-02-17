@@ -18,6 +18,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
+import reactor.netty.resources.LoopResources;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
@@ -43,6 +44,8 @@ public class WebServiceUtil
         .filter(t->!(ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound)
             && !(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
         .transientErrors(true);
+    public static final LoopResources LOOP_RESOURCES =
+        LoopResources.create("sc2-http", Math.max(Runtime.getRuntime().availableProcessors(), 6), true);
 
     public static WebClient.Builder getWebClientBuilder
     (ObjectMapper objectMapper, int inMemorySize, ConnectionProvider connectionProvider)
@@ -54,6 +57,7 @@ public class WebServiceUtil
                 c-> c.addHandlerLast(new ReadTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
                     .addHandlerLast(new WriteTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
             )
+            .runOn(LOOP_RESOURCES)
             .compress(true);
         return WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(httpClient))
