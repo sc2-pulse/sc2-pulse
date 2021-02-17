@@ -28,7 +28,7 @@ public class SC2RevealedAPI
 
     private void initClient(ObjectMapper objectMapper)
     {
-        client = WebServiceUtil.getWebClientBuilder(objectMapper, 800000, null)
+        client = WebServiceUtil.getWebClientBuilder(objectMapper, 800000)
             .baseUrl(BASE_URL)
             .build();
     }

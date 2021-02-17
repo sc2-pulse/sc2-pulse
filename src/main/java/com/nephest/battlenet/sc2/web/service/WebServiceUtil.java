@@ -44,13 +44,20 @@ public class WebServiceUtil
         .filter(t->!(ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound)
             && !(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
         .transientErrors(true);
+    public static final ConnectionProvider CONNECTION_PROVIDER = ConnectionProvider.builder("sc2-connection-provider")
+        .maxConnections(700)
+        .maxIdleTime(Duration.ofMinutes(30))
+        .maxLifeTime(Duration.ofMinutes(90))
+        .evictInBackground(Duration.ofMinutes(10))
+        .lifo()
+        .build();
     public static final LoopResources LOOP_RESOURCES =
         LoopResources.create("sc2-http", Math.max(Runtime.getRuntime().availableProcessors(), 6), true);
 
     public static WebClient.Builder getWebClientBuilder
-    (ObjectMapper objectMapper, int inMemorySize, ConnectionProvider connectionProvider)
+    (ObjectMapper objectMapper, int inMemorySize)
     {
-        HttpClient httpClient = connectionProvider == null ? HttpClient.create() : HttpClient.create(connectionProvider)
+        HttpClient httpClient = HttpClient.create(CONNECTION_PROVIDER)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECT_TIMEOUT.toMillis())
             .doOnConnected
             (
@@ -71,7 +78,7 @@ public class WebServiceUtil
 
     public static WebClient.Builder getWebClientBuilder(ObjectMapper objectMapper)
     {
-        return getWebClientBuilder(objectMapper, -1, null);
+        return getWebClientBuilder(objectMapper, -1);
     }
 
     public static <T> Mono<T> getRateDelayedMono

@@ -28,13 +28,11 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.ParallelFlux;
 import reactor.core.scheduler.Schedulers;
-import reactor.netty.resources.ConnectionProvider;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple5;
 import reactor.util.function.Tuples;
 
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.stream.LongStream;
 
@@ -86,14 +84,7 @@ public class BlizzardSC2API
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
         oauth2Client.setDefaultClientRegistrationId("sc2-sys");
-        ConnectionProvider provider = ConnectionProvider.builder("BlizzardSC2APIConnectionProvider")
-            .maxConnections(700)
-            .maxIdleTime(Duration.ofMinutes(30))
-            .maxLifeTime(Duration.ofMinutes(90))
-            .evictInBackground(Duration.ofMinutes(10))
-            .lifo()
-            .build();
-        client = WebServiceUtil.getWebClientBuilder(objectMapper, 400000, provider)
+        client = WebServiceUtil.getWebClientBuilder(objectMapper, 400000)
                 .apply(oauth2Client.oauth2Configuration()).build();
     }
 
