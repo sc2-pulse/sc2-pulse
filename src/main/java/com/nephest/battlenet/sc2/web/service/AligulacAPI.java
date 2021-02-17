@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -32,7 +32,7 @@ public class AligulacAPI
 
     private void initClient(ObjectMapper objectMapper)
     {
-        client = WebServiceUtil.getWebClientBuilder(objectMapper, -1)
+        client = WebServiceUtil.getWebClientBuilder(objectMapper)
             .baseUrl(BASE_URL)
             .build();
     }

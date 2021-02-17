@@ -85,7 +85,8 @@ public class BlizzardSC2API
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
         oauth2Client.setDefaultClientRegistrationId("sc2-sys");
         client =
-            WebServiceUtil.getWebClientBuilder(objectMapper, 400000).apply(oauth2Client.oauth2Configuration()).build();
+            WebServiceUtil.getWebClientBuilder(objectMapper, 400000, null)
+                .apply(oauth2Client.oauth2Configuration()).build();
     }
 
     protected void setRegionUri(String uri)

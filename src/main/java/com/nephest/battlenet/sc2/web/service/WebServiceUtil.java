@@ -17,6 +17,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
+import reactor.netty.resources.ConnectionProvider;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
@@ -43,9 +44,10 @@ public class WebServiceUtil
             && !(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
         .transientErrors(true);
 
-    public static WebClient.Builder getWebClientBuilder(ObjectMapper objectMapper, int inMemorySize)
+    public static WebClient.Builder getWebClientBuilder
+    (ObjectMapper objectMapper, int inMemorySize, ConnectionProvider connectionProvider)
     {
-        HttpClient httpClient = HttpClient.create()
+        HttpClient httpClient = connectionProvider == null ? HttpClient.create() : HttpClient.create(connectionProvider)
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECT_TIMEOUT.toMillis())
             .doOnConnected
             (
@@ -61,6 +63,11 @@ public class WebServiceUtil
                 conf.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
                 if(inMemorySize > 0) conf.defaultCodecs().maxInMemorySize(inMemorySize);
             }).build());
+    }
+
+    public static WebClient.Builder getWebClientBuilder(ObjectMapper objectMapper)
+    {
+        return getWebClientBuilder(objectMapper, -1, null);
     }
 
     public static <T> Mono<T> getRateDelayedMono
