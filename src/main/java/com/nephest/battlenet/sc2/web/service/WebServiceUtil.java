@@ -17,7 +17,6 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
-import reactor.netty.tcp.TcpClient;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
@@ -46,14 +45,13 @@ public class WebServiceUtil
 
     public static WebClient.Builder getWebClientBuilder(ObjectMapper objectMapper, int inMemorySize)
     {
-        TcpClient timeoutClient = TcpClient.create()
+        HttpClient httpClient = HttpClient.create()
             .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECT_TIMEOUT.toMillis())
             .doOnConnected
             (
                 c-> c.addHandlerLast(new ReadTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
                     .addHandlerLast(new WriteTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
-            );
-        HttpClient httpClient = HttpClient.from(timeoutClient)
+            )
             .compress(true);
         return WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(httpClient))
