@@ -214,12 +214,8 @@ public class BlizzardSC2API
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
             .flatMap(id->WebServiceUtil.getRateDelayedMono(
-                getLeague(id.getT1(), id.getT2(), id.getT3(), id.getT4(), id.getT5(), cur),
-                t->{if(!(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
-                    LOG.error(ExceptionUtils.getRootCauseMessage(t));
-                    return Mono.empty();},
-                DELAY),
-                true, 1);
+                getLeague(id.getT1(), id.getT2(), id.getT3(), id.getT4(), id.getT5(), cur), Mono::error, DELAY),
+                false, 1);
     }
 
     public Mono<BlizzardLadder> getLadder
@@ -273,12 +269,8 @@ public class BlizzardSC2API
         return Flux.fromArray(divisions)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(d->WebServiceUtil.getRateDelayedMono(
-                    getLadder(region, d).zipWith(Mono.just(d)),
-                    t->{if(!(ExceptionUtils.getRootCause(t) instanceof NoRetryException)) LOG.error(t.getMessage(), t);
-                        return Mono.empty();},
-                    DELAY),
-                true, 1);
+            .flatMap(d->WebServiceUtil.getRateDelayedMono(getLadder(region, d).zipWith(Mono.just(d)),Mono::error, DELAY),
+                false, 1);
     }
 
     public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region region, long ladderId)
