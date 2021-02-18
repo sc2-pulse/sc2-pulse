@@ -328,7 +328,7 @@ public class BlizzardSC2API
     (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, int ix)
     {
         int prevIx = ix - 1;
-        if(ix > 0) LOG.warn("Profile ladder not found {} times: {}/{}/{}",
+        if(ix > 0) LOG.debug("Profile ladder not found {} times: {}/{}/{}",
             ix, id.getT2()[prevIx].getRealm(), id.getT2()[prevIx].getId(), id.getT3());
         return Mono.defer(()->
         {
@@ -340,7 +340,7 @@ public class BlizzardSC2API
                         return chainProfileLadderMono(id, ix + 1);
                     });
             }
-            LOG.error("Profile ladder not found {}/{}/{}", id.getT2()[prevIx].getRealm(), id.getT2()[prevIx].getId(), id.getT3());
+            LOG.warn("Profile ladder not found {}/{}/{}", id.getT2()[prevIx].getRealm(), id.getT2()[prevIx].getId(), id.getT3());
             return Mono.error(new NoRetryException("Profile ladder not found"));
         });
     }
@@ -382,7 +382,7 @@ public class BlizzardSC2API
             .findAny().orElse(null);
         if(currentMembership == null)
         {
-            LOG.warn("Current ladder membership not found {}", ladderId);
+            LOG.debug("Current ladder membership not found {}", ladderId);
             return Mono.error(new NoRetryException("Current ladder membership not found. Player moved to a new division?"));
         }
         if (!currentMembership.getLocalizedGameMode().toLowerCase().contains("1v1"))
