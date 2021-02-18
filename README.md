@@ -22,7 +22,7 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * Pro player stats
     * Social media links
     * Match history
-## Disclamier
+## Disclaimer
 I use this project for learning, it is not production-ready.
 
 This application uses Battle.net&reg; API. 
