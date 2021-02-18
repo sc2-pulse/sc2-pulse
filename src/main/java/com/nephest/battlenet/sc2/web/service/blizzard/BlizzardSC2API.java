@@ -143,10 +143,7 @@ public class BlizzardSC2API
     //current season endpoint can return the 500/503 code sometimes
     public Mono<BlizzardSeason> getCurrentOrLastSeason(Region region, int startFrom)
     {
-        return getCurrentSeason(region).onErrorResume((t)->{
-            LOG.error(ExceptionUtils.getRootCauseMessage(t));
-            return getLastSeason(region, startFrom);
-        });
+        return getCurrentSeason(region).onErrorResume(t->getLastSeason(region, startFrom));
     }
 
     public Mono<BlizzardLeague> getLeague
@@ -242,12 +239,7 @@ public class BlizzardSC2API
         return Flux.fromArray(divisions)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(d->WebServiceUtil.getRateDelayedMono(
-                getLadder(region, d).zipWith(Mono.just(d)),
-                t->{if(!(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
-                        LOG.error(ExceptionUtils.getRootCauseMessage(t));
-                    return Mono.empty();},
-                DELAY),
+            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getLadder(region, d).zipWith(Mono.just(d)), DELAY),
                 true, 1);
     }
 
@@ -304,7 +296,6 @@ public class BlizzardSC2API
                 }
                 return Tuples.of(region, characters, ladderId);
             })
-            .doOnError(t->LOG.error(ExceptionUtils.getRootCauseMessage(t)))
             .retryWhen(WebServiceUtil.RETRY_SKIP_NOT_FOUND);
     }
 
@@ -314,7 +305,7 @@ public class BlizzardSC2API
         return Flux.fromStream(LongStream.range(from, toExcluded).boxed())
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(l->WebServiceUtil.getRateDelayedMono(getProfileLadderId(region, l), DELAY),
+            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getProfileLadderId(region, l), DELAY),
                 true, 1);
     }
 
@@ -324,7 +315,7 @@ public class BlizzardSC2API
         return Flux.fromIterable(ids)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(l->WebServiceUtil.getRateDelayedMono(getProfileLadderId(region, l), DELAY),
+            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getProfileLadderId(region, l), DELAY),
                 true, 1);
     }
 
@@ -410,11 +401,7 @@ public class BlizzardSC2API
             .parallel(rps)
             .runOn(Schedulers.boundedElastic())
             .flatMap(id->WebServiceUtil
-                .getRateDelayedMono(
-                    getProfile1v1Ladder(id),
-                    t->{if(!(ExceptionUtils.getRootCause(t) instanceof NoRetryException)) LOG.error(t.getMessage(), t);
-                        return Mono.empty();},
-                    DELAY)
+                .getOnErrorLogAndSkipRateDelayedMono(getProfile1v1Ladder(id), DELAY)
                 .zipWith(Mono.just(id)),
                 true, 1);
     }
@@ -445,7 +432,6 @@ public class BlizzardSC2API
             .zipWith(Mono.just(playerCharacter))
             .retryWhen(WebServiceUtil.RETRY)
             //API can be broken randomly, accepting this as a normal behavior
-            .doOnError(t->LOG.error(ExceptionUtils.getRootCauseMessage(t)))
             .onErrorReturn(Tuples.of(new BlizzardMatches(), playerCharacter));
     }
 
@@ -454,7 +440,7 @@ public class BlizzardSC2API
         return Flux.fromIterable(playerCharacters)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(p->WebServiceUtil.getRateDelayedMono(getMatches(p), DELAY), false, 1);
+            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getMatches(p), DELAY), false, 1);
     }
 
 }

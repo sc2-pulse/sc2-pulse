@@ -8,6 +8,8 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
@@ -27,6 +29,8 @@ import java.util.function.Function;
 @Service
 public class WebServiceUtil
 {
+
+    public static final Logger LOG = LoggerFactory.getLogger(WebServiceUtil.class);
 
     private WebServiceUtil(){}
 
@@ -53,6 +57,10 @@ public class WebServiceUtil
         .build();
     public static final LoopResources LOOP_RESOURCES =
         LoopResources.create("sc2-http", Math.max(Runtime.getRuntime().availableProcessors(), 6), true);
+    public static Function<? super Throwable,? extends Mono<?>> LOG_ROOT_MESSAGE_AND_RETURN_EMPTY = t->{
+        LOG.error(ExceptionUtils.getRootCauseMessage(t));
+        return Mono.empty();
+    };
 
     public static WebClient.Builder getWebClientBuilder
     (ObjectMapper objectMapper, int inMemorySize)
@@ -96,6 +104,17 @@ public class WebServiceUtil
     public static <T> Mono<T> getRateDelayedMono(Mono<T> mono, int fullDelay)
     {
         return getRateDelayedMono(mono, t->Mono.empty(), fullDelay);
+    }
+
+    public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono(Mono<T> mono, int fullDelay)
+    {
+        return getRateDelayedMono(
+            mono,
+            t->{
+                LOG.error(ExceptionUtils.getRootCauseMessage(t));
+                return Mono.empty();
+            },
+            fullDelay);
     }
 
 }
