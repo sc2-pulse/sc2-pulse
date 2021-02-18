@@ -88,6 +88,11 @@ public class Cron
                 QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
                 BaseLeague.LeagueType.values()
             );
+            /*
+                Recache team count as soon as possible.
+                Temporary solution until team member cursor is fixed in 1.11.0
+             */
+            ladderSearchDAO.precache();
             proPlayerService.update();
             matchService.update();
         }
@@ -117,6 +122,11 @@ public class Cron
                         ? ALTERNATIVE_LEAGUES
                         : NORMAL_LEAGUES
             );
+            /*
+                Recache team count as soon as possible.
+                Temporary solution until team member cursor is fixed in 1.11.0
+             */
+            ladderSearchDAO.precache();
             matchService.update();
         }
         catch(RuntimeException ex)
