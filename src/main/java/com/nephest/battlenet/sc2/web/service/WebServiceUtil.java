@@ -111,7 +111,14 @@ public class WebServiceUtil
         return getRateDelayedMono(
             mono,
             t->{
-                LOG.error(ExceptionUtils.getRootCauseMessage(t));
+                if(t instanceof TemplatedException) {
+                    TemplatedException te = (TemplatedException) t;
+                    LOG.error(te.getLogTemplate(), te.getLogArgs());
+                }
+                else
+                {
+                    LOG.error(ExceptionUtils.getRootCauseMessage(t));
+                }
                 return Mono.empty();
             },
             fullDelay);

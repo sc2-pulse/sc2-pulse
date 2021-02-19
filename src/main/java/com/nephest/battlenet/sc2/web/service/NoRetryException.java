@@ -4,8 +4,13 @@
 package com.nephest.battlenet.sc2.web.service;
 
 public class NoRetryException
-extends RuntimeException
+extends TemplatedException
 {
+
+    public NoRetryException(String msg, String logTemplate, Object... logArgs)
+    {
+        super(msg, logTemplate, logArgs);
+    }
 
     public NoRetryException(String msg)
     {

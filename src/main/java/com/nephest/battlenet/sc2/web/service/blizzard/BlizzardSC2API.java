@@ -340,8 +340,11 @@ public class BlizzardSC2API
                         return chainProfileLadderMono(id, ix + 1);
                     });
             }
-            LOG.warn("Profile ladder not found {}/{}/{}", id.getT2()[prevIx].getRealm(), id.getT2()[prevIx].getId(), id.getT3());
-            return Mono.error(new NoRetryException("Profile ladder not found"));
+            return Mono.error(new NoRetryException(
+                "Profile ladder not found",
+                "Profile ladder not found {}/{}/{}",
+                id.getT2()[prevIx].getRealm(), id.getT2()[prevIx].getId(), id.getT3()
+            ));
         });
     }
 
