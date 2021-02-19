@@ -305,7 +305,7 @@ public class BlizzardSC2API
         return Flux.fromStream(LongStream.range(from, toExcluded).boxed())
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getProfileLadderId(region, l), DELAY),
+            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getProfileLadderId(region, l), DELAY, false),
                 true, 1);
     }
 
@@ -315,7 +315,7 @@ public class BlizzardSC2API
         return Flux.fromIterable(ids)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getProfileLadderId(region, l), DELAY),
+            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getProfileLadderId(region, l), DELAY, false),
                 true, 1);
     }
 
@@ -404,7 +404,7 @@ public class BlizzardSC2API
             .parallel(rps)
             .runOn(Schedulers.boundedElastic())
             .flatMap(id->WebServiceUtil
-                .getOnErrorLogAndSkipRateDelayedMono(getProfile1v1Ladder(id), DELAY)
+                .getOnErrorLogAndSkipRateDelayedMono(getProfile1v1Ladder(id), DELAY, false)
                 .zipWith(Mono.just(id)),
                 true, 1);
     }
