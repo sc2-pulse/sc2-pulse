@@ -106,22 +106,29 @@ public class WebServiceUtil
         return getRateDelayedMono(mono, t->Mono.empty(), fullDelay);
     }
 
-    public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono(Mono<T> mono, int fullDelay)
+    public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono(Mono<T> mono, int fullDelay, boolean error)
     {
         return getRateDelayedMono(
             mono,
             t->{
                 if(t instanceof TemplatedException) {
                     TemplatedException te = (TemplatedException) t;
-                    LOG.error(te.getLogTemplate(), te.getLogArgs());
+                    if(error) {LOG.error(te.getLogTemplate(), te.getLogArgs());}
+                    else{LOG.warn(te.getLogTemplate(), te.getLogArgs());}
                 }
                 else
                 {
-                    LOG.error(ExceptionUtils.getRootCauseMessage(t));
+                    if(error) {LOG.error(ExceptionUtils.getRootCauseMessage(t));}
+                    else{LOG.warn(ExceptionUtils.getRootCauseMessage(t));}
                 }
                 return Mono.empty();
             },
             fullDelay);
+    }
+
+    public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono(Mono<T> mono, int fullDelay)
+    {
+        return getOnErrorLogAndSkipRateDelayedMono(mono, fullDelay, true);
     }
 
 }
