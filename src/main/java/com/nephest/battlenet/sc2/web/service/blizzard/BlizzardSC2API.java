@@ -84,7 +84,7 @@ public class BlizzardSC2API
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
         oauth2Client.setDefaultClientRegistrationId("sc2-sys");
-        client = WebServiceUtil.getWebClientBuilder(objectMapper, 400000)
+        client = WebServiceUtil.getWebClientBuilder(objectMapper, 500 * 1024)
                 .apply(oauth2Client.oauth2Configuration()).build();
     }
 
