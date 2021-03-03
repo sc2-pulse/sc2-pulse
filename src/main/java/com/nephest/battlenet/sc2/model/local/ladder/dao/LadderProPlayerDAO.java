@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -23,7 +23,7 @@ import java.util.List;
 public class LadderProPlayerDAO
 {
 
-    private static final String FIND_PRO_PLAYER_BY_CHARACTER_ID_QUERY =
+    private static final String FIND_PRO_PLAYER_TEMPLATE =
         "SELECT "
         + ProPlayerDAO.STD_SELECT + ", "
         + SocialMediaLinkDAO.STD_SELECT + ", "
@@ -35,9 +35,12 @@ public class LadderProPlayerDAO
         + "INNER JOIN pro_player ON pro_player_account.pro_player_id = pro_player.id "
         + "LEFT JOIN social_media_link ON pro_player.id = social_media_link.pro_player_id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
-        + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
+        + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id ";
 
+    private static final String FIND_PRO_PLAYER_BY_CHARACTER_ID_QUERY = FIND_PRO_PLAYER_TEMPLATE
         + "WHERE player_character.id = :playerCharacterId";
+    private static final String FIND_PRO_PLAYER_BY_BATTLE_TAG = FIND_PRO_PLAYER_TEMPLATE
+        + "WHERE account.battle_tag = :battletag";
 
     public static final ResultSetExtractor<LadderProPlayer> LADDER_PRO_PLAYER_EXTRACTOR = (rs)->
     {
@@ -70,6 +73,12 @@ public class LadderProPlayerDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("playerCharacterId", id);
         return template.query(FIND_PRO_PLAYER_BY_CHARACTER_ID_QUERY, params, LADDER_PRO_PLAYER_EXTRACTOR);
+    }
+
+    public LadderProPlayer getProPlayerByBattletag(String btag)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("battletag", btag);
+        return template.query(FIND_PRO_PLAYER_BY_BATTLE_TAG, params, LADDER_PRO_PLAYER_EXTRACTOR);
     }
 
 }
