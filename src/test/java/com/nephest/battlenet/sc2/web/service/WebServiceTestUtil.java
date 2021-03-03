@@ -13,6 +13,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.test.StepVerifier;
+import reactor.util.retry.Retry;
 
 import java.time.Duration;
 import java.util.concurrent.TimeUnit;
@@ -79,6 +80,22 @@ public class WebServiceTestUtil
         StepVerifier.create(mono)
             .expectNextCount(1)
             .expectComplete().verify();
+    }
+
+    public static WebClient fastTimers(BaseAPI api)
+    {
+        WebClient originalClient = api.getWebClient();
+        api.setWebClient(originalClient.mutate()
+            .clientConnector(new ReactorClientHttpConnector(WebServiceUtil.getHttpClient(Duration.ZERO, Duration.ZERO)))
+            .build());
+        api.setRetry(Retry.maxInARow(WebServiceUtil.RETRY_COUNT));
+        return originalClient;
+    }
+
+    public static void revertFastTimers(BaseAPI api, WebClient originalClient)
+    {
+        api.setWebClient(originalClient);
+        api.setRetry(null);
     }
 
 }
