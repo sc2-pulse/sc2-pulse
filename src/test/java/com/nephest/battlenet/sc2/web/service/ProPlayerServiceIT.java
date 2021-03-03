@@ -139,7 +139,9 @@ public class ProPlayerServiceIT
         assertNull(nullMember.getProNickname());
         assertNull(nullMember.getProTeam());
 
-        LadderProPlayer ladderProPlayer = ladderProPlayerDAO.getProPlayerByCharacterId(1L);
+        //skip character id link
+        assertNull(ladderProPlayerDAO.getProPlayerByCharacterId(2L).getProPlayer());
+        LadderProPlayer ladderProPlayer = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
         //replaced by aligulac id
         assertArrayEquals
         (
@@ -188,8 +190,8 @@ public class ProPlayerServiceIT
             "firstName2",
             "lastName2",
             null,
-            new String[]{},
-            new Long[]{1L},
+            new String[]{"battletag#30"},
+            new Long[]{2L},
             Map.of
             (
                 SocialMedia.ALIGULAC, "http://aliculac.com/123321-something",

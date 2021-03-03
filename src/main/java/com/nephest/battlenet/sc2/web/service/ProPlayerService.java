@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -110,7 +110,6 @@ public class ProPlayerService
             for(SocialMediaLink link : links) link.setProPlayerId(proPlayer.getId());
             socialMediaLinkDAO.merge(links);
             proPlayerAccountDAO.link(proPlayer.getId(), revealedProPlayer.getBnetTags());
-            proPlayerAccountDAO.link(proPlayer.getId(), revealedProPlayer.getKnownIds());
         }
         idBuffer.clear();
     }
