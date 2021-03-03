@@ -40,7 +40,7 @@ extends StandardDAO
         + "SELECT :proPlayerId, account.id, NOW() "
         + "FROM account "
         + "INNER JOIN player_character ON player_character.account_id = account.id "
-        + "WHERE partition = :partition AND player_character.id = :playerCharacterId "
+        + "WHERE partition = :partition AND player_character.battlenet_id = :playerCharacterBattlenetId "
         + MERGE_CLAUSE;
     private static final String DELETE_BY_BATTLE_TAG_QUERY =
         "DELETE FROM pro_player_account WHERE pro_player_id = :proPlayerId "
@@ -117,13 +117,13 @@ extends StandardDAO
         return template.batchUpdate(LINK_BY_BATTLE_TAG_QUERY, params);
     }
 
-    public int[] link(Long proPlayerId, Long... playerCharacterIds)
+    public int[] link(Long proPlayerId, Long... playerCharacterBattlenetIds)
     {
-        MapSqlParameterSource[] params = new MapSqlParameterSource[playerCharacterIds.length];
-        for(int i = 0; i < playerCharacterIds.length; i++)
+        MapSqlParameterSource[] params = new MapSqlParameterSource[playerCharacterBattlenetIds.length];
+        for(int i = 0; i < playerCharacterBattlenetIds.length; i++)
             params[i] = new MapSqlParameterSource()
                 .addValue("proPlayerId", proPlayerId)
-                .addValue("playerCharacterId", playerCharacterIds[i])
+                .addValue("playerCharacterBattlenetId", playerCharacterBattlenetIds[i])
                 //sc2revealed has global partition only
                 .addValue("partition", conversionService.convert(Partition.GLOBAL, Integer.class));
 
