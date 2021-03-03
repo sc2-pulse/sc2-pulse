@@ -11,9 +11,7 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.Order;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
@@ -60,6 +58,20 @@ public class BlizzardSC2APIIT
 
     @Autowired
     private Validator validator;
+
+    private static WebClient originalClient;
+
+    @BeforeAll
+    public static void beforeAll(@Autowired BlizzardSC2API api)
+    {
+        originalClient = WebServiceTestUtil.fastTimers(api);
+    }
+
+    @AfterAll
+    public static void afterAll(@Autowired BlizzardSC2API api)
+    {
+        WebServiceTestUtil.revertFastTimers(api, originalClient);
+    }
 
     @Test @Order(1)
     public void testFetch()

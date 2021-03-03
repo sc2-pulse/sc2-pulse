@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -6,11 +6,14 @@ package com.nephest.battlenet.sc2.web.service;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -23,6 +26,20 @@ public class SC2RevealedAPIIT
 
     @Autowired
     private SC2RevealedAPI api;
+
+    private static WebClient originalClient;
+
+    @BeforeAll
+    public static void beforeAll(@Autowired SC2RevealedAPI api)
+    {
+        originalClient = WebServiceTestUtil.fastTimers(api);
+    }
+
+    @AfterAll
+    public static void afterAll(@Autowired SC2RevealedAPI api)
+    {
+        WebServiceTestUtil.revertFastTimers(api, originalClient);
+    }
 
     @Test
     @Order(1)

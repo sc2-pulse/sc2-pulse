@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -6,11 +6,14 @@ package com.nephest.battlenet.sc2.web.service;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import okhttp3.mockwebserver.MockWebServer;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Order;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.reactive.function.client.WebClient;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -26,6 +29,20 @@ public class AligulacAPIIT
 
     @Autowired
     private ProPlayerService proPlayerService;
+
+    private static WebClient originalClient;
+
+    @BeforeAll
+    public static void beforeAll(@Autowired AligulacAPI api)
+    {
+        originalClient = WebServiceTestUtil.fastTimers(api);
+    }
+
+    @AfterAll
+    public static void afterAll(@Autowired AligulacAPI api)
+    {
+        WebServiceTestUtil.revertFastTimers(api, originalClient);
+    }
 
     @Test
     @Order(1)
