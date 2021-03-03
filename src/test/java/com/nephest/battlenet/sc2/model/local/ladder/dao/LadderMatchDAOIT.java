@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -79,7 +79,7 @@ public class LadderMatchDAOIT
             proPlayerDAO.merge(proPlayer);
             ProTeam proTeam = proTeamDAO.merge(new ProTeam(null, 1L, "proTeamName", "proTeamShortName"));
             proTeamMemberDAO.merge(new ProTeamMember(proTeam.getId(), proPlayer.getId()));
-            proPlayerAccountDAO.link(proPlayer.getId(), 2L);
+            proPlayerAccountDAO.link(proPlayer.getId(), "battletag#1");
         }
     }
 
