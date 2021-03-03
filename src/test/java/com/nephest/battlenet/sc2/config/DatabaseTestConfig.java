@@ -9,9 +9,9 @@ import com.nephest.battlenet.sc2.config.security.SameSiteRememberMeAuthenticatio
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
 import com.nephest.battlenet.sc2.web.controller.StatusController;
 import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
+import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
-import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;

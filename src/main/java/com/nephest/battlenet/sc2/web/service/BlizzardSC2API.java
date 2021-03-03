@@ -1,7 +1,7 @@
 // Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-package com.nephest.battlenet.sc2.web.service.blizzard;
+package com.nephest.battlenet.sc2.web.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -13,8 +13,6 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.web.service.NoRetryException;
-import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -43,6 +40,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Service
 public class BlizzardSC2API
+extends BaseAPI
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(BlizzardSC2API.class);
@@ -57,7 +55,6 @@ public class BlizzardSC2API
     public static final int SAFE_REQUESTS_PER_HOUR_CAP = (int) Math.round(REQUESTS_PER_HOUR_CAP * REQUEST_RATE_COEFF);
     public static final int FIRST_SEASON = 28;
 
-    private WebClient client;
     private String regionUri;
     private final ObjectMapper objectMapper;
 
@@ -84,23 +81,13 @@ public class BlizzardSC2API
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
         oauth2Client.setDefaultClientRegistrationId("sc2-sys");
-        client = WebServiceUtil.getWebClientBuilder(objectMapper, 500 * 1024)
-                .apply(oauth2Client.oauth2Configuration()).build();
+        setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper, 500 * 1024)
+                .apply(oauth2Client.oauth2Configuration()).build());
     }
 
     protected void setRegionUri(String uri)
     {
         this.regionUri = uri;
-    }
-
-    protected void setWebClient(WebClient client)
-    {
-        this.client = client;
-    }
-
-    protected WebClient getWebClient()
-    {
-        return client;
     }
 
     public Mono<BlizzardSeason> getSeason(Region region, Integer id)
@@ -111,7 +98,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardDataSeason.class).cast(BlizzardSeason.class)
-            .retryWhen(WebServiceUtil.RETRY);
+            .retryWhen(getRetry(WebServiceUtil.RETRY));
     }
 
     public Mono<BlizzardSeason> getCurrentSeason(Region region)
@@ -122,7 +109,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
-            .retryWhen(WebServiceUtil.RETRY);
+            .retryWhen(getRetry(WebServiceUtil.RETRY));
     }
 
     public Mono<BlizzardSeason> getLastSeason(Region region, int startFrom)
@@ -169,7 +156,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
-            .retryWhen(WebServiceUtil.RETRY);
+            .retryWhen(getRetry(WebServiceUtil.RETRY));
 
         /*
            After a new season has started there is a period of time when this endpoint could return a 404
@@ -227,7 +214,7 @@ public class BlizzardSC2API
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
-            .retryWhen(WebServiceUtil.RETRY);
+            .retryWhen(getRetry(WebServiceUtil.RETRY));
     }
 
     public ParallelFlux<Tuple2<BlizzardLadder, Long>> getLadders
@@ -296,7 +283,7 @@ public class BlizzardSC2API
                 }
                 return Tuples.of(region, characters, ladderId);
             })
-            .retryWhen(WebServiceUtil.RETRY_SKIP_NOT_FOUND);
+            .retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND));
     }
 
     public ParallelFlux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
@@ -371,7 +358,7 @@ public class BlizzardSC2API
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(WebServiceUtil.RETRY_SKIP_NOT_FOUND);
+            .retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND));
     }
 
     private Mono<BlizzardProfileLadder> extractProfileLadder(String s, long ladderId)
@@ -433,7 +420,7 @@ public class BlizzardSC2API
             .retrieve()
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(WebServiceUtil.RETRY)
+            .retryWhen(getRetry(WebServiceUtil.RETRY))
             //API can be broken randomly, accepting this as a normal behavior
             .onErrorReturn(Tuples.of(new BlizzardMatches(), playerCharacter));
     }

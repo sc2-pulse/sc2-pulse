@@ -12,7 +12,6 @@ import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
-import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

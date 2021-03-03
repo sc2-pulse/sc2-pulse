@@ -10,7 +10,6 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeamMember;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
-import com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -7,18 +7,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.revealed.RevealedPlayers;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Service
 public class SC2RevealedAPI
+extends BaseAPI
 {
 
     public static final String BASE_URL = "https://spawning-pool.herokuapp.com/";
-
-    private WebClient client;
 
     @Autowired
     public SC2RevealedAPI(ObjectMapper objectMapper)
@@ -28,19 +26,9 @@ public class SC2RevealedAPI
 
     private void initClient(ObjectMapper objectMapper)
     {
-        client = WebServiceUtil.getWebClientBuilder(objectMapper, 800000)
+        setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper, 800000)
             .baseUrl(BASE_URL)
-            .build();
-    }
-
-    protected void setWebClient(WebClient client)
-    {
-        this.client = client;
-    }
-
-    protected WebClient getWebClient()
-    {
-        return client;
+            .build());
     }
 
     public Mono<RevealedPlayers> getPlayers()
@@ -51,7 +39,7 @@ public class SC2RevealedAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(RevealedPlayers.class)
-            .retryWhen(WebServiceUtil.RETRY);
+            .retryWhen(getRetry(WebServiceUtil.RETRY));
     }
 
 }

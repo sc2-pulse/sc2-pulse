@@ -8,18 +8,17 @@ import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
-import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Service
 public class AligulacAPI
+extends BaseAPI
 {
 
     public static final String BASE_URL = "http://aligulac.com/api/v1/";
 
-    private WebClient client;
     private final String apiKey;
 
     @Autowired
@@ -32,19 +31,9 @@ public class AligulacAPI
 
     private void initClient(ObjectMapper objectMapper)
     {
-        client = WebServiceUtil.getWebClientBuilder(objectMapper)
+        setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper)
             .baseUrl(BASE_URL)
-            .build();
-    }
-
-    protected void setWebClient(WebClient client)
-    {
-        this.client = client;
-    }
-
-    protected WebClient getWebClient()
-    {
-        return client;
+            .build());
     }
 
     public Mono<AligulacProPlayerRoot> getPlayers(long... ids)
@@ -62,7 +51,7 @@ public class AligulacAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(AligulacProPlayerRoot.class)
-            .retryWhen(WebServiceUtil.RETRY);
+            .retryWhen(getRetry(WebServiceUtil.RETRY));
     }
 
 }
