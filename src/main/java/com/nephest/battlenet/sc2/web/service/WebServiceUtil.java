@@ -38,13 +38,12 @@ public class WebServiceUtil
     public static final Duration CONNECT_TIMEOUT = Duration.ofMillis(60000);
     public static final Duration IO_TIMEOUT = Duration.ofMillis(60000);
     public static final Duration RETRY_DURATION_MIN = Duration.ofMillis(5000);
-    public static final Duration RETRY_DURATION_MAX = Duration.ofMillis(10000);
     public static final Retry RETRY = Retry
-        .backoff(RETRY_COUNT, RETRY_DURATION_MIN).maxBackoff(RETRY_DURATION_MAX)
+        .backoff(RETRY_COUNT, RETRY_DURATION_MIN)
         .filter(t->!(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
         .transientErrors(true);
     public static final Retry RETRY_SKIP_NOT_FOUND = Retry
-        .backoff(RETRY_COUNT, RETRY_DURATION_MIN).maxBackoff(RETRY_DURATION_MAX)
+        .backoff(RETRY_COUNT, RETRY_DURATION_MIN)
         .filter(t->!(ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound)
             && !(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
         .transientErrors(true);
