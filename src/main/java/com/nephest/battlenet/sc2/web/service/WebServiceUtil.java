@@ -65,23 +65,27 @@ public class WebServiceUtil
     public static WebClient.Builder getWebClientBuilder
     (ObjectMapper objectMapper, int inMemorySize)
     {
-        HttpClient httpClient = HttpClient.create(CONNECTION_PROVIDER)
-            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) CONNECT_TIMEOUT.toMillis())
-            .doOnConnected
-            (
-                c-> c.addHandlerLast(new ReadTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
-                    .addHandlerLast(new WriteTimeoutHandler((int) IO_TIMEOUT.toSeconds()))
-            )
-            .runOn(LOOP_RESOURCES)
-            .compress(true);
         return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .clientConnector(new ReactorClientHttpConnector(getHttpClient(CONNECT_TIMEOUT, IO_TIMEOUT)))
             .exchangeStrategies(ExchangeStrategies.builder().codecs(conf->
             {
                 conf.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
                 conf.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
                 if(inMemorySize > 0) conf.defaultCodecs().maxInMemorySize(inMemorySize);
             }).build());
+    }
+
+    public static HttpClient getHttpClient(Duration connectTimeout, Duration ioTimeout)
+    {
+        return HttpClient.create(CONNECTION_PROVIDER)
+            .option(ChannelOption.CONNECT_TIMEOUT_MILLIS, (int) connectTimeout.toMillis())
+            .doOnConnected
+                (
+                    c-> c.addHandlerLast(new ReadTimeoutHandler((int) ioTimeout.toSeconds()))
+                        .addHandlerLast(new WriteTimeoutHandler((int) ioTimeout.toSeconds()))
+                )
+            .runOn(LOOP_RESOURCES)
+            .compress(true);
     }
 
     public static WebClient.Builder getWebClientBuilder(ObjectMapper objectMapper)
