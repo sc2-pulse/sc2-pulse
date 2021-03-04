@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:th="http://www.thymeleaf.org">
     <th:block th:with="absoluteUrl=${#httpServletRequest.scheme}+'://'+${#httpServletRequest.serverName}+${#httpServletRequest.contextPath}">
         <th:block th:with="currentSeason=${@seasonDAO.getMaxBattlenetId()}">
                 <th:block th:each="queueType : ${T(com.nephest.battlenet.sc2.model.QueueType).getTypes(T(com.nephest.battlenet.sc2.model.Version).LOTV)}">
                     <th:block th:each="teamType : ${T(com.nephest.battlenet.sc2.model.TeamType).values()}">
-                        <url th:if="${T(com.nephest.battlenet.sc2.web.service.blizzard.BlizzardSC2API)
+                        <url th:if="${T(com.nephest.battlenet.sc2.web.service.BlizzardSC2API)
                             .isValidCombination(null, queueType, teamType)}">
                             <loc th:text="@{__${absoluteUrl}__/
                             (season=${currentSeason},queue=${queueType.toString()},team-type=${teamType.toString()}
