@@ -49,9 +49,9 @@ public class WebServiceUtil
         .transientErrors(true);
     public static final ConnectionProvider CONNECTION_PROVIDER = ConnectionProvider.builder("sc2-connection-provider")
         .maxConnections(700)
-        .maxIdleTime(Duration.ofMinutes(5))
+        .maxIdleTime(Duration.ofSeconds(30))
         .maxLifeTime(Duration.ofMinutes(30))
-        .evictInBackground(Duration.ofMinutes(5))
+        .evictInBackground(Duration.ofSeconds(30))
         .lifo()
         .build();
     public static final LoopResources LOOP_RESOURCES =
