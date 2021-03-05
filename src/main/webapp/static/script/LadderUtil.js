@@ -169,6 +169,19 @@ class LadderUtil
         );
     }
 
+    static restoreLadderFormState(form, params)
+    {
+        for(const checkbox of form.querySelectorAll('input[type="checkbox"]')) checkbox.checked = false;
+        ElementUtil.changeInputValue(form.querySelector("#" + form.id + "-season-picker"), params.get("season"));
+        ElementUtil.changeInputValue(form.querySelector("#" + form.id + "-team-format-picker"), params.get("queue"));
+        ElementUtil.changeInputValue(form.querySelector("#" + form.id + "-team-type-picker"), params.get("team-type"));
+        for(const entry of params.entries())
+        {
+            const checkbox = form.querySelector("#" + form.id + "-" + entry[0] + '[type="checkbox"]');
+            if(checkbox != null) ElementUtil.changeInputValue(checkbox, true);
+        }
+    }
+
     static onLadderFormTeamFormatChange(e)
     {
         const teamTypeSelect = e.target.closest("form").querySelector('.team-type-picker');

@@ -220,6 +220,7 @@ class HistoryUtil
         switch(type)
         {
             case "ladder":
+                LadderUtil.restoreLadderFormState(document.getElementById("form-ladder"), params);
                 const ratingAnchor = params.get("ratingAnchor"); params.delete("ratingAnchor");
                 const idAnchor = params.get("idAnchor"); params.delete("idAnchor");
                 const forward = params.get("forward"); params.delete("forward");
@@ -244,6 +245,7 @@ class HistoryUtil
                 promises.push(CharacterUtil.updateCharacterSearch(name));
                 break;
             case "following-ladder":
+                LadderUtil.restoreLadderFormState(document.getElementById("form-following-ladder"), params);
                 scrollTo = "following-ladder";
                 lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-following-ladder"));
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
