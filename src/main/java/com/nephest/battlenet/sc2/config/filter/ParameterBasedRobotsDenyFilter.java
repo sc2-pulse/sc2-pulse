@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.filter;
@@ -46,7 +46,7 @@ implements Filter
 
     private boolean hasDeprecatedParams(ServletRequest req)
     {
-        return hasTabParam(req) || hasModalTypeParam(req);
+        return hasTabParam(req) || hasModalTypeParam(req) || hasDeprecatedCursor(req);
     }
 
     private boolean hasTabParam(ServletRequest req)
@@ -59,6 +59,11 @@ implements Filter
     {
         String type = req.getParameter("type");
         return type != null && type.equals("modal");
+    }
+
+    private boolean hasDeprecatedCursor(ServletRequest req)
+    {
+        return req.getParameter("forward") != null;
     }
 
 }

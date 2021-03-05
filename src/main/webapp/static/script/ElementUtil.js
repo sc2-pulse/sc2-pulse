@@ -216,8 +216,7 @@ class ElementUtil
         {
             const pageFrom = params.get("page");
             const count = params.get("count");
-            const forward = params.get("forward");
-            const page = forward ? pageFrom + count : pageFrom - count;
+            const page = pageFrom + count;
             const rankFrom = ((page - 1) * 100) + 1;
             desc += ", rank " +  rankFrom + "-" + (rankFrom + 99);
         }

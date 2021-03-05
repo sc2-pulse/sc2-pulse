@@ -190,7 +190,7 @@ public class LadderSearchDAOIT
             TEAM_TYPE,
             page
         );
-        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId);
+        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId, false);
     }
 
     //skip masters league for test
@@ -210,10 +210,9 @@ public class LadderSearchDAOIT
             page - 1,
             //team id is zero based in generator, but actual db id is 1 based. + 2 to offset that
             teamId, teamId + 2,
-            true,
             1
         );
-        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId);
+        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId, true);
 
         //reversed
         PagedSearchResult<List<LadderTeam>> resultReversed = search.findAnchored
@@ -226,10 +225,9 @@ public class LadderSearchDAOIT
             page + 1,
             //for reversed order the generator offset is correct
             teamId - leagueTeamCount, (teamId - leagueTeamCount) + 1,
-            false,
-            1
+            -1
         );
-        verifyLadder(resultReversed, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId);
+        verifyLadder(resultReversed, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId, true);
     }
 
     @Test
@@ -246,10 +244,9 @@ public class LadderSearchDAOIT
             TEAM_TYPE,
             1,
             200, 201,
-            true,
             2
         );
-        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, 3, 159);
+        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, 3, 159, true);
 
         //reversed
         PagedSearchResult<List<LadderTeam>> resultReversed = search.findAnchored
@@ -262,10 +259,9 @@ public class LadderSearchDAOIT
             3,
             //for reversed order the generator offset is correct
             159, 160,
-            false,
-            2
+            -2
         );
-        verifyLadder(resultReversed, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, 1, 279);
+        verifyLadder(resultReversed, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, 1, 279, true);
     }
 
     private void verifyLadder
@@ -275,16 +271,17 @@ public class LadderSearchDAOIT
         TeamType teamType,
         BaseLeagueTier.LeagueTierType tierType,
         int page,
-        int teamId
+        int teamId,
+        boolean cursor
     )
     {
-        int expectedTeamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
+        long expectedTeamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
         int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
 
         //validate meta
-        assertEquals(expectedTeamCount, result.getMeta().getTotalCount());
+        assertEquals(cursor ? null : expectedTeamCount, result.getMeta().getTotalCount());
         assertEquals(leagueTeamCount, result.getMeta().getPerPage());
-        assertEquals( (int) Math.ceil(expectedTeamCount / (double) leagueTeamCount), result.getMeta().getPageCount());
+        assertEquals(cursor ? null :  (long) Math.ceil(expectedTeamCount / (double) leagueTeamCount), result.getMeta().getPageCount());
         assertEquals(page, result.getMeta().getPage());
 
         //validate teams
@@ -353,30 +350,6 @@ public class LadderSearchDAOIT
             QUEUE_TYPE,
             TEAM_TYPE,
             lastPage
-        );
-
-        verifyLadderOffset(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE);
-    }
-
-    @Test
-    public void test4v4AnchoredReversedOffset()
-    {
-        int teamsPerPage = 45;
-        int lastPage = 6;
-
-        search.setResultsPerPage(teamsPerPage);
-        PagedSearchResult<List<LadderTeam>> result = search.findAnchored
-        (
-            DEFAULT_SEASON_ID,
-            Set.of(Region.values()),
-            LEAGUES_SET,
-            QUEUE_TYPE,
-            TEAM_TYPE,
-            lastPage + 1,
-            -1,
-            0,
-            false,
-            1
         );
 
         verifyLadderOffset(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE);

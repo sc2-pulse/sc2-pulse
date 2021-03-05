@@ -46,23 +46,23 @@ class PaginationUtil
         const params = {first: firstParams, last: lastParams, forward: forwardParams, backward: backwardParams};
         for(const pagination of document.getElementsByClassName("pagination-ladder"))
         {
-            PaginationUtil.updatePagination(pagination, params, currentLadder.meta.page, currentLadder.meta.pageCount);
+            PaginationUtil.updatePagination(pagination, params, currentLadder.meta.page, currentLadder.meta.isLastPage);
             pagination.classList.remove("d-none");
         }
     }
 
-    static updatePagination(pagination, params, currentPage, lastPage)
+    static updatePagination(pagination, params, currentPage, isLastPage)
     {
         const pages = pagination.getElementsByClassName("page-link");
-        PaginationUtil.updatePaginationPage(pages.item(0), params, PAGE_TYPE.FIRST, true, 1, 0, "First", currentPage != 1, false);
-        PaginationUtil.updatePaginationPage(pages.item(1), params, PAGE_TYPE.GENERAL, false, 1, currentPage, "<", currentPage - 1 >= 1, false);
-        PaginationUtil.updatePaginationPage(pages.item(pages.length - 1), params, PAGE_TYPE.LAST, false, 1, +lastPage + 1, "Last", currentPage != lastPage, false);
-        PaginationUtil.updatePaginationPage(pages.item(pages.length - 2), params, PAGE_TYPE.GENERAL, true, 1, currentPage, ">", +currentPage + 1 <= lastPage, false);
+        PaginationUtil.updatePaginationPage(pages.item(0), params, PAGE_TYPE.FIRST, 1, 0, "First", currentPage != 1, false);
+        PaginationUtil.updatePaginationPage(pages.item(1), params, PAGE_TYPE.GENERAL, -1, currentPage, "<", currentPage - 1 >= 1, false);
+        PaginationUtil.updatePaginationPage(pages.item(pages.length - 1), params, PAGE_TYPE.LAST, 1, currentPage, "Last", false, false);
+        PaginationUtil.updatePaginationPage(pages.item(pages.length - 2), params, PAGE_TYPE.GENERAL, 1, currentPage, ">", !isLastPage, false);
 
         const dynamicCount = pages.length - 4;
         const sideCount = (dynamicCount - 1) / 2;
         const middleMin = sideCount + 1;
-        const middleMax = lastPage - sideCount;
+        const middleMax = Number.MAX_VALUE;
         const middleVal = currentPage < middleMin
             ? middleMin
             : currentPage > middleMax
@@ -74,14 +74,13 @@ class PaginationUtil
         let curDynamicPage;
         for(let i = 2, curDynamicPage = leftStart; i < dynamicCount + 2; i++, curDynamicPage++ )
         {
-            const forward = curDynamicPage > currentPage;
-            const curCount = Math.abs(curDynamicPage - currentPage);
-            const active = curDynamicPage <= lastPage && curDynamicPage != currentPage;
-            PaginationUtil.updatePaginationPage(pages.item(i), params, PAGE_TYPE.GENERAL, forward, curCount, currentPage, (active || curDynamicPage == currentPage) ? curDynamicPage : "", active, curDynamicPage == currentPage);
+            const curCount = curDynamicPage - currentPage;
+            const active = curDynamicPage != currentPage && (curDynamicPage > currentPage ? !isLastPage : true);
+            PaginationUtil.updatePaginationPage(pages.item(i), params, PAGE_TYPE.GENERAL, curCount, currentPage, (active || curDynamicPage == currentPage) ? curDynamicPage : "", active, curDynamicPage == currentPage);
         }
     }
 
-    static updatePaginationPage(page, params, pageType, forward, count, pageNumber, label, enabled, current)
+    static updatePaginationPage(page, params, pageType, count, pageNumber, label, enabled, current)
     {
         if(label === "")
         {
@@ -122,12 +121,11 @@ class PaginationUtil
                 pageParams = params.last;
                 break;
             case PAGE_TYPE.GENERAL:
-                pageParams = forward ? params.forward : params.backward;
+                pageParams = count > -1 ? params.forward : params.backward;
                 break;
         }
         for(const [key, val] of pageParams) page.setAttribute("data-page-" + key, val);
 
-        page.setAttribute("data-page-forward", forward);
         page.setAttribute("data-page-count", count);
         page.setAttribute("data-page-number", pageNumber);
         page.textContent = label;

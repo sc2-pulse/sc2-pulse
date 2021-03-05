@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -362,22 +362,14 @@ public class LadderSearchDAO
         long page,
         long ratingAnchor,
         long idAnchor,
-        boolean forward,
-        int count
+        int pageDiff
     )
     {
-        long finalPage = forward ? page + count : page - count;
-        long teamCount = ladderSearchDAO.getTeamCount(season, regions, leagueTypes, queueType, teamType);
-        long pageCount = (long) Math.ceil(teamCount /(double) getResultsPerPage());
+        boolean forward = pageDiff > -1;
+        long finalPage = page + pageDiff;
         long membersPerTeam = queueType.getTeamFormat().getMemberCount(teamType);
-        long offset = (count - 1) * getResultsPerPage() * membersPerTeam;
+        long offset = (Math.abs(pageDiff) - 1) * getResultsPerPage() * membersPerTeam;
         long limit = getResultsPerPage() * membersPerTeam;
-        //if last page is requested, show only leftovers
-        if(page == pageCount + 1)
-        {
-            limit = (teamCount % getResultsPerPage()) * membersPerTeam;
-            limit = limit == 0 ? getResultsPerPage() * membersPerTeam : limit;
-        }
         MapSqlParameterSource params =
             ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType)
                 .addValue("offset", offset)
@@ -390,7 +382,7 @@ public class LadderSearchDAO
             .query(q, params, LADDER_TEAM_EXTRACTOR);
         if(!forward) Collections.reverse(teams);
 
-        return new PagedSearchResult<>(teamCount, (long) getResultsPerPage(), finalPage, teams);
+        return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, teams);
     }
 
     @Cacheable(cacheNames = "search-team-count")

@@ -16,13 +16,63 @@ class LadderUtil
         ]);
     }
 
-    static updateLadderModel(params, formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
+    static updateLadderModel(params, formParams, ratingAnchor = 99999, idAnchor = 0, count = 1)
     {
-        const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${forward}/${count}?` + formParams;
+        return Promise.all([LadderUtil.chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count), StatsUtil.updateBundleModel()]);
+    }
+
+    static chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count, isLastPage = false)
+    {
+        const request = `api/ladder/a/${ratingAnchor}/${idAnchor}/${count}?` + formParams;
         const ladderPromise = fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.SEARCH, json); res(json);}));
-        return Promise.all([ladderPromise, StatsUtil.updateBundleModel()]);
+        .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+        .then(json => {
+            json.meta.isLastPage = isLastPage;
+            if(json.result.length == 0) {
+                count--;
+                params.count = count;
+                if(count < 1) return LadderUtil.setLastOrCurrentLadder(params, json);
+
+                return LadderUtil.chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count, true)
+            }
+
+             return new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.SEARCH, json);
+                Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.VAR, params);
+                res(params);})
+        });
+         return ladderPromise;
+    }
+
+    static setLastOrCurrentLadder(params, json)
+    {
+        const data = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH);
+        const dataParams = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.VAR);
+        if(data != null)
+        {
+            const dataSearchParams = new URLSearchParams(dataParams.form);
+            const searchParams = new URLSearchParams(params.form);
+            dataSearchParams.delete("page");
+            searchParams.delete("page");
+            if(dataSearchParams.toString() == searchParams.toString())
+            {
+                Object.assign(params,  dataParams);
+                data.meta.isLastPage = true;
+            }
+            else
+            {
+                params.count++;
+                Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.SEARCH, json);
+                Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.VAR, params);
+            }
+        }
+        else
+        {
+            params.count++;
+            Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.SEARCH, json);
+            Model.DATA.get(VIEW.LADDER).set(VIEW_DATA.VAR, params);
+        }
+        return params;
     }
 
     static updateLadderView()
@@ -36,7 +86,7 @@ class LadderUtil
         document.getElementById("generated-info-all").classList.remove("d-none");
     }
 
-    static updateLadder(formParams, ratingAnchor = 99999, idAnchor = 0, forward = true, count = 1)
+    static updateLadder(formParams, ratingAnchor = 99999, idAnchor = 0, count = 1)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         const params =
@@ -44,16 +94,16 @@ class LadderUtil
             form: formParams,
             ratingAnchor: ratingAnchor,
             idAnchor: idAnchor,
-            forward: forward,
             count: count
         };
-        const searchParams = new URLSearchParams(formParams);
-        searchParams.append("type", "ladder");
-        for(const [param, val] of Object.entries(params)) if(param != "form") searchParams.append(param, val);
-        const stringParams = searchParams.toString();
 
-        return LadderUtil.updateLadderModel(params, formParams, ratingAnchor, idAnchor, forward, count)
+        return LadderUtil.updateLadderModel(params, formParams, ratingAnchor, idAnchor, count)
             .then(e => new Promise((res, rej)=>{
+                const searchParams = new URLSearchParams(e[0].form);
+                searchParams.append("type", "ladder");
+                for(const [param, val] of Object.entries(params)) if(param != "form") searchParams.append(param, val);
+                const stringParams = searchParams.toString();
+
                 LadderUtil.updateLadderView();
                 Util.setGeneratingStatus(STATUS.SUCCESS, null, "generated-info-all");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString() + "#ladder-top");
@@ -127,7 +177,6 @@ class LadderUtil
             formParams,
             evt.target.getAttribute("data-page-rating-anchor"),
             evt.target.getAttribute("data-page-id-anchor"),
-            evt.target.getAttribute("data-page-forward"),
             evt.target.getAttribute("data-page-count")
         ).then(e=>Util.scrollIntoViewById(evt.target.getAttribute("href").substring(1)));
     }

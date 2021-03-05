@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -97,12 +97,11 @@ public class LadderController
         );
     }
 
-    @GetMapping("/ladder/a/{ratingAnchor}/{idAnchor}/{forward}/{count}")
+    @GetMapping("/ladder/a/{ratingAnchor}/{idAnchor}/{count}")
     public PagedSearchResult<List<LadderTeam>> getLadderAnchored
         (
             @PathVariable("ratingAnchor") long ratingAnchor,
             @PathVariable("idAnchor") long idAnchor,
-            @PathVariable("forward") boolean forward,
             @PathVariable("count") int count,
             @RequestParam("season") int season,
             @RequestParam("queue") QueueType queue,
@@ -145,7 +144,6 @@ public class LadderController
             page,
             ratingAnchor,
             idAnchor,
-            forward,
             count
         );
     }
