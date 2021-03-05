@@ -27,7 +27,10 @@ class PaginationUtil
     static updateLadderPaginations()
     {
         const currentLadder = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH);
-        if(currentLadder == null || currentLadder.result.length < 1) return;
+        if(currentLadder == null || currentLadder.result.length < 1) {
+            for(const pagination of document.getElementsByClassName("pagination-ladder")) pagination.classList.add("d-none");
+            return;
+        }
         const backwardParams = new Map();
         backwardParams.set("rating-anchor", currentLadder.result[0].rating);
         backwardParams.set("id-anchor", currentLadder.result[0].id);
@@ -44,6 +47,7 @@ class PaginationUtil
         for(const pagination of document.getElementsByClassName("pagination-ladder"))
         {
             PaginationUtil.updatePagination(pagination, params, currentLadder.meta.page, currentLadder.meta.pageCount);
+            pagination.classList.remove("d-none");
         }
     }
 
