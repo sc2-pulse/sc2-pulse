@@ -315,6 +315,17 @@ class ElementUtil
         }
     }
 
+    static changeInputValue(input, val)
+    {
+        const type = input.getAttribute("type");
+        if(type == "checkbox" || type == "radio") {
+            input.checked = val;
+        } else {
+            input.value = val;
+        }
+        input.dispatchEvent(new Event("change"));
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
