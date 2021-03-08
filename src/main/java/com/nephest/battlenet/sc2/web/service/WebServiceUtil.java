@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.util.LogUtil;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
@@ -109,20 +110,19 @@ public class WebServiceUtil
         return getRateDelayedMono(mono, t->Mono.empty(), fullDelay);
     }
 
-    public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono(Mono<T> mono, int fullDelay, boolean error)
+    public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono
+    (Mono<T> mono, int fullDelay, Function<Throwable, LogUtil.LogLevel> logLevelFunction)
     {
         return getRateDelayedMono(
             mono,
             t->{
                 if(t instanceof TemplatedException) {
                     TemplatedException te = (TemplatedException) t;
-                    if(error) {LOG.error(te.getLogTemplate(), te.getLogArgs());}
-                    else{LOG.warn(te.getLogTemplate(), te.getLogArgs());}
+                    LogUtil.log(LOG, logLevelFunction.apply(t), te.getLogTemplate(), te.getLogArgs());
                 }
                 else
                 {
-                    if(error) {LOG.error(ExceptionUtils.getRootCauseMessage(t));}
-                    else{LOG.warn(ExceptionUtils.getRootCauseMessage(t));}
+                    LogUtil.log(LOG, logLevelFunction.apply(t), ExceptionUtils.getRootCauseMessage(t));
                 }
                 return Mono.empty();
             },
@@ -131,7 +131,7 @@ public class WebServiceUtil
 
     public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono(Mono<T> mono, int fullDelay)
     {
-        return getOnErrorLogAndSkipRateDelayedMono(mono, fullDelay, true);
+        return getOnErrorLogAndSkipRateDelayedMono(mono, fullDelay, (t)->LogUtil.LogLevel.ERROR);
     }
 
 }

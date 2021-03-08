@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.util.LogUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -292,7 +293,8 @@ extends BaseAPI
         return Flux.fromStream(LongStream.range(from, toExcluded).boxed())
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getProfileLadderId(region, l), DELAY, false),
+            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(
+                    getProfileLadderId(region, l), DELAY, (t)->LogUtil.LogLevel.WARNING),
                 true, 1);
     }
 
@@ -302,7 +304,8 @@ extends BaseAPI
         return Flux.fromIterable(ids)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getProfileLadderId(region, l), DELAY, false),
+            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(
+                    getProfileLadderId(region, l), DELAY, (t)->LogUtil.LogLevel.WARNING),
                 true, 1);
     }
 
@@ -391,7 +394,9 @@ extends BaseAPI
             .parallel(rps)
             .runOn(Schedulers.boundedElastic())
             .flatMap(id->WebServiceUtil
-                .getOnErrorLogAndSkipRateDelayedMono(getProfile1v1Ladder(id), DELAY, false)
+                .getOnErrorLogAndSkipRateDelayedMono(
+                    getProfile1v1Ladder(id), DELAY,
+                    (t)->t.getMessage().startsWith("Invalid game mode") ? LogUtil.LogLevel.DEBUG : LogUtil.LogLevel.WARNING)
                 .zipWith(Mono.just(id)),
                 true, 1);
     }
