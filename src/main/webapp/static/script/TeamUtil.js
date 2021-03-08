@@ -79,7 +79,7 @@ class TeamUtil
 
         const rankInfo = `<div class="text-nowrap">
             <span>${rank}</span>
-            <span class="text-secondary font-weight-lighter">${topPercentage != "" ? "(" + topPercentage + "%)" : ""}</span>
+            <span class="text-secondary font-weight-lighter">${!isNaN(topPercentage) ? "(" + topPercentage + "%)" : ""}</span>
             </div>`;
         parent.innerHTML = rankInfo;
     }
