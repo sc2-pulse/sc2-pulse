@@ -10,7 +10,10 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -70,52 +73,6 @@ public class LadderSearchDAO
     private static final String LADDER_SEARCH_TEAM_FROM_WHERE =
         LADDER_SEARCH_TEAM_FROM + LADDER_SEARCH_TEAM_WHERE;
 
-    private static final String FIND_TEAM_MEMBERS_LATE_FORMAT =
-        FIND_TEAM_MEMBERS_BASE
-
-        + "FROM "
-        + "(SELECT team_id, player_character_id "
-            + "FROM team_member "
-            + "INNER JOIN team teamr ON team_member.team_id=teamr.id "
-            + "WHERE "
-            + "teamr.season=:seasonId "
-            + "AND teamr.region IN (:region0, :region1, :region2, :region3) "
-            + "AND teamr.league_type IN (:leagueType0, :leagueType1, :leagueType2, :leagueType3, :leagueType4, :leagueType5, :leagueType6) "
-            + "AND teamr.queue_type=:queueType "
-            + "AND teamr.team_type=:teamType "
-            + "ORDER BY teamr.rating %1$s, teamr.id %1$s "
-            + "OFFSET :offset LIMIT :limit"
-        + ") o "
-        + "JOIN team_member ON team_member.team_id=o.team_id AND team_member.player_character_id=o.player_character_id "
-        + "INNER JOIN team ON team_member.team_id=team.id "
-        + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
-        + "INNER JOIN account ON player_character.account_id=account.id "
-        + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
-        + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
-        + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
-        + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
-        + "ORDER BY team.rating %1$s, team.id %1$s ";
-
-    private static final String FIND_TEAM_MEMBERS_LATE_QUERY =
-        String.format(FIND_TEAM_MEMBERS_LATE_FORMAT, "DESC");
-
-    private static final String FIND_TEAM_MEMBERS_LATE_REVERSED_QUERY =
-        String.format(FIND_TEAM_MEMBERS_LATE_FORMAT, "ASC");
-
-    private static final String FIND_TEAM_MEMBERS_FORMAT =
-        FIND_TEAM_MEMBERS_BASE
-
-        + LADDER_SEARCH_TEAM_FROM_WHERE
-
-        + "ORDER BY team.rating %1$s, team.id %1$s "
-        + "OFFSET :offset LIMIT :limit";
-
-    private static final String FIND_TEAM_MEMBERS_QUERY =
-        String.format(FIND_TEAM_MEMBERS_FORMAT, "DESC");
-
-    private static final String FIND_TEAM_MEMBERS_REVERSED_QUERY =
-        String.format(FIND_TEAM_MEMBERS_FORMAT, "ASC");
-
     private static final String FIND_FOLLOWING_TEAM_MEMBERS =
         "WITH following_team AS"
         + "("
@@ -151,11 +108,6 @@ public class LadderSearchDAO
 
     private static final String FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY =
         String.format(FIND_TEAM_MEMBERS_ANCHOR_FORMAT, "ASC", ">");
-
-    private static final String FIND_TEAM_COUNT_QUERY =
-        "SELECT COUNT(*) "
-        + "FROM team "
-        + LADDER_SEARCH_TEAM_WHERE;
 
     private static final String FIND_CARACTER_TEAM_MEMBERS_QUERY =
         "WITH team_filtered AS "
@@ -297,61 +249,6 @@ public class LadderSearchDAO
         return teams;
     }
 
-    public PagedSearchResult<List<LadderTeam>> find
-    (
-        int season,
-        Set<Region> regions,
-        Set<League.LeagueType> leagueTypes,
-        QueueType queueType,
-        TeamType teamType,
-        long page
-    )
-    {
-        long membersPerTeam = queueType.getTeamFormat().getMemberCount(teamType);
-        long teamCount = ladderSearchDAO.getTeamCount(season, regions, leagueTypes, queueType, teamType);
-        long pageCount = (long) Math.ceil(teamCount /(double) getResultsPerPage());
-        long middlePage = (long) Math.ceil(pageCount / 2d);
-        long offset;
-        long limit = getResultsPerPage() * membersPerTeam;
-        if (page < 1) page = 1;
-        if(page > pageCount) page = pageCount;
-        boolean reversed = page > middlePage;
-        if(!reversed)
-        {
-             offset = (page - 1) * getResultsPerPage() * membersPerTeam;
-        }
-        else
-        {
-            if(page == pageCount)
-            {
-                offset = 0;
-                limit = (teamCount % getResultsPerPage()) * membersPerTeam;
-                limit = limit == 0 ? getResultsPerPage() * membersPerTeam : limit;
-            }
-            else
-            {
-                long reverseOffset = getResultsPerPage() - (teamCount % getResultsPerPage());
-                reverseOffset = reverseOffset == 0 ? getResultsPerPage() : reverseOffset;
-                offset = ((pageCount - (page)) * getResultsPerPage() * membersPerTeam) - (getResultsPerPage() - reverseOffset);
-            }
-        }
-
-        MapSqlParameterSource params =
-            ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType)
-            .addValue("offset", offset)
-            .addValue("limit", limit);
-
-        boolean late = page > 5 || pageCount - page > 5;
-        String q = late
-            ? (reversed ? FIND_TEAM_MEMBERS_LATE_REVERSED_QUERY : FIND_TEAM_MEMBERS_LATE_QUERY)
-            : (reversed ? FIND_TEAM_MEMBERS_REVERSED_QUERY : FIND_TEAM_MEMBERS_QUERY);
-        List<LadderTeam> teams = template
-            .query(q, params, LADDER_TEAM_EXTRACTOR);
-        if(reversed) Collections.reverse(teams);
-
-        return new PagedSearchResult<>(teamCount, (long) getResultsPerPage(), page, teams);
-    }
-
     public PagedSearchResult<List<LadderTeam>> findAnchored
     (
         int season,
@@ -383,20 +280,6 @@ public class LadderSearchDAO
         if(!forward) Collections.reverse(teams);
 
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, teams);
-    }
-
-    public long getTeamCount
-    (
-        int season,
-        Set<Region> regions,
-        Set<League.LeagueType> leagueTypes,
-        QueueType queueType,
-        TeamType teamType
-    )
-    {
-        MapSqlParameterSource params =
-            ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType);
-        return template.query(FIND_TEAM_COUNT_QUERY, params, DAOUtils.LONG_EXTRACTOR);
     }
 
     @Cacheable

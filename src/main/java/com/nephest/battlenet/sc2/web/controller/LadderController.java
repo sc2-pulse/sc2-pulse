@@ -52,51 +52,6 @@ public class LadderController
     @Autowired
     private LadderTeamStateDAO ladderTeamStateDAO;
 
-    @GetMapping("/ladder")
-    public PagedSearchResult<List<LadderTeam>> getLadder
-    (
-        @RequestParam("season") int season,
-        @RequestParam("queue") QueueType queue,
-        @RequestParam("team-type") TeamType teamType,
-        @RequestParam(name = "us", required = false) boolean us,
-        @RequestParam(name = "eu", required = false) boolean eu,
-        @RequestParam(name = "kr", required = false) boolean kr,
-        @RequestParam(name = "cn", required = false) boolean cn,
-        @RequestParam(name = "bro", required = false) boolean bronze,
-        @RequestParam(name = "sil", required = false) boolean silver,
-        @RequestParam(name = "gol", required = false) boolean gold,
-        @RequestParam(name = "pla", required = false) boolean platinum,
-        @RequestParam(name = "dia", required = false) boolean diamond,
-        @RequestParam(name = "mas", required = false) boolean master,
-        @RequestParam(name = "gra", required = false) boolean grandmaster,
-        @RequestParam(name = "page", defaultValue="1") int page
-    )
-    {
-        Set<Region> regions = EnumSet.noneOf(Region.class);
-        if(us) regions.add(Region.US);
-        if(eu) regions.add(Region.EU);
-        if(kr) regions.add(Region.KR);
-        if(cn) regions.add(Region.CN);
-
-        Set<LeagueType> leagues = EnumSet.noneOf(LeagueType.class);
-        if(bronze) leagues.add(LeagueType.BRONZE);
-        if(silver) leagues.add(LeagueType.SILVER);
-        if(gold) leagues.add(LeagueType.GOLD);
-        if(platinum) leagues.add(LeagueType.PLATINUM);
-        if(diamond) leagues.add(LeagueType.DIAMOND);
-        if(master) leagues.add(LeagueType.MASTER);
-        if(grandmaster) leagues.add(LeagueType.GRANDMASTER);
-        return ladderSearch.find
-        (
-            season,
-            regions,
-            leagues,
-            queue,
-            teamType,
-            page
-        );
-    }
-
     @GetMapping("/ladder/a/{ratingAnchor}/{idAnchor}/{count}")
     public PagedSearchResult<List<LadderTeam>> getLadderAnchored
         (

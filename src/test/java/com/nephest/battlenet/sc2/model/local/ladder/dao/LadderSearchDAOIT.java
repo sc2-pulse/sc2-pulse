@@ -178,24 +178,6 @@ public class LadderSearchDAOIT
     //skip masters league for test
     @CsvSource({"1, 279", "2, 199", "3, 159", "4, 119", "5, 79", "6, 39"})
     @ParameterizedTest
-    public void test4v4Ladder(int page, int teamId)
-    {
-        search.setResultsPerPage(REGIONS.size() * TEAMS_PER_LEAGUE);
-        PagedSearchResult<List<LadderTeam>> result = search.find
-        (
-            DEFAULT_SEASON_ID,
-            EnumSet.copyOf(REGIONS),
-            LEAGUES_SET,
-            QUEUE_TYPE,
-            TEAM_TYPE,
-            page
-        );
-        verifyLadder(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, page, teamId, false);
-    }
-
-    //skip masters league for test
-    @CsvSource({"1, 279", "2, 199", "3, 159", "4, 119", "5, 79", "6, 39"})
-    @ParameterizedTest
     public void test4v4LadderAnchor(int page, int teamId)
     {
         int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
@@ -333,26 +315,6 @@ public class LadderSearchDAOIT
         assertEquals(expectedGlobalRank, (long) team.getGlobalRank());
         assertEquals(expectedRegionRank, (long) team.getRegionRank());
         assertEquals(expectedLeagueRank, (long) team.getLeagueRank());
-    }
-
-    @Test
-    public void test4v4ReversedOffset()
-    {
-        int teamsPerPage = 45;
-        int lastPage = 6;
-
-        search.setResultsPerPage(teamsPerPage);
-        PagedSearchResult<List<LadderTeam>> result = search.find
-        (
-            DEFAULT_SEASON_ID,
-            Set.of(Region.values()),
-            LEAGUES_SET,
-            QUEUE_TYPE,
-            TEAM_TYPE,
-            lastPage
-        );
-
-        verifyLadderOffset(result, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE);
     }
 
     private void verifyLadderOffset
