@@ -326,6 +326,7 @@ extends BaseAPI
             {
                 return getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3())
                     .onErrorResume((t)->{
+                        if(t.getMessage().startsWith("Invalid game mode")) return Mono.error(t);
                         LOG.debug(ExceptionUtils.getRootCauseMessage(t));
                         return chainProfileLadderMono(id, ix + 1);
                     });
