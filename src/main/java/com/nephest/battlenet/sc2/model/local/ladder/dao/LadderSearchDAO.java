@@ -385,7 +385,6 @@ public class LadderSearchDAO
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, teams);
     }
 
-    @Cacheable(cacheNames = "search-team-count")
     public long getTeamCount
     (
         int season,
@@ -398,20 +397,6 @@ public class LadderSearchDAO
         MapSqlParameterSource params =
             ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType);
         return template.query(FIND_TEAM_COUNT_QUERY, params, DAOUtils.LONG_EXTRACTOR);
-    }
-
-    public void precache()
-    {
-        for(Season season : seasonDAO.findListByFirstBattlenetId()) precacheSeason(season.getBattlenetId());
-    }
-
-    private void precacheSeason(int season)
-    {
-        Set<Region> regions = Set.of(Region.values());
-        Set<BaseLeague.LeagueType> leagues = Set.of(BaseLeague.LeagueType.values());
-        for(QueueType queue : QueueType.values())
-            for(TeamType team : TeamType.values())
-                getLadderSearchDAO().getTeamCount(season, regions , leagues, queue, team);
     }
 
     @Cacheable

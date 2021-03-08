@@ -6,7 +6,6 @@ package com.nephest.battlenet.sc2.config;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
@@ -41,9 +40,6 @@ public class Cron
 
     @Autowired
     private MatchService matchService;
-
-    @Autowired
-    private LadderSearchDAO ladderSearchDAO;
 
     @Autowired
     private PostgreSQLUtils postgreSQLUtils;
@@ -88,11 +84,6 @@ public class Cron
                 QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
                 BaseLeague.LeagueType.values()
             );
-            /*
-                Recache team count as soon as possible.
-                Temporary solution until team member cursor is fixed in 1.11.0
-             */
-            ladderSearchDAO.precache();
             proPlayerService.update();
             matchService.update();
         }
@@ -105,7 +96,6 @@ public class Cron
         {
             postgreSQLUtils.vacuum();
             postgreSQLUtils.analyze();
-            ladderSearchDAO.precache();
         }
     }
 
@@ -122,21 +112,12 @@ public class Cron
                         ? ALTERNATIVE_LEAGUES
                         : NORMAL_LEAGUES
             );
-            /*
-                Recache team count as soon as possible.
-                Temporary solution until team member cursor is fixed in 1.11.0
-             */
-            ladderSearchDAO.precache();
             matchService.update();
         }
         catch(RuntimeException ex)
         {
             //API can be broken randomly. All we can do at this point is log the exception.
             LOG.error(ex.getMessage(), ex);
-        }
-        finally
-        {
-            ladderSearchDAO.precache();
         }
     }
 
