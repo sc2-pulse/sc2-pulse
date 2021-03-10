@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -15,13 +15,13 @@ public class LeagueTierTest
     @Test
     public void testUniqueness()
     {
-        LeagueTier tier = new LeagueTier(0L, 0L, FIRST, 0, 0);
-        LeagueTier equalTier = new LeagueTier(1L, 0L, FIRST, 1, 1);
+        LeagueTier tier = new LeagueTier(0, 0, FIRST, 0, 0);
+        LeagueTier equalTier = new LeagueTier(1, 0, FIRST, 1, 1);
 
         LeagueTier[] notEqualTiers = new LeagueTier[]
         {
-            new LeagueTier(0L, 1L, FIRST, 0, 0),
-            new LeagueTier(0L, 0L, SECOND, 0, 0),
+            new LeagueTier(0, 1, FIRST, 0, 0),
+            new LeagueTier(0, 0, SECOND, 0, 0),
         };
 
         TestUtil.testUniqueness(tier, equalTier, notEqualTiers);

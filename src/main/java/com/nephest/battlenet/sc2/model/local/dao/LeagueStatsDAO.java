@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -63,7 +63,7 @@ public class LeagueStatsDAO
 
     public static final RowMapper<LeagueStats> STD_ROW_MAPPER = (rs, num) -> new LeagueStats
     (
-        rs.getLong("league_stats.league_id"),
+        rs.getInt("league_stats.league_id"),
         rs.getInt("league_stats.team_count"),
         rs.getInt("league_stats.terran_games_played"),
         rs.getInt("league_stats.protoss_games_played"),

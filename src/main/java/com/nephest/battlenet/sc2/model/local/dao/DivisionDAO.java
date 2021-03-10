@@ -137,8 +137,8 @@ public class DivisionDAO
 
     public static final RowMapper<Division> STD_ROW_MAPPER = (rs, num)-> new Division
     (
-        rs.getLong("division.id"),
-        rs.getLong("division.league_tier_id"),
+        rs.getInt("division.id"),
+        rs.getInt("division.league_tier_id"),
         rs.getLong("division.battlenet_id")
     );
 
@@ -172,7 +172,7 @@ public class DivisionDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createPamarameterSource(division);
         template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
-        division.setId(keyHolder.getKey().longValue());
+        division.setId(keyHolder.getKey().intValue());
         return division;
     }
 
@@ -181,7 +181,7 @@ public class DivisionDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createPamarameterSource(division);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        division.setId(keyHolder.getKey().longValue());
+        division.setId(keyHolder.getKey().intValue());
         return division;
     }
 

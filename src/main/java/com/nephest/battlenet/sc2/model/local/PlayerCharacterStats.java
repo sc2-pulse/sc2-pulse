@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -17,14 +17,14 @@ public class PlayerCharacterStats
 implements Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     private Long id;
 
     @NotNull
     private Long playerCharacterId;
 
-    private Long seasonId;
+    private Integer seasonId;
 
     @NotNull
     private QueueType queueType;
@@ -52,7 +52,7 @@ implements Serializable
     (
         Long id,
         @NotNull Long playerCharacterId,
-        Long seasonId,
+        Integer seasonId,
         @NotNull QueueType queueType,
         @NotNull TeamType teamType,
         Race race,
@@ -128,12 +128,12 @@ implements Serializable
         this.playerCharacterId = playerCharacterId;
     }
 
-    public Long getSeasonId()
+    public Integer getSeasonId()
     {
         return seasonId;
     }
 
-    public void setSeasonId(Long seasonId)
+    public void setSeasonId(Integer seasonId)
     {
         this.seasonId = seasonId;
     }

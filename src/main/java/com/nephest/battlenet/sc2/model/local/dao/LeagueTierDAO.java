@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -72,8 +72,8 @@ public class LeagueTierDAO
     {
         if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)-> new LeagueTier
         (
-            rs.getLong("league_tier.id"),
-            rs.getLong("league_tier.league_id"),
+            rs.getInt("league_tier.id"),
+            rs.getInt("league_tier.league_id"),
             conversionService.convert(rs.getInt("league_tier.type"), BaseLeagueTier.LeagueTierType.class),
             rs.getInt("league_tier.min_rating"),
             rs.getInt("league_tier.max_rating")
@@ -100,7 +100,7 @@ public class LeagueTierDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(tier);
         template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
-        tier.setId(keyHolder.getKey().longValue());
+        tier.setId(keyHolder.getKey().intValue());
         return tier;
     }
 
@@ -109,7 +109,7 @@ public class LeagueTierDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(tier);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        tier.setId(keyHolder.getKey().longValue());
+        tier.setId(keyHolder.getKey().intValue());
         return tier;
     }
 

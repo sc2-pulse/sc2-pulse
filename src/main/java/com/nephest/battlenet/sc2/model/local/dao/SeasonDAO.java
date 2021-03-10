@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -81,7 +81,7 @@ public class SeasonDAO
         if(STD_ROW_MAPPER == null) STD_ROW_MAPPER =
         (rs, num)-> new Season
         (
-            rs.getLong("season.id"),
+            rs.getInt("season.id"),
             rs.getInt("season.battlenet_id"),
             conversionService.convert(rs.getInt("season.region"), Region.class),
             rs.getInt("season.year"),
@@ -101,7 +101,7 @@ public class SeasonDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(season);
         template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
-        season.setId(keyHolder.getKey().longValue());
+        season.setId(keyHolder.getKey().intValue());
         return season;
     }
 
@@ -110,7 +110,7 @@ public class SeasonDAO
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(season);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        season.setId(keyHolder.getKey().longValue());
+        season.setId(keyHolder.getKey().intValue());
         return season;
     }
 

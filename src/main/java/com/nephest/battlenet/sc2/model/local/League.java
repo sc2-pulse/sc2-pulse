@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -16,18 +16,18 @@ extends BaseLeague
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private Long id;
+    private Integer id;
 
     @NotNull
-    private Long seasonId;
+    private Integer seasonId;
 
     public League(){}
 
     public League
     (
-        Long id, Long seasonId,
+        Integer id, Integer seasonId,
         LeagueType type, QueueType queueType, TeamType teamType
     )
     {
@@ -82,22 +82,22 @@ implements java.io.Serializable
         );
     }
 
-    public void setId(Long id)
+    public void setId(Integer id)
     {
         this.id = id;
     }
 
-    public Long getId()
+    public Integer getId()
     {
         return id;
     }
 
-    public void setSeasonId(Long seasonId)
+    public void setSeasonId(@NotNull Integer seasonId)
     {
         this.seasonId = seasonId;
     }
 
-    public Long getSeasonId()
+    public Integer getSeasonId()
     {
         return seasonId;
     }

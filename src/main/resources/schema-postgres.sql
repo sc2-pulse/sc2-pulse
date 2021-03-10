@@ -48,7 +48,7 @@ CREATE INDEX "ix_player_character_name" ON "player_character"(LOWER("name") text
 CREATE TABLE "season"
 (
 
-    "id" BIGSERIAL,
+    "id" SERIAL,
     "region" SMALLINT NOT NULL,
     "battlenet_id" SMALLINT NOT NULL,
     "year" SMALLINT NOT NULL,
@@ -65,8 +65,8 @@ CREATE TABLE "season"
 CREATE TABLE "league"
 (
 
-    "id" BIGSERIAL,
-    "season_id" BIGINT NOT NULL,
+    "id" SERIAL,
+    "season_id" INTEGER NOT NULL,
     "type" SMALLINT NOT NULL,
     "queue_type" SMALLINT NOT NULL,
     "team_type" SMALLINT NOT NULL,
@@ -86,8 +86,8 @@ CREATE TABLE "league"
 CREATE TABLE "league_tier"
 (
 
-    "id" BIGSERIAL,
-    "league_id" BIGINT NOT NULL,
+    "id" SERIAL,
+    "league_id" INTEGER NOT NULL,
     "type" SMALLINT NOT NULL,
     "min_rating" SMALLINT,
     "max_rating" SMALLINT,
@@ -107,8 +107,8 @@ CREATE TABLE "league_tier"
 CREATE TABLE "division"
 (
 
-    "id" BIGSERIAL,
-    "league_tier_id" BIGINT NOT NULL,
+    "id" SERIAL,
+    "league_tier_id" INTEGER NOT NULL,
     "battlenet_id" BIGINT NOT NULL,
 
     PRIMARY KEY ("id"),
@@ -127,7 +127,7 @@ CREATE TABLE "team"
 (
 
     "id" BIGSERIAL,
-    "division_id" BIGINT NOT NULL,
+    "division_id" INTEGER NOT NULL,
     "battlenet_id" NUMERIC(20, 0) NOT NULL,
     "season" SMALLINT NOT NULL,
     "region" SMALLINT NOT NULL,
@@ -185,7 +185,7 @@ CREATE TABLE "team_state"
 (
     "team_id" BIGINT NOT NULL,
     "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-    "division_id" BIGINT NOT NULL,
+    "division_id" INTEGER NOT NULL,
     "games" SMALLINT NOT NULL,
     "rating" SMALLINT NOT NULL,
 
@@ -221,7 +221,7 @@ CREATE TABLE "queue_stats"
 
 CREATE TABLE "league_stats"
 (
-    "league_id" BIGINT NOT NULL,
+    "league_id" INTEGER NOT NULL,
     "team_count" INTEGER NOT NULL,
     "terran_games_played" INTEGER NOT NULL,
     "protoss_games_played" INTEGER NOT NULL,
@@ -240,7 +240,7 @@ CREATE TABLE "player_character_stats"
 (
     "id" BIGSERIAL,
     "player_character_id" BIGINT NOT NULL,
-    "season_id" BIGINT,
+    "season_id" INTEGER,
     "queue_type" SMALLINT NOT NULL,
     "team_type" SMALLINT NOT NULL,
     "race" SMALLINT,

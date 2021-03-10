@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -29,7 +29,7 @@ implements java.io.Serializable
         Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType leagueTierType,
-        Long divisionId,
+        Integer divisionId,
         BigInteger battlenetId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         List<LadderTeamMember> members

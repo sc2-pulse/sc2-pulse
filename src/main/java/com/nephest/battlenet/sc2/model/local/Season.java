@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -16,9 +16,9 @@ extends BaseSeason
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
-    private Long id;
+    private Integer id;
 
     @NotNull
     private Integer battlenetId;
@@ -30,7 +30,7 @@ implements java.io.Serializable
 
     public Season
     (
-        Long id,
+        Integer id,
         Integer battlenetId,
         Region region,
         Integer year,
@@ -88,12 +88,12 @@ implements java.io.Serializable
         );
     }
 
-    public void setId(Long id)
+    public void setId(Integer id)
     {
         this.id = id;
     }
 
-    public Long getId()
+    public Integer getId()
     {
         return id;
     }

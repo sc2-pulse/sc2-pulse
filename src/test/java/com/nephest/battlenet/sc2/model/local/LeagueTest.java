@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -19,15 +19,15 @@ public class LeagueTest
     @Test
     public void testUniqueness()
     {
-        League league = new League(0L, 0L, GOLD, WOL_1V1, ARRANGED);
-        League equalLeague = new League(1L, 0L, GOLD, WOL_1V1, ARRANGED);
+        League league = new League(0, 0, GOLD, WOL_1V1, ARRANGED);
+        League equalLeague = new League(1, 0, GOLD, WOL_1V1, ARRANGED);
 
         League[] notEqualLeagues = new League[]
         {
-            new League(0L, 1L, GOLD, WOL_1V1, ARRANGED),
-            new League(0L, 0L, PLATINUM, WOL_1V1, ARRANGED),
-            new League(0L, 0L, GOLD, HOTS_1V1, ARRANGED),
-            new League(0L, 0L, GOLD, WOL_1V1, RANDOM),
+            new League(0, 1, GOLD, WOL_1V1, ARRANGED),
+            new League(0, 0, PLATINUM, WOL_1V1, ARRANGED),
+            new League(0, 0, GOLD, HOTS_1V1, ARRANGED),
+            new League(0, 0, GOLD, WOL_1V1, RANDOM),
         };
 
         TestUtil.testUniqueness(league, equalLeague, notEqualLeagues);

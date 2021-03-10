@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -22,7 +22,7 @@ public class PlayerCharacterStatsTest
         (
             null,
             0L,
-            0L,
+            0,
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Race.PROTOSS,
@@ -35,7 +35,7 @@ public class PlayerCharacterStatsTest
         (
             0L,
             0L,
-            0L,
+            0,
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Race.PROTOSS,
@@ -50,7 +50,7 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 1L,
-                0L,
+                0,
                 QueueType.LOTV_1V1,
                 TeamType.ARRANGED,
                 Race.PROTOSS,
@@ -63,7 +63,7 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                1L,
+                1,
                 QueueType.LOTV_1V1,
                 TeamType.ARRANGED,
                 Race.PROTOSS,
@@ -76,7 +76,7 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                0L,
+                0,
                 QueueType.LOTV_2V2,
                 TeamType.ARRANGED,
                 Race.PROTOSS,
@@ -102,7 +102,7 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                0L,
+                0,
                 QueueType.LOTV_1V1,
                 TeamType.RANDOM,
                 Race.PROTOSS,
@@ -115,7 +115,7 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                0L,
+                0,
                 QueueType.LOTV_1V1,
                 TeamType.ARRANGED,
                 Race.TERRAN,
@@ -128,7 +128,7 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                0L,
+                0,
                 QueueType.LOTV_1V1,
                 TeamType.ARRANGED,
                 null,

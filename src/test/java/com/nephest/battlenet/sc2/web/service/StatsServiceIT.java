@@ -64,7 +64,7 @@ public class StatsServiceIT
         });
 
         statsService.updateTeams(new BlizzardTeam[]{noBattletagTeam}, mock(Season.class),
-            new League(1L, 1L, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            new League(1, 1, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             mock(LeagueTier.class), mock(Division.class), Instant.now());
 
         verify(teamDAO, never()).merge(any());

@@ -160,7 +160,7 @@ public class PlayerCharacterStatsDAO
             (
                 rs.getLong("id"),
                 rs.getLong("player_character_id"),
-                rs.getLong("season_id"),
+                rs.getInt("season_id"),
                 conversionService.convert(rs.getInt("queue_type"), QueueType.class),
                 conversionService.convert(rs.getInt("team_type"), TeamType.class),
                 race,

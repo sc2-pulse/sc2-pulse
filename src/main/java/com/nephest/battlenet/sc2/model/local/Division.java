@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -12,19 +12,19 @@ public class Division
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
-    private Long id;
+    private Integer id;
 
     @NotNull
-    private Long tierId;
+    private Integer tierId;
 
     @NotNull
     private Long battlenetId;
 
     public Division(){}
 
-    public Division(Long id, Long tierId, Long battlenetId)
+    public Division(Integer id, Integer tierId, Long battlenetId)
     {
         this.id = id;
         this.tierId = tierId;
@@ -70,22 +70,22 @@ implements java.io.Serializable
         );
     }
 
-    public void setId(Long id)
+    public void setId(Integer id)
     {
         this.id = id;
     }
 
-    public Long getId()
+    public Integer getId()
     {
         return id;
     }
 
-    public void setTierId(Long tierId)
+    public void setTierId(Integer tierId)
     {
         this.tierId = tierId;
     }
 
-    public Long getTierId()
+    public Integer getTierId()
     {
         return tierId;
     }

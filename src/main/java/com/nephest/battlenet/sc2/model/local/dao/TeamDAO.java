@@ -167,7 +167,7 @@ public class TeamDAO
                         conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
                     ),
                 conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
-                rs.getLong("team.division_id"),
+                rs.getInt("team.division_id"),
                 idDec == null ? null : idDec.toBigInteger(),
                 rs.getLong("team.rating"),
                 rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),

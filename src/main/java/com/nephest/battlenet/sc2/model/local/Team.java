@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -15,12 +15,12 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
     private Long id;
 
     @NotNull
-    private Long divisionId;
+    private Integer divisionId;
 
     private BigInteger battlenetId;
 
@@ -53,7 +53,7 @@ implements java.io.Serializable
         Integer season, Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType tierType,
-        Long divisionId,
+        Integer divisionId,
         BigInteger battlenetId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points
     )
@@ -130,12 +130,12 @@ implements java.io.Serializable
         return id;
     }
 
-    public void setDivisionId(Long divisionId)
+    public void setDivisionId(Integer divisionId)
     {
         this.divisionId = divisionId;
     }
 
-    public Long getDivisionId()
+    public Integer getDivisionId()
     {
         return divisionId;
     }

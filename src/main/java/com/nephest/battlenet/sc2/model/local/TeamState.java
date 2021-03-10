@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -11,7 +11,7 @@ public class TeamState
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NotNull
     private Long teamId;
@@ -20,7 +20,7 @@ implements java.io.Serializable
     private OffsetDateTime dateTime = OffsetDateTime.now();
 
     @NotNull
-    private Long divisionId;
+    private Integer divisionId;
 
     @NotNull
     private Integer games;
@@ -34,7 +34,7 @@ implements java.io.Serializable
     (
         @NotNull Long teamId,
         @NotNull OffsetDateTime dateTime,
-        @NotNull Long divisionId,
+        @NotNull Integer divisionId,
         @NotNull Integer games,
         @NotNull Integer rating
     )
@@ -104,12 +104,12 @@ implements java.io.Serializable
         this.dateTime = dateTime;
     }
 
-    public Long getDivisionId()
+    public Integer getDivisionId()
     {
         return divisionId;
     }
 
-    public void setDivisionId(Long divisionId)
+    public void setDivisionId(Integer divisionId)
     {
         this.divisionId = divisionId;
     }

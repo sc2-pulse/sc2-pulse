@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -34,7 +34,7 @@ public class TeamStateDAO
     (
         rs.getLong("team_state.team_id"),
         rs.getObject("team_state.timestamp", OffsetDateTime.class),
-        rs.getLong("team_state.division_id"),
+        rs.getInt("team_state.division_id"),
         rs.getInt("team_state.games"),
         rs.getInt("team_state.rating")
     );
