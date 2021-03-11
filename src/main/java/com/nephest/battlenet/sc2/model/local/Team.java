@@ -3,7 +3,8 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseTeam;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 
 import javax.validation.constraints.NotNull;
@@ -15,9 +16,12 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 5L;
+    private static final long serialVersionUID = 6L;
 
     private Long id;
+
+    @NotNull
+    private Integer leagueTierId;
 
     @NotNull
     private Integer divisionId;
@@ -25,16 +29,7 @@ implements java.io.Serializable
     private BigInteger battlenetId;
 
     @NotNull
-    private Integer season;
-
-    @NotNull
     private Region region;
-
-    @NotNull
-    private BaseLeague league;
-
-    @NotNull
-    private LeagueTier.LeagueTierType tierType;
 
     @NotNull
     private Integer globalRank = 2147483647;
@@ -50,9 +45,8 @@ implements java.io.Serializable
     public Team
     (
         Long id,
-        Integer season, Region region,
-        BaseLeague league,
-        LeagueTier.LeagueTierType tierType,
+        Region region,
+        Integer leagueTierId,
         Integer divisionId,
         BigInteger battlenetId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points
@@ -60,18 +54,15 @@ implements java.io.Serializable
     {
         super(rating, wins, losses, ties, points);
         this.id = id;
+        this.leagueTierId = leagueTierId;
         this.divisionId = divisionId;
         this.battlenetId = battlenetId;
-        this.season = season;
         this.region = region;
-        this.league = league;
-        this.tierType = tierType;
     }
 
     public static Team of
     (
         Season season,
-        League league,
         LeagueTier tier,
         Division division,
         BlizzardTeam bTeam
@@ -80,10 +71,8 @@ implements java.io.Serializable
         return new Team
         (
             null,
-            season.getBattlenetId(),
             season.getRegion(),
-            league,
-            tier.getType(),
+            tier.getId(),
             division.getId(),
             bTeam.getId(),
             bTeam.getRating(),
@@ -95,7 +84,7 @@ implements java.io.Serializable
     @Override
     public int hashCode()
     {
-        return Objects.hash(getBattlenetId(), getSeason(), getRegion());
+        return Objects.hash(getBattlenetId(), getRegion());
     }
 
     @Override
@@ -105,7 +94,6 @@ implements java.io.Serializable
         if (o == null || getClass() != o.getClass()) return false;
         Team team = (Team) o;
         return Objects.equals(getBattlenetId(), team.getBattlenetId())
-            && getSeason().equals(team.getSeason())
             && getRegion() == team.getRegion();
     }
 
@@ -114,9 +102,9 @@ implements java.io.Serializable
     {
         return String.format
         (
-            "%s[%s %s %s]",
+            "%s[%s %s]",
             Team.class.getSimpleName(),
-            getSeason(), getRegion().toString(), getBattlenetId()
+            getRegion().toString(), getBattlenetId()
         );
     }
 
@@ -128,6 +116,16 @@ implements java.io.Serializable
     public Long getId()
     {
         return id;
+    }
+
+    public Integer getLeagueTierId()
+    {
+        return leagueTierId;
+    }
+
+    public void setLeagueTierId(Integer leagueTierId)
+    {
+        this.leagueTierId = leagueTierId;
     }
 
     public void setDivisionId(Integer divisionId)
@@ -150,16 +148,6 @@ implements java.io.Serializable
         return battlenetId;
     }
 
-    public void setSeason(Integer season)
-    {
-        this.season = season;
-    }
-
-    public Integer getSeason()
-    {
-        return season;
-    }
-
     public void setRegion(Region region)
     {
         this.region = region;
@@ -168,56 +156,6 @@ implements java.io.Serializable
     public Region getRegion()
     {
         return region;
-    }
-
-    public BaseLeague getLeague()
-    {
-        return league;
-    }
-
-    public void setLeague(BaseLeague league)
-    {
-        this.league = league;
-    }
-
-    public void setLeagueType(League.LeagueType type)
-    {
-        league.setType(type);
-    }
-
-    public League.LeagueType getLeagueType()
-    {
-        return league.getType();
-    }
-
-    public void setQueueType(QueueType type)
-    {
-        league.setQueueType(type);
-    }
-
-    public QueueType getQueueType()
-    {
-        return league.getQueueType();
-    }
-
-    public void setTeamType(TeamType type)
-    {
-        league.setTeamType(type);
-    }
-
-    public TeamType getTeamType()
-    {
-        return league.getTeamType();
-    }
-
-    public void setTierType(LeagueTier.LeagueTierType tierType)
-    {
-        this.tierType = tierType;
-    }
-
-    public LeagueTier.LeagueTierType getTierType()
-    {
-        return tierType;
     }
 
     public Integer getGlobalRank()

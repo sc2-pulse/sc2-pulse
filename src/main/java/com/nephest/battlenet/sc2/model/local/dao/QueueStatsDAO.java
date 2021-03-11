@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -43,19 +43,22 @@ public class QueueStatsDAO
         + "AS"
         + "("
             + "SELECT "
-            + "MAX(team.season) AS \"team_season\", "
-            + "team.queue_type AS \"team_queue_type\", "
-            + "team.team_type AS \"team_team_type\", "
+            + "MAX(season.battlenet_id) AS \"team_season\", "
+            + "league.queue_type AS \"team_queue_type\", "
+            + "league.team_type AS \"team_team_type\", "
             + "COUNT(DISTINCT(account.id)) AS \"player_base\" "
 
             + "FROM team_member "
             + "INNER JOIN team ON team_member.team_id=team.id "
+            + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
+            + "INNER JOIN league ON league.id = league_tier.league_id "
+            + "INNER JOIN season ON season.id = league.season_id "
             + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
             + "INNER JOIN account ON player_character.account_id=account.id "
 
             + "WHERE "
-            + "team.season<=:seasonId "
-            + "GROUP BY team.queue_type, team.team_type "
+            + "season.battlenet_id<=:seasonId "
+            + "GROUP BY league.queue_type, league.team_type "
         + ") "
         + "INSERT INTO queue_stats "
         + "(season, queue_type, team_type, player_base, player_count) "
@@ -71,13 +74,16 @@ public class QueueStatsDAO
     private static final String CALCULATE_SEASON_STATS_QUERY =
         "INSERT INTO queue_stats "
         + "(season, queue_type, team_type, player_base, player_count) "
-        + "SELECT MAX(team.season), team.queue_type, team.team_type, 0, COUNT(DISTINCT(account.id)) "
+        + "SELECT MAX(season.battlenet_id), league.queue_type, league.team_type, 0, COUNT(DISTINCT(account.id)) "
         + "FROM team_member "
         + "INNER JOIN team ON team_member.team_id = team.id "
+        + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
+        + "INNER JOIN league ON league.id = league_tier.league_id "
+        + "INNER JOIN season ON season.id = league.season_id "
         + "INNER JOIN player_character ON team_member.player_character_id = player_character.id "
         + "INNER JOIN account ON player_character.account_id = account.id "
-        + "WHERE team.season = :seasonId "
-        + "GROUP BY team.queue_type, team.team_type";
+        + "WHERE season.battlenet_id = :seasonId "
+        + "GROUP BY league.queue_type, league.team_type";
 
     private static final String CALCULATE_SEASON_STATS_MERGE_QUERY = CALCULATE_SEASON_STATS_QUERY
         + " "
@@ -99,14 +105,17 @@ public class QueueStatsDAO
 
         + "player AS "
         + "("
-            + "SELECT team.queue_type, team.team_type "
+            + "SELECT league.queue_type, league.team_type "
             + "FROM account "
             + "INNER JOIN player_character ON account.id = player_character.account_id "
             + "INNER JOIN team_member ON player_character.id = team_member.player_character_id "
             + "INNER JOIN team ON team_member.team_id = team.id "
+            + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
+            + "INNER JOIN league ON league.id = league_tier.league_id "
+            + "INNER JOIN season ON season.id = league.season_id "
             + "CROSS JOIN day "
-            + "WHERE team.season = :seasonId "
-            + "GROUP BY team.queue_type, team.team_type, account.id "
+            + "WHERE season.battlenet_id = :seasonId "
+            + "GROUP BY league.queue_type, league.team_type, account.id "
             + "HAVING (SUM(team.wins) + SUM(team.losses) + SUM(team.ties))::decimal / MAX(day.count)::decimal %2$s "
         + "), "
 

@@ -32,15 +32,17 @@ public class PlayerCharacterStatsDAO
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START =
         "INSERT INTO player_character_stats "
         + "(player_character_id, season_id, queue_type, team_type, race, rating_max, league_max, games_played) "
-        + "SELECT player_character.id, season.id, team.queue_type, team.team_type, %1$s, "
-        + "MAX(team.rating), MAX(team.league_type), ";
+        + "SELECT player_character.id, season.id, league.queue_type, league.team_type, %1$s, "
+        + "MAX(team.rating), MAX(league.type), ";
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END =
         "FROM team_member "
         + "INNER JOIN team ON team_member.team_id=team.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
-        + "INNER JOIN season ON team.region=season.region AND team.season=season.battlenet_id ";
+        + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
+        + "INNER JOIN league ON league.id = league_tier.league_id "
+        + "INNER JOIN season ON season.id = league.season_id ";
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_GROUP =
-        "GROUP BY season.id, team.queue_type, team.team_type, player_character.id ";
+        "GROUP BY season.id, league.queue_type, league.team_type, player_character.id ";
     public static final String MERGE_TEMPLATE =
         " "
         + "ON CONFLICT(player_character_id, COALESCE(season_id, -32768), COALESCE(race, -32768), " 
@@ -61,7 +63,7 @@ public class PlayerCharacterStatsDAO
                 + "+ COALESCE(SUM(random_games_played), 0)"
             + ") "
             + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END
-            + "WHERE team.season=:season "
+            + "WHERE season.battlenet_id=:season "
             + CALCULATE_PLAYER_CHARACTER_STATS_GROUP,
             "NULL"
         );
@@ -72,7 +74,7 @@ public class PlayerCharacterStatsDAO
         CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
         + "SUM(%2$s_games_played) "
         + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END
-        + "WHERE team.season=:season "
+        + "WHERE season.battlenet_id=:season "
         + "AND %2$s_games_played > 0 "
         + "AND ("
             + "%2$s_games_played::decimal / "

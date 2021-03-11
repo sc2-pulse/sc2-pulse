@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.service;
@@ -142,10 +142,8 @@ public class AccountFollowingIT
             .create(new PlayerCharacter(null, memberAccount.getId(), region, 9997L, 1, "memberchar#123"));
         Team team1 = new Team
         (
-            null, season2.getBattlenetId(), region,
-            new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            bronze1.getId(), BigInteger.valueOf(11111L), 100L,
-            100, 0, 0, 0
+            null, region, bronze1.getTierId(), bronze1.getId(), BigInteger.valueOf(11111L),
+            100L, 100, 0, 0, 0
         );
         teamDAO.create(team1);
         TeamMember member1 = new TeamMember
@@ -163,10 +161,8 @@ public class AccountFollowingIT
 
         Team team2 = new Team
         (
-            null, season2.getBattlenetId(), region,
-            new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            bronze1.getId(), BigInteger.valueOf(11112L), 101L,
-            100, 0, 0, 0
+            null, region, bronze1.getTierId(), bronze1.getId(), BigInteger.valueOf(11112L),
+            101L, 100, 0, 0, 0
         );
         teamDAO.create(team2);
         TeamMember member2 = new TeamMember
@@ -178,10 +174,8 @@ public class AccountFollowingIT
 
         Team team3 = new Team
         (
-            null, season2.getBattlenetId(), region,
-            new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            bronze1.getId(), BigInteger.valueOf(11113L), 99L,
-            100, 0, 0, 0
+            null, region, bronze1.getTierId(), bronze1.getId(), BigInteger.valueOf(11113L),
+            99L, 100, 0, 0, 0
         );
         teamDAO.create(team3);
         TeamMember member3 = new TeamMember

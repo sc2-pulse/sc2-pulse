@@ -474,7 +474,7 @@ public class StatsService
     {
         //alternative ladder update updates only 1v1
         if(ignoreAlternativeData || league.getQueueType() != QueueType.LOTV_1V1)
-            return teamDao.merge(Team.of(season, league, tier, division,bTeam));
+            return teamDao.merge(Team.of(season, tier, division, bTeam));
 
         //alternative ladder does not have battlenet id, find such teams and update them
         PlayerCharacter playerCharacter =
@@ -483,7 +483,7 @@ public class StatsService
                 bTeam.getMembers()[0].getCharacter().getRealm(),
                 bTeam.getMembers()[0].getCharacter().getId())
             .orElse((null));
-        if(playerCharacter == null) return teamDao.merge(Team.of(season, league, tier, division,bTeam));
+        if(playerCharacter == null) return teamDao.merge(Team.of(season, tier, division,bTeam));
 
         BaseLocalTeamMember member = new BaseLocalTeamMember();
         for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
@@ -495,8 +495,7 @@ public class StatsService
             Team team = teamEntry.getKey();
             boolean wasAlternative = team.getBattlenetId() == null;
 
-            team.setLeague(league);
-            team.setTierType(tier.getType());
+            team.setLeagueTierId(tier.getId());
             team.setDivisionId(division.getId());
             team.setBattlenetId(bTeam.getId());
             team.setRating(bTeam.getRating());
@@ -507,7 +506,7 @@ public class StatsService
             return wasAlternative ? teamDao.mergeById(team, forceUpdate) : teamDao.merge(team);
         }
 
-        return teamDao.merge(Team.of(season, league, tier, division,bTeam));
+        return teamDao.merge(Team.of(season, tier, division,bTeam));
     }
 
     //cross field validation

@@ -197,7 +197,7 @@ public class AlternativeLadderService
             }
 
             Map.Entry<Team, List<TeamMember>> teamEntry =
-                updateOrCreate1v1Team(season, playerCharacter, bTeam, ladder.getLeagueType(), division);
+                updateOrCreate1v1Team(season, playerCharacter, bTeam, division);
             //old team, nothing to update
             if(teamEntry.getKey() == null) continue;
             TeamMember member = teamEntry.getValue().get(0);
@@ -243,14 +243,13 @@ public class AlternativeLadderService
         Season season,
         PlayerCharacter playerCharacter,
         BlizzardProfileTeam bTeam,
-        BaseLeague.LeagueType leagueType,
         Division division
     )
     {
         Map.Entry<Team, List<TeamMember>> result =
-            updateExisting1v1Team(season, playerCharacter, bTeam, leagueType, division);
+            updateExisting1v1Team(season, playerCharacter, bTeam, division);
         if(result != null) return result;
-        return create1v1Team(season, playerCharacter, bTeam, leagueType, division);
+        return create1v1Team(season, playerCharacter, bTeam, division);
     }
 
     private Map.Entry<Team, List<TeamMember>> updateExisting1v1Team
@@ -258,7 +257,6 @@ public class AlternativeLadderService
         Season season,
         PlayerCharacter playerCharacter,
         BlizzardProfileTeam bTeam,
-        BaseLeague.LeagueType leagueType,
         Division division
     )
     {
@@ -267,8 +265,8 @@ public class AlternativeLadderService
         if(teamEntry != null)
         {
             Team team = teamEntry.getKey();
+            team.setLeagueTierId(division.getTierId());
             team.setDivisionId(division.getId());
-            team.setLeagueType(leagueType);
             team.setRating(bTeam.getRating());
             team.setWins(bTeam.getWins());
             team.setLosses(bTeam.getLosses());
@@ -285,17 +283,14 @@ public class AlternativeLadderService
         Season season,
         PlayerCharacter playerCharacter,
         BlizzardProfileTeam bTeam,
-        BaseLeague.LeagueType leagueType,
         Division division
     )
     {
         Team team = new Team
         (
             null,
-            season.getBattlenetId(),
             season.getRegion(),
-            new BaseLeague(leagueType, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            ALTERNATIVE_TIER,
+            division.getTierId(),
             division.getId(),
             null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()

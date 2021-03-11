@@ -103,12 +103,12 @@ public class PlayerCharacterStatsDAOIT
         Account acc = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount#123"));
         PlayerCharacter character = playerCharacterDAO
             .create(new PlayerCharacter(null, acc.getId(), region, 9999L, 1, "refchar#123"));
-        createTeam(season1, Race.TERRAN, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, BigInteger.valueOf(9999L), 1L, character);
-        createTeam(season1, Race.PROTOSS, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, BigInteger.valueOf(10000L), 1L, character);
-        createTeam(season1, Race.ZERG, region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, bronze1, BigInteger.valueOf(10001L), 1L, character);
-        createTeam(season1, Race.ZERG, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, BigInteger.valueOf(10002L), 3L, character);
-        createTeam(season2, Race.ZERG, region, BaseLeague.LeagueType.GOLD, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, gold2, BigInteger.valueOf(10003L), 2L, character);
-        createTeam(season2, null, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, BigInteger.valueOf(10004L), 2L, character);
+        createTeam(Race.TERRAN, region, bronze1, BigInteger.valueOf(9999L), 1L, character);
+        createTeam(Race.PROTOSS, region, bronze1, BigInteger.valueOf(10000L), 1L, character);
+        createTeam(Race.ZERG, region, bronze1, BigInteger.valueOf(10001L), 1L, character);
+        createTeam(Race.ZERG, region, diamond1, BigInteger.valueOf(10002L), 3L, character);
+        createTeam(Race.ZERG, region, gold2, BigInteger.valueOf(10003L), 2L, character);
+        createTeam(null, region, diamond1, BigInteger.valueOf(10004L), 2L, character);
         playerCharacterStatsDAO.calculate(season1.getBattlenetId());
         playerCharacterStatsDAO.mergeCalculate(season1.getBattlenetId()); //just for testing, not actually required
         playerCharacterStatsDAO.calculate(season2.getBattlenetId());
@@ -136,13 +136,8 @@ public class PlayerCharacterStatsDAOIT
 
     private void createTeam
     (
-        Season season,
         Race race,
         Region region,
-        BaseLeague.LeagueType league,
-        QueueType queueType,
-        TeamType teamType,
-        BaseLeagueTier.LeagueTierType tierType,
         Division division,
         BigInteger battlenetId,
         long rating,
@@ -151,8 +146,8 @@ public class PlayerCharacterStatsDAOIT
     {
         Team team = new Team
         (
-            null, season.getBattlenetId(), region,
-            new BaseLeague(league, queueType, teamType), tierType,
+            null, region,
+            division.getTierId(),
             division.getId(),
             battlenetId,
             rating,

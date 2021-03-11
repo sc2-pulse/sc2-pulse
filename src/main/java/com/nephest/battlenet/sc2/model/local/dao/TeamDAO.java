@@ -4,7 +4,9 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,14 +34,10 @@ public class TeamDAO
 
     public static final String STD_SELECT =
         "team.id AS \"team.id\", "
+        + "team.league_tier_id AS \"team.league_tier_id\", "
         + "team.division_id AS \"team.division_id\", "
         + "team.battlenet_id AS \"team.battlenet_id\", "
-        + "team.season AS \"team.season\", "
         + "team.region AS \"team.region\", "
-        + "team.league_type AS \"team.league_type\", "
-        + "team.queue_type AS \"team.queue_type\", "
-        + "team.team_type AS \"team.team_type\", "
-        + "team.tier_type AS \"team.tier_type\", "
         + "team.rating AS \"team.rating\", "
         + "team.wins AS \"team.wins\", "
         + "team.losses AS \"team.losses\", "
@@ -49,15 +47,22 @@ public class TeamDAO
         + "team.region_rank AS \"team.region_rank\", "
         + "team.league_rank AS \"team.league_rank\" ";
 
+    public static final String STD_ADDITIONAL_SELECT =
+        "season.battlenet_id AS \"team.season\", "
+        + "league.type AS \"team.league_type\", "
+        + "league.queue_type AS \"team.queue_type\", "
+        + "league.team_type AS \"team.team_type\", "
+        + "league_tier.type AS \"team.tier_type\" ";
+
     private static final String CREATE_TEMPLATE = "INSERT INTO team "
         + "("
-            + "%1$sdivision_id, battlenet_id, "
-            + "season, region, league_type, queue_type, team_type, tier_type, "
+            + "%1$sleague_tier_id, division_id, battlenet_id, "
+            + "region, "
             + "rating, points, wins, losses, ties"
         + ") "
         + "VALUES ("
-            + "%2$s:divisionId, :battlenetId, "
-            + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
+            + "%2$s:leagueTierId, :divisionId, :battlenetId, "
+            + ":region, "
             + ":rating, :points, :wins, :losses, :ties"
         + ")";
 
@@ -68,12 +73,8 @@ public class TeamDAO
         " "
         + "ON CONFLICT(%1$s) DO UPDATE SET "
         + "%2$s"
+        + "league_tier_id=excluded.league_tier_id, "
         + "division_id=excluded.division_id, "
-        + "season=excluded.season, "
-        + "league_type=excluded.league_type, "
-        + "queue_type=excluded.queue_type, "
-        + "team_type=excluded.team_type, "
-        + "tier_type=excluded.tier_type, "
         + "rating=excluded.rating, "
         + "points=excluded.points, "
         + "wins=excluded.wins, "
@@ -98,13 +99,17 @@ public class TeamDAO
     private static final String CALCULATE_RANK_TEMPLATE =
         "WITH cte AS"
         + "("
-            + "SELECT id, RANK() OVER(PARTITION BY queue_type, team_type%2$s ORDER BY rating DESC, id DESC) as rnk "
+            + "SELECT team.id, RANK() OVER(PARTITION BY "
+            + "league.queue_type, league.team_type%2$s ORDER BY team.rating DESC, team.id DESC) as rnk "
             + "FROM team "
-            + "WHERE season = :season "
-            + "AND region IN (:regions) "
-            + "AND queue_type IN (:queueTypes) "
-            + "AND team_type IN (:teamTypes) "
-            + "AND league_type IN (:leagueTypes) "
+            + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
+            + "INNER JOIN league ON league.id = league_tier.league_id "
+            + "INNER JOIN season ON season.id = league.season_id "
+            + "WHERE season.battlenet_id = :season "
+            + "AND season.region IN (:regions) "
+            + "AND league.queue_type IN (:queueTypes) "
+            + "AND league.team_type IN (:teamTypes) "
+            + "AND league.type IN (:leagueTypes) "
         + ")"
         + "UPDATE team "
         + "set %1$s_rank=cte.rnk "
@@ -116,9 +121,9 @@ public class TeamDAO
 
     private static final String CALCULATE_GLOBAL_RANK_QUERY = String.format(CALCULATE_RANK_TEMPLATE, "global", "");
     private static final String CALCULATE_REGION_RANK_QUERY =
-        String.format(CALCULATE_RANK_TEMPLATE, "region", ", region");
+        String.format(CALCULATE_RANK_TEMPLATE, "region", ", season.region");
     private static final String CALCULATE_LEAGUE_RANK_QUERY =
-        String.format(CALCULATE_RANK_TEMPLATE, "league", ", league_type");
+        String.format(CALCULATE_RANK_TEMPLATE, "league", ", league.type");
 
     private static RowMapper<Team> STD_ROW_MAPPER;
     private static ResultSetExtractor<Team> STD_EXTRACTOR;
@@ -158,15 +163,8 @@ public class TeamDAO
             return new Team
             (
                 rs.getLong("team.id"),
-                rs.getInt("team.season"),
                 conversionService.convert(rs.getInt("team.region"), Region.class),
-                new BaseLeague
-                    (
-                        conversionService.convert(rs.getInt("team.league_type"), League.LeagueType.class),
-                        conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
-                        conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
-                    ),
-                conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
+                rs.getInt("team.league_tier_id"),
                 rs.getInt("team.division_id"),
                 idDec == null ? null : idDec.toBigInteger(),
                 rs.getLong("team.rating"),
@@ -189,12 +187,15 @@ public class TeamDAO
                 "SELECT " + TeamDAO.STD_SELECT + ", " + TeamMemberDAO.STD_SELECT
                     + "FROM team_member "
                     + "INNER JOIN team ON team_member.team_id = team.id "
+                    + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
+                    + "INNER JOIN league ON league.id = league_tier.league_id "
+                    + "INNER JOIN season ON season.id = league.season_id "
                     + "WHERE team_member.player_character_id = :playerCharacterId "
                     + "AND team_member.%1$s_games_played > 0 "
-                    + "AND team.season = :season "
-                    + "AND team.region = :region "
-                    + "AND team.queue_type = " + conversionService.convert(QueueType.LOTV_1V1, Integer.class) + " "
-                    + "AND team.team_type = " + conversionService.convert(TeamType.ARRANGED, Integer.class);
+                    + "AND season.battlenet_id = :season "
+                    + "AND season.region = :region "
+                    + "AND league.queue_type = " + conversionService.convert(QueueType.LOTV_1V1, Integer.class) + " "
+                    + "AND league.team_type = " + conversionService.convert(TeamType.ARRANGED, Integer.class);
             for(Race race : Race.values()) FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES.put(
                 race, String.format(template, race.getName().toLowerCase()));
         }
@@ -337,14 +338,10 @@ public class TeamDAO
     private MapSqlParameterSource createParameterSource(Team team)
     {
         return new MapSqlParameterSource()
+            .addValue("leagueTierId", team.getLeagueTierId())
             .addValue("divisionId", team.getDivisionId())
             .addValue("battlenetId", team.getBattlenetId())
-            .addValue("season", team.getSeason())
             .addValue("region", conversionService.convert(team.getRegion(), Integer.class))
-            .addValue("leagueType", conversionService.convert(team.getLeagueType(), Integer.class))
-            .addValue("queueType", conversionService.convert(team.getQueueType(), Integer.class))
-            .addValue("teamType", conversionService.convert(team.getTeamType(), Integer.class))
-            .addValue("tierType", conversionService.convert(team.getTierType(), Integer.class))
             .addValue("rating", team.getRating())
             .addValue("points", team.getPoints())
             .addValue("wins", team.getWins())
