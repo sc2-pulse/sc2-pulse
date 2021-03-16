@@ -201,6 +201,8 @@ CREATE TABLE "team_state"
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE INDEX "ix_team_state_timestamp" ON "team_state"("timestamp");
+
 CREATE TABLE "queue_stats"
 (
     "id" BIGSERIAL,
