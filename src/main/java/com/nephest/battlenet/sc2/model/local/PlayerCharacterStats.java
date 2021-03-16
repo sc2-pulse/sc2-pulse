@@ -17,14 +17,12 @@ public class PlayerCharacterStats
 implements Serializable
 {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     private Long id;
 
     @NotNull
     private Long playerCharacterId;
-
-    private Integer seasonId;
 
     @NotNull
     private QueueType queueType;
@@ -52,7 +50,6 @@ implements Serializable
     (
         Long id,
         @NotNull Long playerCharacterId,
-        Integer seasonId,
         @NotNull QueueType queueType,
         @NotNull TeamType teamType,
         Race race,
@@ -64,7 +61,6 @@ implements Serializable
     {
         this.id = id;
         this.playerCharacterId = playerCharacterId;
-        this.seasonId = seasonId;
         this.queueType = queueType;
         this.teamType = teamType;
         this.race = race;
@@ -81,7 +77,6 @@ implements Serializable
         if (o == null || getClass() != o.getClass()) return false;
         PlayerCharacterStats that = (PlayerCharacterStats) o;
         return Objects.equals(getPlayerCharacterId(), that.getPlayerCharacterId())
-            && Objects.equals(getSeasonId(), that.getSeasonId())
             && getQueueType() == that.getQueueType()
             && getTeamType() == that.getTeamType()
             && getRace() == that.getRace();
@@ -90,7 +85,7 @@ implements Serializable
     @Override
     public int hashCode()
     {
-        return Objects.hash(getPlayerCharacterId(), getSeasonId(), getQueueType(), getTeamType(), getRace());
+        return Objects.hash(getPlayerCharacterId(), getQueueType(), getTeamType(), getRace());
     }
 
     @Override
@@ -98,10 +93,9 @@ implements Serializable
     {
         return String.format
         (
-            "%s[%s %s %s %s %s]",
+            "%s[%s %s %s %s]",
             PlayerCharacterStats.class.getSimpleName(),
             getPlayerCharacterId(),
-            getSeasonId(),
             getQueueType(),
             getTeamType(),
             getRace()
@@ -126,16 +120,6 @@ implements Serializable
     public void setPlayerCharacterId(Long playerCharacterId)
     {
         this.playerCharacterId = playerCharacterId;
-    }
-
-    public Integer getSeasonId()
-    {
-        return seasonId;
-    }
-
-    public void setSeasonId(Integer seasonId)
-    {
-        this.seasonId = seasonId;
     }
 
     public QueueType getQueueType()

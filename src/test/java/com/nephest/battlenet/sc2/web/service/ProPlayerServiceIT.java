@@ -35,7 +35,6 @@ import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -99,8 +98,7 @@ public class ProPlayerServiceIT
             TIER_TYPE,
             5
         );
-        playerCharacterStatsDAO.mergeCalculate(SeasonGenerator.DEFAULT_SEASON_ID);
-        playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusHours(1));
+        playerCharacterStatsDAO.mergeCalculate();
     }
 
     @AfterAll

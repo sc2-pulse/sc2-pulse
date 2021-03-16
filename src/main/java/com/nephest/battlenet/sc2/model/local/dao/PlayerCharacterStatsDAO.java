@@ -29,87 +29,104 @@ public class PlayerCharacterStatsDAO
 
     private static final Logger LOG = LoggerFactory.getLogger(PlayerCharacterStatsDAO.class);
 
+    public static final String CHARACTER_FILTER =
+        "WITH team_filter AS "
+        + "("
+            + "SELECT DISTINCT team_id FROM team_state WHERE \"timestamp\" > :updatedMin"
+        + "), "
+        + "player_character_filter AS"
+        + "("
+            + "SELECT DISTINCT team_member.player_character_id "
+            + "FROM team_filter "
+            + "INNER JOIN team ON team_filter.team_id = team.id "
+            + "INNER JOIN team_member ON team.id = team_member.team_id"
+        + ") ";
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START =
         "INSERT INTO player_character_stats "
-        + "(player_character_id, season_id, queue_type, team_type, race, rating_max, league_max, games_played) "
-        + "SELECT player_character.id, season.id, league.queue_type, league.team_type, %1$s, "
+        + "(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played) "
+        + "SELECT team_member.player_character_id, league.queue_type, league.team_type, %1$s, "
         + "MAX(team.rating), MAX(league.type), ";
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END =
         "FROM team_member "
         + "INNER JOIN team ON team_member.team_id=team.id "
-        + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
-        + "INNER JOIN league ON league.id = league_tier.league_id "
-        + "INNER JOIN season ON season.id = league.season_id ";
+        + "INNER JOIN league ON league.id = league_tier.league_id ";
+    public static final String CALCULATE_RECENT_PLAYER_CHARACTER_STATS_TEMPLATE_END =
+        "FROM player_character_filter "
+        + "INNER JOIN team_member USING(player_character_id) "
+        + "INNER JOIN team ON team_member.team_id = team.id "
+        + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
+        + "INNER JOIN league ON league.id = league_tier.league_id ";
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_GROUP =
-        "GROUP BY season.id, league.queue_type, league.team_type, player_character.id ";
+        "GROUP BY league.queue_type, league.team_type, team_member.player_character_id ";
     public static final String MERGE_TEMPLATE =
         " "
-        + "ON CONFLICT(player_character_id, COALESCE(season_id, -32768), COALESCE(race, -32768), " 
-        + "queue_type, team_type) DO UPDATE SET "
+        + "ON CONFLICT(player_character_id, COALESCE(race, -32768), queue_type, team_type) DO UPDATE SET "
         + "rating_max=excluded.rating_max, "
         + "league_max=excluded.league_max, "
         + "games_played=excluded.games_played, "
         + "updated=excluded.updated "
         + "WHERE player_character_stats.games_played<>excluded.games_played";
+    public static final String CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE =
+        CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
+        + "("
+            + "COALESCE(SUM(terran_games_played), 0) "
+            + "+ COALESCE(SUM(protoss_games_played), 0) "
+            + "+ COALESCE(SUM(zerg_games_played), 0) "
+            + "+ COALESCE(SUM(random_games_played), 0)"
+        + ") "
+        + "%2$s"
+        + CALCULATE_PLAYER_CHARACTER_STATS_GROUP;
     public static final String CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY =
-        String.format
-        (
-            CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
-            + "("
-                + "COALESCE(SUM(terran_games_played), 0) "
-                + "+ COALESCE(SUM(protoss_games_played), 0) "
-                + "+ COALESCE(SUM(zerg_games_played), 0) "
-                + "+ COALESCE(SUM(random_games_played), 0)"
-            + ") "
-            + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END
-            + "WHERE season.battlenet_id=:season "
-            + CALCULATE_PLAYER_CHARACTER_STATS_GROUP,
-            "NULL"
-        );
+        String.format(CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE, "NULL", CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END);
     public static final String CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_QUERY =
-        CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY
-        + MERGE_TEMPLATE;
-    public static final String CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERY_FORMAT =
+        String.format(CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE + MERGE_TEMPLATE, "NULL", CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END);
+    public static final String CALCULATE_RECENT_PLAYER_CHARACTER_RACELESS_STATS_QUERY =
+        String.format(CHARACTER_FILTER + CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE,
+            "NULL",
+            CALCULATE_RECENT_PLAYER_CHARACTER_STATS_TEMPLATE_END);
+    public static final String CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACELESS_STATS_QUERY =
+        String.format(CHARACTER_FILTER + CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE + MERGE_TEMPLATE,
+            "NULL",
+            CALCULATE_RECENT_PLAYER_CHARACTER_STATS_TEMPLATE_END);
+
+    public static final String CALCULATE_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
         CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
         + "SUM(%2$s_games_played) "
         + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END
-        + "WHERE season.battlenet_id=:season "
-        + "AND %2$s_games_played > 0 "
+        + "WHERE "
+        + "%2$s_games_played > 0 "
         + "AND ("
             + "%2$s_games_played::decimal / "
             + "(team.wins + team.losses + team.ties) "
         + ") > 0.9::decimal "
         + CALCULATE_PLAYER_CHARACTER_STATS_GROUP;
-    public static final String CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERY_FORMAT =
-        CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERY_FORMAT
-        + MERGE_TEMPLATE;
-    
-    public static final String CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS = 
-        "INSERT INTO player_character_stats "
-        + "(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played) "
-        + "SELECT player_character_id, queue_type, team_type, race, "
-        + "MAX(rating_max) AS rating_max, MAX(league_max) AS league_max, SUM(games_played) AS games_played "
-        + "FROM player_character_stats "
-        + "WHERE season_id IS NOT NULL "
-        + "GROUP BY player_character_id, race, queue_type, team_type "
-        + "HAVING MAX(updated) > :updatedMin";
-    public static final String CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS =
-        CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS + MERGE_TEMPLATE;
+    public static final String CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
+        CALCULATE_PLAYER_CHARACTER_RACE_STATS_TEMPLATE + MERGE_TEMPLATE;
+    public static final String CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
+        CHARACTER_FILTER
+        + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
+        + "SUM(%2$s_games_played) "
+        + CALCULATE_RECENT_PLAYER_CHARACTER_STATS_TEMPLATE_END
+        + "WHERE "
+        + "%2$s_games_played > 0 "
+        + "AND ("
+        + "%2$s_games_played::decimal / "
+        + "(team.wins + team.losses + team.ties) "
+        + ") > 0.9::decimal "
+        + CALCULATE_PLAYER_CHARACTER_STATS_GROUP;
+    public static final String CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
+        CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE + MERGE_TEMPLATE;
 
     private static Map<Race, String> CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES;
     private static Map<Race, String> CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES;
+    private static Map<Race, String> CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES;
+    private static Map<Race, String> CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES;
 
-    public static final String FIND_STATS_LIST_BY_PLAYER_CHARACTER_ID_QUERY =
-        "SELECT player_character_stats.id, season_id, queue_type, team_type, player_character_id, race, rating_max, "
-        + "league_max, games_played, updated "
-        + "FROM player_character_stats "
-        + "INNER JOIN player_character ON player_character_stats.player_character_id=player_character.id "
-        + "WHERE player_character.id = :playerCharacterId";
     public static final String FIND_GLOBAL_STATS_LIST_BY_PLAYER_CHARACTER_ID_QUERY =
-        "SELECT id, season_id, queue_type, team_type, player_character_id, race, rating_max, league_max, games_played, updated "
+        "SELECT id, queue_type, team_type, player_character_id, race, rating_max, league_max, games_played, updated "
         + "FROM player_character_stats "
-        + "WHERE player_character_id = :playerCharacterId AND season_id is NULL ";
+        + "WHERE player_character_id = :playerCharacterId";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -131,9 +148,17 @@ public class PlayerCharacterStatsDAO
     private static void initQueries(ConversionService conversionService)
     {
         if(CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES == null)
-            CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES = initQueries(CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERY_FORMAT, conversionService);
+            CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES =
+                initQueries(CALCULATE_PLAYER_CHARACTER_RACE_STATS_TEMPLATE, conversionService);
         if(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES == null)
-            CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES = initQueries(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERY_FORMAT, conversionService);
+            CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES =
+                initQueries(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_TEMPLATE, conversionService);
+        if(CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES == null)
+            CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES =
+                initQueries(CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE, conversionService);
+        if(CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES == null)
+            CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES =
+                initQueries(CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE, conversionService);
     }
 
     private static Map<Race, String> initQueries(String query, ConversionService conversionService)
@@ -162,7 +187,6 @@ public class PlayerCharacterStatsDAO
             (
                 rs.getLong("id"),
                 rs.getLong("player_character_id"),
-                rs.getInt("season_id"),
                 conversionService.convert(rs.getInt("queue_type"), QueueType.class),
                 conversionService.convert(rs.getInt("team_type"), TeamType.class),
                 race,
@@ -180,50 +204,51 @@ public class PlayerCharacterStatsDAO
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void calculate(int season)
+    public int calculate()
     {
-        SqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
-        for(Race race : Race.values()) template.update(CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race), params);
-        template.update(CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
-        LOG.debug("Calculated player character stats for {} season", season);
+        int count = 0;
+        for(Race race : Race.values())
+            count += template.getJdbcTemplate().update(CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race));
+        count += template.getJdbcTemplate().update(CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY);
+        LOG.debug("Calculated {} player character stats", count);
+        return count;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void mergeCalculate(int season)
+    public int mergeCalculate()
     {
-        SqlParameterSource params = new MapSqlParameterSource().addValue("season", season);
-        for(Race race : Race.values()) template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race),
-            params);
-        template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
-        LOG.debug("Calculated (merged) player character stats for {} season", season);
+        int count = 0;
+        for(Race race : Race.values())
+            count += template.getJdbcTemplate().update(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race));
+        count += template.getJdbcTemplate().update(CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_QUERY);
+        LOG.debug("Calculated (merged) {} player character stats", count);
+        return count;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void calculateGlobal(OffsetDateTime updatedMin)
+    public int calculate(OffsetDateTime updatedMin)
     {
+        int count = 0;
         SqlParameterSource params = new MapSqlParameterSource()
             .addValue("updatedMin", updatedMin);
-        template.update(CALCULATE_PLAYER_CHARACTER_GLOBAL_STATS, params);
-        LOG.debug("Calculated player character global stats");
+        for(Race race : Race.values())
+            count += template.update(CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race), params);
+        count += template.update(CALCULATE_RECENT_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
+        LOG.debug("Calculated {} recent({}) player character stats", count, updatedMin);
+        return count;
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void mergeCalculateGlobal(OffsetDateTime updatedMin)
+    public int mergeCalculate(OffsetDateTime updatedMin)
     {
+        int count = 0;
         SqlParameterSource params = new MapSqlParameterSource()
             .addValue("updatedMin", updatedMin);
-        template.update(CALCULATE_MERGE_PLAYER_CHARACTER_GLOBAL_STATS, params);
-        LOG.debug("Calculated (merged) player character global stats");
-    }
-
-    public List<PlayerCharacterStats> findList(Long playerCharacterId)
-    {
-        return template.query
-        (
-            FIND_STATS_LIST_BY_PLAYER_CHARACTER_ID_QUERY,
-            new MapSqlParameterSource().addValue("playerCharacterId", playerCharacterId),
-            STD_ROW_MAPPER
-        );
+        for(Race race : Race.values())
+            count += template.update(CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race), params);
+        count += template.update(CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
+        LOG.debug("Calculated (merged) {} recent({}) player character stats", count, updatedMin);
+        return count;
     }
 
     public List<PlayerCharacterStats> findGlobalList(Long playerCharacterId)

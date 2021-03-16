@@ -109,12 +109,10 @@ public class PlayerCharacterStatsDAOIT
         createTeam(Race.ZERG, region, diamond1, BigInteger.valueOf(10002L), 3L, character);
         createTeam(Race.ZERG, region, gold2, BigInteger.valueOf(10003L), 2L, character);
         createTeam(null, region, diamond1, BigInteger.valueOf(10004L), 2L, character);
-        playerCharacterStatsDAO.calculate(season1.getBattlenetId());
-        playerCharacterStatsDAO.mergeCalculate(season1.getBattlenetId()); //just for testing, not actually required
-        playerCharacterStatsDAO.calculate(season2.getBattlenetId());
-        playerCharacterStatsDAO.mergeCalculate(season2.getBattlenetId()); //just for testing, not actually required
-        playerCharacterStatsDAO.calculateGlobal(OffsetDateTime.now().minusHours(1));
-        playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusHours(1)); //just for testing, not actually required
+        playerCharacterStatsDAO.calculate();
+        playerCharacterStatsDAO.mergeCalculate(); //just for testing, not actually required
+        playerCharacterStatsDAO.calculate(OffsetDateTime.now().minusHours(1));
+        playerCharacterStatsDAO.mergeCalculate(OffsetDateTime.now().minusHours(1)); //just for testing, not actually required
         Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats =
             playerCharacterStatsDAO.findGlobalMap(character.getId());
 

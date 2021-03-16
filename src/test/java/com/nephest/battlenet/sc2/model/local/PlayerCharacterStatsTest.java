@@ -22,7 +22,6 @@ public class PlayerCharacterStatsTest
         (
             null,
             0L,
-            0,
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Race.PROTOSS,
@@ -35,7 +34,6 @@ public class PlayerCharacterStatsTest
         (
             0L,
             0L,
-            0,
             QueueType.LOTV_1V1,
             TeamType.ARRANGED,
             Race.PROTOSS,
@@ -50,7 +48,6 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 1L,
-                0,
                 QueueType.LOTV_1V1,
                 TeamType.ARRANGED,
                 Race.PROTOSS,
@@ -63,20 +60,6 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                1,
-                QueueType.LOTV_1V1,
-                TeamType.ARRANGED,
-                Race.PROTOSS,
-                0,
-                BaseLeague.LeagueType.GOLD,
-                0,
-                OffsetDateTime.MAX
-            ),
-            new PlayerCharacterStats
-            (
-                null,
-                0L,
-                0,
                 QueueType.LOTV_2V2,
                 TeamType.ARRANGED,
                 Race.PROTOSS,
@@ -89,7 +72,6 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                null,
                 QueueType.LOTV_2V2,
                 TeamType.ARRANGED,
                 Race.PROTOSS,
@@ -102,7 +84,6 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                0,
                 QueueType.LOTV_1V1,
                 TeamType.RANDOM,
                 Race.PROTOSS,
@@ -115,7 +96,6 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                0,
                 QueueType.LOTV_1V1,
                 TeamType.ARRANGED,
                 Race.TERRAN,
@@ -128,7 +108,6 @@ public class PlayerCharacterStatsTest
             (
                 null,
                 0L,
-                0,
                 QueueType.LOTV_1V1,
                 TeamType.ARRANGED,
                 null,

@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -37,7 +37,6 @@ public class LadderCharacterDAO
         + "player_character_stats.id, player_character_stats.player_character_id "
         + "FROM player_character_filtered "
         + "INNER JOIN player_character_stats ON player_character_stats.player_character_id = player_character_filtered.id "
-        + "WHERE COALESCE(player_character_stats.season_id, -32768) = -32768 "
         + "ORDER BY player_character_stats.player_character_id, player_character_stats.rating_max DESC, "
         + "player_character_stats.race, " //prevent summary selection where racial stats are available
         + "player_character_stats.games_played DESC, player_character_stats.league_max DESC, "

@@ -51,4 +51,11 @@ ALTER TABLE "team"
     DROP COLUMN "team_type",
     DROP COLUMN "tier_type";
 
+DROP INDEX "ix_player_character_stats_calculation";
+DELETE FROM "player_character_stats" WHERE "season_id" IS NOT NULL;
+ALTER TABLE "player_character_stats" DROP COLUMN "season_id";
+CREATE UNIQUE INDEX "uq_player_character_stats_main"
+    ON "player_character_stats"("player_character_id", COALESCE("race", -32768), "queue_type", "team_type");
+VACUUM(FULL) "player_character_stats";
+
 SET work_mem = '4MB';

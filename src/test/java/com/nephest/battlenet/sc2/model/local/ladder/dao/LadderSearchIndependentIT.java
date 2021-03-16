@@ -23,7 +23,6 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -157,8 +156,7 @@ public class LadderSearchIndependentIT
             0, 0, 100, 0
         );
         teamMemberDAO.create(member3);
-        playerCharacterStatsDAO.mergeCalculate(season1.getBattlenetId());
-        playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusHours(1));
+        playerCharacterStatsDAO.mergeCalculate();
 
         List<LadderDistinctCharacter> byName = ladderCharacterDAO.findDistinctCharactersByName("refchar1");
         assertEquals(1, byName.size());

@@ -26,6 +26,7 @@ import reactor.util.function.Tuples;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -38,6 +39,7 @@ public class StatsService
 
     public static final Version VERSION = Version.LOTV;
     public static final int STALE_LADDER_TOLERANCE = 3;
+    public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 27;
 
     @Autowired
     private StatsService statsService;
@@ -167,7 +169,7 @@ public class StatsService
                 updateSeason(season, regions, queues, leagues);
                 LOG.info("Updated season {}", season);
             }
-            playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusYears(1));
+            playerCharacterStatsDAO.mergeCalculate();
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
@@ -263,7 +265,6 @@ public class StatsService
     {
         queueStatsDAO.mergeCalculateForSeason(seasonId);
         leagueStatsDao.mergeCalculateForSeason(seasonId);
-        playerCharacterStatsDAO.mergeCalculate(seasonId);
         teamDao.updateRanks(seasonId, regions, queues, TeamType.values(), leagues);
     }
 
@@ -292,7 +293,10 @@ public class StatsService
             if(queues.length == QueueType.getTypes(VERSION).size())
             {
                 updateSeasonStats(seasonId, regions, queues, leagues);
-                playerCharacterStatsDAO.mergeCalculateGlobal(OffsetDateTime.now().minusHours(1));
+                playerCharacterStatsDAO.mergeCalculate(
+                    lastLeagueUpdates.get(queues.length) != null
+                    ? OffsetDateTime.ofInstant(lastLeagueUpdates.get(queues.length), ZoneId.systemDefault())
+                    : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH));
             }
             else
             {

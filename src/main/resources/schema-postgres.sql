@@ -242,7 +242,6 @@ CREATE TABLE "player_character_stats"
 (
     "id" BIGSERIAL,
     "player_character_id" BIGINT NOT NULL,
-    "season_id" INTEGER,
     "queue_type" SMALLINT NOT NULL,
     "team_type" SMALLINT NOT NULL,
     "race" SMALLINT,
@@ -256,18 +255,11 @@ CREATE TABLE "player_character_stats"
     CONSTRAINT "fk_player_character_stats_player_character_id"
         FOREIGN KEY ("player_character_id")
         REFERENCES "player_character"("id")
-        ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "fk_player_character_stats_season_id"
-        FOREIGN KEY ("season_id")
-        REFERENCES "season"("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE UNIQUE INDEX "uq_player_character_stats_main"
-    ON "player_character_stats"("player_character_id", COALESCE("season_id", -32768), COALESCE("race", -32768), "queue_type", "team_type");
-
-CREATE INDEX "ix_player_character_stats_calculation"
-    ON "player_character_stats"("player_character_id", "race", "queue_type", "team_type", "season_id");
+    ON "player_character_stats"("player_character_id", COALESCE("race", -32768), "queue_type", "team_type");
 
 CREATE TABLE "account_following"
 (
