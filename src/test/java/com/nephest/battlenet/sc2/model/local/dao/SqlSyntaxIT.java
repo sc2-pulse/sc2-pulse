@@ -54,6 +54,9 @@ public class SqlSyntaxIT
     private TeamMemberDAO teamMemberDAO;
 
     @Autowired
+    private TeamStateDAO teamStateDAO;
+
+    @Autowired
     private LeagueStatsDAO leagueStatsDAO;
 
     @Autowired
@@ -219,6 +222,7 @@ public class SqlSyntaxIT
         proPlayerDAO.removeExpired();
         proTeamDAO.removeExpired();
         proTeamMemberDAO.removeExpired();
+        teamStateDAO.removeExpired();
 
         teamMemberDAO.removeByTeamId(zergTeam.getId());
         assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).isEmpty());

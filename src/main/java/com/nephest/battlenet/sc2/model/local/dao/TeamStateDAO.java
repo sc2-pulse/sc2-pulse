@@ -15,7 +15,10 @@ import java.time.OffsetDateTime;
 
 @Repository
 public class TeamStateDAO
+extends StandardDAO
 {
+
+    public static final int MAX_DEPTH_DAYS = 90;
 
     public static final String STD_SELECT =
         "team_state.team_id AS \"team_state.team_id\", "
@@ -39,12 +42,10 @@ public class TeamStateDAO
         rs.getInt("team_state.rating")
     );
 
-    private final NamedParameterJdbcTemplate template;
-
     @Autowired
     public TeamStateDAO(@Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template)
     {
-        this.template = template;
+        super(template, "team_state", "\"timestamp\"", MAX_DEPTH_DAYS + " DAYS");
     }
 
     public static MapSqlParameterSource createParameterSource(TeamState history)
@@ -64,7 +65,7 @@ public class TeamStateDAO
         MapSqlParameterSource[] params = new MapSqlParameterSource[states.length];
         for(int i = 0; i < states.length; i++) params[i] = createParameterSource(states[i]);
 
-        return template.batchUpdate(CREATE_QUERY, params);
+        return getTemplate().batchUpdate(CREATE_QUERY, params);
     }
 
 }
