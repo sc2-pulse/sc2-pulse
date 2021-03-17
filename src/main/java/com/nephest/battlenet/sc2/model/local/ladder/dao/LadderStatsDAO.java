@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -40,8 +40,8 @@ public class LadderStatsDAO
         + "INNER JOIN season ON league.season_id = season.id "
 
         + "WHERE "
-        + "season.region IN (:region0, :region1, :region2, :region3) "
-        + "AND league.type IN (:leagueType0, :leagueType1, :leagueType2, :leagueType3, :leagueType4, :leagueType5, :leagueType6) "
+        + "season.region IN (:regions) "
+        + "AND league.type IN (:leagueTypes) "
         + "AND league.queue_type=:queueType "
         + "AND league.team_type=:teamType ";
 
@@ -57,8 +57,8 @@ public class LadderStatsDAO
 
         + "WHERE "
         + "season.battlenet_id=:seasonId "
-        + "AND season.region IN (:region0, :region1, :region2, :region3) "
-        + "AND league.type IN (:leagueType0, :leagueType1, :leagueType2, :leagueType3, :leagueType4, :leagueType5, :leagueType6) "
+        + "AND season.region IN (:regions) "
+        + "AND league.type IN (:leagueTypes) "
         + "AND league.queue_type=:queueType "
         + "AND league.team_type=:teamType ";
 
