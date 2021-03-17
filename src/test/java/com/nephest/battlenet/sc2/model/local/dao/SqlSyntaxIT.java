@@ -164,7 +164,11 @@ public class SqlSyntaxIT
         assertEquals(2, team.getLosses());
         assertEquals(2, team.getTies());
         assertEquals(2, team.getPoints());
-        assertNull(teamDAO.merge(team));
+        assertNull(teamDAO.merge(team)); //do not update a team when games played or division is the same
+        team.setDivisionId(division2.getId());
+        assertNotNull(teamDAO.merge(team));
+        team.setDivisionId(division.getId());
+        assertNotNull(teamDAO.merge(team));
         assertNotNull(teamDAO.mergeById(team, true));
         assertNotNull(teamDAO.merge(team, true));
         assertNull(teamDAO.merge(sameTeam));
