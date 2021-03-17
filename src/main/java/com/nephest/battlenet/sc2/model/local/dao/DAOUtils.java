@@ -9,7 +9,7 @@ import org.springframework.jdbc.core.RowMapper;
 public final class DAOUtils
 {
 
-    public static final String REMOVE_OUTDATED_TEMPLATE = "DELETE FROM %1$s WHERE updated < NOW() - INTERVAL '%2$s'";
+    public static final String REMOVE_OUTDATED_TEMPLATE = "DELETE FROM %1$s WHERE %2$s < NOW() - INTERVAL '%3$s'";
     public static final int[] EMPTY_INT_ARRAY = new int[0];
 
     private DAOUtils(){}
