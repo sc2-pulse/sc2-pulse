@@ -169,6 +169,7 @@ public class StatsService
                 updateSeason(season, regions, queues, leagues);
                 LOG.info("Updated season {}", season);
             }
+            teamStateDAO.removeExpired();
             playerCharacterStatsDAO.mergeCalculate();
 
             isUpdating.set(false);
@@ -288,6 +289,7 @@ public class StatsService
             seasonId = season.getBattlenetId();
             LOG.debug("Updated leagues: {} {}", seasonId, region);
         }
+        teamStateDAO.removeExpired();
         if(seasonId != null)
         {
             if(queues.length == QueueType.getTypes(VERSION).size())
