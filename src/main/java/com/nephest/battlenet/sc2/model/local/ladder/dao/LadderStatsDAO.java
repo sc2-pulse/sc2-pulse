@@ -64,7 +64,6 @@ public class LadderStatsDAO
 
     private final NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
-    private final LadderUtil ladderUtil;
     private final QueueStatsDAO queueStatsDAO;
     public final SeasonDAO seasonDAO;
 
@@ -119,14 +118,12 @@ public class LadderStatsDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
-        @Autowired LadderUtil ladderUtil,
         @Autowired QueueStatsDAO queueStatsDAO,
         @Autowired SeasonDAO seasonDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
-        this.ladderUtil = ladderUtil;
         this.queueStatsDAO = queueStatsDAO;
         this.seasonDAO = seasonDAO;
     }
@@ -146,7 +143,7 @@ public class LadderStatsDAO
     )
     {
         MapSqlParameterSource params =
-            ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType);
+            LadderUtil.createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType);
         return template
             .query(FIND_LEAGUE_TIER_BOUNDS_QUERY, params, LEAGUE_TIER_BOUNDS_EXTRACTOR);
     }
@@ -161,7 +158,7 @@ public class LadderStatsDAO
     )
     {
         MapSqlParameterSource params =
-            ladderUtil.createSearchParams(0, regions, leagueTypes, queueType, teamType);
+            LadderUtil.createSearchParams(conversionService, 0, regions, leagueTypes, queueType, teamType);
         Map<Integer, Map<Region, Map<BaseLeague.LeagueType, LadderSearchStatsResult>>> stats = template
             .query(LADDER_SEARCH_STATS_QUERY, params, LADDER_STATS_EXTRACTOR);
         Map<Integer, MergedLadderSearchStatsResult> result = new HashMap<>(stats.size(), 1.0f);

@@ -7,32 +7,20 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.stereotype.Repository;
 
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@Repository
-public class LadderUtil
+public final class LadderUtil
 {
 
-    private final ConversionService conversionService;
+    private LadderUtil(){}
 
-    @Autowired
-    public LadderUtil
+    public static MapSqlParameterSource createSearchParams
     (
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService
-    )
-    {
-        this.conversionService = conversionService;
-    }
-
-    public MapSqlParameterSource createSearchParams
-    (
+        ConversionService conversionService,
         int season,
         Set<Region> regions,
         Set<League.LeagueType> leagueTypes,

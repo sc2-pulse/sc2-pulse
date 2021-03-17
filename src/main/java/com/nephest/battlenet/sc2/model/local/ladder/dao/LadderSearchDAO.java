@@ -155,8 +155,6 @@ public class LadderSearchDAO
 
     private int resultsPerPage = 100;
 
-    private LadderUtil ladderUtil;
-
     @Autowired @Lazy
     private LadderSearchDAO ladderSearchDAO;
 
@@ -167,13 +165,11 @@ public class LadderSearchDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
-        @Autowired LadderUtil ladderUtil,
         @Autowired SeasonDAO seasonDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
-        this.ladderUtil = ladderUtil;
         this.seasonDAO = seasonDAO;
     }
 
@@ -278,7 +274,7 @@ public class LadderSearchDAO
         long offset = (Math.abs(pageDiff) - 1) * getResultsPerPage() * membersPerTeam;
         long limit = getResultsPerPage() * membersPerTeam;
         MapSqlParameterSource params =
-            ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType)
+            LadderUtil.createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType)
                 .addValue("offset", offset)
                 .addValue("limit", limit)
                 .addValue("ratingAnchor", ratingAnchor)
@@ -320,7 +316,7 @@ public class LadderSearchDAO
     )
     {
         MapSqlParameterSource params =
-            ladderUtil.createSearchParams(season, regions, leagueTypes, queueType, teamType)
+            LadderUtil.createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType)
             .addValue("accountId", accountId);
         return template
             .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAM_EXTRACTOR);
