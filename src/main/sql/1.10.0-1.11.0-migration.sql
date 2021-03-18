@@ -57,4 +57,6 @@ ALTER TABLE "team"
     DROP COLUMN "team_type",
     DROP COLUMN "tier_type";
 
+CREATE INDEX "ix_team_state_timestamp" ON "team_state"("timestamp");
+
 SET work_mem = '4MB';
