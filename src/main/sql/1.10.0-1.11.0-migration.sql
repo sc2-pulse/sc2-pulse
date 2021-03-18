@@ -2,8 +2,7 @@
 -- SPDX-License-Identifier: AGPL-3.0-or-later
 ---
 
-VACUUM;
-ANALYZE;
+VACUUM(ANALYZE);
 SET work_mem = '128MB';
 
 DROP INDEX "ix_player_character_stats_calculation";
@@ -33,13 +32,20 @@ ALTER TABLE "team_state" ALTER COLUMN "division_id" TYPE INTEGER;
 
 ALTER TABLE "team" ADD COLUMN "league_tier_id" INTEGER NOT NULL DEFAULT 0;
 
-VACUUM;
-ANALYZE;
-UPDATE "team"
-SET "league_tier_id" = "division"."league_tier_id"
-FROM "division"
-WHERE "team"."division_id" = "division"."id";
+VACUUM(ANALYZE);
 
+ALTER TABLE "team" DROP CONSTRAINT "uq_team_region_battlenet_id";
+DROP INDEX "ix_team_ladder_search_full";
+ALTER TABLE "team"
+    DROP COLUMN "season",
+    DROP COLUMN "league_type",
+    DROP COLUMN "queue_type",
+    DROP COLUMN "team_type",
+    DROP COLUMN "tier_type";
+UPDATE "team"
+    SET "league_tier_id" = "division"."league_tier_id"
+    FROM "division"
+    WHERE "team"."division_id" = "division"."id";
 ALTER TABLE "team"
     ALTER COLUMN "league_tier_id" DROP DEFAULT,
     ADD CONSTRAINT "fk_team_league_tier_id"
@@ -47,15 +53,9 @@ ALTER TABLE "team"
         REFERENCES "league_tier"("id")
         ON DELETE CASCADE ON UPDATE CASCADE;
 
-DROP INDEX "ix_team_ladder_search_full";
+ALTER TABLE "team" ADD CONSTRAINT "uq_team_region_battlenet_id" UNIQUE ("region", "battlenet_id");
 CREATE INDEX "ix_team_ladder_search" ON "team"("rating", "id");
-
-ALTER TABLE "team"
-    DROP COLUMN "season",
-    DROP COLUMN "league_type",
-    DROP COLUMN "queue_type",
-    DROP COLUMN "team_type",
-    DROP COLUMN "tier_type";
+VACUUM(FULL) "team";
 
 CREATE INDEX "ix_team_state_timestamp" ON "team_state"("timestamp");
 
