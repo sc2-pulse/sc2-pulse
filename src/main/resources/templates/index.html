@@ -839,6 +839,14 @@
                                             </select>
                                         </div>
                                         <div class="form-group col">
+                                            <label for="mmr-depth" class="text-nowrap">Depth(days)</label>
+                                            <input id="mmr-depth" class="form-control text-center serializable"
+                                                type="number"
+                                                min="1"
+                                                th:max="${T(com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO).MAX_DEPTH_DAYS}"
+                                            />
+                                        </div>
+                                        <div class="form-group col">
                                             <label for="mmr-exclude-start" class="text-nowrap">Exclude from</label>
                                             <input id="mmr-exclude-start" class="form-control text-center" type="number" min="0" list="mmr-range-list"/>
                                         </div>

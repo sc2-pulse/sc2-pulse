@@ -257,6 +257,8 @@ class CharacterUtil
         const queue = EnumUtil.enumOfFullName(queueFilterSelect.options[queueFilterSelect.selectedIndex].value, TEAM_FORMAT);
         const queueFilter = queue.code;
         const teamTypeFilter = queue == TEAM_FORMAT._1V1 ? TEAM_TYPE.ARRANGED.code : TEAM_TYPE.RANDOM.code;
+        const depth = document.getElementById("mmr-depth").value || SC2Restful.MMR_HISTORY_DAYS_MAX;
+        const depthStartTimestamp = Date.now() - (depth * 24 * 60 * 60 * 1000);
         const excludeStart = document.getElementById("mmr-exclude-start").value || 0;
         const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
         const changesOnly = document.getElementById("mmr-changes-only").checked;
@@ -274,6 +276,7 @@ class CharacterUtil
             queueFilter,
             teamTypeFilter);
         if(bestRaceOnly === true) mmrHistory = CharacterUtil.filterMmrHistoryBestRace(historyByRace);
+        if(depth != SC2Restful.MMR_HISTORY_DAYS_MAX) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() >= depthStartTimestamp);
         const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime.getTime());
         const data = [];
         const rawData = [];
@@ -296,7 +299,9 @@ class CharacterUtil
             (dateTime)=>new Date(parseInt(dateTime))
         );
         document.getElementById("mmr-history-filters").textContent =
-            "(" + queue.name + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
+            "(" + queue.name
+            + (depth != SC2Restful.MMR_HISTORY_DAYS_MAX ? ", starting from " + Util.DATE_FORMAT.format(new Date(depthStartTimestamp)) : "")
+            + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
     }
 
@@ -692,20 +697,18 @@ class CharacterUtil
     static enhanceMmrForm()
     {
         document.getElementById("mmr-queue-filter").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
-        document.getElementById("mmr-exclude-start").addEventListener("input", evt=>
-        {
-            const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
-            if(prev != null)  window.clearTimeout(prev);
-            ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT))
-        });
-        document.getElementById("mmr-exclude-end").addEventListener("input", evt=>
-        {
-            const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
-            if(prev != null)  window.clearTimeout(prev);
-            ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT))
-        });
+        document.getElementById("mmr-depth").addEventListener("input",  CharacterUtil.onMmrInput);
+        document.getElementById("mmr-exclude-start").addEventListener("input", CharacterUtil.onMmrInput);
+        document.getElementById("mmr-exclude-end").addEventListener("input", CharacterUtil.onMmrInput);
         document.getElementById("mmr-changes-only").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
         document.getElementById("mmr-best-race").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
+    }
+
+    static onMmrInput(evt)
+    {
+        const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
+        if(prev != null)  window.clearTimeout(prev);
+        ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT));
     }
 
 }
