@@ -72,8 +72,7 @@ public class PlayerCharacterStatsDAO
         + "ON CONFLICT(player_character_id, COALESCE(race, -32768), queue_type, team_type) DO UPDATE SET "
         + "rating_max=excluded.rating_max, "
         + "league_max=excluded.league_max, "
-        + "games_played=excluded.games_played, "
-        + "updated=excluded.updated "
+        + "games_played=excluded.games_played "
         + "WHERE player_character_stats.games_played<>excluded.games_played";
     public static final String CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE =
         CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
@@ -129,7 +128,7 @@ public class PlayerCharacterStatsDAO
     private static Map<Race, String> CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES;
 
     public static final String FIND_GLOBAL_STATS_LIST_BY_PLAYER_CHARACTER_ID_QUERY =
-        "SELECT id, queue_type, team_type, player_character_id, race, rating_max, league_max, games_played, updated "
+        "SELECT id, queue_type, team_type, player_character_id, race, rating_max, league_max, games_played "
         + "FROM player_character_stats "
         + "WHERE player_character_id = :playerCharacterId";
 
@@ -211,8 +210,7 @@ public class PlayerCharacterStatsDAO
                 race,
                 rs.getInt("rating_max"),
                 conversionService.convert(rs.getInt("league_max"), BaseLeague.LeagueType.class),
-                rs.getInt("games_played"),
-                rs.getObject("updated", OffsetDateTime.class)
+                rs.getInt("games_played")
             );
         };
     }

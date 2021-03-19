@@ -248,7 +248,6 @@ CREATE TABLE "player_character_stats"
     "rating_max" SMALLINT NOT NULL,
     "league_max" SMALLINT NOT NULL,
     "games_played" INTEGER NOT NULL,
-    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
 
