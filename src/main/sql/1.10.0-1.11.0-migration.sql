@@ -59,4 +59,128 @@ VACUUM(FULL) "team";
 
 CREATE INDEX "ix_team_state_timestamp" ON "team_state"("timestamp");
 
+WITH player_character_filter AS
+(
+    SELECT DISTINCT team_member.player_character_id
+    FROM team_member
+    INNER JOIN team ON team_member.team_id = team.id
+    INNER JOIN league_tier ON team.league_tier_id = league_tier.id
+    INNER JOIN league ON league_tier.league_id = league.id
+    WHERE league.queue_type <> 201 AND terran_games_played > 0
+)
+INSERT INTO player_character_stats
+(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played)
+SELECT team_member.player_character_id, league.queue_type, league.team_type, 1,
+MAX(team.rating), MAX(league.type),
+SUM(terran_games_played)
+FROM player_character_filter
+INNER JOIN team_member USING(player_character_id)
+INNER JOIN team ON team_member.team_id = team.id
+INNER JOIN league_tier ON league_tier.id = team.league_tier_id
+INNER JOIN league ON league.id = league_tier.league_id
+WHERE league.queue_type <> 201
+AND terran_games_played > 0
+AND terran_games_played > COALESCE(protoss_games_played, 0)
+AND terran_games_played > COALESCE(zerg_games_played, 0)
+AND terran_games_played > COALESCE(random_games_played, 0)
+GROUP BY league.queue_type, league.team_type, team_member.player_character_id
+ON CONFLICT(player_character_id, COALESCE(race, -32768), queue_type, team_type) DO UPDATE SET
+rating_max=excluded.rating_max,
+league_max=excluded.league_max,
+games_played=excluded.games_played
+WHERE player_character_stats.games_played<>excluded.games_played;
+
+WITH player_character_filter AS
+(
+    SELECT DISTINCT team_member.player_character_id
+    FROM team_member
+    INNER JOIN team ON team_member.team_id = team.id
+    INNER JOIN league_tier ON team.league_tier_id = league_tier.id
+    INNER JOIN league ON league_tier.league_id = league.id
+    WHERE  league.queue_type <> 201 AND protoss_games_played > 0
+)
+INSERT INTO player_character_stats
+(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played)
+SELECT team_member.player_character_id, league.queue_type, league.team_type, 2,
+MAX(team.rating), MAX(league.type),
+SUM(protoss_games_played)
+FROM player_character_filter
+INNER JOIN team_member USING(player_character_id)
+INNER JOIN team ON team_member.team_id = team.id
+INNER JOIN league_tier ON league_tier.id = team.league_tier_id
+INNER JOIN league ON league.id = league_tier.league_id
+WHERE league.queue_type <> 201
+AND protoss_games_played > 0
+AND protoss_games_played > COALESCE(terran_games_played, 0)
+AND protoss_games_played > COALESCE(zerg_games_played, 0)
+AND protoss_games_played > COALESCE(random_games_played, 0)
+GROUP BY league.queue_type, league.team_type, team_member.player_character_id
+ON CONFLICT(player_character_id, COALESCE(race, -32768), queue_type, team_type) DO UPDATE SET
+rating_max=excluded.rating_max,
+league_max=excluded.league_max,
+games_played=excluded.games_played
+WHERE player_character_stats.games_played<>excluded.games_played;
+
+WITH player_character_filter AS
+(
+    SELECT DISTINCT team_member.player_character_id
+    FROM team_member
+    INNER JOIN team ON team_member.team_id = team.id
+    INNER JOIN league_tier ON team.league_tier_id = league_tier.id
+    INNER JOIN league ON league_tier.league_id = league.id
+    WHERE league.queue_type <> 201 AND zerg_games_played > 0
+)
+INSERT INTO player_character_stats
+(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played)
+SELECT team_member.player_character_id, league.queue_type, league.team_type, 3,
+MAX(team.rating), MAX(league.type),
+SUM(zerg_games_played)
+FROM player_character_filter
+INNER JOIN team_member USING(player_character_id)
+INNER JOIN team ON team_member.team_id = team.id
+INNER JOIN league_tier ON league_tier.id = team.league_tier_id
+INNER JOIN league ON league.id = league_tier.league_id
+WHERE league.queue_type <> 201
+AND zerg_games_played > 0
+AND zerg_games_played > COALESCE(terran_games_played, 0)
+AND zerg_games_played > COALESCE(protoss_games_played, 0)
+AND zerg_games_played > COALESCE(random_games_played, 0)
+GROUP BY league.queue_type, league.team_type, team_member.player_character_id
+ON CONFLICT(player_character_id, COALESCE(race, -32768), queue_type, team_type) DO UPDATE SET
+rating_max=excluded.rating_max,
+league_max=excluded.league_max,
+games_played=excluded.games_played
+WHERE player_character_stats.games_played<>excluded.games_played;
+
+WITH player_character_filter AS
+(
+    SELECT DISTINCT team_member.player_character_id
+    FROM team_member
+    INNER JOIN team ON team_member.team_id = team.id
+    INNER JOIN league_tier ON team.league_tier_id = league_tier.id
+    INNER JOIN league ON league_tier.league_id = league.id
+    WHERE league.queue_type <> 201 AND random_games_played > 0
+)
+INSERT INTO player_character_stats
+(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played)
+SELECT team_member.player_character_id, league.queue_type, league.team_type, 4,
+MAX(team.rating), MAX(league.type),
+SUM(random_games_played)
+FROM player_character_filter
+INNER JOIN team_member USING(player_character_id)
+INNER JOIN team ON team_member.team_id = team.id
+INNER JOIN league_tier ON league_tier.id = team.league_tier_id
+INNER JOIN league ON league.id = league_tier.league_id
+WHERE league.queue_type <> 201
+AND random_games_played > 0
+AND random_games_played > COALESCE(protoss_games_played, 0)
+AND random_games_played > COALESCE(zerg_games_played, 0)
+AND random_games_played > COALESCE(terran_games_played, 0)
+GROUP BY league.queue_type, league.team_type, team_member.player_character_id
+ON CONFLICT(player_character_id, COALESCE(race, -32768), queue_type, team_type) DO UPDATE SET
+rating_max=excluded.rating_max,
+league_max=excluded.league_max,
+games_played=excluded.games_played
+WHERE player_character_stats.games_played<>excluded.games_played;
+
 SET work_mem = '4MB';

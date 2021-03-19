@@ -29,18 +29,26 @@ public class PlayerCharacterStatsDAO
 
     private static final Logger LOG = LoggerFactory.getLogger(PlayerCharacterStatsDAO.class);
 
-    public static final String CHARACTER_FILTER =
-        "WITH team_filter AS "
-        + "("
-            + "SELECT DISTINCT team_id FROM team_state WHERE \"timestamp\" > :updatedMin"
-        + "), "
-        + "player_character_filter AS"
+    public static final String CHARACTER_RACIAL_FILTER_TEMPLATE =
+        "WITH player_character_filter AS"
         + "("
             + "SELECT DISTINCT team_member.player_character_id "
-            + "FROM team_filter "
-            + "INNER JOIN team ON team_filter.team_id = team.id "
-            + "INNER JOIN team_member ON team.id = team_member.team_id"
+            + "FROM team_member "
+            + "WHERE %2$s_games_played > 0"
         + ") ";
+    public static final String RECENT_CHARACTER_FILTER_TEMPLATE =
+        "WITH player_character_filter AS"
+        + "("
+            + "SELECT DISTINCT team_member.player_character_id "
+            + "FROM team_state "
+            + "INNER JOIN team_member USING(team_id) "
+            + "WHERE team_state.\"timestamp\" > :updatedMin "
+            + "%1$s"
+        + ") ";
+    public static final String RECENT_CHARACTER_FILTER = String.format(RECENT_CHARACTER_FILTER_TEMPLATE, "");
+    public static final String RECENT_CHARACTER_RACIAL_FILTER_TEMPLATE = String.format(
+        RECENT_CHARACTER_FILTER_TEMPLATE,
+        "AND team_member.%2$s_games_played > 0 ");
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START =
         "INSERT INTO player_character_stats "
         + "(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played) "
@@ -51,7 +59,7 @@ public class PlayerCharacterStatsDAO
         + "INNER JOIN team ON team_member.team_id=team.id "
         + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
         + "INNER JOIN league ON league.id = league_tier.league_id ";
-    public static final String CALCULATE_RECENT_PLAYER_CHARACTER_STATS_TEMPLATE_END =
+    public static final String CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END =
         "FROM player_character_filter "
         + "INNER JOIN team_member USING(player_character_id) "
         + "INNER JOIN team ON team_member.team_id = team.id "
@@ -82,38 +90,35 @@ public class PlayerCharacterStatsDAO
     public static final String CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_QUERY =
         String.format(CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE + MERGE_TEMPLATE, "NULL", CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END);
     public static final String CALCULATE_RECENT_PLAYER_CHARACTER_RACELESS_STATS_QUERY =
-        String.format(CHARACTER_FILTER + CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE,
-            "NULL",
-            CALCULATE_RECENT_PLAYER_CHARACTER_STATS_TEMPLATE_END);
+        String.format(
+            RECENT_CHARACTER_FILTER + CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE,
+            "NULL", CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END
+        );
     public static final String CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACELESS_STATS_QUERY =
-        String.format(CHARACTER_FILTER + CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE + MERGE_TEMPLATE,
-            "NULL",
-            CALCULATE_RECENT_PLAYER_CHARACTER_STATS_TEMPLATE_END);
+        String.format(
+            RECENT_CHARACTER_FILTER + CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE + MERGE_TEMPLATE,
+            "NULL", CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END
+        );
 
     public static final String CALCULATE_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
-        CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
+        CHARACTER_RACIAL_FILTER_TEMPLATE
+        + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
         + "SUM(%2$s_games_played) "
-        + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END
+        + CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END
         + "WHERE "
         + "%2$s_games_played > 0 "
-        + "AND ("
-            + "%2$s_games_played::decimal / "
-            + "(team.wins + team.losses + team.ties) "
-        + ") > 0.9::decimal "
+        + "%3$s "
         + CALCULATE_PLAYER_CHARACTER_STATS_GROUP;
     public static final String CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
         CALCULATE_PLAYER_CHARACTER_RACE_STATS_TEMPLATE + MERGE_TEMPLATE;
     public static final String CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
-        CHARACTER_FILTER
+        RECENT_CHARACTER_RACIAL_FILTER_TEMPLATE
         + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
         + "SUM(%2$s_games_played) "
-        + CALCULATE_RECENT_PLAYER_CHARACTER_STATS_TEMPLATE_END
+        + CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END
         + "WHERE "
         + "%2$s_games_played > 0 "
-        + "AND ("
-        + "%2$s_games_played::decimal / "
-        + "(team.wins + team.losses + team.ties) "
-        + ") > 0.9::decimal "
+        + "%3$s "
         + CALCULATE_PLAYER_CHARACTER_STATS_GROUP;
     public static final String CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
         CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE + MERGE_TEMPLATE;
@@ -170,11 +175,25 @@ public class PlayerCharacterStatsDAO
             (
                 query,
                 conversionService.convert(race, Integer.class),
-                race.getName().toLowerCase()
+                race.getName().toLowerCase(),
+                getRaceTeamFilter(race)
             );
             queries.put(race, q);
         }
         return Collections.unmodifiableMap(queries);
+    }
+
+    private static String getRaceTeamFilter(Race race)
+    {
+        StringBuilder sb = new StringBuilder();
+        Race[] otherRaces = Arrays.stream(Race.values()).filter(r->r!=race).toArray(Race[]::new);
+        for(Race otherRace : otherRaces) sb
+            .append("AND ")
+            .append(race.getName().toLowerCase())
+            .append("_games_played > COALESCE(")
+            .append(otherRace.getName().toLowerCase())
+            .append("_games_played, 0) ");
+        return sb.toString();
     }
 
     private static void initMappers(ConversionService conversionService)
