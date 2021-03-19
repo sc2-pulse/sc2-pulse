@@ -58,6 +58,9 @@ public class PlayerCharacterStatsDAOIT
     @Autowired
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
+    @Autowired
+    private TeamStateDAO teamStateDAO;
+
     @BeforeEach
     public void beforeEach(@Autowired DataSource dataSource)
     throws SQLException
@@ -170,6 +173,7 @@ public class PlayerCharacterStatsDAOIT
             100, 0, 0, 0
         );
         teamDAO.create(team);
+        teamStateDAO.saveState(TeamState.of(team));
         TeamMember member;
         if (race != null)
         {
