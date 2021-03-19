@@ -6,8 +6,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -58,9 +58,9 @@ public class PlayerCharacterStatsDAOIT
     @Autowired
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
-    @BeforeAll
-    public static void beforeAll(@Autowired DataSource dataSource)
-        throws SQLException
+    @BeforeEach
+    public void beforeEach(@Autowired DataSource dataSource)
+    throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
         {
@@ -69,9 +69,9 @@ public class PlayerCharacterStatsDAOIT
         }
     }
 
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
-        throws SQLException
+    @AfterEach
+    public void afterEach(@Autowired DataSource dataSource)
+    throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
         {
@@ -80,7 +80,28 @@ public class PlayerCharacterStatsDAOIT
     }
 
     @Test
-    public void testStatsCalculation()
+    public void testGlobalStatsCalculation()
+    {
+        PlayerCharacter character = setupStats();
+        playerCharacterStatsDAO.calculate();
+        playerCharacterStatsDAO.mergeCalculate(); //just for testing, not actually required
+        Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats =
+            playerCharacterStatsDAO.findGlobalMap(character.getId());
+        verifyStats(character, stats);
+    }
+
+    @Test
+    public void testRecentStatsCalculation()
+    {
+        PlayerCharacter character = setupStats();
+        playerCharacterStatsDAO.calculate(OffsetDateTime.now().minusHours(1));
+        playerCharacterStatsDAO.mergeCalculate(OffsetDateTime.now().minusHours(1)); //just for testing, not actually required
+        Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats =
+            playerCharacterStatsDAO.findGlobalMap(character.getId());
+        verifyStats(character, stats);
+    }
+
+    public PlayerCharacter setupStats()
     {
         Region region = Region.EU;
         Season season1 = new Season(null, 1, region, 2020, 1, LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));
@@ -109,13 +130,11 @@ public class PlayerCharacterStatsDAOIT
         createTeam(Race.ZERG, region, diamond1, BigInteger.valueOf(10002L), 3L, character);
         createTeam(Race.ZERG, region, gold2, BigInteger.valueOf(10003L), 2L, character);
         createTeam(null, region, diamond1, BigInteger.valueOf(10004L), 2L, character);
-        playerCharacterStatsDAO.calculate();
-        playerCharacterStatsDAO.mergeCalculate(); //just for testing, not actually required
-        playerCharacterStatsDAO.calculate(OffsetDateTime.now().minusHours(1));
-        playerCharacterStatsDAO.mergeCalculate(OffsetDateTime.now().minusHours(1)); //just for testing, not actually required
-        Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats =
-            playerCharacterStatsDAO.findGlobalMap(character.getId());
+        return character;
+    }
 
+    private void verifyStats(PlayerCharacter character, Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats)
+    {
         assertNull(stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.RANDOM));
 
         PlayerCharacterStats terranStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.TERRAN);
@@ -129,7 +148,6 @@ public class PlayerCharacterStatsDAOIT
 
         PlayerCharacterStats globalStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(null);
         verifyStats(globalStats, character, null, BaseLeague.LeagueType.DIAMOND, 3L, 595);
-
     }
 
     private void createTeam
