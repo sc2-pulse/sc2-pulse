@@ -15,7 +15,7 @@ extends BasePlayerCharacter
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     private Long id;
 
@@ -50,6 +50,12 @@ implements java.io.Serializable
             bCharacter.getRealm(),
             bCharacter.getName()
         );
+    }
+
+    public static boolean shouldUpdate(PlayerCharacter existingChar, PlayerCharacter newChar)
+    {
+        return !existingChar.getName().equals(newChar.getName())
+            || !existingChar.getAccountId().equals(newChar.getAccountId());
     }
 
     @Override

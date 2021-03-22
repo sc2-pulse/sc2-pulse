@@ -7,6 +7,9 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import org.junit.jupiter.api.Test;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class PlayerCharacterTest
 {
 
@@ -24,6 +27,17 @@ public class PlayerCharacterTest
         };
 
         TestUtil.testUniqueness(character, equalsCharacter, notEqualCharacters);
+    }
+
+    @Test
+    public void testShouldUpdate()
+    {
+        PlayerCharacter character = new PlayerCharacter(0L, 0L, Region.EU, 0L, 0, "Name");
+        PlayerCharacter equalCharacter = new PlayerCharacter(1L, 0L, Region.US, 1L, 1, "Name");
+        PlayerCharacter notEqualCharacter = new PlayerCharacter(0L, 1L, Region.EU, 0L, 0, "DiffName");
+
+        assertFalse(PlayerCharacter.shouldUpdate(character, equalCharacter));
+        assertTrue(PlayerCharacter.shouldUpdate(character, notEqualCharacter));
     }
 
 }

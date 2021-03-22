@@ -9,6 +9,9 @@ import org.junit.jupiter.api.Test;
 
 import java.math.BigInteger;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 public class TeamTest
 {
 
@@ -27,6 +30,19 @@ public class TeamTest
         };
 
         TestUtil.testUniqueness(team, equalTeam, notEqualTeams);
+    }
+
+    @Test
+    public void testShouldUpdate()
+    {
+        Team team = new Team(0L, Region.EU, 0, 0, BigInteger.valueOf(0), 0L, 0, 0, 0, 0);
+        Team equalTeam = new Team(1L, Region.US, 0, 1, BigInteger.valueOf(1), 1L, 0, 0, 0, 1);
+        Team notEqualTeam1 = new Team(0L, Region.EU, 1, 0, BigInteger.valueOf(0), 0L, 0, 0, 0, 0);
+        Team notEqualTeam2 = new Team(0L, Region.EU, 0, 0, BigInteger.valueOf(0), 0L, 1, 1, 1, 0);
+
+        assertFalse(Team.shouldUpdate(team, equalTeam));
+        assertTrue(Team.shouldUpdate(team, notEqualTeam1));
+        assertTrue(Team.shouldUpdate(team, notEqualTeam2));
     }
 
 }
