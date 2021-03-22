@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -36,6 +37,7 @@ public class AccountDAO
     private final ConversionService conversionService;
 
     private static RowMapper<Account> STD_ROW_MAPPER;
+    private static ResultSetExtractor<Account> STD_EXTRACTOR;
 
     @Autowired
     public AccountDAO
@@ -57,11 +59,22 @@ public class AccountDAO
             conversionService.convert(rs.getInt("account.partition"), Partition.class),
             rs.getString("account.battle_tag")
         );
+
+        if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
+        {
+            if(!rs.next()) return null;
+            return getStdRowMapper().mapRow(rs, 0);
+        };
     }
 
     public static RowMapper<Account> getStdRowMapper()
     {
         return STD_ROW_MAPPER;
+    }
+
+    public static ResultSetExtractor<Account> getStdExtractor()
+    {
+        return STD_EXTRACTOR;
     }
 
     public Account create(Account account)
