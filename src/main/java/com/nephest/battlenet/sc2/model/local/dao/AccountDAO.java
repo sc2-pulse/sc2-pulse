@@ -16,6 +16,8 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.util.Optional;
+
 @Repository
 public class AccountDAO
 {
@@ -32,6 +34,12 @@ public class AccountDAO
         + " "
         + "ON CONFLICT(partition, battle_tag) DO UPDATE SET "
         + "partition=excluded.partition";
+
+    private static final String FIND_BY_PARTITION_AND_BATTLE_TAG =
+        "SELECT " + STD_SELECT
+        + "FROM account "
+        + "WHERE partition = :partition "
+        + "AND battle_tag = :battleTag";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -93,6 +101,14 @@ public class AccountDAO
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
         account.setId(keyHolder.getKey().longValue());
         return account;
+    }
+
+    public Optional<Account> find(Partition partition, String battleTag)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("partition", conversionService.convert(partition, Integer.class))
+            .addValue("battleTag", battleTag);
+        return Optional.ofNullable(template.query(FIND_BY_PARTITION_AND_BATTLE_TAG, params, STD_EXTRACTOR));
     }
 
     private MapSqlParameterSource createParameterSource(Account account)
