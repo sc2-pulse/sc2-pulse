@@ -191,9 +191,9 @@ public class AlternativeLadderService
             //skip new players for now
             if(playerCharacter == null) continue;
 
-            if(!playerCharacter.getName().startsWith(bMember.getName()))
+            if(!playerCharacter.getName().equals(bMember.getName()))
             {
-                playerCharacter.setName(bMember.getName() + "#1");
+                playerCharacter.setName(bMember.getName());
                 characters.add(playerCharacter);
             }
 
