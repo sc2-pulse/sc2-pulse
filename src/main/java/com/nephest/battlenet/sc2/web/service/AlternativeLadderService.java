@@ -218,7 +218,7 @@ public class AlternativeLadderService
         if(characters.isEmpty()) return;
 
         characters.sort(Comparator.comparing(PlayerCharacter::getBattlenetId));
-        for(PlayerCharacter c : characters) playerCharacterDao.merge(c);
+        for(PlayerCharacter c : characters) playerCharacterDao.merge(c, true);
     }
 
     public Division getOrCreate1v1Division

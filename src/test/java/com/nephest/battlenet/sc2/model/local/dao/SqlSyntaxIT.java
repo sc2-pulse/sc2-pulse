@@ -189,12 +189,20 @@ public class SqlSyntaxIT
         assertEquals(3, foundTeam.getTies());
         assertEquals(3, foundTeam.getPoints());
 
-        accountDAO.create(new Account(null, Partition.GLOBAL, "tag#1"));
+        Account createdAccount = accountDAO.create(new Account(null, Partition.GLOBAL, "newtag#2"));
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "newtag#2"));
+        assertEquals(createdAccount.getId(), account.getId());
         assertEquals("newtag#2", account.getBattleTag());
         assertEquals(account, accountDAO.find(Partition.GLOBAL, "newtag#2").get());
 
-        playerCharacterDAO.create(new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1"));
+        PlayerCharacter createdCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1");
+        playerCharacterDAO.create(createdCharacter);
+        PlayerCharacter mergedCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#2");
+        playerCharacterDAO.merge(mergedCharacter);
+        assertEquals(playerCharacterDAO.find(createdCharacter.getRegion(), createdCharacter.getRealm(), createdCharacter.getBattlenetId())
+            .get().getName(), mergedCharacter.getName());
+        assertEquals(createdCharacter.getId(), mergedCharacter.getId());
+
         PlayerCharacter character = playerCharacterDAO
             .merge(new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 2, "newname#2"));
         assertEquals(2, character.getRealm());
@@ -212,6 +220,10 @@ public class SqlSyntaxIT
 
         assertEquals(zergTeam.getId(),
             teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
+        zergTeam.setWins(zergTeam.getWins() + 1);
+        teamDAO.mergeByFavoriteRace(zergTeam, season.getBattlenetId(), character, Race.ZERG);
+        assertEquals(zergTeam.getWins(), teamDAO.find1v1TeamByFavoriteRace(season.getBattlenetId(), character, Race.ZERG)
+            .get().getKey().getWins());
         assertEquals(team.getId(),teamDAO.find1v1TeamByFavoriteRace(40, character, Race.TERRAN).get().getKey().getId());
         assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.PROTOSS).isEmpty());
 

@@ -137,7 +137,24 @@ public class PlayerCharacterDAO
         return character;
     }
 
+    public PlayerCharacter merge(PlayerCharacter character, boolean force)
+    {
+        if(force) return doMerge(character);
+
+        PlayerCharacter found =
+            find(character.getRegion(), character.getRealm(), character.getBattlenetId()).orElse(null);
+        if(found == null || PlayerCharacter.shouldUpdate(found, character)) return doMerge(character);
+
+        character.setId(found.getId());
+        return character;
+    }
+
     public PlayerCharacter merge(PlayerCharacter character)
+    {
+        return merge(character, false);
+    }
+
+    private PlayerCharacter doMerge(PlayerCharacter character)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(character);

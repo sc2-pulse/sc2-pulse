@@ -234,7 +234,7 @@ public class AccountFollowingIT
             + "\"account\":{\"partition\":\"GLOBAL\",\"battleTag\":\"refaccount#123\"}},"
             + "{\"terranGamesPlayed\":0,\"protossGamesPlayed\":0,\"zergGamesPlayed\":100,"
             + "\"randomGamesPlayed\":0,\"character\":{\"realm\":1,\"name\":\"memberchar#123\",\"id\":283,"
-            + "\"accountId\":283,\"region\":\"EU\",\"battlenetId\":9997},"
+            + "\"accountId\":282,\"region\":\"EU\",\"battlenetId\":9997},"
             + "\"account\":{\"partition\":\"GLOBAL\",\"battleTag\":\"memberacc#123\"}}]},"
 
             + "{\"rating\":99,\"wins\":100,\"losses\":0,\"id\":73,"

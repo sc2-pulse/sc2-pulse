@@ -252,6 +252,21 @@ public class TeamDAO
         return null;
     }
 
+    //this method is intended to be used with legacy teams
+    public Team mergeByFavoriteRace
+    (Team team, int season, PlayerCharacter character, Race race)
+    {
+        Map.Entry<Team, List<TeamMember>> foundTeam = find1v1TeamByFavoriteRace(season, character, race).orElse(null);
+
+        if(foundTeam == null) return merge(team);
+        //legacy team can have invalid natural id
+        team.setId(foundTeam.getKey().getId());
+        if(foundTeam.getKey().getBattlenetId() != null) team.setBattlenetId(foundTeam.getKey().getBattlenetId());
+        if(Team.shouldUpdate(foundTeam.getKey(), team)) return mergeById(team, false);
+
+        return team;
+    }
+
     public Optional<Team> findById(long id)
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);

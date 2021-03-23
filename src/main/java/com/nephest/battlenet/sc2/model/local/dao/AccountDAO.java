@@ -96,6 +96,13 @@ public class AccountDAO
 
     public Account merge(Account account)
     {
+        Account result = find(account.getPartition(), account.getBattleTag()).orElseGet(()->doMerge(account));
+        account.setId(result.getId());
+        return account;
+    }
+
+    private Account doMerge(Account account)
+    {
         KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(account);
         template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
