@@ -17,7 +17,7 @@ public final class DAOUtils
     public static final ResultSetExtractor<Long> LONG_EXTRACTOR =
     (rs)->
     {
-        rs.next();
+        if(!rs.next()) return null;
         long val = rs.getLong(1);
         return rs.wasNull() ? null : val;
     };
@@ -25,7 +25,7 @@ public final class DAOUtils
     public static final ResultSetExtractor<Integer> INT_EXTRACTOR =
     (rs)->
     {
-        rs.next();
+        if(!rs.next()) return null;
         int val = rs.getInt(1);
         return rs.wasNull() ? null : val;
     };
