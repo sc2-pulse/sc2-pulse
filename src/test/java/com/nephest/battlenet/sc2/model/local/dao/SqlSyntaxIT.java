@@ -192,7 +192,6 @@ public class SqlSyntaxIT
         accountDAO.create(new Account(null, Partition.GLOBAL, "tag#1"));
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "newtag#2"));
         assertEquals("newtag#2", account.getBattleTag());
-        accountDAO.removeExpiredByPrivacy();
 
         playerCharacterDAO.create(new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1"));
         PlayerCharacter character = playerCharacterDAO

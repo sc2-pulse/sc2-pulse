@@ -7,7 +7,6 @@ CREATE TABLE "account"
     "id" BIGSERIAL,
     "partition" SMALLINT NOT NULL,
     "battle_tag" VARCHAR(30) NOT NULL,
-    "updated" TIMESTAMP WITH TIME ZONE NOT NULL,
 
     PRIMARY KEY ("id"),
 
@@ -16,7 +15,6 @@ CREATE TABLE "account"
 
 );
 
-CREATE INDEX "ix_account_updated" ON "account"("updated");
 CREATE INDEX "ix_account_battle_tag" ON "account"(LOWER("battle_tag") text_pattern_ops);
 
 CREATE TABLE "player_character"

@@ -5,6 +5,9 @@
 VACUUM(ANALYZE);
 SET work_mem = '128MB';
 
+ALTER TABLE "account" DROP COLUMN "updated";
+VACUUM(FULL) "account";
+
 DROP INDEX "ix_player_character_stats_calculation";
 DELETE FROM "player_character_stats" WHERE "season_id" IS NOT NULL;
 ALTER TABLE "player_character_stats"

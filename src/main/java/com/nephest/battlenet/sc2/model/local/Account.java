@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -9,7 +9,6 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
 
 import javax.validation.constraints.NotNull;
-import java.time.OffsetDateTime;
 import java.util.Objects;
 
 public class Account
@@ -17,15 +16,12 @@ extends BaseAccount
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     private Long id;
 
     @NotNull
     private Partition partition;
-
-    @NotNull
-    private OffsetDateTime updated = OffsetDateTime.now();
 
     public Account(){}
 
@@ -87,16 +83,6 @@ implements java.io.Serializable
     public void setPartition(Partition partition)
     {
         this.partition = partition;
-    }
-
-    public void setUpdated(OffsetDateTime updated)
-    {
-        this.updated = updated;
-    }
-
-    public OffsetDateTime getUpdated()
-    {
-        return updated;
     }
 
 }

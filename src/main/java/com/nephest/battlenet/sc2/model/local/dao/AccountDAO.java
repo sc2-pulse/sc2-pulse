@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -15,28 +15,22 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.util.Collections;
-
 @Repository
 public class AccountDAO
 {
     public static final String STD_SELECT =
         "account.id AS \"account.id\", "
         + "account.partition AS \"account.partition\", "
-        + "account.battle_tag AS \"account.battle_tag\", "
-        + "account.updated AS \"account.updated\" ";
+        + "account.battle_tag AS \"account.battle_tag\" ";
 
     private static final String CREATE_QUERY = "INSERT INTO account "
-        + "(partition, battle_tag, updated) "
-        + "VALUES (:partition, :battleTag, :updated)";
+        + "(partition, battle_tag) "
+        + "VALUES (:partition, :battleTag)";
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
         + "ON CONFLICT(partition, battle_tag) DO UPDATE SET "
-        + "updated=excluded.updated";
-
-    private static final String REMOVE_EXPIRED_PRIVACY_QUERY =
-        "DELETE FROM account WHERE updated < NOW() - INTERVAL '30 DAYS'";
+        + "partition=excluded.partition";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -92,13 +86,7 @@ public class AccountDAO
     {
         return new MapSqlParameterSource()
             .addValue("partition", conversionService.convert(account.getPartition(), Integer.class))
-            .addValue("battleTag", account.getBattleTag())
-            .addValue("updated", account.getUpdated());
-    }
-
-    public void removeExpiredByPrivacy()
-    {
-        template.update(REMOVE_EXPIRED_PRIVACY_QUERY, Collections.emptyMap());
+            .addValue("battleTag", account.getBattleTag());
     }
 
 }
