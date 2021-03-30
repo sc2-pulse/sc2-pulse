@@ -494,25 +494,16 @@ public class StatsService
         BaseLocalTeamMember member = new BaseLocalTeamMember();
         for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
             member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
-        Map.Entry<Team, List<TeamMember>> teamEntry = teamDao
-            .find1v1TeamByFavoriteRace(season.getBattlenetId(), playerCharacter, member.getFavoriteRace()).orElse(null);
-        if(teamEntry != null)
-        {
-            Team team = teamEntry.getKey();
-            boolean wasAlternative = team.getBattlenetId() == null;
-
-            team.setLeagueTierId(tier.getId());
-            team.setDivisionId(division.getId());
-            team.setBattlenetId(bTeam.getId());
-            team.setRating(bTeam.getRating());
-            team.setPoints(bTeam.getPoints());
-            team.setWins(bTeam.getWins());
-            team.setLosses(bTeam.getLosses());
-            team.setTies(bTeam.getTies());
-            return wasAlternative ? teamDao.mergeById(team, forceUpdate) : teamDao.merge(team);
-        }
-
-        return teamDao.merge(Team.of(season, tier, division,bTeam));
+        Team team = new Team
+        (
+            null,
+            season.getRegion(),
+            tier.getId(),
+            division.getId(),
+            bTeam.getId(),
+            bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(), bTeam.getPoints()
+        );
+        return teamDao.mergeByFavoriteRace(team, season.getBattlenetId(), playerCharacter, member.getFavoriteRace());
     }
 
     //cross field validation
