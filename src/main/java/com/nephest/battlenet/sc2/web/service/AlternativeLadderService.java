@@ -178,6 +178,7 @@ public class AlternativeLadderService
         Division division = getOrCreate1v1Division(season, ladder.getLeagueType(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
         Set<TeamState> states = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
+        List<PlayerCharacter> characters = new ArrayList<>(ladder.getLadderTeams().length);
         for(BlizzardProfileTeam bTeam : ladder.getLadderTeams())
         {
             Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
@@ -193,7 +194,7 @@ public class AlternativeLadderService
             if(!playerCharacter.getName().startsWith(bMember.getName()))
             {
                 playerCharacter.setName(bMember.getName() + "#1");
-                playerCharacterDao.merge(playerCharacter);
+                characters.add(playerCharacter);
             }
 
             Map.Entry<Team, List<TeamMember>> teamEntry =
@@ -205,9 +206,19 @@ public class AlternativeLadderService
             members.add(member);
             states.add(TeamState.of(teamEntry.getKey()));
         }
+        savePlayerCharacters(characters);
         if(members.size() > 0) teamMemberDao.merge(members.toArray(new TeamMember[0]));
         teamStateDAO.saveState(states.toArray(TeamState[]::new));
         LOG.debug("Ladder saved: {} {}", id.getT1(), id.getT3());
+    }
+
+    //this ensures the consistent order for concurrent entities
+    private void savePlayerCharacters(List<PlayerCharacter> characters)
+    {
+        if(characters.isEmpty()) return;
+
+        characters.sort(Comparator.comparing(PlayerCharacter::getBattlenetId));
+        for(PlayerCharacter c : characters) playerCharacterDao.merge(c);
     }
 
     public Division getOrCreate1v1Division
