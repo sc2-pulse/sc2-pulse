@@ -48,6 +48,7 @@ public class AlternativeLadderService
     private final DivisionDAO divisionDao;
     private final TeamDAO teamDao;
     private final TeamStateDAO teamStateDAO;
+    private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDao;
     private final TeamMemberDAO teamMemberDao;
     private final Validator validator;
@@ -61,6 +62,7 @@ public class AlternativeLadderService
         DivisionDAO divisionDao,
         TeamDAO teamDao,
         TeamStateDAO teamStateDAO,
+        AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDao,
         TeamMemberDAO teamMemberDao,
         Validator validator
@@ -72,6 +74,7 @@ public class AlternativeLadderService
         this.divisionDao = divisionDao;
         this.teamDao = teamDao;
         this.teamStateDAO = teamStateDAO;
+        this.accountDAO = accountDAO;
         this.playerCharacterDao = playerCharacterDao;
         this.teamMemberDao = teamMemberDao;
         this.validator = validator;
