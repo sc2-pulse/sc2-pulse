@@ -122,9 +122,9 @@ class Util
         return str + Array(maxLen - str.length).fill(tail).join("");
     }
 
-    static needToUnmaskName(name, proNickname)
+    static needToUnmaskName(name, proNickname, battleTag)
     {
-        return proNickname != null || Util.BARCODE_REGEX.test(name);
+        return proNickname != null || (Util.BARCODE_REGEX.test(name) && !Util.isFakeBattleTag(battleTag));
     }
 
     static unmaskName(member)
@@ -134,7 +134,7 @@ class Util
             return {maskedName: maskedName, unmaskedName: member.proNickname, ...(member.proTeam != null && {unmaskedTeam: member.proTeam})};
 
         return {maskedName: maskedName,
-            unmaskedName: Util.needToUnmaskName(maskedName, member.proNickname)
+            unmaskedName: Util.needToUnmaskName(maskedName, member.proNickname, member.account.battleTag)
                 ? member.account.battleTag.substring(0, member.account.battleTag.indexOf("#"))
                 : maskedName
         };
@@ -143,6 +143,11 @@ class Util
     static isUndefinedRank(rank)
     {
         return rank == SC2Restful.UNDEFINED_RANK;
+    }
+
+    static isFakeBattleTag(btag)
+    {
+        return btag.startsWith("f#");
     }
 
     static escapeHtml(string)

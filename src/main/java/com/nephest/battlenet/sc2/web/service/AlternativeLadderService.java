@@ -22,6 +22,8 @@ import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
+import reactor.util.function.Tuples;
 
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -187,6 +189,7 @@ public class AlternativeLadderService
         Set<TeamMember> members = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
         Set<TeamState> states = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
         List<PlayerCharacter> characters = new ArrayList<>(ladder.getLadderTeams().length);
+        List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams = new ArrayList<>();
         for(BlizzardProfileTeam bTeam : ladder.getLadderTeams())
         {
             Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
@@ -196,8 +199,11 @@ public class AlternativeLadderService
             BlizzardProfileTeamMember bMember = bTeam.getTeamMembers()[0];
             PlayerCharacter playerCharacter = playerCharacterDao.find(id.getT1(), bMember.getRealm(), bMember.getId())
                 .orElse(null);
-            //skip new players for now
-            if(playerCharacter == null) continue;
+
+            if(playerCharacter == null) {
+                addNewAlternativeCharacter(season, division, bTeam, newTeams);
+                continue;
+            }
 
             if(!playerCharacter.getName().equals(bMember.getName()))
             {
@@ -214,10 +220,58 @@ public class AlternativeLadderService
             members.add(member);
             states.add(TeamState.of(teamEntry.getKey()));
         }
+        saveNewCharacterData(newTeams, members, states);
         savePlayerCharacters(characters);
         if(members.size() > 0) teamMemberDao.merge(members.toArray(new TeamMember[0]));
         teamStateDAO.saveState(states.toArray(TeamState[]::new));
         LOG.debug("Ladder saved: {} {}", id.getT1(), id.getT3());
+    }
+
+
+    // This creates fake accounts for new alternative characters. The main update method will override them with the
+    // real ones
+    private void addNewAlternativeCharacter
+    (
+        Season season,
+        Division division,
+        BlizzardProfileTeam bTeam,
+        List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams
+    )
+    {
+        String fakeBtag = "f#"
+            + conversionService.convert(season.getRegion(), Integer.class)
+            + bTeam.getTeamMembers()[0].getRealm()
+            + bTeam.getTeamMembers()[0].getId();
+        Account fakeAccount = new Account(null, Partition.of(season.getRegion()), fakeBtag);
+        PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bTeam.getTeamMembers()[0]);
+        Team team = new Team(null, season.getRegion(), division.getTierId(), division.getId(), null,
+            bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(), bTeam.getPoints());
+        newTeams.add(Tuples.of(fakeAccount, character, team, bTeam.getTeamMembers()[0].getFavoriteRace()));
+    }
+
+    //this ensures the consistent order for concurrent entities(accounts and players)
+    private void saveNewCharacterData
+    (List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams, Set<TeamMember> teamMembers, Set<TeamState> states)
+    {
+        if(newTeams.size() == 0) return;
+
+        newTeams.sort(Comparator.comparing(a -> a.getT1().getBattleTag()));
+        for(Tuple4<Account, PlayerCharacter, Team, Race> curMembers : newTeams) accountDAO.merge(curMembers.getT1());
+
+        newTeams.sort(Comparator.comparing(a -> a.getT2().getBattlenetId()));
+        for(Tuple4<Account, PlayerCharacter, Team, Race> curNewTeam : newTeams)
+        {
+            Account account = curNewTeam.getT1();
+
+            curNewTeam.getT2().setAccountId(account.getId());
+            PlayerCharacter character = playerCharacterDao.merge(curNewTeam.getT2());
+
+            Team team = teamDao.merge(curNewTeam.getT3());
+            TeamMember teamMember = new TeamMember(team.getId(), character.getId(), null, null, null, null);
+            teamMember.setGamesPlayed(curNewTeam.getT4(), team.getWins() + team.getLosses() + team.getTies());
+            teamMembers.add(teamMember);
+            states.add(TeamState.of(team));
+        }
     }
 
     //this ensures the consistent order for concurrent entities

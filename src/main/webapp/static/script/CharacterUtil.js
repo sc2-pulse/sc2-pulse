@@ -103,7 +103,12 @@ class CharacterUtil
             profileLinkElement.setAttribute("href", profileLink);
             profileLinkElement.parentElement.classList.remove("d-none");
         }
-        document.querySelector("#link-battletag span").textContent = account.battleTag;
+        if(Util.isFakeBattleTag(account.battleTag)) {
+            document.querySelector("#link-battletag").classList.add("d-none");
+        } else {
+            document.querySelector("#link-battletag").classList.remove("d-none");
+            document.querySelector("#link-battletag span").textContent = account.battleTag;
+        }
         CharacterUtil.updateCharacterProInfo(commonCharacter);
     }
 
@@ -151,7 +156,7 @@ class CharacterUtil
         let charNameAdditional;
         const hashIx = member.character.name.indexOf("#");
         const nameNoHash = member.character.name.substring(0, hashIx);
-        if(!Util.needToUnmaskName(nameNoHash, member.proNickname))
+        if(!Util.needToUnmaskName(nameNoHash, member.proNickname, member.account.battleTag))
         {
             charName = nameNoHash;
             charNameAdditional = member.character.name.substring(hashIx);
@@ -631,6 +636,7 @@ class CharacterUtil
             const bTag = document.createElement("span");
             bTag.classList.add("c-divider", "battle-tag");
             bTag.textContent = character.members.account.battleTag;
+            if(Util.isFakeBattleTag(character.members.account.battleTag)) bTag.classList.add("d-none");
             mInfo.getElementsByClassName("player-link-container")[0].appendChild(bTag);
             mRow.appendChild(mInfo);
             membersCell.appendChild(mRow);
