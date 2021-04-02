@@ -209,12 +209,12 @@ th.hoverable span
   content: ")";
 }
 
-.race-percentage:after
+.race-percentage ~ .race-percentage::before
 {
     content: "/";
 }
 
-.c-divider:after
+.c-divider ~ .c-divider::before
 {
     content: " | ";
 }
@@ -224,12 +224,6 @@ th.hoverable span
     display: inline-block;
     border-radius: 1em;
     border: 0.15em solid gray;
-}
-
-.race-percentage:last-child:after,
-.c-divider:last-child:after
-{
-    content: "";
 }
 
 .c-dropdown:after
