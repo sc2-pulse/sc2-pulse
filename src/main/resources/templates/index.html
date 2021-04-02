@@ -58,12 +58,11 @@
             </nav>
             <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}"  alt="Pulse"/><span> SC2 Pulse</span></a></h1>
             <th:div th:if="${not @statsService.getAlternativeRegions().isEmpty()}" class="container text-danger">
-                <span class="align-middle">Broken API mode</span>
+                <span th:text="'Broken API mode ' + ${#strings.toString(@statsService.getAlternativeRegions())}">Broken API mode</span>
                 <img
                         th:src="@{/static/icon/misc/info.svg}"
                         alt="1v1 only, no tiers, some info may be missing"
-                        th:title="${'1v1 only, no tiers, some info may be missing. Affected regions: '
-                            + #strings.toString(@statsService.getAlternativeRegions())}"
+                        title="1v1 only, no tiers, some info may be missing"
                         data-toggle="tooltip"
                 />
             </th:div>
