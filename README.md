@@ -102,7 +102,6 @@ so you can have a situation when KR region uses the alternative route, while oth
 Alternative update limitations:
 * 1v1 only
 * no league tiers
-* no new players
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
 ## Contributing
