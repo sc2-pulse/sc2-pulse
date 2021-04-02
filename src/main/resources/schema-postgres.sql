@@ -6,7 +6,7 @@ CREATE TABLE "account"
 
     "id" BIGSERIAL,
     "partition" SMALLINT NOT NULL,
-    "battle_tag" VARCHAR(30) NOT NULL,
+    "battle_tag" TEXT NOT NULL,
 
     PRIMARY KEY ("id"),
 
@@ -25,7 +25,7 @@ CREATE TABLE "player_character"
     "battlenet_id" BIGINT NOT NULL,
     "region" SMALLINT NOT NULL,
     "realm" SMALLINT NOT NULL,
-    "name" VARCHAR(30) NOT NULL,
+    "name" TEXT NOT NULL,
 
     PRIMARY KEY ("id"),
 
@@ -280,10 +280,10 @@ CREATE TABLE "pro_player"
     "id" BIGSERIAL,
     "revealed_id" bytea NOT NULL,
     "aligulac_id" BIGINT,
-    "nickname" VARCHAR(50) NOT NULL,
-    "name" VARCHAR(50) NOT NULL,
+    "nickname" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
     "country" CHAR(2),
-    "team" VARCHAR(50),
+    "team" TEXT,
     "birthday" DATE,
     "earnings" INTEGER,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -301,7 +301,7 @@ CREATE TABLE "social_media_link"
 (
     "pro_player_id" BIGINT NOT NULL,
     "type" SMALLINT NOT NULL,
-    "url" VARCHAR(255) NOT NULL,
+    "url" TEXT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY("pro_player_id", "type"),
@@ -340,8 +340,8 @@ CREATE TABLE "pro_team"
 (
     "id" BIGSERIAL,
     "aligulac_id" BIGINT,
-    "name" VARCHAR(50) NOT NULL,
-    "short_name" VARCHAR(50),
+    "name" TEXT NOT NULL,
+    "short_name" TEXT,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY("id")
@@ -376,7 +376,7 @@ CREATE TABLE "match"
     "id" BIGSERIAL,
     "date" TIMESTAMP WITH TIME ZONE NOT NULL,
     "type" SMALLINT NOT NULL,
-    "map" VARCHAR(100) NOT NULL,
+    "map" TEXT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
