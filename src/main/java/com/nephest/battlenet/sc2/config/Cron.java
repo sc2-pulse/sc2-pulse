@@ -112,7 +112,6 @@ public class Cron
                         ? ALTERNATIVE_LEAGUES
                         : NORMAL_LEAGUES
             );
-            matchService.update();
         }
         catch(RuntimeException ex)
         {
