@@ -122,7 +122,7 @@ public class LadderSearchIndependentIT
             .create(new PlayerCharacter(null, acc2.getId(), region, 9997L, 1, "refchar3#123"));
         Team team1 = new Team
         (
-            null, region, bronze1.getTierId(), bronze1.getId(), BigInteger.valueOf(11111L),
+            null, region, QUEUE_TYPE, bronze1.getTierId(), bronze1.getId(), BigInteger.valueOf(11111L),
             100L, 100, 0, 0, 0
         );
         teamDAO.create(team1);
@@ -134,7 +134,7 @@ public class LadderSearchIndependentIT
         teamMemberDAO.create(member1);
         Team team2 = new Team
         (
-            null, region, bronze1.getTierId(), bronze1.getId(), BigInteger.valueOf(11112L),
+            null, region, QUEUE_TYPE, bronze1.getTierId(), bronze1.getId(), BigInteger.valueOf(11112L),
             101L, 100, 0, 0, 0
         );
         teamDAO.create(team2);
@@ -146,7 +146,7 @@ public class LadderSearchIndependentIT
         teamMemberDAO.create(member2);
         Team team3 = new Team
         (
-            null, region, bronze1.getTierId(), bronze1.getId(), BigInteger.valueOf(11113L),
+            null, region, QUEUE_TYPE, bronze1.getTierId(), bronze1.getId(), BigInteger.valueOf(11113L),
             102L, 100, 0, 0, 0
         );
         teamDAO.create(team3);
@@ -265,22 +265,22 @@ public class LadderSearchIndependentIT
 
         Team team1 = seasonGenerator.createTeam
         (
-            season1, bronze1, BigInteger.valueOf(10002L),
+            season1, QUEUE_TYPE, bronze1, BigInteger.valueOf(10002L),
             1L, 1, 2, 3, 4, characters
         );
         Team team2 = seasonGenerator.createTeam
         (
-            season1, bronze1, BigInteger.valueOf(10000L),
+            season1, QUEUE_TYPE, bronze1, BigInteger.valueOf(10000L),
             2L, 1, 2, 3, 4, characters
         );
         Team team3 = seasonGenerator.createTeam
         (
-            season2,  gold2, BigInteger.valueOf(10001L),
+            season2, QUEUE_TYPE, gold2, BigInteger.valueOf(10001L),
             3L, 1, 2, 3, 4, characters
         );
         Team team4 = seasonGenerator.createTeam
         (
-            season1, bronze1v1, BigInteger.valueOf(10003L),
+            season1, QUEUE_TYPE, bronze1v1, BigInteger.valueOf(10003L),
             0L, 1, 2, 3, 4, characters[0]
         );
 

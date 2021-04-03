@@ -71,7 +71,7 @@ public class LadderSearchDAO
         + "season.battlenet_id=:seasonId "
         + "AND season.region IN (:regions) "
         + "AND league.type IN (:leagueTypes) "
-        + "AND league.queue_type=:queueType "
+        + "AND team.queue_type=:queueType "
         + "AND league.team_type=:teamType ";
 
     private static final String LADDER_SEARCH_TEAM_FROM_WHERE =

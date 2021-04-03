@@ -38,6 +38,7 @@ public class TeamDAO
         + "team.division_id AS \"team.division_id\", "
         + "team.battlenet_id AS \"team.battlenet_id\", "
         + "team.region AS \"team.region\", "
+        + "team.queue_type AS \"team.queue_type\", "
         + "team.rating AS \"team.rating\", "
         + "team.wins AS \"team.wins\", "
         + "team.losses AS \"team.losses\", "
@@ -57,12 +58,12 @@ public class TeamDAO
     private static final String CREATE_TEMPLATE = "INSERT INTO team "
         + "("
             + "%1$sleague_tier_id, division_id, battlenet_id, "
-            + "region, "
+            + "region, queue_type, "
             + "rating, points, wins, losses, ties"
         + ") "
         + "VALUES ("
             + "%2$s:leagueTierId, :divisionId, :battlenetId, "
-            + ":region, "
+            + ":region, :queueType, "
             + ":rating, :points, :wins, :losses, :ties"
         + ")";
 
@@ -165,6 +166,7 @@ public class TeamDAO
             (
                 rs.getLong("team.id"),
                 conversionService.convert(rs.getInt("team.region"), Region.class),
+                conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
                 rs.getInt("team.league_tier_id"),
                 rs.getInt("team.division_id"),
                 idDec == null ? null : idDec.toBigInteger(),
@@ -358,6 +360,7 @@ public class TeamDAO
             .addValue("divisionId", team.getDivisionId())
             .addValue("battlenetId", team.getBattlenetId())
             .addValue("region", conversionService.convert(team.getRegion(), Integer.class))
+            .addValue("queueType", conversionService.convert(team.getQueueType(), Integer.class))
             .addValue("rating", team.getRating())
             .addValue("points", team.getPoints())
             .addValue("wins", team.getWins())

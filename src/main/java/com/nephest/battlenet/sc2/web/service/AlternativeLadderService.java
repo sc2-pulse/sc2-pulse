@@ -244,7 +244,7 @@ public class AlternativeLadderService
             + bTeam.getTeamMembers()[0].getId();
         Account fakeAccount = new Account(null, Partition.of(season.getRegion()), fakeBtag);
         PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bTeam.getTeamMembers()[0]);
-        Team team = new Team(null, season.getRegion(), division.getTierId(), division.getId(), null,
+        Team team = new Team(null, season.getRegion(), QueueType.LOTV_1V1, division.getTierId(), division.getId(), null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(), bTeam.getPoints());
         newTeams.add(Tuples.of(fakeAccount, character, team, bTeam.getTeamMembers()[0].getFavoriteRace()));
     }
@@ -341,6 +341,7 @@ public class AlternativeLadderService
             (
                 teamEntry.getKey().getId(),
                 season.getRegion(),
+                QueueType.LOTV_1V1,
                 division.getTierId(),
                 division.getId(),
                 teamEntry.getKey().getBattlenetId(),
@@ -367,6 +368,7 @@ public class AlternativeLadderService
         (
             null,
             season.getRegion(),
+            QueueType.LOTV_1V1,
             division.getTierId(),
             division.getId(),
             null,
