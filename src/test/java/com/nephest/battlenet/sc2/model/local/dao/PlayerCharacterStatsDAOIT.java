@@ -166,7 +166,6 @@ public class PlayerCharacterStatsDAOIT
         Team team = new Team
         (
             null, region,
-            QUEUE_TYPE,
             division.getTierId(),
             division.getId(),
             battlenetId,

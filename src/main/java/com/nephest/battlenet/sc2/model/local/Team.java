@@ -4,7 +4,6 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.BaseTeam;
-import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 
@@ -17,7 +16,7 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 7L;
+    private static final long serialVersionUID = 6L;
 
     private Long id;
 
@@ -31,9 +30,6 @@ implements java.io.Serializable
 
     @NotNull
     private Region region;
-
-    @NotNull
-    private QueueType queueType;
 
     @NotNull
     private Integer globalRank = 2147483647;
@@ -50,7 +46,6 @@ implements java.io.Serializable
     (
         Long id,
         Region region,
-        QueueType queueType,
         Integer leagueTierId,
         Integer divisionId,
         BigInteger battlenetId,
@@ -63,13 +58,11 @@ implements java.io.Serializable
         this.divisionId = divisionId;
         this.battlenetId = battlenetId;
         this.region = region;
-        this.queueType = queueType;
     }
 
     public static Team of
     (
         Season season,
-        QueueType queueType,
         LeagueTier tier,
         Division division,
         BlizzardTeam bTeam
@@ -79,7 +72,6 @@ implements java.io.Serializable
         (
             null,
             season.getRegion(),
-            queueType,
             tier.getId(),
             division.getId(),
             bTeam.getId(),
@@ -172,16 +164,6 @@ implements java.io.Serializable
     public Region getRegion()
     {
         return region;
-    }
-
-    public QueueType getQueueType()
-    {
-        return queueType;
-    }
-
-    public void setQueueType(QueueType queueType)
-    {
-        this.queueType = queueType;
     }
 
     public Integer getGlobalRank()

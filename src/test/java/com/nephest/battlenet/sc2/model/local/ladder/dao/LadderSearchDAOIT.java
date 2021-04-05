@@ -139,7 +139,7 @@ public class LadderSearchDAOIT
             BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
         Team newTeam = new Team
         (
-            null, Region.EU, QUEUE_TYPE, bronzeDivision.getTierId(), bronzeDivision.getId(),
+            null, Region.EU, bronzeDivision.getTierId(), bronzeDivision.getId(),
             BigInteger.valueOf(9999L), 1L, 1, 1, 1, 1
         );
         Team team = teamDAO.create(newTeam);

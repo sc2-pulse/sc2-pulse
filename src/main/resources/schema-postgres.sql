@@ -129,7 +129,6 @@ CREATE TABLE "team"
     "division_id" INTEGER NOT NULL,
     "battlenet_id" NUMERIC(20, 0) NOT NULL,
     "region" SMALLINT NOT NULL,
-    "queue_type" SMALLINT NOT NULL,
     "rating" SMALLINT NOT NULL,
     "points" SMALLINT NOT NULL,
     "wins" SMALLINT NOT NULL,
@@ -155,7 +154,7 @@ CREATE TABLE "team"
 
 );
 
-CREATE INDEX "ix_team_ladder_search" ON "team"("queue_type", "rating", "id");
+CREATE INDEX "ix_team_ladder_search" ON "team"("rating", "id");
 
 CREATE TABLE "team_member"
 (

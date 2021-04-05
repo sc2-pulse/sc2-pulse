@@ -49,7 +49,7 @@ implements java.io.Serializable
         List<LadderTeamMember> members
     )
     {
-        super(id, region, league.getQueueType(), leagueTierId, divisionId, battlenetId, rating, wins, losses, ties, points);
+        super(id, region, leagueTierId, divisionId, battlenetId, rating, wins, losses, ties,points);
         this.season = season;
         this.league = league;
         this.tierType = leagueTierType;

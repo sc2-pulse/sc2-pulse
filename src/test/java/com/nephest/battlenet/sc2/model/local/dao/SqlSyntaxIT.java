@@ -135,27 +135,27 @@ public class SqlSyntaxIT
 
         Team newTeam = new Team
         (
-            null, season.getRegion(), QueueType.HOTS_1V1, divFound.getTierId(), divFound.getId(), BigInteger.ONE,
+            null, season.getRegion(), divFound.getTierId(), divFound.getId(), BigInteger.ONE,
             1L, 1, 1, 1, 1
         );
         Team mergedTeam = new Team
         (
-            null, season.getRegion(), QueueType.HOTS_1V1, divFound.getTierId(), divFound.getId(), BigInteger.ONE,
+            null, season.getRegion(), divFound.getTierId(), divFound.getId(), BigInteger.ONE,
             2L, 2, 2, 2, 2
         );
         Team sameTeam = new Team
         (
-            null, season.getRegion(), QueueType.HOTS_1V1, divFound.getTierId(), divFound.getId(), BigInteger.ONE,
+            null, season.getRegion(), divFound.getTierId(), divFound.getId(), BigInteger.ONE,
             2L, 2, 2, 2, 2
         );
         Team mergedByIdTeam = new Team
         (
-            null, season.getRegion(), QueueType.LOTV_1V1, div2Found.getTierId(), div2Found.getId(), BigInteger.TEN,
+            null, season.getRegion(), div2Found.getTierId(), div2Found.getId(), BigInteger.TEN,
             3L, 3, 3, 3, 3
         );
         Team zergTeam = new Team
         (
-            null, season.getRegion(), QueueType.LOTV_1V1, div2Found.getTierId(), div2Found.getId(), BigInteger.TWO,
+            null, season.getRegion(), div2Found.getTierId(), div2Found.getId(), BigInteger.TWO,
             4L, 3, 3, 0, 3
         );
         teamDAO.create(newTeam);
@@ -178,7 +178,6 @@ public class SqlSyntaxIT
         mergedByIdTeam.setId(team.getId());
         teamDAO.mergeById(mergedByIdTeam, false);
         Team foundTeam = teamDAO.findById(mergedByIdTeam.getId()).orElse(null);
-        assertEquals(QueueType.HOTS_1V1, foundTeam.getQueueType());
         assertEquals(mergedByIdTeam.getId(), foundTeam.getId());
         assertNotNull(foundTeam);
         assertEquals(div2Found.getTierId(), foundTeam.getLeagueTierId());

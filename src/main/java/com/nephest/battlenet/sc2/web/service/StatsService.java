@@ -480,7 +480,7 @@ public class StatsService
     {
         //alternative ladder update updates only 1v1
         if(ignoreAlternativeData || league.getQueueType() != QueueType.LOTV_1V1)
-            return teamDao.merge(Team.of(season, league.getQueueType(), tier, division, bTeam));
+            return teamDao.merge(Team.of(season, tier, division, bTeam));
 
         //alternative ladder does not have battlenet id, find such teams and update them
         PlayerCharacter playerCharacter =
@@ -489,7 +489,7 @@ public class StatsService
                 bTeam.getMembers()[0].getCharacter().getRealm(),
                 bTeam.getMembers()[0].getCharacter().getId())
             .orElse((null));
-        if(playerCharacter == null) return teamDao.merge(Team.of(season, league.getQueueType(), tier, division,bTeam));
+        if(playerCharacter == null) return teamDao.merge(Team.of(season, tier, division,bTeam));
 
         BaseLocalTeamMember member = new BaseLocalTeamMember();
         for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
@@ -498,7 +498,6 @@ public class StatsService
         (
             null,
             season.getRegion(),
-            league.getQueueType(),
             tier.getId(),
             division.getId(),
             bTeam.getId(),
