@@ -137,9 +137,10 @@ public class LadderSearchDAOIT
         //counting only NEW players.
         Division bronzeDivision = divisionDAO.findListByLadder(emptySeasons.get(0).getBattlenetId(), Region.EU,
             BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
+        BaseLeague bronzeLeague = new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE);
         Team newTeam = new Team
         (
-            null, Region.EU, bronzeDivision.getTierId(), bronzeDivision.getId(),
+            null, emptySeasons.get(0).getBattlenetId(), Region.EU, bronzeLeague, TIER_TYPE, bronzeDivision.getId(),
             BigInteger.valueOf(9999L), 1L, 1, 1, 1, 1
         );
         Team team = teamDAO.create(newTeam);

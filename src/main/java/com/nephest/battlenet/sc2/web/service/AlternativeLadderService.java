@@ -185,6 +185,7 @@ public class AlternativeLadderService
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateTeams(Season season, Tuple3<Region, BlizzardPlayerCharacter[], Long> id, BlizzardProfileLadder ladder)
     {
+        BaseLeague baseLeague = new BaseLeague(ladder.getLeagueType(), QueueType.LOTV_1V1, TeamType.ARRANGED);
         Division division = getOrCreate1v1Division(season, ladder.getLeagueType(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
         Set<TeamState> states = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
@@ -201,7 +202,7 @@ public class AlternativeLadderService
                 .orElse(null);
 
             if(playerCharacter == null) {
-                addNewAlternativeCharacter(season, division, bTeam, newTeams);
+                addNewAlternativeCharacter(season, baseLeague, division, bTeam, newTeams);
                 continue;
             }
 
@@ -212,7 +213,7 @@ public class AlternativeLadderService
             }
 
             Map.Entry<Team, List<TeamMember>> teamEntry =
-                updateOrCreate1v1Team(season, playerCharacter, bTeam, division);
+                updateOrCreate1v1Team(season, baseLeague, playerCharacter, bTeam, division);
             //old team, nothing to update
             if(teamEntry.getKey() == null) continue;
             TeamMember member = teamEntry.getValue().get(0);
@@ -233,6 +234,7 @@ public class AlternativeLadderService
     private void addNewAlternativeCharacter
     (
         Season season,
+        BaseLeague baseLeague,
         Division division,
         BlizzardProfileTeam bTeam,
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams
@@ -244,7 +246,11 @@ public class AlternativeLadderService
             + bTeam.getTeamMembers()[0].getId();
         Account fakeAccount = new Account(null, Partition.of(season.getRegion()), fakeBtag);
         PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bTeam.getTeamMembers()[0]);
-        Team team = new Team(null, season.getRegion(), division.getTierId(), division.getId(), null,
+        Team team = new Team(
+            null,
+            season.getBattlenetId(), season.getRegion(),
+            baseLeague, ALTERNATIVE_TIER,
+            division.getId(), null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(), bTeam.getPoints());
         newTeams.add(Tuples.of(fakeAccount, character, team, bTeam.getTeamMembers()[0].getFavoriteRace()));
     }
@@ -314,20 +320,22 @@ public class AlternativeLadderService
     private Map.Entry<Team, List<TeamMember>> updateOrCreate1v1Team
     (
         Season season,
+        BaseLeague baseLeague,
         PlayerCharacter playerCharacter,
         BlizzardProfileTeam bTeam,
         Division division
     )
     {
         Map.Entry<Team, List<TeamMember>> result =
-            updateExisting1v1Team(season, playerCharacter, bTeam, division);
+            updateExisting1v1Team(season, baseLeague, playerCharacter, bTeam, division);
         if(result != null) return result;
-        return create1v1Team(season, playerCharacter, bTeam, division);
+        return create1v1Team(season, baseLeague, playerCharacter, bTeam, division);
     }
 
     private Map.Entry<Team, List<TeamMember>> updateExisting1v1Team
     (
         Season season,
+        BaseLeague baseLeague,
         PlayerCharacter playerCharacter,
         BlizzardProfileTeam bTeam,
         Division division
@@ -340,10 +348,9 @@ public class AlternativeLadderService
             Team team = new Team
             (
                 teamEntry.getKey().getId(),
-                season.getRegion(),
-                division.getTierId(),
-                division.getId(),
-                teamEntry.getKey().getBattlenetId(),
+                season.getBattlenetId(), season.getRegion(),
+                baseLeague, ALTERNATIVE_TIER,
+                division.getId(), teamEntry.getKey().getBattlenetId(),
                 bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), teamEntry.getKey().getTies(), bTeam.getPoints()
             );
             if(!Team.shouldUpdate(teamEntry.getKey(), team)) return new AbstractMap.SimpleEntry<>(null, null);
@@ -358,6 +365,7 @@ public class AlternativeLadderService
     private Map.Entry<Team, List<TeamMember>> create1v1Team
     (
         Season season,
+        BaseLeague baseLeague,
         PlayerCharacter playerCharacter,
         BlizzardProfileTeam bTeam,
         Division division
@@ -366,10 +374,9 @@ public class AlternativeLadderService
         Team team = new Team
         (
             null,
-            season.getRegion(),
-            division.getTierId(),
-            division.getId(),
-            null,
+            season.getBattlenetId(), season.getRegion(),
+            baseLeague, ALTERNATIVE_TIER,
+            division.getId(), null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
         );
         teamDao.merge(team);

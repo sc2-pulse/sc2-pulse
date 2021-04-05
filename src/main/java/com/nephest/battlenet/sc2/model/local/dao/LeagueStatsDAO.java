@@ -47,11 +47,10 @@ public class LeagueStatsDAO
         + "INNER JOIN division ON team.division_id=division.id "
         + "INNER JOIN league_tier ON division.league_tier_id=league_tier.id "
         + "INNER JOIN league ON league_tier.league_id=league.id "
-        + "INNER JOIN season ON season.id = league.season_id "
 
         + "WHERE "
-        + "season.battlenet_id=:seasonId "
-        + "GROUP BY season.region, league.type, league.queue_type, league.team_type";
+        + "team.season=:seasonId "
+        + "GROUP BY team.region, team.league_type, team.queue_type, team.team_type";
 
     private static final String CALCULATE_SEASON_STATS_MERGE_QUERY = CALCULATE_SEASON_STATS_QUERY
         + " "

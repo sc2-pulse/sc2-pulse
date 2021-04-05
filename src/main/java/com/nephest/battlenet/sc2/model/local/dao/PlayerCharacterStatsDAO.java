@@ -52,21 +52,17 @@ public class PlayerCharacterStatsDAO
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START =
         "INSERT INTO player_character_stats "
         + "(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played) "
-        + "SELECT team_member.player_character_id, league.queue_type, league.team_type, %1$s, "
-        + "MAX(team.rating), MAX(league.type), ";
+        + "SELECT team_member.player_character_id, team.queue_type, team.team_type, %1$s, "
+        + "MAX(team.rating), MAX(team.league_type), ";
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END =
         "FROM team_member "
-        + "INNER JOIN team ON team_member.team_id=team.id "
-        + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
-        + "INNER JOIN league ON league.id = league_tier.league_id ";
+        + "INNER JOIN team ON team_member.team_id=team.id ";
     public static final String CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END =
         "FROM player_character_filter "
         + "INNER JOIN team_member USING(player_character_id) "
-        + "INNER JOIN team ON team_member.team_id = team.id "
-        + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
-        + "INNER JOIN league ON league.id = league_tier.league_id ";
+        + "INNER JOIN team ON team_member.team_id = team.id ";
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_GROUP =
-        "GROUP BY league.queue_type, league.team_type, team_member.player_character_id ";
+        "GROUP BY team.queue_type, team.team_type, team_member.player_character_id ";
     public static final String MERGE_TEMPLATE =
         " "
         + "ON CONFLICT(player_character_id, COALESCE(race, -32768), queue_type, team_type) DO UPDATE SET "

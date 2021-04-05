@@ -125,10 +125,14 @@ CREATE TABLE "team"
 (
 
     "id" BIGSERIAL,
-    "league_tier_id" INTEGER NOT NULL,
     "division_id" INTEGER NOT NULL,
     "battlenet_id" NUMERIC(20, 0) NOT NULL,
+    "season" SMALLINT NOT NULL,
     "region" SMALLINT NOT NULL,
+    "league_type" SMALLINT NOT NULL,
+    "queue_type" SMALLINT NOT NULL,
+    "team_type" SMALLINT NOT NULL,
+    "tier_type" SMALLINT NOT NULL,
     "rating" SMALLINT NOT NULL,
     "points" SMALLINT NOT NULL,
     "wins" SMALLINT NOT NULL,
@@ -140,10 +144,6 @@ CREATE TABLE "team"
 
     PRIMARY KEY ("id"),
 
-    CONSTRAINT "fk_team_league_tier_id"
-        FOREIGN KEY ("league_tier_id")
-        REFERENCES "league_tier"("id")
-        ON DELETE CASCADE ON UPDATE CASCADE,
     CONSTRAINT "fk_team_division_id"
         FOREIGN KEY ("division_id")
         REFERENCES "division"("id")
@@ -154,7 +154,7 @@ CREATE TABLE "team"
 
 );
 
-CREATE INDEX "ix_team_ladder_search" ON "team"("rating", "id");
+CREATE INDEX "ix_team_ladder_search_full" ON "team"("season", "queue_type", "team_type", "rating", "id");
 
 CREATE TABLE "team_member"
 (

@@ -135,27 +135,27 @@ public class SqlSyntaxIT
 
         Team newTeam = new Team
         (
-            null, season.getRegion(), divFound.getTierId(), divFound.getId(), BigInteger.ONE,
+            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.ONE,
             1L, 1, 1, 1, 1
         );
         Team mergedTeam = new Team
         (
-            null, season.getRegion(), divFound.getTierId(), divFound.getId(), BigInteger.ONE,
+            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.ONE,
             2L, 2, 2, 2, 2
         );
         Team sameTeam = new Team
         (
-            null, season.getRegion(), divFound.getTierId(), divFound.getId(), BigInteger.ONE,
+            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.ONE,
             2L, 2, 2, 2, 2
         );
         Team mergedByIdTeam = new Team
         (
-            null, season.getRegion(), div2Found.getTierId(), div2Found.getId(), BigInteger.TEN,
+            null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(), division2.getId(), BigInteger.TEN,
             3L, 3, 3, 3, 3
         );
         Team zergTeam = new Team
         (
-            null, season.getRegion(), div2Found.getTierId(), div2Found.getId(), BigInteger.TWO,
+            null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(), division2.getId(), BigInteger.TWO,
             4L, 3, 3, 0, 3
         );
         teamDAO.create(newTeam);
@@ -180,8 +180,11 @@ public class SqlSyntaxIT
         Team foundTeam = teamDAO.findById(mergedByIdTeam.getId()).orElse(null);
         assertEquals(mergedByIdTeam.getId(), foundTeam.getId());
         assertNotNull(foundTeam);
-        assertEquals(div2Found.getTierId(), foundTeam.getLeagueTierId());
-        assertEquals(div2Found.getId(), foundTeam.getDivisionId());
+        assertEquals(league2.getType(), foundTeam.getLeague().getType());
+        assertEquals(league2.getQueueType(), foundTeam.getLeague().getQueueType());
+        assertEquals(league2.getTeamType(), foundTeam.getLeague().getTeamType());
+        assertEquals(tier2.getType(), foundTeam.getTierType());
+        assertEquals(division2.getId(), foundTeam.getDivisionId());
         assertEquals(BigInteger.TEN, foundTeam.getBattlenetId());
         assertEquals(3, foundTeam.getRating());
         assertEquals(3, foundTeam.getWins());

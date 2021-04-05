@@ -42,7 +42,6 @@ public class LadderSearchDAO
     private static final String FIND_TEAM_MEMBERS_BASE =
         "SELECT "
         + TeamDAO.STD_SELECT + ", "
-        + TeamDAO.STD_ADDITIONAL_SELECT + ", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\","
         + AccountDAO.STD_SELECT + ", "
@@ -53,9 +52,6 @@ public class LadderSearchDAO
     private static final String LADDER_SEARCH_TEAM_FROM_SHORT =
         "FROM team_member "
         + "INNER JOIN team ON team_member.team_id=team.id "
-        + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
-        + "INNER JOIN league ON league.id = league_tier.league_id "
-        + "INNER JOIN season ON season.id = league.season_id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id ";
 
@@ -68,12 +64,11 @@ public class LadderSearchDAO
 
     private static final String LADDER_SEARCH_TEAM_WHERE =
         "WHERE "
-        + "season.battlenet_id=:seasonId "
-        + "AND season.region IN (:regions) "
-        + "AND league.type IN (:leagueTypes) "
-        + "AND league.queue_type=:queueType "
-        + "AND league.team_type=:teamType ";
-
+        + "team.season=:seasonId "
+        + "AND team.region IN (:regions) "
+        + "AND team.league_type IN (:leagueTypes) "
+        + "AND team.queue_type=:queueType "
+        + "AND team.team_type=:teamType ";
     private static final String LADDER_SEARCH_TEAM_FROM_WHERE =
         LADDER_SEARCH_TEAM_FROM + LADDER_SEARCH_TEAM_WHERE;
 
@@ -89,9 +84,6 @@ public class LadderSearchDAO
         + FIND_TEAM_MEMBERS_BASE
         + "FROM following_team "
         + "INNER JOIN team ON following_team.id = team.id "
-        + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
-        + "INNER JOIN league ON league.id = league_tier.league_id "
-        + "INNER JOIN season ON season.id = league.season_id "
         + "INNER JOIN team_member ON team_member.team_id = team.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
@@ -131,9 +123,6 @@ public class LadderSearchDAO
 
         + "FROM team_filtered "
         + "INNER JOIN team ON team_filtered.id=team.id "
-        + "INNER JOIN league_tier ON league_tier.id = team.league_tier_id "
-        + "INNER JOIN league ON league.id = league_tier.league_id "
-        + "INNER JOIN season ON season.id = league.season_id "
         + "INNER JOIN team_member ON team.id = team_member.team_id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
@@ -142,8 +131,8 @@ public class LadderSearchDAO
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
         + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
 
-        + "ORDER BY season.battlenet_id DESC, "
-        + "league.queue_type ASC, league.team_type ASC, league.type DESC, "
+        + "ORDER BY team.season DESC, "
+        + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
         + "team.rating DESC, team.id ASC, "
         + "player_character.id ASC ";
 
@@ -224,7 +213,6 @@ public class LadderSearchDAO
                         conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
                     ),
                     conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
-                    rs.getInt("team.league_tier_id"),
                     rs.getInt("team.division_id"),
                     idDec == null ? null : idDec.toBigInteger(),
                     rs.getLong("team.rating"),

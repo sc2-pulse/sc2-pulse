@@ -3,10 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
-import com.nephest.battlenet.sc2.model.Partition;
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -150,7 +147,7 @@ public class SeasonGenerator
         {
             Team newTeam = new Team
            (
-               null, season.getRegion(), division.getTierId(), division.getId(), BigInteger.valueOf(teamCount),
+               null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.valueOf(teamCount),
                (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3
            );
             Team team = teamDAO.create(newTeam);
@@ -187,6 +184,8 @@ public class SeasonGenerator
     public Team createTeam
     (
         Season season,
+        BaseLeague league,
+        BaseLeagueTier.LeagueTierType tierType,
         Division division,
         BigInteger battlenetId,
         long rating, int wins, int losses, int ties, int points,
@@ -195,7 +194,7 @@ public class SeasonGenerator
     {
         Team newTeam = new Team
         (
-            null, season.getRegion(), division.getTierId(), division.getId(), battlenetId,
+            null, season.getBattlenetId(), season.getRegion(), league, tierType, division.getId(), battlenetId,
             rating, wins, losses, ties, points
         );
         Team team = teamDAO.create(newTeam);
