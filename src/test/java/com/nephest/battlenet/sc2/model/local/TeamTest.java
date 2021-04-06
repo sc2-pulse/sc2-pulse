@@ -30,6 +30,7 @@ public class TeamTest
         equalTeam.setGlobalRank(-1);
         equalTeam.setRegionRank(-1);
         equalTeam.setLeagueRank(-1);
+        equalTeam.setLegacyId(BigInteger.ONE);
 
         Team[] notEqualTeams = new Team[]
         {

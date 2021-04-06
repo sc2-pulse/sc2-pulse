@@ -15,9 +15,11 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 6L;
+    private static final long serialVersionUID = 7L;
 
     private Long id;
+
+    private BigInteger legacyId;
 
     @NotNull
     private Integer divisionId;
@@ -136,6 +138,16 @@ implements java.io.Serializable
     public Long getId()
     {
         return id;
+    }
+
+    public BigInteger getLegacyId()
+    {
+        return legacyId;
+    }
+
+    public void setLegacyId(BigInteger legacyId)
+    {
+        this.legacyId = legacyId;
     }
 
     public void setDivisionId(Integer divisionId)

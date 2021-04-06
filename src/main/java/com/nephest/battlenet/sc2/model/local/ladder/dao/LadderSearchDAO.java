@@ -201,6 +201,7 @@ public class LadderSearchDAO
             {
                 members = new ArrayList<>();
                 BigDecimal idDec = (BigDecimal) rs.getObject("team.battlenet_id");
+                BigDecimal legacyId = (BigDecimal) rs.getObject("team.legacy_id");
                 LadderTeam team = new LadderTeam
                 (
                     teamId,
@@ -223,6 +224,7 @@ public class LadderSearchDAO
                 team.setGlobalRank(rs.getInt("team.global_rank"));
                 team.setRegionRank(rs.getInt("team.region_rank"));
                 team.setLeagueRank(rs.getInt("team.league_rank"));
+                if(legacyId != null) team.setLegacyId(legacyId.toBigInteger());
                 teams.add(team);
                 lastTeamId = teamId;
             }

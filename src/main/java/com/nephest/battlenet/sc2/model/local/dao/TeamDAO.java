@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -32,6 +33,7 @@ public class TeamDAO
 
     public static final String STD_SELECT =
         "team.id AS \"team.id\", "
+        + "team.legacy_id AS \"team.legacy_id\", "
         + "team.division_id AS \"team.division_id\", "
         + "team.battlenet_id AS \"team.battlenet_id\", "
         + "team.season AS \"team.season\", "
@@ -151,12 +153,24 @@ public class TeamDAO
         initQueries(conversionService);
     }
 
+    public BigInteger legacyIdOf(int[] realm, long[] battlenetId, Race... race)
+    {
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0; i < realm.length; i++)
+        {
+            sb.append(realm[i]).append(battlenetId[i]);
+            if(race.length > 0) sb.append(conversionService.convert(race[i], Integer.class));
+        }
+        return new BigInteger(sb.toString());
+    }
+
     private static void initMappers(ConversionService conversionService)
     {
         if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)->
         {
             BigDecimal idDec = (BigDecimal) rs.getObject("team.battlenet_id");
-            return new Team
+            BigDecimal legacyId = (BigDecimal) rs.getObject("team.legacy_id");
+            Team team = new Team
             (
                 rs.getLong("team.id"),
                 rs.getInt("team.season"),
@@ -174,6 +188,8 @@ public class TeamDAO
                 rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
                 rs.getInt("team.points")
             );
+            if(legacyId != null) team.setLegacyId(legacyId.toBigInteger());
+            return team;
         };
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
         {
@@ -353,6 +369,7 @@ public class TeamDAO
     private MapSqlParameterSource createParameterSource(Team team)
     {
         return new MapSqlParameterSource()
+            .addValue("legacyId", team.getLegacyId())
             .addValue("divisionId", team.getDivisionId())
             .addValue("battlenetId", team.getBattlenetId())
             .addValue("season", team.getSeason())

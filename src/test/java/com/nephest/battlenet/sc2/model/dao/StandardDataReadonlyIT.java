@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +19,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 import javax.sql.DataSource;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -35,6 +37,9 @@ public class StandardDataReadonlyIT
 
     @Autowired
     private DivisionDAO divisionDAO;
+
+    @Autowired
+    private TeamDAO teamDAO;
 
     @BeforeAll
     public static void init
@@ -110,6 +115,19 @@ public class StandardDataReadonlyIT
             TeamType.ARRANGED
         );
         assertEquals(2, count);
+    }
+
+    @Test
+    public void testTeamLegacyIdGeneration()
+    {
+        assertEquals(
+            new BigInteger("123"),
+            teamDAO.legacyIdOf(new int[]{1}, new long[]{2L}, Race.ZERG)
+        );
+        assertEquals(
+            new BigInteger("1223"),
+            teamDAO.legacyIdOf(new int[]{1, 2}, new long[]{2L, 3L})
+        );
     }
 
 }
