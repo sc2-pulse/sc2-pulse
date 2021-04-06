@@ -30,10 +30,23 @@ public class AccountDAO
         + "(partition, battle_tag) "
         + "VALUES (:partition, :battleTag)";
 
-    private static final String MERGE_QUERY = CREATE_QUERY
-        + " "
-        + "ON CONFLICT(partition, battle_tag) DO UPDATE SET "
-        + "partition=excluded.partition";
+    private static final String MERGE_QUERY =
+        "WITH selected AS ("
+            + "SELECT id FROM account WHERE partition = :partition AND battle_tag = :battleTag "
+        + "), "
+        + "inserted AS ("
+            + "INSERT INTO account "
+            + "(partition, battle_tag) "
+            + "SELECT :partition, :battleTag "
+            + "WHERE NOT EXISTS(SELECT 1 FROM selected) "
+            + "ON CONFLICT(partition, battle_tag) DO UPDATE SET "
+            + "partition=excluded.partition "
+            + "RETURNING id"
+        + ") "
+        + "SELECT id FROM selected "
+        + "UNION ALL "
+        + "SELECT id FROM inserted "
+        + "LIMIT 1";
 
     private static final String FIND_BY_PARTITION_AND_BATTLE_TAG =
         "SELECT " + STD_SELECT
@@ -96,17 +109,8 @@ public class AccountDAO
 
     public Account merge(Account account)
     {
-        Account result = find(account.getPartition(), account.getBattleTag()).orElseGet(()->doMerge(account));
-        account.setId(result.getId());
-        return account;
-    }
-
-    private Account doMerge(Account account)
-    {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(account);
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        account.setId(keyHolder.getKey().longValue());
+        account.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return account;
     }
 
