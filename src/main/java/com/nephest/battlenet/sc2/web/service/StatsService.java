@@ -601,6 +601,12 @@ public class StatsService
         {
             BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
             long maxId = getMaxLadderId(bSeason, region);
+            if(maxId < 0) {
+                if(alternativeRegions.add(region))
+                    LOG.warn("Stale data detected for {}, added this region to alternative update", region);
+                continue;
+            }
+
             api.getProfileLadderId(region, maxId + STALE_LADDER_TOLERANCE)
                 .doOnNext(l->{
                     if(alternativeRegions.add(region))
