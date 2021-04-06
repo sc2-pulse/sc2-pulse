@@ -342,6 +342,7 @@ public class StatsService
         boolean currentSeason
     )
     {
+        LOG.debug("Updating season {}", season);
         for (League.LeagueType leagueType : leagues)
         {
             for (QueueType queueType : queues)
@@ -410,6 +411,7 @@ public class StatsService
         BlizzardTierDivision bDivision = t.getT2();
         Division division = saveDivision(season, league, tier, bDivision);
         updateTeams(t.getT1().getTeams(), season, league, tier, division, lastUpdateStart);
+        LOG.debug("Ladder saved: {} {}", season, division.getBattlenetId());
     }
 
     public Division saveDivision
