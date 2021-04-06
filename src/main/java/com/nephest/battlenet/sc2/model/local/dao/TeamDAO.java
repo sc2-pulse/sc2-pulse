@@ -96,6 +96,52 @@ public class TeamDAO
     private static final String FORCE_MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
         + String.format(MERGE_TEMPLATE, "id", "region=excluded.region, battlenet_id = excluded.battlenet_id, ");
 
+    private static final String MERGE_BY_FAVORITE_RACE_QUERY =
+        "WITH existing AS ("
+            + "SELECT team.id "
+            + "FROM team "
+            + "WHERE team.season = :season "
+            + "AND team.region = :region "
+            + "AND team.queue_type = :queueType "
+            + "AND team.legacy_id = :legacyId "
+        + "), "
+        + "inserted AS ("
+            + "INSERT INTO team "
+            + "("
+            + "legacy_id, division_id, battlenet_id, "
+            + "season, region, league_type, queue_type, team_type, tier_type, "
+            + "rating, points, wins, losses, ties "
+            + ") "
+            + "SELECT "
+            + ":legacyId, :divisionId, :battlenetId, "
+            + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
+            + ":rating, :points, :wins, :losses, :ties "
+            + "WHERE NOT EXISTS (SELECT 1 FROM existing) "
+            + String.format(MERGE_TEMPLATE, "region, battlenet_id", "legacy_id=excluded.legacy_id, ")
+            + "RETURNING id"
+        + "), "
+        + "updated AS ("
+            + "UPDATE team "
+            + "SET "
+            + "division_id=:divisionId, "
+            + "league_type=:leagueType, "
+            + "tier_type=:tierType, "
+            + "rating=:rating, "
+            + "points=:points, "
+            + "wins=:wins, "
+            + "losses=:losses, "
+            + "ties=:ties, "
+            + "battlenet_id = :battlenetId "
+            + "FROM existing "
+            + "WHERE team.id = existing.id "
+            + "AND (team.division_id != :divisionId OR (team.wins + team.losses + team.ties) != :gamesPlayed) "
+            + "RETURNING team.id"
+        + ") "
+        + "SELECT id FROM inserted "
+        + "UNION ALL "
+        + "SELECT id FROM updated "
+        + "LIMIT 1";
+
     private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
 
     private static final String CALCULATE_RANK_TEMPLATE =
@@ -268,16 +314,15 @@ public class TeamDAO
     }
 
     //this method is intended to be used with legacy teams
-    public Team mergeByFavoriteRace
-    (Team team, int season, PlayerCharacter character, Race race)
+    public Team mergeByFavoriteRace(Team team, int characterRealm, long characterBattlenetId, Race race)
     {
-        Map.Entry<Team, List<TeamMember>> foundTeam = find1v1TeamByFavoriteRace(season, character, race).orElse(null);
-
-        if(foundTeam == null) return merge(team);
-        //legacy team can have invalid natural id
-        team.setId(foundTeam.getKey().getId());
-        if(foundTeam.getKey().getBattlenetId() != null) team.setBattlenetId(foundTeam.getKey().getBattlenetId());
-        if(Team.shouldUpdate(foundTeam.getKey(), team)) return mergeById(team, false);
+        MapSqlParameterSource params = createParameterSource(team);
+        params.addValue(
+            "legacyId",
+            legacyIdOf(new int[]{characterRealm}, new long[]{characterBattlenetId}, race));
+        params.addValue("gamesPlayed", team.getWins() + team.getLosses() + team.getTies());
+        team.setId(template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
+        if(team.getId() == null)  return null;
 
         return team;
     }

@@ -198,6 +198,10 @@ public class AlternativeLadderService
             if(errors.hasErrors() || !isValidTeam(bTeam, 1)) continue;
 
             BlizzardProfileTeamMember bMember = bTeam.getTeamMembers()[0];
+            Team team = save1v1Team(season, baseLeague, bMember.getRealm(), bMember.getId(), bTeam, division);
+            //old team, nothing to update
+            if(team == null) continue;
+
             PlayerCharacter playerCharacter = playerCharacterDao.find(id.getT1(), bMember.getRealm(), bMember.getId())
                 .orElse(null);
 
@@ -212,14 +216,10 @@ public class AlternativeLadderService
                 characters.add(playerCharacter);
             }
 
-            Map.Entry<Team, List<TeamMember>> teamEntry =
-                updateOrCreate1v1Team(season, baseLeague, playerCharacter, bTeam, division);
-            //old team, nothing to update
-            if(teamEntry.getKey() == null) continue;
-            TeamMember member = teamEntry.getValue().get(0);
+            TeamMember member = new TeamMember(team.getId(), playerCharacter.getId(), null, null, null, null);
             member.setGamesPlayed(bMember.getFavoriteRace(), bTeam.getWins() + bTeam.getLosses());
             members.add(member);
-            states.add(TeamState.of(teamEntry.getKey()));
+            states.add(TeamState.of(team));
         }
         saveNewCharacterData(newTeams, members, states);
         savePlayerCharacters(characters);
@@ -317,56 +317,12 @@ public class AlternativeLadderService
             .merge(new Division(null, tier.getId(), battlenetId));
     }
 
-    private Map.Entry<Team, List<TeamMember>> updateOrCreate1v1Team
+    private Team save1v1Team
     (
         Season season,
         BaseLeague baseLeague,
-        PlayerCharacter playerCharacter,
-        BlizzardProfileTeam bTeam,
-        Division division
-    )
-    {
-        Map.Entry<Team, List<TeamMember>> result =
-            updateExisting1v1Team(season, baseLeague, playerCharacter, bTeam, division);
-        if(result != null) return result;
-        return create1v1Team(season, baseLeague, playerCharacter, bTeam, division);
-    }
-
-    private Map.Entry<Team, List<TeamMember>> updateExisting1v1Team
-    (
-        Season season,
-        BaseLeague baseLeague,
-        PlayerCharacter playerCharacter,
-        BlizzardProfileTeam bTeam,
-        Division division
-    )
-    {
-        Map.Entry<Team, List<TeamMember>> teamEntry = teamDao.find1v1TeamByFavoriteRace(
-            season.getBattlenetId(),playerCharacter, bTeam.getTeamMembers()[0].getFavoriteRace()).orElse(null);
-        if(teamEntry != null)
-        {
-            Team team = new Team
-            (
-                teamEntry.getKey().getId(),
-                season.getBattlenetId(), season.getRegion(),
-                baseLeague, ALTERNATIVE_TIER,
-                division.getId(), teamEntry.getKey().getBattlenetId(),
-                bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), teamEntry.getKey().getTies(), bTeam.getPoints()
-            );
-            if(!Team.shouldUpdate(teamEntry.getKey(), team)) return new AbstractMap.SimpleEntry<>(null, null);
-            if(teamDao.mergeById(team, false) == null) return new AbstractMap.SimpleEntry<>(null, null);
-
-            return new AbstractMap.SimpleEntry<>(team, teamEntry.getValue());
-        }
-
-        return null;
-    }
-
-    private Map.Entry<Team, List<TeamMember>> create1v1Team
-    (
-        Season season,
-        BaseLeague baseLeague,
-        PlayerCharacter playerCharacter,
+        int characterRealm,
+        long characterBattlenetId,
         BlizzardProfileTeam bTeam,
         Division division
     )
@@ -379,9 +335,7 @@ public class AlternativeLadderService
             division.getId(), null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
         );
-        teamDao.merge(team);
-        TeamMember member = new TeamMember(team.getId(), playerCharacter.getId(), null, null, null, null);
-        return new AbstractMap.SimpleEntry<>(team, List.of(member));
+        return teamDao.mergeByFavoriteRace(team, characterRealm, characterBattlenetId, bTeam.getTeamMembers()[0].getFavoriteRace());
     }
 
     private boolean isValidTeam(BlizzardProfileTeam team, int expectedMemberCount)

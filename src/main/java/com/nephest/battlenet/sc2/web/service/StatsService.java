@@ -483,27 +483,12 @@ public class StatsService
             return teamDao.merge(Team.of(season, league, tier, division, bTeam));
 
         //alternative ladder does not have battlenet id, find such teams and update them
-        PlayerCharacter playerCharacter =
-            playerCharacterDao.find(
-                season.getRegion(),
-                bTeam.getMembers()[0].getCharacter().getRealm(),
-                bTeam.getMembers()[0].getCharacter().getId())
-            .orElse((null));
-        if(playerCharacter == null) return teamDao.merge(Team.of(season, league, tier, division,bTeam));
-
         BaseLocalTeamMember member = new BaseLocalTeamMember();
         for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
             member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
-        Team team = new Team
-        (
-            null,
-            season.getBattlenetId(), season.getRegion(),
-            league, tier.getType(),
-            division.getId(),
-            bTeam.getId(),
-            bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(), bTeam.getPoints()
-        );
-        return teamDao.mergeByFavoriteRace(team, season.getBattlenetId(), playerCharacter, member.getFavoriteRace());
+        Team team = Team.of(season, league, tier, division, bTeam);
+        BlizzardPlayerCharacter bChar = bTeam.getMembers()[0].getCharacter();
+        return teamDao.mergeByFavoriteRace(team, bChar.getRealm(), bChar.getId(), member.getFavoriteRace());
     }
 
     //cross field validation
