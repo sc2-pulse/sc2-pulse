@@ -10,13 +10,15 @@ public enum TeamType
 implements Identifiable
 {
 
-    ARRANGED(0), RANDOM(1);
+    ARRANGED(0, "Arranged"), RANDOM(1, "Random");
 
     private final int id;
+    private final String name;
 
-    TeamType(int id)
+    TeamType(int id, String name)
     {
         this.id = id;
+        this.name = name;
     }
 
     @JsonCreator
@@ -29,11 +31,24 @@ implements Identifiable
         throw new IllegalArgumentException("Invalid id");
     }
 
+    public static TeamType from(String name)
+    {
+        for(TeamType type : TeamType.values())
+            if(type.getName().equalsIgnoreCase(name)) return type;
+
+        throw new IllegalArgumentException("Invalid name");
+    }
+
     @Override
     @JsonValue
     public int getId()
     {
         return id;
+    }
+
+    public String getName()
+    {
+        return name;
     }
 
 }
