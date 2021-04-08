@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
@@ -10,6 +10,8 @@ implements Identifiable
 {
 
     TERRAN(1, "Terran"), PROTOSS(2, "Protoss"), ZERG(3, "Zerg"), RANDOM(4, "Random");
+
+    public static final Race[] EMPTY_RACE_ARRAY = new Race[0];
 
     private final int id;
     private final String name;
