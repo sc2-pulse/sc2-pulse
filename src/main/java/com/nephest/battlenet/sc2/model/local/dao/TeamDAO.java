@@ -314,7 +314,7 @@ public class TeamDAO
     }
 
     //this method is intended to be used with legacy teams
-    public Team mergeByFavoriteRace(Team team, int characterRealm, long characterBattlenetId, Race race)
+    public Team mergeLegacy(Team team, int characterRealm, long characterBattlenetId, Race race)
     {
         MapSqlParameterSource params = createParameterSource(team);
         params.addValue(

@@ -328,7 +328,7 @@ public class AlternativeLadderService
             division.getId(), null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
         );
-        return teamDao.mergeByFavoriteRace(team, characterRealm, characterBattlenetId, bTeam.getTeamMembers()[0].getFavoriteRace());
+        return teamDao.mergeLegacy(team, characterRealm, characterBattlenetId, bTeam.getTeamMembers()[0].getFavoriteRace());
     }
 
     private boolean isValidTeam(BlizzardProfileTeam team, int expectedMemberCount)

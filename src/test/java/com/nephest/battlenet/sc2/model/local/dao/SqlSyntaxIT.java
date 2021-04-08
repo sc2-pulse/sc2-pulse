@@ -224,7 +224,7 @@ public class SqlSyntaxIT
         assertEquals(zergTeam.getId(),
             teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
         zergTeam.setWins(zergTeam.getWins() + 1);
-        teamDAO.mergeByFavoriteRace(zergTeam, character.getRealm(), character.getBattlenetId(), Race.ZERG);
+        teamDAO.mergeLegacy(zergTeam, character.getRealm(), character.getBattlenetId(), Race.ZERG);
         assertEquals(zergTeam.getWins(), teamDAO.find1v1TeamByFavoriteRace(season.getBattlenetId(), character, Race.ZERG)
             .get().getKey().getWins());
         assertEquals(team.getId(),teamDAO.find1v1TeamByFavoriteRace(40, character, Race.TERRAN).get().getKey().getId());
