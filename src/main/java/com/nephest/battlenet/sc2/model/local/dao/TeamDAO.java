@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -199,17 +200,15 @@ public class TeamDAO
         initQueries(conversionService);
     }
 
-    public BigInteger legacyIdOf(int[] realm, long[] battlenetId, Race... race)
+    public BigInteger legacyIdOf(BlizzardPlayerCharacter[] characters, Race... races)
     {
         StringBuilder sb = new StringBuilder();
-        Arrays.sort(realm);
-        Arrays.sort(battlenetId);
-        Arrays.sort(race);
-        for(int i = 0; i < realm.length; i++)
-        {
-            sb.append(realm[i]).append(battlenetId[i]);
-            if(race.length > 0) sb.append(conversionService.convert(race[i], Integer.class));
-        }
+        Arrays.sort(characters, Comparator
+                .comparingInt(BlizzardPlayerCharacter::getRealm)
+                .thenComparingLong(BlizzardPlayerCharacter::getId));
+        Arrays.sort(races);
+        for(BlizzardPlayerCharacter c : characters) sb.append(c.getRealm()).append(c.getId());
+        for(Race r : races) sb.append(conversionService.convert(r, Integer.class));
         return new BigInteger(sb.toString());
     }
 
@@ -317,12 +316,10 @@ public class TeamDAO
     }
 
     //this method is intended to be used with legacy teams
-    public Team mergeLegacy(Team team, int characterRealm, long characterBattlenetId, Race race)
+    public Team mergeLegacy(Team team, BlizzardPlayerCharacter[] characters, Race... races)
     {
         MapSqlParameterSource params = createParameterSource(team);
-        params.addValue(
-            "legacyId",
-            legacyIdOf(new int[]{characterRealm}, new long[]{characterBattlenetId}, race));
+        params.addValue("legacyId", legacyIdOf(characters, races));
         params.addValue("gamesPlayed", team.getWins() + team.getLosses() + team.getTies());
         team.setId(template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         if(team.getId() == null)  return null;

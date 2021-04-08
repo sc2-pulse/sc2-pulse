@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -224,7 +225,11 @@ public class SqlSyntaxIT
         assertEquals(zergTeam.getId(),
             teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
         zergTeam.setWins(zergTeam.getWins() + 1);
-        teamDAO.mergeLegacy(zergTeam, character.getRealm(), character.getBattlenetId(), Race.ZERG);
+        teamDAO.mergeLegacy(
+            zergTeam,
+            new BlizzardPlayerCharacter[]{new BlizzardPlayerCharacter(character.getId(), character.getRealm(), character.getName())},
+            Race.ZERG
+        );
         assertEquals(zergTeam.getWins(), teamDAO.find1v1TeamByFavoriteRace(season.getBattlenetId(), character, Race.ZERG)
             .get().getKey().getWins());
         assertEquals(team.getId(),teamDAO.find1v1TeamByFavoriteRace(40, character, Race.TERRAN).get().getKey().getId());

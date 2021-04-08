@@ -198,7 +198,7 @@ public class AlternativeLadderService
             if(errors.hasErrors() || !isValidTeam(bTeam, 1)) continue;
 
             BlizzardProfileTeamMember bMember = bTeam.getTeamMembers()[0];
-            Team team = save1v1Team(season, baseLeague, bMember.getRealm(), bMember.getId(), bTeam, division);
+            Team team = save1v1Team(season, baseLeague, bTeam, division);
             //old team, nothing to update
             if(team == null) continue;
 
@@ -314,8 +314,6 @@ public class AlternativeLadderService
     (
         Season season,
         BaseLeague baseLeague,
-        int characterRealm,
-        long characterBattlenetId,
         BlizzardProfileTeam bTeam,
         Division division
     )
@@ -328,7 +326,7 @@ public class AlternativeLadderService
             division.getId(), null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
         );
-        return teamDao.mergeLegacy(team, characterRealm, characterBattlenetId, bTeam.getTeamMembers()[0].getFavoriteRace());
+        return teamDao.mergeLegacy(team, bTeam.getTeamMembers(), bTeam.getTeamMembers()[0].getFavoriteRace());
     }
 
     private boolean isValidTeam(BlizzardProfileTeam team, int expectedMemberCount)

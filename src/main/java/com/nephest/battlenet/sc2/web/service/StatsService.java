@@ -490,7 +490,7 @@ public class StatsService
             member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
         Team team = Team.of(season, league, tier, division, bTeam);
         BlizzardPlayerCharacter bChar = bTeam.getMembers()[0].getCharacter();
-        return teamDao.mergeLegacy(team, bChar.getRealm(), bChar.getId(), member.getFavoriteRace());
+        return teamDao.mergeLegacy(team, new BlizzardPlayerCharacter[]{bChar}, member.getFavoriteRace());
     }
 
     //cross field validation

@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.dao;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
@@ -117,25 +118,26 @@ public class StandardDataReadonlyIT
         assertEquals(2, count);
     }
 
-    //each array must be sorted in a natural order
     @Test
     public void testTeamLegacyIdGeneration()
     {
+        BlizzardPlayerCharacter c1 = new BlizzardPlayerCharacter(1L, 1, "name1");
+        BlizzardPlayerCharacter c2 = new BlizzardPlayerCharacter(2L, 1, "name2");
         assertEquals(
             new BigInteger("123"),
-            teamDAO.legacyIdOf(new int[]{1}, new long[]{2L}, Race.ZERG)
+            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{c2}, Race.ZERG)
         );
         assertEquals(
-            new BigInteger("1223"),
-            teamDAO.legacyIdOf(new int[]{1, 2}, new long[]{2L, 3L})
+            new BigInteger("1112"),
+            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{c1, c2})
         );
         assertEquals(
-            new BigInteger("1223"),
-            teamDAO.legacyIdOf(new int[]{2, 1}, new long[]{3L, 2L})
+            new BigInteger("1112"),
+            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{c2, c1})
         );
         assertEquals(
-            new BigInteger("121233"),
-            teamDAO.legacyIdOf(new int[]{2, 1}, new long[]{3L, 2L}, Race.ZERG, Race.TERRAN)
+            new BigInteger("111213"),
+            teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{c1, c2}, Race.ZERG, Race.TERRAN)
         );
     }
 
