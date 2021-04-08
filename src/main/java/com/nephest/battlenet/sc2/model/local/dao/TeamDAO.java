@@ -202,6 +202,9 @@ public class TeamDAO
     public BigInteger legacyIdOf(int[] realm, long[] battlenetId, Race... race)
     {
         StringBuilder sb = new StringBuilder();
+        Arrays.sort(realm);
+        Arrays.sort(battlenetId);
+        Arrays.sort(race);
         for(int i = 0; i < realm.length; i++)
         {
             sb.append(realm[i]).append(battlenetId[i]);

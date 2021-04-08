@@ -117,6 +117,7 @@ public class StandardDataReadonlyIT
         assertEquals(2, count);
     }
 
+    //each array must be sorted in a natural order
     @Test
     public void testTeamLegacyIdGeneration()
     {
@@ -127,6 +128,14 @@ public class StandardDataReadonlyIT
         assertEquals(
             new BigInteger("1223"),
             teamDAO.legacyIdOf(new int[]{1, 2}, new long[]{2L, 3L})
+        );
+        assertEquals(
+            new BigInteger("1223"),
+            teamDAO.legacyIdOf(new int[]{2, 1}, new long[]{3L, 2L})
+        );
+        assertEquals(
+            new BigInteger("121233"),
+            teamDAO.legacyIdOf(new int[]{2, 1}, new long[]{3L, 2L}, Race.ZERG, Race.TERRAN)
         );
     }
 
