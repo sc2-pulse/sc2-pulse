@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
@@ -18,17 +18,17 @@ public class BlizzardProfileLadder
     private BlizzardProfileTeam[] ladderTeams = EMPTY_LADDER_TEAMS;
 
     @NotNull @Valid
-    private BaseLeague.LeagueType leagueType;
+    private BaseLeague league;
 
     public BlizzardProfileLadder(){}
 
     public BlizzardProfileLadder
     (
-        @Valid @NotNull BlizzardProfileTeam[] ladderTeams, @NotNull @Valid BaseLeague.LeagueType leagueType
+        @Valid @NotNull BlizzardProfileTeam[] ladderTeams, @NotNull @Valid BaseLeague league
     )
     {
         this.ladderTeams = ladderTeams;
-        this.leagueType = leagueType;
+        this.league = league;
     }
 
     public BlizzardProfileTeam[] getLadderTeams()
@@ -41,14 +41,14 @@ public class BlizzardProfileLadder
         this.ladderTeams = ladderTeams;
     }
 
-    public BaseLeague.LeagueType getLeagueType()
+    public BaseLeague getLeague()
     {
-        return leagueType;
+        return league;
     }
 
-    public void setLeagueType(BaseLeague.LeagueType leagueType)
+    public void setLeague(BaseLeague league)
     {
-        this.leagueType = leagueType;
+        this.league = league;
     }
 
 }

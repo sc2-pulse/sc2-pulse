@@ -6,10 +6,7 @@ package com.nephest.battlenet.sc2.web.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -32,6 +29,7 @@ import reactor.util.function.Tuple5;
 import reactor.util.function.Tuples;
 
 import java.util.Arrays;
+import java.util.Set;
 import java.util.stream.LongStream;
 
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
@@ -309,13 +307,14 @@ extends BaseAPI
                 true, 1);
     }
 
-    public Mono<BlizzardProfileLadder> getProfile1v1Ladder(Tuple3<Region, BlizzardPlayerCharacter[], Long> id)
+    public Mono<BlizzardProfileLadder> getProfileLadder
+    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, Set<QueueType> queueTypes)
     {
-        return chainProfileLadderMono(id, 0);
+        return chainProfileLadderMono(id, 0, queueTypes);
     }
 
     private Mono<BlizzardProfileLadder> chainProfileLadderMono
-    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, int ix)
+    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, int ix, Set<QueueType> queueTypes)
     {
         int prevIx = ix - 1;
         if(ix > 0) LOG.debug("Profile ladder not found {} times: {}/{}/{}",
@@ -324,11 +323,11 @@ extends BaseAPI
         {
             if(ix < id.getT2().length)
             {
-                return getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3())
+                return getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3(), queueTypes)
                     .onErrorResume((t)->{
                         if(t.getMessage().startsWith("Invalid game mode")) return Mono.error(t);
                         LOG.debug(ExceptionUtils.getRootCauseMessage(t));
-                        return chainProfileLadderMono(id, ix + 1);
+                        return chainProfileLadderMono(id, ix + 1, queueTypes);
                     });
             }
             return Mono.error(new NoRetryException(
@@ -339,7 +338,8 @@ extends BaseAPI
         });
     }
 
-    protected Mono<BlizzardProfileLadder> getProfileLadderMono(Region region, BlizzardPlayerCharacter character,long id)
+    protected Mono<BlizzardProfileLadder> getProfileLadderMono
+    (Region region, BlizzardPlayerCharacter character, long id, Set<QueueType> queueTypes)
     {
         return getWebClient()
             .get()
@@ -355,7 +355,7 @@ extends BaseAPI
             {
                 try
                 {
-                    return extractProfileLadder(s, id);
+                    return extractProfileLadder(s, id, queueTypes);
                 }
                 catch (JsonProcessingException e)
                 {
@@ -365,7 +365,7 @@ extends BaseAPI
             .retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND));
     }
 
-    private Mono<BlizzardProfileLadder> extractProfileLadder(String s, long ladderId)
+    private Mono<BlizzardProfileLadder> extractProfileLadder(String s, long ladderId, Set<QueueType> queues)
     throws JsonProcessingException
     {
         JsonNode root = objectMapper.readTree(s);
@@ -379,33 +379,41 @@ extends BaseAPI
             LOG.debug("Current ladder membership not found {}", ladderId);
             return Mono.error(new NoRetryException("Current ladder membership not found. Player moved to a new division?"));
         }
-        if (!currentMembership.getLocalizedGameMode().toLowerCase().contains("1v1"))
+        //the length can be in 1-3 range depending on team format and type
+        String[] membershipItems = currentMembership.getLocalizedGameMode().split(" ");
+        TeamFormat teamFormat = TeamFormat.from(membershipItems[0]); //always present
+        TeamType teamType = membershipItems.length < 3 ? TeamType.ARRANGED : TeamType.from(membershipItems[1]);
+        QueueType queueType = QueueType.from(StatsService.VERSION, teamFormat);
+        BaseLeague.LeagueType leagueType = BaseLeague.LeagueType.from(root.at("/league").asText());
+
+        if (!queues.contains(queueType))
             return Mono.error(new NoRetryException("Invalid game mode: " + currentMembership.getLocalizedGameMode()));
 
         BlizzardProfileLadder ladder = new BlizzardProfileLadder(
             objectMapper.treeToValue(root.at("/ladderTeams"), BlizzardProfileTeam[].class),
-            BaseLeague.LeagueType.from(root.at("/league").asText()));
+            new BaseLeague(leagueType, queueType, teamType)
+        );
         return Mono.just(ladder);
     }
 
-    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfile1v1Ladders
-    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, int rps)
+    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfileLadders
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, Set<QueueType> queueTypes, int rps)
     {
         return Flux.fromIterable(ids)
             .parallel(rps)
             .runOn(Schedulers.boundedElastic())
             .flatMap(id->WebServiceUtil
                 .getOnErrorLogAndSkipRateDelayedMono(
-                    getProfile1v1Ladder(id), DELAY,
+                    getProfileLadder(id, queueTypes), DELAY,
                     (t)->t.getMessage().startsWith("Invalid game mode") ? LogUtil.LogLevel.DEBUG : LogUtil.LogLevel.WARNING)
                 .zipWith(Mono.just(id)),
                 true, 1);
     }
 
-    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfile1v1Ladders
-    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids)
+    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfileLadders
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, Set<QueueType> queueTypes)
     {
-        return getProfile1v1Ladders(ids, SAFE_REQUESTS_PER_SECOND_CAP);
+        return getProfileLadders(ids, queueTypes, SAFE_REQUESTS_PER_SECOND_CAP);
     }
 
     public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)

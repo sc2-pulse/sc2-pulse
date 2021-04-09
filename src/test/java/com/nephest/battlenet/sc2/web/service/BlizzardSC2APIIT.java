@@ -101,12 +101,28 @@ public class BlizzardSC2APIIT
 
     private void testFetchAlternative()
     {
-        BlizzardSeason bSeason = api.getCurrentOrLastSeason(Region.US, 46).block();
-        long ladderLongId = api.getLeague(Region.US, bSeason, BaseLeague.LeagueType.DIAMOND, QueueType.LOTV_1V1,TeamType.ARRANGED, true)
+        api.getProfileLadder(Tuples.of(Region.EU, new BlizzardPlayerCharacter[]{
+                new BlizzardPlayerCharacter(1L, 1, "Name#123"),
+                new BlizzardPlayerCharacter(2L, 2, "Name2#123"),
+                new BlizzardPlayerCharacter(3L, 3, "Name#123")},
+            1L), Set.of(QueueType.LOTV_1V1))
+            .onErrorResume(t->Mono.empty())
+            .block();
+        testFetchAlternative(Region.US, QueueType.LOTV_1V1, TeamType.ARRANGED);
+        testFetchAlternative(Region.US, QueueType.LOTV_4V4, TeamType.RANDOM);
+        testFetchAlternative(Region.US, QueueType.LOTV_ARCHON, TeamType.ARRANGED);
+    }
+    
+    private void testFetchAlternative(Region region, QueueType queueType, TeamType teamType)
+    {
+        BaseLeague.LeagueType leagueType = BaseLeague.LeagueType.DIAMOND;
+        Set<QueueType> queueTypes = Set.of(queueType);
+        BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, 46).block();
+        long ladderLongId = api.getLeague(region, bSeason, leagueType, queueType,teamType, true)
             .block()
             .getTiers()[0].getDivisions()[0].getLadderId();
-        Tuple3<Region, BlizzardPlayerCharacter[], Long> ladderId = api.getProfileLadderId(Region.US, ladderLongId).block();
-        assertEquals(Region.US, ladderId.getT1());
+        Tuple3<Region, BlizzardPlayerCharacter[], Long> ladderId = api.getProfileLadderId(region, ladderLongId).block();
+        assertEquals(region, ladderId.getT1());
         assertEquals(ladderLongId, ladderId.getT3());
         assertNotNull(ladderId.getT2());
         Arrays.stream(ladderId.getT2()).forEach(Assertions::assertNotNull);
@@ -116,21 +132,16 @@ public class BlizzardSC2APIIT
         assertFalse(errors.hasErrors());
 
         BlizzardProfileLadder ladder = api
-            .getProfile1v1Ladder(Tuples.of(ladderId.getT1(), ladderId.getT2(), ladderId.getT3())).block();
+            .getProfileLadder(Tuples.of(ladderId.getT1(), ladderId.getT2(), ladderId.getT3()), queueTypes).block();
         BlizzardProfileTeam[] teams = ladder.getLadderTeams();
         assertTrue(teams.length > 0);
         Errors teamErrors = new BeanPropertyBindingResult(teams, teams.toString());
         validator.validate(teams, teamErrors);
         assertFalse(teamErrors.hasErrors());
-        assertEquals(BaseLeague.LeagueType.DIAMOND, ladder.getLeagueType());
-
-        api.getProfile1v1Ladder(Tuples.of(Region.EU, new BlizzardPlayerCharacter[]{
-            new BlizzardPlayerCharacter(1L, 1, "Name#123"),
-            new BlizzardPlayerCharacter(2L, 2, "Name2#123"),
-            new BlizzardPlayerCharacter(3L, 3, "Name#123")},
-        1L))
-        .onErrorResume(t->Mono.empty())
-        .block();
+        assertEquals(queueType.getTeamFormat().getMemberCount(teamType), teams[0].getTeamMembers().length);
+        assertEquals(leagueType, ladder.getLeague().getType());
+        assertEquals(queueType, ladder.getLeague().getQueueType());
+        assertEquals(teamType, ladder.getLeague().getTeamType());
     }
 
     @Test @Order(2)
@@ -154,6 +165,7 @@ public class BlizzardSC2APIIT
     public void testRetrying()
     throws Exception
     {
+        Set<QueueType> queueTypes = Set.of(QueueType.LOTV_1V1);
         MockWebServer server = new MockWebServer();
         server.start();
         api.setRegionUri(server.url("/someurl").uri().toString());
@@ -177,7 +189,7 @@ public class BlizzardSC2APIIT
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, 1L), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getMatches(SERRAL), VALID_MATCHES, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderId(Region.US, 292783), VALID_LEGACY_LADDER, server, RETRY_COUNT);
-        WebServiceTestUtil.testRetrying(api.getProfileLadderMono(Region.US, BLIZZARD_CHARACTER, 292783L),
+        WebServiceTestUtil.testRetrying(api.getProfileLadderMono(Region.US, BLIZZARD_CHARACTER, 292783L, queueTypes),
             VALID_PROFILE_LADDER, server, RETRY_COUNT);
         server.shutdown();
 

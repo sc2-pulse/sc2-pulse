@@ -106,7 +106,7 @@ public class AlternativeLadderService
         api.getProfileLadderIds(season.getRegion(), divisions)
             .doOnNext(profileLadderIds::add)
             .sequential().blockLast();
-        api.getProfile1v1Ladders(profileLadderIds, BATCH_SIZE)
+        api.getProfileLadders(profileLadderIds, Set.of(QueueType.LOTV_1V1), BATCH_SIZE)
             .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
             .sequential().blockLast();
     }
@@ -149,7 +149,7 @@ public class AlternativeLadderService
         ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds =
             get1v1ProfileLadderIds(season, lastDivision);
         LOG.info("{} {} ladders found", profileIds.size(), season);
-        api.getProfile1v1Ladders(profileIds, BATCH_SIZE)
+        api.getProfileLadders(profileIds, Set.of(QueueType.LOTV_1V1), BATCH_SIZE)
             .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
             .sequential().blockLast();
     }
@@ -185,8 +185,8 @@ public class AlternativeLadderService
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateTeams(Season season, Tuple3<Region, BlizzardPlayerCharacter[], Long> id, BlizzardProfileLadder ladder)
     {
-        BaseLeague baseLeague = new BaseLeague(ladder.getLeagueType(), QueueType.LOTV_1V1, TeamType.ARRANGED);
-        Division division = getOrCreate1v1Division(season, ladder.getLeagueType(), id.getT3());
+        BaseLeague baseLeague = ladder.getLeague();
+        Division division = getOrCreate1v1Division(season, baseLeague.getType(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
         Set<TeamState> states = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
         List<PlayerCharacter> characters = new ArrayList<>(ladder.getLadderTeams().length);
