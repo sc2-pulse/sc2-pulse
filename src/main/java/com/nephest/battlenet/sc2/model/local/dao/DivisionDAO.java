@@ -92,7 +92,7 @@ public class DivisionDAO
         + "season.battlenet_id=:season "
         + "AND season.region=:region "
         + "AND league.type IN (:leagues) "
-        + "AND league.queue_type = :queueType "
+        + "AND league.queue_type IN (:queueTypes) "
         + "AND league.team_type = :teamType ";
 
     private static final String FIND_LAST_DIVISION_BATTLENET_ID_BY_SEASON_AND_REGION =
@@ -291,18 +291,21 @@ public class DivisionDAO
         int season,
         Region region,
         BaseLeague.LeagueType[] leagues,
-        QueueType queueType,
+        QueueType[] queueTypes,
         TeamType teamType
     )
     {
         Set<Integer> leagueInts = Arrays.stream(leagues)
             .map(l->conversionService.convert(l, Integer.class))
             .collect(Collectors.toSet());
+        Set<Integer> queueInts = Arrays.stream(queueTypes)
+            .map(o->conversionService.convert(o, Integer.class))
+            .collect(Collectors.toSet());
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("season", season)
             .addValue("region", conversionService.convert(region, Integer.class))
             .addValue("leagues", leagueInts)
-            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("queueTypes", queueInts)
             .addValue("teamType", conversionService.convert(teamType, Integer.class));
         return template.query(FIND_DIVISION_BATTLENET_IDS, params, DAOUtils.LONG_MAPPER);
     }

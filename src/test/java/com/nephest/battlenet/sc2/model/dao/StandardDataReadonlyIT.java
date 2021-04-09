@@ -100,7 +100,7 @@ public class StandardDataReadonlyIT
             SeasonGenerator.DEFAULT_SEASON_ID,
             Region.US,
             new BaseLeague.LeagueType[]{BaseLeague.LeagueType.DIAMOND, BaseLeague.LeagueType.MASTER},
-            QueueType.LOTV_1V1,
+            new QueueType[]{QueueType.LOTV_1V1},
             TeamType.ARRANGED
         );
         assertEquals(2, ids.size());

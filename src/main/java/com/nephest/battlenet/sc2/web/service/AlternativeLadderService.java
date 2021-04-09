@@ -99,7 +99,7 @@ public class AlternativeLadderService
             season.getBattlenetId(),
             season.getRegion(),
             leagues,
-            QueueType.LOTV_1V1, TeamType.ARRANGED
+            new QueueType[]{QueueType.LOTV_1V1}, TeamType.ARRANGED
         );
         ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
             new ConcurrentLinkedQueue<>();
