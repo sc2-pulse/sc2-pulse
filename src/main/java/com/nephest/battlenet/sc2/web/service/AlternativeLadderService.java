@@ -206,7 +206,7 @@ public class AlternativeLadderService
                 .orElse(null);
 
             if(playerCharacter == null) {
-                addNewAlternativeCharacter(season, baseLeague, division, bTeam, newTeams);
+                addNewAlternativeCharacter(season, team, bTeam, newTeams);
                 continue;
             }
 
@@ -234,8 +234,7 @@ public class AlternativeLadderService
     private void addNewAlternativeCharacter
     (
         Season season,
-        BaseLeague baseLeague,
-        Division division,
+        Team team,
         BlizzardProfileTeam bTeam,
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams
     )
@@ -246,12 +245,6 @@ public class AlternativeLadderService
             + bTeam.getTeamMembers()[0].getId();
         Account fakeAccount = new Account(null, Partition.of(season.getRegion()), fakeBtag);
         PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bTeam.getTeamMembers()[0]);
-        Team team = new Team(
-            null,
-            season.getBattlenetId(), season.getRegion(),
-            baseLeague, ALTERNATIVE_TIER,
-            division.getId(), null,
-            bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(), bTeam.getPoints());
         newTeams.add(Tuples.of(fakeAccount, character, team, bTeam.getTeamMembers()[0].getFavoriteRace()));
     }
 
