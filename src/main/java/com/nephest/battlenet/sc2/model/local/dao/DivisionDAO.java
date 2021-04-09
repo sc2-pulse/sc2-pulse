@@ -95,7 +95,7 @@ public class DivisionDAO
         + "AND league.queue_type = :queueType "
         + "AND league.team_type = :teamType ";
 
-    private static final String FIND_LAST_DIVISION_BATTLENET_ID =
+    private static final String FIND_LAST_DIVISION_BATTLENET_ID_BY_SEASON_AND_REGION =
         "SELECT MAX(division.battlenet_id) "
         + "FROM division "
         + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
@@ -103,7 +103,10 @@ public class DivisionDAO
         + "INNER JOIN season ON league.season_id = season.id "
         + "WHERE "
         + "season.battlenet_id=:season "
-        + "AND season.region=:region "
+        + "AND season.region=:region ";
+
+    private static final String FIND_LAST_DIVISION_BATTLENET_ID_BY_LADDER =
+        FIND_LAST_DIVISION_BATTLENET_ID_BY_SEASON_AND_REGION + " "
         + "AND league.queue_type = :queueType "
         + "AND league.team_type = :teamType";
 
@@ -239,6 +242,14 @@ public class DivisionDAO
         return Optional.ofNullable(template.query(FIND_DIVISION, params, DivisionDAO.STD_EXTRACTOR));
     }
 
+    public Optional<Long> findLastDivision(int season, Region region)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("region", conversionService.convert(region, Integer.class));
+        return Optional.ofNullable(template.query(FIND_LAST_DIVISION_BATTLENET_ID_BY_SEASON_AND_REGION, params, DAOUtils.LONG_EXTRACTOR));
+    }
+
     public Optional<Long> findLastDivision
     (
         int season,
@@ -252,7 +263,7 @@ public class DivisionDAO
             .addValue("region", conversionService.convert(region, Integer.class))
             .addValue("queueType", conversionService.convert(queueType, Integer.class))
             .addValue("teamType", conversionService.convert(teamType, Integer.class));
-        return Optional.ofNullable(template.query(FIND_LAST_DIVISION_BATTLENET_ID, params, DAOUtils.LONG_EXTRACTOR));
+        return Optional.ofNullable(template.query(FIND_LAST_DIVISION_BATTLENET_ID_BY_LADDER, params, DAOUtils.LONG_EXTRACTOR));
     }
 
     public Map<Division, PlayerCharacter> findProfileDivisionIds

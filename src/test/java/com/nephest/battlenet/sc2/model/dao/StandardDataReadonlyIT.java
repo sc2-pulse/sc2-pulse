@@ -93,6 +93,7 @@ public class StandardDataReadonlyIT
         //grandmaster
         assertEquals(6, divisionDAO.findLastDivision(SeasonGenerator.DEFAULT_SEASON_ID,
             Region.US, QueueType.LOTV_1V1, TeamType.ARRANGED).get());
+        assertEquals(16, divisionDAO.findLastDivision(SeasonGenerator.DEFAULT_SEASON_ID, Region.EU).get());
 
         List<Long> longIds = divisionDAO.findDivisionIds
         (
