@@ -265,7 +265,7 @@ public class AlternativeLadderService
             curNewTeam.getT2().setAccountId(account.getId());
             PlayerCharacter character = playerCharacterDao.merge(curNewTeam.getT2());
 
-            Team team = teamDao.merge(curNewTeam.getT3());
+            Team team = curNewTeam.getT3();
             TeamMember teamMember = new TeamMember(team.getId(), character.getId(), null, null, null, null);
             teamMember.setGamesPlayed(curNewTeam.getT4(), team.getWins() + team.getLosses() + team.getTies());
             teamMembers.add(teamMember);
