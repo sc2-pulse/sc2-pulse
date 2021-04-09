@@ -13,6 +13,7 @@ import javax.validation.constraints.NotNull;
 
 @JsonNaming(PropertyNamingStrategy.SnakeCaseStrategy.class)
 public class BlizzardLadderLeagueKey
+extends BaseLeague
 {
 
     @NotNull
