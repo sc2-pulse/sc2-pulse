@@ -320,7 +320,8 @@ public class TeamDAO
     {
         Race[] racesToUse = team.getQueueType() == QueueType.LOTV_1V1 ? races : Race.EMPTY_RACE_ARRAY;
         MapSqlParameterSource params = createParameterSource(team);
-        params.addValue("legacyId", legacyIdOf(characters, racesToUse));
+        team.setLegacyId(legacyIdOf(characters, racesToUse));
+        params.addValue("legacyId", team.getLegacyId());
         params.addValue("gamesPlayed", team.getWins() + team.getLosses() + team.getTies());
         team.setId(template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         if(team.getId() == null)  return null;
