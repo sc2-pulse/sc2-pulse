@@ -94,14 +94,6 @@ implements java.io.Serializable
         );
     }
 
-    public static boolean shouldUpdate(Team existingTeam, Team newTeam)
-    {
-        return (existingTeam.getBattlenetId() == null && newTeam.getBattlenetId() != null)
-            || existingTeam.getWins() + existingTeam.getLosses() + existingTeam.getTies()
-                != newTeam.getWins() + newTeam.getLosses() + newTeam.getTies()
-            || !existingTeam.getDivisionId().equals(newTeam.getDivisionId());
-    }
-
     @Override
     public int hashCode()
     {
