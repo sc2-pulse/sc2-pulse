@@ -410,7 +410,7 @@ public class StatsService
         BlizzardTierDivision bDivision = t.getT2();
         Division division = saveDivision(season, league, tier, bDivision);
         updateTeams(t.getT1().getTeams(), season, league, tier, division, lastUpdateStart);
-        LOG.debug("Ladder saved: {} {}", season, division.getBattlenetId());
+        LOG.debug("Ladder saved: {} {} {}", season, division.getBattlenetId(), league);
     }
 
     public Division saveDivision

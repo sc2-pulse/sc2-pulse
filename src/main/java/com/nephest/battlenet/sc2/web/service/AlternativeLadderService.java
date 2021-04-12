@@ -209,7 +209,7 @@ public class AlternativeLadderService
         savePlayerCharacters(characters);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
         teamStateDAO.saveState(states.toArray(TeamState[]::new));
-        LOG.debug("Ladder saved: {} {}", id.getT1(), id.getT3());
+        LOG.debug("Ladder saved: {} {} {}", id.getT1(), id.getT3(), ladder.getLeague());
     }
 
     private void extractTeamData
