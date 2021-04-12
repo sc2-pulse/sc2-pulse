@@ -248,8 +248,7 @@ public class StatsService
 
         League league = new League(null, null, lKey.getLeagueId(), lKey.getQueueId(), lKey.getTeamType());
         LeagueTier tier = new LeagueTier(null, null, AlternativeLadderService.ALTERNATIVE_TIER, 0, 0);
-        Division division = alternativeLadderService.getOrCreate1v1Division(
-            season, lKey.getQueueId(), lKey.getTeamType(), lKey.getLeagueId(), id);
+        Division division = alternativeLadderService.getOrCreateDivision(season, lKey, id);
         updateTeams(bLadder.getTeams(), season, league, tier, division, null);
     }
 
@@ -319,7 +318,7 @@ public class StatsService
         {
             if(queues.length < QueueType.getTypes(VERSION).size())
             {
-                alternativeLadderService.updateThenSmartDiscoverSeason(season, leagues);
+                alternativeLadderService.updateThenSmartDiscoverSeason(season, queues, leagues);
             }
             else
             {
@@ -422,16 +421,14 @@ public class StatsService
         BlizzardTierDivision bDivision
     )
     {
-        //alternative ladder update updates only 1v1
-        if(ignoreAlternativeData || league.getQueueType() != QueueType.LOTV_1V1)
-            return divisionDao.merge(Division.of(tier, bDivision));
+        if(ignoreAlternativeData) return divisionDao.merge(Division.of(tier, bDivision));
 
         /*
             Alternative ladder update doesn't have tier info, so it creates divisions with the default tier.
             Find such divisions and update their tier.
          */
         Division division = divisionDao.findDivision(
-            season.getBattlenetId(), season.getRegion(), QueueType.LOTV_1V1, TeamType.ARRANGED, bDivision.getLadderId())
+            season.getBattlenetId(), season.getRegion(), league.getQueueType(), league.getTeamType(), bDivision.getLadderId())
             .orElseGet(()->Division.of(tier, bDivision));
         division.setTierId(tier.getId());
 
@@ -480,17 +477,30 @@ public class StatsService
         BlizzardTeam bTeam
     )
     {
-        //alternative ladder update updates only 1v1
-        if(ignoreAlternativeData || league.getQueueType() != QueueType.LOTV_1V1)
-            return teamDao.merge(Team.of(season, league, tier, division, bTeam));
+        if(ignoreAlternativeData) return teamDao.merge(Team.of(season, league, tier, division, bTeam));
 
-        //alternative ladder does not have battlenet id, find such teams and update them
-        BaseLocalTeamMember member = new BaseLocalTeamMember();
-        for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
-            member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
         Team team = Team.of(season, league, tier, division, bTeam);
-        BlizzardPlayerCharacter bChar = bTeam.getMembers()[0].getCharacter();
-        return teamDao.mergeLegacy(team, new BlizzardPlayerCharacter[]{bChar}, member.getFavoriteRace());
+        BlizzardPlayerCharacter[] bChars = Arrays.stream(bTeam.getMembers())
+            .map(BlizzardTeamMember::getCharacter)
+            .toArray(BlizzardPlayerCharacter[]::new);
+        return teamDao.mergeLegacy(team, bChars, extractLegacyIdRaces(league, bTeam));
+    }
+
+    private static Race[] extractLegacyIdRaces(League league, BlizzardTeam bTeam)
+    {
+        Race[] races;
+        if(league.getQueueType() == QueueType.LOTV_1V1)
+        {
+            BaseLocalTeamMember member = new BaseLocalTeamMember();
+            for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
+                member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
+            races = new Race[]{member.getFavoriteRace()};
+        }
+        else
+        {
+            races = Race.EMPTY_RACE_ARRAY;
+        }
+        return races;
     }
 
     //cross field validation

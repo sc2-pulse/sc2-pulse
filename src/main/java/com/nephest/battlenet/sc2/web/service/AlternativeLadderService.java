@@ -91,7 +91,7 @@ public class AlternativeLadderService
     public static final int BATCH_SIZE = 30;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
-    public void updateSeason(Season season, BaseLeague.LeagueType[] leagues)
+    public void updateSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
         LOG.debug("Updating season {}", season);
         List<Long> divisions = divisionDao.findDivisionIds
@@ -99,45 +99,45 @@ public class AlternativeLadderService
             season.getBattlenetId(),
             season.getRegion(),
             leagues,
-            new QueueType[]{QueueType.LOTV_1V1}, TeamType.ARRANGED
+            queueTypes, TeamType.ARRANGED
         );
         ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
             new ConcurrentLinkedQueue<>();
         api.getProfileLadderIds(season.getRegion(), divisions)
             .doOnNext(profileLadderIds::add)
             .sequential().blockLast();
-        api.getProfileLadders(profileLadderIds, Set.of(QueueType.LOTV_1V1), BATCH_SIZE)
+        api.getProfileLadders(profileLadderIds, Set.of(queueTypes), BATCH_SIZE)
             .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
             .sequential().blockLast();
     }
 
-    public void updateThenSmartDiscoverSeason(Season season, BaseLeague.LeagueType[] leagues)
+    public void updateThenSmartDiscoverSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
         int divisionCount = divisionDao.getDivisionCount(season.getBattlenetId(), season.getRegion(), leagues, QueueType.LOTV_1V1, TeamType.ARRANGED);
         if(divisionCount < SMART_DISCOVERY_MAX.get(season.getRegion()))
         {
-            updateThenContinueDiscoverSeason(season, leagues);
+            updateThenContinueDiscoverSeason(season, queueTypes, leagues);
         }
         else
         {
-            updateSeason(season, leagues);
+            updateSeason(season, queueTypes, leagues);
         }
     }
 
     public void discoverSeason(Season season)
     {
-        long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion(),
-            QueueType.LOTV_1V1, TeamType.ARRANGED).orElse(FIRST_DIVISION_ID) + 1;
+        long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion())
+            .orElse(FIRST_DIVISION_ID) + 1;
         discoverSeason(season, lastDivision);
     }
 
-    public void updateThenContinueDiscoverSeason(Season season, BaseLeague.LeagueType[] leagues)
+    public void updateThenContinueDiscoverSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
-        updateSeason(season, leagues);
+        updateSeason(season, queueTypes, leagues);
         long lastDivision = divisionDao
-            .findLastDivision(season.getBattlenetId(), season.getRegion(), QueueType.LOTV_1V1, TeamType.ARRANGED)
+            .findLastDivision(season.getBattlenetId(), season.getRegion())
             .orElseGet(()->divisionDao
-                .findLastDivision(season.getBattlenetId() - 1, season.getRegion(),QueueType.LOTV_1V1, TeamType.ARRANGED)
+                .findLastDivision(season.getBattlenetId() - 1, season.getRegion())
                 .orElse(FIRST_DIVISION_ID)) + 1;
         discoverSeason(season, lastDivision);
     }
@@ -147,14 +147,14 @@ public class AlternativeLadderService
         LOG.info("Discovering {} ladders", season);
 
         ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds =
-            get1v1ProfileLadderIds(season, lastDivision);
+            getProfileLadderIds(season, lastDivision);
         LOG.info("{} {} ladders found", profileIds.size(), season);
-        api.getProfileLadders(profileIds, Set.of(QueueType.LOTV_1V1), BATCH_SIZE)
+        api.getProfileLadders(profileIds, QueueType.getTypes(StatsService.VERSION), BATCH_SIZE)
             .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
             .sequential().blockLast();
     }
 
-    private ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> get1v1ProfileLadderIds
+    private ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
     (Season season, long lastDivision)
     {
         ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
@@ -185,47 +185,55 @@ public class AlternativeLadderService
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateTeams(Season season, Tuple3<Region, BlizzardPlayerCharacter[], Long> id, BlizzardProfileLadder ladder)
     {
+        int teamMemberCount = ladder.getLeague().getQueueType().getTeamFormat()
+            .getMemberCount(ladder.getLeague().getTeamType());
+        int ladderMemberCount = ladder.getLadderTeams().length * teamMemberCount;
         BaseLeague baseLeague = ladder.getLeague();
-        Division division = getOrCreate1v1Division(season, baseLeague.getType(), id.getT3());
-        Set<TeamMember> members = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
+        Division division = getOrCreateDivision(season, ladder.getLeague(), id.getT3());
+        Set<TeamMember> members = new HashSet<>(ladderMemberCount, 1.0F);
         Set<TeamState> states = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
-        List<PlayerCharacter> characters = new ArrayList<>(ladder.getLadderTeams().length);
+        List<PlayerCharacter> characters = new ArrayList<>();
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams = new ArrayList<>();
         for(BlizzardProfileTeam bTeam : ladder.getLadderTeams())
         {
             Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
             validator.validate(bTeam, errors);
-            if(errors.hasErrors() || !isValidTeam(bTeam, 1)) continue;
+            if(errors.hasErrors() || !isValidTeam(bTeam, teamMemberCount)) continue;
 
-            BlizzardProfileTeamMember bMember = bTeam.getTeamMembers()[0];
-            Team team = save1v1Team(season, baseLeague, bTeam, division);
-            //old team, nothing to update
-            if(team == null) continue;
+            Team team = saveTeam(season, baseLeague, bTeam, division);
+            if(team == null) continue; //old team, nothing to update
 
-            PlayerCharacter playerCharacter = playerCharacterDao.find(id.getT1(), bMember.getRealm(), bMember.getId())
-                .orElse(null);
-
-            if(playerCharacter == null) {
-                addNewAlternativeCharacter(season, team, bTeam, newTeams);
-                continue;
-            }
-
-            if(!playerCharacter.getName().equals(bMember.getName()))
-            {
-                playerCharacter.setName(bMember.getName());
-                characters.add(playerCharacter);
-            }
-
-            TeamMember member = new TeamMember(team.getId(), playerCharacter.getId(), null, null, null, null);
-            member.setGamesPlayed(bMember.getFavoriteRace(), bTeam.getWins() + bTeam.getLosses());
-            members.add(member);
-            states.add(TeamState.of(team));
+            extractTeamData(season, team, bTeam, newTeams, characters, members, states);
         }
         saveNewCharacterData(newTeams, members, states);
         savePlayerCharacters(characters);
-        if(members.size() > 0) teamMemberDao.merge(members.toArray(new TeamMember[0]));
+        teamMemberDao.merge(members.toArray(TeamMember[]::new));
         teamStateDAO.saveState(states.toArray(TeamState[]::new));
         LOG.debug("Ladder saved: {} {}", id.getT1(), id.getT3());
+    }
+
+    private void extractTeamData
+    (
+        Season season,
+        Team team,
+        BlizzardProfileTeam bTeam,
+        List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams,
+        List<PlayerCharacter> characters,
+        Set<TeamMember> members,
+        Set<TeamState> states
+    )
+    {
+        for(BlizzardProfileTeamMember bMember : bTeam.getTeamMembers())
+        {
+            PlayerCharacter playerCharacter = playerCharacterDao.find(season.getRegion(), bMember.getRealm(), bMember.getId())
+                .orElse(null);
+
+            if(playerCharacter == null) {
+                addNewAlternativeCharacter(season, team, bMember, newTeams);
+            } else {
+                addExistingAlternativeCharacter(team, bTeam, playerCharacter, bMember, characters, members, states);
+            }
+        }
     }
 
 
@@ -235,17 +243,40 @@ public class AlternativeLadderService
     (
         Season season,
         Team team,
-        BlizzardProfileTeam bTeam,
+        BlizzardProfileTeamMember bMember,
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams
     )
     {
         String fakeBtag = "f#"
             + conversionService.convert(season.getRegion(), Integer.class)
-            + bTeam.getTeamMembers()[0].getRealm()
-            + bTeam.getTeamMembers()[0].getId();
+            + bMember.getRealm()
+            + bMember.getId();
         Account fakeAccount = new Account(null, Partition.of(season.getRegion()), fakeBtag);
-        PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bTeam.getTeamMembers()[0]);
-        newTeams.add(Tuples.of(fakeAccount, character, team, bTeam.getTeamMembers()[0].getFavoriteRace()));
+        PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bMember);
+        newTeams.add(Tuples.of(fakeAccount, character, team, bMember.getFavoriteRace()));
+    }
+
+    private void addExistingAlternativeCharacter
+    (
+        Team team,
+        BlizzardProfileTeam bTeam,
+        PlayerCharacter playerCharacter,
+        BlizzardProfileTeamMember bMember,
+        List<PlayerCharacter> characters,
+        Set<TeamMember> members,
+        Set<TeamState> states
+    )
+    {
+        if(!playerCharacter.getName().equals(bMember.getName()))
+        {
+            playerCharacter.setName(bMember.getName());
+            characters.add(playerCharacter);
+        }
+
+        TeamMember member = new TeamMember(team.getId(), playerCharacter.getId(), null, null, null, null);
+        member.setGamesPlayed(bMember.getFavoriteRace(), bTeam.getWins() + bTeam.getLosses());
+        members.add(member);
+        states.add(TeamState.of(team));
     }
 
     //this ensures the consistent order for concurrent entities(accounts and players)
@@ -282,27 +313,22 @@ public class AlternativeLadderService
         for(PlayerCharacter c : characters) playerCharacterDao.merge(c, true);
     }
 
-    public Division getOrCreate1v1Division
-    (Season season, QueueType queueType, TeamType teamType, BaseLeague.LeagueType leagueType, long battlenetId)
+    public Division getOrCreateDivision
+    (Season season, BaseLeague bLeague, long battlenetId)
     {
         return divisionDao
-            .findDivision(season.getBattlenetId(), season.getRegion(), queueType, teamType, battlenetId)
-            .orElseGet(()->create1v1Division(season, queueType, teamType, leagueType, battlenetId));
+            .findDivision(season.getBattlenetId(), season.getRegion(), bLeague.getQueueType(), bLeague.getTeamType(), battlenetId)
+            .orElseGet(()-> createDivision(season, bLeague, battlenetId));
     }
 
-    private Division getOrCreate1v1Division(Season season, BaseLeague.LeagueType leagueType, long battlenetId)
-    {
-        return getOrCreate1v1Division(season, QueueType.LOTV_1V1, TeamType.ARRANGED, leagueType, battlenetId);
-    }
-
-    private Division create1v1Division
-    (Season season, QueueType queueType, TeamType teamType, BaseLeague.LeagueType leagueType, long battlenetId)
+    private Division createDivision
+    (Season season, BaseLeague bLeague, long battlenetId)
     {
         LeagueTier tier = leagueTierDao.findByLadder(
-            season.getBattlenetId(), season.getRegion(), leagueType, queueType, teamType, ALTERNATIVE_TIER)
+            season.getBattlenetId(), season.getRegion(), bLeague.getType(), bLeague.getQueueType(), bLeague.getTeamType(), ALTERNATIVE_TIER)
             .orElseGet(()->{
                 League league = leagueDao
-                    .merge(new League(null, season.getId(), leagueType, queueType, teamType));
+                    .merge(new League(null, season.getId(), bLeague.getType(), bLeague.getQueueType(), bLeague.getTeamType()));
                 return leagueTierDao.merge(new LeagueTier(null, league.getId(), ALTERNATIVE_TIER, 0, 0));
             });
 
@@ -310,7 +336,7 @@ public class AlternativeLadderService
             .merge(new Division(null, tier.getId(), battlenetId));
     }
 
-    private Team save1v1Team
+    private Team saveTeam
     (
         Season season,
         BaseLeague baseLeague,
@@ -326,7 +352,12 @@ public class AlternativeLadderService
             division.getId(), null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
         );
-        return teamDao.mergeLegacy(team, bTeam.getTeamMembers(), bTeam.getTeamMembers()[0].getFavoriteRace());
+        return teamDao.mergeLegacy(
+            team, bTeam.getTeamMembers(),
+            baseLeague.getQueueType() == QueueType.LOTV_1V1
+                ? new Race[]{bTeam.getTeamMembers()[0].getFavoriteRace()}
+                : Race.EMPTY_RACE_ARRAY
+        );
     }
 
     private boolean isValidTeam(BlizzardProfileTeam team, int expectedMemberCount)
