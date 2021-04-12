@@ -318,8 +318,9 @@ public class TeamDAO
     //this method is intended to be used with legacy teams
     public Team mergeLegacy(Team team, BlizzardPlayerCharacter[] characters, Race... races)
     {
+        Race[] racesToUse = team.getQueueType() == QueueType.LOTV_1V1 ? races : Race.EMPTY_RACE_ARRAY;
         MapSqlParameterSource params = createParameterSource(team);
-        params.addValue("legacyId", legacyIdOf(characters, races));
+        params.addValue("legacyId", legacyIdOf(characters, racesToUse));
         params.addValue("gamesPlayed", team.getWins() + team.getLosses() + team.getTies());
         team.setId(template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         if(team.getId() == null)  return null;
