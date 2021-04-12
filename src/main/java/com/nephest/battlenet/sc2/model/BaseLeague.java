@@ -86,6 +86,12 @@ public class BaseLeague
         this.teamType = teamType;
     }
 
+    @Override
+    public String toString()
+    {
+        return "BaseLeague{" + "type=" + type + ", queueType=" + queueType + ", teamType=" + teamType + '}';
+    }
+
     public void setType(LeagueType type)
     {
         this.type = type;
