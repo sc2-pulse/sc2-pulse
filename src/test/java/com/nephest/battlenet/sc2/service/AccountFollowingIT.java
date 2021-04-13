@@ -144,7 +144,7 @@ public class AccountFollowingIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            bronze1.getId(), BigInteger.valueOf(11111L), 100L,
+            BigInteger.valueOf(11111L), bronze1.getId(), BigInteger.valueOf(11111L), 100L,
             100, 0, 0, 0
         );
         teamDAO.create(team1);
@@ -165,7 +165,7 @@ public class AccountFollowingIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            bronze1.getId(), BigInteger.valueOf(11112L), 101L,
+            BigInteger.valueOf(11112L), bronze1.getId(), BigInteger.valueOf(11112L), 101L,
             100, 0, 0, 0
         );
         teamDAO.create(team2);
@@ -180,7 +180,7 @@ public class AccountFollowingIT
         (
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            bronze1.getId(), BigInteger.valueOf(11113L), 99L,
+            BigInteger.valueOf(11113L), bronze1.getId(), BigInteger.valueOf(11113L), 99L,
             100, 0, 0, 0
         );
         teamDAO.create(team3);

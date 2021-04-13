@@ -124,8 +124,8 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            bronze1.getId(), BigInteger.valueOf(11111L), 100L,
-            100, 0, 0, 0
+            BigInteger.valueOf(11111L), bronze1.getId(), BigInteger.valueOf(11111L),
+            100L, 100, 0, 0, 0
         );
         teamDAO.create(team1);
         TeamMember member1 = new TeamMember
@@ -138,8 +138,8 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            bronze1.getId(), BigInteger.valueOf(11112L), 101L,
-            100, 0, 0, 0
+            BigInteger.valueOf(11112L), bronze1.getId(), BigInteger.valueOf(11112L),
+            101L, 100, 0, 0, 0
         );
         teamDAO.create(team2);
         TeamMember member2 = new TeamMember
@@ -152,8 +152,8 @@ public class LadderSearchIndependentIT
         (
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
-            bronze1.getId(), BigInteger.valueOf(11113L), 102L,
-            100, 0, 0, 0
+            BigInteger.valueOf(11113L), bronze1.getId(), BigInteger.valueOf(11113L),
+            102L, 100, 0, 0, 0
         );
         teamDAO.create(team3);
         TeamMember member3 = new TeamMember

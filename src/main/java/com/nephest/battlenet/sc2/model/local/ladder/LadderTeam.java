@@ -29,13 +29,14 @@ implements java.io.Serializable
         Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType leagueTierType,
+        BigInteger legacyId,
         Integer divisionId,
         BigInteger battlenetId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         List<LadderTeamMember> members
     )
     {
-        super(id, season, region, league, leagueTierType, divisionId, battlenetId, rating, wins, losses, ties,points);
+        super(id, season, region, league, leagueTierType, legacyId, divisionId, battlenetId, rating, wins, losses, ties,points);
         this.members = members;
     }
 

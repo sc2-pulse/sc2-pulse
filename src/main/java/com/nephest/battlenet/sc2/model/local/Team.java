@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
@@ -19,6 +20,7 @@ implements java.io.Serializable
 
     private Long id;
 
+    @NotNull
     private BigInteger legacyId;
 
     @NotNull
@@ -55,6 +57,7 @@ implements java.io.Serializable
         Integer season, Region region,
         BaseLeague league,
         LeagueTier.LeagueTierType tierType,
+        BigInteger legacyId,
         Integer divisionId,
         BigInteger battlenetId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points
@@ -62,6 +65,7 @@ implements java.io.Serializable
     {
         super(rating, wins, losses, ties, points);
         this.id = id;
+        this.legacyId = legacyId;
         this.divisionId = divisionId;
         this.battlenetId = battlenetId;
         this.season = season;
@@ -76,7 +80,8 @@ implements java.io.Serializable
         League league,
         LeagueTier tier,
         Division division,
-        BlizzardTeam bTeam
+        BlizzardTeam bTeam,
+        TeamDAO teamDAO
     )
     {
         return new Team
@@ -86,6 +91,7 @@ implements java.io.Serializable
             season.getRegion(),
             league,
             tier.getType(),
+            teamDAO.legacyIdOf(league, bTeam),
             division.getId(),
             bTeam.getId(),
             bTeam.getRating(),

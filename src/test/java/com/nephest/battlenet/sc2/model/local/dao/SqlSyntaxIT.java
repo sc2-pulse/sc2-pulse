@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -136,27 +135,32 @@ public class SqlSyntaxIT
 
         Team newTeam = new Team
         (
-            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.ONE,
+            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
+            BigInteger.ONE, division.getId(), BigInteger.ONE,
             1L, 1, 1, 1, 1
         );
         Team mergedTeam = new Team
         (
-            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.ONE,
+            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
+            BigInteger.ONE, division.getId(), BigInteger.ONE,
             2L, 2, 2, 2, 2
         );
         Team sameTeam = new Team
         (
-            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(), division.getId(), BigInteger.ONE,
+            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
+            BigInteger.ONE, division.getId(), BigInteger.ONE,
             2L, 2, 2, 2, 2
         );
         Team mergedByIdTeam = new Team
         (
-            null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(), division2.getId(), BigInteger.TEN,
+            null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
+            BigInteger.TEN, division2.getId(), BigInteger.TEN,
             3L, 3, 3, 3, 3
         );
         Team zergTeam = new Team
         (
-            null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(), division2.getId(), BigInteger.TWO,
+            null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
+            BigInteger.TWO, division2.getId(), BigInteger.TWO,
             4L, 3, 3, 0, 3
         );
         teamDAO.create(newTeam);
@@ -187,6 +191,7 @@ public class SqlSyntaxIT
         assertEquals(tier2.getType(), foundTeam.getTierType());
         assertEquals(division2.getId(), foundTeam.getDivisionId());
         assertEquals(BigInteger.TEN, foundTeam.getBattlenetId());
+        assertEquals(BigInteger.TEN, foundTeam.getLegacyId());
         assertEquals(3, foundTeam.getRating());
         assertEquals(3, foundTeam.getWins());
         assertEquals(3, foundTeam.getLosses());
@@ -225,11 +230,7 @@ public class SqlSyntaxIT
         assertEquals(zergTeam.getId(),
             teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
         zergTeam.setWins(zergTeam.getWins() + 1);
-        teamDAO.mergeLegacy(
-            zergTeam,
-            new BlizzardPlayerCharacter[]{new BlizzardPlayerCharacter(character.getId(), character.getRealm(), character.getName())},
-            Race.ZERG
-        );
+        teamDAO.mergeLegacy(zergTeam);
         assertEquals(zergTeam.getWins(), teamDAO.find1v1TeamByFavoriteRace(season.getBattlenetId(), character, Race.ZERG)
             .get().getKey().getWins());
         assertEquals(team.getId(),teamDAO.find1v1TeamByFavoriteRace(40, character, Race.TERRAN).get().getKey().getId());

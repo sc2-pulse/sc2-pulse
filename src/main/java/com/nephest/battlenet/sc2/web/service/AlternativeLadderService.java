@@ -349,15 +349,10 @@ public class AlternativeLadderService
             null,
             season.getBattlenetId(), season.getRegion(),
             baseLeague, ALTERNATIVE_TIER,
-            division.getId(), null,
+            teamDao.legacyIdOf(baseLeague, bTeam), division.getId(), null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
         );
-        return teamDao.mergeLegacy(
-            team, bTeam.getTeamMembers(),
-            baseLeague.getQueueType() == QueueType.LOTV_1V1
-                ? new Race[]{bTeam.getTeamMembers()[0].getFavoriteRace()}
-                : Race.EMPTY_RACE_ARRAY
-        );
+        return teamDao.mergeLegacy(team);
     }
 
     private boolean isValidTeam(BlizzardProfileTeam team, int expectedMemberCount)

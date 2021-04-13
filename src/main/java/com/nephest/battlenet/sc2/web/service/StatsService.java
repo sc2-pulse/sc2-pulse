@@ -477,30 +477,8 @@ public class StatsService
         BlizzardTeam bTeam
     )
     {
-        if(ignoreAlternativeData) return teamDao.merge(Team.of(season, league, tier, division, bTeam));
-
-        Team team = Team.of(season, league, tier, division, bTeam);
-        BlizzardPlayerCharacter[] bChars = Arrays.stream(bTeam.getMembers())
-            .map(BlizzardTeamMember::getCharacter)
-            .toArray(BlizzardPlayerCharacter[]::new);
-        return teamDao.mergeLegacy(team, bChars, extractLegacyIdRaces(league, bTeam));
-    }
-
-    private static Race[] extractLegacyIdRaces(League league, BlizzardTeam bTeam)
-    {
-        Race[] races;
-        if(league.getQueueType() == QueueType.LOTV_1V1)
-        {
-            BaseLocalTeamMember member = new BaseLocalTeamMember();
-            for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
-                member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
-            races = new Race[]{member.getFavoriteRace()};
-        }
-        else
-        {
-            races = Race.EMPTY_RACE_ARRAY;
-        }
-        return races;
+        Team team = Team.of(season, league, tier, division, bTeam, teamDao);
+        return ignoreAlternativeData ? teamDao.merge(team) : teamDao.mergeLegacy(team);
     }
 
     //cross field validation

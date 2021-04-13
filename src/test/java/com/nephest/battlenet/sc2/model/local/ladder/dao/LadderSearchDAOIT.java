@@ -140,8 +140,9 @@ public class LadderSearchDAOIT
         BaseLeague bronzeLeague = new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE);
         Team newTeam = new Team
         (
-            null, emptySeasons.get(0).getBattlenetId(), Region.EU, bronzeLeague, TIER_TYPE, bronzeDivision.getId(),
-            BigInteger.valueOf(9999L), 1L, 1, 1, 1, 1
+            null, emptySeasons.get(0).getBattlenetId(), Region.EU, bronzeLeague, TIER_TYPE,
+            BigInteger.valueOf(9999L), bronzeDivision.getId(), BigInteger.valueOf(9999L),
+            1L, 1, 1, 1, 1
         );
         Team team = teamDAO.create(newTeam);
         //old player

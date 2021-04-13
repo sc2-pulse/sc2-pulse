@@ -4,7 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -54,12 +54,12 @@ public class TeamDAO
 
     private static final String CREATE_TEMPLATE = "INSERT INTO team "
         + "("
-            + "%1$sdivision_id, battlenet_id, "
+            + "%1$slegacy_id, division_id, battlenet_id, "
             + "season, region, league_type, queue_type, team_type, tier_type, "
             + "rating, points, wins, losses, ties"
         + ") "
         + "VALUES ("
-            + "%2$s:divisionId, :battlenetId, "
+            + "%2$s:legacyId, :divisionId, :battlenetId, "
             + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
             + ":rating, :points, :wins, :losses, :ties"
         + ")";
@@ -212,12 +212,47 @@ public class TeamDAO
         return new BigInteger(sb.toString());
     }
 
+    public BigInteger legacyIdOf(BaseLeague league, BlizzardTeam bTeam)
+    {
+        BlizzardPlayerCharacter[] bChars = Arrays.stream(bTeam.getMembers())
+            .map(BlizzardTeamMember::getCharacter)
+            .toArray(BlizzardPlayerCharacter[]::new);
+        return legacyIdOf(bChars, extractLegacyIdRaces(league, bTeam));
+    }
+
+    public BigInteger legacyIdOf(BaseLeague league, BlizzardProfileTeam bTeam)
+    {
+        return legacyIdOf
+        (
+            bTeam.getTeamMembers(),
+            league.getQueueType() == QueueType.LOTV_1V1
+                ? new Race[]{bTeam.getTeamMembers()[0].getFavoriteRace()}
+                : Race.EMPTY_RACE_ARRAY
+        );
+    }
+
+    private static Race[] extractLegacyIdRaces(BaseLeague league, BlizzardTeam bTeam)
+    {
+        Race[] races;
+        if(league.getQueueType() == QueueType.LOTV_1V1)
+        {
+            BaseLocalTeamMember member = new BaseLocalTeamMember();
+            for(BlizzardTeamMemberRace race : bTeam.getMembers()[0].getRaces())
+                member.setGamesPlayed(race.getRace(), race.getGamesPlayed());
+            races = new Race[]{member.getFavoriteRace()};
+        }
+        else
+        {
+            races = Race.EMPTY_RACE_ARRAY;
+        }
+        return races;
+    }
+
     private static void initMappers(ConversionService conversionService)
     {
         if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)->
         {
             BigDecimal idDec = (BigDecimal) rs.getObject("team.battlenet_id");
-            BigDecimal legacyId = (BigDecimal) rs.getObject("team.legacy_id");
             Team team = new Team
             (
                 rs.getLong("team.id"),
@@ -230,13 +265,13 @@ public class TeamDAO
                         conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
                     ),
                 conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
+                ((BigDecimal) rs.getObject("team.legacy_id")).toBigInteger(),
                 rs.getInt("team.division_id"),
                 idDec == null ? null : idDec.toBigInteger(),
                 rs.getLong("team.rating"),
                 rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
                 rs.getInt("team.points")
             );
-            if(legacyId != null) team.setLegacyId(legacyId.toBigInteger());
             return team;
         };
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
@@ -316,12 +351,9 @@ public class TeamDAO
     }
 
     //this method is intended to be used with legacy teams
-    public Team mergeLegacy(Team team, BlizzardPlayerCharacter[] characters, Race... races)
+    public Team mergeLegacy(Team team)
     {
-        Race[] racesToUse = team.getQueueType() == QueueType.LOTV_1V1 ? races : Race.EMPTY_RACE_ARRAY;
         MapSqlParameterSource params = createParameterSource(team);
-        team.setLegacyId(legacyIdOf(characters, racesToUse));
-        params.addValue("legacyId", team.getLegacyId());
         params.addValue("gamesPlayed", team.getWins() + team.getLosses() + team.getTies());
         team.setId(template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         if(team.getId() == null)  return null;

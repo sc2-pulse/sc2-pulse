@@ -37,5 +37,8 @@ ALTER TABLE "team"
         UNIQUE ("season", "region", "queue_type", "legacy_id");
 CREATE INDEX "ix_team_ladder_search_full" ON "team"("season", "queue_type", "team_type", "rating", "id");
 
+ALTER TABLE "team"
+    ALTER COLUMN "legacy_id" SET NOT NULL;
+
 SET work_mem = '4MB';
 VACUUM(ANALYZE);

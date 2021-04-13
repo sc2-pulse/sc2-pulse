@@ -125,7 +125,7 @@ CREATE TABLE "team"
 (
 
     "id" BIGSERIAL,
-    "legacy_id" NUMERIC,
+    "legacy_id" NUMERIC NOT NULL,
     "division_id" INTEGER NOT NULL,
     "battlenet_id" NUMERIC(20, 0) NOT NULL,
     "season" SMALLINT NOT NULL,
