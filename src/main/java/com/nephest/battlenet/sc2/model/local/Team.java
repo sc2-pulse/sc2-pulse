@@ -16,7 +16,7 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 7L;
+    private static final long serialVersionUID = 8L;
 
     private Long id;
 
@@ -103,18 +103,19 @@ implements java.io.Serializable
     @Override
     public int hashCode()
     {
-        return Objects.hash(getBattlenetId(), getSeason(), getRegion());
+        return Objects.hash(getSeason(), getRegion(), getQueueType(), getLegacyId());
     }
 
     @Override
     public boolean equals(Object o)
     {
         if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (!(o instanceof Team)) return false;
         Team team = (Team) o;
-        return Objects.equals(getBattlenetId(), team.getBattlenetId())
-            && getSeason().equals(team.getSeason())
-            && getRegion() == team.getRegion();
+        return getSeason().equals(team.getSeason())
+            && getRegion() == team.getRegion()
+            && getQueueType() == team.getQueueType()
+            && getLegacyId().equals(team.getLegacyId());
     }
 
     @Override
@@ -122,9 +123,9 @@ implements java.io.Serializable
     {
         return String.format
         (
-            "%s[%s %s %s]",
+            "%s[%s %s %s %s]",
             Team.class.getSimpleName(),
-            getSeason(), getRegion().toString(), getBattlenetId()
+            getSeason(), getRegion().toString(), getQueueType(), getLegacyId()
         );
     }
 

@@ -66,15 +66,12 @@ public class TeamDAO
 
     private static final String CREATE_QUERY = String.format(CREATE_TEMPLATE, "", "");
 
-    private static final String MERGE_TEMPLATE =
+    private static final String MERGE_CLAUSE =
         " "
-        + "ON CONFLICT(%1$s) DO UPDATE SET "
-        + "%2$s"
+        + "ON CONFLICT(season, region, queue_type, legacy_id) DO UPDATE SET "
+        + "battlenet_id=excluded.battlenet_id, "
         + "division_id=excluded.division_id, "
-        + "season=excluded.season, "
         + "league_type=excluded.league_type, "
-        + "queue_type=excluded.queue_type, "
-        + "team_type=excluded.team_type, "
         + "tier_type=excluded.tier_type, "
         + "rating=excluded.rating, "
         + "points=excluded.points, "
@@ -103,7 +100,7 @@ public class TeamDAO
             + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
             + ":rating, :points, :wins, :losses, :ties "
             + "WHERE NOT EXISTS (SELECT 1 FROM existing) "
-            + String.format(MERGE_TEMPLATE, "region, battlenet_id", "legacy_id=excluded.legacy_id, ")
+            + MERGE_CLAUSE
             + "RETURNING id"
         + "), "
         + "updated AS ("
