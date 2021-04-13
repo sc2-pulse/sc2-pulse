@@ -64,6 +64,7 @@ public class StatsService
     private QueueStatsDAO queueStatsDAO;
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
+    private VarDAO varDAO;
     private Validator validator;
 
     private final AtomicBoolean isUpdating = new AtomicBoolean(false);
@@ -88,6 +89,7 @@ public class StatsService
         QueueStatsDAO queueStatsDAO,
         LeagueStatsDAO leagueStatsDao,
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
+        VarDAO varDAO,
         Validator validator
     )
     {
@@ -105,6 +107,7 @@ public class StatsService
         this.queueStatsDAO = queueStatsDAO;
         this.leagueStatsDao = leagueStatsDao;
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
+        this.varDAO = varDAO;
         this.validator = validator;
     }
 
