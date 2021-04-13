@@ -406,3 +406,12 @@ CREATE TABLE "match_participant"
 );
 
 CREATE INDEX "ix_match_participant_player_character_id" ON "match_participant"("player_character_id");
+
+CREATE TABLE "var"
+(
+    "key" TEXT NOT NULL,
+    "value" TEXT,
+
+    PRIMARY KEY ("key")
+);
+

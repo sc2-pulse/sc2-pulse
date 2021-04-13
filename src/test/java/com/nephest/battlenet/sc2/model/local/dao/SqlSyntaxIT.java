@@ -71,6 +71,9 @@ public class SqlSyntaxIT
     @Autowired
     private ProPlayerAccountDAO proPlayerAccountDAO;
 
+    @Autowired
+    private VarDAO varDAO;
+
     @BeforeAll
     public static void beforeAll(@Autowired DataSource dataSource)
     throws SQLException
@@ -243,6 +246,16 @@ public class SqlSyntaxIT
 
         teamMemberDAO.removeByTeamId(zergTeam.getId());
         assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).isEmpty());
+    }
+
+    @Test
+    public void testVar()
+    {
+        String key = "some. Key";
+        varDAO.merge(key, "1");
+        assertEquals("1", varDAO.find(key).get());
+        varDAO.merge(key, "val ue]1");
+        assertEquals("val ue]1", varDAO.find(key).get());
     }
 
 }

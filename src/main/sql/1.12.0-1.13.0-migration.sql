@@ -44,5 +44,13 @@ ALTER TABLE "team"
     DROP CONSTRAINT "uq_team_region_battlenet_id",
     DROP COLUMN "battlenet_id";
 
+CREATE TABLE "var"
+(
+    "key" TEXT NOT NULL,
+    "value" TEXT,
+
+    PRIMARY KEY ("key")
+);
+
 SET work_mem = '4MB';
 VACUUM(ANALYZE);
