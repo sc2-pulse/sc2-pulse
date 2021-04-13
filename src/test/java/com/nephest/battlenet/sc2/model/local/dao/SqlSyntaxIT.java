@@ -165,20 +165,20 @@ public class SqlSyntaxIT
         );
         teamDAO.create(newTeam);
         teamDAO.create(zergTeam);
-        Team team = teamDAO.mergeLegacy(mergedTeam);
+        Team team = teamDAO.merge(mergedTeam);
         assertNotNull(team.getId());
         assertEquals(2, team.getRating());
         assertEquals(2, team.getWins());
         assertEquals(2, team.getLosses());
         assertEquals(2, team.getTies());
         assertEquals(2, team.getPoints());
-        assertNull(teamDAO.mergeLegacy(team)); //do not update a team when games played or division is the same
+        assertNull(teamDAO.merge(team)); //do not update a team when games played or division is the same
         team.setDivisionId(division2.getId());
-        assertNotNull(teamDAO.mergeLegacy(team));
+        assertNotNull(teamDAO.merge(team));
         team.setDivisionId(division.getId());
-        assertNotNull(teamDAO.mergeLegacy(team));
-        assertNull(teamDAO.mergeLegacy(sameTeam));
-        teamDAO.mergeLegacy(updatedTeam);
+        assertNotNull(teamDAO.merge(team));
+        assertNull(teamDAO.merge(sameTeam));
+        teamDAO.merge(updatedTeam);
         Team foundTeam = teamDAO.findById(updatedTeam.getId()).orElse(null);
         assertEquals(updatedTeam.getId(), foundTeam.getId());
         assertNotNull(foundTeam);
@@ -227,7 +227,7 @@ public class SqlSyntaxIT
         assertEquals(zergTeam.getId(),
             teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
         zergTeam.setWins(zergTeam.getWins() + 1);
-        teamDAO.mergeLegacy(zergTeam);
+        teamDAO.merge(zergTeam);
         assertEquals(zergTeam.getWins(), teamDAO.find1v1TeamByFavoriteRace(season.getBattlenetId(), character, Race.ZERG)
             .get().getKey().getWins());
         assertEquals(team.getId(),teamDAO.find1v1TeamByFavoriteRace(40, character, Race.TERRAN).get().getKey().getId());

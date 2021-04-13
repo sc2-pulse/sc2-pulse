@@ -304,8 +304,7 @@ public class TeamDAO
         return team;
     }
 
-    //this method is intended to be used with legacy teams
-    public Team mergeLegacy(Team team)
+    public Team merge(Team team)
     {
         MapSqlParameterSource params = createParameterSource(team);
         params.addValue("gamesPlayed", team.getWins() + team.getLosses() + team.getTies());

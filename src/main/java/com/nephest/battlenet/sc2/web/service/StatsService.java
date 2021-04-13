@@ -467,7 +467,7 @@ public class StatsService
         BlizzardTeam bTeam
     )
     {
-        return teamDao.mergeLegacy(Team.of(season, league, tier, division, bTeam, teamDao));
+        return teamDao.merge(Team.of(season, league, tier, division, bTeam, teamDao));
     }
 
     //cross field validation

@@ -352,7 +352,7 @@ public class AlternativeLadderService
             teamDao.legacyIdOf(baseLeague, bTeam), division.getId(), null,
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
         );
-        return teamDao.mergeLegacy(team);
+        return teamDao.merge(team);
     }
 
     private boolean isValidTeam(BlizzardProfileTeam team, int expectedMemberCount)
