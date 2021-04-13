@@ -65,7 +65,6 @@ public class TeamDAO
         + ")";
 
     private static final String CREATE_QUERY = String.format(CREATE_TEMPLATE, "", "");
-    private static final String CREATE_WITH_ID_QUERY = String.format(CREATE_TEMPLATE, "id, ", ":id, ");
 
     private static final String MERGE_TEMPLATE =
         " "
@@ -82,20 +81,6 @@ public class TeamDAO
         + "wins=excluded.wins, "
         + "losses=excluded.losses, "
         + "ties=excluded.ties ";
-    private static final String MERGE_CONDITION =
-        "WHERE team.wins + team.losses + team.ties <> excluded.wins + excluded.losses + excluded.ties "
-        + "OR team.division_id <> excluded.division_id";
-
-    private static final String MERGE_QUERY = CREATE_QUERY
-        + String.format(MERGE_TEMPLATE + MERGE_CONDITION, "region, battlenet_id", "");
-    private static final String FORCE_MERGE_QUERY = CREATE_QUERY
-        + String.format(MERGE_TEMPLATE, "region, battlenet_id", "");
-
-    private static final String MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
-        + String.format(MERGE_TEMPLATE + MERGE_CONDITION, "id",
-            "region=excluded.region, battlenet_id = excluded.battlenet_id, legacy_id = excluded.legacy_id, ");
-    private static final String FORCE_MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
-        + String.format(MERGE_TEMPLATE, "id", "region=excluded.region, battlenet_id = excluded.battlenet_id, legacy_id = excluded.legacy_id, ");
 
     private static final String MERGE_BY_FAVORITE_RACE_QUERY =
         "WITH existing AS ("
@@ -317,37 +302,6 @@ public class TeamDAO
         template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
         team.setId(keyHolder.getKey().longValue());
         return team;
-    }
-
-    /*
-        Profile ladders do not have last played field, so the only way to filter out the teams is comparing total
-        games played when inserting a team into the db.
-        Returning nulls here to tell that there were no modifications made, so the update chain could be interrupted
-     */
-    public Team merge(Team team, boolean force)
-    {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource params = createParameterSource(team);
-        int updated = template.update(force ? FORCE_MERGE_QUERY : MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        if(updated > 0)
-        {
-            team.setId(keyHolder.getKey().longValue());
-            return team;
-        }
-        return null;
-    }
-
-    public Team merge(Team team)
-    {
-        return merge(team, false);
-    }
-
-    public Team mergeById(Team team, boolean force)
-    {
-        MapSqlParameterSource params = createParameterSource(team);
-        params.addValue("id", team.getId());
-        if(template.update(force ? FORCE_MERGE_BY_ID_QUERY : MERGE_BY_ID_QUERY, params) > 0) return team;
-        return null;
     }
 
     //this method is intended to be used with legacy teams
