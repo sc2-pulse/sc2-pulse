@@ -93,9 +93,9 @@ public class TeamDAO
 
     private static final String MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
         + String.format(MERGE_TEMPLATE + MERGE_CONDITION, "id",
-            "region=excluded.region, battlenet_id = excluded.battlenet_id, ");
+            "region=excluded.region, battlenet_id = excluded.battlenet_id, legacy_id = excluded.legacy_id, ");
     private static final String FORCE_MERGE_BY_ID_QUERY = CREATE_WITH_ID_QUERY
-        + String.format(MERGE_TEMPLATE, "id", "region=excluded.region, battlenet_id = excluded.battlenet_id, ");
+        + String.format(MERGE_TEMPLATE, "id", "region=excluded.region, battlenet_id = excluded.battlenet_id, legacy_id = excluded.legacy_id, ");
 
     private static final String MERGE_BY_FAVORITE_RACE_QUERY =
         "WITH existing AS ("
