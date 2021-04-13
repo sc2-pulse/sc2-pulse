@@ -10,8 +10,10 @@ import com.nephest.battlenet.sc2.model.local.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -66,6 +68,7 @@ public class StatsService
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private VarDAO varDAO;
     private Validator validator;
+    private ConversionService conversionService;
 
     private final AtomicBoolean isUpdating = new AtomicBoolean(false);
     private final Map<Integer, Instant> lastLeagueUpdates = new HashMap<>();
@@ -90,6 +93,7 @@ public class StatsService
         LeagueStatsDAO leagueStatsDao,
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
         VarDAO varDAO,
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator
     )
     {
@@ -108,6 +112,7 @@ public class StatsService
         this.leagueStatsDao = leagueStatsDao;
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.varDAO = varDAO;
+        this.conversionService = conversionService;
         this.validator = validator;
     }
 
