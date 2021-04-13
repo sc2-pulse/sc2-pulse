@@ -30,6 +30,13 @@ public final class DAOUtils
         return rs.wasNull() ? null : val;
     };
 
+    public static final ResultSetExtractor<String> STRING_EXTRACTOR =
+    (rs)->
+    {
+        if(!rs.next()) return null;
+        return rs.getString(1);
+    };
+
     public static final RowMapper<Long> LONG_MAPPER =
     (rs, ix)->
     {
