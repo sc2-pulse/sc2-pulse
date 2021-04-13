@@ -26,6 +26,7 @@ import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple5;
 import reactor.util.function.Tuples;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -114,6 +115,18 @@ public class StatsService
         this.varDAO = varDAO;
         this.conversionService = conversionService;
         this.validator = validator;
+    }
+
+    @PostConstruct
+    public void init()
+    {
+        //catch exceptions to allow service autowiring for tests
+        try {
+            loadLastUpdates();
+        }
+        catch(RuntimeException ex) {
+            LOG.warn(ex.getMessage(), ex);
+        }
     }
 
     protected void setNestedService(StatsService statsService)
@@ -213,6 +226,7 @@ public class StatsService
             updateCurrentSeason(regions, queues, leagues);
 
             lastLeagueUpdates.put(queues.length, startInstant);
+            saveLastUpdates();
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
             LOG.info("Updated current after {} seconds", seconds);
@@ -590,6 +604,32 @@ public class StatsService
                 })
                 .block();
         }
+    }
+
+    private void loadLastUpdates()
+    {
+        String updatesVar = varDAO.find("ladder.updated").orElse(null);
+        if(updatesVar == null || updatesVar.isEmpty()) {
+            lastLeagueUpdates.clear();
+            return;
+        }
+
+        for(String entry : updatesVar.split(",")) {
+            String[] vals = entry.split("=");
+            lastLeagueUpdates.put(Integer.valueOf(vals[0]), Instant.ofEpochMilli(Long.parseLong(vals[1])));
+        }
+        for(Map.Entry<Integer, Instant> entry : lastLeagueUpdates.entrySet())
+            LOG.debug("Loaded lastLeagueUpdates entry: {}={}", entry.getKey(), entry.getValue());
+    }
+
+    private void saveLastUpdates()
+    {
+        StringBuilder sb = new StringBuilder();
+        for(Map.Entry<Integer, Instant> entry : lastLeagueUpdates.entrySet()) {
+            if(sb.length() > 0) sb.append(",");
+            sb.append(entry.getKey()).append("=").append(entry.getValue().toEpochMilli());
+        }
+        varDAO.merge("ladder.updated", sb.toString());
     }
 
 }
