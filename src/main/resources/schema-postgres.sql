@@ -127,7 +127,6 @@ CREATE TABLE "team"
     "id" BIGSERIAL,
     "legacy_id" NUMERIC NOT NULL,
     "division_id" INTEGER NOT NULL,
-    "battlenet_id" NUMERIC(20, 0) NOT NULL,
     "season" SMALLINT NOT NULL,
     "region" SMALLINT NOT NULL,
     "league_type" SMALLINT NOT NULL,
@@ -150,8 +149,6 @@ CREATE TABLE "team"
         REFERENCES "division"("id")
         ON DELETE CASCADE ON UPDATE CASCADE,
 
-    CONSTRAINT "uq_team_region_battlenet_id"
-        UNIQUE ("region", "battlenet_id"),
     CONSTRAINT "uq_team_season_region_queue_type_legacy_id"
         UNIQUE ("season", "region", "queue_type", "legacy_id")
 

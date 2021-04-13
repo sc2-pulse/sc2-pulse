@@ -148,7 +148,7 @@ public class SeasonGenerator
             Team newTeam = new Team
            (
                null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
-               BigInteger.valueOf(teamCount), division.getId(), BigInteger.valueOf(teamCount),
+               BigInteger.valueOf(teamCount), division.getId(),
                (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3
            );
             Team team = teamDAO.create(newTeam);
@@ -188,7 +188,7 @@ public class SeasonGenerator
         BaseLeague league,
         BaseLeagueTier.LeagueTierType tierType,
         Division division,
-        BigInteger battlenetId,
+        BigInteger legacyId,
         long rating, int wins, int losses, int ties, int points,
         PlayerCharacter... members
     )
@@ -196,7 +196,7 @@ public class SeasonGenerator
         Team newTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tierType,
-            battlenetId, division.getId(), battlenetId,
+            legacyId, division.getId(),
             rating, wins, losses, ties, points
         );
         Team team = teamDAO.create(newTeam);

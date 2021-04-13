@@ -163,7 +163,7 @@ public class PlayerCharacterStatsDAOIT
         TeamType teamType,
         BaseLeagueTier.LeagueTierType tierType,
         Division division,
-        BigInteger battlenetId,
+        BigInteger legacyId,
         long rating,
         PlayerCharacter character
     )
@@ -173,9 +173,8 @@ public class PlayerCharacterStatsDAOIT
             null,
             season.getBattlenetId(), region,
             new BaseLeague(league, queueType, teamType), tierType,
-            battlenetId,
+            legacyId,
             division.getId(),
-            battlenetId,
             rating,
             100, 0, 0, 0
         );

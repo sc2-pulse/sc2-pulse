@@ -136,31 +136,31 @@ public class SqlSyntaxIT
         Team newTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
-            BigInteger.ONE, division.getId(), BigInteger.ONE,
+            BigInteger.ONE, division.getId(),
             1L, 1, 1, 1, 1
         );
         Team mergedTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
-            BigInteger.ONE, division.getId(), BigInteger.ONE,
+            BigInteger.ONE, division.getId(),
             2L, 2, 2, 2, 2
         );
         Team sameTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
-            BigInteger.ONE, division.getId(), BigInteger.ONE,
+            BigInteger.ONE, division.getId(),
             2L, 2, 2, 2, 2
         );
         Team updatedTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
-            BigInteger.ONE, division2.getId(), BigInteger.ONE,
+            BigInteger.ONE, division2.getId(),
             3L, 3, 3, 3, 3
         );
         Team zergTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
-            BigInteger.TWO, division2.getId(), BigInteger.TWO,
+            BigInteger.TWO, division2.getId(),
             4L, 3, 3, 0, 3
         );
         teamDAO.create(newTeam);
@@ -187,7 +187,6 @@ public class SqlSyntaxIT
         assertEquals(league2.getTeamType(), foundTeam.getLeague().getTeamType());
         assertEquals(tier2.getType(), foundTeam.getTierType());
         assertEquals(division2.getId(), foundTeam.getDivisionId());
-        assertEquals(BigInteger.ONE, foundTeam.getBattlenetId());
         assertEquals(BigInteger.ONE, foundTeam.getLegacyId());
         assertEquals(3, foundTeam.getRating());
         assertEquals(3, foundTeam.getWins());

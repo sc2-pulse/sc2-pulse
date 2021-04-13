@@ -26,8 +26,6 @@ implements java.io.Serializable
     @NotNull
     private Integer divisionId;
 
-    private BigInteger battlenetId;
-
     @NotNull
     private Integer season;
 
@@ -59,7 +57,6 @@ implements java.io.Serializable
         LeagueTier.LeagueTierType tierType,
         BigInteger legacyId,
         Integer divisionId,
-        BigInteger battlenetId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points
     )
     {
@@ -67,7 +64,6 @@ implements java.io.Serializable
         this.id = id;
         this.legacyId = legacyId;
         this.divisionId = divisionId;
-        this.battlenetId = battlenetId;
         this.season = season;
         this.region = region;
         this.league = league;
@@ -93,7 +89,6 @@ implements java.io.Serializable
             tier.getType(),
             teamDAO.legacyIdOf(league, bTeam),
             division.getId(),
-            bTeam.getId(),
             bTeam.getRating(),
             bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(),
             bTeam.getPoints()
@@ -157,16 +152,6 @@ implements java.io.Serializable
     public Integer getDivisionId()
     {
         return divisionId;
-    }
-
-    public void setBattlenetId(BigInteger battlenetId)
-    {
-        this.battlenetId = battlenetId;
-    }
-
-    public BigInteger getBattlenetId()
-    {
-        return battlenetId;
     }
 
     public void setSeason(Integer season)

@@ -24,9 +24,9 @@ public class TeamTest
         BaseLeague league = new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED);
         BaseLeague equalLeague = new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.RANDOM);
         BaseLeague notEqualLeague = new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED);
-        Team team = new Team(0L, 0, Region.EU, league, FIRST, BigInteger.ZERO, 0, BigInteger.ZERO,
+        Team team = new Team(0L, 0, Region.EU, league, FIRST, BigInteger.ZERO, 0,
             0L, 0, 0, 0,0);
-        Team equalTeam = new Team(1L, 0, Region.EU, equalLeague, SECOND, BigInteger.ZERO, 1, BigInteger.ONE,
+        Team equalTeam = new Team(1L, 0, Region.EU, equalLeague, SECOND, BigInteger.ZERO, 1,
             1L, 1, 1, 1, 1);
         equalTeam.setGlobalRank(-1);
         equalTeam.setRegionRank(-1);
@@ -34,14 +34,10 @@ public class TeamTest
 
         Team[] notEqualTeams = new Team[]
         {
-            new Team(0L, 1, Region.EU, league, FIRST, BigInteger.ZERO, 0, BigInteger.ZERO,
-                0L, 0, 0, 0,0),
-            new Team(0L, 0, Region.US, league, FIRST, BigInteger.ZERO, 0, BigInteger.ZERO,
-                0L, 0, 0, 0,0),
-            new Team(0L, 0, Region.EU, notEqualLeague, FIRST, BigInteger.ZERO, 0, BigInteger.ZERO,
-                0L, 0, 0, 0,0),
-            new Team(0L, 0, Region.EU, league, FIRST, BigInteger.ONE, 0, BigInteger.ZERO,
-                0L, 0, 0, 0,0)
+            new Team(0L, 1, Region.EU, league, FIRST, BigInteger.ZERO, 0, 0L, 0, 0, 0,0),
+            new Team(0L, 0, Region.US, league, FIRST, BigInteger.ZERO, 0, 0L, 0, 0, 0,0),
+            new Team(0L, 0, Region.EU, notEqualLeague, FIRST, BigInteger.ZERO, 0, 0L, 0, 0, 0,0),
+            new Team(0L, 0, Region.EU, league, FIRST, BigInteger.ONE, 0, 0L, 0, 0, 0,0)
         };
 
         TestUtil.testUniqueness(team, equalTeam, notEqualTeams);

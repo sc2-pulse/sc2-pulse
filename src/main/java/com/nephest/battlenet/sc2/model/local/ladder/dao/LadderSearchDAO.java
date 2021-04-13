@@ -200,7 +200,6 @@ public class LadderSearchDAO
             if (teamId != lastTeamId)
             {
                 members = new ArrayList<>();
-                BigDecimal idDec = (BigDecimal) rs.getObject("team.battlenet_id");
                 LadderTeam team = new LadderTeam
                 (
                     teamId,
@@ -215,7 +214,6 @@ public class LadderSearchDAO
                     conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
                     ((BigDecimal) rs.getObject("team.legacy_id")).toBigInteger(),
                     rs.getInt("team.division_id"),
-                    idDec == null ? null : idDec.toBigInteger(),
                     rs.getLong("team.rating"),
                     rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
                     null,

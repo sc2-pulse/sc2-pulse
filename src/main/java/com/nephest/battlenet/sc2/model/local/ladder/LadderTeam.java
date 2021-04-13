@@ -31,12 +31,11 @@ implements java.io.Serializable
         LeagueTier.LeagueTierType leagueTierType,
         BigInteger legacyId,
         Integer divisionId,
-        BigInteger battlenetId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
         List<LadderTeamMember> members
     )
     {
-        super(id, season, region, league, leagueTierType, legacyId, divisionId, battlenetId, rating, wins, losses, ties,points);
+        super(id, season, region, league, leagueTierType, legacyId, divisionId, rating, wins, losses, ties,points);
         this.members = members;
     }
 

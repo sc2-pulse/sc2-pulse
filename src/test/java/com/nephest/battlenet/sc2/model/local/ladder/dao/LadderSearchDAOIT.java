@@ -141,7 +141,7 @@ public class LadderSearchDAOIT
         Team newTeam = new Team
         (
             null, emptySeasons.get(0).getBattlenetId(), Region.EU, bronzeLeague, TIER_TYPE,
-            BigInteger.valueOf(9999L), bronzeDivision.getId(), BigInteger.valueOf(9999L),
+            BigInteger.valueOf(9999L), bronzeDivision.getId(),
             1L, 1, 1, 1, 1
         );
         Team team = teamDAO.create(newTeam);

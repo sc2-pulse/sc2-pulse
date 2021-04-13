@@ -36,7 +36,6 @@ public class TeamDAO
         "team.id AS \"team.id\", "
         + "team.legacy_id AS \"team.legacy_id\", "
         + "team.division_id AS \"team.division_id\", "
-        + "team.battlenet_id AS \"team.battlenet_id\", "
         + "team.season AS \"team.season\", "
         + "team.region AS \"team.region\", "
         + "team.league_type AS \"team.league_type\", "
@@ -54,12 +53,12 @@ public class TeamDAO
 
     private static final String CREATE_TEMPLATE = "INSERT INTO team "
         + "("
-            + "%1$slegacy_id, division_id, battlenet_id, "
+            + "%1$slegacy_id, division_id, "
             + "season, region, league_type, queue_type, team_type, tier_type, "
             + "rating, points, wins, losses, ties"
         + ") "
         + "VALUES ("
-            + "%2$s:legacyId, :divisionId, :battlenetId, "
+            + "%2$s:legacyId, :divisionId, "
             + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
             + ":rating, :points, :wins, :losses, :ties"
         + ")";
@@ -69,7 +68,6 @@ public class TeamDAO
     private static final String MERGE_CLAUSE =
         " "
         + "ON CONFLICT(season, region, queue_type, legacy_id) DO UPDATE SET "
-        + "battlenet_id=excluded.battlenet_id, "
         + "division_id=excluded.division_id, "
         + "league_type=excluded.league_type, "
         + "tier_type=excluded.tier_type, "
@@ -91,12 +89,12 @@ public class TeamDAO
         + "inserted AS ("
             + "INSERT INTO team "
             + "("
-            + "legacy_id, division_id, battlenet_id, "
+            + "legacy_id, division_id, "
             + "season, region, league_type, queue_type, team_type, tier_type, "
             + "rating, points, wins, losses, ties "
             + ") "
             + "SELECT "
-            + ":legacyId, :divisionId, :battlenetId, "
+            + ":legacyId, :divisionId, "
             + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
             + ":rating, :points, :wins, :losses, :ties "
             + "WHERE NOT EXISTS (SELECT 1 FROM existing) "
@@ -113,8 +111,7 @@ public class TeamDAO
             + "points=:points, "
             + "wins=:wins, "
             + "losses=:losses, "
-            + "ties=:ties, "
-            + "battlenet_id = :battlenetId "
+            + "ties=:ties "
             + "FROM existing "
             + "WHERE team.id = existing.id "
             + "AND (team.division_id != :divisionId OR (team.wins + team.losses + team.ties) != :gamesPlayed) "
@@ -234,7 +231,6 @@ public class TeamDAO
     {
         if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)->
         {
-            BigDecimal idDec = (BigDecimal) rs.getObject("team.battlenet_id");
             Team team = new Team
             (
                 rs.getLong("team.id"),
@@ -249,7 +245,6 @@ public class TeamDAO
                 conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
                 ((BigDecimal) rs.getObject("team.legacy_id")).toBigInteger(),
                 rs.getInt("team.division_id"),
-                idDec == null ? null : idDec.toBigInteger(),
                 rs.getLong("team.rating"),
                 rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
                 rs.getInt("team.points")
@@ -400,7 +395,6 @@ public class TeamDAO
         return new MapSqlParameterSource()
             .addValue("legacyId", team.getLegacyId())
             .addValue("divisionId", team.getDivisionId())
-            .addValue("battlenetId", team.getBattlenetId())
             .addValue("season", team.getSeason())
             .addValue("region", conversionService.convert(team.getRegion(), Integer.class))
             .addValue("leagueType", conversionService.convert(team.getLeagueType(), Integer.class))

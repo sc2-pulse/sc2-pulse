@@ -40,5 +40,9 @@ CREATE INDEX "ix_team_ladder_search_full" ON "team"("season", "queue_type", "tea
 ALTER TABLE "team"
     ALTER COLUMN "legacy_id" SET NOT NULL;
 
+ALTER TABLE "team"
+    DROP CONSTRAINT "uq_team_region_battlenet_id",
+    DROP COLUMN "battlenet_id";
+
 SET work_mem = '4MB';
 VACUUM(ANALYZE);
