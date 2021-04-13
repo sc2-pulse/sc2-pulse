@@ -65,7 +65,6 @@ public class StatsService
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private Validator validator;
-    private boolean ignoreAlternativeData;
 
     private final AtomicBoolean isUpdating = new AtomicBoolean(false);
     private final Map<Integer, Instant> lastLeagueUpdates = new HashMap<>();
@@ -132,13 +131,6 @@ public class StatsService
     public Map<Integer, Instant> getLastLeagueUpdates()
     {
         return lastLeagueUpdates;
-    }
-
-    @Autowired
-    protected void setIgnoreAlternativeData
-    (@Value("${com.nephest.battlenet.sc2.ladder.ignoreAlternativeData:#{'false'}}") boolean ignoreAlternativeData)
-    {
-        this.ignoreAlternativeData = ignoreAlternativeData;
     }
 
     @CacheEvict
@@ -421,8 +413,6 @@ public class StatsService
         BlizzardTierDivision bDivision
     )
     {
-        if(ignoreAlternativeData) return divisionDao.merge(Division.of(tier, bDivision));
-
         /*
             Alternative ladder update doesn't have tier info, so it creates divisions with the default tier.
             Find such divisions and update their tier.
@@ -477,8 +467,7 @@ public class StatsService
         BlizzardTeam bTeam
     )
     {
-        Team team = Team.of(season, league, tier, division, bTeam, teamDao);
-        return ignoreAlternativeData ? teamDao.merge(team) : teamDao.mergeLegacy(team);
+        return teamDao.mergeLegacy(Team.of(season, league, tier, division, bTeam, teamDao));
     }
 
     //cross field validation
