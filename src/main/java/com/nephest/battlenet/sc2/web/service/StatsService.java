@@ -33,6 +33,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 @Service
 public class StatsService
@@ -123,6 +124,7 @@ public class StatsService
         //catch exceptions to allow service autowiring for tests
         try {
             loadLastUpdates();
+            loadAlternativeRegions();
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -604,6 +606,7 @@ public class StatsService
                 })
                 .block();
         }
+        saveAlternativeRegions();
     }
 
     private void loadLastUpdates()
@@ -630,6 +633,30 @@ public class StatsService
             sb.append(entry.getKey()).append("=").append(entry.getValue().toEpochMilli());
         }
         varDAO.merge("ladder.updated", sb.toString());
+    }
+
+    private void loadAlternativeRegions()
+    {
+        String var = varDAO.find("region.alternative").orElse(null);
+        if(var == null || var.isEmpty()) {
+            alternativeRegions.clear();
+            return;
+        }
+
+        Arrays.stream(var.split(","))
+            .map(Integer::valueOf)
+            .map(i->conversionService.convert(i, Region.class))
+            .forEach(alternativeRegions::add);
+        if(!alternativeRegions.isEmpty()) LOG.warn("Alternative regions loaded: {}", alternativeRegions);
+    }
+
+    private void saveAlternativeRegions()
+    {
+        String var = alternativeRegions.stream()
+            .map(r->conversionService.convert(r, Integer.class))
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+        varDAO.merge("region.alternative", var);
     }
 
 }
