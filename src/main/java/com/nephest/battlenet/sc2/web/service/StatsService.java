@@ -357,7 +357,8 @@ public class StatsService
         boolean currentSeason
     )
     {
-        LOG.debug("Updating season {}", season);
+        Instant lastUpdated = currentSeason ? lastLeagueUpdates.get(queues.length) : null;
+        LOG.debug("Updating season {} using {} checkpoint", season, lastUpdated);
         for (League.LeagueType leagueType : leagues)
         {
             for (QueueType queueType : queues)
@@ -376,9 +377,7 @@ public class StatsService
                     League league = League.of(season, bLeague);
 
                     leagueDao.merge(league);
-                    updateLeagueTiers(
-                        bLeague, season, league,
-                        currentSeason ? lastLeagueUpdates.get(queues.length) : null);
+                    updateLeagueTiers(bLeague, season, league, lastUpdated);
                 }
             }
         }
@@ -459,8 +458,12 @@ public class StatsService
         Instant lastUpdateStart
     )
     {
-        if(lastUpdateStart != null) bTeams = Arrays.stream(bTeams)
-            .filter(t->t.getLastPlayedTimeStamp().isAfter(lastUpdateStart)).toArray(BlizzardTeam[]::new);
+        if(lastUpdateStart != null) {
+            int initialSize = bTeams.length;
+            bTeams = Arrays.stream(bTeams)
+                .filter(t->t.getLastPlayedTimeStamp().isAfter(lastUpdateStart)).toArray(BlizzardTeam[]::new);
+            LOG.debug("Saving {} out of {} {} teams", bTeams.length, initialSize, division);
+        }
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members = new ArrayList<>(bTeams.length * memberCount);
         Set<TeamState> states = new HashSet<>(bTeams.length, 1f);
