@@ -84,7 +84,7 @@ class Session
             const savedState = localStorage.getItem(elem.id);
             if(savedState == null) continue;
 
-            if(elem.getAttribute("type") == "checkbox") {
+            if(elem.getAttribute("type") == "checkbox" || elem.getAttribute("type") == "radio") {
                 if(savedState == "true") {
                     elem.setAttribute("checked", "checked");
                 } else {
@@ -100,10 +100,19 @@ class Session
     {
         for(const elem of document.querySelectorAll(".serializable"))
         {
-            if(elem.getAttribute("type") == "checkbox") {
-                elem.addEventListener("change", e=>localStorage.setItem(elem.id, elem.checked));
-            } else {
-                elem.addEventListener("change", e=>localStorage.setItem(elem.id, elem.value));
+            switch(elem.getAttribute("type"))
+            {
+                case "checkbox":
+                    elem.addEventListener("change", e=>localStorage.setItem(elem.id, elem.checked));
+                    break;
+                case "radio":
+                    elem.addEventListener("click", e=>e.target.closest("form")
+                        .querySelectorAll(':scope input[name="' + e.target.getAttribute("name") + '"]')
+                        .forEach(r=>localStorage.setItem(r.id, r.checked)));
+                    break;
+                default:
+                    elem.addEventListener("change", e=>localStorage.setItem(elem.id, elem.value));
+                    break;
             }
         }
     }
