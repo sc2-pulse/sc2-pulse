@@ -89,3 +89,9 @@ const STATUS = Object.freeze
   SUCCESS: {name: "success", order: 2},
   ERROR: {name: "error", order: 3}
 });
+
+const THEME = Object.freeze
+({
+  LIGHT: {name: "light", order: 1},
+  DARK: {name: "dark", order: 2}
+});

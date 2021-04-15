@@ -2,7 +2,8 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:fragment="layout (title, description, content, script)" lang="en">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:fragment="layout (title, description, content, script)" lang="en"
+      th:with="uiTheme=${#strings.equals(T(org.springframework.web.util.WebUtils).getCookie(#request, 'theme')?.getValue(), 'dark')} ? 'dark' : 'light'">
 <head>
     <th:block th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')}">
     <!-- Global site tag (gtag.js) - Google Analytics -->
@@ -19,14 +20,16 @@
     <meta charset="utf-8"/>
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta th:replace="${description}" name="description" content="Flexible StarCraft&reg;2 stats aggregator for any team format"/>
-    <link rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
-    <link rel="stylesheet" th:href="@{/static/sc2.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"/>
+    <link id="bootstrap-theme-light" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
+    <link th:if="${uiTheme == 'dark'}" id="bootstrap-theme-dark" rel="stylesheet" th:href="@{/static/bootstrap-dark.min.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
+    <link id="bootstrap-theme-override" rel="stylesheet" th:href="@{/static/sc2.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"/>
     <link rel="icon" type="image/png" sizes="128x128" th:href="@{/static/icon/misc/favicon-128.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/png" sizes="32x32" th:href="@{/static/icon/misc/favicon-32.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/png" sizes="16x16" th:href="@{/static/icon/misc/favicon-16.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/svg+xml" th:href="@{/static/icon/misc/pulse.svg(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
 </head>
-<body th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder)}">
+<body th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder)}"
+      th:class="${'theme-' + uiTheme}">
     <div class="container">
         <div th:replace="${content}"></div>
         <!-- Modal generic-->

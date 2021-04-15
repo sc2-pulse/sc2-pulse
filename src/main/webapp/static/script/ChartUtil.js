@@ -70,6 +70,11 @@ class ChartUtil
                         yAxes:
                         [{
                             scaleLabel: {display: false, labelString: config.yTitle},
+                            gridLines:
+                            {
+                                color: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)",
+                                zeroLineColor: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)"
+                             },
                             ticks:
                             {
                                 callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val),
@@ -445,7 +450,7 @@ Chart.controllers.lineVCursor = Chart.controllers.line.extend
             ctx.lineTo(x, bottomY);
             ctx.setLineDash([1, 2]);
             ctx.lineWidth = 1;
-            ctx.strokeStyle = 'black';
+            ctx.strokeStyle = Session.theme == THEME.DARK ? '#d3d3d3' : "black";
             ctx.stroke();
             ctx.restore();
         }

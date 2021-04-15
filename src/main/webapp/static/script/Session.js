@@ -139,6 +139,7 @@ Session.currentRestorationHash = null;
 Session.lastNonModalParams = "?#stats";
 Session.lastNonModalTitle = "Stats";
 Session.titleAndUrlHistory = [["Stats", "?#stats"]];
+Session.theme = THEME.LIGHT;
 
 Session.sectionParams = new Map();
 

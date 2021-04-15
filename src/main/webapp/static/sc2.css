@@ -62,6 +62,11 @@ h4
     background-color: white;
 }
 
+body.theme-dark #stats h4
+{
+    background-color: #191d21;
+}
+
 .modal h2
 {
     flex-grow: 1;
@@ -195,7 +200,7 @@ th.hoverable span
 
 .player-name-masked
 {
-  color: gray ;
+  color: gray !important;
   font-size: 0.8em;
 }
 
@@ -251,7 +256,7 @@ th.hoverable span
   height: 2em;
 }
 
-.social-media
+body.theme-light .social-media
 {
   color: black;
 }
@@ -301,11 +306,21 @@ th.hoverable span
     border-top: 1px solid rgba(0,0,0,.1);
 }
 
+body.theme-dark .c-divider-hr
+{
+    border-color: #343a40;
+}
+
 .page-item.disabled.active .page-link
 {
     color: #fff;
     background-color: #007bff;
     border-color: #007bff;
+}
+
+body.theme-dark .page-item.disabled:not(.active) .page-link
+{
+    color: #373d43;
 }
 
 .card-equal
@@ -336,23 +351,39 @@ th.hoverable span
     border-radius: 0;
 }
 
+body.theme-dark a:not(.btn):not(.nav-link):not(.page-link)
+{
+    color: #00b0f4;
+}
+
+body.theme-dark a:not(.btn):not(.nav-link):not(.page-link):hover
+{
+    color: #0899dd;
+}
+
 .nav-pills .nav-link
 {
     outline: none;
-    color: #212529;
-    border-bottom: #f0f0f0 0.20rem solid;
+    color: #adadad;
+    border-bottom: #343a40 0.20rem solid;
     transition-property: color, border-bottom-color;
     transition-duration: 200ms;
 }
 
-.nav-pills .nav-link:focus,
-.nav-pills .nav-link:hover
+body.theme-light .nav-pills .nav-link
+{
+    color: #212529;
+    border-bottom: #f0f0f0 0.20rem solid;
+}
+
+body .nav-pills .nav-link:focus,
+body .nav-pills .nav-link:hover
 {
     border-bottom-color: #5a6268;
 }
 
-.nav-pills .nav-link.active,
-.nav-pills .nav-link.active:focus
+body .nav-pills .nav-link.active,
+body .nav-pills .nav-link.active:focus
 {
     color: #007bff;
     background-color: unset;
@@ -382,7 +413,7 @@ th.hoverable span
     color: white;
 }
 
-.modal-footer
+body.theme-light .modal-footer
 {
     background-color: #fcfcfc;
 }
@@ -402,11 +433,21 @@ th.hoverable span
     text-align: left;
 }
 
-:fullscreen
+body.theme-dark .popover
+{
+    background-color: black;
+}
+
+body :fullscreen
 {
     background-color: white;
     overflow-y: auto;
-    overflow-x: hidden
+    overflow-x: hidden;
+}
+
+body.theme-dark :fullscreen
+{
+    background-color: #191d21;
 }
 
 .fullscreen-toggle
