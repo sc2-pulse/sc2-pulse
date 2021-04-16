@@ -2,7 +2,7 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::section}, ~{::#script-additional})}">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::section}, ~{::script})}">
 <head>
     <title>Stats - SC2 Pulse</title>
     <meta name="description" content="Flexible StarCraft&reg;2 stats aggregator for any team format"/>
@@ -1018,33 +1018,6 @@
             </div>
         </div>
     </section><!--Container-->
-    <th:block  id="script-additional" th:switch="${#arrays.contains(@environment.getActiveProfiles(), 'dev')}">
-        <th:block th:case="true">
-            <script th:src="@{/static/script/BootstrapUtil.js}"></script>
-            <script th:src="@{/static/script/CharacterUtil.js}"></script>
-            <script th:src="@{/static/script/ChartUtil.js}"></script>
-            <script th:src="@{/static/script/ElementUtil.js}"></script>
-            <script th:src="@{/static/script/enum.js}"></script>
-            <script th:src="@{/static/script/EnumUtil.js}"></script>
-            <script th:src="@{/static/script/FollowUtil.js}"></script>
-            <script th:src="@{/static/script/HistoryUtil.js}"></script>
-            <script th:src="@{/static/script/LadderUtil.js}"></script>
-            <script th:src="@{/static/script/Model.js}"></script>
-            <script th:src="@{/static/script/PaginationUtil.js}"></script>
-            <script th:src="@{/static/script/SC2Restful.js}"></script>
-            <script th:src="@{/static/script/SeasonUtil.js}"></script>
-            <script th:src="@{/static/script/Session.js}"></script>
-            <script th:src="@{/static/script/StatsUtil.js}"></script>
-            <script th:src="@{/static/script/TableUtil.js}"></script>
-            <script th:src="@{/static/script/TeamUtil.js}"></script>
-            <script th:src="@{/static/script/Util.js}"></script>
-            <script th:src="@{/static/script/ViewUtil.js}"></script>
-            <script th:src="@{/static/script/FormUtil.js}"></script>
-            <script th:src="@{/static/script/sc2-restful.js}"></script>
-        </th:block>
-        <th:block th:case="false">
-            <script th:src="@{/static/script/sc2-restful.min.js(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"></script>
-        </th:block>
-    </th:block>
+    <script>$(document).ready(function(){SC2Restful.start();});</script>
 </body>
 </html>
