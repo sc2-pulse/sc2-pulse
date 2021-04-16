@@ -54,6 +54,20 @@
                             My
                         </a>
                     </li>
+                    <li class="nav-item">
+                        <a
+                                id="settings-tab"
+                                class="nav-link"
+                                data-toggle="pill"
+                                data-target="#settings"
+                                href="#settings"
+                                role="tab"
+                                aria-controls="settings"
+                                aria-selected="false"
+                        >
+                            Settings
+                        </a>
+                    </li>
                 </ul>
             </nav>
             <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}"  alt="Pulse"/><span> SC2 Pulse</span></a></h1>
@@ -647,6 +661,13 @@
                     </section>
                 </div>
             </div>
+        </section>
+        <section id="settings" class="tab-pane fade"
+                 data-view-title="Settings"
+                 data-view-description="Tailor viewing experience to your liking"
+        >
+            <h2>Settings</h2>
+            <div th:replace="~{fragments/settings :: settings}"></div>
         </section>
 
         </div><!--Tab content-->
