@@ -117,6 +117,90 @@ class Session
         }
     }
 
+    static setTheme(theme)
+    {
+        if(Session.theme == theme) return;
+
+        Session.setDocumentTheme(theme);
+        Session.setChartTheme(theme);
+        Session.theme = theme;
+
+        document.cookie = "theme=" + theme.name
+            + ";path=" + ROOT_CONTEXT_PATH
+            + ";max-age=" + "315360000"
+            + ";secure;SameSite=Lax";
+    }
+
+    static setDocumentTheme(theme)
+    {
+        const body = document.querySelector("body");
+        const themesToRemove = [];
+        let themeAdded;
+        for(const cTheme of Object.values(THEME)) {
+            if(cTheme == theme) {
+                body.classList.add("theme-" + cTheme.name);
+                themeAdded = Session.themeLinks.get(cTheme);
+                themeAdded.onload = e=>themesToRemove.forEach(t=>t.remove());
+                const themeOverride = document.querySelector("#bootstrap-theme-override");
+                if(themeOverride.previousElementSibling != themeAdded)
+                    document.querySelector("head").insertBefore(themeAdded, themeOverride);
+            } else {
+                body.classList.remove("theme-" + cTheme.name);
+                const themeLink = document.querySelector("#bootstrap-theme-" + cTheme.name);
+                if(themeLink != null) themesToRemove.push(themeLink);
+            }
+        }
+
+        const prev = ElementUtil.INPUT_TIMEOUTS.get("bootstrap-theme-cleanup-timeout");
+        if(prev != null)  window.clearTimeout(prev);
+        ElementUtil.INPUT_TIMEOUTS.set("bootstrap-theme-cleanup-timeout", window.setTimeout(e=>themesToRemove.forEach(t=>t.remove()), 5000));
+    }
+
+    static setChartTheme(theme)
+    {
+        const color = theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)";
+        for(const chart of ChartUtil.CHARTS.values()) {
+            chart.config.options.scales.yAxes[0].gridLines.color = color;
+            chart.config.options.scales.yAxes[0].gridLines.zeroLineColor = color;
+            chart.update();
+        }
+    }
+
+    static initThemes()
+    {
+        Session.themeLinks.set(THEME.LIGHT, document.querySelector("#bootstrap-theme-light"));
+        let darkThemeLink = document.querySelector("#bootstrap-theme-dark");
+        if(!darkThemeLink)
+        {
+            darkThemeLink = document.createElement("link");
+            darkThemeLink.id = "bootstrap-theme-dark";
+            darkThemeLink.setAttribute("rel", "stylesheet");
+            darkThemeLink.setAttribute("href", RESOURCE_PATH + "bootstrap-dark.min.css");
+        }
+        Session.themeLinks.set(THEME.DARK, darkThemeLink);
+    }
+
+    static enhanceThemeInputs()
+    {
+        const handler = e=>Session.refreshTheme();
+        document.querySelector("#theme-device").addEventListener("click", handler);
+        document.querySelector("#theme-light").addEventListener("click", handler);
+        document.querySelector("#theme-dark").addEventListener("click", handler);
+    }
+
+    static refreshTheme()
+    {
+        window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', Session.deviceThemeCallback);
+        if(localStorage.getItem("theme-light") == "true") {
+            Session.setTheme(THEME.LIGHT);
+        } else if(localStorage.getItem("theme-dark") == "true") {
+            Session.setTheme(THEME.DARK);
+        } else {
+            window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', Session.deviceThemeCallback);
+            Session.deviceThemeCallback();
+        }
+    }
+
 }
 
 Session.isSilent = false;
@@ -140,6 +224,10 @@ Session.lastNonModalParams = "?#stats";
 Session.lastNonModalTitle = "Stats";
 Session.titleAndUrlHistory = [["Stats", "?#stats"]];
 Session.theme = THEME.LIGHT;
+Session.themeLinks = new Map();
+Session.initThemes();
+Session.deviceThemeCallback=e=>Session.setTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? THEME.DARK : THEME.LIGHT);
 
 Session.sectionParams = new Map();
 

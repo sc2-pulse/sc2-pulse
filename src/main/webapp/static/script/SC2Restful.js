@@ -48,6 +48,8 @@ class SC2Restful
         ElementUtil.enhanceFullscreenToggles();
         Session.enhanceSerializable();
         ChartUtil.enhanceZoomToggles();
+        Session.enhanceThemeInputs();
+        Session.refreshTheme();
     }
 
 }
