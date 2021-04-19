@@ -59,6 +59,24 @@ UPDATE "team"
     AND "team"."legacy_id" IS NULL
     AND COALESCE("team_member"."random_games_played", 0) > 0;
 
+CREATE INDEX "ix_team_legacy_id_duplicate" ON "team"("season", "region", "queue_type", "legacy_id");
+DELETE FROM "team"
+USING "team" team2
+WHERE "team"."season" = "team2"."season"
+AND "team"."region" = "team2"."region"
+AND "team"."queue_type" = "team2"."queue_type"
+AND "team"."legacy_id" = "team2"."legacy_id"
+AND "team"."wins" + "team"."losses" + "team"."ties" < "team2"."wins" + "team2"."losses" + "team2"."ties";
+DELETE FROM "team"
+USING "team" team2
+WHERE "team"."season" = "team2"."season"
+AND "team"."region" = "team2"."region"
+AND "team"."queue_type" = "team2"."queue_type"
+AND "team"."legacy_id" = "team2"."legacy_id"
+AND "team"."id" < "team2"."id";
+DELETE FROM "team" WHERE "legacy_id" IS NULL;
+DROP INDEX "ix_team_legacy_id_duplicate";
+
 ALTER TABLE "team"
     ADD CONSTRAINT "fk_team_division_id"
         FOREIGN KEY ("division_id")
