@@ -26,6 +26,39 @@ UPDATE "team"
     ) "team_filter"
     WHERE "team"."id" = "team_filter"."id";
 
+UPDATE "team"
+    SET "legacy_id" = CONCAT("player_character"."realm", "player_character"."battlenet_id", 1)::numeric
+    FROM "team_member"
+    INNER JOIN "player_character" ON "team_member"."player_character_id" = "player_character"."id"
+    WHERE "team"."id" = "team_member"."team_id"
+    AND "team"."queue_type" = 201
+    AND "team"."legacy_id" IS NULL
+    AND COALESCE("team_member"."terran_games_played", 0) > 0;
+UPDATE "team"
+    SET "legacy_id" = CONCAT("player_character"."realm", "player_character"."battlenet_id", 2)::numeric
+    FROM "team_member"
+    INNER JOIN "player_character" ON "team_member"."player_character_id" = "player_character"."id"
+    WHERE "team"."id" = "team_member"."team_id"
+    AND "team"."queue_type" = 201
+    AND "team"."legacy_id" IS NULL
+    AND COALESCE("team_member"."protoss_games_played", 0) > 0;
+UPDATE "team"
+    SET "legacy_id" = CONCAT("player_character"."realm", "player_character"."battlenet_id", 3)::numeric
+    FROM "team_member"
+    INNER JOIN "player_character" ON "team_member"."player_character_id" = "player_character"."id"
+    WHERE "team"."id" = "team_member"."team_id"
+    AND "team"."queue_type" = 201
+    AND "team"."legacy_id" IS NULL
+    AND COALESCE("team_member"."zerg_games_played", 0) > 0;
+UPDATE "team"
+    SET "legacy_id" = CONCAT("player_character"."realm", "player_character"."battlenet_id", 4)::numeric
+    FROM "team_member"
+    INNER JOIN "player_character" ON "team_member"."player_character_id" = "player_character"."id"
+    WHERE "team"."id" = "team_member"."team_id"
+    AND "team"."queue_type" = 201
+    AND "team"."legacy_id" IS NULL
+    AND COALESCE("team_member"."random_games_played", 0) > 0;
+
 ALTER TABLE "team"
     ADD CONSTRAINT "fk_team_division_id"
         FOREIGN KEY ("division_id")
