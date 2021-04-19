@@ -35,9 +35,10 @@ h1 img
     width: 1.333em;
 }
 
-h1 *
+h1 a
 {
-    vertical-align: middle;
+    display: inline-flex;
+    align-items: center;
 }
 
 h2

@@ -1,6 +1,7 @@
-<!DOCTYPE html>
-<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
 <head>
     <title>Generic</title>
@@ -12,7 +13,7 @@
             <a href="/" th:href="@{/}">Back to home</a>
         </section>
         <section class="mt-3 mb-3 text-center" th:fragment="content (content)">
-            <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}" alt="Pulse"/><span> SC2 Pulse</span></a></h1>
+            <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}" class="mr-1" alt="Pulse"/><span> SC2 Pulse</span></a></h1>
             <section th:replace="${content}"></section>
         </section>
     </body>
