@@ -4,6 +4,11 @@
 class SC2Restful
 {
 
+    static baseStart()
+    {
+        Session.initThemes();
+    }
+
     static start()
     {
         window.addEventListener("popstate", e=>{HistoryUtil.restoreState(e)});

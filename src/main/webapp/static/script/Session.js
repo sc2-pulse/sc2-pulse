@@ -168,6 +168,7 @@ class Session
 
     static initThemes()
     {
+        Session.theme = THEME.LIGHT;
         Session.themeLinks.set(THEME.LIGHT, document.querySelector("#bootstrap-theme-light"));
         let darkThemeLink = document.querySelector("#bootstrap-theme-dark");
         if(!darkThemeLink)
@@ -223,11 +224,10 @@ Session.currentRestorationHash = null;
 Session.lastNonModalParams = "?#stats";
 Session.lastNonModalTitle = "Stats";
 Session.titleAndUrlHistory = [["Stats", "?#stats"]];
-Session.theme = THEME.LIGHT;
+Session.theme = null;
 Session.themeLinks = new Map();
-Session.initThemes();
-Session.deviceThemeCallback=e=>Session.setTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? THEME.DARK : THEME.LIGHT);
+Session.deviceThemeCallback=function(e){Session.setTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? THEME.DARK : THEME.LIGHT)};
 
 Session.sectionParams = new Map();
 
