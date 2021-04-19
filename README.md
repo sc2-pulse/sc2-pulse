@@ -100,8 +100,12 @@ switch the endpoint route if any problems are found. This happens automatically 
 so you can have a situation when KR region uses the alternative route, while other regions use the usual route.
 
 Alternative update limitations:
-* 1v1 only
 * no league tiers
+* no BattleTags
+* partial racial info
+* slower update
+
+The missing info can be fetched from the main endpoint when it's back up(it happens automatically).
 
 Original idea by Keiras
 ## Task configuration
