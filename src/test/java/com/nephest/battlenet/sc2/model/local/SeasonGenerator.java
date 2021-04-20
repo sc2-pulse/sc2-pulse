@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -49,6 +51,9 @@ public class SeasonGenerator
 
     @Autowired
     private TeamDAO teamDAO;
+
+    @Autowired
+    private TeamStateDAO teamStateDAO;
 
     @Autowired
     private TeamMemberDAO teamMemberDAO;
@@ -134,6 +139,7 @@ public class SeasonGenerator
         int teamCount
     )
     {
+        OffsetDateTime seasonStart = season.getStart().atStartOfDay(ZoneId.of("UTC")).toOffsetDateTime();
         League league = leagueDAO.create(new League(null, season.getId(), type, queueType, teamType));
         LeagueTier newTier = new LeagueTier
         (
@@ -152,6 +158,9 @@ public class SeasonGenerator
                (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3
            );
             Team team = teamDAO.create(newTeam);
+            TeamState teamState = TeamState.of(team);
+            teamState.setDateTime(seasonStart);
+            teamStateDAO.saveState(teamState);
 
             for(int memberIx = 0; memberIx < queueType.getTeamFormat().getMemberCount(teamType); memberIx++)
             {
