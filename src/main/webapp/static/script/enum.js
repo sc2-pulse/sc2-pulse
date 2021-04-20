@@ -43,6 +43,13 @@ const TEAM_TYPE = Object.freeze
     RANDOM: {code:1, name: "Random", fullName: "RANDOM", secondaryName: "Solo", order: 2}
 });
 
+const PERIOD = Object.freeze
+({
+   DAY: {name: "day", order: 1},
+   WEEK: {name: "week", order: 2},
+   MONTH: {name: "month", order: 3}
+});
+
 const PAGE_TYPE = Object.freeze
 ({
     FIRST: {}, LAST: {}, GENERAL: {}
