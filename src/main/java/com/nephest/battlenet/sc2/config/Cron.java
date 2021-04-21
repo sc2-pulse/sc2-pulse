@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.config;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
@@ -47,6 +49,12 @@ public class Cron
     private MatchService matchService;
 
     @Autowired
+    private SeasonStateDAO seasonStateDAO;
+
+    @Autowired
+    private SeasonDAO seasonDAO;
+
+    @Autowired
     private PostgreSQLUtils postgreSQLUtils;
 
     @Autowired
@@ -82,6 +90,7 @@ public class Cron
 
     private void updateSeasonsHourCycle()
     {
+        seasonStateDAO.merge(OffsetDateTime.now(), seasonDAO.getMaxBattlenetId());
         Instant startInstant = Instant.now();
         int cycleMinutes = 60 - OffsetDateTime.now().getMinute();
         long start = System.currentTimeMillis();
