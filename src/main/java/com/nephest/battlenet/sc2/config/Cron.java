@@ -18,6 +18,10 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.temporal.ChronoUnit;
+
 @Profile({"!maintenance & !dev"})
 @Component
 public class Cron
@@ -49,33 +53,54 @@ public class Cron
     private ThreadPoolTaskScheduler executor;
 
     @Scheduled(cron="0 0 7 * * *")
+    public void updateAll()
+    {
+        proPlayerService.update();
+        matchService.update();
+        postgreSQLUtils.vacuum();
+        postgreSQLUtils.analyze();
+        updateSeasonsHourCycle();
+    }
+
+    @Scheduled(cron="0 0 0-6,8-23 * * MON-TUE,THU-SUN")
     public void updateSeasons()
     {
+        updateSeasonsHourCycle();
+    }
+
+    @Scheduled(cron="0 0 0-6,8-11,13-23 * * WED")
+    public void updateSeasonsWed()
+    {
+        updateSeasonsHourCycle();
+    }
+
+    @Scheduled(cron="0 10 12 * * WED")
+    public void updateSeasonsPreMaintenance()
+    {
+        updateSeasonsHourCycle();
+    }
+
+    private void updateSeasonsHourCycle()
+    {
+        Instant startInstant = Instant.now();
+        int cycleMinutes = 60 - OffsetDateTime.now().getMinute();
+        long start = System.currentTimeMillis();
         doUpdateSeasons();
-    }
+        // + 2.5 minutes just to be safe
+        long taskDurationMinutes = (long) ((System.currentTimeMillis() - start) + 60000 * 2.5) / 1000 / 60;
+        long scans = Math.min(cycleMinutes / taskDurationMinutes, 4);
+        long minutesBetweenTasks = 60 / scans;
 
-    @Scheduled(cron="0 */15 0-5,8-23 * * MON-TUE,THU-SUN")
-    public void updateTop()
-    {
-        doUpdateTop();
-    }
-
-    @Scheduled(cron="0 0,15,30 6 * * *")
-    public void updateTopPreDiscovery()
-    {
-        doUpdateTop();
-    }
-
-    @Scheduled(cron="0 */15 0-5,8-11,13-23 * * WED")
-    public void updateTopWed()
-    {
-        doUpdateTop();
-    }
-
-    @Scheduled(cron="0 0,15 12 * * WED")
-    public void updateTopPreMaintenance()
-    {
-        doUpdateTop();
+        for(int i = 1; i < scans; i++) {
+            Instant nextInstant = startInstant.plus(minutesBetweenTasks * i, ChronoUnit.MINUTES);
+            executor.schedule(this::doUpdateSeasons, nextInstant);
+            LOG.debug("Scheduled seasons update at {}", nextInstant);
+        }
+        if(scans < 2 && OffsetDateTime.now().getMinute() < 42)  {
+            Instant nextInstant = OffsetDateTime.now().withMinute(42).withSecond(0).toInstant();
+            executor.schedule(this::doUpdateTop, nextInstant);
+            LOG.debug("Scheduled top update at {}", nextInstant);
+        }
     }
 
     private void doUpdateSeasons()
@@ -88,18 +113,11 @@ public class Cron
                 QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
                 BaseLeague.LeagueType.values()
             );
-            proPlayerService.update();
-            matchService.update();
         }
         catch(RuntimeException ex)
         {
             //API can be broken randomly. All we can do at this point is log the exception.
             LOG.error(ex.getMessage(), ex);
-        }
-        finally
-        {
-            postgreSQLUtils.vacuum();
-            postgreSQLUtils.analyze();
         }
     }
 
