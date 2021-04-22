@@ -215,7 +215,7 @@ th.hoverable span
   content: ")";
 }
 
-.race-percentage ~ .race-percentage::before
+.c-divider-slash ~ .c-divider-slash::before
 {
     content: "/";
 }
