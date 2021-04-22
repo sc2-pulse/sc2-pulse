@@ -211,7 +211,8 @@ public class StatsService
         },
         allEntries=true
     )
-    public boolean updateCurrent(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    public boolean updateCurrent
+    (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats)
     {
         if(!isUpdating.compareAndSet(false, true))
         {
@@ -225,7 +226,7 @@ public class StatsService
             long start = System.currentTimeMillis();
 
             checkStaleData();
-            updateCurrentSeason(regions, queues, leagues);
+            updateCurrentSeason(regions, queues, leagues, allStats);
 
             lastLeagueUpdates.put(queues.length, startInstant);
             saveLastUpdates();
@@ -274,12 +275,13 @@ public class StatsService
         {
             updateSeason(region, seasonId, queues, leagues);
         }
-        updateSeasonStats(seasonId, regions, queues, leagues);
+        updateSeasonStats(seasonId, regions, queues, leagues, true);
     }
 
-    private void updateSeasonStats(int seasonId, Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    private void updateSeasonStats
+    (int seasonId, Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats)
     {
-        queueStatsDAO.mergeCalculateForSeason(seasonId);
+        if(allStats) queueStatsDAO.mergeCalculateForSeason(seasonId);
         leagueStatsDao.mergeCalculateForSeason(seasonId);
         teamDao.updateRanks(seasonId, regions, queues, TeamType.values(), leagues);
     }
@@ -292,7 +294,8 @@ public class StatsService
         LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
 
-    private void updateCurrentSeason(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    private void updateCurrentSeason
+    (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats)
     {
         Integer seasonId = null;
         int maxSeason = seasonDao.getMaxBattlenetId();
@@ -309,7 +312,7 @@ public class StatsService
         {
             if(queues.length == QueueType.getTypes(VERSION).size())
             {
-                updateSeasonStats(seasonId, regions, queues, leagues);
+                updateSeasonStats(seasonId, regions, queues, leagues, allStats);
                 playerCharacterStatsDAO.mergeCalculate(
                     lastLeagueUpdates.get(queues.length) != null
                     ? OffsetDateTime.ofInstant(lastLeagueUpdates.get(queues.length), ZoneId.systemDefault())

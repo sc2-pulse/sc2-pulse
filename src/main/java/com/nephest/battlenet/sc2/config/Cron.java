@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.config;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
@@ -60,11 +61,15 @@ public class Cron
     @Autowired
     private ThreadPoolTaskScheduler executor;
 
+    @Autowired
+    private QueueStatsDAO queueStatsDAO;
+
     @Scheduled(cron="0 0 7 * * *")
     public void updateAll()
     {
         proPlayerService.update();
         matchService.update();
+        queueStatsDAO.mergeCalculateForSeason(seasonDAO.getMaxBattlenetId());
         postgreSQLUtils.vacuum();
         postgreSQLUtils.analyze();
         updateSeasonsHourCycle();
@@ -120,7 +125,8 @@ public class Cron
             (
                 Region.values(),
                 QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
-                BaseLeague.LeagueType.values()
+                BaseLeague.LeagueType.values(),
+                false
             );
         }
         catch(RuntimeException ex)
@@ -141,7 +147,8 @@ public class Cron
                 statsService.getAlternativeRegions().contains(Region.EU)
                     || statsService.getAlternativeRegions().contains(Region.US)
                         ? ALTERNATIVE_LEAGUES
-                        : NORMAL_LEAGUES
+                        : NORMAL_LEAGUES,
+                false
             );
         }
         catch(RuntimeException ex)

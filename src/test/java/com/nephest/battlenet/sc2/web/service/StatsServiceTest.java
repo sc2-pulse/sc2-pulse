@@ -47,7 +47,7 @@ public class StatsServiceTest
     {
         ss.setIsUpdating(true);
         assertFalse(ss.updateAll(Region.values(), QueueType.values(), BaseLeague.LeagueType.values()));
-        assertFalse(ss.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values()));
+        assertFalse(ss.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values(), false));
     }
 
     @Test
@@ -56,7 +56,7 @@ public class StatsServiceTest
         try{ss.updateAll(Region.values(), QueueType.values(), BaseLeague.LeagueType.values());} catch(Exception ex){}
         assertFalse(ss.isUpdating());
 
-        try{ss.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values());} catch(Exception ex){}
+        try{ss.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values(), false);} catch(Exception ex){}
         assertFalse(ss.isUpdating());
     }
 
