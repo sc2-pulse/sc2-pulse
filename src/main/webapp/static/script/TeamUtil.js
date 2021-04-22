@@ -235,14 +235,17 @@ class TeamUtil
             for(const [race, val] of percentageSorted.entries())
             {
                 if(val == 0) continue;
-                racesElem.appendChild(ElementUtil.createImage("race/", race.name, "table-image table-image-square"));
+                const percentageEntry = document.createElement("span");
+                percentageEntry.classList.add("race-percentage-entry", "c-divider-slash", "text-secondary");
+                percentageEntry.appendChild(ElementUtil.createImage("race/", race.name, "table-image table-image-square"));
                 if(val < 100)
                 {
                     const racePercent = document.createElement("span");
                     racePercent.classList.add("race-percentage", "race-percentage-" + race.name, "text-secondary");
                     racePercent.textContent = val;
-                    racesElem.appendChild(racePercent);
+                    percentageEntry.appendChild(racePercent);
                 }
+                racesElem.appendChild(percentageEntry);
             }
         }
         else
