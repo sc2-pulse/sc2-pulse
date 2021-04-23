@@ -134,7 +134,7 @@ class ChartUtil
         }
         label = Util.addStringTail(label, labels, " ");
         const rawData = ChartUtil.CHART_RAW_DATA.get(data.customMeta.id);
-        if(rawData != null)
+        if(rawData != null && rawData.additionalDataGetter)
         {
             const additional = rawData.additionalDataGetter(rawData.rawData, data, tooltipItem.index, tooltipItem.datasetIndex);
             if(additional.constructor === Array)
