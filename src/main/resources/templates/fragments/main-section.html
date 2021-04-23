@@ -43,5 +43,76 @@
         </form>
     </div>
 </section>
+<section id="online" class="tab-pane fade"
+    data-view-title="Online"
+    data-view-description="Steam-like ranked ladder online statistics divided by region.
+        Hourly player count and games played numbers. Day, Week, Month periods."
+    th:fragment="online"
+>
+    <header>
+        <h2>Online</h2>
+        <form id="form-online">
+            <div class="form-row">
+                <div class="col-md-2 mb-3"></div>
+                <div class="col-md-4 mb-3">
+                    <input type="date" class="form-control text-center" id="online-to" name="to" required="required" data-exclusive="true"/>
+                </div>
+                <div class="col-md-4 mb-3">
+                    <select id="online-period" class="form-control text-center" name="period" required="required">
+                        <option value="DAY">Day</option>
+                        <option value="WEEK" selected="selected">Week</option>
+                        <option value="MONTH">Month</option>
+                    </select>
+                </div>
+                <div class="col-md-2 mb-3"></div>
+                <div class="col-md-12 mb-3">
+                    <button class="btn btn-primary mb-3" type="submit">
+                        <span>Show</span>
+                    </button>
+                </div>
+            </div>
+        </form>
+    </header>
+    <div id="online-data" class="row no-gutters d-none">
+        <section id="online-players" class="col-lg-12 mb-3">
+            <h3>Players</h3>
+            <table
+                id="online-players-table"
+                class="chartable"
+                data-chart-type="bar"
+                data-chart-stacked="true"
+                data-chart-tooltip-percentage="false"
+                data-chart-id="online-players-chart"
+                data-chart-x-title="Date" data-chart-y-title="Players"
+                data-chart-direct="true"
+                data-chart-x-type="time"
+                data-chart-x-time-unit="false"
+            >
+                <thead><tr></tr></thead>
+                <tbody><tr></tr></tbody>
+            </table>
+            <div id="online-players-chart-container" class="container-chart"><canvas id="online-players-chart" class="c-chart"></canvas></div>
+        </section>
+        <section id="online-games" class="col-lg-12 mb-3">
+            <h3>Games</h3>
+            <table
+                    id="online-games-table"
+                    class="chartable"
+                    data-chart-type="bar"
+                    data-chart-stacked="true"
+                    data-chart-tooltip-percentage="false"
+                    data-chart-id="online-games-chart"
+                    data-chart-x-title="Date" data-chart-y-title="Games"
+                    data-chart-direct="true"
+                    data-chart-x-type="time"
+                    data-chart-x-time-unit="false"
+            >
+                <thead><tr></tr></thead>
+                <tbody><tr></tr></tbody>
+            </table>
+            <div id="online-games-chart-container" class="container-chart"><canvas id="online-games-chart" class="c-chart"></canvas></div>
+        </section>
+    </div>
+</section>
 </body>
 </html>

@@ -31,6 +31,8 @@ class BootstrapUtil
             ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateCharacterTitle);
             ElementUtil.DESCRIPTION_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateCharacterDescription);
         }
+
+        ElementUtil.TITLE_CONSTRUCTORS.set("#online", ElementUtil.generateOnlineTitle);
     }
 
     static renderTabContent(tab)

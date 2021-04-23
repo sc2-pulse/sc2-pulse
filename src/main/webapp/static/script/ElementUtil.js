@@ -208,6 +208,28 @@ class ElementUtil
         return `${name}${nameAdditional} ${ElementUtil.getTabTitle(hash)}`;
     }
 
+    static generateOnlineTitle(params, hash)
+    {
+        if(!params.get("to") || !params.get("period")) return "Online";
+        const to = new Date(parseInt(params.get("to")));
+        const period = EnumUtil.enumOfName(params.get("period"), PERIOD);
+        var from = new Date(to.getTime());
+        switch(period)
+        {
+            case PERIOD.DAY:
+                from.setDate(to.getDate() - 1);
+                break;
+            case PERIOD.WEEK:
+                from.setDate(to.getDate() - 7);
+                break;
+            case PERIOD.MONTH:
+                from.setMonth(to.getMonth() - 1);
+                break;
+        }
+
+        return `Online ${from.toISOString()} - ${to.toISOString()}`;
+    }
+
     static generateLadderDescription(params, hash, includeSeason = true)
     {
         let desc = ElementUtil.getTabTitle(hash);

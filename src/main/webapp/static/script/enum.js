@@ -76,7 +76,8 @@ const VIEW = Object.freeze
     FOLLOWING_LADDER: {name: "following-ladder", order: 3},
     CHARACTER: {name: "character", order: 4},
     CHARACTER_SEARCH: {name: "character-search", order: 5},
-    PERSONAL_CHARACTERS: {name: "personal-characters", order: 6}
+    PERSONAL_CHARACTERS: {name: "personal-characters", order: 6},
+    ONLINE: {name: "online", order: 7}
 });
 
 const VIEW_DATA = Object.freeze

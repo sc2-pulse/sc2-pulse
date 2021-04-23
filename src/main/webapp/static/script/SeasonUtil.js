@@ -88,4 +88,74 @@ class SeasonUtil
         teamSection.appendChild(seasonPills.pane);
     }
 
+    static updateSeasonState(searchParams)
+    {
+        searchParams.append("type", "online");
+        const stringParams = searchParams.toString();
+        const params = {params: stringParams};
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        return SeasonUtil.updateSeasonStateModel(searchParams)
+            .then(e=>new Promise((res, rej)=>{
+                SeasonUtil.updateSeasonStateView();
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+                if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + stringParams + "#online");
+                Session.currentSearchParams = stringParams;
+                if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
+                res();
+            }))
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+    }
+
+    static updateSeasonStateModel(searchParams)
+    {
+        const request = `api/season/state/${new Date(parseInt(searchParams.get("to"))).toISOString()}/${searchParams.get("period")}`;
+        return fetch(request)
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.ONLINE).set(VIEW_DATA.SEARCH, json); res(json);}));
+    }
+
+    static updateSeasonStateView()
+    {
+        SeasonUtil.updateSeasonStateViewPart("online-players-table", "playerCount");
+        SeasonUtil.updateSeasonStateViewPart("online-games-table", "gamesPlayed");
+        document.querySelector("#online-data").classList.remove("d-none");
+    }
+
+    static updateSeasonStateViewPart(tableId, param)
+    {
+         const searchResult = Model.DATA.get(VIEW.ONLINE).get(VIEW_DATA.SEARCH);
+         const data = {};
+         for(const state of searchResult)
+         {
+            if(data[state.seasonState.timestamp] == null) data[state.seasonState.timestamp] = {};
+            data[state.seasonState.timestamp][state.season.region] = state.seasonState[param];
+         }
+         ChartUtil.CHART_RAW_DATA.set(tableId, {});
+         TableUtil.updateVirtualColRowTable
+         (
+             document.getElementById(tableId),
+             data,
+             (tableData=>ChartUtil.CHART_RAW_DATA.get(tableId).data = tableData),
+             (a, b)=>EnumUtil.enumOfName(a, REGION).order - EnumUtil.enumOfName(b, REGION).order,
+             (name)=>EnumUtil.enumOfName(name, REGION).name,
+             (dateTime)=>new Date(dateTime)
+         );
+    }
+
+    static enhanceSeasonStateForm()
+    {
+        const form = document.querySelector("#form-online");
+        document.querySelector("#online-to").valueAsNumber = new Date().getTime();
+        form.addEventListener("submit", evt=>{
+            evt.preventDefault();
+            const fd = new FormData(form);
+            //the API expects exclusive "to", but user expects inclusive "to"
+            const date = new Date(document.querySelector("#online-to").valueAsNumber);
+            date.setHours(0, 0, 0, 0);
+            date.setDate(date.getDate() + 1)
+            fd.set("to", date.getTime());
+            SeasonUtil.updateSeasonState(new URLSearchParams(Util.urlencodeFormData(fd)));
+        });
+    }
+
 }

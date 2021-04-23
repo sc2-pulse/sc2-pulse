@@ -28,6 +28,20 @@
                     </li>
                     <li class="nav-item">
                         <a
+                                id="online-tab"
+                                class="nav-link"
+                                data-toggle="pill"
+                                data-target="#online"
+                                href="#online"
+                                role="tab"
+                                aria-controls="online"
+                                aria-selected="false"
+                        >
+                            Online
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a
                             id="search-tab"
                             class="nav-link"
                             data-toggle="pill"
@@ -517,6 +531,7 @@
         </div><!--Ladder all-->
         </div><!--Generated all-->
         </section><!--Generator-->
+        <section th:replace="~{fragments/main-section :: online}"></section>
         <section id="search" class="tab-pane fade"
                  data-view-name="player-search"
                  data-view-title="Player search"

@@ -243,6 +243,12 @@ class HistoryUtil
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(CharacterUtil.updateCharacterSearch(name));
                 break;
+            case "online":
+                scrollTo = "online-data";
+                lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
+                lazyPromises.push(e=>FormUtil.setFormState(document.querySelector("#form-online"), params));
+                promises.push(SeasonUtil.updateSeasonState(params));
+                break;
             case "following-ladder":
                 LadderUtil.restoreLadderFormState(document.getElementById("form-following-ladder"), params);
                 scrollTo = "following-ladder";
