@@ -316,11 +316,22 @@ class ElementUtil
 
     static changeInputValue(input, val)
     {
-        const type = input.getAttribute("type");
-        if(type == "checkbox" || type == "radio") {
-            input.checked = val;
-        } else {
-            input.value = val;
+        switch(input.getAttribute("type"))
+        {
+            case "date":
+            {
+                const date = new Date(parseInt(val));
+                if(input.getAttribute("data-exclusive")) date.setDate(date.getDate() - 1);
+                input.valueAsNumber = date.getTime() - new Date().getTimezoneOffset() * 60 * 1000;
+                break;
+            }
+            case "checkbox":
+            case "radio":
+                input.checked = val;
+                break;
+            default:
+                input.value = val;
+                break;
         }
         input.dispatchEvent(new Event("change"));
     }
