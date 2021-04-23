@@ -30,4 +30,15 @@ class FormUtil
         return false;
     }
 
+    static setFormState(form, searchParams)
+    {
+        for(const [key, val] of searchParams)
+        {
+            const input = form.querySelector(':scope [name="' + key + '"]');
+            if(!input) continue;
+            ElementUtil.changeInputValue(input, val);
+        }
+
+    }
+
 }
