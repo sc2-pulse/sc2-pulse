@@ -62,6 +62,7 @@ class ChartUtil
                               //  ...(config.performance === "fast") && {sampleSize: 50}
                             },
                             stacked: config.stacked === "true" ? true : false,
+                            offset: config.type === "bar" ? true : false,
                             ...(config.xType === "time") && {
                                 type: "time",
                                 time: {unit: config.xTimeUnit == "false" ? false : config.xTimeUnit}
