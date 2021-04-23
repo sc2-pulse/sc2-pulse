@@ -64,7 +64,7 @@ class ChartUtil
                             stacked: config.stacked === "true" ? true : false,
                             ...(config.xType === "time") && {
                                 type: "time",
-                                time: {unit: config.xTimeUnit}
+                                time: {unit: config.xTimeUnit == "false" ? false : config.xTimeUnit}
                             }
                         }],
                         yAxes:
