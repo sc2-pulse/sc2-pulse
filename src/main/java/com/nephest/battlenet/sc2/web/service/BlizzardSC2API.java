@@ -196,9 +196,9 @@ extends BaseAPI
         return Flux.fromIterable(ids)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(id->WebServiceUtil.getRateDelayedMono(
-                getLeague(id.getT1(), id.getT2(), id.getT3(), id.getT4(), id.getT5(), cur), Mono::error, DELAY),
-                false, 1);
+            .flatMap(id->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(
+                getLeague(id.getT1(), id.getT2(), id.getT3(), id.getT4(), id.getT5(), cur), DELAY),
+                true, 1);
     }
 
     public Mono<BlizzardLadder> getLadder
@@ -247,8 +247,8 @@ extends BaseAPI
         return Flux.fromArray(divisions)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(d->WebServiceUtil.getRateDelayedMono(getLadder(region, d).zipWith(Mono.just(d)),Mono::error, DELAY),
-                false, 1);
+            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getLadder(region, d).zipWith(Mono.just(d)), DELAY),
+                true, 1);
     }
 
     public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region region, long ladderId)
