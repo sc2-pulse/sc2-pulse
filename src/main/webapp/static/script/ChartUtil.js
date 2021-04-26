@@ -337,8 +337,6 @@ class ChartUtil
 
     static onChartableMutation(mutations, observer)
     {
-        if(Session.isHistorical) return;
-
         for(const mutation of mutations)
         {
             if(mutation.target.closest(".tab-pane").classList.contains("active"))
