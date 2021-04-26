@@ -204,6 +204,9 @@
                                 <profile>default</profile>
                                 <profile>dev</profile>
                             </profiles>
+                            <arguments>
+                                <argument>--logging.level.com.nephest=DEBUG</argument>
+                            </arguments>
                         </configuration>
                     </plugin>
                 </plugins>
