@@ -252,7 +252,7 @@
                         </executions>
                         <configuration>
                             <target>
-                                <java classname="com.google.javascript.jscomp.CommandLineRunner" fork="true">
+                                <java classname="com.google.javascript.jscomp.CommandLineRunner" failonerror="true" fork="true">
                                     <classpath>
                                         <path refid="maven.plugin.classpath"/>
                                     </classpath>
