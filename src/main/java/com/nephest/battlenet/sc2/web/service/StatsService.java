@@ -392,11 +392,16 @@ public class StatsService
         {
             LeagueTier tier = LeagueTier.of(league, bTier);
             leagueTierDao.merge(tier);
-            updateDivisions(bTier.getDivisions(), season, league, tier, lastUpdateStart);
+            statsService.updateDivisions(bTier.getDivisions(), season, league, tier, lastUpdateStart);
         }
     }
 
-    private void updateDivisions
+    @Transactional
+    (
+        //isolation = Isolation.READ_COMMITTED,
+        propagation = Propagation.REQUIRES_NEW
+    )
+    public void updateDivisions
     (
         BlizzardTierDivision[] divisions,
         Season season,
@@ -406,17 +411,12 @@ public class StatsService
     )
     {
         api.getLadders(season.getRegion(), divisions)
-            .doOnNext(t->statsService.saveLadder(season, league, tier, t, lastUpdateStart))
+            .doOnNext(t->saveLadder(season, league, tier, t, lastUpdateStart))
             .sequential()
             .blockLast();
     }
 
-    @Transactional
-    (
-        //isolation = Isolation.READ_COMMITTED,
-        propagation = Propagation.REQUIRES_NEW
-    )
-    public void saveLadder
+    private void saveLadder
     (
         Season season,
         League league,
