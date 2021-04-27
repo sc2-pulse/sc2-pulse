@@ -130,7 +130,7 @@ public class Cron
         Instant startInstant = Instant.now();
         int cycleMinutes = 60 - OffsetDateTime.now().getMinute();
         timedUpdateSeasons();
-        long scans = Math.min(cycleMinutes / updateDuration.get(ChronoUnit.MINUTES), 4);
+        long scans = Math.max(1, Math.min(cycleMinutes / updateDuration.get(ChronoUnit.MINUTES), 4));
         long minutesBetweenTasks = 60 / scans;
 
         for(int i = 1; i < scans; i++) {
