@@ -44,6 +44,7 @@ public class Cron
     };
 
     private Duration updateDuration = Duration.ofMinutes(60);
+    private Instant heavyStatsInstant;
 
     @Autowired
     private StatsService statsService;
@@ -82,6 +83,11 @@ public class Cron
                     updateDuration = Duration.ofMinutes(Integer.parseInt(durationStr));
                     LOG.debug("Loaded ladder update duration: {}", updateDuration);
                 });
+            varDAO.find("ladder.stats.heavy.timestamp")
+                .ifPresent(timestampStr->{
+                    heavyStatsInstant = Instant.ofEpochMilli(Long.parseLong(timestampStr));
+                    LOG.debug("Loaded ladder heavy stats instant: {}", heavyStatsInstant);
+                });
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -94,6 +100,7 @@ public class Cron
         proPlayerService.update();
         matchService.update();
         queueStatsDAO.mergeCalculateForSeason(seasonDAO.getMaxBattlenetId());
+        varDAO.merge("ladder.stats.heavy.timestamp", String.valueOf(System.currentTimeMillis()));
         postgreSQLUtils.vacuum();
         postgreSQLUtils.analyze();
         updateSeasonsHourCycle();
