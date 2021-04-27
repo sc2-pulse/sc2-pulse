@@ -27,9 +27,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.Future;
 
 @Profile({"!maintenance & !dev"})
 @Component
@@ -45,8 +42,6 @@ public class Cron
         BaseLeague.LeagueType.MASTER,
         BaseLeague.LeagueType.DIAMOND
     };
-
-    private final Set<Future<?>> scheduled = new HashSet<>();
 
     private Duration updateDuration = Duration.ofMinutes(60);
 
@@ -124,8 +119,6 @@ public class Cron
 
     private void updateSeasonsHourCycle()
     {
-        scheduled.forEach(f->f.cancel(true));
-        scheduled.clear();
         seasonStateDAO.merge(OffsetDateTime.now(), seasonDAO.getMaxBattlenetId());
         Instant startInstant = Instant.now();
         int cycleMinutes = 60 - OffsetDateTime.now().getMinute();
@@ -135,12 +128,12 @@ public class Cron
 
         for(int i = 1; i < scans; i++) {
             Instant nextInstant = startInstant.plus(minutesBetweenTasks * i, ChronoUnit.MINUTES);
-            scheduled.add(executor.schedule(this::doUpdateSeasons, nextInstant));
+            executor.schedule(this::doUpdateSeasons, nextInstant);
             LOG.debug("Scheduled seasons update at {}", nextInstant);
         }
         if(scans < 2 && OffsetDateTime.now().getMinute() < 42)  {
             Instant nextInstant = OffsetDateTime.now().withMinute(42).withSecond(0).toInstant();
-            scheduled.add(executor.schedule(this::doUpdateTop, nextInstant));
+            executor.schedule(this::doUpdateTop, nextInstant);
             LOG.debug("Scheduled top update at {}", nextInstant);
         }
     }
