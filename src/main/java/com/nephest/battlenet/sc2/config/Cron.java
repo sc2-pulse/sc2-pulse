@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
@@ -21,6 +22,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.temporal.ChronoUnit;
@@ -45,6 +48,8 @@ public class Cron
 
     private final Set<Future<?>> scheduled = new HashSet<>();
 
+    private Duration updateDuration = Duration.ofMinutes(60);
+
     @Autowired
     private StatsService statsService;
 
@@ -68,6 +73,25 @@ public class Cron
 
     @Autowired
     private QueueStatsDAO queueStatsDAO;
+
+    @Autowired
+    private VarDAO varDAO;
+
+    @PostConstruct
+    public void init()
+    {
+        //catch exceptions to allow service autowiring for tests
+        try {
+            varDAO.find("ladder.duration.minutes")
+                .ifPresent(durationStr->{
+                    updateDuration = Duration.ofMinutes(Integer.parseInt(durationStr));
+                    LOG.debug("Loaded ladder update duration: {}", updateDuration);
+                });
+        }
+        catch(RuntimeException ex) {
+            LOG.warn(ex.getMessage(), ex);
+        }
+    }
 
     @Scheduled(cron="0 0 7 * * *")
     public void updateAll()
@@ -105,11 +129,8 @@ public class Cron
         seasonStateDAO.merge(OffsetDateTime.now(), seasonDAO.getMaxBattlenetId());
         Instant startInstant = Instant.now();
         int cycleMinutes = 60 - OffsetDateTime.now().getMinute();
-        long start = System.currentTimeMillis();
-        doUpdateSeasons();
-        // + 2.5 minutes just to be safe
-        long taskDurationMinutes = (long) ((System.currentTimeMillis() - start) + 60000 * 2.5) / 1000 / 60;
-        long scans = Math.min(cycleMinutes / taskDurationMinutes, 4);
+        timedUpdateSeasons();
+        long scans = Math.min(cycleMinutes / updateDuration.get(ChronoUnit.MINUTES), 4);
         long minutesBetweenTasks = 60 / scans;
 
         for(int i = 1; i < scans; i++) {
@@ -121,6 +142,19 @@ public class Cron
             Instant nextInstant = OffsetDateTime.now().withMinute(42).withSecond(0).toInstant();
             scheduled.add(executor.schedule(this::doUpdateTop, nextInstant));
             LOG.debug("Scheduled top update at {}", nextInstant);
+        }
+    }
+
+    private void timedUpdateSeasons()
+    {
+        long start = System.currentTimeMillis();
+        boolean updated = doUpdateSeasons();
+
+        if (updated) {
+            // + 2.5 minutes just to be safe
+            long durationMinutes = Math.max(1, (int) ((System.currentTimeMillis() - start) + 60000 * 2.5) / 1000 / 60);
+            this.updateDuration = Duration.ofMinutes(durationMinutes);
+            varDAO.merge("ladder.duration.minutes", String.valueOf(updateDuration.get(ChronoUnit.MINUTES)));
         }
     }
 
