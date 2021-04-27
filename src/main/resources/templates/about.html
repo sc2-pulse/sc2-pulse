@@ -45,6 +45,7 @@
                         <li>Player count, team count, games played</li>
                         <li>League, region, race distribution</li>
                         <li>Daily activity</li>
+                        <li>Steam-like online stats</li>
                     </ul>
                 </li>
                 <li>Tier MMR ranges</li>
@@ -122,6 +123,8 @@
                         matches and pro stats for pro players</dd>
                         <dt><code><a th:href="@{/api/status/stale}" target="_blank" rel="noopener noreferrer nofollow">/api/status/stale</a></code></dt>
                         <dd>List of Blizzard API regions that return stale data</dd>
+                        <dt><code><a th:href="@{'/api/season/state/' + ${T(java.lang.System).currentTimeMillis()} + '/MONTH'}" target="_blank" rel="noopener noreferrer nofollow">/api/season/status/{endTimestampMillis}/{period}</a></code></dt>
+                        <dd>Steam-like online stats. Hour resolution, player count and games played, divided by region. See Period enum for available periods.</dd>
                     </dl>
                 </p>
             </section>
