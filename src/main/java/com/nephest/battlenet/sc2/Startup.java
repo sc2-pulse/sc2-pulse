@@ -3,7 +3,6 @@
 
 package com.nephest.battlenet.sc2;
 
-import com.nephest.battlenet.sc2.web.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.ApplicationArguments;
@@ -19,15 +18,11 @@ public class Startup
 implements ApplicationRunner
 {
 
-    @Autowired
-    private StatsService statsService;
-
     @Autowired @Qualifier("taskScheduler")
     private Executor executor;
 
     @Override
     public void run(ApplicationArguments args)
     {
-        executor.execute(()->statsService.checkStaleData());
     }
 }
