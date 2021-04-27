@@ -124,7 +124,7 @@ public class Cron
         }
     }
 
-    private void doUpdateSeasons()
+    private boolean doUpdateSeasons()
     {
         try
         {
@@ -140,10 +140,12 @@ public class Cron
         {
             //API can be broken randomly. All we can do at this point is log the exception.
             LOG.error(ex.getMessage(), ex);
+            return false;
         }
+        return true;
     }
 
-    private void doUpdateTop()
+    private boolean doUpdateTop()
     {
         try
         {
@@ -162,7 +164,9 @@ public class Cron
         {
             //API can be broken randomly. All we can do at this point is log the exception.
             LOG.error(ex.getMessage(), ex);
+            return false;
         }
+        return true;
     }
 
 }
