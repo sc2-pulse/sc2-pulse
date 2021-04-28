@@ -84,13 +84,18 @@ public class Cron
         nonStopUpdate();
     }
 
+    @Scheduled(cron="0 59 * * * *")
+    public void updateSeasonState()
+    {
+        seasonStateDAO.merge(OffsetDateTime.now(), seasonDAO.getMaxBattlenetId());
+    }
+
     private void nonStopUpdate()
     {
         try
         {
             doUpdateSeasons();
             calculateHeavyStats();
-            seasonStateDAO.merge(OffsetDateTime.now(), seasonDAO.getMaxBattlenetId());
         }
         catch(RuntimeException ex) {
             LOG.error(ex.getMessage(), ex);
