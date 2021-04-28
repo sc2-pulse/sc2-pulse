@@ -160,10 +160,10 @@ public class LadderSeasonStateDAOIT
         //hour1: only 1 4v4 US team
         OffsetDateTime time1 = OffsetDateTime.now().withMinute(0).withSecond(0).withNano(0);
         TeamState state1 = TeamState.of(team1);
-        state1.setDateTime(time1.minusMinutes(59));
+        state1.setDateTime(time1.plusMinutes(59));
         //this state has no effect on stats
         TeamState state2 = TeamState.of(team1);
-        state2.setDateTime(time1.minusSeconds(1));
+        state2.setDateTime(time1.plusSeconds(1));
         teamStateDAO.saveState(state1, state2);
         seasonStateDAO.merge(time1, SeasonGenerator.DEFAULT_SEASON_ID);
 
@@ -182,11 +182,11 @@ public class LadderSeasonStateDAOIT
         teamDAO.merge(team1);
         OffsetDateTime time2 = time1.plusHours(1);
         TeamState state21 = TeamState.of(team1);
-        state21.setDateTime(time2.minusMinutes(59));
+        state21.setDateTime(time2.plusMinutes(59));
         TeamState state22 = TeamState.of(team2);
-        state22.setDateTime(time2.minusMinutes(30));
+        state22.setDateTime(time2.plusMinutes(30));
         TeamState state23 = TeamState.of(team3);
-        state23.setDateTime(time2.minusSeconds(1));
+        state23.setDateTime(time2.plusSeconds(1));
         teamStateDAO.saveState(state21, state22, state23);
         seasonStateDAO.merge(time2, SeasonGenerator.DEFAULT_SEASON_ID);
 

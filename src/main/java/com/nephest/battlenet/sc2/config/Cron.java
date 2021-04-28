@@ -88,9 +88,9 @@ public class Cron
     {
         try
         {
-            seasonStateDAO.merge(OffsetDateTime.now(), seasonDAO.getMaxBattlenetId());
             doUpdateSeasons();
             calculateHeavyStats();
+            seasonStateDAO.merge(OffsetDateTime.now(), seasonDAO.getMaxBattlenetId());
         }
         catch(RuntimeException ex) {
             LOG.error(ex.getMessage(), ex);
