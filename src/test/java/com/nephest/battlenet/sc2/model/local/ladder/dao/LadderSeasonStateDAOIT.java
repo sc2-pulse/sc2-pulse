@@ -169,7 +169,7 @@ public class LadderSeasonStateDAOIT
 
         List<LadderSeasonState> states1 = ladderSeasonStateDAO.find(time1.plusSeconds(1), Period.DAY);
         assertEquals(1, states1.size());
-        assertTrue(time1.isEqual(states1.get(0).getSeasonState().getTimestamp()));
+        assertTrue(time1.isEqual(states1.get(0).getSeasonState().getPeriodStart()));
         assertEquals(1, states1.get(0).getSeason().getId());
         //only regions with team state for that hour
         assertEquals(6, states1.get(0).getSeasonState().getTotalGamesPlayed());
@@ -192,14 +192,14 @@ public class LadderSeasonStateDAOIT
 
         List<LadderSeasonState> states2 = ladderSeasonStateDAO.find(time2.plusSeconds(1), Period.DAY);
         assertEquals(3, states2.size());
-        assertTrue(time2.isEqual(states2.get(1).getSeasonState().getTimestamp()));
+        assertTrue(time2.isEqual(states2.get(1).getSeasonState().getPeriodStart()));
         assertEquals(1, states2.get(1).getSeason().getId());
         assertEquals(7, states2.get(1).getSeasonState().getTotalGamesPlayed());
         assertEquals(1, states2.get(1).getSeasonState().getGamesPlayed());
         //only unique accounts
         assertEquals(5, states2.get(1).getSeasonState().getPlayerCount());
 
-        assertTrue(time2.isEqual(states2.get(2).getSeasonState().getTimestamp()));
+        assertTrue(time2.isEqual(states2.get(2).getSeasonState().getPeriodStart()));
         assertEquals(2, states2.get(2).getSeason().getId());
         assertEquals(3, states2.get(2).getSeasonState().getTotalGamesPlayed());
         //null if there is no previous state

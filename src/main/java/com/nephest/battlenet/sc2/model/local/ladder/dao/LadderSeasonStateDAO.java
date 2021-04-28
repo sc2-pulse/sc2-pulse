@@ -29,9 +29,9 @@ public class LadderSeasonStateDAO
         "SELECT " + SeasonDAO.STD_SELECT + ", " + SeasonStateDAO.STD_SELECT + " "
         + "FROM season_state "
         + "INNER JOIN season ON season_state.season_id = season.id "
-        + "WHERE season_state.\"timestamp\" >= :to - INTERVAL '%1$s'"
-        + "AND season_state.\"timestamp\" < :to "
-        + "ORDER BY season_state.\"timestamp\", season.region";
+        + "WHERE season_state.period_start >= :to - INTERVAL '%1$s'"
+        + "AND season_state.period_start < :to "
+        + "ORDER BY season_state.period_start, season.region";
     private static final Map<Period, String> FIND_QUERIES = Arrays.stream(Period.values())
         .collect(Collectors.toUnmodifiableMap(Function.identity(), p->String.format(FIND_TEMPLATE, p.getSqlPeriod())));
 

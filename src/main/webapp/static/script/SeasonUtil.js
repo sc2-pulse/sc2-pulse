@@ -127,8 +127,8 @@ class SeasonUtil
          const data = {};
          for(const state of searchResult)
          {
-            if(data[state.seasonState.timestamp] == null) data[state.seasonState.timestamp] = {};
-            data[state.seasonState.timestamp][state.season.region] = state.seasonState[param];
+            if(data[state.seasonState.periodStart] == null) data[state.seasonState.periodStart] = {};
+            data[state.seasonState.periodStart][state.season.region] = state.seasonState[param];
          }
          ChartUtil.CHART_RAW_DATA.set(tableId, {});
          TableUtil.updateVirtualColRowTable

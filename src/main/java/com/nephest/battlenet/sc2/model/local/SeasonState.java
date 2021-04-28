@@ -16,7 +16,7 @@ public class SeasonState
     private Integer seasonId;
 
     @NotNull
-    private OffsetDateTime timestamp;
+    private OffsetDateTime periodStart;
 
     @NotNull
     private Integer playerCount;
@@ -31,14 +31,14 @@ public class SeasonState
     public SeasonState
     (
         @NotNull Integer seasonId,
-        @NotNull OffsetDateTime timestamp,
+        @NotNull OffsetDateTime periodStart,
         @NotNull Integer playerCount,
         @NotNull Integer totalGamesPlayed,
         Integer gamesPlayed
     )
     {
         this.seasonId = seasonId;
-        this.timestamp = timestamp;
+        this.periodStart = periodStart;
         this.playerCount = playerCount;
         this.totalGamesPlayed = totalGamesPlayed;
         this.gamesPlayed = gamesPlayed;
@@ -50,13 +50,13 @@ public class SeasonState
         if (this == o) return true;
         if (!(o instanceof SeasonState)) return false;
         SeasonState that = (SeasonState) o;
-        return seasonId.equals(that.seasonId) && timestamp.equals(that.timestamp);
+        return seasonId.equals(that.seasonId) && periodStart.equals(that.periodStart);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(seasonId, timestamp);
+        return Objects.hash(seasonId, periodStart);
     }
 
     @Override
@@ -66,7 +66,7 @@ public class SeasonState
         (
             "%s[%s %s]",
             SeasonState.class.getSimpleName(),
-            getSeasonId(), getTimestamp()
+            getSeasonId(), getPeriodStart()
         );
     }
 
@@ -80,14 +80,14 @@ public class SeasonState
         this.seasonId = seasonId;
     }
 
-    public OffsetDateTime getTimestamp()
+    public OffsetDateTime getPeriodStart()
     {
-        return timestamp;
+        return periodStart;
     }
 
-    public void setTimestamp(OffsetDateTime timestamp)
+    public void setPeriodStart(OffsetDateTime periodStart)
     {
-        this.timestamp = timestamp;
+        this.periodStart = periodStart;
     }
 
     public Integer getPlayerCount()

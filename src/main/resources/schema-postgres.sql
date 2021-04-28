@@ -239,12 +239,12 @@ CREATE TABLE "league_stats"
 CREATE TABLE "season_state"
 (
     "season_id" INTEGER NOT NULL,
-    "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL,
+    "period_start" TIMESTAMP WITH TIME ZONE NOT NULL,
     "player_count" SMALLINT NOT NULL,
     "total_games_played" INTEGER NOT NULL,
     "games_played" SMALLINT,
 
-    PRIMARY KEY("timestamp", "season_id"),
+    PRIMARY KEY("period_start", "season_id"),
 
     CONSTRAINT "fk_season_state_season_id"
         FOREIGN KEY ("season_id")

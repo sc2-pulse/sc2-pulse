@@ -17,3 +17,6 @@ CREATE TABLE "season_state"
         REFERENCES "season"("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+ALTER TABLE "season_state"
+    RENAME COLUMN "timestamp" TO "period_start";

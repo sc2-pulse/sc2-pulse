@@ -19,7 +19,7 @@ public class SeasonStateDAO
 
     public static final String STD_SELECT =
         "season_state.season_id AS \"season_state.season_id\", "
-        + "season_state.timestamp AS \"season_state.timestamp\", "
+        + "season_state.period_start AS \"season_state.period_start\", "
         + "season_state.player_count AS \"season_state.player_count\", "
         + "season_state.total_games_played AS \"season_state.total_games_played\", "
         + "season_state.games_played AS \"season_state.games_played\" ";
@@ -55,7 +55,7 @@ public class SeasonStateDAO
             + "SELECT total.id, season_state.total_games_played "
             + "FROM total "
             + "INNER JOIN season_state ON total.id = season_state.season_id "
-            + "WHERE \"timestamp\" = :point - INTERVAL '1 HOURS'"
+            + "WHERE period_start = :point - INTERVAL '1 HOURS'"
         + "), "
         + "fin AS ("
             + "SELECT id, account_filter.player_count, total.total_games_played, "
@@ -64,10 +64,10 @@ public class SeasonStateDAO
             + "INNER JOIN total USING(id) "
             + "LEFT OUTER JOIN prev USING(id)"
         + ") "
-        + "INSERT INTO season_state (season_id, \"timestamp\", player_count, total_games_played, games_played) "
+        + "INSERT INTO season_state (season_id, period_start, player_count, total_games_played, games_played) "
         + "SELECT fin.id, :point, fin.player_count, fin.total_games_played, fin.total_games_played - fin.prev_total_games_played "
         + "FROM fin "
-        + "ON CONFLICT(\"timestamp\", season_id) DO UPDATE SET "
+        + "ON CONFLICT(period_start, season_id) DO UPDATE SET "
         + "player_count = excluded.player_count, "
         + "total_games_played = excluded.total_games_played, "
         + "games_played = excluded.games_played";
@@ -82,7 +82,7 @@ public class SeasonStateDAO
         return new SeasonState
         (
             rs.getInt("season_state.season_id"),
-            rs.getObject("season_state.timestamp", OffsetDateTime.class),
+            rs.getObject("season_state.period_start", OffsetDateTime.class),
             rs.getInt("season_state.player_count"),
             rs.getInt("season_state.total_games_played"),
             games
