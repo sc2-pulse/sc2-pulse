@@ -89,7 +89,6 @@ public class AlternativeLadderService
     }
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 50;
-    public static final int BATCH_SIZE = 30;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
     public void updateSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
@@ -178,7 +177,7 @@ public class AlternativeLadderService
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladders
     )
     {
-        api.getProfileLadders(ladders, queueTypes, BATCH_SIZE)
+        api.getProfileLadders(ladders, queueTypes)
             .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
             .sequential().blockLast();
     }
