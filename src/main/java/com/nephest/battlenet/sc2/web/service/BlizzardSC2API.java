@@ -190,14 +190,15 @@ extends BaseAPI
         return getLeague(region, season, leagueType, queueType, teamType, false);
     }
 
-    public ParallelFlux<BlizzardLeague> getLeagues
+    public ParallelFlux<Tuple2<BlizzardLeague, Region>> getLeagues
     (Iterable<? extends Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> ids, boolean cur)
     {
         return Flux.fromIterable(ids)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
             .flatMap(id->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(
-                getLeague(id.getT1(), id.getT2(), id.getT3(), id.getT4(), id.getT5(), cur), DELAY),
+                getLeague(id.getT1(), id.getT2(), id.getT3(), id.getT4(), id.getT5(), cur)
+                    .zipWith(Mono.just(id.getT1())), DELAY),
                 true, 1);
     }
 

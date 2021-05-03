@@ -592,7 +592,7 @@ public class StatsService
         AtomicLong max = new AtomicLong(-1);
         api.getLeagues(leagueIds, true)
             .doOnNext(l->{
-                long maxId = Arrays.stream(l.getTiers())
+                long maxId = Arrays.stream(l.getT1().getTiers())
                     .flatMapToLong(t->Arrays.stream(t.getDivisions()).mapToLong(BlizzardTierDivision::getLadderId))
                     .max().orElse(-1L);
                 max.getAndUpdate(c->Math.max(c, maxId));
