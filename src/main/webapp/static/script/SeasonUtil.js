@@ -145,7 +145,7 @@ class SeasonUtil
     static enhanceSeasonStateForm()
     {
         const form = document.querySelector("#form-online");
-        document.querySelector("#online-to").valueAsNumber = new Date().getTime();
+        document.querySelector("#online-to").value = Util.currentISODateString();
         form.addEventListener("submit", evt=>{
             evt.preventDefault();
             const fd = new FormData(form);
