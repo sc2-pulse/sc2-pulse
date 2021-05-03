@@ -20,11 +20,9 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuple3;
-import reactor.util.function.Tuple5;
-import reactor.util.function.Tuples;
+import reactor.util.function.*;
 
 import javax.annotation.PostConstruct;
 import java.time.Instant;
@@ -582,6 +580,21 @@ public class StatsService
             }
         }
         return leagueIds;
+    }
+
+    private List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, Long>> getLadderIds
+    (Iterable<? extends Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> ids, boolean cur)
+    {
+        List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, Long>> ladderIds = new ArrayList<>();
+        api.getLeagues(ids, cur)
+            .flatMap(l-> Flux.fromStream(
+                Arrays.stream(l.getT1().getTiers())
+                    .flatMap(t-> Arrays.stream(t.getDivisions())
+                        .map(d->Tuples.of(l.getT1(), l.getT2(), t, d.getLadderId())))))
+            .sequential()
+            .doOnNext(ladderIds::add)
+            .blockLast();
+        return ladderIds;
     }
 
     public long getMaxLadderId(BlizzardSeason bSeason, Region region)
