@@ -22,7 +22,10 @@ import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.*;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
+import reactor.util.function.Tuple5;
+import reactor.util.function.Tuples;
 
 import javax.annotation.PostConstruct;
 import java.time.Instant;
@@ -42,6 +45,7 @@ public class StatsService
     public static final Version VERSION = Version.LOTV;
     public static final int STALE_LADDER_TOLERANCE = 3;
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 27;
+    public static final int LADDER_BATCH_SIZE = 400;
 
     @Autowired
     private StatsService statsService;
@@ -362,37 +366,16 @@ public class StatsService
     {
         Instant lastUpdated = currentSeason ? lastLeagueUpdates.get(queues.length) : null;
         LOG.debug("Updating season {} using {} checkpoint", season, lastUpdated);
-        for (League.LeagueType leagueType : leagues)
+        List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
+            getLadderIds(getLeagueIds(bSeason, season.getRegion(), queues, leagues), currentSeason);
+        int batches = (int) Math.ceil(ladderIds.size() / (double) LADDER_BATCH_SIZE);
+        for(int i = 0; i < batches; i++)
         {
-            for (QueueType queueType : queues)
-            {
-                for (TeamType teamType : TeamType.values())
-                {
-                    if (!BlizzardSC2API.isValidCombination(leagueType, queueType, teamType)) continue;
-
-                    BlizzardLeague bLeague = api.getLeague
-                    (
-                        season.getRegion(),
-                        bSeason,
-                        leagueType, queueType, teamType,
-                        currentSeason
-                    ).block();
-                    League league = League.of(season, bLeague);
-
-                    leagueDao.merge(league);
-                    updateLeagueTiers(bLeague, season, league, lastUpdated);
-                }
-            }
-        }
-    }
-
-    private void updateLeagueTiers(BlizzardLeague bLeague, Season season, League league, Instant lastUpdateStart)
-    {
-        for (BlizzardLeagueTier bTier : bLeague.getTiers())
-        {
-            LeagueTier tier = LeagueTier.of(league, bTier);
-            leagueTierDao.merge(tier);
-            statsService.updateDivisions(bTier.getDivisions(), season, league, tier, lastUpdateStart);
+            int to = (i + 1) * LADDER_BATCH_SIZE;
+            if (to > ladderIds.size()) to = ladderIds.size();
+            List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>  batch =
+                ladderIds.subList(i * LADDER_BATCH_SIZE, to);
+            statsService.updateLadders(season, batch, lastUpdated);
         }
     }
 
@@ -401,34 +384,19 @@ public class StatsService
         //isolation = Isolation.READ_COMMITTED,
         propagation = Propagation.REQUIRES_NEW
     )
-    public void updateDivisions
-    (
-        BlizzardTierDivision[] divisions,
-        Season season,
-        League league,
-        LeagueTier tier,
-        Instant lastUpdateStart
-    )
+    public void updateLadders
+    (Season season, List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds, Instant lastUpdated)
     {
-        api.getLadders(season.getRegion(), divisions)
-            .doOnNext(t->saveLadder(season, league, tier, t, lastUpdateStart))
+        api.getLadders(ladderIds)
+            .doOnNext(l->{
+                League league = leagueDao.merge(League.of(season, l.getT2().getT1()));
+                LeagueTier tier = leagueTierDao.merge(LeagueTier.of(league, l.getT2().getT3()));
+                Division division = saveDivision(season, league, tier, l.getT2().getT4());
+                updateTeams(l.getT1().getTeams(), season, league, tier, division, lastUpdated);
+                LOG.debug("Ladder saved: {} {} {}", season, division.getBattlenetId(), league);
+            })
             .sequential()
             .blockLast();
-    }
-
-    private void saveLadder
-    (
-        Season season,
-        League league,
-        LeagueTier tier,
-        Tuple2<BlizzardLadder, BlizzardTierDivision> t,
-        Instant lastUpdateStart
-    )
-    {
-        BlizzardTierDivision bDivision = t.getT2();
-        Division division = saveDivision(season, league, tier, bDivision);
-        updateTeams(t.getT1().getTeams(), season, league, tier, division, lastUpdateStart);
-        LOG.debug("Ladder saved: {} {} {}", season, division.getBattlenetId(), league);
     }
 
     public Division saveDivision
