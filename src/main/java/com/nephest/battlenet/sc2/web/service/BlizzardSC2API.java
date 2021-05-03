@@ -23,10 +23,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.ParallelFlux;
 import reactor.core.scheduler.Schedulers;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuple3;
-import reactor.util.function.Tuple5;
-import reactor.util.function.Tuples;
+import reactor.util.function.*;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -227,6 +224,16 @@ extends BaseAPI
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
             .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getLadder(region, d).zipWith(Mono.just(d)), DELAY),
+                true, 1);
+    }
+
+    public ParallelFlux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, Long>>> getLadders
+    (Iterable<? extends Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, Long>> ladderIds)
+    {
+        return Flux.fromIterable(ladderIds)
+            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
+            .runOn(Schedulers.boundedElastic())
+            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getLadder(d.getT2(), d.getT4()).zipWith(Mono.just(d)), DELAY),
                 true, 1);
     }
 
