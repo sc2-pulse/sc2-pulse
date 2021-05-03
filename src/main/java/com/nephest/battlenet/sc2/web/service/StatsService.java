@@ -560,12 +560,18 @@ public class StatsService
         if(teamMembers.size() > 0) teamMemberDao.merge(teamMembers.toArray(teamMembers.toArray(new TeamMember[0])));
     }
 
-    public long getMaxLadderId(BlizzardSeason bSeason, Region region)
+    public static List<Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> getLeagueIds
+    (
+        BlizzardSeason bSeason,
+        Region region,
+        QueueType[] queues,
+        BaseLeague.LeagueType[] leagues
+    )
     {
         List<Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> leagueIds = new ArrayList<>();
-        for(BaseLeague.LeagueType league : BaseLeague.LeagueType.values())
+        for(BaseLeague.LeagueType league : leagues)
         {
-            for(QueueType queue : QueueType.getTypes(VERSION))
+            for(QueueType queue : queues)
             {
                 for(TeamType team : TeamType.values())
                 {
@@ -575,6 +581,13 @@ public class StatsService
                 }
             }
         }
+        return leagueIds;
+    }
+
+    public long getMaxLadderId(BlizzardSeason bSeason, Region region)
+    {
+        List<Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> leagueIds =
+            getLeagueIds(bSeason, region, QueueType.getTypes(VERSION).toArray(QueueType[]::new), BaseLeague.LeagueType.values());
 
         AtomicLong max = new AtomicLong(-1);
         api.getLeagues(leagueIds, true)
