@@ -582,15 +582,15 @@ public class StatsService
         return leagueIds;
     }
 
-    private List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, Long>> getLadderIds
+    private List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> getLadderIds
     (Iterable<? extends Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> ids, boolean cur)
     {
-        List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, Long>> ladderIds = new ArrayList<>();
+        List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds = new ArrayList<>();
         api.getLeagues(ids, cur)
             .flatMap(l-> Flux.fromStream(
                 Arrays.stream(l.getT1().getTiers())
                     .flatMap(t-> Arrays.stream(t.getDivisions())
-                        .map(d->Tuples.of(l.getT1(), l.getT2(), t, d.getLadderId())))))
+                        .map(d->Tuples.of(l.getT1(), l.getT2(), t, d)))))
             .sequential()
             .doOnNext(ladderIds::add)
             .blockLast();

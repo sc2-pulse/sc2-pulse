@@ -227,8 +227,8 @@ extends BaseAPI
                 true, 1);
     }
 
-    public ParallelFlux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, Long>>> getLadders
-    (Iterable<? extends Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, Long>> ladderIds)
+    public ParallelFlux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>> getLadders
+    (Iterable<? extends Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds)
     {
         return Flux.fromIterable(ladderIds)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
