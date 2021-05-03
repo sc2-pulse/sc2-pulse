@@ -83,6 +83,13 @@ public class BlizzardSC2APIIT
         assertNotNull(season.getYear());
         assertNotNull(season.getStart());
         assertNotNull(season.getEnd());
+        BlizzardLeague league =
+            api.getLeague(Region.EU, season, BaseLeague.LeagueType.MASTER, QueueType.LOTV_1V1, TeamType.ARRANGED).block();
+        assertNotNull(league);
+        assertEquals(BaseLeague.LeagueType.MASTER, league.getType());
+        assertEquals(QueueType.LOTV_1V1, league.getQueueType());
+        assertEquals(TeamType.ARRANGED, league.getTeamType());
+        assertTrue(league.getTiers().length > 0);
 
         BlizzardSeason historicalSeason = api.getSeason(Region.EU, 40).block();
         Errors errors = new BeanPropertyBindingResult(historicalSeason, historicalSeason.toString());
