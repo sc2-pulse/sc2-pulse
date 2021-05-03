@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -351,16 +352,20 @@ public class AlternativeLadderService
     private Division createDivision
     (Season season, BaseLeague bLeague, long battlenetId)
     {
-        LeagueTier tier = leagueTierDao.findByLadder(
+        LeagueTier tier = alternativeLadderService.createLeagueTier(season, bLeague);
+        return divisionDao.merge(new Division(null, tier.getId(), battlenetId));
+    }
+
+    @Cacheable(cacheNames = "ladder-skeleton")
+    public LeagueTier createLeagueTier(Season season, BaseLeague bLeague)
+    {
+        return leagueTierDao.findByLadder(
             season.getBattlenetId(), season.getRegion(), bLeague.getType(), bLeague.getQueueType(), bLeague.getTeamType(), ALTERNATIVE_TIER)
             .orElseGet(()->{
                 League league = leagueDao
                     .merge(new League(null, season.getId(), bLeague.getType(), bLeague.getQueueType(), bLeague.getTeamType()));
                 return leagueTierDao.merge(new LeagueTier(null, league.getId(), ALTERNATIVE_TIER, 0, 0));
             });
-
-        return divisionDao
-            .merge(new Division(null, tier.getId(), battlenetId));
     }
 
     private Team saveTeam

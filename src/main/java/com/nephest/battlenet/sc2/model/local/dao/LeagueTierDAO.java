@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
@@ -104,6 +105,7 @@ public class LeagueTierDAO
         return tier;
     }
 
+    @Cacheable(cacheNames = "ladder-skeleton")
     public LeagueTier merge(LeagueTier tier)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();

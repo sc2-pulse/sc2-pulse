@@ -163,7 +163,8 @@ public class StatsService
             "search-seasons", "search-season-last",
             "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle",
             "search-ladder-league-bounds", "search-ladder-season",
-            "search-ladder-stats-queue"
+            "search-ladder-stats-queue",
+            "ladder-skeleton"
         },
         allEntries=true
     )
@@ -207,7 +208,8 @@ public class StatsService
             "search-seasons", "search-season-last",
             "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle",
             "search-ladder-league-bounds", "search-ladder-season",
-            "search-ladder-stats-queue"
+            "search-ladder-stats-queue",
+            "ladder-skeleton"
         },
         allEntries=true
     )

@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -79,6 +80,7 @@ public class LeagueDAO
         return league;
     }
 
+    @Cacheable(cacheNames = "ladder-skeleton")
     public League merge(League league)
     {
         KeyHolder keyHolder = new GeneratedKeyHolder();
