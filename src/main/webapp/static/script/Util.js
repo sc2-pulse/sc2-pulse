@@ -169,6 +169,11 @@ class Util
         return new Date(str);
     }
 
+    static currentISODateString()
+    {
+        return new Date().toISOString().substring(0, 10);
+    }
+
     static forObjectValues(obj, func)
     {
         for(const [key, val] of Object.entries(obj))
