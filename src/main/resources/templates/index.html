@@ -868,7 +868,7 @@
                                             </select>
                                         </div>
                                         <div class="form-group col">
-                                            <label for="mmr-depth" class="text-nowrap">Depth(days)</label>
+                                            <label for="mmr-depth" class="text-nowrap" th:text="${'Depth('+ T(com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO).MAX_DEPTH_DAYS + ' days max)'}">Depth(days)</label>
                                             <input id="mmr-depth" class="form-control text-center serializable"
                                                 type="number"
                                                 min="1"
