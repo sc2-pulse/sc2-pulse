@@ -129,6 +129,11 @@
                 </p>
             </section>
         </section>
+        <section th:if="${@environment.getProperty('com.nephest.battlenet.sc2.supporters')}">
+            <h3>Supporters</h3>
+            <p>The following people are currently supporting this project via Patreon. Thanks!</p>
+            <div th:text="${@environment.getProperty('com.nephest.battlenet.sc2.supporters')}"></div>
+        </section>
         <section>
             <h3>Notice</h3>
             <p>
