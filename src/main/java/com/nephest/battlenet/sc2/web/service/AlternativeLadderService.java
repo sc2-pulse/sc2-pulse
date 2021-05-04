@@ -89,7 +89,7 @@ public class AlternativeLadderService
         this.validator = validator;
     }
 
-    public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 50;
+    public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 100;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
     public void updateSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
