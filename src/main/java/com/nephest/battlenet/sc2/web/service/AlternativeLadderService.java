@@ -43,7 +43,7 @@ public class AlternativeLadderService
     ));
 
     public static final long FIRST_DIVISION_ID = 33080L;
-    public static final int LADDER_BATCH_SIZE = 400;
+    public static final int LADDER_BATCH_SIZE = StatsService.LADDER_BATCH_SIZE;
 
     @Autowired
     private AlternativeLadderService alternativeLadderService;
