@@ -49,8 +49,14 @@ to create a simple test config:
 spring.datasource.username={name}
 spring.datasource.password={pasword}
 spring.datasource.url=jdbc:postgresql://localhost:5432/{test_db_name}
-spring.security.oauth2.client.registration.sc2-sys.client-id={client_id}
-spring.security.oauth2.client.registration.sc2-sys.client-secret={client_secret}
+spring.security.oauth2.client.registration.sc2-sys-us.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys-us.client-secret={client_secret}
+spring.security.oauth2.client.registration.sc2-sys-eu.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys-eu.client-secret={client_secret}
+spring.security.oauth2.client.registration.sc2-sys-kr.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys-kr.client-secret={client_secret}
+spring.security.oauth2.client.registration.sc2-sys-cn.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys-cn.client-secret={client_secret}
 com.nephest.battlenet.sc2.aligulac.api.key={api_key}
 ```
 
@@ -69,8 +75,14 @@ server.port={port}
 spring.datasource.username={name}
 spring.datasource.password={pasword}
 spring.datasource.url=jdbc:postgresql://localhost:5432/{db_name}
-spring.security.oauth2.client.registration.sc2-sys.client-id={client_id}
-spring.security.oauth2.client.registration.sc2-sys.client-secret={client_secret}
+spring.security.oauth2.client.registration.sc2-sys-us.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys-us.client-secret={client_secret}
+spring.security.oauth2.client.registration.sc2-sys-eu.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys-eu.client-secret={client_secret}
+spring.security.oauth2.client.registration.sc2-sys-kr.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys-kr.client-secret={client_secret}
+spring.security.oauth2.client.registration.sc2-sys-cn.client-id={client_id}
+spring.security.oauth2.client.registration.sc2-sys-cn.client-secret={client_secret}
 spring.security.oauth2.client.registration.sc2-lg-eu.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-eu.client-secret = {client_secret}
 spring.security.oauth2.client.registration.sc2-lg-us.client-id = {client_id}
@@ -95,6 +107,10 @@ To run the local server execute the following command in a terminal
 ```
 mvn spring-boot:run
 ```
+## Blizzard API clients
+You can use different API clients for each region. This can be helpful in production: if your server is performant enough, then
+you can hit requests per hour cap, which reduces API consumption performance. Use different API keys for some/all regions
+to completely mitigate this issue.
 ## Alternative update
 The Blizzard API can sometimes break and return stale data. The app checks the API state before every update and will
 switch the endpoint route if any problems are found. This happens automatically and individually for each region,

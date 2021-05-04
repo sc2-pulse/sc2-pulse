@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -26,6 +27,8 @@ import reactor.core.scheduler.Schedulers;
 import reactor.util.function.*;
 
 import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.LongStream;
 
@@ -53,6 +56,7 @@ extends BaseAPI
 
     private String regionUri;
     private final ObjectMapper objectMapper;
+    private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
 
     @Autowired
     public BlizzardSC2API(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
@@ -72,13 +76,33 @@ extends BaseAPI
         return leagueType != GRANDMASTER || queueType.getTeamFormat() == ARCHON || queueType.getTeamFormat() == _1V1;
     }
 
+    @Override
+    protected void setWebClient(WebClient client)
+    {
+        for(Region region : Region.values()) clients.put(region, client);
+    }
+
+    @Override
+    public WebClient getWebClient()
+    {
+        return getWebClient(Region.EU);
+    }
+
+    public WebClient getWebClient(Region region)
+    {
+        return clients.get(region);
+    }
+
     private void initWebClient(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
     {
-        ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
-            new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
-        oauth2Client.setDefaultClientRegistrationId("sc2-sys");
-        setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper, 500 * 1024)
+        for(Region region : Region.values())
+        {
+            ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
+                new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
+            oauth2Client.setDefaultClientRegistrationId("sc2-sys-" + region.name().toLowerCase());
+            clients.put(region, WebServiceUtil.getWebClientBuilder(objectMapper, 500 * 1024)
                 .apply(oauth2Client.oauth2Configuration()).build());
+        }
     }
 
     protected void setRegionUri(String uri)
@@ -88,7 +112,7 @@ extends BaseAPI
 
     public Mono<BlizzardSeason> getSeason(Region region, Integer id)
     {
-        return getWebClient()
+        return getWebClient(region)
             .get()
             .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "data/sc2/season/{0}"), id)
             .accept(APPLICATION_JSON)
@@ -99,7 +123,7 @@ extends BaseAPI
 
     public Mono<BlizzardSeason> getCurrentSeason(Region region)
     {
-        return getWebClient()
+        return getWebClient(region)
             .get()
             .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/ladder/season/{0}"), region.getId())
             .accept(APPLICATION_JSON)
@@ -139,7 +163,7 @@ extends BaseAPI
         boolean currentSeason
     )
     {
-        Mono<BlizzardLeague> mono =  getWebClient()
+        Mono<BlizzardLeague> mono =  getWebClient(region)
             .get()
             .uri
             (
@@ -205,7 +229,7 @@ extends BaseAPI
         Long id
     )
     {
-        return getWebClient()
+        return getWebClient(region)
             .get()
             .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "data/sc2/ladder/{0}"), id)
             .accept(APPLICATION_JSON)
@@ -261,7 +285,7 @@ extends BaseAPI
 
     public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region region, long ladderId)
     {
-        return getWebClient()
+        return getWebClient(region)
             .get()
             .uri
             (
@@ -349,7 +373,7 @@ extends BaseAPI
     protected Mono<BlizzardProfileLadder> getProfileLadderMono
     (Region region, BlizzardPlayerCharacter character, long id, Set<QueueType> queueTypes)
     {
-        return getWebClient()
+        return getWebClient(region)
             .get()
             .uri
                 (
@@ -426,14 +450,13 @@ extends BaseAPI
 
     public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)
     {
-        return getWebClient()
+        return getWebClient(playerCharacter.getRegion())
             .get()
             .uri
             (
                 regionUri != null
                     ? regionUri
-                    //EU is the most stable host for matches currently, might change it in the future
-                    : (Region.EU.getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}/matches"),
+                    : (playerCharacter.getRegion().getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}/matches"),
                 playerCharacter.getRegion().getId(),
                 playerCharacter.getRealm(),
                 playerCharacter.getBattlenetId()
