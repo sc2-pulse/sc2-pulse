@@ -96,7 +96,7 @@ class SeasonUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return SeasonUtil.updateSeasonStateModel(searchParams)
             .then(e=>new Promise((res, rej)=>{
-                SeasonUtil.updateSeasonStateView();
+                SeasonUtil.updateSeasonStateView(searchParams);
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + stringParams + "#online");
                 Session.currentSearchParams = stringParams;
@@ -114,32 +114,32 @@ class SeasonUtil
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.ONLINE).set(VIEW_DATA.SEARCH, json); res(json);}));
     }
 
-    static updateSeasonStateView()
+    static updateSeasonStateView(searchParams)
     {
-        SeasonUtil.updateSeasonStateViewPart("online-players-table", "playerCount");
-        SeasonUtil.updateSeasonStateViewPart("online-games-table", "gamesPlayed");
+        SeasonUtil.updateSeasonStateViewPart(searchParams, "online-players-table", "playerCount");
+        SeasonUtil.updateSeasonStateViewPart(searchParams, "online-games-table", "gamesPlayed");
         document.querySelector("#online-data").classList.remove("d-none");
     }
 
-    static updateSeasonStateViewPart(tableId, param)
+    static updateSeasonStateViewPart(searchParams, tableId, param)
     {
-         const searchResult = Model.DATA.get(VIEW.ONLINE).get(VIEW_DATA.SEARCH);
-         const data = {};
-         for(const state of searchResult)
-         {
+        const searchResult = Model.DATA.get(VIEW.ONLINE).get(VIEW_DATA.SEARCH);
+        const data = {};
+        for(const state of searchResult)
+        {
             if(data[state.seasonState.periodStart] == null) data[state.seasonState.periodStart] = {};
             data[state.seasonState.periodStart][state.season.region] = state.seasonState[param];
-         }
-         ChartUtil.CHART_RAW_DATA.set(tableId, {});
-         TableUtil.updateVirtualColRowTable
-         (
-             document.getElementById(tableId),
-             data,
-             (tableData=>ChartUtil.CHART_RAW_DATA.get(tableId).data = tableData),
-             (a, b)=>EnumUtil.enumOfName(a, REGION).order - EnumUtil.enumOfName(b, REGION).order,
-             (name)=>EnumUtil.enumOfName(name, REGION).name,
-             (dateTime)=>new Date(dateTime)
-         );
+        }
+        ChartUtil.CHART_RAW_DATA.set(tableId, {});
+        TableUtil.updateVirtualColRowTable
+        (
+            document.getElementById(tableId),
+            data,
+            (tableData=>ChartUtil.CHART_RAW_DATA.get(tableId).data = tableData),
+            (a, b)=>EnumUtil.enumOfName(a, REGION).order - EnumUtil.enumOfName(b, REGION).order,
+            (name)=>EnumUtil.enumOfName(name, REGION).name,
+            (dateTime)=>new Date(dateTime)
+        );
     }
 
     static enhanceSeasonStateForm()
