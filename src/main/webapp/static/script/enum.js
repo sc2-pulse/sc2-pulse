@@ -45,9 +45,9 @@ const TEAM_TYPE = Object.freeze
 
 const PERIOD = Object.freeze
 ({
-   DAY: {name: "day", order: 1},
-   WEEK: {name: "week", order: 2},
-   MONTH: {name: "month", order: 3}
+   DAY: {name: "day", timeUnit: "hour", order: 1},
+   WEEK: {name: "week", timeUnit: "day", order: 2},
+   MONTH: {name: "month", timeUnit: "day", order: 3}
 });
 
 const PAGE_TYPE = Object.freeze
