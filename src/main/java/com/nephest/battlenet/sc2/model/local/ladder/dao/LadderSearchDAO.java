@@ -41,13 +41,13 @@ public class LadderSearchDAO
 
     private static final String FIND_TEAM_MEMBERS_BASE =
         "SELECT "
-        + TeamDAO.STD_SELECT + ", "
-        + "pro_player.nickname AS \"pro_player.nickname\", "
-        + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\","
-        + AccountDAO.STD_SELECT + ", "
-        + PlayerCharacterDAO.STD_SELECT + ", "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
-        + "team_member.zerg_games_played, team_member.random_games_played ";
+        + "team_member.zerg_games_played, team_member.random_games_played, "
+        + TeamDAO.STD_SELECT + ", "
+        + PlayerCharacterDAO.STD_SELECT + ", "
+        + AccountDAO.STD_SELECT + ", "
+        + "pro_player.nickname AS \"pro_player.nickname\", "
+        + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\" ";
 
     private static final String LADDER_SEARCH_TEAM_FROM_SHORT =
         "FROM team_member "
