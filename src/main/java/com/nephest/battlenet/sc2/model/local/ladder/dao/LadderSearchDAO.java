@@ -28,6 +28,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -135,6 +136,12 @@ public class LadderSearchDAO
         + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
         + "team.rating DESC, team.id ASC, "
         + "player_character.id ASC ";
+
+    private static final String FIND_LEGACY_TEAM_MEMBERS =
+        FIND_TEAM_MEMBERS_BASE
+        + LADDER_SEARCH_TEAM_FROM
+        + "WHERE CAST(team.queue_type::text || team.region::text || team.legacy_id::text AS numeric) IN (:legacyConcats) "
+        + "ORDER BY team.season, team.id";
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
@@ -307,6 +314,15 @@ public class LadderSearchDAO
             .addValue("accountId", accountId);
         return template
             .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAM_EXTRACTOR);
+    }
+
+    public List<LadderTeam> findLegacyTeams(Set<BigInteger> legacyConcats)
+    {
+        if(legacyConcats.isEmpty()) return new ArrayList<>();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("legacyConcats", legacyConcats);
+        return template.query(FIND_LEGACY_TEAM_MEMBERS, params, LADDER_TEAM_EXTRACTOR);
     }
 
 }

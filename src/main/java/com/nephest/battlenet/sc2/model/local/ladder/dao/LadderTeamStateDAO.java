@@ -16,12 +16,28 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Repository
 public class LadderTeamStateDAO
 {
+
+    private static final String SELECT_QUERY_PART =
+        "SELECT team_filter.race, "
+        + TeamStateDAO.STD_SELECT + ", "
+        + "league_tier.type AS \"league_tier.type\", "
+        + LeagueDAO.STD_SELECT + ", "
+        + "season.battlenet_id as \"season.battlenet_id\" "
+        + "FROM team_filter "
+        + "INNER JOIN team_state ON team_filter.id = team_state.team_id "
+        + "INNER JOIN division ON team_state.division_id = division.id "
+        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
+        + "INNER JOIN league ON league_tier.league_id = league.id "
+        + "INNER JOIN season ON league.season_id = season.id "
+        + "ORDER BY team_state.timestamp ASC";
 
     private static final String FIND_BY_CHARACTER_ID_QUERY_TEMPLATE =
         "WITH team_filter AS "
@@ -38,18 +54,12 @@ public class LadderTeamStateDAO
             + "INNER JOIN player_character ON team_member.player_character_id = player_character.id "
             + "WHERE player_character.id = :playerCharacterId "
         + ") "
-        + "SELECT team_filter.race, "
-        + TeamStateDAO.STD_SELECT + ", "
-        + "league_tier.type AS \"league_tier.type\", "
-        + LeagueDAO.STD_SELECT + ", "
-        + "season.battlenet_id as \"season.battlenet_id\" "
-        + "FROM team_filter "
-        + "INNER JOIN team_state ON team_filter.id = team_state.team_id "
-        + "INNER JOIN division ON team_state.division_id = division.id "
-        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
-        + "INNER JOIN league ON league_tier.league_id = league.id "
-        + "INNER JOIN season ON league.season_id = season.id "
-        + "ORDER BY team_state.timestamp ASC";
+        + SELECT_QUERY_PART;
+
+    private static final String FIND_BY_LEGACY_ID =
+        "WITH team_filter AS "
+        + "(SELECT id, NULL AS \"race\" FROM team WHERE CAST(queue_type::text || region::text || legacy_id::text AS numeric) IN (:legacyConcats)) "
+        + SELECT_QUERY_PART;
 
     private static String FIND_QUERY;
 
@@ -91,13 +101,18 @@ public class LadderTeamStateDAO
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
         {
             List<LadderTeamState> result = new ArrayList<>();
-            while(rs.next()) result.add(new LadderTeamState(
-                TeamStateDAO.STD_ROW_MAPPER.mapRow(rs, 0),
-                conversionService.convert(rs.getInt("race"), Race.class),
-                conversionService.convert(rs.getInt("league_tier.type"), BaseLeagueTier.LeagueTierType.class),
-                LeagueDAO.getStdRowMapper().mapRow(rs, 0),
-                rs.getInt("season.battlenet_id")
-            ));
+            while(rs.next())
+            {
+                int raceInt = rs.getInt("race");
+                Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
+                result.add(new LadderTeamState(
+                    TeamStateDAO.STD_ROW_MAPPER.mapRow(rs, 0),
+                    race,
+                    conversionService.convert(rs.getInt("league_tier.type"), BaseLeagueTier.LeagueTierType.class),
+                    LeagueDAO.getStdRowMapper().mapRow(rs, 0),
+                    rs.getInt("season.battlenet_id")
+                ));
+            }
             return result;
         };
     }
@@ -107,6 +122,15 @@ public class LadderTeamStateDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterId", characterId);
         return template.query(FIND_QUERY, params, getStdExtractor());
+    }
+
+    public List<LadderTeamState> find(Set<BigInteger> legacyConcats)
+    {
+        if(legacyConcats.isEmpty()) return new ArrayList<>();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("legacyConcats", legacyConcats);
+        return template.query(FIND_BY_LEGACY_ID, params, getStdExtractor());
     }
 
 }
