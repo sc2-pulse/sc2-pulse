@@ -6,6 +6,8 @@ class ViewUtil
 
     static getView(element)
     {
+        const proxy = element.getAttribute("data-proxy");
+        if(proxy) element = document.getElementById(proxy);
         return EnumUtil.enumOfName(element.closest("[data-view-name]").getAttribute("data-view-name"), VIEW);
     }
 
