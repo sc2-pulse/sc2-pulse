@@ -196,6 +196,11 @@ th.hoverable span
     border-left: #007bff 0.20rem solid;
 }
 
+.background-cover
+{
+    background-size: cover;
+}
+
 .player-team:before
 {
   content: "[";
