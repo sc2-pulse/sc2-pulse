@@ -82,6 +82,13 @@ caption
     margin: 0;
 }
 
+.sticky-bottom
+{
+    position: sticky !important;
+    bottom: 0 !important;
+    z-index: 9999 !important;
+}
+
 #status-generating-fullscreen
 {
     left: 0;
