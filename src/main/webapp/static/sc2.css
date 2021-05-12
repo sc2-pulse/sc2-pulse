@@ -201,6 +201,16 @@ th.hoverable span
     background-size: cover;
 }
 
+.team-buffer-toggle.add
+{
+    background-image: url("icon/misc/plus.svg");
+}
+
+.team-buffer-toggle.remove
+{
+    background-image: url("icon/misc/minus.svg");
+}
+
 .player-team:before
 {
   content: "[";
@@ -466,14 +476,14 @@ body.theme-dark .popover
     background-color: black;
 }
 
-body :fullscreen
+body :fullscreen, body #team-buffer
 {
     background-color: white;
     overflow-y: auto;
     overflow-x: hidden;
 }
 
-body.theme-dark :fullscreen
+body.theme-dark :fullscreen, body.theme-dark #team-buffer
 {
     background-color: #191d21;
 }

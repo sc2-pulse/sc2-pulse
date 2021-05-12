@@ -23,6 +23,7 @@ class TeamUtil
             row.appendChild(TeamUtil.createMembersCell(team));
             TeamUtil.appendGamesInfo(row.insertCell(), team);
             row.insertCell().textContent = Math.round( team.wins / (team.wins + team.losses) * 100);
+            row.appendChild(TeamUtil.createBufCell(team));
         }
 
         $(table).popover
@@ -277,6 +278,18 @@ class TeamUtil
         return leagueDiv;
     }
 
+    static createBufCell(team)
+    {
+        const bufCell = document.createElement("td");
+        const remove = TeamUtil.teamBuffer.has(team.id);
+        const toggle = document.createElement("div");
+        toggle.classList.add("table-image", "table-image-square", "m-auto", "background-cover", "team-buffer-toggle", remove ? "remove" : "add");
+        toggle.setAttribute("role", "button");
+        toggle.addEventListener("click", TeamUtil.toggleTeamBuffer);
+        bufCell.appendChild(toggle);
+        return bufCell;
+    }
+
     static isAlternativelyUpdatedTeam(team)
     {
         return ALTERNATIVE_UPDATE_REGIONS.length > 0
@@ -296,4 +309,58 @@ class TeamUtil
         return result;
     }
 
+    static addTeamToBuffer(team)
+    {
+        TeamUtil.teamBuffer.set(team.id, team);
+        TeamUtil.updateTeamBufferModel();
+        TeamUtil.updateTeamBufferView();
+
+    }
+
+    static removeTeamFromBuffer(team)
+    {
+        TeamUtil.teamBuffer.delete(team.id);
+        TeamUtil.updateTeamBufferModel();
+        TeamUtil.updateTeamBufferView();
+    }
+
+    static updateTeamBufferModel()
+    {
+        Model.DATA.get(VIEW.TEAM_BUFFER).set(VIEW_DATA.SEARCH, {result:Array.from(TeamUtil.teamBuffer.values())});
+    }
+
+    static updateTeamBufferView()
+    {
+        const bufferElem = document.querySelector("#team-buffer");
+        document.querySelector("#team-buffer-count").textContent = TeamUtil.teamBuffer.size;
+        if(TeamUtil.teamBuffer.size == 0) {
+            bufferElem.classList.add("d-none");
+        } else {
+            bufferElem.classList.remove("d-none");
+        }
+        TeamUtil.updateTeamsTable(document.querySelector("#team-buffer-teams"), {result:Array.from(TeamUtil.teamBuffer.values())});
+    }
+
+    static toggleTeamBuffer(evt)
+    {
+        const team = TeamUtil.getTeamFromElement(evt.target);
+        const remove = evt.target.classList.contains("remove");
+        if(remove) {
+            TeamUtil.removeTeamFromBuffer(team);
+            document.querySelectorAll('[data-team-id="' + team.id + '"] .team-buffer-toggle').forEach(e=>{
+                e.classList.remove("remove");
+                e.classList.add("add");
+            });
+
+        } else {
+            TeamUtil.addTeamToBuffer(team);
+            document.querySelectorAll('[data-team-id="' + team.id + '"] .team-buffer-toggle').forEach(e=>{
+                e.classList.add("remove");
+                e.classList.remove("add");
+            });
+        }
+    }
+
 }
+
+TeamUtil.teamBuffer = new Map();
