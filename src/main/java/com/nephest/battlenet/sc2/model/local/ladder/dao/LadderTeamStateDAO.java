@@ -23,7 +23,7 @@ import java.util.List;
 public class LadderTeamStateDAO
 {
 
-    private static final String FIND_QUERY_TEMPLATE =
+    private static final String FIND_BY_CHARACTER_ID_QUERY_TEMPLATE =
         "WITH team_filter AS "
         + "("
             + "SELECT team.id, "
@@ -78,7 +78,7 @@ public class LadderTeamStateDAO
 
     private static void initQueries(ConversionService conversionService)
     {
-        FIND_QUERY = String.format(FIND_QUERY_TEMPLATE,
+        FIND_QUERY = String.format(FIND_BY_CHARACTER_ID_QUERY_TEMPLATE,
             "terran", conversionService.convert(Race.TERRAN, Integer.class),
             "protoss", conversionService.convert(Race.PROTOSS, Integer.class),
             "zerg", conversionService.convert(Race.ZERG, Integer.class),
