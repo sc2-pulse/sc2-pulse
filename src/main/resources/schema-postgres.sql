@@ -147,13 +147,11 @@ CREATE TABLE "team"
     CONSTRAINT "fk_team_division_id"
         FOREIGN KEY ("division_id")
         REFERENCES "division"("id")
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT "uq_team_queue_type_region_legacy_id_season"
-        UNIQUE ("queue_type", "region", "legacy_id", "season")
+        ON DELETE CASCADE ON UPDATE CASCADE
 
 );
 
+CREATE UNIQUE INDEX "uq_team_legacy_uid_season" ON "team"(CAST("queue_type"::text || "region"::text || "legacy_id"::text AS numeric), "season");
 CREATE INDEX "ix_team_ladder_search_full" ON "team"("season", "queue_type", "team_type", "rating", "id");
 
 CREATE TABLE "team_member"
