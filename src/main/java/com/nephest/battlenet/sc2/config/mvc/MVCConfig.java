@@ -17,6 +17,7 @@ implements WebMvcConfigurer
         registry.addViewController("/privacy-policy").setViewName("privacy-policy");
         registry.addViewController("/about").setViewName("about");
         registry.addViewController("/donate").setViewName("donate");
+        registry.addViewController("/team/history").setViewName("team-history");
     }
 
 }

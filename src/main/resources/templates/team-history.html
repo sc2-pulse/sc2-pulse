@@ -1,0 +1,17 @@
+<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, ~{::script})}">
+<head>
+    <title>Team MMR history - SC2 Pulse</title>
+    <meta name="description" content="Complete mmr history for multiple teams of any format."/>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: content(~{::section})}">
+    <section th:replace="~{fragments/main-section :: team-mmr}"></section>
+</div>
+<section th:replace="~{fragments/app :: modal}"></section>
+<script>SC2Restful.start(START_MODE.MINIMAL); TeamUtil.enhanceMmrForm();</script>
+</body>
+</html>

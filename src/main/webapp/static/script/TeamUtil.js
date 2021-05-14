@@ -337,7 +337,18 @@ class TeamUtil
         } else {
             bufferElem.classList.remove("d-none");
         }
+        TeamUtil.updateTeamMmrLink();
         TeamUtil.updateTeamsTable(document.querySelector("#team-buffer-teams"), {result:Array.from(TeamUtil.teamBuffer.values())});
+    }
+
+    static updateTeamMmrLink()
+    {
+        const searchParams = new URLSearchParams();
+        searchParams.append("type", "team-mmr");
+        for(const team of TeamUtil.teamBuffer.values())
+            searchParams.append("legacyUid", team.queueType + "-" + EnumUtil.enumOfName(team.region, REGION).code + "-" + team.legacyId);
+
+        document.querySelector("#team-buffer-mmr").setAttribute("href", `${ROOT_CONTEXT_PATH}team/history?${searchParams.toString()}`);
     }
 
     static toggleTeamBuffer(evt)
@@ -358,6 +369,191 @@ class TeamUtil
                 e.classList.remove("add");
             });
         }
+    }
+
+    static enhanceTeamBuffer()
+    {
+        document.querySelector("#team-buffer-mmr").addEventListener("click", TeamUtil.updateTeamMmr);
+    }
+
+    static updateTeamMmr(searchParams = null)
+    {
+        if(searchParams == null)
+        {
+            searchParams = new URLSearchParams();
+            searchParams.append("type", "team-mmr");
+            for(const team of TeamUtil.teamBuffer.values())
+                searchParams.append("legacyUid", team.queueType + "-" + EnumUtil.enumOfName(team.region, REGION).code + "-" + team.legacyId);
+        }
+        const stringParams = searchParams.toString();
+        const params = {params: stringParams};
+        Util.setGeneratingStatus(STATUS.BEGIN);
+
+        return TeamUtil.updateTeamMmrModel(searchParams)
+            .then(e=>new Promise((res, rej)=>{
+                TeamUtil.updateTeamMmrView();
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+                if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + stringParams + "#team-mmr");
+                Session.currentSearchParams = stringParams;
+                if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
+                res();
+            }))
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+    }
+
+    static updateTeamMmrModel(searchParams)
+    {
+        const reqParams = new URLSearchParams();
+        for(const id of searchParams.getAll("legacyUid")) reqParams.append("legacyUid", id);
+        const request = `${ROOT_CONTEXT_PATH}api/team/history/common?${reqParams.toString()}`;
+        const mmrPromise = fetch(request)
+            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{
+                const teams = [];
+                for(const history of Object.values(json)) teams.push(history.teams[history.teams.length - 1]);
+                teams.sort((a, b)=>b.rating - a.rating);
+                Model.DATA.get(VIEW.TEAM_MMR).set(VIEW_DATA.SEARCH, {result: teams});
+                Model.DATA.get(VIEW.TEAM_MMR).set(VIEW_DATA.VAR, json);
+                res(json);
+            }));
+        return Promise.all([mmrPromise, StatsUtil.updateBundleModel()]);
+    }
+
+    static updateTeamMmrView()
+    {
+        const searchResult = Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.VAR);
+        const seasonLastOnly = document.getElementById("team-mmr-season-last").checked;
+        const depth = document.getElementById("team-mmr-depth").value;
+        const depthDate = depth > 0 ? new Date(Date.now() - (depth * 24 * 60 * 60 * 1000)) : null;
+        const excludeStart = document.getElementById("team-mmr-exclude-start").value || 0;
+        const excludeEnd = document.getElementById("team-mmr-exclude-end").value || 0;
+        TeamUtil.updateTeamsTable(document.querySelector("#team-mmr-teams-table"), Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH));
+        let transformedData = [];
+        let curEntry = 0;
+        for(const [legacyUid, history] of Object.entries(searchResult)) {
+            const refTeam = history.teams[history.teams.length - 1];
+            const group = TeamUtil.generateTeamName(refTeam);
+            if(!seasonLastOnly) {
+                for(const state of history.states) {
+                    state.group = {name: group, order: curEntry};
+                    state.teamState.dateTime = new Date(state.teamState.dateTime);
+                    transformedData.push(state);
+                }
+            }
+            for(const team of history.teams) {
+                const state = CharacterUtil.createTeamSnapshot(team, Session.currentSeasonsMap.get(team.season)[0].end);
+                state.group = {name: group, order: curEntry};
+                transformedData.push(state);
+            }
+            curEntry++;
+        }
+        transformedData = TeamUtil.filterTeamMmrHistory(transformedData, depthDate, excludeStart, excludeEnd);
+        transformedData.sort((a,b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
+        const mmrHistoryGrouped = Util.groupBy(transformedData, h=>h.teamState.dateTime.getTime());
+        const data = [];
+        const rawData = [];
+        for(const [dateTime, histories] of mmrHistoryGrouped.entries())
+        {
+            rawData.push(histories);
+            data[dateTime] = {};
+            for(const history of histories) data[dateTime][history.group.name] = history.teamState.rating;
+        }
+        ChartUtil.CHART_RAW_DATA.set("team-mmr-table", {rawData: rawData, additionalDataGetter: TeamUtil.getAdditionalMmrHistoryData});
+        TableUtil.updateVirtualColRowTable
+        (
+            document.getElementById("team-mmr-table"),
+            data,
+            (tableData=>ChartUtil.CHART_RAW_DATA.get("team-mmr-table").data = tableData),
+            null,
+            null,
+            (dateTime)=>new Date(parseInt(dateTime))
+        );
+        TeamUtil.updateTeamMmrFilters(transformedData, depthDate, excludeStart, excludeEnd);
+    }
+
+    static filterTeamMmrHistory(mmrHistory, depthDate, excludeStart, excludeEnd)
+    {
+        if(depthDate != null) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() > depthDate.getTime());
+        if(excludeEnd > 0)
+            mmrHistory = mmrHistory.filter(h=>h.teamState.rating < excludeStart || h.teamState.rating >= excludeEnd);
+        return mmrHistory;
+    }
+
+    static updateTeamMmrFilters(mmrHistory, depthDate, excludeStart, excludeEnd)
+    {
+        document.getElementById("team-mmr-filters").textContent =
+        "(" + mmrHistory.length  + " entries"
+        + (depthDate != null ? ", starting from " + Util.DATE_FORMAT.format(depthDate) : "")
+        + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "")
+        + ")";
+    }
+
+    static getAdditionalMmrHistoryData(data, dataset, ix1, ix2)
+    {
+        const races = [];
+        dataset.datasets.forEach(d=>races.push(d.label));
+        const race = races[ix2];
+        const curData = Object.values(data)[ix1].find(d=>d.group.name == race);
+        const lines1 = [];
+        const lines2 = [];
+        lines1.push("mmr: " + curData.teamState.rating);
+        lines1.push("games: " + curData.teamState.games);
+        lines2.push("league: " +  EnumUtil.enumOfId(curData.league.type, LEAGUE).name)
+            + (ALTERNATIVE_UPDATE_REGIONS.length > 0 ? "" : " " + (curData.tier + 1));
+        lines2.push("season: " + curData.season);
+
+        return [lines1.join(", "), lines2.join(", ")];
+    }
+
+    static generateTeamMmrTitle(params, hash)
+    {
+        const teams = Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH).result;
+        if(!teams  || teams.length == 0) return "Team MMR history";
+
+        const groups = [];
+        for(const team of teams) groups.push(TeamUtil.generateTeamName(team, false));
+
+        return `${groups.join(" | ")} team MMR history`;
+    }
+
+    static generateTeamMmrDescription(params, hash)
+    {
+        const entries = Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.VAR);
+        if(!entries  || entries.length == 0) return "Complete team MMR history";
+
+        let count = 0;
+        for(const history of Object.values(entries)) count += history.teams.length + history.states.length;
+
+        return `Complete team MMR history, ${Object.entries(entries).length} teams, ${count} entries.`;
+    }
+
+    static enhanceMmrForm()
+    {
+        document.getElementById("team-mmr-depth").addEventListener("input",  TeamUtil.onMmrInput);
+        document.getElementById("team-mmr-exclude-start").addEventListener("input", TeamUtil.onMmrInput);
+        document.getElementById("team-mmr-exclude-end").addEventListener("input", TeamUtil.onMmrInput);
+        document.getElementById("team-mmr-season-last").addEventListener("change", evt=>TeamUtil.updateTeamMmrView());
+    }
+
+    static onMmrInput(evt)
+    {
+        const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
+        if(prev != null) window.clearTimeout(prev);
+        ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(TeamUtil.updateTeamMmrView, ElementUtil.INPUT_TIMEOUT));
+    }
+
+    static generateTeamName(team, includeId = true)
+    {
+        const group = [];
+        group.push(EnumUtil.enumOfId(team.queueType, TEAM_FORMAT).name)
+        for(const member of team.members) {
+            const unmasked = Util.unmaskName(member);
+            group.push(unmasked.unmaskedName
+                + "(" + (unmasked.maskedName.toLowerCase() != unmasked.unmaskedName.toLowerCase() ? (unmasked.maskedName + ", ") : "")
+                + TeamUtil.getFavoriteRace(member).name.substring(0, 1) + ")");
+        }
+        if(includeId) group.push(team.id);
+        return group.join(", ");
     }
 
 }

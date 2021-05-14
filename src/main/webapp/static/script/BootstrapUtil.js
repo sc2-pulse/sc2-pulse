@@ -33,6 +33,9 @@ class BootstrapUtil
         }
 
         ElementUtil.TITLE_CONSTRUCTORS.set("#online", ElementUtil.generateOnlineTitle);
+        ElementUtil.TITLE_CONSTRUCTORS.set("#team-mmr-history", TeamUtil.generateTeamMmrTitle);
+        ElementUtil.DESCRIPTION_CONSTRUCTORS.set("#team-mmr-history", TeamUtil.generateTeamMmrDescription);
+        ElementUtil.TITLE_CONSTRUCTORS.set("#team-mmr-teams", TeamUtil.generateTeamMmrTitle);
     }
 
     static renderTabContent(tab)

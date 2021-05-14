@@ -114,5 +114,161 @@
         </section>
     </div>
 </section>
+<section id="team-mmr"
+         data-view-name="team-mmr"
+         data-view-title="Team MMR history"
+         data-view-description="Complete MMR history for any team."
+         th:fragment="team-mmr"
+>
+    <nav class="d-none">
+        <ul class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+            <li class="nav-item">
+                <a
+                        id="team-mmr-global-tab"
+                        class="nav-link active"
+                        data-toggle="pill"
+                        data-target="#team-mmr-global"
+                        data-ignore-visibility="true"
+                        href="#team-mmr-global"
+                        role="tab"
+                        aria-controls="team-mmr-global"
+                        aria-selected="true"
+                >
+                    Global
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div id="team-mmr-global" class="tab-pane show active">
+    <header>
+        <h2>Team MMR history</h2>
+        <nav>
+            <ul id="team-mmr-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                <li class="nav-item">
+                    <a
+                            id="team-mmr-history-tab"
+                            class="nav-link active"
+                            data-toggle="pill"
+                            data-target="#team-mmr-history"
+                            href="#team-mmr-history"
+                            role="tab"
+                            aria-controls="team-mmr-history"
+                            aria-selected="true"
+                    >
+                        History
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                            id="team-mmr-teams-tab"
+                            class="nav-link"
+                            data-toggle="pill"
+                            data-target="#team-mmr-teams"
+                            href="#team-mmr-teams"
+                            role="tab"
+                            aria-controls="team-mmr-teams"
+                            aria-selected="false"
+                    >
+                        Teams
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    </header>
+    <div class="tab-content">
+        <section
+                id="team-mmr-history"
+                class="tab-pane fade show active"
+                data-view-name="team-mmr"
+                data-view-title="MMR history"
+        >
+            <div id="team-mmr-filters"></div>
+            <form>
+                <div class="form-row">
+                    <div class="form-group col">
+                        <label for="team-mmr-depth" class="text-nowrap">Depth(days)</label>
+                        <input id="team-mmr-depth" class="form-control text-center serializable" type="number" min="0"/>
+                    </div>
+                    <div class="form-group col">
+                        <label for="team-mmr-exclude-start" class="text-nowrap">Exclude from</label>
+                        <input id="team-mmr-exclude-start" class="form-control text-center" type="number" min="0" list="team-mmr-range-list"/>
+                    </div>
+                    <div class="form-group col">
+                        <label for="team-mmr-exclude-end" class="text-nowrap">Exclude to</label>
+                        <input id="team-mmr-exclude-end" class="form-control text-center" type="number" min="0" list="team-mmr-range-list">
+                    </div>
+                    <datalist id="team-mmr-range-list">
+                        <option value="3000">
+                        <option value="4000">
+                        <option value="5000">
+                        <option value="6000">
+                        <option value="7000">
+                    </datalist>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="team-mmr-season-last" class="form-check-input serializable" type="checkbox" />
+                    <label for="team-mmr-season-last" class="text-nowrap form-check-label">End of season</label>
+                </div>
+                <div class="form-check form-check-inline">
+                    <input id="team-mmr-zoom" class="form-check-input serializable chart-zoom-toggle" type="checkbox"
+                           data-chartable="team-mmr-table"/>
+                    <label for="team-mmr-zoom" class="text-nowrap form-check-label">Zoom</label>
+                </div>
+            </form>
+            <div id="team-mmr-container">
+                <table
+                        id="team-mmr-table"
+                        class="chartable"
+                        data-chart-type="line"
+                        data-chart-tooltip-percentage="false"
+                        data-chart-id="team-mmr-chart"
+                        data-chart-x-title="Date" data-chart-y-title="MMR"
+                        data-chart-performance="fast"
+                        data-chart-point-radius="0.5"
+                        data-chart-x-type="time"
+                        data-chart-direct="true"
+                >
+                    <thead><tr></tr></thead>
+                    <tbody><tr></tr></tbody>
+                </table>
+                <div id="team-mmr-chart-container" class="container-chart"><canvas id="team-mmr-chart" class="c-chart"></canvas></div>
+            </div>
+        </section>
+        <section id="team-mmr-teams" class="tab-pane fade" data-view-name="team-mmr" data-view-title="MMR history - teams">
+            <h3>Teams</h3>
+            <div id="team-team-mmrs-container" class="table-responsive">
+                <table id="team-mmr-teams-table" class="table table-sm table-hover" data-ladder-rank-show="true" data-ladder-format-show="true">
+                    <thead>
+                    <tr>
+                        <th scope="col">Format</th>
+                        <th scope="col"
+                            class="hoverable"
+                            title="Hover over this column values to get a more detailed view"
+                            data-toggle="tooltip"
+                        >
+                            <span>Rank</span>
+                        </th>
+                        <th scope="col">MMR</th>
+                        <th scope="col">League</th>
+                        <th scope="col">Region</th>
+                        <th scope="col">Team</th>
+                        <th scope="col"
+                            class="hoverable"
+                            title="Hover over this column values to get a more detailed view"
+                            data-toggle="tooltip"
+                        >
+                            <span>Games</span>
+                        </th>
+                        <th scope="col">Win%</th>
+                        <th scope="col">Buf</th>
+                    </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+        </section>
+    </div>
+    </div>
+</section>
 </body>
 </html>

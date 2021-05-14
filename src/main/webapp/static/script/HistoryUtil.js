@@ -243,6 +243,9 @@ class HistoryUtil
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(CharacterUtil.updateCharacterSearch(name));
                 break;
+            case "team-mmr":
+                 promises.push(TeamUtil.updateTeamMmr(params));
+                 break;
             case "online":
                 scrollTo = "online-data";
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
