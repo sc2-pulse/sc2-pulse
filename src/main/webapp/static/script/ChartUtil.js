@@ -185,14 +185,15 @@ class ChartUtil
     {
         for (let i = 0; i < data.datasets.length; i++)
         {
+            const color = SC2Restful.getPredefinedOrRandomColor(data.customColors[i], i);
             if (config.type === "lineVCursor" || config.type === "line")
             {
                 data.datasets[i]["borderWidth"] = 2;
                 data.datasets[i]["pointRadius"] = config.pointRadius != null ? parseFloat(config.pointRadius) : 0;
                 data.datasets[i]["hoverPointRadius"] = 2;
 
-                data.datasets[i]["borderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
-                data.datasets[i]["pointBackgroundColor"] = SC2Restful.COLORS.get(data.customColors[i]);
+                data.datasets[i]["borderColor"] = color;
+                data.datasets[i]["pointBackgroundColor"] = color;
                 //data.datasets[i]["pointBorderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
                 data.datasets[i]["backgroundColor"] = "rgba(0, 0, 0, 0)";
             }
@@ -202,7 +203,8 @@ class ChartUtil
                 const dataEmptyColors = [];
                 for(let dataValIx = 0; dataValIx < data.datasets[i].data.length; dataValIx++)
                 {
-                    dataColors.push(SC2Restful.COLORS.get(data.customColors[dataValIx]));
+                    const color = SC2Restful.getPredefinedOrRandomColor(data.customColors[dataValIx], dataValIx);
+                    dataColors.push(color);
                     dataEmptyColors.push("rgba(0, 0, 0, 0)");
                 }
                 data.datasets[i]["backgroundColor"] = dataColors;
@@ -210,7 +212,7 @@ class ChartUtil
             }
             else
             {
-                data.datasets[i]["backgroundColor"] = SC2Restful.COLORS.get(data.customColors[i]);
+                data.datasets[i]["backgroundColor"] = color;
                 data.datasets[i]["borderColor"] = "rgba(0, 0, 0, 0)";
             }
         }
