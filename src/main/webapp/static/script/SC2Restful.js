@@ -58,6 +58,12 @@ class SC2Restful
         Session.refreshTheme();
     }
 
+    static getPredefinedOrRandomColor(name, ix)
+    {
+        return SC2Restful.COLORS.get(name)
+            || ( ix < SC2Restful.UNIQUE_COLORS.length ? SC2Restful.UNIQUE_COLORS[ix] : Util.getRandomRgbColorString());
+    }
+
 }
 
 SC2Restful.COLORS = new Map
@@ -85,6 +91,8 @@ SC2Restful.COLORS = new Map
     ["master", "#00b1fb"],
     ["grandmaster", "#ef3e00"]
 ]);
+
+SC2Restful.UNIQUE_COLORS = [...new Set(SC2Restful.COLORS.values())];
 
 SC2Restful.SITE_NAME = "SC2 Pulse";
 SC2Restful.UNDEFINED_RANK = 2147483647;
