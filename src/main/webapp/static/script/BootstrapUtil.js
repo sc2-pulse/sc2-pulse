@@ -70,7 +70,8 @@ class BootstrapUtil
         const modal = e.target.closest(".modal");
         const root = modal != null ? ("#" + modal.id) : "body";
         for(const tab of document.querySelectorAll(root + " .nav-pills a.active"))
-            if(tab.offsetParent != null) params.append("t", tab.getAttribute("data-target").substring(1));
+            if(tab.getAttribute("data-ignore-visibility") || tab.offsetParent != null)
+                params.append("t", tab.getAttribute("data-target").substring(1));
         const newTabs = params.getAll("t");
         //this can happen only when hiding tabs
         if(newTabs.length == 0) return;
