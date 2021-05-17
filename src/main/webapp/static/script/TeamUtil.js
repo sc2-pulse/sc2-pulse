@@ -314,7 +314,6 @@ class TeamUtil
         TeamUtil.teamBuffer.set(team.id, team);
         TeamUtil.updateTeamBufferModel();
         TeamUtil.updateTeamBufferView();
-
     }
 
     static removeTeamFromBuffer(team)

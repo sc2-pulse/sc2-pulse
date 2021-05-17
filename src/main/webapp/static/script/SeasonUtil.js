@@ -15,7 +15,7 @@ class SeasonUtil
     static getSeasons()
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return fetch("api/seasons")
+        return fetch(ROOT_CONTEXT_PATH + "api/seasons")
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{SeasonUtil.updateSeasons(json); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
             .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
@@ -108,7 +108,7 @@ class SeasonUtil
 
     static updateSeasonStateModel(searchParams)
     {
-        const request = `api/season/state/${searchParams.get("to")}/${searchParams.get("period")}`;
+        const request = `${ROOT_CONTEXT_PATH}api/season/state/${searchParams.get("to")}/${searchParams.get("period")}`;
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.ONLINE).set(VIEW_DATA.SEARCH, json); res(json);}));

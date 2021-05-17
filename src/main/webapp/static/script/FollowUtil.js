@@ -9,7 +9,7 @@ class FollowUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
-        return fetch("api/my/following/" + id, {method: "POST"})
+        return fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, {method: "POST"})
             .then
             (
                 resp =>
@@ -29,7 +29,7 @@ class FollowUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
-        return fetch("api/my/following/" + id, {method: "DELETE"})
+        return fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, {method: "DELETE"})
             .then
             (
                 resp =>
@@ -47,7 +47,7 @@ class FollowUtil
     static getMyFollowing()
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return fetch("api/my/following")
+        return fetch(ROOT_CONTEXT_PATH + "api/my/following")
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Session.currentFollowing = json; Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
             .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));

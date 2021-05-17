@@ -236,7 +236,7 @@ class PersonalUtil
     static getMyAccount()
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        const request = "api/my/account";
+        const request = ROOT_CONTEXT_PATH + "api/my/account";
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{PersonalUtil.updateMyAccount(json); Util.setGeneratingStatus(STATUS.SUCCESS); res()}))

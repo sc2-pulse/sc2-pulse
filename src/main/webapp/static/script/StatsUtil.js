@@ -9,7 +9,7 @@ class StatsUtil
         const params = new URLSearchParams(formParams);
         const queueType = EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT);
         const teamType = EnumUtil.enumOfFullName(params.get("team-type"), TEAM_TYPE);
-        const request = `api/ladder/stats/queue/${queueType.fullName}/${teamType.fullName}`;
+        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/queue/${queueType.fullName}/${teamType.fullName}`;
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.QUEUE_STATS, json); res(json);}));
@@ -97,7 +97,7 @@ class StatsUtil
 
     static updateLadderStatsModel(formParams)
     {
-        const request = "api/ladder/stats?" + formParams;
+        const request = ROOT_CONTEXT_PATH + "api/ladder/stats?" + formParams;
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LADDER_STATS, json); res(json);}));
@@ -190,7 +190,7 @@ class StatsUtil
 
     static updateLeagueBoundsModel(formParams)
     {
-        const request = "api/ladder/league/bounds?" + formParams;
+        const request = ROOT_CONTEXT_PATH + "api/ladder/league/bounds?" + formParams;
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LEAGUE_BOUNDS, json); res(json);}));

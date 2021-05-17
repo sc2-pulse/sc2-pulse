@@ -29,7 +29,7 @@ class CharacterUtil
 
     static updateCharacterModel(id)
     {
-        const request = "api/character/" + id + "/common";
+        const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common";
         const characterPromise =
             fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
         return Promise.all([characterPromise, StatsUtil.updateBundleModel()])
@@ -597,7 +597,7 @@ class CharacterUtil
 
     static updateCharacterSearchModel(name)
     {
-        const request = "api/characters?name=" + encodeURIComponent(name);
+        const request = ROOT_CONTEXT_PATH + "api/characters?name=" + encodeURIComponent(name);
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
@@ -664,7 +664,7 @@ class CharacterUtil
 
     static updatePersonalCharactersModel()
     {
-        return fetch("api/my/characters")
+        return fetch(ROOT_CONTEXT_PATH + "api/my/characters")
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json);
