@@ -104,3 +104,9 @@ const THEME = Object.freeze
   LIGHT: {name: "light", order: 1},
   DARK: {name: "dark", order: 2}
 });
+
+const START_MODE = Object.freeze
+({
+  FULL: {name: "full", order: 1},
+  MINIMAL: {name: "minimal", order: 2}
+});

@@ -9,7 +9,7 @@ class SC2Restful
         Session.initThemes();
     }
 
-    static start()
+    static start(mode = START_MODE.FULL)
     {
         window.addEventListener("popstate", e=>{HistoryUtil.restoreState(e)});
         return new Promise
@@ -18,7 +18,7 @@ class SC2Restful
             {
                 SC2Restful.initAll();
                 Session.restoreState();
-                SC2Restful.enhanceAll();
+                SC2Restful.enhance(mode);
                 ChartUtil.observeChartables();
                 PaginationUtil.createPaginations();
                 ElementUtil.createPlayerStatsCards(document.getElementById("player-stats-container"));
@@ -36,26 +36,31 @@ class SC2Restful
         Model.init();
     }
 
-    static enhanceAll()
+    static enhance(mode = START_MODE.FULL)
     {
-        BootstrapUtil.init();
-        BootstrapUtil.enhanceModals();
-        BootstrapUtil.enhanceCollapsibles();
-        LadderUtil.enhanceLadderForm();
-        CharacterUtil.enhanceSearchForm();
-        CharacterUtil.enhanceMmrForm();
-        LadderUtil.enhanceMyLadderForm();
-        SeasonUtil.enhanceSeasonStateForm();
-        FollowUtil.enhanceFollowButtons();
-        BootstrapUtil.enhanceTabs();
-        BootstrapUtil.setFormCollapsibleScroll("form-ladder");
-        BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
-        BootstrapUtil.enhanceTooltips();
-        ElementUtil.enhanceFullscreenToggles();
-        Session.enhanceSerializable();
-        ChartUtil.enhanceZoomToggles();
-        Session.enhanceThemeInputs();
-        Session.refreshTheme();
+        switch(mode)
+        {
+            case START_MODE.FULL:
+                LadderUtil.enhanceLadderForm();
+                CharacterUtil.enhanceSearchForm();
+                LadderUtil.enhanceMyLadderForm();
+                SeasonUtil.enhanceSeasonStateForm();
+                BootstrapUtil.setFormCollapsibleScroll("form-ladder");
+                BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
+                Session.enhanceThemeInputs();
+            case START_MODE.MINIMAL:
+                BootstrapUtil.init();
+                BootstrapUtil.enhanceModals();
+                BootstrapUtil.enhanceCollapsibles();
+                CharacterUtil.enhanceMmrForm();
+                FollowUtil.enhanceFollowButtons();
+                BootstrapUtil.enhanceTabs();
+                BootstrapUtil.enhanceTooltips();
+                ElementUtil.enhanceFullscreenToggles();
+                Session.enhanceSerializable();
+                ChartUtil.enhanceZoomToggles();
+                Session.refreshTheme();
+        }
     }
 
     static getPredefinedOrRandomColor(name, ix)
