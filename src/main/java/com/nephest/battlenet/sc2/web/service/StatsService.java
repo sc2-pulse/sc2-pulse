@@ -44,6 +44,7 @@ public class StatsService
 
     public static final Version VERSION = Version.LOTV;
     public static final int STALE_LADDER_TOLERANCE = 3;
+    public static final int STALE_LADDER_DEPTH = 10;
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 27;
     public static final int LADDER_BATCH_SIZE = 400;
 
@@ -596,19 +597,27 @@ public class StatsService
                 continue;
             }
 
-            api.getProfileLadderId(region, maxId + STALE_LADDER_TOLERANCE)
+            chainStaleDataCheck(region, maxId + STALE_LADDER_TOLERANCE, 0).block();
+        }
+        saveAlternativeRegions();
+    }
+
+    private Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> chainStaleDataCheck(Region region, long ladderId, int count)
+    {
+        return Mono.defer(()->
+            api.getProfileLadderId(region, ladderId)
                 .doOnNext(l->{
                     if(alternativeRegions.add(region))
                         LOG.warn("Stale data detected for {}, added this region to alternative update", region);
                 })
                 .onErrorResume(t->{
+                    int next = count + 1;
+                    if(next < STALE_LADDER_DEPTH) return chainStaleDataCheck(region, ladderId + 1, next);
+
                     if(alternativeRegions.remove(region))
                         LOG.info("{} now returns fresh data, removed it from alternative update", region);
                     return Mono.empty();
-                })
-                .block();
-        }
-        saveAlternativeRegions();
+        }));
     }
 
     private void loadLastUpdates()
