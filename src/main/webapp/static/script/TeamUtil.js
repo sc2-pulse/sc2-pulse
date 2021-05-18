@@ -391,7 +391,6 @@ class TeamUtil
 
     static enhanceTeamBuffer()
     {
-        document.querySelector("#team-buffer-mmr").addEventListener("click", TeamUtil.updateTeamMmr);
     }
 
     static updateTeamMmr(searchParams = null)
