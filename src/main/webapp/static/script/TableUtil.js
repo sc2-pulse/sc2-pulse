@@ -47,6 +47,8 @@ class TableUtil
         headRow.appendChild(document.createElement("th"));
         const tBody = table.getElementsByTagName("tbody")[0];
         ElementUtil.removeChildren(tBody);
+        if(!data) {table.setAttribute("data-last-updated", Date.now()); return;}
+
         let rowIx = 0;
         const headers = TableUtil.collectHeaders(data).sort(sorter == null ? (a, b)=>b[0].localeCompare(a[0]) : sorter);
         for(const header of headers)
@@ -77,6 +79,8 @@ class TableUtil
     static collectHeaders(data)
     {
         const headers = [];
+        if(!data) return headers;
+
         for(const[rowHeader, rowData] of Object.entries(data))
         {
             for(const [header, value] of Object.entries(rowData))
@@ -93,6 +97,8 @@ class TableUtil
         const bodyRow = table.querySelector(":scope tbody tr");
         ElementUtil.removeChildren(headRow);
         ElementUtil.removeChildren(bodyRow);
+        if(!data) {table.setAttribute("data-last-updated", Date.now()); return;}
+
         for(const [header, value] of Object.entries(data).sort(sorter == null ? (a, b)=>b[0].localeCompare(a[0]) : sorter))
         {
             const headCell = document.createElement("th");
