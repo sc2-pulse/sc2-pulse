@@ -346,14 +346,17 @@ class TeamUtil
         return team.queueType + "-" + EnumUtil.enumOfName(team.region, REGION).code + "-" + team.legacyId;
     }
 
-    static updateTeamMmrLink()
+    static getTeamMmrHistoryHref(teams)
     {
         const searchParams = new URLSearchParams();
         searchParams.append("type", "team-mmr");
-        for(const team of TeamUtil.teamBuffer.values())
-            searchParams.append("legacyUid", TeamUtil.getTeamLegacyUid(team));
+        for(const team of teams) searchParams.append("legacyUid", TeamUtil.getTeamLegacyUid(team));
+        return `${ROOT_CONTEXT_PATH}team/history?${searchParams.toString()}`;
+    }
 
-        document.querySelector("#team-buffer-mmr").setAttribute("href", `${ROOT_CONTEXT_PATH}team/history?${searchParams.toString()}`);
+    static updateTeamMmrLink()
+    {
+        document.querySelector("#team-buffer-mmr").setAttribute("href", TeamUtil.getTeamMmrHistoryHref(TeamUtil.teamBuffer.values()));
     }
 
     static toggleTeamBuffer(evt)
