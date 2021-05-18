@@ -346,12 +346,18 @@ class TeamUtil
         return team.queueType + "-" + EnumUtil.enumOfName(team.region, REGION).code + "-" + team.legacyId;
     }
 
-    static getTeamMmrHistoryHref(teams)
+    static getTeamMmrHistoryParams(teams)
     {
         const searchParams = new URLSearchParams();
         searchParams.append("type", "team-mmr");
         for(const team of teams) searchParams.append("legacyUid", TeamUtil.getTeamLegacyUid(team));
-        return `${ROOT_CONTEXT_PATH}team/history?${searchParams.toString()}`;
+
+        return searchParams;
+    }
+
+    static getTeamMmrHistoryHref(teams)
+    {
+        return `${ROOT_CONTEXT_PATH}team/history?${TeamUtil.getTeamMmrHistoryParams(teams).toString()}`;
     }
 
     static updateTeamMmrLink()
@@ -386,13 +392,7 @@ class TeamUtil
 
     static updateTeamMmr(searchParams = null)
     {
-        if(searchParams == null)
-        {
-            searchParams = new URLSearchParams();
-            searchParams.append("type", "team-mmr");
-            for(const team of TeamUtil.teamBuffer.values())
-                searchParams.append("legacyUid", TeamUtil.getTeamLegacyUid(team));
-        }
+        if(searchParams == null) searchParams = TeamUtil.getTeamMmrHistoryParams(TeamUtil.teamBuffer.values());
         const stringParams = searchParams.toString();
         const params = {params: stringParams};
         Util.setGeneratingStatus(STATUS.BEGIN);
