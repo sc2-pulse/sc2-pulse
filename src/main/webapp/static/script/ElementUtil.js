@@ -94,6 +94,14 @@ class ElementUtil
         return noRace;
     }
 
+    static createTagButton(tag, classes)
+    {
+        const elem = document.createElement(tag);
+        elem.setAttribute("role", "button");
+        elem.setAttribute("class", classes);
+        return elem;
+    }
+
     static setElementsVisibility(elems, visible)
     {
         for (const elem of elems)
