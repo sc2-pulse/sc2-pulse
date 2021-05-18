@@ -355,11 +355,14 @@
     </div>
     <div id="team-buffer" class="d-none sticky-bottom border-top" data-view-name="team-buffer">
         <h2 class="mt-2">
-            <a id="team-buffer-collapse" class="c-dropdown c-dropup collapsed mr-2" href="#team-buffer-container"
+            <span id="team-buffer-clear" class="table-image table-image-square background-cover cross-img d-inline-block mr-3" role="button">
+                <span class="sr-only">Clear</span>
+            </span>
+            <a id="team-buffer-collapse" class="c-dropdown c-dropup collapsed mr-3" href="#team-buffer-container"
                data-toggle="collapse" role="button" aria-expanded="false" aria-controls="team-buffer-container">
                 Team buffer(<span id="team-buffer-count"></span>)
             </a>
-            <a id="team-buffer-mmr" href="#" rel="noopener" target="_blank" class="btn btn-primary mr-2" role="button">MMR</a>
+            <a id="team-buffer-mmr" href="#" rel="noopener" target="_blank" class="btn btn-primary mr-3" role="button">MMR</a>
         </h2>
         <div id="team-buffer-container" class="table-responsive collapse">
             <table id="team-buffer-teams" class="table table-sm table-hover" data-ladder-rank-show="true" data-ladder-format-show="true">

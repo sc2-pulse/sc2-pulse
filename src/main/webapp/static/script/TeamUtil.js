@@ -327,6 +327,14 @@ class TeamUtil
         TeamUtil.updateTeamBufferView();
     }
 
+    static clearTeamBuffer()
+    {
+        TeamUtil.teamBuffer.clear();
+        document.querySelectorAll('.team-buffer-toggle.remove').forEach(e=>e.classList.replace("remove", "add"));
+        TeamUtil.updateTeamBufferModel();
+        TeamUtil.updateTeamBufferView();
+    }
+
     static updateTeamBufferModel()
     {
         Model.DATA.get(VIEW.TEAM_BUFFER).set(VIEW_DATA.SEARCH, {result:Array.from(TeamUtil.teamBuffer.values())});
@@ -391,6 +399,7 @@ class TeamUtil
 
     static enhanceTeamBuffer()
     {
+        document.querySelector("#team-buffer-clear").addEventListener("click", TeamUtil.clearTeamBuffer);
     }
 
     static updateTeamMmr(searchParams = null)
