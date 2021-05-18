@@ -341,12 +341,17 @@ class TeamUtil
         TeamUtil.updateTeamsTable(document.querySelector("#team-buffer-teams"), {result:Array.from(TeamUtil.teamBuffer.values())});
     }
 
+    static getTeamLegacyUid(team)
+    {
+        return team.queueType + "-" + EnumUtil.enumOfName(team.region, REGION).code + "-" + team.legacyId;
+    }
+
     static updateTeamMmrLink()
     {
         const searchParams = new URLSearchParams();
         searchParams.append("type", "team-mmr");
         for(const team of TeamUtil.teamBuffer.values())
-            searchParams.append("legacyUid", team.queueType + "-" + EnumUtil.enumOfName(team.region, REGION).code + "-" + team.legacyId);
+            searchParams.append("legacyUid", TeamUtil.getTeamLegacyUid(team));
 
         document.querySelector("#team-buffer-mmr").setAttribute("href", `${ROOT_CONTEXT_PATH}team/history?${searchParams.toString()}`);
     }
@@ -383,7 +388,7 @@ class TeamUtil
             searchParams = new URLSearchParams();
             searchParams.append("type", "team-mmr");
             for(const team of TeamUtil.teamBuffer.values())
-                searchParams.append("legacyUid", team.queueType + "-" + EnumUtil.enumOfName(team.region, REGION).code + "-" + team.legacyId);
+                searchParams.append("legacyUid", TeamUtil.getTeamLegacyUid(team));
         }
         const stringParams = searchParams.toString();
         const params = {params: stringParams};
