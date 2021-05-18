@@ -77,7 +77,7 @@ class SeasonUtil
         teamSection.appendChild(seasonPills.nav);
         for(const pane of seasonPills.pane.getElementsByClassName("tab-pane"))
         {
-            const table = TableUtil.createTable(["Format", "Rank", "MMR", "League", "Region", "Team", "Games", "Win%", "Buf"]);
+            const table = TableUtil.createTable(["Format", "Rank", "MMR", "League", "Region", "Team", "Games", "Win%", "Misc"]);
             table.querySelector("table").id = pane.id + "-table";
             const headers = table.querySelectorAll(":scope thead th");
             TableUtil.hoverableColumnHeader(headers[1]);

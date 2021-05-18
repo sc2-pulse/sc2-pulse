@@ -23,7 +23,7 @@ class TeamUtil
             row.appendChild(TeamUtil.createMembersCell(team));
             TeamUtil.appendGamesInfo(row.insertCell(), team);
             row.insertCell().textContent = Math.round( team.wins / (team.wins + team.losses) * 100);
-            row.appendChild(TeamUtil.createBufCell(team));
+            row.appendChild(TeamUtil.createMiscCell(team));
         }
 
         $(table).popover
@@ -278,14 +278,18 @@ class TeamUtil
         return leagueDiv;
     }
 
-    static createBufCell(team)
+    static createMiscCell(team)
     {
         const bufCell = document.createElement("td");
+        bufCell.classList.add("text-nowrap")
         const remove = TeamUtil.teamBuffer.has(team.id);
-        const toggle = document.createElement("div");
-        toggle.classList.add("table-image", "table-image-square", "m-auto", "background-cover", "team-buffer-toggle", remove ? "remove" : "add");
-        toggle.setAttribute("role", "button");
+        const toggle = ElementUtil.createTagButton("div", "table-image table-image-square background-cover team-buffer-toggle d-inline-block " + (remove ? "remove" : "add"));
         toggle.addEventListener("click", TeamUtil.toggleTeamBuffer);
+        const historyLink = ElementUtil.createTagButton("a",  "table-image table-image-square background-cover mr-3 d-inline-block chart-line-img");
+        historyLink.setAttribute("href", TeamUtil.getTeamMmrHistoryHref([team]));
+        historyLink.setAttribute("target", "_blank");
+        historyLink.setAttribute("rel", "noopener");
+        bufCell.appendChild(historyLink);
         bufCell.appendChild(toggle);
         return bufCell;
     }
