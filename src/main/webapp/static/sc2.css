@@ -206,6 +206,11 @@ th.hoverable span
     background-image: url("icon/misc/chart-line.svg");
 }
 
+.cross-img
+{
+    background-image: url("icon/misc/cross.svg");
+}
+
 .team-buffer-toggle.add
 {
     background-image: url("icon/misc/plus.svg");
