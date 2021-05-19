@@ -430,6 +430,7 @@ class CharacterUtil
     static createTeamSnapshot(team, dateTime)
     {
         return {
+            team: team,
             teamState: {
                 teamId: team.id,
                 dateTime: dateTime,
