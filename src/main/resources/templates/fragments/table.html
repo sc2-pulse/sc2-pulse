@@ -1,13 +1,14 @@
-<!DOCTYPE html>
-<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Pulse</title>
 </head>
 <body>
-<div class="table-responsive" th:fragment="table (id, caption, class)">
+<div class="table-responsive" th:fragment="player-search (id, caption, class)">
     <table
         th:id="${id}"
         th:class="${'table table-sm table-hover ' + class}"
