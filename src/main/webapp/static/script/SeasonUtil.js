@@ -128,7 +128,7 @@ class SeasonUtil
         for(const state of searchResult)
         {
             if(data[state.seasonState.periodStart] == null) data[state.seasonState.periodStart] = {};
-            data[state.seasonState.periodStart][state.season.region] = state.seasonState[param];
+            data[state.seasonState.periodStart][state.season.region] = state.seasonState[param] < 0 ? 0 : state.seasonState[param];
         }
         ChartUtil.CHART_RAW_DATA.set(tableId, {});
         TableUtil.updateVirtualColRowTable
