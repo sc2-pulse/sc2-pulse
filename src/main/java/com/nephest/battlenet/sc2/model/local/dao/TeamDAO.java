@@ -67,7 +67,7 @@ public class TeamDAO
 
     private static final String MERGE_CLAUSE =
         " "
-        + "ON CONFLICT(CAST(queue_type::text || region::text || legacy_id::text AS numeric), season) DO UPDATE SET "
+         + "ON CONFLICT(queue_type, region, legacy_id, season) DO UPDATE SET "
         + "division_id=excluded.division_id, "
         + "league_type=excluded.league_type, "
         + "tier_type=excluded.tier_type, "

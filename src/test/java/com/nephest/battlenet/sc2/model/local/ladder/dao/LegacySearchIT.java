@@ -23,6 +23,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuples;
 
 import javax.sql.DataSource;
 import java.math.BigInteger;
@@ -50,8 +52,8 @@ public class LegacySearchIT
     @Autowired @Qualifier("sc2StatsConversionService")
     private ConversionService conversionService;
 
-    public static final String LEGACY_ID_STR_1 = "99999";
-    public static final String LEGACY_ID_STR_2 ="999999";
+    public static final BigInteger LEGACY_ID_1 = new BigInteger("99999");
+    public static final BigInteger LEGACY_ID_2 = new BigInteger("999999");
 
     @BeforeAll
     public static void beforeAll
@@ -84,14 +86,14 @@ public class LegacySearchIT
                 BaseLeagueTier.LeagueTierType.FIRST,
                 1
             );
-            setupTeam(QueueType.LOTV_4V4, Region.EU, 1, new BigInteger(LEGACY_ID_STR_1), BaseLeague.LeagueType.BRONZE, 3,
+            setupTeam(QueueType.LOTV_4V4, Region.EU, 1, LEGACY_ID_1, BaseLeague.LeagueType.BRONZE, 3,
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
-            setupTeam(QueueType.LOTV_1V1, Region.US, 1, new BigInteger(LEGACY_ID_STR_2), BaseLeague.LeagueType.BRONZE, 3,
+            setupTeam(QueueType.LOTV_1V1, Region.US, 1, LEGACY_ID_2, BaseLeague.LeagueType.BRONZE, 3,
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
 
-            setupTeam(QueueType.LOTV_4V4,  Region.EU, 2, new BigInteger(LEGACY_ID_STR_1), BaseLeague.LeagueType.GOLD, 10,
+            setupTeam(QueueType.LOTV_4V4,  Region.EU, 2, LEGACY_ID_1, BaseLeague.LeagueType.GOLD, 10,
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
-            setupTeam(QueueType.LOTV_1V1, Region.US, 2, new BigInteger(LEGACY_ID_STR_2), BaseLeague.LeagueType.GOLD, 10,
+            setupTeam(QueueType.LOTV_1V1, Region.US, 2, LEGACY_ID_2, BaseLeague.LeagueType.GOLD, 10,
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
         }
     }
@@ -135,13 +137,9 @@ public class LegacySearchIT
     @Test
     public void testLegacyFinders()
     {
-        String prefix1 = conversionService.convert(QueueType.LOTV_4V4, Integer.class) + ""
-            + conversionService.convert(Region.EU, Integer.class);
-        String prefix2 = conversionService.convert(QueueType.LOTV_1V1, Integer.class) + ""
-            + conversionService.convert(Region.US, Integer.class);
-        Set<BigInteger> legacyIds = Set.of(
-            new BigInteger(prefix1 + LEGACY_ID_STR_1),
-            new BigInteger(prefix2 + LEGACY_ID_STR_2)
+        Set<Tuple3<QueueType, Region, BigInteger>> legacyIds = Set.of(
+            Tuples.of(QueueType.LOTV_4V4, Region.EU, LEGACY_ID_1),
+            Tuples.of(QueueType.LOTV_1V1, Region.US, LEGACY_ID_2)
         );
         List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(legacyIds);
         assertEquals(4, teams.size());
@@ -150,7 +148,7 @@ public class LegacySearchIT
         assertEquals(1, team1.getSeason());
         assertEquals(QueueType.LOTV_4V4, team1.getQueueType());
         assertEquals(Region.EU, team1.getRegion());
-        assertEquals(new BigInteger(LEGACY_ID_STR_1), team1.getLegacyId());
+        assertEquals(LEGACY_ID_1, team1.getLegacyId());
         assertEquals(4, team1.getWins());
         assertEquals(4, team1.getMembers().size());
 
@@ -158,7 +156,7 @@ public class LegacySearchIT
         assertEquals(1, team2.getSeason());
         assertEquals(QueueType.LOTV_1V1, team2.getQueueType());
         assertEquals(Region.US, team2.getRegion());
-        assertEquals(new BigInteger(LEGACY_ID_STR_2), team2.getLegacyId());
+        assertEquals(LEGACY_ID_2, team2.getLegacyId());
         assertEquals(4, team2.getWins());
         assertEquals(1, team2.getMembers().size());
 
@@ -166,7 +164,7 @@ public class LegacySearchIT
         assertEquals(2, team3.getSeason());
         assertEquals(QueueType.LOTV_4V4, team3.getQueueType());
         assertEquals(Region.EU, team3.getRegion());
-        assertEquals(new BigInteger(LEGACY_ID_STR_1), team3.getLegacyId());
+        assertEquals(LEGACY_ID_1, team3.getLegacyId());
         assertEquals(11, team3.getWins());
         assertEquals(4, team3.getMembers().size());
 
@@ -174,7 +172,7 @@ public class LegacySearchIT
         assertEquals(2, team4.getSeason());
         assertEquals(QueueType.LOTV_1V1, team4.getQueueType());
         assertEquals(Region.US, team4.getRegion());
-        assertEquals(new BigInteger(LEGACY_ID_STR_2), team4.getLegacyId());
+        assertEquals(LEGACY_ID_2, team4.getLegacyId());
         assertEquals(11, team4.getWins());
         assertEquals(1, team4.getMembers().size());
 

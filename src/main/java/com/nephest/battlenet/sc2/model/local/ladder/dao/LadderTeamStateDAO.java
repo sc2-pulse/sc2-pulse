@@ -4,7 +4,9 @@
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
@@ -15,11 +17,13 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import reactor.util.function.Tuple3;
 
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Repository
 public class LadderTeamStateDAO
@@ -58,7 +62,7 @@ public class LadderTeamStateDAO
 
     private static final String FIND_BY_LEGACY_ID =
         "WITH team_filter AS "
-        + "(SELECT id, NULL AS \"race\" FROM team WHERE CAST(queue_type::text || region::text || legacy_id::text AS numeric) IN (:legacyConcats)) "
+        + "(SELECT id, NULL AS \"race\" FROM team WHERE (team.queue_type, team.region, team.legacy_id) IN (:legacyUids) )"
         + SELECT_QUERY_PART;
 
     private static String FIND_QUERY;
@@ -124,12 +128,19 @@ public class LadderTeamStateDAO
         return template.query(FIND_QUERY, params, getStdExtractor());
     }
 
-    public List<LadderTeamState> find(Set<BigInteger> legacyConcats)
+    public List<LadderTeamState> find(Set<Tuple3<QueueType, Region, BigInteger>> ids)
     {
-        if(legacyConcats.isEmpty()) return new ArrayList<>();
+        if(ids.isEmpty()) return new ArrayList<>();
 
+        List<Object[]> legacyUids = ids.stream()
+            .map(id->new Object[]{
+                conversionService.convert(id.getT1(), Integer.class),
+                conversionService.convert(id.getT2(), Integer.class),
+                id.getT3()
+            })
+           .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("legacyConcats", legacyConcats);
+            .addValue("legacyUids", legacyUids);
         return template.query(FIND_BY_LEGACY_ID, params, getStdExtractor());
     }
 

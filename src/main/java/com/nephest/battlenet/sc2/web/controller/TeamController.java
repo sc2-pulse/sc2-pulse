@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuples;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -49,8 +51,15 @@ public class TeamController
         List<String> ids = params.get("legacyUid");
         if(ids == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "legacyUid parameter not found");
 
-        Set<BigInteger> idSet = ids.stream()
-            .map(sId->new BigInteger(sId.replaceAll("-", "")))
+        Set<Tuple3<QueueType, Region, BigInteger>> idSet = ids.stream()
+            .map(sId->{
+                String[] split = sId.split("-");
+                return Tuples.of(
+                    conversionService.convert(Integer.parseInt(split[0]), QueueType.class),
+                    conversionService.convert(split[1], Region.class),
+                    new BigInteger(split[2])
+                );
+            })
             .collect(Collectors.toSet());
         List<LadderTeamState> states = ladderTeamStateDAO.find(idSet);
         List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(idSet);
