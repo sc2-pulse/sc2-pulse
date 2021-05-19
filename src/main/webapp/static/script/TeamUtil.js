@@ -61,6 +61,24 @@ class TeamUtil
         return document.createTextNode(teamFormat.name + " " + teamType.secondaryName);
     }
 
+    static getRank(team, rankType, teamCountCalculator)
+    {
+        const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
+        const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
+
+        const rank = (!Util.isUndefinedRank(team[rankType]) ? Util.NUMBER_FORMAT.format(team[rankType]) : "-");
+        const teamCount = teamCountCalculator(stats);
+        const topPercentage = (!Util.isUndefinedRank(team[rankType])
+            ? Util.DECIMAL_FORMAT.format( (team[rankType] / teamCount) * 100)
+            : "");
+        return {rank: rank, teamCount: teamCount, topPercentage: topPercentage}
+    }
+
+    static getRankString(rankInfo, header, includeTeamCount = true)
+    {
+        return header + ": " + rankInfo.rank + (includeTeamCount ? "/" + rankInfo.teamCount : "") + "(" + rankInfo.topPercentage + "%)";
+    }
+
     static appendRankInfo(parent, searchResult, team, teamIx)
     {
         const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
