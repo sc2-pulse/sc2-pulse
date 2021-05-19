@@ -216,36 +216,7 @@
                 <nav class="pagination-container" aria-label="Ladder navigation top">
                     <ul class="pagination pagination-ladder justify-content-center flex-wrap"></ul>
                 </nav>
-                <div class="table-responsive">
-                    <table id="ladder" class="table table-sm table-hover" data-ladder-rank-show="true">
-                        <thead>
-                            <tr>
-                                <th scope="col"
-                                    class="hoverable"
-                                    title="Hover over this column values to get a more detailed view"
-                                    data-toggle="tooltip"
-                                >
-                                    <span>Rank</span>
-                                </th>
-                                <th scope="col">MMR</th>
-                                <th scope="col">League</th>
-                                <th scope="col">Region</th>
-                                <th scope="col">Team</th>
-                                <th scope="col"
-                                    class="hoverable"
-                                    title="Hover over this column values to get a more detailed view"
-                                    data-toggle="tooltip"
-                                >
-                                    <span>Games</span>
-                                </th>
-                                <th scope="col">Win%</th>
-                                <th scope="col">Misc</th>
-                            </tr>
-                        </thead>
-                        <tbody id="ladder-body">
-                        </tbody>
-                    </table>
-                </div>
+                <div th:replace="~{fragments/table :: team('ladder-table-container', 'ladder', '', _)}"></div>
                 <nav class="pagination-container" aria-label="Ladder navigation bottom">
                     <ul class="pagination pagination-ladder justify-content-center flex-wrap"></ul>
                 </nav>
@@ -645,36 +616,7 @@
                             you will follow all of their profiles in all regions. You can follow
                             <span th:text="${@accountFollowingService.getFollowingMax()}" th:remove="tag"></span> players max.
                         </p>
-                        <div id="following-ladder-container" class="table-responsive d-none">
-                            <table id="following-ladder" class="table table-sm table-hover" data-ladder-rank-show="true">
-                                <thead>
-                                <tr>
-                                    <th scope="col"
-                                        class="hoverable"
-                                        title="Hover over this column values to get a more detailed view"
-                                        data-toggle="tooltip"
-                                    >
-                                        <span>Rank</span>
-                                    </th>
-                                    <th scope="col">MMR</th>
-                                    <th scope="col">League</th>
-                                    <th scope="col">Region</th>
-                                    <th scope="col">Team</th>
-                                    <th scope="col"
-                                        class="hoverable"
-                                        title="Hover over this column values to get a more detailed view"
-                                        data-toggle="tooltip"
-                                    >
-                                        <span>Games</span>
-                                    </th>
-                                    <th scope="col">Win%</th>
-                                    <th scope="col">Misc</th>
-                                </tr>
-                                </thead>
-                                <tbody id="following-ladder-body">
-                                </tbody>
-                            </table>
-                        </div>
+                        <div th:replace="~{fragments/table :: team('following-ladder-container', 'following-ladder', '', _)}"></div>
                     </section>
                 </div>
             </div>

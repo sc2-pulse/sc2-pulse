@@ -239,36 +239,7 @@
         </section>
         <section id="team-mmr-teams" class="tab-pane fade" data-view-name="team-mmr" data-view-title="MMR history - teams">
             <h3>Teams</h3>
-            <div id="team-team-mmrs-container" class="table-responsive">
-                <table id="team-mmr-teams-table" class="table table-sm table-hover" data-ladder-rank-show="true" data-ladder-format-show="true">
-                    <thead>
-                    <tr>
-                        <th scope="col">Format</th>
-                        <th scope="col"
-                            class="hoverable"
-                            title="Hover over this column values to get a more detailed view"
-                            data-toggle="tooltip"
-                        >
-                            <span>Rank</span>
-                        </th>
-                        <th scope="col">MMR</th>
-                        <th scope="col">League</th>
-                        <th scope="col">Region</th>
-                        <th scope="col">Team</th>
-                        <th scope="col"
-                            class="hoverable"
-                            title="Hover over this column values to get a more detailed view"
-                            data-toggle="tooltip"
-                        >
-                            <span>Games</span>
-                        </th>
-                        <th scope="col">Win%</th>
-                        <th scope="col">Misc</th>
-                    </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div th:replace="~{fragments/table :: team('team-mmr-teams-table-container', 'team-mmr-teams-table', '', 'true')}"></div>
         </section>
     </div>
     </div>

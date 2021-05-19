@@ -358,43 +358,16 @@
             <span id="team-buffer-clear" class="table-image table-image-square background-cover cross-img d-inline-block float-right mr-3" role="button">
                 <span class="sr-only">Clear</span>
             </span>
-            <a id="team-buffer-collapse" class="c-dropdown c-dropup collapsed mr-3" href="#team-buffer-container"
-               data-toggle="collapse" role="button" aria-expanded="false" aria-controls="team-buffer-container">
+            <a id="team-buffer-collapse" class="c-dropdown c-dropup collapsed mr-3" href="#team-buffer-top-container"
+               data-toggle="collapse" role="button" aria-expanded="false" aria-controls="team-buffer-top-container">
                 Team buffer(<span id="team-buffer-count"></span>)
             </a>
             <a id="team-buffer-mmr" href="#" rel="noopener" target="_blank" class="table-image table-image-square background-cover chart-line-img d-inline-block float-right mr-3" role="button">
                 <span class="sr-only">MMR</span>
             </a>
         </h2>
-        <div id="team-buffer-container" class="table-responsive collapse">
-            <table id="team-buffer-teams" class="table table-sm table-hover" data-ladder-rank-show="true" data-ladder-format-show="true">
-                <thead>
-                <tr>
-                    <th scope="col">Format</th>
-                    <th scope="col"
-                        class="hoverable"
-                        title="Hover over this column values to get a more detailed view"
-                        data-toggle="tooltip"
-                    >
-                        <span>Rank</span>
-                    </th>
-                    <th scope="col">MMR</th>
-                    <th scope="col">League</th>
-                    <th scope="col">Region</th>
-                    <th scope="col">Team</th>
-                    <th scope="col"
-                        class="hoverable"
-                        title="Hover over this column values to get a more detailed view"
-                        data-toggle="tooltip"
-                    >
-                        <span>Games</span>
-                    </th>
-                    <th scope="col">Win%</th>
-                    <th scope="col">Misc</th>
-                </tr>
-                </thead>
-                <tbody></tbody>
-            </table>
+        <div id="team-buffer-top-container" class="collapse">
+        <div th:replace="~{fragments/table :: team('team-buffer-container', 'team-buffer-teams', '', 'true')}"></div>
         </div>
     </div>
 </th:block>
