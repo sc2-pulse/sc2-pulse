@@ -56,7 +56,7 @@ public class TeamController
                 String[] split = sId.split("-");
                 return Tuples.of(
                     conversionService.convert(Integer.parseInt(split[0]), QueueType.class),
-                    conversionService.convert(split[1], Region.class),
+                    conversionService.convert(Integer.parseInt(split[1]), Region.class),
                     new BigInteger(split[2])
                 );
             })
