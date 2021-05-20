@@ -90,6 +90,7 @@ public class AlternativeLadderService
     }
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 100;
+    public static final int LEGACY_LADDER_BATCH_SIZE = 500;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
     public void updateSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
@@ -192,7 +193,7 @@ public class AlternativeLadderService
         while(discovered.get() > 0)
         {
             discovered.set(0);
-            api.getProfileLadderIds(season.getRegion(), lastDivision,lastDivision + ALTERNATIVE_LADDER_ERROR_THRESHOLD)
+            api.getProfileLadderIds(season.getRegion(), lastDivision,lastDivision + LEGACY_LADDER_BATCH_SIZE)
                 .doOnNext((id)->{
                     profileLadderIds.add(id);
                     discovered.getAndIncrement();
@@ -200,8 +201,8 @@ public class AlternativeLadderService
                 })
                 .sequential()
                 .blockLast();
-
-            lastDivision+=ALTERNATIVE_LADDER_ERROR_THRESHOLD;
+            if(LEGACY_LADDER_BATCH_SIZE - discovered.get() > ALTERNATIVE_LADDER_ERROR_THRESHOLD) break;
+            lastDivision+=LEGACY_LADDER_BATCH_SIZE;
         }
         return profileLadderIds;
     }
