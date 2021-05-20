@@ -675,7 +675,10 @@ class CharacterUtil
 
     static updatePersonalCharactersView()
     {
-        CharacterUtil.updateCharacters(document.querySelector("#personal-characters-table"), Model.DATA.get(VIEW.PERSONAL_CHARACTERS).get(VIEW_DATA.SEARCH));
+        const personalCharTable = document.querySelector("#personal-characters-table");
+        if(!personalCharTable) return;
+
+        CharacterUtil.updateCharacters(personalCharTable, Model.DATA.get(VIEW.PERSONAL_CHARACTERS).get(VIEW_DATA.SEARCH));
     }
 
     static updatePersonalCharacters()

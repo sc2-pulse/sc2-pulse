@@ -246,6 +246,9 @@ class PersonalUtil
     static updateMyAccount(account)
     {
         Session.currentAccount = account;
-        document.querySelector("#login-battletag").textContent = Session.currentAccount.battleTag;
+        const btagElem = document.querySelector("#login-battletag");
+        if(!btagElem) return;
+
+        btagElem.textContent = Session.currentAccount.battleTag;
     }
 }
