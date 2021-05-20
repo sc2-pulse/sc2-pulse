@@ -54,6 +54,8 @@ public class TeamController
         Set<Tuple3<QueueType, Region, BigInteger>> idSet = ids.stream()
             .map(sId->{
                 String[] split = sId.split("-");
+                if(split.length != 3) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "legacyUid must have 3 components");
+
                 return Tuples.of(
                     conversionService.convert(Integer.parseInt(split[0]), QueueType.class),
                     conversionService.convert(Integer.parseInt(split[1]), Region.class),
