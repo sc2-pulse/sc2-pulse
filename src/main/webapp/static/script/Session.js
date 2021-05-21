@@ -183,7 +183,7 @@ class Session
 
     static enhanceThemeInputs()
     {
-        const handler = e=>Session.refreshTheme();
+        const handler = e=>window.setTimeout(Session.refreshTheme, 1);
         document.querySelector("#theme-device").addEventListener("click", handler);
         document.querySelector("#theme-light").addEventListener("click", handler);
         document.querySelector("#theme-dark").addEventListener("click", handler);
