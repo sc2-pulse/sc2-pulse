@@ -85,15 +85,6 @@
                 </ul>
             </nav>
             <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}" class="mr-1"  alt="Pulse"/><span> SC2 Pulse</span></a></h1>
-            <th:div th:if="${not @statsService.getAlternativeRegions().isEmpty()}" class="container text-danger">
-                <span th:text="'API issues detected ' + ${#strings.toString(@statsService.getAlternativeRegions())}">API issues detected</span>
-                <img
-                        th:src="@{/static/icon/misc/info.svg}"
-                        alt="No tiers, btags. Partial racial info. Less frequent updates."
-                        title="No tiers, btags. Partial racial info. Less frequent updates."
-                        data-toggle="tooltip"
-                />
-            </th:div>
             <div class="c-divider-hr"></div>
         </header>
         <div class="tab-content tab-content-main">
