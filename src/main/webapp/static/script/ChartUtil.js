@@ -36,6 +36,7 @@ class ChartUtil
                 data: config.data,
                 options:
                 {
+                    aspectRatio: ChartUtil.ASPECT_RATIO,
                     title:
                     {
                         display: config.title == null ? false : true,
@@ -405,6 +406,35 @@ class ChartUtil
         if(chart != null) chart.update();
     }
 
+    static enhanceHeightControls()
+    {
+        const handler = e=>window.setTimeout(ChartUtil.updateAspectRatioFromLocalStorage, 1);
+        document.querySelector("#chart-height-high").addEventListener("click", handler);
+        document.querySelector("#chart-height-medium").addEventListener("click", handler);
+        document.querySelector("#chart-height-low").addEventListener("click", handler);
+    }
+
+    static updateAspectRatioFromLocalStorage()
+    {
+        if(localStorage.getItem("chart-height-high") == "true") {
+            ChartUtil.ASPECT_RATIO = 2;
+        } else if(localStorage.getItem("chart-height-low") == "true") {
+            ChartUtil.ASPECT_RATIO = 4;
+        } else {
+            ChartUtil.ASPECT_RATIO = 2.5;
+        }
+        ChartUtil.updateAspectRatio();
+    }
+
+    static updateAspectRatio()
+    {
+        for(const chart of ChartUtil.CHARTS.values()) {
+            chart.config.options.aspectRatio = ChartUtil.ASPECT_RATIO;
+            chart.aspectRatio = ChartUtil.ASPECT_RATIO;
+            chart.update();
+        }
+    }
+
 }
 
 ChartUtil.CHARTS = new Map();
@@ -428,6 +458,7 @@ ChartUtil.CHART_OBSERVER_CONFIG =
 
 ChartUtil.CHARTABLE_OBSERVER = new MutationObserver(ChartUtil.onChartableMutation);
 ChartUtil.CHART_OBSERVER = new MutationObserver(ChartUtil.onChartMutation);
+ChartUtil.ASPECT_RATIO = 2.5;
 
 Chart.defaults.lineVCursor = Chart.defaults.line;
 Chart.controllers.lineVCursor = Chart.controllers.line.extend

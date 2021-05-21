@@ -48,6 +48,7 @@ class SC2Restful
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");
                 BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
                 Session.enhanceThemeInputs();
+                ChartUtil.enhanceHeightControls();
             case START_MODE.MINIMAL:
                 BootstrapUtil.init();
                 BootstrapUtil.enhanceModals();
@@ -60,6 +61,7 @@ class SC2Restful
                 ElementUtil.enhanceFullscreenToggles();
                 Session.enhanceSerializable();
                 ChartUtil.enhanceZoomToggles();
+                ChartUtil.updateAspectRatioFromLocalStorage();
                 Session.refreshTheme();
         }
     }
