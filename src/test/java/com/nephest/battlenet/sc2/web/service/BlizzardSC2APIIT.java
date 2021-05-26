@@ -155,7 +155,6 @@ public class BlizzardSC2APIIT
     public void testFetchMatches()
     {
         api.getMatches(Set.of(SERRAL, HEROMARINE, MARU))
-            .sequential()
             .doOnNext((m)->
             {
                 assertTrue(m.getT1().getMatches().length > 0);

@@ -25,8 +25,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 
 import static com.nephest.battlenet.sc2.model.BaseMatch.Decision.WIN;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -68,12 +67,34 @@ public class LadderMatchDAOIT
                 List.of(BaseLeague.LeagueType.values()),
                 List.of(QUEUE_TYPE), TEAM_TYPE, TIER_TYPE, 3
             );
-            matchDAO.merge(MATCH1);
-            matchDAO.merge(MATCH2);
-            matchParticipantDAO.merge(new MatchParticipant(MATCH1.getId(), 2L, WIN));
-            matchParticipantDAO.merge(new MatchParticipant(MATCH1.getId(), 3L, BaseMatch.Decision.LOSS));
-            matchParticipantDAO.merge(new MatchParticipant(MATCH2.getId(), 2L, BaseMatch.Decision.LOSS));
-            matchParticipantDAO.merge(new MatchParticipant(MATCH2.getId(), 3L, WIN));
+            matchDAO.merge(MATCH1, MATCH2);
+            MATCH1.setUpdated(MATCH1.getUpdated().plusHours(1));
+            MATCH2.setUpdated(MATCH2.getUpdated().plusHours(1));
+            matchDAO.merge(MATCH1, MATCH2);
+            //no-updates merge, readonly
+            matchDAO.merge(MATCH1, MATCH2);
+            matchParticipantDAO.merge
+            (
+                new MatchParticipant(MATCH1.getId(), 2L, BaseMatch.Decision.LOSS),
+                new MatchParticipant(MATCH1.getId(), 3L, BaseMatch.Decision.WIN),
+                new MatchParticipant(MATCH2.getId(), 2L, BaseMatch.Decision.WIN)
+            );
+            //old values are updated, new values are inserted
+            matchParticipantDAO.merge
+            (
+                new MatchParticipant(MATCH1.getId(), 2L, WIN),
+                new MatchParticipant(MATCH1.getId(), 3L, BaseMatch.Decision.LOSS),
+                new MatchParticipant(MATCH2.getId(), 2L, BaseMatch.Decision.LOSS),
+                new MatchParticipant(MATCH2.getId(), 3L, WIN)
+            );
+            //no-updates merge, readonly
+            matchParticipantDAO.merge
+            (
+                new MatchParticipant(MATCH1.getId(), 2L, WIN),
+                new MatchParticipant(MATCH1.getId(), 3L, BaseMatch.Decision.LOSS),
+                new MatchParticipant(MATCH2.getId(), 2L, BaseMatch.Decision.LOSS),
+                new MatchParticipant(MATCH2.getId(), 3L, WIN)
+            );
 
             ProPlayer proPlayer = new ProPlayer(null, new byte[]{0x1, 0x1}, "proNickname", "proName");
             proPlayerDAO.merge(proPlayer);
@@ -107,6 +128,7 @@ public class LadderMatchDAOIT
         //match 1
         LadderMatch match1 = matches.get(0);
         assertEquals(MATCH1, match1.getMatch());
+        assertNotNull(match1.getMatch().getId());
         LadderMatchParticipant participant11 = match1.getParticipants().get(0);
         assertEquals(BaseMatch.Decision.LOSS, participant11.getParticipant().getDecision());
         assertEquals("character#2", participant11.getTeamMember().getCharacter().getName());
@@ -122,6 +144,7 @@ public class LadderMatchDAOIT
         //match 2
         LadderMatch match2 = matches.get(1);
         assertEquals(MATCH2, match2.getMatch());
+        assertNotNull(match2.getMatch().getId());
         LadderMatchParticipant participant21 = match2.getParticipants().get(0);
         assertEquals(BaseMatch.Decision.WIN, participant21.getParticipant().getDecision());
         assertEquals("character#2", participant21.getTeamMember().getCharacter().getName());

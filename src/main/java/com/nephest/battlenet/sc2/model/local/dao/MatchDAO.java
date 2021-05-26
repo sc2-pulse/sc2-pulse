@@ -11,11 +11,13 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 public class MatchDAO
@@ -28,11 +30,51 @@ extends StandardDAO
         + "match.type AS \"match.type\", "
         + "match.map AS \"match.map\", "
         + "match.updated AS \"match.updated\" ";
-    private static final String CREATE_QUERY =
-        "INSERT INTO match (date, type, map, updated) VALUES(:date, :type, :map, :updated)";
-    private static final String MERGE_QUERY = CREATE_QUERY + " "
-        + "ON CONFLICT(date, type, map) DO UPDATE SET "
-        + "updated=excluded.updated";
+    private static final String MERGE_QUERY =
+        "WITH "
+        + "vals AS (VALUES :matchUids), "
+        + "updated AS "
+        + "("
+            + "UPDATE match "
+            + "SET updated = NOW() "
+            + "FROM vals v (date, type, map)"
+            + "WHERE match.date = v.date "
+            + "AND match.type = v.type "
+            + "AND match.map = v.map "
+            + "RETURNING match.id AS \"match.id\", "
+            + "match.date AS \"match.date\", "
+            + "match.type AS \"match.type\", "
+            + "match.map AS \"match.map\", "
+            + "match.updated AS \"match.updated\""
+        + "), "
+        + "missing AS "
+        + "("
+            + "SELECT v.date, v.type, v.map "
+            + "FROM vals v (date, type, map) "
+            + "LEFT JOIN updated ON v.date = updated.\"match.date\"  "
+            + "AND v.type = updated.\"match.type\" "
+            + "AND v.map = updated.\"match.map\" "
+            + "WHERE updated.\"match.id\" IS NULL "
+        + "), "
+        + "inserted AS "
+        + "("
+            + "INSERT INTO match (date, type, map) "
+            + "SELECT * FROM missing "
+            /*
+                2 matched matches(2 parts from different players) can be absent in the db
+                do nothing to verify that this is the case, because it will fail otherwise as there will be no second
+                 match in filtering phase
+             */
+            + "ON CONFLICT(date, type, map) DO NOTHING "
+            + "RETURNING id AS \"match.id\", "
+            + "date AS \"match.date\", "
+            + "type AS \"match.type\", "
+            + "map AS \"match.map\", "
+            + "updated AS \"match.updated\""
+        + ") "
+        + "SELECT * FROM updated "
+        + "UNION ALL "
+        + "SELECT * FROM inserted";
 
     private static RowMapper<Match> STD_ROW_MAPPER;
     private final ConversionService conversionService;
@@ -79,13 +121,30 @@ extends StandardDAO
             .addValue("updated", match.getUpdated());
     }
 
-    public Match merge(Match match)
+    public Match[] merge(Match... matches)
     {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
-        MapSqlParameterSource params = createParameterSource(match);
-        getTemplate().update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        match.setId(keyHolder.getKey().longValue());
-        return match;
+        if(matches.length == 0) return new Match[0];
+
+        List<Object[]> matchUids = Arrays.stream(matches)
+            .map(match->new Object[]{
+                match.getDate(),
+                conversionService.convert(match.getType(), Integer.class),
+                match.getMap()
+            })
+            .collect(Collectors.toList());
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("matchUids", matchUids);
+
+        List<Match> mergedMatches = getTemplate().query(MERGE_QUERY, params, getStdRowMapper());
+        List<Match> mergedMatchesOriginal = new ArrayList<>(mergedMatches);
+        for(Match m : matches) {
+            Match found = mergedMatches.stream().filter(mm->mm.equals(m)).findFirst()
+                .orElseGet(()->mergedMatchesOriginal.stream().filter(mm->mm.equals(m)).findFirst().get());
+            m.setId(found.getId());
+            mergedMatches.remove(found);
+        }
+
+        return matches;
     }
 
 }

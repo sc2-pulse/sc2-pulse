@@ -470,12 +470,10 @@ extends BaseAPI
             .onErrorReturn(Tuples.of(new BlizzardMatches(), playerCharacter));
     }
 
-    public ParallelFlux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(Iterable<? extends PlayerCharacter> playerCharacters)
+    public Flux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(Iterable<? extends PlayerCharacter> playerCharacters)
     {
         return Flux.fromIterable(playerCharacters)
-            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
-            .runOn(Schedulers.boundedElastic())
-            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getMatches(p), DELAY), false, 1);
+            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getMatches(p), DELAY), SAFE_REQUESTS_PER_SECOND_CAP);
     }
 
 }

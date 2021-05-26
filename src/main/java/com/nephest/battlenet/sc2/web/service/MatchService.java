@@ -3,8 +3,8 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatches;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -16,6 +16,15 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuples;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Stream;
 
 
 @Service
@@ -23,14 +32,12 @@ public class MatchService
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(MatchService.class);
+    public static final int BATCH_SIZE = 1000;
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
     private final MatchParticipantDAO matchParticipantDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
-
-    @Autowired
-    private MatchService matchService;
 
     @Autowired
     public MatchService
@@ -47,28 +54,46 @@ public class MatchService
         this.matchParticipantDAO = matchParticipantDAO;
     }
 
-    protected void setNestedService(MatchService matchService)
-    {
-        this.matchService = matchService;
-    }
-
+    @Transactional
     public void update()
     {
+        AtomicInteger count = new AtomicInteger(0);
         api.getMatches(playerCharacterDAO.findProPlayerCharacters())
-            .doOnNext((m)->matchService.saveMatches(m.getT1(), m.getT2()))
-            .sequential().blockLast();
+            .flatMap(m->Flux.fromArray(m.getT1().getMatches())
+                .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
+            .buffer(BATCH_SIZE)
+            .doOnNext(b->count.getAndAdd(b.size()))
+            .toStream(2)
+            .forEach(this::saveMatches);
         matchDAO.removeExpired();
-        LOG.info("Updated matches");
+        LOG.info("Saved {} matches", count.get());
     }
 
-    @Transactional
-    public void saveMatches(BlizzardMatches matches, PlayerCharacter playerCharacter)
+    private void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacter>> matches)
     {
-        for(BlizzardMatch bMatch : matches.getMatches())
+        Match[] matchBatch = new Match[matches.size()];
+        MatchParticipant[] participantBatch = new MatchParticipant[matches.size()];
+        List<Tuple3<Match, BaseMatch.Decision, PlayerCharacter>> meta = new ArrayList<>();
+        for(int i = 0; i < matches.size(); i++)
         {
-            Match match = matchDAO.merge(Match.of(bMatch));
-            matchParticipantDAO.merge(MatchParticipant.of(match, playerCharacter, bMatch));
+            Tuple2<BlizzardMatch, PlayerCharacter> match = matches.get(i);
+            Match localMatch = Match.of(match.getT1());
+            matchBatch[i] = localMatch;
+            meta.add(Tuples.of(localMatch, match.getT1().getDecision(), match.getT2()));
         }
+        matchDAO.merge(matchBatch);
+        for(int i = 0; i < meta.size(); i++)
+        {
+            Tuple3<Match, BaseMatch.Decision, PlayerCharacter> participant = meta.get(i);
+            participantBatch[i] = new MatchParticipant
+            (
+                participant.getT1().getId(),
+                participant.getT3().getId(),
+                participant.getT2()
+            );
+        }
+        matchParticipantDAO.merge(participantBatch);
+        LOG.debug("Saved {} matches", matches.size());
     }
 
 }
