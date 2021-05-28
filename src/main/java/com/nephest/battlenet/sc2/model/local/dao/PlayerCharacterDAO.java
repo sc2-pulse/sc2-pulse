@@ -21,6 +21,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,6 +71,19 @@ public class PlayerCharacterDAO
 
         + "ORDER BY team.rating DESC, team.id DESC, player_character.id DESC "
         + "LIMIT :limit";
+
+    private static final String FIND_RECENTLY_ACTIVE_CHARACTERS =
+        "WITH team_filter AS "
+        + "( "
+            + "SELECT DISTINCT team_id "
+            + "FROM team_state "
+            + "WHERE \"timestamp\" >= :point "
+        + ") "
+        + "SELECT DISTINCT ON(player_character.id) "
+        + STD_SELECT
+        + "FROM team_filter "
+        + "INNER JOIN team_member USING(team_id) "
+        + "INNER JOIN player_character ON team_member.player_character_id = player_character.id";
 
     private static final String FIND_BY_REGION_AND_REALM_AND_BATTLENET_ID = "SELECT " + STD_SELECT
         + "FROM player_character "
@@ -202,6 +216,13 @@ public class PlayerCharacterDAO
             .addValue("idAnchor", bookmark != null ? bookmark[1] : 0L)
             .addValue("ratingAnchor", bookmark != null ? bookmark[0] : 99999L);
         return template.query(FIND_TOP_PLAYER_CHARACTERS, params, BOOKMARKED_STD_ROW_EXTRACTOR);
+    }
+
+    public List<PlayerCharacter> findRecentlyActiveCharacters(OffsetDateTime from)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("point", from);
+        return template.query(FIND_RECENTLY_ACTIVE_CHARACTERS, params, getStdRowMapper());
     }
 
     public Optional<PlayerCharacter> find(Region region, int realm, long battlenetId)
