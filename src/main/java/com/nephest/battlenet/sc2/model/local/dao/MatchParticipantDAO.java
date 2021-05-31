@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +25,8 @@ public class MatchParticipantDAO
     public static final String STD_SELECT =
         "match_participant.match_id AS \"match_participant.match_id\", "
         + "match_participant.player_character_id AS \"match_participant.player_character_id\", "
+        + "match_participant.team_id AS \"match_participant.team_id\", "
+        + "match_participant.team_state_timestamp AS \"match_participant.team_state_timestamp\", "
         + "match_participant.decision AS \"match_participant.decision\" ";
     private static final String MERGE_QUERY =
         "WITH "
@@ -73,12 +76,18 @@ public class MatchParticipantDAO
 
     private void initMappers(ConversionService conversionService)
     {
-        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num)-> new MatchParticipant
-        (
-            rs.getLong("match_participant.match_id"),
-            rs.getLong("match_participant.player_character_id"),
-            conversionService.convert(rs.getInt("match_participant.decision"), BaseMatch.Decision.class)
-        );
+        if (STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num) ->
+        {
+            MatchParticipant participant = new MatchParticipant(
+                rs.getLong("match_participant.match_id"),
+                rs.getLong("match_participant.player_character_id"),
+                conversionService.convert(rs.getInt("match_participant.decision"), BaseMatch.Decision.class)
+            );
+            long teamId = rs.getLong("match_participant.team_id");
+            if(!rs.wasNull()) participant.setTeamId(teamId);
+            participant.setTeamStateDateTime(rs.getObject("match_participant.team_state_timestamp", OffsetDateTime.class));
+           return participant;
+        };
     }
 
     public static RowMapper<MatchParticipant> getStdRowMapper()

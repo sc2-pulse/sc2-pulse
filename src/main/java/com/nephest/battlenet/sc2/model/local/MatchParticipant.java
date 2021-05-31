@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -7,19 +7,24 @@ import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 
 import javax.validation.constraints.NotNull;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 public class MatchParticipant
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NotNull
     private Long matchId;
 
     @NotNull
     private Long playerCharacterId;
+
+    private Long teamId;
+
+    private OffsetDateTime teamStateDateTime;
 
     @NotNull
     private BaseMatch.Decision decision;
@@ -80,6 +85,26 @@ implements java.io.Serializable
     public void setPlayerCharacterId(Long playerCharacterId)
     {
         this.playerCharacterId = playerCharacterId;
+    }
+
+    public Long getTeamId()
+    {
+        return teamId;
+    }
+
+    public void setTeamId(Long teamId)
+    {
+        this.teamId = teamId;
+    }
+
+    public OffsetDateTime getTeamStateDateTime()
+    {
+        return teamStateDateTime;
+    }
+
+    public void setTeamStateDateTime(OffsetDateTime teamStateDateTime)
+    {
+        this.teamStateDateTime = teamStateDateTime;
     }
 
     public BaseMatch.Decision getDecision()

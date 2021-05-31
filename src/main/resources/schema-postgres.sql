@@ -407,6 +407,8 @@ CREATE TABLE "match_participant"
 (
     "match_id" BIGINT NOT NULL,
     "player_character_id" BIGINT NOT NULL,
+    "team_id" BIGINT,
+    "team_state_timestamp" TIMESTAMP WITH TIME ZONE,
     "decision" SMALLINT NOT NULL,
 
     PRIMARY KEY ("match_id", "player_character_id"),
@@ -418,6 +420,14 @@ CREATE TABLE "match_participant"
     CONSTRAINT "fk_match_participant_player_character_id"
         FOREIGN KEY ("player_character_id")
         REFERENCES "player_character"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_match_participant_team_id"
+        FOREIGN KEY ("team_id")
+        REFERENCES "team"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_match_participant_team_state_uid"
+        FOREIGN KEY ("team_id", "team_state_timestamp")
+        REFERENCES "team_state"("team_id", "timestamp")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
