@@ -14,8 +14,8 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -136,12 +136,28 @@ extends StandardDAO
             .addValue("matchUids", matchUids);
 
         List<Match> mergedMatches = getTemplate().query(MERGE_QUERY, params, getStdRowMapper());
-        List<Match> mergedMatchesOriginal = new ArrayList<>(mergedMatches);
-        for(Match m : matches) {
-            Match found = mergedMatches.stream().filter(mm->mm.equals(m)).findFirst()
-                .orElseGet(()->mergedMatchesOriginal.stream().filter(mm->mm.equals(m)).findFirst().get());
-            m.setId(found.getId());
-            mergedMatches.remove(found);
+        Arrays.sort(matches, Comparator.comparing(Match::getDate)
+            .thenComparing(Match::getType)
+            .thenComparing(Match::getMap));
+        mergedMatches.sort(Comparator.comparing(Match::getDate)
+            .thenComparing(Match::getType)
+            .thenComparing(Match::getMap));
+
+        //expecting ~1% of duplicates, using dirty but efficient way
+        for(int originalIx = 0, mergedIx = 0; originalIx < matches.length; originalIx++)
+        {
+            if(mergedIx >= mergedMatches.size()) mergedIx = mergedMatches.size() - 1; //should rarely happen
+            Match original = matches[originalIx];
+            Match merged = mergedMatches.get(mergedIx);
+
+            if(!merged.equals(original)) //should rarely happen
+            {
+                mergedIx--;
+                merged = mergedMatches.get(mergedIx);
+                if(!merged.equals(original)) throw new IllegalStateException("Match pair didn't match");
+            }
+            original.setId(merged.getId());
+            mergedIx++;
         }
 
         return matches;

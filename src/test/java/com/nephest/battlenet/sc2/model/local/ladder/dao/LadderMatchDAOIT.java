@@ -39,6 +39,9 @@ public class LadderMatchDAOIT
     public static final Match MATCH1 = new Match(null, OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map1");
     public static final Match MATCH2 = new Match(null, OffsetDateTime.now().minusDays(1), BaseMatch.MatchType._1V1,
         "map1");
+    public static final Match MATCH1_DUPLICATE1 = new Match(null, MATCH1.getDate(), MATCH1.getType(), MATCH1.getMap());
+    public static final Match MATCH1_DUPLICATE2 = new Match(null, MATCH1.getDate(), MATCH1.getType(), MATCH1.getMap());
+    public static final Match MATCH2_DUPLICATE1 = new Match(null, MATCH2.getDate(), MATCH2.getType(), MATCH2.getMap());
 
     @Autowired
     private LadderMatchDAO ladderMatchDAO;
@@ -67,12 +70,12 @@ public class LadderMatchDAOIT
                 List.of(BaseLeague.LeagueType.values()),
                 List.of(QUEUE_TYPE), TEAM_TYPE, TIER_TYPE, 3
             );
-            matchDAO.merge(MATCH1, MATCH2);
+            matchDAO.merge(MATCH1, MATCH2, MATCH1_DUPLICATE1, MATCH1_DUPLICATE2);
             MATCH1.setUpdated(MATCH1.getUpdated().plusHours(1));
             MATCH2.setUpdated(MATCH2.getUpdated().plusHours(1));
-            matchDAO.merge(MATCH1, MATCH2);
+            matchDAO.merge(MATCH2_DUPLICATE1, MATCH1, MATCH2);
             //no-updates merge, readonly
-            matchDAO.merge(MATCH1, MATCH2);
+            matchDAO.merge(MATCH1, MATCH2, MATCH1_DUPLICATE2);
             matchParticipantDAO.merge
             (
                 new MatchParticipant(MATCH1.getId(), 2L, BaseMatch.Decision.LOSS),
@@ -129,6 +132,8 @@ public class LadderMatchDAOIT
         LadderMatch match1 = matches.get(0);
         assertEquals(MATCH1, match1.getMatch());
         assertNotNull(match1.getMatch().getId());
+        assertEquals(match1.getMatch().getId(), MATCH1_DUPLICATE1.getId());
+        assertEquals(match1.getMatch().getId(), MATCH1_DUPLICATE2.getId());
         LadderMatchParticipant participant11 = match1.getParticipants().get(0);
         assertEquals(BaseMatch.Decision.LOSS, participant11.getParticipant().getDecision());
         assertEquals("character#2", participant11.getTeamMember().getCharacter().getName());
@@ -145,6 +150,7 @@ public class LadderMatchDAOIT
         LadderMatch match2 = matches.get(1);
         assertEquals(MATCH2, match2.getMatch());
         assertNotNull(match2.getMatch().getId());
+        assertEquals(match2.getMatch().getId(), MATCH2_DUPLICATE1.getId());
         LadderMatchParticipant participant21 = match2.getParticipants().get(0);
         assertEquals(BaseMatch.Decision.WIN, participant21.getParticipant().getDecision());
         assertEquals("character#2", participant21.getTeamMember().getCharacter().getName());
