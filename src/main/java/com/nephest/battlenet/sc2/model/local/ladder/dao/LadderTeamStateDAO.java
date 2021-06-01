@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -67,6 +68,7 @@ public class LadderTeamStateDAO
 
     private static String FIND_QUERY;
 
+    private static RowMapper<LadderTeamState> STD_ROW_MAPPER;
     private static ResultSetExtractor<List<LadderTeamState>> STD_EXTRACTOR;
 
     private final NamedParameterJdbcTemplate template;
@@ -83,6 +85,11 @@ public class LadderTeamStateDAO
         this.conversionService = conversionService;
         initQueries(conversionService);
         initMappers(conversionService);
+    }
+
+    public static RowMapper<LadderTeamState> getStdRowMapper()
+    {
+        return STD_ROW_MAPPER;
     }
 
     public static ResultSetExtractor<List<LadderTeamState>> getStdExtractor()
@@ -102,21 +109,23 @@ public class LadderTeamStateDAO
 
     private static void initMappers(ConversionService conversionService)
     {
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)->
+        {
+            int raceInt = rs.getInt("race");
+            Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
+            return new LadderTeamState(
+                TeamStateDAO.STD_ROW_MAPPER.mapRow(rs, 0),
+                race,
+                conversionService.convert(rs.getInt("league_tier.type"), BaseLeagueTier.LeagueTierType.class),
+                LeagueDAO.getStdRowMapper().mapRow(rs, 0),
+                rs.getInt("season.battlenet_id")
+            );
+        };
+
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
         {
             List<LadderTeamState> result = new ArrayList<>();
-            while(rs.next())
-            {
-                int raceInt = rs.getInt("race");
-                Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
-                result.add(new LadderTeamState(
-                    TeamStateDAO.STD_ROW_MAPPER.mapRow(rs, 0),
-                    race,
-                    conversionService.convert(rs.getInt("league_tier.type"), BaseLeagueTier.LeagueTierType.class),
-                    LeagueDAO.getStdRowMapper().mapRow(rs, 0),
-                    rs.getInt("season.battlenet_id")
-                ));
-            }
+            while(rs.next()) result.add(getStdRowMapper().mapRow(rs, 0));
             return result;
         };
     }
