@@ -46,16 +46,21 @@ implements java.io.Serializable
         this.rating = rating;
     }
 
-    public static TeamState of(Team team)
+    public static TeamState of(Team team, OffsetDateTime timestamp)
     {
         return new TeamState
         (
             team.getId(),
-            OffsetDateTime.now(),
+            timestamp,
             team.getDivisionId(),
             team.getWins() + team.getLosses() + team.getTies(),
             team.getRating().intValue()
         );
+    }
+
+    public static TeamState of(Team team)
+    {
+        return TeamState.of(team, OffsetDateTime.now());
     }
 
     @Override
