@@ -8,10 +8,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
-import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.dao.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +23,7 @@ import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -43,6 +41,7 @@ public class MatchService
     private final MatchDAO matchDAO;
     private final MatchParticipantDAO matchParticipantDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
+    private final SeasonDAO seasonDAO;
     private final VarDAO varDAO;
 
     private Instant lastUpdated;
@@ -54,6 +53,7 @@ public class MatchService
         PlayerCharacterDAO playerCharacterDAO,
         MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
+        SeasonDAO seasonDAO,
         VarDAO varDAO
     )
     {
@@ -61,6 +61,7 @@ public class MatchService
         this.playerCharacterDAO = playerCharacterDAO;
         this.matchDAO = matchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
+        this.seasonDAO = seasonDAO;
         this.varDAO = varDAO;
     }
 
@@ -110,9 +111,11 @@ public class MatchService
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream(2)
             .forEach(this::saveMatches);
+        int identified = matchParticipantDAO
+            .identify(seasonDAO.getMaxBattlenetId(), OffsetDateTime.ofInstant(lastUpdated, ZoneOffset.systemDefault()));
         matchDAO.removeExpired();
         updateLastUpdated();
-        LOG.info("Saved {} matches", count.get());
+        LOG.info("Saved {} matches({} identified)", count.get(), identified);
     }
 
     private void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacter>> matches)

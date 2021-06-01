@@ -3,8 +3,13 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
+import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
+import com.nephest.battlenet.sc2.web.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -14,6 +19,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -21,6 +27,8 @@ import java.util.stream.Collectors;
 @Repository
 public class MatchParticipantDAO
 {
+    
+    public static final int IDENTIFICATION_FRAME_MINUTES = 7;
 
     public static final String STD_SELECT =
         "match_participant.match_id AS \"match_participant.match_id\", "
@@ -57,6 +65,69 @@ public class MatchParticipantDAO
         + ") "
         + "SELECT COUNT(*) FROM updated, inserted";
 
+    private static final String IDENTIFY_MATCH_FILTER_TEMPLATE =
+        "match_filter AS "
+        + "("
+            + "SELECT match.id "
+            + "FROM match "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+            + "WHERE match.type = %1$s "
+            + "AND \"date\"  >= :point "
+            + "GROUP BY match.id "
+            + "HAVING COUNT(*) = %2$s AND SUM(decision) = %3$s "
+        + ") ";
+
+    private static final String IDENTIFY_JOIN_WHERE =
+        "INNER JOIN match USING(id) "
+        + "INNER JOIN match_participant AS match_participant_a ON match.id = match_participant_a.match_id "
+        + "INNER JOIN team_member USING(player_character_id) "
+        + "INNER JOIN team ON team_member.team_id = team.id "
+        + "INNER JOIN team_state ON team.id = team_state.team_id "
+        + "AND team_state.timestamp >= match.date - INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
+        + "AND team_state.timestamp <= match.date + INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
+        + "WHERE team.season = :season "
+        + "AND team.queue_type = %4$s "
+        + "AND team.team_type = %5$s ";
+    
+    private static final String IDENTIFY_SOLO_PARTICIPANTS_TEMPLATE =
+        "WITH "
+        + IDENTIFY_MATCH_FILTER_TEMPLATE
+        + "UPDATE match_participant "
+        + "SET team_id = team.id, "
+        + "team_state_timestamp = team_state.timestamp "
+        + "FROM match_filter "
+        + IDENTIFY_JOIN_WHERE
+        + "AND match_participant_a.match_id = match_participant.match_id "
+        + "AND match_participant_a.player_character_id = match_participant.player_character_id";
+    
+    private static final String IDENTIFY_TEAM_PARTICIPANTS_TEMPLATE = 
+        "WITH "
+        + IDENTIFY_MATCH_FILTER_TEMPLATE
+        + ", team_filter AS "
+        + "( "
+            + "SELECT match.id, "
+            + "string_agg"
+            + "("
+                + "player_character.realm::text || player_character.battlenet_id::text, "
+                + "'' ORDER BY player_character.realm, player_character.battlenet_id"
+            + ")::numeric AS legacy_id "
+            + "FROM match_filter "
+            + "INNER JOIN match USING(id) "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+            + "INNER JOIN player_character ON match_participant.player_character_id = player_character.id "
+            + "GROUP BY match.id, match_participant.decision "
+        + ") "
+        + "UPDATE match_participant "
+        + "SET team_id = team.id, "
+        + "team_state_timestamp = team_state.timestamp "
+        + "FROM team_filter "
+        + IDENTIFY_JOIN_WHERE
+        + "AND team.legacy_id = team_filter.legacy_id "
+        + "AND match_participant_a.match_id = match_participant.match_id "
+        + "AND match_participant_a.player_character_id = match_participant.player_character_id";
+
+    private static final List<String> IDENTIFY_PARTICIPANT_QUERIES = new ArrayList<>();
+
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
 
@@ -72,6 +143,7 @@ public class MatchParticipantDAO
         this.template = template;
         this.conversionService = conversionService;
         initMappers(conversionService);
+        initQueries(conversionService);
     }
 
     private void initMappers(ConversionService conversionService)
@@ -93,6 +165,30 @@ public class MatchParticipantDAO
     public static RowMapper<MatchParticipant> getStdRowMapper()
     {
         return STD_ROW_MAPPER;
+    }
+
+    private static void initQueries(ConversionService conversionService)
+    {
+        int winLossSum = conversionService.convert(BaseMatch.Decision.WIN, Integer.class)
+            + conversionService.convert(BaseMatch.Decision.LOSS, Integer.class);
+        for(QueueType queueType : QueueType.getTypes(StatsService.VERSION))
+        {
+            for(TeamType teamType : TeamType.values())
+            {
+                if(!BlizzardSC2API.isValidCombination(BaseLeague.LeagueType.BRONZE, queueType, teamType)) continue;
+
+                String query = queueType.getTeamFormat().getMemberCount(teamType) == 1
+                    ? IDENTIFY_SOLO_PARTICIPANTS_TEMPLATE
+                    : IDENTIFY_TEAM_PARTICIPANTS_TEMPLATE;
+                IDENTIFY_PARTICIPANT_QUERIES.add(String.format(query,
+                    conversionService.convert(BaseMatch.MatchType.from(queueType.getTeamFormat()), Integer.class),
+                    queueType.getTeamFormat().getMemberCount() * 2,
+                    queueType.getTeamFormat().getMemberCount() * winLossSum,
+                    conversionService.convert(queueType, Integer.class),
+                    conversionService.convert(teamType, Integer.class)
+                ));
+            }
+        }
     }
 
     private MapSqlParameterSource createParameterSource(MatchParticipant participant)
@@ -118,6 +214,16 @@ public class MatchParticipantDAO
             .addValue("participants", participantsData);
 
         template.query(MERGE_QUERY, params, DAOUtils.INT_EXTRACTOR);
+    }
+
+    public int identify(int season, OffsetDateTime from)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue("point", from);
+        int identified = 0;
+        for(String q : IDENTIFY_PARTICIPANT_QUERIES) identified += template.update(q, params);
+        return identified;
     }
 
 }
