@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
@@ -67,29 +67,31 @@ public class BaseMatch
     implements Identifiable
     {
         
-        _1V1(1, "1v1"),
-        _2V2(2, "2v2"),
-        _3V3(3, "3v3"),
-        _4V4(4, "4v4"),
-        ARCHON(5, "archon"),
-        COOP(6, "coop", "(unknown)"),
-        CUSTOM(7, "custom"),
-        UNKNOWN(8, "");
+        _1V1(1, "1v1", TeamFormat._1V1),
+        _2V2(2, "2v2", TeamFormat._2V2),
+        _3V3(3, "3v3", TeamFormat._3V3),
+        _4V4(4, "4v4", TeamFormat._4V4),
+        ARCHON(5, "archon", TeamFormat.ARCHON),
+        COOP(6, "coop", "(unknown)", null),
+        CUSTOM(7, "custom", null),
+        UNKNOWN(8, "", null);
 
         private final int id;
         private final String name;
         private final String additionalName;
+        private final TeamFormat teamFormat;
 
-        MatchType(int id, String name, String additionalName)
+        MatchType(int id, String name, String additionalName, TeamFormat teamFormat)
         {
             this.id = id;
             this.name = name;
             this.additionalName = additionalName;
+            this.teamFormat = teamFormat;
         }
 
-        MatchType(int id, String name)
+        MatchType(int id, String name, TeamFormat teamFormat)
         {
-            this(id, name, null);
+            this(id, name, null, teamFormat);
         }
 
         public static MatchType from(int id)
@@ -113,6 +115,15 @@ public class BaseMatch
             return UNKNOWN;
         }
 
+        public static MatchType from(TeamFormat teamFormat)
+        {
+            if(teamFormat == null) throw new IllegalArgumentException("Invalid team format");
+
+            for(MatchType matchType : MatchType.values())
+                if(matchType.getTeamFormat() == teamFormat) return matchType;
+            throw new IllegalArgumentException("Invalid team format");
+        }
+
         @Override
         public int getId()
         {
@@ -127,6 +138,11 @@ public class BaseMatch
         public String getAdditionalName()
         {
             return additionalName;
+        }
+
+        public TeamFormat getTeamFormat()
+        {
+            return teamFormat;
         }
 
     }
