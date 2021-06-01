@@ -23,6 +23,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -149,7 +150,10 @@ public class LadderSearchDAO
     private ConversionService conversionService;
     private SeasonDAO seasonDAO;
 
-    private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAM_EXTRACTOR= this::mapTeams;
+    private static RowMapper<LadderTeamMember> LADDER_TEAM_MEMBER_MAPPER;
+    private static RowMapper<LadderTeam> LADDER_TEAM_MAPPER;
+    private static ResultSetExtractor<LadderTeam> LADDER_TEAM_EXTRACTOR;
+    private final ResultSetExtractor<List<LadderTeam>> LADDER_TEAMS_EXTRACTOR = this::mapTeams;
 
     private int resultsPerPage = 100;
 
@@ -169,6 +173,90 @@ public class LadderSearchDAO
         this.template = template;
         this.conversionService = conversionService;
         this.seasonDAO = seasonDAO;
+        initMappers(conversionService);
+    }
+
+    private static void initMappers(ConversionService conversionService)
+    {
+        initLadderTeamMemberMapper();
+        initLadderTeamMapper(conversionService);
+        initLadderTeamExtractor();
+    }
+
+    private static void initLadderTeamMemberMapper()
+    {
+        if(LADDER_TEAM_MEMBER_MAPPER == null) LADDER_TEAM_MEMBER_MAPPER = (rs, i)->
+            new LadderTeamMember
+            (
+                AccountDAO.getStdRowMapper().mapRow(rs, 0),
+                PlayerCharacterDAO.getStdRowMapper().mapRow(rs, 0),
+                rs.getString("pro_player.nickname"),
+                rs.getString("pro_player.team"),
+                (Integer) rs.getObject("terran_games_played"),
+                (Integer) rs.getObject("protoss_games_played"),
+                (Integer) rs.getObject("zerg_games_played"),
+                (Integer) rs.getObject("random_games_played")
+            );
+    }
+
+    private static void initLadderTeamMapper(ConversionService conversionService)
+    {
+        if(LADDER_TEAM_MAPPER == null) LADDER_TEAM_MAPPER = (rs, i)->
+        {
+            LadderTeam team = new LadderTeam(
+                rs.getLong("team.id"),
+                rs.getInt("team.season"),
+                conversionService.convert(rs.getInt("team.region"), Region.class),
+                new BaseLeague(
+                    conversionService.convert(rs.getInt("team.league_type"), League.LeagueType.class),
+                    conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
+                    conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
+                ),
+                conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
+                ((BigDecimal) rs.getObject("team.legacy_id")).toBigInteger(),
+                rs.getInt("team.division_id"),
+                rs.getLong("team.rating"),
+                rs.getInt("team.wins"),
+                rs.getInt("team.losses"),
+                rs.getInt("team.ties"),
+                null,
+                new ArrayList<>()
+            );
+            team.setGlobalRank(rs.getInt("team.global_rank"));
+            team.setRegionRank(rs.getInt("team.region_rank"));
+            team.setLeagueRank(rs.getInt("team.league_rank"));
+            return team;
+        };
+    }
+
+    private static void initLadderTeamExtractor()
+    {
+        if(LADDER_TEAM_EXTRACTOR == null) LADDER_TEAM_EXTRACTOR = rs->
+        {
+            if(rs.isAfterLast()) return null;
+
+            LadderTeam team = getLadderTeamMapper().mapRow(rs, 0);
+            do {
+                if (rs.getLong("team.id") != team.getId()) break;
+                team.getMembers().add(getLadderTeamMemberMapper().mapRow(rs, 0));
+            } while (rs.next());
+
+            return team;
+        };
+    }
+
+    public static RowMapper<LadderTeamMember> getLadderTeamMemberMapper()
+    {
+        return LADDER_TEAM_MEMBER_MAPPER;
+    }
+    public static RowMapper<LadderTeam> getLadderTeamMapper()
+    {
+        return LADDER_TEAM_MAPPER;
+    }
+
+    public static ResultSetExtractor<LadderTeam> getLadderTeamExtractor()
+    {
+        return LADDER_TEAM_EXTRACTOR;
     }
 
     protected void setResultsPerPage(int resultsPerPage)
@@ -199,55 +287,9 @@ public class LadderSearchDAO
     private List<LadderTeam> mapTeams(ResultSet rs)
     throws SQLException
     {
-        long lastTeamId = -1;
         List<LadderTeam> teams = new ArrayList<>();
-        List<LadderTeamMember> members = null;
-        while(rs.next())
-        {
-           // if(totalCount == 0) totalCount = rs.getLong("total_team_count");
-            long teamId = rs.getLong("team.id");
-            if (teamId != lastTeamId)
-            {
-                members = new ArrayList<>();
-                LadderTeam team = new LadderTeam
-                (
-                    teamId,
-                    rs.getInt("team.season"),
-                    conversionService.convert(rs.getInt("team.region"), Region.class),
-                    new BaseLeague
-                    (
-                        conversionService.convert(rs.getInt("team.league_type"), League.LeagueType.class),
-                        conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
-                        conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
-                    ),
-                    conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
-                    ((BigDecimal) rs.getObject("team.legacy_id")).toBigInteger(),
-                    rs.getInt("team.division_id"),
-                    rs.getLong("team.rating"),
-                    rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
-                    null,
-                    members
-                );
-                team.setGlobalRank(rs.getInt("team.global_rank"));
-                team.setRegionRank(rs.getInt("team.region_rank"));
-                team.setLeagueRank(rs.getInt("team.league_rank"));
-                teams.add(team);
-                lastTeamId = teamId;
-            }
-
-            LadderTeamMember member = new LadderTeamMember
-            (
-                AccountDAO.getStdRowMapper().mapRow(rs, 0),
-                PlayerCharacterDAO.getStdRowMapper().mapRow(rs, 0),
-                rs.getString("pro_player.nickname"),
-                rs.getString("pro_player.team"),
-                (Integer) rs.getObject("terran_games_played"),
-                (Integer) rs.getObject("protoss_games_played"),
-                (Integer) rs.getObject("zerg_games_played"),
-                (Integer) rs.getObject("random_games_played")
-            );
-            members.add(member);
-        }
+        if(!rs.next()) return teams;
+        while(!rs.isAfterLast()) teams.add(getLadderTeamExtractor().extractData(rs));
         return teams;
     }
 
@@ -278,7 +320,7 @@ public class LadderSearchDAO
 
         String q = forward ? FIND_TEAM_MEMBERS_ANCHOR_QUERY : FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY;
         List<LadderTeam> teams = template
-            .query(q, params, LADDER_TEAM_EXTRACTOR);
+            .query(q, params, LADDER_TEAMS_EXTRACTOR);
         if(!forward) Collections.reverse(teams);
 
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, teams);
@@ -298,7 +340,7 @@ public class LadderSearchDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterId", id);
         return template
-            .query(FIND_CARACTER_TEAM_MEMBERS_QUERY, params, LADDER_TEAM_EXTRACTOR);
+            .query(FIND_CARACTER_TEAM_MEMBERS_QUERY, params, LADDER_TEAMS_EXTRACTOR);
     }
 
     public List<LadderTeam> findFollowingTeams
@@ -315,7 +357,7 @@ public class LadderSearchDAO
             LadderUtil.createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType)
             .addValue("accountId", accountId);
         return template
-            .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAM_EXTRACTOR);
+            .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAMS_EXTRACTOR);
     }
 
     public List<LadderTeam> findLegacyTeams(Set<Tuple3<QueueType, Region, BigInteger>> ids)
@@ -331,7 +373,7 @@ public class LadderSearchDAO
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("legacyUids", legacyUids);
-        return template.query(FIND_LEGACY_TEAM_MEMBERS, params, LADDER_TEAM_EXTRACTOR);
+        return template.query(FIND_LEGACY_TEAM_MEMBERS, params, LADDER_TEAMS_EXTRACTOR);
     }
 
 }
