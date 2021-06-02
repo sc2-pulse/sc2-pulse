@@ -64,13 +64,13 @@ implements java.io.Serializable
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         TeamState that = (TeamState) o;
-        return teamId.equals(that.teamId) && dateTime.equals(that.dateTime);
+        return teamId.equals(that.teamId) && dateTime.isEqual(that.dateTime);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(teamId, dateTime);
+        return Objects.hash(teamId, dateTime.toEpochSecond());
     }
 
     @Override
