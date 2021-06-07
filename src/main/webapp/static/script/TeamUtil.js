@@ -4,11 +4,11 @@
 class TeamUtil
 {
 
-    static updateTeamsTable(table, searchResult)
+    static updateTeamsTable(table, searchResult, clear = true)
     {
         const fullMode = table.getAttribute("data-ladder-format-show") == "true";
         const ladderBody = table.getElementsByTagName("tbody")[0];
-        ElementUtil.removeChildren(ladderBody);
+        if(clear) ElementUtil.removeChildren(ladderBody);
 
         for(let i = 0; i < searchResult.result.length; i++)
         {
