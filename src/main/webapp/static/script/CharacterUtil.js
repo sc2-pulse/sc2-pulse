@@ -528,14 +528,17 @@ class CharacterUtil
         const tabNav = tab.closest(".nav-item");
         const pane = document.querySelector("#player-stats-matches");
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        const characterId = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
         const matches = commonCharacter.matches;
 
         tabNav.classList.remove("d-none");
         pane.classList.remove("d-none");
+        const table = document.querySelector("#matches");
         const tBody = document.querySelector("#matches tbody");
         ElementUtil.removeChildren(tBody);
         //filter out partial matches
         const validMatches = matches.filter(m=>m.participants.length > 1);
+        const allTeams = [];
         for(const match of validMatches)
         {
             const participantsGrouped = Util.groupBy(match.participants, p=>p.participant.decision);
@@ -548,42 +551,49 @@ class CharacterUtil
                 || participantsGrouped.get("WIN").length != participantsGrouped.get("LOSS").length
             ) continue;
 
-            const tr = document.createElement("tr");
-            tr.insertCell().textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(match.match.date));
-            tr.insertCell().textContent = match.match.type.replace(/_/g, "");
-            tr.insertCell().textContent = match.match.map;
-            const participantsRow = document.createElement("div");
-            participantsRow.classList.add("row", "no-gutters", "text-left");
-            tr.insertCell().appendChild(participantsRow);
+            const rowNum = tBody.childNodes.length;
+            const teams = [];
+            const participantsSorted = match.participants.sort((a, b)=>b.participant.decision.localeCompare(a.participant.decision));
+            for(const p of participantsSorted)
+                if(teams.length == 0 || teams[teams.length - 1].id != p.team.id) teams.push(p.team);
+            allTeams.push(...teams);
+            TeamUtil.updateTeamsTable(table, {result: teams}, false);
+            CharacterUtil.prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId);
 
-            //winner-loser-winner-loser
-            let winner = true;
-            const winLossLen = participantsGrouped.get("WIN").length + participantsGrouped.get("LOSS").length;
-            for(let i = 0; i < winLossLen; i++)
-            {
-                const participant = winner ? participantsGrouped.get("WIN").pop() : participantsGrouped.get("LOSS").pop();
-                participantsRow.appendChild(CharacterUtil.createMatchParticipant(match, participant));
-                winner = !winner;
-            }
-            tBody.appendChild(tr);
+            const tr = tBody.childNodes[rowNum];
+            const mapCell = document.createElement("td");
+            mapCell.setAttribute("rowspan", teams.length);
+            mapCell.textContent = match.match.map;
+            tr.prepend(mapCell);
+            const typeCell = document.createElement("td");
+            typeCell.setAttribute("rowspan", teams.length);
+            typeCell.textContent = match.match.type.replace(/_/g, "");
+            tr.prepend(typeCell);
+            const dateCell = document.createElement("td");
+            dateCell.setAttribute("rowspan", teams.length);
+            dateCell.textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(match.match.date));
+            tr.prepend(dateCell);
         }
+        Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.TEAMS, {result: allTeams});
         return Promise.resolve();
     }
 
-    static createMatchParticipant(match, participant)
+    static prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId)
     {
-        const info = TeamUtil.createMemberInfo(
-            participant.team,
-            participant.team.members.find(m=>m.character.id == participant.participant.playerCharacterId),
-            false);
-        const container = info.querySelector(":scope .player-link-container");
-        const decision = document.createElement("span");
-        decision.classList.add("match-decision", "mr-3", "font-weight-bold");
-        if(participant.participant.decision == "WIN") decision.classList.add("text-success");
-        if(participant.participant.decision == "LOSS") decision.classList.add("text-danger");
-        decision.textContent = participant.participant.decision;
-        container.prepend(decision);
-        return info;
+        for(let ix = 0; ix < teams.length; ix++)
+        {
+            const tr = tBody.childNodes[rowNum];
+            const teamId = tr.getAttribute("data-team-id");
+            const decision = participantsGrouped.get("WIN").find(p=>p.team.id == teamId) ? "Win" : "Loss";
+            const decisionElem = document.createElement("td");
+            decisionElem.classList.add(decision == "Win" ? "text-success" : "text-danger");
+            if(teams.find(t=>t.id == teamId).members.find(m=>m.character.id == characterId))
+                decisionElem.classList.add("font-weight-bold", "text-decoration-underline");
+
+            decisionElem.textContent = decision;
+            tr.prepend(decisionElem);
+            rowNum++;
+        }
     }
 
     static findCharactersByName()
