@@ -6,7 +6,7 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
 * All seasons, races, team formats
 * Player profile
     * Career summary
-    * History: all teams and seasons, mmr chart
+    * History: all teams and seasons, mmr chart, matches
     * Linked profiles
 * BattleNet integration
     * Log in with a BattleNet account
@@ -22,7 +22,6 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * Barcode unmasking
     * Pro player stats
     * Social media links
-    * Match history
 ## Disclaimer
 I use this project for learning, it is not production-ready.
 
