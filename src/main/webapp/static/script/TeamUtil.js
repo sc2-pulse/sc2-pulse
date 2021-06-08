@@ -106,12 +106,15 @@ class TeamUtil
     static getTeamFromElement(parent)
     {
         const teamId = parent.closest("tr").getAttribute("data-team-id");
-        return Model.DATA.get(ViewUtil.getView(parent)).get(VIEW_DATA.SEARCH).result.filter(t=>t.id==teamId)[0];
+        const viewData = Model.DATA.get(ViewUtil.getView(parent));
+        const searchResult = viewData.get(VIEW_DATA.TEAMS) || viewData.get(VIEW_DATA.SEARCH);
+        return searchResult.result.filter(t=>t.id==teamId)[0];
     }
 
     static createDynamicRankTable(parent)
     {
-        const searchResult = Model.DATA.get(ViewUtil.getView(parent)).get(VIEW_DATA.SEARCH);
+        const viewData = Model.DATA.get(ViewUtil.getView(parent));
+        const searchResult = viewData.get(VIEW_DATA.TEAMS) || viewData.get(VIEW_DATA.SEARCH);
         const team = TeamUtil.getTeamFromElement(parent);
         const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
         const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
