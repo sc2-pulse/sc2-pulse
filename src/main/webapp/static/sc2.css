@@ -309,6 +309,11 @@ body.theme-light .social-media
   color: black;
 }
 
+.text-decoration-underline
+{
+    text-decoration: underline;
+}
+
 .social-media:hover, .player-link:hover
 {
   text-decoration: none;
