@@ -90,7 +90,8 @@ const VIEW_DATA = Object.freeze
     LEAGUE_BOUNDS: {name: "league-bounds", order: 4},
     BUNDLE: {name: "bundle", order: 5},
     CHARACTER_STATS: {name: "character-stats", order: 6},
-    VAR: {name: "var", order: 7}
+    VAR: {name: "var", order: 7},
+    TEAMS: {name: "teams", order: 8}
 });
 
 const STATUS = Object.freeze
