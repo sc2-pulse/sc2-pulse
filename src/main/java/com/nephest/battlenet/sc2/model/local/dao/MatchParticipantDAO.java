@@ -28,7 +28,7 @@ import java.util.stream.Collectors;
 public class MatchParticipantDAO
 {
     
-    public static final int IDENTIFICATION_FRAME_MINUTES = 7;
+    public static final int IDENTIFICATION_FRAME_MINUTES = 10;
 
     public static final String STD_SELECT =
         "match_participant.match_id AS \"match_participant.match_id\", "
