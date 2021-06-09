@@ -66,7 +66,7 @@ public class MatchService
     public void update(Instant lastUpdated)
     {
         if(lastUpdated == null) return;
-        OffsetDateTime minDate = OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()).minusMinutes(60);
+
         AtomicInteger count = new AtomicInteger(0);
         api.getMatches(playerCharacterDAO.findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault())))
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
