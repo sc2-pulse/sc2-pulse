@@ -8,7 +8,10 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,7 +22,6 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
-import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -42,9 +44,6 @@ public class MatchService
     private final MatchParticipantDAO matchParticipantDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SeasonDAO seasonDAO;
-    private final VarDAO varDAO;
-
-    private Instant lastUpdated;
 
     @Autowired
     public MatchService
@@ -53,8 +52,7 @@ public class MatchService
         PlayerCharacterDAO playerCharacterDAO,
         MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
-        SeasonDAO seasonDAO,
-        VarDAO varDAO
+        SeasonDAO seasonDAO
     )
     {
         this.api = api;
@@ -62,48 +60,12 @@ public class MatchService
         this.matchDAO = matchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
         this.seasonDAO = seasonDAO;
-        this.varDAO = varDAO;
-    }
-
-    @PostConstruct
-    public void init()
-    {
-        //catch exceptions to allow service autowiring for tests
-        try {
-            loadLastUpdated();
-        }
-        catch(RuntimeException ex) {
-            LOG.warn(ex.getMessage(), ex);
-        }
-    }
-
-    private void loadLastUpdated()
-    {
-        String updatesVar = varDAO.find("match.updated").orElse(null);
-        if(updatesVar == null || updatesVar.isEmpty()) {
-            lastUpdated = null;
-            return;
-        }
-
-        lastUpdated = Instant.ofEpochMilli(Long.parseLong(updatesVar));
-        LOG.debug("Loaded last updated: {}", lastUpdated);
-    }
-
-    private void updateLastUpdated(Instant instant)
-    {
-        lastUpdated = instant;
-        varDAO.merge("match.updated", String.valueOf(lastUpdated.toEpochMilli()));
     }
 
     @Transactional
-    public void update()
+    public void update(Instant lastUpdated)
     {
-        Instant begin = Instant.now();
-        if(lastUpdated == null) {
-            updateLastUpdated(begin);
-            return;
-        }
-
+        if(lastUpdated == null) return;
         OffsetDateTime minDate = OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()).minusMinutes(60);
         AtomicInteger count = new AtomicInteger(0);
         api.getMatches(playerCharacterDAO.findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault())))
@@ -111,10 +73,10 @@ public class MatchService
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
             .filter(m->
                 m.getT1().getType() == BaseMatch.MatchType._1V1
-                    || m.getT1().getType() == BaseMatch.MatchType._2V2
-                    || m.getT1().getType() == BaseMatch.MatchType._3V3
-                    || m.getT1().getType() == BaseMatch.MatchType._4V4
-                    || m.getT1().getType() == BaseMatch.MatchType.ARCHON)
+                || m.getT1().getType() == BaseMatch.MatchType._2V2
+                || m.getT1().getType() == BaseMatch.MatchType._3V3
+                || m.getT1().getType() == BaseMatch.MatchType._4V4
+                || m.getT1().getType() == BaseMatch.MatchType.ARCHON)
             .buffer(BATCH_SIZE)
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream(2)
@@ -122,7 +84,6 @@ public class MatchService
         int identified = matchParticipantDAO
             .identify(seasonDAO.getMaxBattlenetId(), OffsetDateTime.ofInstant(lastUpdated, ZoneOffset.systemDefault()));
         matchDAO.removeExpired();
-        updateLastUpdated(begin);
         LOG.info("Saved {} matches({} identified)", count.get(), identified);
     }
 

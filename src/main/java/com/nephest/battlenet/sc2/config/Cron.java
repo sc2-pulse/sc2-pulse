@@ -34,6 +34,7 @@ public class Cron
     private static final Logger LOG = LoggerFactory.getLogger(Cron.class);
 
     private Instant heavyStatsInstant;
+    private Instant lastUpdated;
 
     @Autowired
     private StatsService statsService;
@@ -72,10 +73,34 @@ public class Cron
                     heavyStatsInstant = Instant.ofEpochMilli(Long.parseLong(timestampStr));
                     LOG.debug("Loaded ladder heavy stats instant: {}", heavyStatsInstant);
                 });
+            loadLastUpdated();
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
         }
+    }
+
+    private void loadLastUpdated()
+    {
+        String updatesVar = varDAO.find("global.updated").orElse(null);
+        if(updatesVar == null || updatesVar.isEmpty()) {
+            lastUpdated = null;
+            return;
+        }
+
+        lastUpdated = Instant.ofEpochMilli(Long.parseLong(updatesVar));
+        LOG.debug("Loaded last updated: {}", lastUpdated);
+    }
+
+    private void updateLastUpdated(Instant instant)
+    {
+        lastUpdated = instant;
+        varDAO.merge("global.updated", String.valueOf(lastUpdated.toEpochMilli()));
+    }
+
+    public Instant getLastUpdated()
+    {
+        return lastUpdated;
     }
 
     @Scheduled(fixedDelay = 30_000)
@@ -94,8 +119,11 @@ public class Cron
     {
         try
         {
-            doUpdateSeasons();
+            Instant begin = Instant.now();
+
+            doUpdateSeasons(lastUpdated);
             calculateHeavyStats();
+            updateLastUpdated(begin);
         }
         catch(RuntimeException ex) {
             LOG.error(ex.getMessage(), ex);
@@ -116,7 +144,7 @@ public class Cron
         return false;
     }
 
-    private boolean doUpdateSeasons()
+    private boolean doUpdateSeasons(Instant lastUpdated)
     {
         try
         {
@@ -125,9 +153,10 @@ public class Cron
                 Region.values(),
                 QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
                 BaseLeague.LeagueType.values(),
-                false
+                false,
+                lastUpdated
             );
-            matchService.update();
+            matchService.update(lastUpdated);
         }
         catch(RuntimeException ex)
         {

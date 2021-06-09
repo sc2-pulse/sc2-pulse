@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.config.Cron;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.Instant;
-import java.util.Map;
 import java.util.Set;
 
 @RestController
@@ -22,6 +22,9 @@ public class StatusController
     @Autowired
     private StatsService statsService;
 
+    @Autowired
+    private Cron cron;
+
     @GetMapping("/stale")
     public Set<Region> getStaleStatus()
     {
@@ -29,9 +32,9 @@ public class StatusController
     }
 
     @GetMapping("/updated")
-    public Map<Integer, Instant> updated()
+    public Instant updated()
     {
-        return statsService.getLastLeagueUpdates();
+        return cron.getLastUpdated();
     }
 
 }
