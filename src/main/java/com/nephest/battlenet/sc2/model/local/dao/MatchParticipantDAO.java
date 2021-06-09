@@ -75,7 +75,7 @@ public class MatchParticipantDAO
             + "FROM match "
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "WHERE match.type = %1$s "
-            + "AND updated  >= :point "
+            + "AND \"date\"  >= :point "
             + "GROUP BY match.id "
             + "HAVING COUNT(*) = %2$s AND SUM(decision) = %3$s "
         + ") ";
