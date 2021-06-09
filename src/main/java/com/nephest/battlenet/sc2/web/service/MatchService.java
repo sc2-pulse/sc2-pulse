@@ -110,12 +110,11 @@ public class MatchService
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
             .filter(m->
-                m.getT1().getDate().compareTo(minDate) > 0
-                && (m.getT1().getType() == BaseMatch.MatchType._1V1
+                m.getT1().getType() == BaseMatch.MatchType._1V1
                     || m.getT1().getType() == BaseMatch.MatchType._2V2
                     || m.getT1().getType() == BaseMatch.MatchType._3V3
                     || m.getT1().getType() == BaseMatch.MatchType._4V4
-                    || m.getT1().getType() == BaseMatch.MatchType.ARCHON))
+                    || m.getT1().getType() == BaseMatch.MatchType.ARCHON)
             .buffer(BATCH_SIZE)
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream(2)
