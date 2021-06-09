@@ -106,7 +106,6 @@ public class Cron
     {
         if(heavyStatsInstant == null || System.currentTimeMillis() - heavyStatsInstant.toEpochMilli() >= 24 * 60 * 60 * 1000) {
             proPlayerService.update();
-            matchService.update();
             queueStatsDAO.mergeCalculateForSeason(seasonDAO.getMaxBattlenetId());
             postgreSQLUtils.vacuum();
             postgreSQLUtils.analyze();
@@ -128,6 +127,7 @@ public class Cron
                 BaseLeague.LeagueType.values(),
                 false
             );
+            matchService.update();
         }
         catch(RuntimeException ex)
         {
