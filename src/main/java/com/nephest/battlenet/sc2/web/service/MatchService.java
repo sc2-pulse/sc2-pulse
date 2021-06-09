@@ -89,17 +89,18 @@ public class MatchService
         LOG.debug("Loaded last updated: {}", lastUpdated);
     }
 
-    private void updateLastUpdated()
+    private void updateLastUpdated(Instant instant)
     {
-        lastUpdated = Instant.now();
+        lastUpdated = instant;
         varDAO.merge("match.updated", String.valueOf(lastUpdated.toEpochMilli()));
     }
 
     @Transactional
     public void update()
     {
+        Instant begin = Instant.now();
         if(lastUpdated == null) {
-            updateLastUpdated();
+            updateLastUpdated(begin);
             return;
         }
 
@@ -114,7 +115,7 @@ public class MatchService
         int identified = matchParticipantDAO
             .identify(seasonDAO.getMaxBattlenetId(), OffsetDateTime.ofInstant(lastUpdated, ZoneOffset.systemDefault()));
         matchDAO.removeExpired();
-        updateLastUpdated();
+        updateLastUpdated(begin);
         LOG.info("Saved {} matches({} identified)", count.get(), identified);
     }
 
