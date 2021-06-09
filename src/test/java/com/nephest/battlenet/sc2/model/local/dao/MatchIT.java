@@ -322,6 +322,8 @@ public class MatchIT
         );
         matchParticipantDAO.merge
         (
+            //skip duplicate, order by decision ASC
+            new MatchParticipant(match4v4.getId(), charEu1.getId(), BaseMatch.Decision.LOSS),
             new MatchParticipant(match4v4.getId(), charEu1.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(match4v4.getId(), charEu2.getId(), BaseMatch.Decision.LOSS)
         );

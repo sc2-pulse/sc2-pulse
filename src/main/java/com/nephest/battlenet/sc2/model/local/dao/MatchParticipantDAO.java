@@ -60,7 +60,10 @@ public class MatchParticipantDAO
         + "inserted AS "
         + "("
             + "INSERT INTO match_participant(match_id, player_character_id, decision) "
-            + "SELECT * FROM missing "
+            // API data can have multiple participants for the same match. Ignore such conflicts.
+            + "SELECT DISTINCT ON(match_id, player_character_id) * "
+            + "FROM missing "
+            + "ORDER BY match_id, player_character_id, decision "
             + "RETURNING 1"
         + ") "
         + "SELECT COUNT(*) FROM updated, inserted";
