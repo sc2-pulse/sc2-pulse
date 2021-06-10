@@ -81,8 +81,13 @@ public class MatchService
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream(2)
             .forEach(this::saveMatches);
-        int identified = matchParticipantDAO
-            .identify(seasonDAO.getMaxBattlenetId(), OffsetDateTime.ofInstant(lastUpdated, ZoneOffset.systemDefault()));
+        int identified = matchParticipantDAO.identify(
+            seasonDAO.getMaxBattlenetId(),
+            /*
+                Matches are fetched retroactively, some of them can happen before the lastUpdated instant.
+                Try to catch these matches by moving the start instant back in time.
+             */
+            OffsetDateTime.ofInstant(lastUpdated, ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         matchDAO.removeExpired();
         LOG.info("Saved {} matches({} identified)", count.get(), identified);
     }
