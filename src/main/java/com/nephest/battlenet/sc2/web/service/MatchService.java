@@ -79,7 +79,7 @@ public class MatchService
                 || m.getT1().getType() == BaseMatch.MatchType.ARCHON)
             .buffer(BATCH_SIZE)
             .doOnNext(b->count.getAndAdd(b.size()))
-            .toStream(2)
+            .toStream(4)
             .forEach(this::saveMatches);
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),
