@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.config.Cron;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.time.Instant;
 import java.util.Set;
 
+@Profile({"!maintenance & !dev"})
 @RestController
 @RequestMapping("/api/status")
 public class StatusController
