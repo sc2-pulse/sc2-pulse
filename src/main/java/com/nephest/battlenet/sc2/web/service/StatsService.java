@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,6 +73,7 @@ public class StatsService
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private VarDAO varDAO;
+    private PostgreSQLUtils postgreSQLUtils;
     private Validator validator;
     private ConversionService conversionService;
 
@@ -97,6 +99,7 @@ public class StatsService
         LeagueStatsDAO leagueStatsDao,
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
         VarDAO varDAO,
+        PostgreSQLUtils postgreSQLUtils,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator
     )
@@ -116,6 +119,7 @@ public class StatsService
         this.leagueStatsDao = leagueStatsDao;
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.varDAO = varDAO;
+        this.postgreSQLUtils = postgreSQLUtils;
         this.conversionService = conversionService;
         this.validator = validator;
     }
@@ -270,6 +274,7 @@ public class StatsService
         {
             updateSeason(region, seasonId, queues, leagues);
         }
+        postgreSQLUtils.vacuumAnalyze();
         updateSeasonStats(seasonId, regions, queues, leagues, true);
     }
 
@@ -302,7 +307,9 @@ public class StatsService
             seasonId = season.getBattlenetId();
             LOG.debug("Updated leagues: {} {}", seasonId, region);
         }
+        postgreSQLUtils.vacuumAnalyze();
         teamStateDAO.removeExpired();
+        postgreSQLUtils.vacuumAnalyze();
         if(seasonId != null)
         {
             if(queues.length == QueueType.getTypes(VERSION).size())

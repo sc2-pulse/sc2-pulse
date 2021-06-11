@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -44,6 +45,7 @@ public class MatchService
     private final MatchParticipantDAO matchParticipantDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SeasonDAO seasonDAO;
+    private final PostgreSQLUtils postgreSQLUtils;
 
     @Autowired
     public MatchService
@@ -52,7 +54,8 @@ public class MatchService
         PlayerCharacterDAO playerCharacterDAO,
         MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
-        SeasonDAO seasonDAO
+        SeasonDAO seasonDAO,
+        PostgreSQLUtils postgreSQLUtils
     )
     {
         this.api = api;
@@ -60,6 +63,7 @@ public class MatchService
         this.matchDAO = matchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
         this.seasonDAO = seasonDAO;
+        this.postgreSQLUtils = postgreSQLUtils;
     }
 
     @Transactional
@@ -81,6 +85,7 @@ public class MatchService
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream(4)
             .forEach(this::saveMatches);
+        postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),
             /*
