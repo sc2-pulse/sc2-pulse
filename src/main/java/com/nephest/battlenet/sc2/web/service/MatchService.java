@@ -16,6 +16,7 @@ import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -47,6 +48,9 @@ public class MatchService
     private final SeasonDAO seasonDAO;
     private final PostgreSQLUtils postgreSQLUtils;
 
+    @Autowired @Lazy
+    private MatchService matchService;
+
     @Autowired
     public MatchService
     (
@@ -66,25 +70,12 @@ public class MatchService
         this.postgreSQLUtils = postgreSQLUtils;
     }
 
-    @Transactional
     public void update(Instant lastUpdated)
     {
         if(lastUpdated == null) return;
 
-        AtomicInteger count = new AtomicInteger(0);
-        api.getMatches(playerCharacterDAO.findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault())))
-            .flatMap(m->Flux.fromArray(m.getT1().getMatches())
-                .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
-            .filter(m->
-                m.getT1().getType() == BaseMatch.MatchType._1V1
-                || m.getT1().getType() == BaseMatch.MatchType._2V2
-                || m.getT1().getType() == BaseMatch.MatchType._3V3
-                || m.getT1().getType() == BaseMatch.MatchType._4V4
-                || m.getT1().getType() == BaseMatch.MatchType.ARCHON)
-            .buffer(BATCH_SIZE)
-            .doOnNext(b->count.getAndAdd(b.size()))
-            .toStream(4)
-            .forEach(this::saveMatches);
+        int matchCount = matchService.saveMatches(lastUpdated);
+        postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),
             /*
@@ -93,7 +84,27 @@ public class MatchService
              */
             OffsetDateTime.ofInstant(lastUpdated, ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         matchDAO.removeExpired();
-        LOG.info("Saved {} matches({} identified)", count.get(), identified);
+        LOG.info("Saved {} matches({} identified)", matchCount, identified);
+    }
+
+    @Transactional
+    protected int saveMatches(Instant lastUpdated)
+    {
+        AtomicInteger count = new AtomicInteger(0);
+        api.getMatches(playerCharacterDAO.findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault())))
+            .flatMap(m->Flux.fromArray(m.getT1().getMatches())
+                .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
+            .filter(m->
+                m.getT1().getType() == BaseMatch.MatchType._1V1
+                    || m.getT1().getType() == BaseMatch.MatchType._2V2
+                    || m.getT1().getType() == BaseMatch.MatchType._3V3
+                    || m.getT1().getType() == BaseMatch.MatchType._4V4
+                    || m.getT1().getType() == BaseMatch.MatchType.ARCHON)
+            .buffer(BATCH_SIZE)
+            .doOnNext(b->count.getAndAdd(b.size()))
+            .toStream(4)
+            .forEach(this::saveMatches);
+        return count.get();
     }
 
     private void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacter>> matches)
