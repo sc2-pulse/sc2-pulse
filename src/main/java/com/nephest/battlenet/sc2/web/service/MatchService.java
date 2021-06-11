@@ -85,7 +85,6 @@ public class MatchService
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream(4)
             .forEach(this::saveMatches);
-        postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),
             /*
