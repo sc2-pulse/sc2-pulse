@@ -586,9 +586,12 @@ class CharacterUtil
             const teamId = tr.getAttribute("data-team-id");
             const decision = participantsGrouped.get("WIN").find(p=>p.team.id == teamId) ? "Win" : "Loss";
             const decisionElem = document.createElement("td");
-            decisionElem.classList.add(decision == "Win" ? "text-success" : "text-danger");
-            if(teams.find(t=>t.id == teamId).members.find(m=>m.character.id == characterId))
-                decisionElem.classList.add("font-weight-bold", "text-decoration-underline");
+
+            if(teams.find(t=>t.id == teamId).members.find(m=>m.character.id == characterId)) {
+                decisionElem.classList.add("font-weight-bold", decision == "Win" ? "bg-success" : "bg-danger")
+            } else {
+                decisionElem.classList.add(decision == "Win" ? "text-success" : "text-danger");
+            }
 
             decisionElem.textContent = decision;
             tr.prepend(decisionElem);
