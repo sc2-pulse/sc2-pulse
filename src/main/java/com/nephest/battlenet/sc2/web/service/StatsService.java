@@ -275,15 +275,15 @@ public class StatsService
             updateSeason(region, seasonId, queues, leagues);
         }
         postgreSQLUtils.vacuumAnalyze();
-        updateSeasonStats(seasonId, regions, queues, leagues, true);
+        updateSeasonStats(seasonId, true);
     }
 
     private void updateSeasonStats
-    (int seasonId, Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats)
+    (int seasonId, boolean allStats)
     {
         if(allStats) queueStatsDAO.mergeCalculateForSeason(seasonId);
         leagueStatsDao.mergeCalculateForSeason(seasonId);
-        teamDao.updateRanks(seasonId, regions, queues, TeamType.values(), leagues);
+        teamDao.updateRanks(seasonId);
     }
 
     private void updateSeason(Region region, int seasonId, QueueType[] queues, BaseLeague.LeagueType[] leagues)
@@ -314,7 +314,7 @@ public class StatsService
         {
             if(queues.length == QueueType.getTypes(VERSION).size())
             {
-                updateSeasonStats(seasonId, regions, queues, leagues, allStats);
+                updateSeasonStats(seasonId, allStats);
                 playerCharacterStatsDAO.mergeCalculate(
                     lastUpdate != null
                     ? OffsetDateTime.ofInstant(lastUpdate, ZoneId.systemDefault())
@@ -323,7 +323,7 @@ public class StatsService
             else
             {
                 leagueStatsDao.mergeCalculateForSeason(seasonId);
-                teamDao.updateRanks(seasonId, regions, queues, TeamType.values(), leagues);
+                teamDao.updateRanks(seasonId);
             }
         }
     }

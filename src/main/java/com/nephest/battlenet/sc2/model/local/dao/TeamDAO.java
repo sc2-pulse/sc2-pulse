@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Repository
 public class TeamDAO
@@ -124,30 +123,24 @@ public class TeamDAO
 
     private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
 
-    private static final String CALCULATE_RANK_TEMPLATE =
-        "WITH cte AS"
-        + "("
-            + "SELECT id, RANK() OVER(PARTITION BY queue_type, team_type%2$s ORDER BY rating DESC, id DESC) as rnk "
+    private static final String CALCULATE_RANK_QUERY =
+        "WITH ranks AS "
+        + "( "
+            + "SELECT id, "
+            + "RANK() OVER(PARTITION BY queue_type, team_type ORDER BY rating DESC, id DESC) as global_rank, "
+            + "RANK() OVER(PARTITION BY queue_type, team_type, region ORDER BY rating DESC, id DESC) as region_rank, "
+            + "RANK() OVER(PARTITION BY queue_type, team_type, league_type ORDER BY rating DESC, id DESC) as league_rank "
             + "FROM team "
             + "WHERE season = :season "
-            + "AND region IN (:regions) "
-            + "AND queue_type IN (:queueTypes) "
-            + "AND team_type IN (:teamTypes) "
-            + "AND league_type IN (:leagueTypes) "
-        + ")"
+        + ") "
         + "UPDATE team "
-        + "set %1$s_rank=cte.rnk "
-        + "FROM cte "
-        + "WHERE team.id = cte.id "
-        + "AND team.%1$s_rank != cte.rnk";
+        + "set global_rank = ranks.global_rank, "
+        + "region_rank = ranks.region_rank, "
+        + "league_rank = ranks.league_rank "
+        + "FROM ranks "
+        + "WHERE team.id = ranks.id";
 
     private static final Map<Race, String> FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES = new EnumMap<>(Race.class);
-
-    private static final String CALCULATE_GLOBAL_RANK_QUERY = String.format(CALCULATE_RANK_TEMPLATE, "global", "");
-    private static final String CALCULATE_REGION_RANK_QUERY =
-        String.format(CALCULATE_RANK_TEMPLATE, "region", ", region");
-    private static final String CALCULATE_LEAGUE_RANK_QUERY =
-        String.format(CALCULATE_RANK_TEMPLATE, "league", ", league_type");
 
     private static RowMapper<Team> STD_ROW_MAPPER;
     private static ResultSetExtractor<Team> STD_EXTRACTOR;
@@ -319,67 +312,12 @@ public class TeamDAO
     }
 
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
-    public void updateRanks
-    (int season, Region[] regions, QueueType[] queues, TeamType[] teams, BaseLeague.LeagueType[] leagues)
+    public void updateRanks(int season)
     {
-        Set<Integer> regionsInt = Arrays.stream(regions)
-            .map(r->conversionService.convert(r, Integer.class))
-            .collect(Collectors.toSet());
-        Set<Integer> queuesInt = Arrays.stream(queues)
-            .map(q->conversionService.convert(q, Integer.class))
-            .collect(Collectors.toSet());
-        Set<Integer> teamsInt = Arrays.stream(teams)
-            .map(t->conversionService.convert(t, Integer.class))
-            .collect(Collectors.toSet());
-        Set<Integer> leaguesInt = Arrays.stream(leagues)
-            .map(l->conversionService.convert(l, Integer.class))
-            .collect(Collectors.toSet());
-        updateGlobalRanks(season, queuesInt, teamsInt);
-        updateRegionRanks(season, regionsInt, queuesInt, teamsInt);
-        updateLeagueRanks(season, leaguesInt, queuesInt, teamsInt);
-
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season);
+        template.update(CALCULATE_RANK_QUERY, params);
         LOG.debug("Calculated team ranks for {} season", season);
-    }
-
-    private void updateGlobalRanks(int season, Set<Integer> queues, Set<Integer> teams)
-    {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("season", season)
-            .addValue("regions", Arrays.stream(Region.values())
-                .map(r->conversionService.convert(r, Integer.class))
-                .collect(Collectors.toSet()))
-            .addValue("queueTypes", queues)
-            .addValue("teamTypes", teams)
-            .addValue("leagueTypes", Arrays.stream(BaseLeague.LeagueType.values())
-                .map(l->conversionService.convert(l, Integer.class))
-                .collect(Collectors.toSet()));
-        template.update(CALCULATE_GLOBAL_RANK_QUERY, params);
-    }
-
-    private void updateRegionRanks(int season, Set<Integer> regions, Set<Integer> queues, Set<Integer> teams)
-    {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("season", season)
-            .addValue("regions", regions)
-            .addValue("queueTypes", queues)
-            .addValue("teamTypes", teams)
-            .addValue("leagueTypes", Arrays.stream(BaseLeague.LeagueType.values())
-                .map(l->conversionService.convert(l, Integer.class))
-                .collect(Collectors.toSet()));
-        template.update(CALCULATE_REGION_RANK_QUERY, params);
-    }
-
-    private void updateLeagueRanks(int season, Set<Integer> leagues, Set<Integer> queues, Set<Integer> teams)
-    {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("season", season)
-            .addValue("regions", Arrays.stream(Region.values())
-                .map(r->conversionService.convert(r, Integer.class))
-                .collect(Collectors.toSet()))
-            .addValue("queueTypes", queues)
-            .addValue("teamTypes", teams)
-            .addValue("leagueTypes", leagues);
-        template.update(CALCULATE_LEAGUE_RANK_QUERY, params);
     }
 
     public Optional<Map.Entry<Team, List<TeamMember>>> find1v1TeamByFavoriteRace

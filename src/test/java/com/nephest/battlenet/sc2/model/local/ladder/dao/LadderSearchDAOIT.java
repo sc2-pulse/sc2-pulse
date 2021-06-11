@@ -148,13 +148,9 @@ public class LadderSearchDAOIT
         //old player
         teamMemberDAO.create(new TeamMember(team.getId(), 1L, 1, 2, 3, 4));
 
-        Region[] regions = REGIONS.toArray(Region[]::new);
-        QueueType[] queues = new QueueType[]{QUEUE_TYPE};
-        TeamType[] teams = new TeamType[]{TEAM_TYPE};
-        BaseLeague.LeagueType[] leagues = LEAGUES_SET.toArray(BaseLeague.LeagueType[]::new);
-        teamDAO.updateRanks(DEFAULT_SEASON_ID, regions, queues, teams, leagues);
-        teamDAO.updateRanks(DEFAULT_SEASON_ID + 1, regions, queues, teams, leagues);
-        teamDAO.updateRanks(DEFAULT_SEASON_ID + 2, regions, queues, teams, leagues);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID + 1);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID + 2);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
