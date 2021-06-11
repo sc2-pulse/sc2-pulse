@@ -393,12 +393,13 @@ CREATE TABLE "match"
     "date" TIMESTAMP WITH TIME ZONE NOT NULL,
     "type" SMALLINT NOT NULL,
     "map" TEXT NOT NULL,
+    "region" SMALLINT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
 
-    CONSTRAINT "uq_match_date_type_map"
-        UNIQUE("date", "type", "map")
+    CONSTRAINT "uq_match_date_type_map_region"
+        UNIQUE("date", "type", "map", "region")
 );
 
 CREATE INDEX "ix_match_updated" ON "match"("updated");

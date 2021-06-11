@@ -13,3 +13,10 @@ ALTER TABLE "match_participant"
         FOREIGN KEY ("team_id", "team_state_timestamp")
         REFERENCES "team_state"("team_id", "timestamp")
         ON DELETE CASCADE ON UPDATE CASCADE;
+
+DELETE FROM "match";
+ALTER TABLE "match"
+    ADD COLUMN "region" SMALLINT NOT NULL,
+    DROP CONSTRAINT "uq_match_date_type_map",
+    ADD CONSTRAINT "uq_match_date_type_map_region"
+        UNIQUE("date", "type", "map", "region");

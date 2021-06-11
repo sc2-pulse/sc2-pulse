@@ -100,7 +100,7 @@ public class MatchService
         for(int i = 0; i < matches.size(); i++)
         {
             Tuple2<BlizzardMatch, PlayerCharacter> match = matches.get(i);
-            Match localMatch = Match.of(match.getT1());
+            Match localMatch = Match.of(match.getT1(), match.getT2().getRegion());
             matchBatch[i] = localMatch;
             meta.add(Tuples.of(localMatch, match.getT1().getDecision(), match.getT2()));
         }

@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 
 import javax.validation.constraints.NotNull;
@@ -15,24 +16,28 @@ extends BaseMatch
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     private Long id;
+
+    @NotNull
+    private Region region;
 
     @NotNull
     private OffsetDateTime updated = OffsetDateTime.now();
 
     public Match(){}
 
-    public Match(Long id, @NotNull OffsetDateTime date, @NotNull MatchType type, @NotNull String map)
+    public Match(Long id, @NotNull OffsetDateTime date, @NotNull MatchType type, @NotNull String map, @NotNull Region region)
     {
         super(date, type, map);
         this.id = id;
+        this.region = region;
     }
 
-    public static Match of(BlizzardMatch match)
+    public static Match of(BlizzardMatch match, Region region)
     {
-        return new Match(null, match.getDate(), match.getType(), match.getMap());
+        return new Match(null, match.getDate(), match.getType(), match.getMap(), region);
     }
 
     @Override
@@ -40,22 +45,23 @@ implements java.io.Serializable
     {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        BaseMatch baseMatch = (BaseMatch) o;
-        return getDate().isEqual(baseMatch.getDate())
-            && getType() == baseMatch.getType()
-            && getMap().equals(baseMatch.getMap());
+        Match otherMatch = (Match) o;
+        return getDate().isEqual(otherMatch.getDate())
+            && getType() == otherMatch.getType()
+            && getMap().equals(otherMatch.getMap())
+            && getRegion() == otherMatch.getRegion();
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getDate().toEpochSecond(), getType(), getMap());
+        return Objects.hash(getDate().toEpochSecond(), getType(), getMap(), getRegion());
     }
 
     @Override
     public String toString()
     {
-        return String.format("%s[%s %s %s]", Match.class.getSimpleName(), getDate(), getType(), getMap());
+        return String.format("%s[%s %s %s %s]", Match.class.getSimpleName(), getDate(), getType(), getMap(), getRegion());
     }
 
     public Long getId()
@@ -66,6 +72,16 @@ implements java.io.Serializable
     public void setId(Long id)
     {
         this.id = id;
+    }
+
+    public Region getRegion()
+    {
+        return region;
+    }
+
+    public void setRegion(Region region)
+    {
+        this.region = region;
     }
 
     public OffsetDateTime getUpdated()
