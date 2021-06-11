@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -73,6 +74,9 @@ public class SqlSyntaxIT
 
     @Autowired
     private VarDAO varDAO;
+
+    @Autowired
+    private PostgreSQLUtils postgreSQLUtils;
 
     @BeforeAll
     public static void beforeAll(@Autowired DataSource dataSource)
@@ -246,6 +250,10 @@ public class SqlSyntaxIT
 
         teamMemberDAO.removeByTeamId(zergTeam.getId());
         assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).isEmpty());
+
+        postgreSQLUtils.vacuum();
+        postgreSQLUtils.analyze();
+        postgreSQLUtils.vacuumAnalyze();
     }
 
     @Test
