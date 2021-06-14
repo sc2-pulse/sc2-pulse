@@ -68,6 +68,10 @@
                 <img class="table-image table-image-square mr-1" th:src="@{/static/icon/misc/heart.svg}" alt="heart image"/><span>Donate</span>
             </a></span>
         </div>
+        <div class="container mb-3 text-secondary"
+             th:if="${@supporterService.getSupporters().size() > 0}"
+             th:text="${'Supported by ' + @supporterService.getRandomSupporter()}">
+        </div>
     </footer>
     <script th:src="@{/webjars/jquery/jquery.slim.min.js}"></script>
     <script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>

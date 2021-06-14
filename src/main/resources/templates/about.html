@@ -96,10 +96,10 @@
                 </p>
             </section>
         </section>
-        <section th:if="${@environment.getProperty('com.nephest.battlenet.sc2.supporters')}">
+        <section th:if="${@supporterService.getSupporters().size() > 0}">
             <h3>Supporters</h3>
             <p>The following people are currently supporting this project via Patreon. Thanks!</p>
-            <div th:text="${@environment.getProperty('com.nephest.battlenet.sc2.supporters')}"></div>
+            <div th:text="${#strings.toString(@supporterService.getSupporters())}"></div>
         </section>
         <aside>
             <section>
