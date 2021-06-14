@@ -80,8 +80,6 @@ public class StatsService
 
     private final AtomicBoolean isUpdating = new AtomicBoolean(false);
 
-    private Instant lastUpdatedCharacterStats;
-
     public StatsService(){}
 
     @Autowired
@@ -135,7 +133,6 @@ public class StatsService
         //catch exceptions to allow service autowiring for tests
         try {
             loadAlternativeRegions();
-            loadLastUpdatedCharacterStats();
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -322,10 +319,9 @@ public class StatsService
             {
                 updateSeasonStats(seasonId, allStats);
                 playerCharacterStatsDAO.mergeCalculate(
-                    lastUpdatedCharacterStats != null
-                    ? OffsetDateTime.ofInstant(lastUpdatedCharacterStats, ZoneId.systemDefault())
+                    updateService.getLastInternalUpdate() != null
+                    ? OffsetDateTime.ofInstant(updateService.getLastInternalUpdate(), ZoneId.systemDefault())
                     : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH));
-                updateLastUpdatedCharacterStats(Instant.now());
             }
             else
             {
@@ -647,24 +643,6 @@ public class StatsService
             .map(String::valueOf)
             .collect(Collectors.joining(","));
         varDAO.merge("region.alternative", var);
-    }
-
-    private void loadLastUpdatedCharacterStats()
-    {
-        String updatesVar = varDAO.find("stats.character.updated").orElse(null);
-        if(updatesVar == null || updatesVar.isEmpty()) {
-            lastUpdatedCharacterStats = null;
-            return;
-        }
-
-        lastUpdatedCharacterStats = Instant.ofEpochMilli(Long.parseLong(updatesVar));
-        LOG.debug("Loaded last updated character stats: {}", lastUpdatedCharacterStats);
-    }
-
-    private void updateLastUpdatedCharacterStats(Instant instant)
-    {
-        lastUpdatedCharacterStats = instant;
-        varDAO.merge("stats.character.updated", String.valueOf(lastUpdatedCharacterStats.toEpochMilli()));
     }
 
 }

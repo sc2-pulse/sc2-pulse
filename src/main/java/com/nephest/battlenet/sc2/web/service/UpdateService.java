@@ -21,6 +21,7 @@ public class UpdateService
     private final VarDAO varDAO;
 
     private Instant lastExternalUpdate;
+    private Instant lastInternalUpdate;
 
     @Autowired
     public UpdateService(VarDAO varDAO)
@@ -34,6 +35,7 @@ public class UpdateService
         //catch exceptions to allow service autowiring for tests
         try {
             loadLastExternalUpdate();
+            loadLastInternalUpdate();
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -61,6 +63,35 @@ public class UpdateService
     public Instant getLastExternalUpdate()
     {
         return lastExternalUpdate;
+    }
+
+    private void loadLastInternalUpdate()
+    {
+        String updatesVar = varDAO.find("global.updated.internal").orElse(null);
+        if(updatesVar == null || updatesVar.isEmpty()) {
+            lastInternalUpdate = null;
+            return;
+        }
+
+        lastInternalUpdate = Instant.ofEpochMilli(Long.parseLong(updatesVar));
+        LOG.debug("Loaded last internal update: {}", lastInternalUpdate);
+    }
+
+    public void updateLastInternalUpdate(Instant instant)
+    {
+        lastInternalUpdate = instant;
+        varDAO.merge("global.updated.internal", String.valueOf(lastInternalUpdate.toEpochMilli()));
+    }
+
+    public Instant getLastInternalUpdate()
+    {
+        return lastInternalUpdate;
+    }
+
+    public void updated(Instant externalUpdate)
+    {
+        updateLastExternalUpdate(externalUpdate);
+        updateLastInternalUpdate(Instant.now());
     }
 
 }

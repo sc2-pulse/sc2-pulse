@@ -21,7 +21,6 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
-import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -47,8 +46,6 @@ public class MatchService
     private final VarDAO varDAO;
     private final PostgreSQLUtils postgreSQLUtils;
     private final UpdateService updateService;
-
-    private Instant lastUpdatedMatches;
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -76,45 +73,12 @@ public class MatchService
         this.updateService = updateService;
     }
 
-    @PostConstruct
-    public void init()
-    {
-        //catch exceptions to allow service autowiring for tests
-        try {
-            loadLastUpdatedMatches();
-        }
-        catch(RuntimeException ex) {
-            LOG.warn(ex.getMessage(), ex);
-        }
-    }
-
-    private void loadLastUpdatedMatches()
-    {
-        String updatesVar = varDAO.find("match.updated").orElse(null);
-        if(updatesVar == null || updatesVar.isEmpty()) {
-            lastUpdatedMatches = null;
-            return;
-        }
-
-        lastUpdatedMatches = Instant.ofEpochMilli(Long.parseLong(updatesVar));
-        LOG.debug("Loaded last updated matches: {}", lastUpdatedMatches);
-    }
-
-    private void updateLastUpdatedMatches(Instant instant)
-    {
-        lastUpdatedMatches = instant;
-        varDAO.merge("match.updated", String.valueOf(lastUpdatedMatches.toEpochMilli()));
-    }
-
     public void update()
     {
-        if(updateService.getLastExternalUpdate() == null) return;
-        if(lastUpdatedMatches == null) lastUpdatedMatches = updateService.getLastExternalUpdate();
-
+        if(updateService.getLastExternalUpdate() == null || updateService.getLastInternalUpdate() == null) return;
 
         //Active players can't be updated retroactively, so there is no reason to sync with other services here
-        int matchCount = matchService.saveMatches(lastUpdatedMatches);
-        updateLastUpdatedMatches(Instant.now());
+        int matchCount = matchService.saveMatches(updateService.getLastInternalUpdate());
         postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),

@@ -102,7 +102,7 @@ public class Cron
 
             doUpdateSeasons();
             calculateHeavyStats();
-            updateService.updateLastExternalUpdate(begin);
+            updateService.updated(begin);
         }
         catch(RuntimeException ex) {
             LOG.error(ex.getMessage(), ex);
