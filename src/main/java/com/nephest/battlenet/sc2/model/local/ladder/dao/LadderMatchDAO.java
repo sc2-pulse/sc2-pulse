@@ -42,7 +42,7 @@ public class LadderMatchDAO
             + "FROM match_filter "
             + "INNER JOIN match_participant ON match_filter.id = match_participant.match_id "
             + "GROUP BY match_filter.id "
-            + "HAVING MAX(team_id) > 0 "
+            + "HAVING bool_and(team_id IS NOT NULL) "
         + ") "
         + "SELECT "
         + MatchDAO.STD_SELECT + ", "

@@ -397,9 +397,7 @@ public class MatchIT
             new MatchParticipant(match1v1InvalidDecision.getId(), charKr2.getId(), BaseMatch.Decision.WIN),
 
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr1.getId(), BaseMatch.Decision.WIN),
-            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr2.getId(), BaseMatch.Decision.LOSS),
-            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr3.getId(), BaseMatch.Decision.WIN),
-            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr4.getId(), BaseMatch.Decision.LOSS)
+            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr2.getId(), BaseMatch.Decision.LOSS)
         );
         TeamState state4v4Win = TeamState.of(team4v4Win, now.minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         TeamState state4v4Loss = TeamState.of(team4v4Loss, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
@@ -424,6 +422,12 @@ public class MatchIT
         );
 
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, now);
+        //merging eralier will prevent all participants from identifying. Merging here to simulate partly
+        //unidentified team
+        matchParticipantDAO.merge(
+            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr3.getId(), BaseMatch.Decision.WIN),
+            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr4.getId(), BaseMatch.Decision.LOSS)
+        );
 
         List<LadderMatch> matches4v4 = ladderMatchDAO.findMatchesByCharacterId(charEu1.getId());
         assertEquals(1, matches4v4.size());
