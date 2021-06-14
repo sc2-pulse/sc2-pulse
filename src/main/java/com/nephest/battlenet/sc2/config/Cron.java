@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import com.nephest.battlenet.sc2.web.service.UpdateService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,7 +35,6 @@ public class Cron
     private static final Logger LOG = LoggerFactory.getLogger(Cron.class);
 
     private Instant heavyStatsInstant;
-    private Instant lastUpdated;
 
     @Autowired
     private StatsService statsService;
@@ -63,6 +63,9 @@ public class Cron
     @Autowired
     private VarDAO varDAO;
 
+    @Autowired
+    private UpdateService updateService;
+
     @PostConstruct
     public void init()
     {
@@ -73,34 +76,10 @@ public class Cron
                     heavyStatsInstant = Instant.ofEpochMilli(Long.parseLong(timestampStr));
                     LOG.debug("Loaded ladder heavy stats instant: {}", heavyStatsInstant);
                 });
-            loadLastUpdated();
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
         }
-    }
-
-    private void loadLastUpdated()
-    {
-        String updatesVar = varDAO.find("global.updated").orElse(null);
-        if(updatesVar == null || updatesVar.isEmpty()) {
-            lastUpdated = null;
-            return;
-        }
-
-        lastUpdated = Instant.ofEpochMilli(Long.parseLong(updatesVar));
-        LOG.debug("Loaded last updated: {}", lastUpdated);
-    }
-
-    private void updateLastUpdated(Instant instant)
-    {
-        lastUpdated = instant;
-        varDAO.merge("global.updated", String.valueOf(lastUpdated.toEpochMilli()));
-    }
-
-    public Instant getLastUpdated()
-    {
-        return lastUpdated;
     }
 
     @Scheduled(fixedDelay = 30_000)
@@ -121,9 +100,9 @@ public class Cron
         {
             Instant begin = Instant.now();
 
-            doUpdateSeasons(lastUpdated);
+            doUpdateSeasons();
             calculateHeavyStats();
-            updateLastUpdated(begin);
+            updateService.updateLastExternalUpdate(begin);
         }
         catch(RuntimeException ex) {
             LOG.error(ex.getMessage(), ex);
@@ -144,7 +123,7 @@ public class Cron
         return false;
     }
 
-    private boolean doUpdateSeasons(Instant lastUpdated)
+    private boolean doUpdateSeasons()
     {
         try
         {
@@ -153,10 +132,9 @@ public class Cron
                 Region.values(),
                 QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
                 BaseLeague.LeagueType.values(),
-                false,
-                lastUpdated
+                false
             );
-            matchService.update(lastUpdated);
+            matchService.update();
         }
         catch(RuntimeException ex)
         {

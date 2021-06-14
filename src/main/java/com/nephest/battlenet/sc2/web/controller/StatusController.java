@@ -3,9 +3,9 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
-import com.nephest.battlenet.sc2.config.Cron;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import com.nephest.battlenet.sc2.web.service.UpdateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -25,7 +25,7 @@ public class StatusController
     private StatsService statsService;
 
     @Autowired
-    private Cron cron;
+    private UpdateService updateService;
 
     @GetMapping("/stale")
     public Set<Region> getStaleStatus()
@@ -33,10 +33,10 @@ public class StatusController
         return statsService.getAlternativeRegions();
     }
 
-    @GetMapping("/updated")
-    public Instant updated()
+    @GetMapping("/updated/external")
+    public Instant updatedExternal()
     {
-        return cron.getLastUpdated();
+        return updateService.getLastExternalUpdate();
     }
 
 }

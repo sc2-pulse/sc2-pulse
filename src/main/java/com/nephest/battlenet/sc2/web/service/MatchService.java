@@ -46,6 +46,7 @@ public class MatchService
     private final SeasonDAO seasonDAO;
     private final VarDAO varDAO;
     private final PostgreSQLUtils postgreSQLUtils;
+    private final UpdateService updateService;
 
     private Instant lastUpdatedMatches;
 
@@ -61,7 +62,8 @@ public class MatchService
         MatchParticipantDAO matchParticipantDAO,
         SeasonDAO seasonDAO,
         VarDAO varDAO,
-        PostgreSQLUtils postgreSQLUtils
+        PostgreSQLUtils postgreSQLUtils,
+        UpdateService updateService
     )
     {
         this.api = api;
@@ -71,6 +73,7 @@ public class MatchService
         this.seasonDAO = seasonDAO;
         this.varDAO = varDAO;
         this.postgreSQLUtils = postgreSQLUtils;
+        this.updateService = updateService;
     }
 
     @PostConstruct
@@ -103,10 +106,10 @@ public class MatchService
         varDAO.merge("match.updated", String.valueOf(lastUpdatedMatches.toEpochMilli()));
     }
 
-    public void update(Instant lastUpdated)
+    public void update()
     {
-        if(lastUpdated == null) return;
-        if(lastUpdatedMatches == null) lastUpdatedMatches = lastUpdated;
+        if(updateService.getLastExternalUpdate() == null) return;
+        if(lastUpdatedMatches == null) lastUpdatedMatches = updateService.getLastExternalUpdate();
 
 
         //Active players can't be updated retroactively, so there is no reason to sync with other services here
@@ -119,7 +122,7 @@ public class MatchService
                 Matches are fetched retroactively, some of them can happen before the lastUpdated instant.
                 Try to catch these matches by moving the start instant back in time.
              */
-            OffsetDateTime.ofInstant(lastUpdated, ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
+            OffsetDateTime.ofInstant(updateService.getLastExternalUpdate(), ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         matchDAO.removeExpired();
         LOG.info("Saved {} matches({} identified)", matchCount, identified);
     }
