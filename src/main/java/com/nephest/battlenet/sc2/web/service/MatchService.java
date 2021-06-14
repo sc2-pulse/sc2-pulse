@@ -8,10 +8,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
-import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,6 +21,7 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
+import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
@@ -46,7 +44,10 @@ public class MatchService
     private final MatchParticipantDAO matchParticipantDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SeasonDAO seasonDAO;
+    private final VarDAO varDAO;
     private final PostgreSQLUtils postgreSQLUtils;
+
+    private Instant lastUpdatedMatches;
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -59,6 +60,7 @@ public class MatchService
         MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
         SeasonDAO seasonDAO,
+        VarDAO varDAO,
         PostgreSQLUtils postgreSQLUtils
     )
     {
@@ -67,14 +69,49 @@ public class MatchService
         this.matchDAO = matchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
         this.seasonDAO = seasonDAO;
+        this.varDAO = varDAO;
         this.postgreSQLUtils = postgreSQLUtils;
+    }
+
+    @PostConstruct
+    public void init()
+    {
+        //catch exceptions to allow service autowiring for tests
+        try {
+            loadLastUpdatedMatches();
+        }
+        catch(RuntimeException ex) {
+            LOG.warn(ex.getMessage(), ex);
+        }
+    }
+
+    private void loadLastUpdatedMatches()
+    {
+        String updatesVar = varDAO.find("match.updated").orElse(null);
+        if(updatesVar == null || updatesVar.isEmpty()) {
+            lastUpdatedMatches = null;
+            return;
+        }
+
+        lastUpdatedMatches = Instant.ofEpochMilli(Long.parseLong(updatesVar));
+        LOG.debug("Loaded last updated matches: {}", lastUpdatedMatches);
+    }
+
+    private void updateLastUpdatedMatches(Instant instant)
+    {
+        lastUpdatedMatches = instant;
+        varDAO.merge("match.updated", String.valueOf(lastUpdatedMatches.toEpochMilli()));
     }
 
     public void update(Instant lastUpdated)
     {
         if(lastUpdated == null) return;
+        if(lastUpdatedMatches == null) lastUpdatedMatches = lastUpdated;
 
-        int matchCount = matchService.saveMatches(lastUpdated);
+
+        //Active players can't be updated retroactively, so there is no reason to sync with other services here
+        int matchCount = matchService.saveMatches(lastUpdatedMatches);
+        updateLastUpdatedMatches(Instant.now());
         postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),
