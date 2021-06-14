@@ -96,7 +96,8 @@ public class MatchParticipantDAO
         + "AND team_state.timestamp <= match.date + INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
         + "WHERE team.season = :season "
         + "AND team.queue_type = %4$s "
-        + "AND team.team_type = %5$s ";
+        + "AND team.team_type = %5$s "
+        + "AND match_participant.team_id IS NULL ";
     
     private static final String IDENTIFY_SOLO_PARTICIPANTS_TEMPLATE =
         "WITH "
