@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2;
@@ -22,6 +22,7 @@ import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
+import java.util.Random;
 
 @SpringBootApplication
 @EnableCaching
@@ -66,6 +67,12 @@ extends SpringBootServletInitializer
         service.addConverter(new IntegerToMatchTypeConverter());
         service.addConverter(new IntegerToDecisionConverter());
         return service;
+    }
+
+    @Bean
+    public Random simpleRng()
+    {
+        return new Random();
     }
 
     @Bean @Profile("maintenance")

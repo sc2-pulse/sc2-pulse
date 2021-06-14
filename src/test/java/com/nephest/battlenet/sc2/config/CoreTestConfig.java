@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
@@ -12,6 +12,7 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
+import java.util.Random;
 
 public class CoreTestConfig
 {
@@ -43,4 +44,11 @@ public class CoreTestConfig
         service.addConverter(new IntegerToDecisionConverter());
         return service;
     }
+
+    @Bean
+    public Random simpleRng()
+    {
+        return new Random();
+    }
+
 }
