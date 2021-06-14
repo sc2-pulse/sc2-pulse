@@ -339,6 +339,7 @@ public class MatchIT
         Match match1v1InvalidState = new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_3", Region.KR);
         Match match1v1InvalidCount =  new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_4", Region.KR);
         Match match1v1InvalidDecision = new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_5", Region.KR);
+        Match match1v1UnidentifiedMembers = new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_6", Region.KR);
         matchDAO.merge
         (
             match4v4, //update
@@ -349,7 +350,8 @@ public class MatchIT
             match1v1_4,
             match1v1InvalidState,
             match1v1InvalidCount,
-            match1v1InvalidDecision
+            match1v1InvalidDecision,
+            match1v1UnidentifiedMembers
         );
         matchParticipantDAO.merge
         (
@@ -392,7 +394,12 @@ public class MatchIT
             new MatchParticipant(match1v1InvalidCount.getId(), charKr1.getId(), BaseMatch.Decision.WIN),
 
             new MatchParticipant(match1v1InvalidDecision.getId(), charKr1.getId(), BaseMatch.Decision.WIN),
-            new MatchParticipant(match1v1InvalidDecision.getId(), charKr2.getId(), BaseMatch.Decision.WIN)
+            new MatchParticipant(match1v1InvalidDecision.getId(), charKr2.getId(), BaseMatch.Decision.WIN),
+
+            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr1.getId(), BaseMatch.Decision.WIN),
+            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr2.getId(), BaseMatch.Decision.LOSS),
+            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr3.getId(), BaseMatch.Decision.WIN),
+            new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr4.getId(), BaseMatch.Decision.LOSS)
         );
         TeamState state4v4Win = TeamState.of(team4v4Win, now.minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         TeamState state4v4Loss = TeamState.of(team4v4Loss, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));

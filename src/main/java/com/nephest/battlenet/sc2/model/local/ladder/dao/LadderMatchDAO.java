@@ -31,7 +31,19 @@ public class LadderMatchDAO
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "INNER JOIN player_character ON match_participant.player_character_id = player_character.id "
             + "WHERE player_character.id = :playerCharacterId"
-        + ")"
+        + "), "
+        /*
+            We can't guarantee anything if there are unidentified members in the match. Exclude such matches.
+            Allow the clients to decide what to do with the data, don't force any opinions on the data except validity.
+         */
+        + "valid_match_filter AS "
+        + "( "
+            + "SELECT match_filter.id "
+            + "FROM match_filter "
+            + "INNER JOIN match_participant ON match_filter.id = match_participant.match_id "
+            + "GROUP BY match_filter.id "
+            + "HAVING MAX(team_id) > 0 "
+        + ") "
         + "SELECT "
         + MatchDAO.STD_SELECT + ", "
         + MatchParticipantDAO.STD_SELECT + ", "
@@ -48,8 +60,8 @@ public class LadderMatchDAO
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\" "
 
-        + "FROM match_filter "
-        + "INNER JOIN match ON match_filter.id = match.id "
+        + "FROM valid_match_filter "
+        + "INNER JOIN match ON valid_match_filter.id = match.id "
         + "INNER JOIN match_participant ON match.id = match_participant.match_id "
         + "INNER JOIN team ON match_participant.team_id = team.id "
         + "INNER JOIN division ON team.division_id = division.id "
