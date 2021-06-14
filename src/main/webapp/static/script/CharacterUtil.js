@@ -588,7 +588,7 @@ class CharacterUtil
             const decisionElem = document.createElement("td");
 
             if(teams.find(t=>t.id == teamId).members.find(m=>m.character.id == characterId)) {
-                decisionElem.classList.add("font-weight-bold", decision == "Win" ? "bg-success" : "bg-danger")
+                decisionElem.classList.add("font-weight-bold", "text-white", decision == "Win" ? "bg-success" : "bg-danger")
             } else {
                 decisionElem.classList.add(decision == "Win" ? "text-success" : "text-danger");
             }
