@@ -561,6 +561,7 @@ class CharacterUtil
             CharacterUtil.prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId);
 
             const tr = tBody.childNodes[rowNum];
+            tr.classList.add("section-splitter");
             const mapCell = document.createElement("td");
             mapCell.setAttribute("rowspan", teams.length);
             mapCell.textContent = match.match.map;
