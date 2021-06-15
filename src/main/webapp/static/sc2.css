@@ -143,6 +143,12 @@ caption
     width: 100%;
 }
 
+.table tr.section-splitter td,
+.table tr.section-splitter th
+{
+    border-block-width: 0.25em
+}
+
 th.hoverable::before
 {
     content: "";
