@@ -425,14 +425,17 @@ CREATE TABLE "match_participant"
     CONSTRAINT "fk_match_participant_team_id"
         FOREIGN KEY ("team_id")
         REFERENCES "team"("id")
-        ON DELETE CASCADE ON UPDATE CASCADE,
+        ON DELETE SET NULL ON UPDATE CASCADE,
     CONSTRAINT "fk_match_participant_team_state_uid"
         FOREIGN KEY ("team_id", "team_state_timestamp")
         REFERENCES "team_state"("team_id", "timestamp")
-        ON DELETE CASCADE ON UPDATE CASCADE
+        ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE INDEX "ix_match_participant_player_character_id" ON "match_participant"("player_character_id");
+CREATE INDEX "ix_match_participant_team_id_team_state_timestamp" ON "match_participant"("team_id", "team_state_timestamp")
+    WHERE "team_id" IS NOT NULL
+    OR "team_state_timestamp" IS NOT NULL;
 
 CREATE TABLE "var"
 (
