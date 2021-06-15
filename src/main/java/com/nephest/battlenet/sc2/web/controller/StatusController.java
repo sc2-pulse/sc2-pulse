@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import com.nephest.battlenet.sc2.web.service.UpdateContext;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Profile;
@@ -12,7 +13,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.Instant;
 import java.util.Set;
 
 @Profile({"!maintenance & !dev"})
@@ -33,10 +33,10 @@ public class StatusController
         return statsService.getAlternativeRegions();
     }
 
-    @GetMapping("/updated/external")
-    public Instant updatedExternal()
+    @GetMapping("/updated")
+    public UpdateContext updated()
     {
-        return updateService.getLastExternalUpdate();
+        return updateService.getUpdateContext();
     }
 
 }

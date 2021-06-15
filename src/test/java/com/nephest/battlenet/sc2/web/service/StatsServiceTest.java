@@ -37,7 +37,7 @@ public class StatsServiceTest
     {
         teamDAO = mock(TeamDAO.class);
         ss = new StatsService(null, null, mock(SeasonDAO.class), null, null, null, teamDAO, null, null, null, null,
-            null, null, null, null, null, null, null, mock(Validator.class));
+            null, null, null, null, null, null, mock(Validator.class));
         StatsService nss = mock(StatsService.class);
         ss.setNestedService(nss);
     }
@@ -48,7 +48,7 @@ public class StatsServiceTest
         ss.setIsUpdating(true);
         assertFalse(ss.updateAll(Region.values(), QueueType.values(), BaseLeague.LeagueType.values()));
         assertFalse(ss.updateCurrent(
-            Region.values(), QueueType.values(), BaseLeague.LeagueType.values(), false));
+            Region.values(), QueueType.values(), BaseLeague.LeagueType.values(), false, new UpdateContext()));
     }
 
     @Test
@@ -57,7 +57,7 @@ public class StatsServiceTest
         try{ss.updateAll(Region.values(), QueueType.values(), BaseLeague.LeagueType.values());} catch(Exception ex){}
         assertFalse(ss.isUpdating());
 
-        try{ss.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values(), false);}
+        try{ss.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values(), false, new UpdateContext());}
         catch(Exception ex){}
         assertFalse(ss.isUpdating());
     }

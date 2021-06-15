@@ -45,7 +45,6 @@ public class MatchService
     private final SeasonDAO seasonDAO;
     private final VarDAO varDAO;
     private final PostgreSQLUtils postgreSQLUtils;
-    private final UpdateService updateService;
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -59,8 +58,7 @@ public class MatchService
         MatchParticipantDAO matchParticipantDAO,
         SeasonDAO seasonDAO,
         VarDAO varDAO,
-        PostgreSQLUtils postgreSQLUtils,
-        UpdateService updateService
+        PostgreSQLUtils postgreSQLUtils
     )
     {
         this.api = api;
@@ -70,15 +68,14 @@ public class MatchService
         this.seasonDAO = seasonDAO;
         this.varDAO = varDAO;
         this.postgreSQLUtils = postgreSQLUtils;
-        this.updateService = updateService;
     }
 
-    public void update()
+    public void update(UpdateContext updateContext)
     {
-        if(updateService.getLastExternalUpdate() == null || updateService.getLastInternalUpdate() == null) return;
+        if(updateContext.getExternalUpdate() == null || updateContext.getInternalUpdate() == null) return;
 
         //Active players can't be updated retroactively, so there is no reason to sync with other services here
-        int matchCount = matchService.saveMatches(updateService.getLastInternalUpdate());
+        int matchCount = matchService.saveMatches(updateContext.getInternalUpdate());
         postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),
@@ -86,7 +83,7 @@ public class MatchService
                 Matches are fetched retroactively, some of them can happen before the lastUpdated instant.
                 Try to catch these matches by moving the start instant back in time.
              */
-            OffsetDateTime.ofInstant(updateService.getLastExternalUpdate(), ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
+            OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         matchDAO.removeExpired();
         LOG.info("Saved {} matches({} identified)", matchCount, identified);
     }

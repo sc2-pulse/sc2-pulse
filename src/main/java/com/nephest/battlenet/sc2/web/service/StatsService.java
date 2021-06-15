@@ -73,7 +73,6 @@ public class StatsService
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private VarDAO varDAO;
-    private UpdateService updateService;
     private PostgreSQLUtils postgreSQLUtils;
     private Validator validator;
     private ConversionService conversionService;
@@ -100,7 +99,6 @@ public class StatsService
         LeagueStatsDAO leagueStatsDao,
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
         VarDAO varDAO,
-        UpdateService updateService,
         PostgreSQLUtils postgreSQLUtils,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator
@@ -121,7 +119,6 @@ public class StatsService
         this.leagueStatsDao = leagueStatsDao;
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.varDAO = varDAO;
-        this.updateService = updateService;
         this.postgreSQLUtils = postgreSQLUtils;
         this.conversionService = conversionService;
         this.validator = validator;
@@ -217,7 +214,7 @@ public class StatsService
         allEntries=true
     )
     public boolean updateCurrent
-    (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats)
+    (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
     {
         if(!isUpdating.compareAndSet(false, true))
         {
@@ -230,7 +227,7 @@ public class StatsService
             long start = System.currentTimeMillis();
 
             checkStaleData();
-            updateCurrentSeason(regions, queues, leagues, allStats);
+            updateCurrentSeason(regions, queues, leagues, allStats, updateContext);
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
@@ -293,12 +290,12 @@ public class StatsService
     {
         BlizzardSeason bSeason = api.getSeason(region, seasonId).block();
         Season season = seasonDao.merge(Season.of(bSeason, region));
-        updateLeagues(bSeason, season, queues, leagues, false);
+        updateLeagues(bSeason, season, queues, leagues, false, new UpdateContext());
         LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
 
     private void updateCurrentSeason
-    (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats)
+    (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
     {
         Integer seasonId = null;
         int maxSeason = seasonDao.getMaxBattlenetId();
@@ -306,7 +303,7 @@ public class StatsService
         {
             BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
             Season season = seasonDao.merge(Season.of(bSeason, region));
-            updateOrAlternativeUpdate(bSeason, season, queues, leagues, true);
+            updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, updateContext);
             seasonId = season.getBattlenetId();
             LOG.debug("Updated leagues: {} {}", seasonId, region);
         }
@@ -319,8 +316,8 @@ public class StatsService
             {
                 updateSeasonStats(seasonId, allStats);
                 playerCharacterStatsDAO.mergeCalculate(
-                    updateService.getLastInternalUpdate() != null
-                    ? OffsetDateTime.ofInstant(updateService.getLastInternalUpdate(), ZoneId.systemDefault())
+                    updateContext.getInternalUpdate() != null
+                    ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
                     : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH));
             }
             else
@@ -333,12 +330,13 @@ public class StatsService
 
     private void updateOrAlternativeUpdate
     (
-        BlizzardSeason bSeason, Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean currentSeason
+        BlizzardSeason bSeason, Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues,
+        boolean currentSeason, UpdateContext updateContext
     )
     {
         if(!isAlternativeUpdate(season.getRegion(), currentSeason))
         {
-            updateLeagues(bSeason, season, queues, leagues, currentSeason);
+            updateLeagues(bSeason, season, queues, leagues, currentSeason, updateContext);
         }
         else
         {
@@ -364,10 +362,11 @@ public class StatsService
         Season season,
         QueueType[] queues,
         BaseLeague.LeagueType[] leagues,
-        boolean currentSeason
+        boolean currentSeason,
+        UpdateContext updateContext
     )
     {
-        LOG.debug("Updating season {} using {} checkpoint", season, updateService.getLastExternalUpdate());
+        LOG.debug("Updating season {} using {} checkpoint", season, updateContext.getExternalUpdate());
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             getLadderIds(getLeagueIds(bSeason, season.getRegion(), queues, leagues), currentSeason);
         int batches = (int) Math.ceil(ladderIds.size() / (double) LADDER_BATCH_SIZE);
@@ -377,7 +376,7 @@ public class StatsService
             if (to > ladderIds.size()) to = ladderIds.size();
             List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>  batch =
                 ladderIds.subList(i * LADDER_BATCH_SIZE, to);
-            statsService.updateLadders(season, batch, updateService.getLastExternalUpdate());
+            statsService.updateLadders(season, batch, updateContext.getExternalUpdate());
         }
     }
 

@@ -132,9 +132,9 @@ public class Cron
                 Region.values(),
                 QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
                 BaseLeague.LeagueType.values(),
-                false
+                false, updateService.getUpdateContext()
             );
-            matchService.update();
+            matchService.update(updateService.getUpdateContext());
         }
         catch(RuntimeException ex)
         {

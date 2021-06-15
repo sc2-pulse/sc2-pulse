@@ -20,8 +20,7 @@ public class UpdateService
 
     private final VarDAO varDAO;
 
-    private Instant lastExternalUpdate;
-    private Instant lastInternalUpdate;
+    private UpdateContext updateContext;
 
     @Autowired
     public UpdateService(VarDAO varDAO)
@@ -34,64 +33,44 @@ public class UpdateService
     {
         //catch exceptions to allow service autowiring for tests
         try {
-            loadLastExternalUpdate();
-            loadLastInternalUpdate();
+            updateContext = new UpdateContext(
+                loadLastExternalUpdate(),
+                loadLastInternalUpdate()
+            );
+            LOG.debug("Loaded last update context: {} {}", updateContext.getExternalUpdate(), updateContext.getInternalUpdate());
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
         }
     }
 
-    private void loadLastExternalUpdate()
+    private Instant loadLastExternalUpdate()
     {
         String updatesVar = varDAO.find("global.updated").orElse(null);
-        if(updatesVar == null || updatesVar.isEmpty()) {
-            lastExternalUpdate = null;
-            return;
-        }
+        if(updatesVar == null || updatesVar.isEmpty()) return null;
 
-        lastExternalUpdate = Instant.ofEpochMilli(Long.parseLong(updatesVar));
-        LOG.debug("Loaded last external update: {}", lastExternalUpdate);
+        return Instant.ofEpochMilli(Long.parseLong(updatesVar));
     }
 
-    public void updateLastExternalUpdate(Instant instant)
-    {
-        lastExternalUpdate = instant;
-        varDAO.merge("global.updated", String.valueOf(lastExternalUpdate.toEpochMilli()));
-    }
-
-    public Instant getLastExternalUpdate()
-    {
-        return lastExternalUpdate;
-    }
-
-    private void loadLastInternalUpdate()
+    private Instant loadLastInternalUpdate()
     {
         String updatesVar = varDAO.find("global.updated.internal").orElse(null);
-        if(updatesVar == null || updatesVar.isEmpty()) {
-            lastInternalUpdate = null;
-            return;
-        }
+        if(updatesVar == null || updatesVar.isEmpty()) return null;
 
-        lastInternalUpdate = Instant.ofEpochMilli(Long.parseLong(updatesVar));
-        LOG.debug("Loaded last internal update: {}", lastInternalUpdate);
-    }
-
-    public void updateLastInternalUpdate(Instant instant)
-    {
-        lastInternalUpdate = instant;
-        varDAO.merge("global.updated.internal", String.valueOf(lastInternalUpdate.toEpochMilli()));
-    }
-
-    public Instant getLastInternalUpdate()
-    {
-        return lastInternalUpdate;
+        return Instant.ofEpochMilli(Long.parseLong(updatesVar));
     }
 
     public void updated(Instant externalUpdate)
     {
-        updateLastExternalUpdate(externalUpdate);
-        updateLastInternalUpdate(Instant.now());
+        Instant internalUpdate = Instant.now();
+        varDAO.merge("global.updated", String.valueOf(externalUpdate.toEpochMilli()));
+        varDAO.merge("global.updated.internal", String.valueOf(internalUpdate.toEpochMilli()));
+        updateContext = new UpdateContext(externalUpdate, internalUpdate);
+    }
+
+    public UpdateContext getUpdateContext()
+    {
+        return updateContext;
     }
 
 }
