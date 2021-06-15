@@ -11,10 +11,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
-import com.nephest.battlenet.sc2.web.service.MatchService;
-import com.nephest.battlenet.sc2.web.service.ProPlayerService;
-import com.nephest.battlenet.sc2.web.service.StatsService;
-import com.nephest.battlenet.sc2.web.service.UpdateService;
+import com.nephest.battlenet.sc2.web.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +21,10 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Objects;
 
 @Profile({"!maintenance & !dev"})
 @Component
@@ -34,7 +33,11 @@ public class Cron
 
     private static final Logger LOG = LoggerFactory.getLogger(Cron.class);
 
+    public static final Duration MATCH_UPDATE_FRAME = Duration.ofMinutes(50);
+
     private Instant heavyStatsInstant;
+    private Instant matchInstant;
+    private UpdateContext matchUpdateContext;
 
     @Autowired
     private StatsService statsService;
@@ -99,10 +102,12 @@ public class Cron
         try
         {
             Instant begin = Instant.now();
+            Instant lastMatchInstant = matchInstant;
 
             doUpdateSeasons();
             calculateHeavyStats();
             updateService.updated(begin);
+            if(!Objects.equals(lastMatchInstant, matchInstant)) matchUpdateContext = updateService.getUpdateContext();
         }
         catch(RuntimeException ex) {
             LOG.error(ex.getMessage(), ex);
@@ -134,7 +139,10 @@ public class Cron
                 BaseLeague.LeagueType.values(),
                 false, updateService.getUpdateContext()
             );
-            matchService.update(updateService.getUpdateContext());
+            if(shouldUpdateMatches()) {
+                matchService.update(matchUpdateContext == null ? updateService.getUpdateContext() : matchUpdateContext);
+                matchInstant = Instant.now();
+            }
         }
         catch(RuntimeException ex)
         {
@@ -143,6 +151,12 @@ public class Cron
             return false;
         }
         return true;
+    }
+
+    private boolean shouldUpdateMatches()
+    {
+        return matchInstant == null
+            || System.currentTimeMillis() - matchInstant.toEpochMilli() >= MATCH_UPDATE_FRAME.toMillis();
     }
 
 }
