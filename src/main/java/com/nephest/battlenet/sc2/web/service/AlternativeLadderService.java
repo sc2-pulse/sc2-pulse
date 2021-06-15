@@ -26,7 +26,6 @@ import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
-import java.time.OffsetDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -58,7 +57,6 @@ public class AlternativeLadderService
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDao;
     private final TeamMemberDAO teamMemberDao;
-    private final PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private final ConversionService conversionService;
     private final Validator validator;
 
@@ -74,7 +72,6 @@ public class AlternativeLadderService
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDao,
         TeamMemberDAO teamMemberDao,
-        PlayerCharacterStatsDAO playerCharacterStatsDAO,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator
     )
@@ -88,7 +85,6 @@ public class AlternativeLadderService
         this.accountDAO = accountDAO;
         this.playerCharacterDao = playerCharacterDao;
         this.teamMemberDao = teamMemberDao;
-        this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.conversionService = conversionService;
         this.validator = validator;
     }
@@ -167,13 +163,11 @@ public class AlternativeLadderService
         int batches = (int) Math.ceil(list.size() / (double) LADDER_BATCH_SIZE);
         for(int i = 0; i < batches; i++)
         {
-            OffsetDateTime start = OffsetDateTime.now();
             int to = (i + 1) * LADDER_BATCH_SIZE;
             if (to > list.size()) to = list.size();
             List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> batch =
                 list.subList(i * LADDER_BATCH_SIZE, to);
             alternativeLadderService.updateLadders(season, queueTypes, batch);
-            playerCharacterStatsDAO.mergeCalculate(start);
         }
     }
 

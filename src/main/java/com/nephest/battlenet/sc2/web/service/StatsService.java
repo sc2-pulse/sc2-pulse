@@ -31,6 +31,7 @@ import reactor.util.function.Tuples;
 import javax.annotation.PostConstruct;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
@@ -45,6 +46,7 @@ public class StatsService
     public static final Version VERSION = Version.LOTV;
     public static final int STALE_LADDER_TOLERANCE = 3;
     public static final int STALE_LADDER_DEPTH = 10;
+    public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 27;
     public static final int LADDER_BATCH_SIZE = 400;
 
     @Autowired
@@ -313,6 +315,10 @@ public class StatsService
             if(queues.length == QueueType.getTypes(VERSION).size())
             {
                 updateSeasonStats(seasonId, allStats);
+                playerCharacterStatsDAO.mergeCalculate(
+                    updateContext.getInternalUpdate() != null
+                    ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
+                    : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH));
             }
             else
             {
@@ -366,13 +372,11 @@ public class StatsService
         int batches = (int) Math.ceil(ladderIds.size() / (double) LADDER_BATCH_SIZE);
         for(int i = 0; i < batches; i++)
         {
-            OffsetDateTime start = OffsetDateTime.now();
             int to = (i + 1) * LADDER_BATCH_SIZE;
             if (to > ladderIds.size()) to = ladderIds.size();
             List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>  batch =
                 ladderIds.subList(i * LADDER_BATCH_SIZE, to);
             statsService.updateLadders(season, batch, updateContext.getExternalUpdate());
-            playerCharacterStatsDAO.mergeCalculate(start);
         }
     }
 
