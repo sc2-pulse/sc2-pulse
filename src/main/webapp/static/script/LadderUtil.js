@@ -77,12 +77,9 @@ class LadderUtil
 
     static updateLadderView()
     {
-        TeamUtil.updateTeamsTable
-        (
-            document.getElementById("ladder"),
-            Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH)
-        );
-        PaginationUtil.updateLadderPaginations();
+        const searchData = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH);
+        TeamUtil.updateTeamsTable(document.getElementById("ladder"), searchData);
+        PaginationUtil.PAGINATIONS.get("ladder").update(searchData);
         document.getElementById("generated-info-all").classList.remove("d-none");
     }
 

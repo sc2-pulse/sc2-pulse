@@ -24,40 +24,13 @@ class PaginationUtil
         }
     }
 
-    static updateLadderPaginations()
-    {
-        const currentLadder = Model.DATA.get(VIEW.LADDER).get(VIEW_DATA.SEARCH);
-        if(currentLadder == null || currentLadder.result.length < 1) {
-            for(const pagination of document.getElementsByClassName("pagination-ladder")) pagination.classList.add("d-none");
-            return;
-        }
-        const backwardParams = new Map();
-        backwardParams.set("rating-anchor", currentLadder.result[0].rating);
-        backwardParams.set("id-anchor", currentLadder.result[0].id);
-        const forwardParams = new Map();
-        forwardParams.set("rating-anchor", currentLadder.result[currentLadder.result.length - 1].rating);
-        forwardParams.set("id-anchor", currentLadder.result[currentLadder.result.length - 1].id);
-        const firstParams = new Map();
-        firstParams.set("rating-anchor", 99999);
-        firstParams.set("id-anchor", 1);
-        const lastParams = new Map();
-        lastParams.set("rating-anchor", 0);
-        lastParams.set("id-anchor", 0);
-        const params = {first: firstParams, last: lastParams, forward: forwardParams, backward: backwardParams};
-        for(const pagination of document.getElementsByClassName("pagination-ladder"))
-        {
-            PaginationUtil.updatePagination(pagination, params, currentLadder.meta.page, currentLadder.meta.isLastPage);
-            pagination.classList.remove("d-none");
-        }
-    }
-
-    static updatePagination(pagination, params, currentPage, isLastPage)
+    static updatePagination(pagination, params, currentPage, isLastPage, onClick)
     {
         const pages = pagination.getElementsByClassName("page-link");
-        PaginationUtil.updatePaginationPage(pages.item(0), params, PAGE_TYPE.FIRST, 1, 0, "First", currentPage != 1, false);
-        PaginationUtil.updatePaginationPage(pages.item(1), params, PAGE_TYPE.GENERAL, -1, currentPage, "<", currentPage - 1 >= 1, false);
-        PaginationUtil.updatePaginationPage(pages.item(pages.length - 1), params, PAGE_TYPE.LAST, 1, currentPage, "Last", false, false);
-        PaginationUtil.updatePaginationPage(pages.item(pages.length - 2), params, PAGE_TYPE.GENERAL, 1, currentPage, ">", !isLastPage, false);
+        PaginationUtil.updatePaginationPage(pages.item(0), params, PAGE_TYPE.FIRST, 1, 0, "First", currentPage != 1, false, onClick);
+        PaginationUtil.updatePaginationPage(pages.item(1), params, PAGE_TYPE.GENERAL, -1, currentPage, "<", currentPage - 1 >= 1, false, onClick);
+        PaginationUtil.updatePaginationPage(pages.item(pages.length - 1), params, PAGE_TYPE.LAST, 1, currentPage, "Last", false, false, onClick);
+        PaginationUtil.updatePaginationPage(pages.item(pages.length - 2), params, PAGE_TYPE.GENERAL, 1, currentPage, ">", !isLastPage, false, onClick);
 
         const dynamicCount = pages.length - 4;
         const sideCount = (dynamicCount - 1) / 2;
@@ -76,11 +49,11 @@ class PaginationUtil
         {
             const curCount = curDynamicPage - currentPage;
             const active = curDynamicPage != currentPage && (curDynamicPage > currentPage ? !isLastPage : true);
-            PaginationUtil.updatePaginationPage(pages.item(i), params, PAGE_TYPE.GENERAL, curCount, currentPage, (active || curDynamicPage == currentPage) ? curDynamicPage : "", active, curDynamicPage == currentPage);
+            PaginationUtil.updatePaginationPage(pages.item(i), params, PAGE_TYPE.GENERAL, curCount, currentPage, (active || curDynamicPage == currentPage) ? curDynamicPage : "", active, curDynamicPage == currentPage, onClick);
         }
     }
 
-    static updatePaginationPage(page, params, pageType, count, pageNumber, label, enabled, current)
+    static updatePaginationPage(page, params, pageType, count, pageNumber, label, enabled, current, onClick)
     {
         if(label === "")
         {
@@ -94,13 +67,13 @@ class PaginationUtil
         {
             page.parentElement.classList.remove("enabled");
             page.parentElement.classList.add("disabled");
-            page.removeEventListener("click", LadderUtil.ladderPaginationPageClick);
+            page.removeEventListener("click", onClick);
         }
         else if (enabled && !page.classList.contains("enabled"))
         {
             page.parentElement.classList.add("enabled");
             page.parentElement.classList.remove("disabled");
-            page.addEventListener("click", LadderUtil.ladderPaginationPageClick)
+            page.addEventListener("click", onClick)
         }
         if(!current)
         {
@@ -137,6 +110,15 @@ class PaginationUtil
         {
             PaginationUtil.createPagination(container, 4);
         }
+        PaginationUtil.PAGINATIONS.set("ladder",
+            new Pagination(
+                ".pagination-ladder",
+                [
+                    {name: "rating-anchor", min: 0, max: 99999, getter: (t)=>t.rating},
+                    {name: "id-anchor", min: 0, max: 1, getter: (t)=>t.id}
+                ],
+                LadderUtil.ladderPaginationPageClick)
+        );
     }
 
     static createPagination(container, sidePageCount)
@@ -165,3 +147,4 @@ class PaginationUtil
 }
 
 PaginationUtil.PAGINATION_SIDE_BUTTON_COUNT = 4;
+PaginationUtil.PAGINATIONS = new Map();
