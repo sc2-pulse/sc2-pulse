@@ -4,26 +4,6 @@
 class PaginationUtil
 {
 
-    static setPaginationsState(enabled)
-    {
-        if(enabled)
-        {
-            PaginationUtil.updateLadderPaginations();
-        }
-        else
-        {
-            for(const pagination of document.getElementsByClassName("pagination-ladder"))
-            {
-                for(const page of pagination.getElementsByClassName("page-link"))
-                {
-                    page.parentElement.classList.remove("enabled");
-                    page.parentElement.classList.add("disabled");
-                    page.removeEventListener("click", LadderUtil.ladderPaginationPageClick);
-                }
-            }
-        }
-    }
-
     static updatePagination(pagination, params, currentPage, isLastPage, onClick)
     {
         const pages = pagination.getElementsByClassName("page-link");
