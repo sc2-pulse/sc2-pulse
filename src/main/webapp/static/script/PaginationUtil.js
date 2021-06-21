@@ -88,7 +88,8 @@ class PaginationUtil
     {
         for(const container of document.getElementsByClassName("pagination"))
         {
-            PaginationUtil.createPagination(container, 4);
+            const sideButtonCount = container.getAttribute("data-pagination-side-button-count");
+            PaginationUtil.createPagination(container, sideButtonCount || PaginationUtil.PAGINATION_SIDE_BUTTON_COUNT);
         }
         PaginationUtil.PAGINATIONS.set("ladder",
             new Pagination(
