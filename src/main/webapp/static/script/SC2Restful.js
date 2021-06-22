@@ -43,6 +43,7 @@ class SC2Restful
             case START_MODE.FULL:
                 LadderUtil.enhanceLadderForm();
                 CharacterUtil.enhanceSearchForm();
+                CharacterUtil.enhanceLoadMoreMatchesInput();
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");

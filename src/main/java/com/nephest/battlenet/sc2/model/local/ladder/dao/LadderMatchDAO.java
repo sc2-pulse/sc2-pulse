@@ -3,19 +3,19 @@
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
+import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.dao.*;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import com.nephest.battlenet.sc2.model.local.ladder.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,14 +23,14 @@ import java.util.List;
 public class LadderMatchDAO
 {
 
-    private static final String FIND_MATCHES_BY_CHARACTER_ID =
+    private static final String FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE =
         "WITH match_filter AS "
         + "("
             + "SELECT DISTINCT(match.id) "
             + "FROM match "
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "INNER JOIN player_character ON match_participant.player_character_id = player_character.id "
-            + "WHERE player_character.id = :playerCharacterId"
+            + "WHERE player_character.id = :playerCharacterId "
         + "), "
         /*
             We can't guarantee anything if there are unidentified members in the match. Exclude such matches.
@@ -38,11 +38,15 @@ public class LadderMatchDAO
          */
         + "valid_match_filter AS "
         + "( "
-            + "SELECT match_filter.id "
+            + "SELECT MAX(match_filter.id) AS id "
             + "FROM match_filter "
+            + "INNER JOIN match USING(id) "
             + "INNER JOIN match_participant ON match_filter.id = match_participant.match_id "
-            + "GROUP BY match_filter.id "
+            + "WHERE (date, type, map) %1$s (:dateAnchor, :typeAnchor, :mapAnchor) "
+            + "GROUP BY date, type, map "
             + "HAVING bool_and(team_id IS NOT NULL) "
+            + "ORDER BY (date, type, map) %2$s "
+            + "LIMIT :limit"
         + ") "
         + "SELECT "
         + MatchDAO.STD_SELECT + ", "
@@ -77,18 +81,31 @@ public class LadderMatchDAO
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
         + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
-        + "ORDER BY (match.date , match.type , match.map) DESC, "
-            + "(match_participant.match_id, match_participant.player_character_id) DESC";
+        + "ORDER BY (match.date , match.type , match.map) %2$s, "
+            + "(match_participant.match_id, match_participant.player_character_id) %2$s ";
+
+    public static String FIND_MATCHES_BY_CHARACTER_ID =
+        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, "<", "DESC");
+    public static String FIND_MATCHES_BY_CHARACTER_ID_REVERSED =
+        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC");
 
     private static ResultSetExtractor<LadderMatchParticipant> PARTICIPANT_EXTRACTOR;
     private static ResultSetExtractor<List<LadderMatch>> MATCHES_EXTRACTOR;
 
     private final NamedParameterJdbcTemplate template;
+    private final ConversionService conversionService;
+
+    private int resultsPerPage = 10;
 
     @Autowired
-    public LadderMatchDAO(@Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template)
+    public LadderMatchDAO
+    (
+        @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+    )
     {
         this.template = template;
+        this.conversionService = conversionService;
         initMappers();
     }
 
@@ -148,10 +165,32 @@ public class LadderMatchDAO
         return MATCHES_EXTRACTOR;
     }
 
-    public List<LadderMatch> findMatchesByCharacterId(long characterId)
+    public int getResultsPerPage()
     {
-        MapSqlParameterSource params = new MapSqlParameterSource().addValue("playerCharacterId", characterId);
-        return template.query(FIND_MATCHES_BY_CHARACTER_ID, params, MATCHES_EXTRACTOR);
+        return resultsPerPage;
+    }
+
+    protected void setResultsPerPage(int resultsPerPage)
+    {
+        this.resultsPerPage = resultsPerPage;
+    }
+
+    public PagedSearchResult<List<LadderMatch>> findMatchesByCharacterId
+    (long characterId, OffsetDateTime dateAnchor, BaseMatch.MatchType typeAnchor, String mapAnchor, int page, int pageDiff)
+    {
+        if(Math.abs(pageDiff) != 1) throw new IllegalArgumentException("Invalid page diff");
+        boolean forward = pageDiff > -1;
+        long finalPage = page + pageDiff;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("playerCharacterId", characterId)
+            .addValue("dateAnchor", dateAnchor)
+            .addValue("typeAnchor", conversionService.convert(typeAnchor, Integer.class))
+            .addValue("mapAnchor", mapAnchor)
+            .addValue("limit", getResultsPerPage());
+        String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
+        List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
+        return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
     }
 
 }

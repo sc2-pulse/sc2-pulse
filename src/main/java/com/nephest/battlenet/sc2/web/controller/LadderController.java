@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
+import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -12,15 +13,13 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
-import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.local.ladder.*;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -221,8 +220,31 @@ public class LadderController
             ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id),
             playerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
-            ladderMatchDAO.findMatchesByCharacterId(id),
+            ladderMatchDAO.findMatchesByCharacterId(
+                id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult(),
             ladderTeamStateDAO.find(id)
+        );
+    }
+
+    @GetMapping("/character/{id}/matches/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}")
+    public PagedSearchResult<List<LadderMatch>> getCharacterMatches
+    (
+        @PathVariable("id") long id,
+        @PathVariable("dateAnchor") String dateAnchor,
+        @PathVariable("typeAnchor") BaseMatch.MatchType typeAnchor,
+        @PathVariable("mapAnchor") String mapAnchor,
+        @PathVariable("page") int page,
+        @PathVariable("pageDiff") int pageDiff
+    )
+    {
+        return ladderMatchDAO.findMatchesByCharacterId
+        (
+            id,
+            OffsetDateTime.parse(dateAnchor),
+            typeAnchor,
+            mapAnchor,
+            page,
+            pageDiff
         );
     }
 

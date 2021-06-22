@@ -429,7 +429,7 @@ public class MatchIT
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr4.getId(), BaseMatch.Decision.LOSS)
         );
 
-        List<LadderMatch> matches4v4 = ladderMatchDAO.findMatchesByCharacterId(charEu1.getId());
+        List<LadderMatch> matches4v4 = ladderMatchDAO.findMatchesByCharacterId(charEu1.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
         assertEquals(1, matches4v4.size());
         assertEquals(match4v4, matches4v4.get(0).getMatch());
         assertEquals(8, matches4v4.get(0).getParticipants().size());
@@ -442,7 +442,7 @@ public class MatchIT
         verifyMatch(losers1, 4, 4, team4v4Loss, Set.of(state4v4Loss, state4v4Loss2), BaseLeague.LeagueType.SILVER,
             Set.of(charEu5, charEu6, charEu7, charEu8), match4v4);
 
-        List<LadderMatch> matches2v2 = ladderMatchDAO.findMatchesByCharacterId(charUs3.getId());
+        List<LadderMatch> matches2v2 = ladderMatchDAO.findMatchesByCharacterId(charUs3.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
         assertEquals(1, matches2v2.size());
         assertEquals(match2v2, matches2v2.get(0).getMatch());
         assertEquals(4, matches2v2.get(0).getParticipants().size());
@@ -463,7 +463,9 @@ public class MatchIT
             1, 1, team2v2Loss2, Set.of(state2v2Loss2), BaseLeague.LeagueType.BRONZE,
             Set.of(charUs4), match2v2);
 
-        List<LadderMatch> matches1v1 = ladderMatchDAO.findMatchesByCharacterId(charKr1.getId());
+        List<LadderMatch> matches1v1 = ladderMatchDAO.findMatchesByCharacterId(charKr1.getId(),
+            OffsetDateTime.now().plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1),
+            BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
         assertEquals(3, matches1v1.size());
         assertEquals(match1v1_3, matches1v1.get(0).getMatch());
         assertEquals(2, matches1v1.get(0).getParticipants().size());
@@ -499,7 +501,7 @@ public class MatchIT
         verifyMatch(losers3_2, 1, 1, team1v1Loss, Set.of(state1v1Loss1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr2), match1v1_1);
 
-        List<LadderMatch> matches1v1_2 = ladderMatchDAO.findMatchesByCharacterId(charEu9.getId());
+        List<LadderMatch> matches1v1_2 = ladderMatchDAO.findMatchesByCharacterId(charEu9.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
         assertEquals(1, matches1v1_2.size());
         assertEquals(match1v1_4, matches1v1_2.get(0).getMatch());
         assertEquals(2, matches1v1_2.get(0).getParticipants().size());

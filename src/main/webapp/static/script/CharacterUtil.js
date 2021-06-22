@@ -576,6 +576,13 @@ class CharacterUtil
             tr.prepend(dateCell);
         }
         Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.TEAMS, {result: allTeams});
+        if(validMatches.length >= MATCH_BATCH_SIZE) {
+            document.querySelector("#load-more-matches").classList.remove("d-none");
+        }
+        else {
+            document.querySelector("#load-more-matches").classList.add("d-none");
+        }
+
         return Promise.resolve();
     }
 
@@ -654,6 +661,35 @@ class CharacterUtil
         }
     }
 
+    static loadNextMatches(evt)
+    {
+        evt.preventDefault();
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        const lastMatch = commonCharacter.matches[commonCharacter.matches.length - 1].match;
+        CharacterUtil.loadNextMatchesModel(
+            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR),
+            lastMatch.date, lastMatch.type, lastMatch.map
+        ).then(json => new Promise((res, rej)=>{
+            if(json.result.length > 0) CharacterUtil.updateCharacterMatchesView();
+            if(json.result.length < MATCH_BATCH_SIZE) document.querySelector("#load-more-matches").classList.add("d-none");
+            Util.setGeneratingStatus(STATUS.SUCCESS);
+            res();
+         }))
+         .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+    }
+
+    static loadNextMatchesModel(id, dateAnchor, typeAnchor, mapAnchor)
+    {
+        return fetch(`${ROOT_CONTEXT_PATH}api/character/${id}/matches/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1`)
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{
+                const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+                commonCharacter.matches = commonCharacter.matches.concat(json.result);
+                res(json);
+            }));
+    }
+
     static updateCharacterSearch(name)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
@@ -728,6 +764,11 @@ class CharacterUtil
         const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
         if(prev != null)  window.clearTimeout(prev);
         ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT));
+    }
+
+    static enhanceLoadMoreMatchesInput()
+    {
+        document.querySelector("#load-more-matches").addEventListener("click", CharacterUtil.loadNextMatches);
     }
 
 }

@@ -87,6 +87,7 @@
             .substring(1, ALTERNATIVE_UPDATE_REGIONS_STR.length - 1)
             .replace(/ /g, '')
             .split(",");
+        const MATCH_BATCH_SIZE = /*[[${@ladderMatchDAO.getResultsPerPage()}]]*/ '';
     </script>
     <th:block  id="script-additional" th:switch="${#arrays.contains(@environment.getActiveProfiles(), 'dev')}">
         <th:block th:case="true">
