@@ -272,6 +272,6 @@ public class LadderController
         @RequestParam("name") String name
     )
     {
-        return ladderCharacterDAO.findDistinctCharactersByName(name);
+        return ladderCharacterDAO.findDistinctCharacters(name);
     }
 }

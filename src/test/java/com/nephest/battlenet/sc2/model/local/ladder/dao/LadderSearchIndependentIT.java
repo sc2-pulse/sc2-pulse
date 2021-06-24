@@ -25,8 +25,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -164,7 +163,7 @@ public class LadderSearchIndependentIT
         teamMemberDAO.create(member3);
         playerCharacterStatsDAO.mergeCalculate();
 
-        List<LadderDistinctCharacter> byName = ladderCharacterDAO.findDistinctCharactersByName("refchar1");
+        List<LadderDistinctCharacter> byName = ladderCharacterDAO.findDistinctCharacters("refchar1");
         assertEquals(1, byName.size());
         LadderDistinctCharacter char1 = byName.get(0);
         assertEquals("refchar1#123", char1.getMembers().getCharacter().getName());
@@ -174,12 +173,21 @@ public class LadderSearchIndependentIT
 
         List<LadderDistinctCharacter> byAccount = ladderCharacterDAO.findDistinctCharactersByAccountId(acc.getId());
         verifyCharacterAccountStats(byAccount);
-        List<LadderDistinctCharacter> byAccountName = ladderCharacterDAO.findDistinctCharactersByName("refaccount");
+        List<LadderDistinctCharacter> byAccountName = ladderCharacterDAO.findDistinctCharacters("refaccount");
         verifyCharacterAccountStats(byAccountName);
-        List<LadderDistinctCharacter> byProNickname = ladderCharacterDAO.findDistinctCharactersByName("refnickname");
+        List<LadderDistinctCharacter> byProNickname = ladderCharacterDAO.findDistinctCharacters("refnickname");
         verifyProCharacterAccountStats(byProNickname);
-        List<LadderDistinctCharacter> byFullAccountName = ladderCharacterDAO.findDistinctCharactersByName("refaccount#123");
+        List<LadderDistinctCharacter> byFullAccountName = ladderCharacterDAO.findDistinctCharacters("refaccount#123");
         verifyCharacterAccountStats(byFullAccountName);
+        LadderDistinctCharacter byProfileLink = ladderCharacterDAO
+            .findDistinctCharacterByProfileLink("https://starcraft2.com/profile/2/1/9998")
+            .orElse(null);
+        assertNotNull(byProfileLink);
+        assertEquals("refaccount#123", byProfileLink.getMembers().getAccount().getBattleTag());
+        assertEquals("refchar1#123", byProfileLink.getMembers().getCharacter().getName());
+        assertEquals(BaseLeague.LeagueType.BRONZE, byProfileLink.getLeagueMax());
+        assertEquals(100, byProfileLink.getRatingMax());
+        assertEquals(100, byProfileLink.getTotalGamesPlayed());
 
         //sorted asc
         List<Long> proCharacterIds = playerCharacterDAO.findProPlayerCharacterIds();

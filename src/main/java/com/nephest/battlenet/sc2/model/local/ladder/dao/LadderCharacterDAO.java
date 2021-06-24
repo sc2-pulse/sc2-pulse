@@ -19,6 +19,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class LadderCharacterDAO
@@ -93,6 +94,13 @@ public class LadderCharacterDAO
         FIND_DISTINCT_CHARACTER_FORMAT,
         "INNER JOIN account ON player_character.account_id=account.id "
         + "WHERE account.id = :accountId ", ""
+    );
+    private static final String FIND_DISTINCT_CHARACTER_BY_PROFILE_LINK_QUERY = String.format
+    (
+        FIND_DISTINCT_CHARACTER_FORMAT,
+        "WHERE region = :region "
+        + "AND realm = :realm "
+        + "AND battlenet_id = :battlenetId", ""
     );
 
     private static final String FIND_LINKED_DISTINCT_CHARACTERS_TEMPLATE = String.format
@@ -176,11 +184,14 @@ public class LadderCharacterDAO
         };
     }
 
-    public List<LadderDistinctCharacter> findDistinctCharactersByName(String name)
+    public List<LadderDistinctCharacter> findDistinctCharacters(String term)
     {
-        boolean isBattleTag = name.contains("#");
-        if(isBattleTag) return findDistinctCharactersByFullBattleTag(name);
-        return findDistinctCharactersByNameOrBattletagOrProNickname(name);
+        if(term.contains("#")) return findDistinctCharactersByFullBattleTag(term);
+        if(term.contains("/")) {
+            LadderDistinctCharacter c = findDistinctCharacterByProfileLink(term).orElse(null);
+            return c == null ? List.of() : List.of(c);
+        }
+        return findDistinctCharactersByNameOrBattletagOrProNickname(term);
     }
 
     private List<LadderDistinctCharacter> findDistinctCharactersByNameOrBattletagOrProNickname(String name)
@@ -207,6 +218,17 @@ public class LadderCharacterDAO
             .addValue("accountId", accountId);
         return template
             .query(FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+    }
+
+    public Optional<LadderDistinctCharacter> findDistinctCharacterByProfileLink(String profile)
+    {
+        String[] split = profile.split("/");
+        if(split.length < 3) throw new IllegalArgumentException("Invalid profile link");
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("region", Integer.parseInt(split[split.length - 3]))
+            .addValue("realm", Integer.parseInt(split[split.length - 2]))
+            .addValue("battlenetId", Long.parseLong(split[split.length - 1]));
+        return Optional.ofNullable(template.query(FIND_DISTINCT_CHARACTER_BY_PROFILE_LINK_QUERY, params, DISTINCT_CHARACTER_EXTRACTOR));
     }
 
     public List<LadderDistinctCharacter> findLinkedDistinctCharactersByCharacterId(Long playerCharacterId)
