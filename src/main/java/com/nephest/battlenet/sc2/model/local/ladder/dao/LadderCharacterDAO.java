@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -137,6 +138,7 @@ public class LadderCharacterDAO
     private final ConversionService conversionService;
 
     private final RowMapper<LadderDistinctCharacter> DISTINCT_CHARACTER_ROW_MAPPER;
+    private final ResultSetExtractor<LadderDistinctCharacter> DISTINCT_CHARACTER_EXTRACTOR;
 
     @Autowired
     public LadderCharacterDAO
@@ -167,6 +169,10 @@ public class LadderCharacterDAO
                 race == Race.RANDOM ? gamesPlayed : null,
                 gamesPlayed
             );
+        };
+        DISTINCT_CHARACTER_EXTRACTOR = (rs)->{
+            if(!rs.next()) return null;
+            return DISTINCT_CHARACTER_ROW_MAPPER.mapRow(rs, 0);
         };
     }
 
