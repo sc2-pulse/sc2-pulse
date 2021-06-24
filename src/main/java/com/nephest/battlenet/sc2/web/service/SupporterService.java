@@ -15,21 +15,32 @@ import java.util.Random;
 public class SupporterService
 {
 
-    @Autowired
     private final Random rng;
-
-    @Value("${com.nephest.battlenet.sc2.supporters:#{''}}")
     private final List<String> supporters;
+    private final List<String> donors;
+    private final String sponsor;
+    private final String sponsoredLink;
 
     @Autowired
     private SupporterService
     (
         @Qualifier("simpleRng") Random rng,
-        @Value("${com.nephest.battlenet.sc2.supporters:#{''}}") List<String> supporters
+        @Value("${com.nephest.battlenet.sc2.donors:#{''}}") List<String> donors,
+        @Value("${com.nephest.battlenet.sc2.supporters:#{''}}") List<String> supporters,
+        @Value("${com.nephest.battlenet.sc2.sponsor:#{''}}") String sponsor,
+        @Value("${com.nephest.battlenet.sc2.sponsor.link:#{''}}") String sponsoredLink
     )
     {
         this.rng = rng;
+        this.donors = donors;
         this.supporters = supporters;
+        this.sponsor = sponsor;
+        this.sponsoredLink = sponsoredLink;
+    }
+
+    public List<String> getDonors()
+    {
+        return donors;
     }
 
     public String getRandomSupporter()
@@ -40,6 +51,16 @@ public class SupporterService
     public List<String> getSupporters()
     {
         return supporters;
+    }
+
+    public String getSponsor()
+    {
+        return sponsor;
+    }
+
+    public String getSponsoredLink()
+    {
+        return sponsoredLink;
     }
 
 }

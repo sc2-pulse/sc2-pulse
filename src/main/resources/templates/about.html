@@ -96,10 +96,18 @@
                 </p>
             </section>
         </section>
-        <section th:if="${@supporterService.getSupporters().size() > 0}">
+        <section>
             <h3>Supporters</h3>
-            <p>The following people are currently supporting this project via Patreon. Thanks!</p>
-            <div th:text="${#strings.toString(@supporterService.getSupporters())}"></div>
+            <section th:if="${@supporterService.getSupporters().size() > 0 or @supporterService.getSponsor() != null}">
+                <h4 class="text-secondary">The following people are currently supporting this project via Patreon</h4>
+                <p th:if="${@supporterService.getSponsor() != null}" th:utext="${@supporterService.getSponsor()} + ' - the sponsor-patron'"></p>
+                <p th:if="${@supporterService.getSupporters().size() > 0}" th:utext="${#strings.toString(@supporterService.getSupporters())}"></p>
+            </section>
+            <section th:if="${@supporterService.getDonors().size() > 0}">
+                <h4 class="text-secondary">The following people support the project with direct donations or have been patrons in the past</h4>
+                <p th:if="${@supporterService.getDonors().size() > 0}" th:utext="${#strings.toString(@supporterService.getDonors())}"></p>
+            </section>
+            <aside><p>Thank you for the support!</p></aside>
         </section>
         <aside>
             <section>

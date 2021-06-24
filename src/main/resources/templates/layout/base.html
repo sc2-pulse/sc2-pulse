@@ -69,6 +69,10 @@
             </a></span>
         </div>
         <div class="container mb-3 text-secondary"
+             th:if="${@supporterService.getSponsoredLink() != null}"
+             th:utext="${@supporterService.getSponsoredLink()}">
+        </div>
+        <div class="container mb-3 text-secondary"
              th:if="${@supporterService.getSupporters().size() > 0}"
              th:text="${'Supported by ' + @supporterService.getRandomSupporter()}">
         </div>
