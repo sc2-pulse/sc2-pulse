@@ -36,8 +36,14 @@ public class BasePlayerCharacter
 
     public void setName(String name)
     {
-        name = name.contains("#") ? name : name + DEFAULT_HASH_SUFFIX;
-        this.name = name;
+        //Some characters can have an empty name. Use a fake name for them.
+        if(name == null) {
+            this.name = "f" + DEFAULT_HASH_SUFFIX;
+        } else
+        {
+            name = name.contains("#") ? name : name + DEFAULT_HASH_SUFFIX;
+            this.name = name;
+        }
     }
 
     public String getName()
