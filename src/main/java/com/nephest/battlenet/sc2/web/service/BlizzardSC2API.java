@@ -11,7 +11,6 @@ import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.util.LogUtil;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -53,6 +52,7 @@ extends BaseAPI
     public static final int CONCURRENCY = SAFE_REQUESTS_PER_SECOND_CAP / Runtime.getRuntime().availableProcessors();
     public static final int SAFE_REQUESTS_PER_HOUR_CAP = (int) Math.round(REQUESTS_PER_HOUR_CAP * REQUEST_RATE_COEFF);
     public static final int FIRST_SEASON = 28;
+    public static final int PROFILE_LADDER_RETRY_COUNT = 4;
 
     private String regionUri;
     private final ObjectMapper objectMapper;
@@ -297,22 +297,28 @@ extends BaseAPI
             .bodyToMono(String.class)
             .map((s)->
             {
-                BlizzardPlayerCharacter[] characters = new BlizzardPlayerCharacter[3];
                 try
                 {
                     JsonNode members = objectMapper.readTree(s).at("/ladderMembers");
-                    characters[0] = objectMapper
-                        .treeToValue(members.get(members.size() - 1).get("character"), BlizzardPlayerCharacter.class);
-                    characters[1] = objectMapper
-                        .treeToValue(members.get(members.size() / 2).get("character"), BlizzardPlayerCharacter.class);
-                    characters[2] = objectMapper
-                        .treeToValue(members.get(0).get("character"), BlizzardPlayerCharacter.class);
+                    BlizzardPlayerCharacter[] characters;
+                    if(members.size() < PROFILE_LADDER_RETRY_COUNT)
+                    {
+                        characters = new BlizzardPlayerCharacter[1];
+                        characters[0] = objectMapper
+                            .treeToValue(members.get(members.size() - 1).get("character"), BlizzardPlayerCharacter.class);
+                    } else {
+                        characters = new BlizzardPlayerCharacter[PROFILE_LADDER_RETRY_COUNT];
+                        int offset = members.size() / PROFILE_LADDER_RETRY_COUNT;
+                        for(int i = 0; i < PROFILE_LADDER_RETRY_COUNT; i++)
+                            characters[i] = objectMapper
+                                .treeToValue(members.get(offset * i).get("character"), BlizzardPlayerCharacter.class);
+                    }
+                    return Tuples.of(region, characters, ladderId);
                 }
                 catch (JsonProcessingException e)
                 {
                     throw new IllegalStateException("Invalid json structure", e);
                 }
-                return Tuples.of(region, characters, ladderId);
             })
             .retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND));
     }
