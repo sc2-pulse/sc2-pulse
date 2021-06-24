@@ -191,6 +191,7 @@ public class LadderCharacterDAO
             LadderDistinctCharacter c = findDistinctCharacterByProfileLink(term).orElse(null);
             return c == null ? List.of() : List.of(c);
         }
+        if(term.equalsIgnoreCase("f")) return List.of(); //forbid fake battletags/names
         return findDistinctCharactersByNameOrBattletagOrProNickname(term);
     }
 
