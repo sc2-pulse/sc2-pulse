@@ -29,7 +29,7 @@ This application uses Battle.net&reg; API.
 This is not an official Blizzard Entertainment&reg; application.
 ## Dependencies
 * Java 11
-* PostgreSQL 11
+* PostgreSQL 11 with btree_gist extension
 * Maven 3
 * BattleNet API access keys(you must use your own keys)
 * Aligulac API key(you must use your own key)
@@ -38,7 +38,7 @@ This is not an official Blizzard Entertainment&reg; application.
 Run the tests to ensure that you have a valid environment set up. You must also pass the tests
 before creating a PR.
 
-A real PostgreSQL database is required for some integration tests.
+A real PostgreSQL database with btree_gist extension is required for some integration tests.
 **This should be only a testing db, as tests will drop/create the schema. Do not use your real DB.**
 
 You can use the ```src/test/resources/application-private.properties``` file (ignored by git, used by a test config) 

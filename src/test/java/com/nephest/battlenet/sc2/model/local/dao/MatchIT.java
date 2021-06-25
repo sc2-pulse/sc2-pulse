@@ -406,9 +406,10 @@ public class MatchIT
         TeamState state2v2Win2 = TeamState.of(team2v2Win2, now);
         TeamState state2v2Loss1 = TeamState.of(team2v2Loss1, now);
         TeamState state2v2Loss2 = TeamState.of(team2v2Loss2, now);
-        TeamState state1v1Win1 = TeamState.of(team1v1Win, now);
+        TeamState state1v1Win0 = TeamState.of(team1v1Win, now.minusSeconds(1));
+        TeamState state1v1Win1 = TeamState.of(team1v1Win, now); //should be picked as the closest state
         TeamState state1v1Loss1 = TeamState.of(team1v1Loss, now);
-        TeamState state1v1Win2 = TeamState.of(team1v1Win, now.plusSeconds(30)); //should be picked as last of the frame
+        TeamState state1v1Win2 = TeamState.of(team1v1Win, now.plusSeconds(30));
         TeamState state1v1Win3 = TeamState.of(team1v1Win, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1));
         TeamState state1v1Loss3 = TeamState.of(team1v1Loss, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1));
         TeamState state1v1Win4 = TeamState.of(team1v1Win4, now);
@@ -416,7 +417,7 @@ public class MatchIT
         teamStateDAO.saveState(
             state4v4Win, state4v4Loss, state4v4Loss2,
             state2v2Win1, state2v2Win2, state2v2Loss1, state2v2Loss2,
-            state1v1Win1, state1v1Loss1, state1v1Win2, state1v1Win3, state1v1Loss3, state1v1Win4, state1v1Loss4,
+            state1v1Win0, state1v1Win1, state1v1Loss1, state1v1Win2, state1v1Win3, state1v1Loss3, state1v1Win4, state1v1Loss4,
             TeamState.of(team1v1WinInvalidState, now.minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES + 1)),
             TeamState.of(team1v1LossInvalidState, now.minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES + 1))
         );
@@ -487,7 +488,7 @@ public class MatchIT
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
         List<LadderMatchParticipant> losers3_1 = matches1v1.get(1).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
-        verifyMatch(winners3_1, 1, 1, team1v1Win, Set.of(state1v1Win2), BaseLeague.LeagueType.BRONZE,
+        verifyMatch(winners3_1, 1, 1, team1v1Win, Set.of(state1v1Win1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr1), match1v1_2);
         verifyMatch(losers3_1, 1, 1, team1v1Loss, Set.of(state1v1Loss1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr2), match1v1_2);
@@ -496,7 +497,7 @@ public class MatchIT
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
         List<LadderMatchParticipant> losers3_2 = matches1v1.get(2).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
-        verifyMatch(winners3_2, 1, 1, team1v1Win, Set.of(state1v1Win2), BaseLeague.LeagueType.BRONZE,
+        verifyMatch(winners3_2, 1, 1, team1v1Win, Set.of(state1v1Win1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr1), match1v1_1);
         verifyMatch(losers3_2, 1, 1, team1v1Loss, Set.of(state1v1Loss1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr2), match1v1_1);

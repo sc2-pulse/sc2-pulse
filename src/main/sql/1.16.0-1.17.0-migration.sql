@@ -36,3 +36,6 @@ ADD CONSTRAINT "fk_match_participant_team_state_uid"
 CREATE INDEX "ix_match_participant_team_id_team_state_timestamp" ON "match_participant"("team_id", "team_state_timestamp")
     WHERE "team_id" IS NOT NULL
     OR "team_state_timestamp" IS NOT NULL;
+
+CREATE EXTENSION btree_gist;
+

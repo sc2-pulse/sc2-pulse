@@ -78,44 +78,46 @@ public class MatchParticipantDAO
             + "AND \"date\"  >= :point "
             + "GROUP BY match.id "
             + "HAVING COUNT(*) = %2$s AND SUM(decision) = %3$s "
+        + "), "
+        + "result_filter AS "
+        + "( "
+            + "SELECT match_participant.match_id, match_participant.player_character_id, "
+            + "team.id AS team_id, team_state.timestamp, match.date, "
+            + "ROW_NUMBER() OVER ( "
+                + "PARTITION BY match_participant.match_id, match_participant.player_character_id "
+                + "ORDER BY team_state.timestamp <-> match.date "
+            + ") AS closest_ix "
+            + "FROM match_filter "
+            + "INNER JOIN match USING(id) "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+            + "INNER JOIN team_member USING(player_character_id) "
+            + "INNER JOIN team ON team_member.team_id = team.id "
+            + "INNER JOIN team_state ON team.id = team_state.team_id "
+                + "AND team_state.timestamp >= match.date - INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
+                + "AND team_state.timestamp <= match.date + INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
+            + "WHERE team.season = :season "
+            + "AND team.queue_type = %4$s "
+            + "AND team.team_type = %5$s "
+            + "AND match_participant.team_id IS NULL "
         + ") ";
-
-    private static final String IDENTIFY_JOIN_WHERE =
-        "INNER JOIN match USING(id) "
-        + "INNER JOIN match_participant AS match_participant_a ON match.id = match_participant_a.match_id "
-        + "INNER JOIN team_member USING(player_character_id) "
-        + "INNER JOIN team ON team_member.team_id = team.id "
-        + "INNER JOIN " 
-        + "("
-            + "SELECT DISTINCT ON(team_state.team_id, team_state.timestamp) team_state.team_id, team_state.timestamp "
-            + "FROM team_state "
-            + "ORDER BY team_state.team_id DESC, team_state.timestamp DESC "
-        + ") "
-        + "team_state ON team.id = team_state.team_id "
-        + "AND team_state.timestamp >= match.date - INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
-        + "AND team_state.timestamp <= match.date + INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
-        + "WHERE team.season = :season "
-        + "AND team.queue_type = %4$s "
-        + "AND team.team_type = %5$s "
-        + "AND match_participant.team_id IS NULL ";
     
     private static final String IDENTIFY_SOLO_PARTICIPANTS_TEMPLATE =
         "WITH "
         + IDENTIFY_MATCH_FILTER_TEMPLATE
         + "UPDATE match_participant "
-        + "SET team_id = team.id, "
-        + "team_state_timestamp = team_state.timestamp "
-        + "FROM match_filter "
-        + IDENTIFY_JOIN_WHERE
-        + "AND match_participant_a.match_id = match_participant.match_id "
-        + "AND match_participant_a.player_character_id = match_participant.player_character_id";
+        + "SET team_id = result_filter.team_id, "
+        + "team_state_timestamp = result_filter.timestamp "
+        + "FROM result_filter "
+        + "WHERE match_participant.match_id = result_filter.match_id "
+        + "AND match_participant.player_character_id = result_filter.player_character_id "
+        + "AND result_filter.closest_ix = 1";
     
     private static final String IDENTIFY_TEAM_PARTICIPANTS_TEMPLATE = 
         "WITH "
         + IDENTIFY_MATCH_FILTER_TEMPLATE
         + ", team_filter AS "
         + "( "
-            + "SELECT match.id, "
+            + "SELECT match.id AS match_id, "
             + "string_agg"
             + "("
                 + "player_character.realm::text || player_character.battlenet_id::text, "
@@ -128,13 +130,15 @@ public class MatchParticipantDAO
             + "GROUP BY match.id, match_participant.decision "
         + ") "
         + "UPDATE match_participant "
-        + "SET team_id = team.id, "
-        + "team_state_timestamp = team_state.timestamp "
-        + "FROM team_filter "
-        + IDENTIFY_JOIN_WHERE
-        + "AND team.legacy_id = team_filter.legacy_id "
-        + "AND match_participant_a.match_id = match_participant.match_id "
-        + "AND match_participant_a.player_character_id = match_participant.player_character_id";
+        + "SET team_id = result_filter.team_id, "
+        + "team_state_timestamp = result_filter.timestamp "
+        + "FROM result_filter "
+        + "INNER JOIN team_filter ON team_filter.match_id = result_filter.match_id "
+        + "INNER JOIN team ON result_filter.team_id = team.id "
+        + "WHERE match_participant.match_id = result_filter.match_id "
+        + "AND match_participant.player_character_id = result_filter.player_character_id "
+        + "AND result_filter.closest_ix = 1 "
+        + "AND team.legacy_id = team_filter.legacy_id ";
 
     private static final List<String> IDENTIFY_PARTICIPANT_QUERIES = new ArrayList<>();
 
