@@ -467,12 +467,16 @@ public class MatchIT
         List<LadderMatch> matches1v1 = ladderMatchDAO.findMatchesByCharacterId(charKr1.getId(),
             OffsetDateTime.now().plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1),
             BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
-        assertEquals(3, matches1v1.size());
+        assertEquals(5, matches1v1.size());
         assertEquals(match1v1_3, matches1v1.get(0).getMatch());
         assertEquals(2, matches1v1.get(0).getParticipants().size());
         assertEquals(match1v1_2, matches1v1.get(1).getMatch());
         assertEquals(2, matches1v1.get(1).getParticipants().size());
-        assertEquals(match1v1_1, matches1v1.get(2).getMatch());
+        assertEquals(match1v1_1, matches1v1.get(4).getMatch());
+        assertEquals(2, matches1v1.get(4).getParticipants().size());
+        assertEquals(match1v1InvalidCount, matches1v1.get(3).getMatch());
+        assertEquals(1, matches1v1.get(3).getParticipants().size());
+        assertEquals(match1v1InvalidDecision, matches1v1.get(2).getMatch());
         assertEquals(2, matches1v1.get(2).getParticipants().size());
 
         List<LadderMatchParticipant> winners3_3 = matches1v1.get(0).getParticipants().stream()
@@ -493,14 +497,33 @@ public class MatchIT
         verifyMatch(losers3_1, 1, 1, team1v1Loss, Set.of(state1v1Loss1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr2), match1v1_2);
 
-        List<LadderMatchParticipant> winners3_2 = matches1v1.get(2).getParticipants().stream()
+        List<LadderMatchParticipant> winners3_2 = matches1v1.get(4).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
-        List<LadderMatchParticipant> losers3_2 = matches1v1.get(2).getParticipants().stream()
+        List<LadderMatchParticipant> losers3_2 = matches1v1.get(4).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
         verifyMatch(winners3_2, 1, 1, team1v1Win, Set.of(state1v1Win1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr1), match1v1_1);
         verifyMatch(losers3_2, 1, 1, team1v1Loss, Set.of(state1v1Loss1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr2), match1v1_1);
+
+        List<LadderMatchParticipant> winnersInvalidCount = matches1v1.get(3).getParticipants().stream()
+            .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
+        List<LadderMatchParticipant> losersInvalidCount = matches1v1.get(3).getParticipants().stream()
+            .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
+        verifyMatch(winnersInvalidCount, 1, 1, team1v1Win, Set.of(state1v1Win1), BaseLeague.LeagueType.BRONZE,
+            Set.of(charKr1), match1v1InvalidCount);
+        assertTrue(losersInvalidCount.isEmpty());
+
+        List<LadderMatchParticipant> winnersInvalidDecision = matches1v1.get(2).getParticipants().stream()
+            .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
+        List<LadderMatchParticipant> losersInvalidDecision = matches1v1.get(2).getParticipants().stream()
+            .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
+        verifyMatch(winnersInvalidDecision.subList(1, 2), 1, 1, team1v1Win, Set.of(state1v1Win1),
+            BaseLeague.LeagueType.BRONZE, Set.of(charKr1), match1v1InvalidDecision);
+        verifyMatch(winnersInvalidDecision.subList(0, 1), 1, 1, team1v1Loss, Set.of(state1v1Loss1),
+            BaseLeague.LeagueType.BRONZE, Set.of(charKr2), match1v1InvalidDecision);
+        assertTrue(losersInvalidDecision.isEmpty());
+
 
         List<LadderMatch> matches1v1_2 = ladderMatchDAO.findMatchesByCharacterId(charEu9.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
         assertEquals(1, matches1v1_2.size());

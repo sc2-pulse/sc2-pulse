@@ -73,11 +73,8 @@ public class MatchParticipantDAO
         + "("
             + "SELECT match.id "
             + "FROM match "
-            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "WHERE match.type = %1$s "
             + "AND \"date\"  >= :point "
-            + "GROUP BY match.id "
-            + "HAVING COUNT(*) = %2$s AND SUM(decision) = %3$s "
         + "), "
         + "result_filter AS "
         + "( "
@@ -96,8 +93,8 @@ public class MatchParticipantDAO
                 + "AND team_state.timestamp >= match.date - INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
                 + "AND team_state.timestamp <= match.date + INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
             + "WHERE team.season = :season "
-            + "AND team.queue_type = %4$s "
-            + "AND team.team_type = %5$s "
+            + "AND team.queue_type = %2$s "
+            + "AND team.team_type = %3$s "
             + "AND match_participant.team_id IS NULL "
         + ") ";
     
@@ -196,8 +193,6 @@ public class MatchParticipantDAO
                     : IDENTIFY_TEAM_PARTICIPANTS_TEMPLATE;
                 IDENTIFY_PARTICIPANT_QUERIES.add(String.format(query,
                     conversionService.convert(BaseMatch.MatchType.from(queueType.getTeamFormat()), Integer.class),
-                    queueType.getTeamFormat().getMemberCount() * 2,
-                    queueType.getTeamFormat().getMemberCount() * winLossSum,
                     conversionService.convert(queueType, Integer.class),
                     conversionService.convert(teamType, Integer.class)
                 ));

@@ -542,14 +542,6 @@ class CharacterUtil
         for(const match of validMatches)
         {
             const participantsGrouped = Util.groupBy(match.participants, p=>p.participant.decision);
-            //filter out collisions and matches without winners
-            if
-            (
-                !participantsGrouped.get("WIN")
-                || !participantsGrouped.get("LOSS")
-                || participantsGrouped.get("WIN").length == 0
-                || participantsGrouped.get("WIN").length != participantsGrouped.get("LOSS").length
-            ) continue;
 
             const rowNum = tBody.childNodes.length;
             const teams = [];
