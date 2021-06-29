@@ -44,7 +44,6 @@ public class LadderMatchDAO
             + "INNER JOIN match_participant ON match_filter.id = match_participant.match_id "
             + "WHERE (date, type, map) %1$s (:dateAnchor, :typeAnchor, :mapAnchor) "
             + "GROUP BY date, type, map "
-            + "HAVING bool_and(team_id IS NOT NULL) "
             + "ORDER BY (date, type, map) %2$s "
             + "LIMIT :limit"
         + ") "
@@ -67,16 +66,16 @@ public class LadderMatchDAO
         + "FROM valid_match_filter "
         + "INNER JOIN match ON valid_match_filter.id = match.id "
         + "INNER JOIN match_participant ON match.id = match_participant.match_id "
-        + "INNER JOIN team ON match_participant.team_id = team.id "
-        + "INNER JOIN division ON team.division_id = division.id "
-        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
-        + "INNER JOIN league ON league_tier.league_id = league.id "
-        + "INNER JOIN season ON league.season_id = season.id "
-        + "INNER JOIN team_member ON team.id = team_member.team_id "
-        + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id "
+        + "LEFT JOIN team ON match_participant.team_id = team.id "
+        + "LEFT JOIN division ON team.division_id = division.id "
+        + "LEFT JOIN league_tier ON division.league_tier_id = league_tier.id "
+        + "LEFT JOIN league ON league_tier.league_id = league.id "
+        + "LEFT JOIN season ON league.season_id = season.id "
+        + "LEFT JOIN team_member ON team.id = team_member.team_id "
+        + "LEFT JOIN team_state ON match_participant.team_id = team_state.team_id "
             + "AND match_participant.team_state_timestamp = team_state.timestamp "
-        + "INNER JOIN player_character ON team_member.player_character_id = player_character.id "
-        + "INNER JOIN account ON player_character.account_id = account.id "
+        + "LEFT JOIN player_character ON team_member.player_character_id = player_character.id "
+        + "LEFT JOIN account ON player_character.account_id = account.id "
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
@@ -122,6 +121,12 @@ public class LadderMatchDAO
             if(rs.isAfterLast()) return null;
 
             MatchParticipant participant = MatchParticipantDAO.getStdRowMapper().mapRow(rs, 0);
+            rs.getLong("team.id");
+            if(rs.wasNull()) {
+                rs.next();
+                return new LadderMatchParticipant(participant, null, null);
+            }
+
             LadderTeamState state = LadderTeamStateDAO.getStdRowMapper().mapRow(rs, 0);
             LadderTeam team = LadderSearchDAO.getLadderTeamMapper().mapRow(rs, 0);
             do

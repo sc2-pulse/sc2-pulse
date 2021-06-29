@@ -27,8 +27,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -467,17 +466,19 @@ public class MatchIT
         List<LadderMatch> matches1v1 = ladderMatchDAO.findMatchesByCharacterId(charKr1.getId(),
             OffsetDateTime.now().plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1),
             BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
-        assertEquals(5, matches1v1.size());
+        assertEquals(6, matches1v1.size());
         assertEquals(match1v1_3, matches1v1.get(0).getMatch());
         assertEquals(2, matches1v1.get(0).getParticipants().size());
         assertEquals(match1v1_2, matches1v1.get(1).getMatch());
         assertEquals(2, matches1v1.get(1).getParticipants().size());
-        assertEquals(match1v1_1, matches1v1.get(4).getMatch());
-        assertEquals(2, matches1v1.get(4).getParticipants().size());
-        assertEquals(match1v1InvalidCount, matches1v1.get(3).getMatch());
-        assertEquals(1, matches1v1.get(3).getParticipants().size());
-        assertEquals(match1v1InvalidDecision, matches1v1.get(2).getMatch());
-        assertEquals(2, matches1v1.get(2).getParticipants().size());
+        assertEquals(match1v1_1, matches1v1.get(5).getMatch());
+        assertEquals(2, matches1v1.get(5).getParticipants().size());
+        assertEquals(match1v1InvalidCount, matches1v1.get(4).getMatch());
+        assertEquals(1, matches1v1.get(4).getParticipants().size());
+        assertEquals(match1v1InvalidDecision, matches1v1.get(3).getMatch());
+        assertEquals(2, matches1v1.get(3).getParticipants().size());
+        assertEquals(match1v1UnidentifiedMembers, matches1v1.get(2).getMatch());
+        assertEquals(4, matches1v1.get(2).getParticipants().size());
 
         List<LadderMatchParticipant> winners3_3 = matches1v1.get(0).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
@@ -497,32 +498,55 @@ public class MatchIT
         verifyMatch(losers3_1, 1, 1, team1v1Loss, Set.of(state1v1Loss1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr2), match1v1_2);
 
-        List<LadderMatchParticipant> winners3_2 = matches1v1.get(4).getParticipants().stream()
+        List<LadderMatchParticipant> winners3_2 = matches1v1.get(5).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
-        List<LadderMatchParticipant> losers3_2 = matches1v1.get(4).getParticipants().stream()
+        List<LadderMatchParticipant> losers3_2 = matches1v1.get(5).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
         verifyMatch(winners3_2, 1, 1, team1v1Win, Set.of(state1v1Win1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr1), match1v1_1);
         verifyMatch(losers3_2, 1, 1, team1v1Loss, Set.of(state1v1Loss1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr2), match1v1_1);
 
-        List<LadderMatchParticipant> winnersInvalidCount = matches1v1.get(3).getParticipants().stream()
+        List<LadderMatchParticipant> winnersInvalidCount = matches1v1.get(4).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
-        List<LadderMatchParticipant> losersInvalidCount = matches1v1.get(3).getParticipants().stream()
+        List<LadderMatchParticipant> losersInvalidCount = matches1v1.get(4).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
         verifyMatch(winnersInvalidCount, 1, 1, team1v1Win, Set.of(state1v1Win1), BaseLeague.LeagueType.BRONZE,
             Set.of(charKr1), match1v1InvalidCount);
         assertTrue(losersInvalidCount.isEmpty());
 
-        List<LadderMatchParticipant> winnersInvalidDecision = matches1v1.get(2).getParticipants().stream()
+        List<LadderMatchParticipant> winnersInvalidDecision = matches1v1.get(3).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
-        List<LadderMatchParticipant> losersInvalidDecision = matches1v1.get(2).getParticipants().stream()
+        List<LadderMatchParticipant> losersInvalidDecision = matches1v1.get(3).getParticipants().stream()
             .filter(p->p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
         verifyMatch(winnersInvalidDecision.subList(1, 2), 1, 1, team1v1Win, Set.of(state1v1Win1),
             BaseLeague.LeagueType.BRONZE, Set.of(charKr1), match1v1InvalidDecision);
         verifyMatch(winnersInvalidDecision.subList(0, 1), 1, 1, team1v1Loss, Set.of(state1v1Loss1),
             BaseLeague.LeagueType.BRONZE, Set.of(charKr2), match1v1InvalidDecision);
         assertTrue(losersInvalidDecision.isEmpty());
+
+        List<LadderMatchParticipant> winnersUnidentified1 = matches1v1.get(2).getParticipants().stream()
+            .filter(p->p.getTeam() != null && p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
+        List<LadderMatchParticipant> losersUnidentified1 = matches1v1.get(2).getParticipants().stream()
+            .filter(p->p.getTeam() != null && p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
+        List<LadderMatchParticipant> winnersUnidentified2 = matches1v1.get(2).getParticipants().stream()
+            .filter(p->p.getTeam() == null && p.getParticipant().getDecision() == BaseMatch.Decision.WIN).collect(Collectors.toList());
+        List<LadderMatchParticipant> losersUnidentified2 = matches1v1.get(2).getParticipants().stream()
+            .filter(p->p.getTeam() == null && p.getParticipant().getDecision() == BaseMatch.Decision.LOSS).collect(Collectors.toList());
+        verifyMatch(winnersUnidentified1, 1, 1, team1v1Win, Set.of(state1v1Win1), BaseLeague.LeagueType.BRONZE,
+            Set.of(charKr1), match1v1UnidentifiedMembers);
+        verifyMatch(losersUnidentified1, 1, 1, team1v1Loss, Set.of(state1v1Loss1), BaseLeague.LeagueType.BRONZE,
+            Set.of(charKr2), match1v1UnidentifiedMembers);
+
+        assertEquals(1, winnersUnidentified2.size());
+        assertEquals(match1v1UnidentifiedMembers.getId(), winnersUnidentified2.get(0).getParticipant().getMatchId());
+        assertNull(winnersUnidentified2.get(0).getTeam());
+        assertEquals(charKr3.getId(), winnersUnidentified2.get(0).getParticipant().getPlayerCharacterId());
+
+        assertEquals(1, losersUnidentified2.size());
+        assertEquals(match1v1UnidentifiedMembers.getId(), losersUnidentified2.get(0).getParticipant().getMatchId());
+        assertNull(losersUnidentified2.get(0).getTeam());
+        assertEquals(charKr4.getId(), losersUnidentified2.get(0).getParticipant().getPlayerCharacterId());
 
 
         List<LadderMatch> matches1v1_2 = ladderMatchDAO.findMatchesByCharacterId(charEu9.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult();

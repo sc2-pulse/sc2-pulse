@@ -546,8 +546,14 @@ class CharacterUtil
             const rowNum = tBody.childNodes.length;
             const teams = [];
             const participantsSorted = match.participants.sort((a, b)=>b.participant.decision.localeCompare(a.participant.decision));
-            for(const p of participantsSorted)
-                if(teams.length == 0 || teams[teams.length - 1].id != p.team.id) teams.push(p.team);
+            for(const p of participantsSorted) {
+                if(p.team == null) {
+                    teams.push({id: -1, alternativeData: p.participant.playerCharacterId + "," + p.participant.decision})
+                } else if(teams.length == 0 || teams[teams.length - 1].id != p.team.id) {
+                    teams.push(p.team);
+                }
+            }
+
             allTeams.push(...teams);
             TeamUtil.updateTeamsTable(table, {result: teams}, false);
             CharacterUtil.prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId);
@@ -584,8 +590,16 @@ class CharacterUtil
         {
             const tr = tBody.childNodes[rowNum];
             const teamId = tr.getAttribute("data-team-id");
-            const decision = participantsGrouped.get("WIN").find(p=>p.team.id == teamId) ? "Win" : "Loss";
             const decisionElem = document.createElement("td");
+            decisionElem.classList.add("text-capitalize");
+
+            if(!teamId) {
+                CharacterUtil.appendUnknownMatchParticipant(tr, decisionElem, characterId);
+                rowNum++;
+                continue;
+            }
+
+            const decision = participantsGrouped.get("WIN").find(p=>p.team.id == teamId) ? "Win" : "Loss";
 
             if(teams.find(t=>t.id == teamId).members.find(m=>m.character.id == characterId)) {
                 decisionElem.classList.add("font-weight-bold", "text-white", decision == "Win" ? "bg-success" : "bg-danger")
@@ -597,6 +611,33 @@ class CharacterUtil
             tr.prepend(decisionElem);
             rowNum++;
         }
+    }
+
+    static appendUnknownMatchParticipant(tr, decisionElem, characterId)
+    {
+        const split = tr.getAttribute("data-team-alternative-data").split(",");
+        const charId = parseInt(split[0]);
+        decisionElem.textContent = split[1].toLowerCase();
+        if(charId == characterId) {
+            decisionElem.classList.add("font-weight-bold", "text-white", split[1] == "WIN" ? "bg-success" : "bg-danger");
+        } else {
+            decisionElem.classList.add(split[1] == "WIN" ? "text-success" : "text-danger");
+        }
+        tr.prepend(decisionElem);
+        tr.insertCell(); tr.insertCell(); tr.insertCell(); tr.insertCell();
+        const teamCell = tr.insertCell();
+        teamCell.classList.add("text-left");
+        const rowSpan = document.createElement("span");
+        rowSpan.classList.add("row", "no-gutters");
+        const playerLink = document.createElement("a");
+        playerLink.setAttribute("data-character-id", charId);
+        playerLink.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=character&id=${charId}&m=1`);
+        playerLink.addEventListener("click", CharacterUtil.showCharacterInfo);
+        playerLink.classList.add("player-link", "col-md-12", "col-lg-12");
+        playerLink.textContent = charId;
+        rowSpan.appendChild(playerLink);
+        teamCell.appendChild(rowSpan);
+        tr.insertCell(); tr.insertCell(); tr.insertCell(); tr.insertCell();
     }
 
     static findCharactersByName()
