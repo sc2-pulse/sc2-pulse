@@ -547,7 +547,7 @@ class CharacterUtil
             const teams = [];
             const participantsSorted = match.participants.sort((a, b)=>b.participant.decision.localeCompare(a.participant.decision));
             for(const p of participantsSorted) {
-                if(p.team == null) {
+                if(!p.team) {
                     teams.push({id: -1, alternativeData: p.participant.playerCharacterId + "," + p.participant.decision})
                 } else if(teams.length == 0 || teams[teams.length - 1].id != p.team.id) {
                     teams.push(p.team);
@@ -599,7 +599,7 @@ class CharacterUtil
                 continue;
             }
 
-            const decision = participantsGrouped.get("WIN").find(p=>p.team.id == teamId) ? "Win" : "Loss";
+            const decision = participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId) ? "Win" : "Loss";
 
             if(teams.find(t=>t.id == teamId).members.find(m=>m.character.id == characterId)) {
                 decisionElem.classList.add("font-weight-bold", "text-white", decision == "Win" ? "bg-success" : "bg-danger")
