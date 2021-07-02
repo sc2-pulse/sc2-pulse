@@ -309,6 +309,42 @@ class CharacterUtil
             + (depth != SC2Restful.MMR_HISTORY_DAYS_MAX ? ", starting from " + Util.DATE_FORMAT.format(new Date(depthStartTimestamp)) : "")
             + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
+        document.getElementById("mmr-history-games-avg-mmr").textContent = CharacterUtil.getGamesAndAverageMmrString(mmrHistory);
+    }
+    
+    static getGamesAndAverageMmrString(mmrHistory)
+    {
+        let result = "games/avg mmr";
+        const gamesMmr = CharacterUtil.getGamesAndAverageMmr(mmrHistory);
+        for(const race of Object.values(RACE))
+        {
+            const val = gamesMmr[race.name.toUpperCase()];
+            if(!val) continue;
+            result += `, ${race.name.toLowerCase()}: ${val.games}/${val.averageMmr}`;
+        }
+        return result;
+    }
+
+    static getGamesAndAverageMmr(mmrHistory)
+    {
+        const result = {};
+        const mmrHistoryGrouped = Util.groupBy(mmrHistory, h=>h.race);
+        for(const [race, histories] of mmrHistoryGrouped.entries())
+        {
+            const originalHistories = histories.filter(h=>!h.generated);
+            if(originalHistories.length == 0) continue;
+            const games = originalHistories.reduce( (acc, history, i, historyArray)=> {
+                if(i == 0) return acc;
+                const diff = history.teamState.games - historyArray[i - 1].teamState.games;
+                const cGames = diff > -1 ? diff : history.teamState.games;
+                return acc + cGames;
+            }, 1);
+            const mmr = originalHistories.map(h=>h.teamState.rating);
+            const sum = mmr.reduce((a, b) => a + b, 0);
+            const avg = (sum / mmr.length) || 0;
+            result[race] = {games : games, averageMmr: Math.round(avg)};
+        }
+        return result;
     }
 
     static injectMmrFlatLines(history, historyByRace, teams, queueFilter, teamTypeFilter)
