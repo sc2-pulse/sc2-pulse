@@ -536,8 +536,7 @@ class CharacterUtil
         const table = document.querySelector("#matches");
         const tBody = document.querySelector("#matches tbody");
         ElementUtil.removeChildren(tBody);
-        //filter out partial matches
-        const validMatches = matches.filter(m=>m.participants.length > 1);
+        const validMatches = matches;
         const allTeams = [];
         for(const match of validMatches)
         {
