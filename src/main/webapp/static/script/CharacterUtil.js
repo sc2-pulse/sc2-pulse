@@ -538,8 +538,9 @@ class CharacterUtil
         ElementUtil.removeChildren(tBody);
         const validMatches = matches;
         const allTeams = [];
-        for(const match of validMatches)
+        for(let i = 0; i < validMatches.length; i++)
         {
+            const match = validMatches[i];
             const participantsGrouped = Util.groupBy(match.participants, p=>p.participant.decision);
 
             const rowNum = tBody.childNodes.length;
@@ -567,6 +568,11 @@ class CharacterUtil
             typeCell.setAttribute("rowspan", teams.length);
             typeCell.textContent = match.match.type.replace(/_/g, "");
             tr.prepend(typeCell);
+            const lengthCell = document.createElement("td");
+            lengthCell.setAttribute("rowspan", teams.length);
+            const matchLength = CharacterUtil.calculateMatchLengthSeconds(validMatches, i);
+            lengthCell.textContent = matchLength == -1 ? "" : Math.round(matchLength / 60) + "m";
+            tr.prepend(lengthCell);
             const dateCell = document.createElement("td");
             dateCell.setAttribute("rowspan", teams.length);
             dateCell.textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(match.match.date));
@@ -581,6 +587,14 @@ class CharacterUtil
         }
 
         return Promise.resolve();
+    }
+
+    static calculateMatchLengthSeconds(matches, i)
+    {
+        if(i == matches.length - 1) return -1;
+        const length = (new Date(matches[i].match.date).getTime() - new Date(matches[i + 1].match.date).getTime()) / 1000;
+        if(length > CharacterUtil.MATCH_DURATION_MAX_SECONDS) return -1;
+        return length;
     }
 
     static prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId)
@@ -804,3 +818,5 @@ class CharacterUtil
     }
 
 }
+
+CharacterUtil.MATCH_DURATION_MAX_SECONDS = 5400;
