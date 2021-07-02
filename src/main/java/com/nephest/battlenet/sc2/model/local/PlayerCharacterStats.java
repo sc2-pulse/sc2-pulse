@@ -16,7 +16,7 @@ public class PlayerCharacterStats
 implements Serializable
 {
 
-    private static final long serialVersionUID = 5L;
+    private static final long serialVersionUID = 6L;
 
     private Long id;
 

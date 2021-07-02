@@ -165,7 +165,7 @@ class ElementUtil
         const cardHeader = document.createElement("h4");
         cardHeader.textContent = teamFormat.name + " " + teamType.secondaryName;
         cardHeader.classList.add("card-title");
-        const table = TableUtil.createTable(["Race", "Best MMR", "Best League", "Total Games"], false);
+        const table = TableUtil.createTable(["Race", "Best League", "Best MMR", "Total Games", "Current MMR", "Current Games"], false);
         table.classList.add("player-stats-table");
         const tableCaption = document.createElement("caption");
         tableCaption.appendChild(cardHeader);
@@ -191,9 +191,11 @@ class ElementUtil
         {
             raceRace.appendChild(ElementUtil.createImage("race/", raceName, "table-image table-image-square"));
         }
-        raceRow.insertCell().classList.add("player-stats-mmr", "player-stats-" + raceName + "-mmr");
         raceRow.insertCell().classList.add("player-stats-league", "player-stats-" + raceName + "-league");
+        raceRow.insertCell().classList.add("player-stats-mmr", "player-stats-" + raceName + "-mmr");
         raceRow.insertCell().classList.add("player-stats-games", "player-stats-" + raceName + "-games");
+        raceRow.insertCell().classList.add("player-stats-mmr", "player-stats-" + raceName + "-mmr-current");
+        raceRow.insertCell().classList.add("player-stats-games", "player-stats-" + raceName + "-games-current");
         return raceRow;
     }
 

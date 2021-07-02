@@ -33,7 +33,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class LadderSearchIndependentIT
 {
 
-    public static final QueueType QUEUE_TYPE = QueueType.LOTV_4V4;
+    public static final QueueType QUEUE_TYPE = LadderCharacterDAO.CURRENT_STATS_QUEUE_TYPE;
     public static final TeamType TEAM_TYPE = TeamType.ARRANGED;
     public static final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
 
@@ -97,8 +97,10 @@ public class LadderSearchIndependentIT
         Region region = Region.EU;
         Season season1 = new Season(null, 1, region, 2020, 1,
             LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));
+        Season season2 = new Season(null, 2, region, 2020, 2,
+            LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1));
         //generate some noise
-        seasonGenerator.generateSeason(List.of(season1),
+        seasonGenerator.generateSeason(List.of(season1, season2),
             List.of(BaseLeague.LeagueType.values()),
             List.of(QUEUE_TYPE),
             TEAM_TYPE,
@@ -108,6 +110,8 @@ public class LadderSearchIndependentIT
 
         //create a pro player who has 2 accounts. First account has 2 characters, second account has one character
         Division bronze1 = divisionDAO.findListByLadder(season1.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
+        Division bronze2 = divisionDAO.findListByLadder(season2.getBattlenetId(), region,
+            BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
         Account acc = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount#123"));
         Account acc2 = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount2#123"));
         ProPlayer proPlayer = new ProPlayer(null, new byte[]{0x1, 0x2}, "refnickname", "pro name");
@@ -133,6 +137,34 @@ public class LadderSearchIndependentIT
             100, 0, 0, 0
         );
         teamMemberDAO.create(member1);
+        Team team1_2 = new Team
+        (
+            null, season2.getBattlenetId(), region,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
+            BigInteger.valueOf(11114L), bronze2.getId(),
+            98L, 99, 0, 0, 0
+        );
+        teamDAO.create(team1_2);
+        TeamMember member1_2 = new TeamMember
+        (
+            team1_2.getId(), character1.getId(),
+            99, 0, 0, 0
+        );
+        teamMemberDAO.create(member1_2);
+        Team team1_3 = new Team
+        (
+            null, season2.getBattlenetId(), region,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
+            BigInteger.valueOf(11115L), bronze2.getId(),
+            97L, 50, 0, 0, 0
+        );
+        teamDAO.create(team1_3);
+        TeamMember member1_3 = new TeamMember
+        (
+            team1_3.getId(), character1.getId(),
+            0, 50, 0, 0
+        );
+        teamMemberDAO.create(member1_3);
         Team team2 = new Team
         (
             null, season1.getBattlenetId(), region,
@@ -169,7 +201,10 @@ public class LadderSearchIndependentIT
         assertEquals("refchar1#123", char1.getMembers().getCharacter().getName());
         assertEquals(BaseLeague.LeagueType.BRONZE, char1.getLeagueMax());
         assertEquals(100, char1.getRatingMax());
-        assertEquals(100, char1.getTotalGamesPlayed());
+        assertEquals(199, char1.getTotalGamesPlayed());
+        assertEquals(98, char1.getRatingCurrent());
+        assertEquals(149, char1.getGamesPlayedCurrent());
+        assertEquals(2147483647, char1.getRankCurrent());
 
         List<LadderDistinctCharacter> byAccount = ladderCharacterDAO.findDistinctCharactersByAccountId(acc.getId());
         verifyCharacterAccountStats(byAccount);
@@ -187,7 +222,10 @@ public class LadderSearchIndependentIT
         assertEquals("refchar1#123", byProfileLink.getMembers().getCharacter().getName());
         assertEquals(BaseLeague.LeagueType.BRONZE, byProfileLink.getLeagueMax());
         assertEquals(100, byProfileLink.getRatingMax());
-        assertEquals(100, byProfileLink.getTotalGamesPlayed());
+        assertEquals(199, byProfileLink.getTotalGamesPlayed());
+        assertEquals(98, byProfileLink.getRatingCurrent());
+        assertEquals(149, byProfileLink.getGamesPlayedCurrent());
+        assertEquals(2147483647, byProfileLink.getRankCurrent());
 
         //sorted asc
         List<Long> proCharacterIds = playerCharacterDAO.findProPlayerCharacterIds();
@@ -222,34 +260,43 @@ public class LadderSearchIndependentIT
     private void verifyCharacterAccountStats(List<LadderDistinctCharacter> byAccount)
     {
         assertEquals(2, byAccount.size());
-        //sorted by rating max
-        LadderDistinctCharacter char11 = byAccount.get(1);
+        //sorted by rating cur, rating max
+        LadderDistinctCharacter char11 = byAccount.get(0);
         assertEquals("refaccount#123", char11.getMembers().getAccount().getBattleTag());
         assertEquals("refchar1#123", char11.getMembers().getCharacter().getName());
         assertEquals(BaseLeague.LeagueType.BRONZE, char11.getLeagueMax());
         assertEquals(100, char11.getRatingMax());
-        assertEquals(100, char11.getTotalGamesPlayed());
+        assertEquals(199, char11.getTotalGamesPlayed());
+        assertEquals(98, char11.getRatingCurrent());
+        assertEquals(149, char11.getGamesPlayedCurrent());
+        assertEquals(2147483647, char11.getRankCurrent());
 
-        LadderDistinctCharacter char12 = byAccount.get(0);
+        LadderDistinctCharacter char12 = byAccount.get(1);
         assertEquals("refaccount#123", char12.getMembers().getAccount().getBattleTag());
         assertEquals("refchar2#123", char12.getMembers().getCharacter().getName());
         assertEquals(BaseLeague.LeagueType.BRONZE, char12.getLeagueMax());
         assertEquals(101, char12.getRatingMax());
         assertEquals(100, char12.getTotalGamesPlayed());
+        assertNull(char12.getRatingCurrent());
+        assertNull(char12.getGamesPlayedCurrent());
+        assertNull(char12.getRankCurrent());
     }
 
     private void verifyProCharacterAccountStats(List<LadderDistinctCharacter> byAccount)
     {
         assertEquals(3, byAccount.size());
         //sorted by rating max
-        LadderDistinctCharacter char13 = byAccount.get(0);
+        LadderDistinctCharacter char13 = byAccount.get(1);
         assertEquals("refaccount2#123", char13.getMembers().getAccount().getBattleTag());
         assertEquals("refchar3#123", char13.getMembers().getCharacter().getName());
         assertEquals(BaseLeague.LeagueType.BRONZE, char13.getLeagueMax());
         assertEquals(102, char13.getRatingMax());
         assertEquals(100, char13.getTotalGamesPlayed());
+        assertNull(char13.getRatingCurrent());
+        assertNull(char13.getGamesPlayedCurrent());
+        assertNull(char13.getRankCurrent());
 
-        verifyCharacterAccountStats(byAccount.subList(1, 3));
+        verifyCharacterAccountStats(List.of(byAccount.get(0), byAccount.get(2)));
     }
 
     @Test

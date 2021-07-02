@@ -1,9 +1,8 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.common;
 
-import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 
 import javax.validation.constraints.NotNull;
@@ -19,7 +18,7 @@ public class CommonCharacter
     private final List<LadderDistinctCharacter> linkedDistinctCharacters;
 
     @NotNull
-    private final List<PlayerCharacterStats> stats;
+    private final List<LadderPlayerCharacterStats> stats;
 
     private final LadderProPlayer proPlayer;
 
@@ -31,7 +30,7 @@ public class CommonCharacter
     (
         @NotNull List<LadderTeam> teams,
         @NotNull List<LadderDistinctCharacter> linkedDistinctCharacters,
-        @NotNull List<PlayerCharacterStats> stats,
+        @NotNull List<LadderPlayerCharacterStats> stats,
         LadderProPlayer proPlayer,
         List<LadderMatch> matches,
         List<LadderTeamState> history
@@ -55,7 +54,7 @@ public class CommonCharacter
         return linkedDistinctCharacters;
     }
 
-    public List<PlayerCharacterStats> getStats()
+    public List<LadderPlayerCharacterStats> getStats()
     {
         return stats;
     }

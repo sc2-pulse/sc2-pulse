@@ -30,6 +30,8 @@
                 <th scope="col">Best League</th>
                 <th scope="col">Best MMR</th>
                 <th scope="col">Total Games</th>
+                <th scope="col" th:text="${'Current ' + T(com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO).CURRENT_STATS_QUEUE_TYPE.getTeamFormat().getName() + ' MMR'}"></th>
+                <th scope="col" th:text="${'Current ' + T(com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO).CURRENT_STATS_QUEUE_TYPE.getTeamFormat().getName() + ' Games'}"></th>
                 <th scope="col">Player</th>
             </tr>
         </thead>

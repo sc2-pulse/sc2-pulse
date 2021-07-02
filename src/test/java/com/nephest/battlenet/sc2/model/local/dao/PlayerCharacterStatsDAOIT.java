@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -59,6 +61,9 @@ public class PlayerCharacterStatsDAOIT
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @Autowired
+    private LadderPlayerCharacterStatsDAO ladderPlayerCharacterStatsDAO;
+
+    @Autowired
     private TeamStateDAO teamStateDAO;
 
     @BeforeEach
@@ -88,8 +93,8 @@ public class PlayerCharacterStatsDAOIT
         PlayerCharacter character = setupStats();
         playerCharacterStatsDAO.calculate();
         playerCharacterStatsDAO.mergeCalculate(); //just for testing, not actually required
-        Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats =
-            playerCharacterStatsDAO.findGlobalMap(character.getId());
+        Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> stats =
+            ladderPlayerCharacterStatsDAO.findGlobalMap(character.getId());
         verifyStats(character, stats);
     }
 
@@ -99,8 +104,8 @@ public class PlayerCharacterStatsDAOIT
         PlayerCharacter character = setupStats();
         playerCharacterStatsDAO.calculate(OffsetDateTime.now().minusHours(1));
         playerCharacterStatsDAO.mergeCalculate(OffsetDateTime.now().minusHours(1)); //just for testing, not actually required
-        Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats =
-            playerCharacterStatsDAO.findGlobalMap(character.getId());
+        Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> stats =
+            ladderPlayerCharacterStatsDAO.findGlobalMap(character.getId());
         verifyStats(character, stats);
     }
 
@@ -136,21 +141,21 @@ public class PlayerCharacterStatsDAOIT
         return character;
     }
 
-    private void verifyStats(PlayerCharacter character, Map<QueueType, Map<TeamType, Map<Race, PlayerCharacterStats>>> stats)
+    private void verifyStats(PlayerCharacter character, Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> stats)
     {
         assertNull(stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.RANDOM));
 
-        PlayerCharacterStats terranStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.TERRAN);
-        verifyStats(terranStats, character, Race.TERRAN, BaseLeague.LeagueType.BRONZE, 1L, 97);
+        LadderPlayerCharacterStats terranStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.TERRAN);
+        verifyStats(terranStats, character, Race.TERRAN, BaseLeague.LeagueType.BRONZE, 1L, 97, null, null);
 
-        PlayerCharacterStats protossStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.PROTOSS);
-        verifyStats(protossStats, character, Race.PROTOSS, BaseLeague.LeagueType.BRONZE, 1L, 97);
+        LadderPlayerCharacterStats protossStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.PROTOSS);
+        verifyStats(protossStats, character, Race.PROTOSS, BaseLeague.LeagueType.BRONZE, 1L, 97, null, null);
 
-        PlayerCharacterStats zergStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.ZERG);
-        verifyStats(zergStats, character, Race.ZERG, BaseLeague.LeagueType.DIAMOND, 3L, 291);
+        LadderPlayerCharacterStats zergStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.ZERG);
+        verifyStats(zergStats, character, Race.ZERG, BaseLeague.LeagueType.DIAMOND, 3L, 291, 2, 97);
 
-        PlayerCharacterStats globalStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(null);
-        verifyStats(globalStats, character, null, BaseLeague.LeagueType.DIAMOND, 3L, 595);
+        LadderPlayerCharacterStats globalStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(null);
+        verifyStats(globalStats, character, null, BaseLeague.LeagueType.DIAMOND, 3L, 595, 2, 199);
     }
 
     private void createTeam
@@ -207,19 +212,23 @@ public class PlayerCharacterStatsDAOIT
 
     private void verifyStats
     (
-        PlayerCharacterStats stats,
+        LadderPlayerCharacterStats stats,
         PlayerCharacter character,
         Race race,
         BaseLeague.LeagueType leagueMax,
         long ratingMax,
-        int gamesPlayed
+        int gamesPlayed,
+        Integer ratingCur,
+        Integer gamesPlayedCur
     )
     {
-        assertEquals(character.getId(), stats.getPlayerCharacterId());
-        assertEquals(race, stats.getRace());
-        assertEquals(leagueMax, stats.getLeagueMax());
-        assertEquals(ratingMax, (long) stats.getRatingMax());
-        assertEquals(gamesPlayed, (long) stats.getGamesPlayed());
+        assertEquals(character.getId(), stats.getStats().getPlayerCharacterId());
+        assertEquals(race, stats.getStats().getRace());
+        assertEquals(leagueMax, stats.getStats().getLeagueMax());
+        assertEquals(ratingMax, (long) stats.getStats().getRatingMax());
+        assertEquals(gamesPlayed, (long) stats.getStats().getGamesPlayed());
+        assertEquals(ratingCur, stats.getRatingCurrent());
+        assertEquals(gamesPlayedCur, stats.getGamesPlayedCurrent());
     }
 
 }

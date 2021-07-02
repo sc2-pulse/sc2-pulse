@@ -125,8 +125,8 @@ public class PlayerCharacterStatsDAO
 
     public static final String FIND_GLOBAL_STATS_LIST_BY_PLAYER_CHARACTER_ID_QUERY =
         "SELECT id, queue_type, team_type, player_character_id, race, rating_max, league_max, games_played "
-        + "FROM player_character_stats "
-        + "WHERE player_character_id = :playerCharacterId";
+            + "FROM player_character_stats "
+            + "WHERE player_character_id = :playerCharacterId";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -178,7 +178,7 @@ public class PlayerCharacterStatsDAO
         return Collections.unmodifiableMap(queries);
     }
 
-    private static String getRaceTeamFilter(Race race)
+    public static String getRaceTeamFilter(Race race)
     {
         StringBuilder sb = new StringBuilder();
         Race[] otherRaces = Arrays.stream(Race.values()).filter(r->r!=race).toArray(Race[]::new);

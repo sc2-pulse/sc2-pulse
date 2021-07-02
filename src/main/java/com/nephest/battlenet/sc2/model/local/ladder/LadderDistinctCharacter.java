@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -21,6 +21,10 @@ public class LadderDistinctCharacter
     @NotNull
     private final Integer totalGamesPlayed;
 
+    private final Integer ratingCurrent;
+    private final Integer gamesPlayedCurrent;
+    private final Integer rankCurrent;
+
     @NotNull
     private final LadderTeamMember members;
 
@@ -28,6 +32,7 @@ public class LadderDistinctCharacter
     (
         BaseLeague.LeagueType leagueMax,
         Integer ratingMax,
+        Integer ratingCurrent,
         Account account,
         PlayerCharacter character,
         String proNickname,
@@ -36,12 +41,17 @@ public class LadderDistinctCharacter
         Integer protossGamesPlayed,
         Integer zergGamesPlayed,
         Integer randomGamesPlayed,
-        Integer totalGamesPlayed
+        Integer totalGamesPlayed,
+        Integer gamesPlayedCurrent,
+        Integer rankCurrent
     )
     {
         this.leagueMax = leagueMax;
         this.ratingMax = ratingMax;
+        this.ratingCurrent = ratingCurrent;
         this.totalGamesPlayed = totalGamesPlayed;
+        this.gamesPlayedCurrent = gamesPlayedCurrent;
+        this.rankCurrent = rankCurrent;
         this.members = new LadderTeamMember
         (
             account,
@@ -68,6 +78,21 @@ public class LadderDistinctCharacter
     public Integer getTotalGamesPlayed()
     {
         return totalGamesPlayed;
+    }
+
+    public Integer getRatingCurrent()
+    {
+        return ratingCurrent;
+    }
+
+    public Integer getGamesPlayedCurrent()
+    {
+        return gamesPlayedCurrent;
+    }
+
+    public Integer getRankCurrent()
+    {
+        return rankCurrent;
     }
 
     public LadderTeamMember getMembers()

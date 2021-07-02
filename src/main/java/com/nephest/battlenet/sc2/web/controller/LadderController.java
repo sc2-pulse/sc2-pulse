@@ -43,6 +43,9 @@ public class LadderController
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @Autowired
+    private LadderPlayerCharacterStatsDAO ladderPlayerCharacterStatsDAO;
+
+    @Autowired
     private LadderProPlayerDAO ladderProPlayerDAO;
 
     @Autowired
@@ -218,7 +221,7 @@ public class LadderController
         (
             ladderSearch.findCharacterTeams(id),
             ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id),
-            playerCharacterStatsDAO.findGlobalList(id),
+            ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
             ladderMatchDAO.findMatchesByCharacterId(
                 id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult(),

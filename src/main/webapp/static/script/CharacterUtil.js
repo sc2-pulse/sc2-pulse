@@ -223,8 +223,9 @@ class CharacterUtil
     {
         const searchResult = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).stats;
         for(const statsSection of document.getElementsByClassName("player-stats-dynamic")) statsSection.classList.add("d-none");
-        for(const stats of searchResult)
+        for(const ladderStats of searchResult)
         {
+            const stats = ladderStats.stats;
             const teamFormat = EnumUtil.enumOfId(stats.queueType, TEAM_FORMAT);
             const teamType = EnumUtil.enumOfId(stats.teamType, TEAM_TYPE);
             const raceName = stats.race == null ? "all" : EnumUtil.enumOfName(stats.race, RACE).name;
@@ -233,6 +234,8 @@ class CharacterUtil
             const raceStats = card.getElementsByClassName("player-stats-" + raceName)[0];
             raceStats.getElementsByClassName("player-stats-" + raceName + "-mmr")[0].textContent = stats.ratingMax;
             raceStats.getElementsByClassName("player-stats-" + raceName + "-games")[0].textContent = stats.gamesPlayed;
+            raceStats.getElementsByClassName("player-stats-" + raceName + "-mmr-current")[0].textContent = ladderStats.ratingCurrent ? ladderStats.ratingCurrent : "";
+            raceStats.getElementsByClassName("player-stats-" + raceName + "-games-current")[0].textContent = ladderStats.gamesPlayedCurrent ? ladderStats.gamesPlayedCurrent : "";
             const leagueStats = raceStats.getElementsByClassName("player-stats-" + raceName + "-league")[0];
             ElementUtil.removeChildren(leagueStats);
             leagueStats.appendChild(ElementUtil.createImage("league/", league.name, "table-image table-image-square"));
@@ -726,6 +729,8 @@ class CharacterUtil
             row.insertCell().appendChild(ElementUtil.createImage("league/", EnumUtil.enumOfId(character.leagueMax, LEAGUE).name, "table-image table-image-square mr-1"));
             row.insertCell().textContent = character.ratingMax;
             row.insertCell().textContent = character.totalGamesPlayed;
+            row.insertCell().textContent = character.ratingCurrent ? character.ratingCurrent : "";
+            row.insertCell().textContent = character.gamesPlayedCurrent ? character.gamesPlayedCurrent : "";
             const membersCell = row.insertCell();
             membersCell.classList.add("complex", "cell-main");
             const mRow = document.createElement("span");
