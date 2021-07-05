@@ -598,7 +598,9 @@ class CharacterUtil
                 continue;
             }
 
-            const decision = participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId) ? "Win" : "Loss";
+            const decision = participantsGrouped.get("WIN") ?
+               (participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId) ? "Win" : "Loss")
+               : "Loss";
 
             if(teams.find(t=>t.id == teamId).members.find(m=>m.character.id == characterId)) {
                 decisionElem.classList.add("font-weight-bold", "text-white", decision == "Win" ? "bg-success" : "bg-danger")
