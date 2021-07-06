@@ -107,6 +107,30 @@ caption
     opacity: 0;
 }
 
+#matches thead tr
+{
+    font-size: 0.75em;
+}
+
+#matches tbody tr.section-splitter td:nth-child(1),
+#matches tbody tr.section-splitter td:nth-child(5),
+#matches tbody td:nth-child(1)
+{
+    font-size: 0.9em;
+}
+
+#matches tbody tr.section-splitter td:nth-child(3),
+#matches tbody tr.section-splitter td:nth-child(4),
+#matches [data-ctype="rank"] .text-secondary
+{
+    font-size: 0.8em;
+}
+
+#matches tbody tr.section-splitter td:nth-child(3)
+{
+    word-break: break-word;
+}
+
 .table
 {
     font-size: 0.875rem;
@@ -146,7 +170,7 @@ caption
 .table tr.section-splitter td,
 .table tr.section-splitter th
 {
-    border-block-width: 0.25em
+    border-block-width: 0.2rem
 }
 
 th.hoverable::before
