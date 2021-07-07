@@ -156,16 +156,18 @@ class CharacterUtil
         let charNameAdditional;
         const hashIx = member.character.name.indexOf("#");
         const nameNoHash = member.character.name.substring(0, hashIx);
+        const maskedTeam = member.clan ? "[" + member.clan.tag + "]" : "";
         if(!Util.needToUnmaskName(nameNoHash, member.proNickname, member.account.battleTag))
         {
-            charName = nameNoHash;
+            charName = maskedTeam + nameNoHash;
             charNameAdditional = member.character.name.substring(hashIx);
         }
         else
         {
             const unmasked = Util.unmaskName(member);
-            charName = (unmasked.unmaskedTeam != null ? "[" + unmasked.unmaskedTeam + "]" : "") + unmasked.unmaskedName
-            charNameAdditional = `(${member.character.name})`;
+            const unmaskedTeam = unmasked.unmaskedTeam ? "[" + unmasked.unmaskedTeam + "]" : "";
+            charName = unmaskedTeam + unmasked.unmaskedName
+            charNameAdditional = `(${maskedTeam}${member.character.name})`;
         }
         document.getElementById("player-info-title-name").textContent = charName;
         const additionalNameElem = document.getElementById("player-info-title-name-additional");

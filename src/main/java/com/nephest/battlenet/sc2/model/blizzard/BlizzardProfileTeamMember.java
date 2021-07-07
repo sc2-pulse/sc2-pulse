@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
@@ -15,6 +15,8 @@ extends BlizzardPlayerCharacter
 
     @NotNull @Valid
     private Race favoriteRace;
+
+    private String clanTag;
 
     public BlizzardProfileTeamMember(){}
 
@@ -38,6 +40,16 @@ extends BlizzardPlayerCharacter
     public void setFavoriteRace(Race favoriteRace)
     {
         this.favoriteRace = favoriteRace;
+    }
+
+    public String getClanTag()
+    {
+        return clanTag;
+    }
+
+    public void setClanTag(String clanTag)
+    {
+        this.clanTag = clanTag;
     }
 
 }

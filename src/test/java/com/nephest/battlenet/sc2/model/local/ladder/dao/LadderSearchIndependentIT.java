@@ -23,6 +23,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -69,6 +70,12 @@ public class LadderSearchIndependentIT
 
     @Autowired
     private ProPlayerAccountDAO proPlayerAccountDAO;
+
+    @Autowired
+    private ClanDAO clanDAO;
+
+    @Autowired
+    private ClanMemberDAO clanMemberDAO;
 
     @BeforeEach
     public void beforeAll(@Autowired DataSource dataSource)
@@ -123,6 +130,11 @@ public class LadderSearchIndependentIT
             .create(new PlayerCharacter(null, acc.getId(), region, 9999L, 1, "refchar2#123"));
         PlayerCharacter character3 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc2.getId(), region, 9997L, 1, "refchar3#123"));
+        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
+        clanMemberDAO.merge(
+            new ClanMember(clan.getId(), character1.getId(), OffsetDateTime.now()),
+            new ClanMember(clan.getId(), character2.getId(), OffsetDateTime.now())
+        );
         Team team1 = new Team
         (
             null, season1.getBattlenetId(), region,
@@ -264,6 +276,10 @@ public class LadderSearchIndependentIT
         LadderDistinctCharacter char11 = byAccount.get(0);
         assertEquals("refaccount#123", char11.getMembers().getAccount().getBattleTag());
         assertEquals("refchar1#123", char11.getMembers().getCharacter().getName());
+        assertNotNull(char11.getMembers().getClan());
+        assertEquals("clanTag", char11.getMembers().getClan().getTag());
+        assertEquals(Region.EU, char11.getMembers().getClan().getRegion());
+        assertEquals("clanName", char11.getMembers().getClan().getName());
         assertEquals(BaseLeague.LeagueType.BRONZE, char11.getLeagueMax());
         assertEquals(100, char11.getRatingMax());
         assertEquals(199, char11.getTotalGamesPlayed());
@@ -274,6 +290,10 @@ public class LadderSearchIndependentIT
         LadderDistinctCharacter char12 = byAccount.get(1);
         assertEquals("refaccount#123", char12.getMembers().getAccount().getBattleTag());
         assertEquals("refchar2#123", char12.getMembers().getCharacter().getName());
+        assertNotNull(char12.getMembers().getClan());
+        assertEquals("clanTag", char12.getMembers().getClan().getTag());
+        assertEquals(Region.EU, char12.getMembers().getClan().getRegion());
+        assertEquals("clanName", char12.getMembers().getClan().getName());
         assertEquals(BaseLeague.LeagueType.BRONZE, char12.getLeagueMax());
         assertEquals(101, char12.getRatingMax());
         assertEquals(100, char12.getTotalGamesPlayed());
@@ -289,6 +309,7 @@ public class LadderSearchIndependentIT
         LadderDistinctCharacter char13 = byAccount.get(1);
         assertEquals("refaccount2#123", char13.getMembers().getAccount().getBattleTag());
         assertEquals("refchar3#123", char13.getMembers().getCharacter().getName());
+        assertNull(char13.getMembers().getClan());
         assertEquals(BaseLeague.LeagueType.BRONZE, char13.getLeagueMax());
         assertEquals(102, char13.getRatingMax());
         assertEquals(100, char13.getTotalGamesPlayed());

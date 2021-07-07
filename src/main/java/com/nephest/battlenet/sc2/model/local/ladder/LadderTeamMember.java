@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.ladder;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.BaseLocalTeamMember;
+import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 
 import javax.validation.constraints.NotNull;
@@ -16,13 +17,15 @@ extends BaseLocalTeamMember
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
 
     @NotNull
     private final PlayerCharacter character;
 
     @NotNull
     private final Account account;
+
+    private final Clan clan;
 
     private final String proNickname;
     private final String proTeam;
@@ -31,6 +34,7 @@ implements java.io.Serializable
     (
         Account account,
         PlayerCharacter character,
+        Clan clan,
         String proNickname,
         String proTeam,
         Integer terranGamesPlayed,
@@ -42,6 +46,7 @@ implements java.io.Serializable
         super(terranGamesPlayed, protossGamesPlayed, zergGamesPlayed, randomGamesPlayed);
         this.character = character;
         this.account = account;
+        this.clan = clan;
         this.proNickname = proNickname;
         this.proTeam = proTeam;
     }
@@ -54,6 +59,11 @@ implements java.io.Serializable
     public Account getAccount()
     {
         return account;
+    }
+
+    public Clan getClan()
+    {
+        return clan;
     }
 
     public String getProNickname()

@@ -21,6 +21,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -71,6 +72,12 @@ public class SqlSyntaxIT
 
     @Autowired
     private ProPlayerAccountDAO proPlayerAccountDAO;
+
+    @Autowired
+    private ClanDAO clanDAO;
+
+    @Autowired
+    private ClanMemberDAO clanMemberDAO;
 
     @Autowired
     private VarDAO varDAO;
@@ -221,6 +228,24 @@ public class SqlSyntaxIT
         assertEquals("newname#2", character.getName());
         assertEquals(character,
             playerCharacterDAO.find(character.getRegion(), character.getRealm(), character.getBattlenetId()).get());
+        Clan[] clans = new Clan[]{
+            new Clan(null, "clanTag1", Region.EU, "clanName1"),
+            new Clan(null, "clanTag2", Region.EU, "clanName2"),
+            new Clan(null, "clanTag1", Region.EU, "clanName1")//duplicate
+        };
+        Clan[] mergedClans = clanDAO.merge(clans);
+        assertEquals(3, mergedClans.length);
+        for(Clan clan : mergedClans) assertNotNull(clan.getId());
+        for(Clan clan : clans) assertNotNull(clan.getId());
+        assertEquals(clans[0].getId(), clans[1].getId());
+        Clan[] mergedClans2 = clanDAO.merge(
+            new Clan(null, "clanTag1", Region.EU, "clanName1"), //nothing
+            new Clan(null, "clanTag2", Region.EU, "clanAnotherName2"), //update
+            new Clan(null, "clanTag3", Region.EU, "clanName3") //insert
+        );
+        assertEquals(clans[0].getId(), mergedClans2[0].getId());
+        assertEquals(clans[2].getId(), mergedClans2[1].getId());
+        clanMemberDAO.merge(new ClanMember(clans[0].getId(), character.getId(), OffsetDateTime.now()));
 
         teamMemberDAO.create(new TeamMember(zergTeam.getId(), character.getId(), 0, 0, 6, 0));
         teamMemberDAO.create(new TeamMember(team.getId(), character.getId(), 1, 1, 1, 1));
@@ -247,6 +272,7 @@ public class SqlSyntaxIT
         proTeamDAO.removeExpired();
         proTeamMemberDAO.removeExpired();
         teamStateDAO.removeExpired();
+        clanMemberDAO.removeExpired();
 
         teamMemberDAO.removeByTeamId(zergTeam.getId());
         assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).isEmpty());

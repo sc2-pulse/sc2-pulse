@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
@@ -26,6 +26,9 @@ public class BlizzardTeamMember
     @Valid @NotNull
     @JsonProperty("character_link")
     private BlizzardAccount account;
+
+    @JsonProperty("clan_link")
+    private BlizzardClan clan;
 
     public BlizzardTeamMember(){}
 
@@ -69,6 +72,16 @@ public class BlizzardTeamMember
     public BlizzardAccount getAccount()
     {
         return account;
+    }
+
+    public BlizzardClan getClan()
+    {
+        return clan;
+    }
+
+    public void setClan(BlizzardClan clan)
+    {
+        this.clan = clan;
     }
 
 }

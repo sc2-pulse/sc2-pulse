@@ -261,20 +261,30 @@ th.hoverable span
   content: "]";
 }
 
-.player-name-masked
+.player-name-masked-container
 {
   color: gray !important;
   font-size: 0.8em;
 }
 
-.player-name-masked:before
+.player-name-masked-container:before
 {
   content: " (";
 }
 
-.player-name-masked:after
+.player-name-masked-container:after
 {
   content: ")";
+}
+
+.player-team-masked:before
+{
+  content: "[";
+}
+
+.player-team-masked:after
+{
+  content: "]";
 }
 
 .c-divider-slash ~ .c-divider-slash::before

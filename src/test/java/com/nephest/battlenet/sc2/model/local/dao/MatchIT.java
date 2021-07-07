@@ -75,6 +75,12 @@ public class MatchIT
     private LadderMatchDAO ladderMatchDAO;
 
     @Autowired
+    private ClanDAO clanDAO;
+
+    @Autowired
+    private ClanMemberDAO clanMemberDAO;
+
+    @Autowired
     private SeasonGenerator seasonGenerator;
 
     @BeforeEach
@@ -176,6 +182,11 @@ public class MatchIT
         PlayerCharacter charKr2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.KR, 2L, 2, "name#2"));
         PlayerCharacter charKr3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.KR, 3L, 3, "name#3"));
         PlayerCharacter charKr4 = playerCharacterDAO.merge(new PlayerCharacter(null, acc4.getId(), Region.KR, 4L, 4, "name#4"));
+        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
+        clanMemberDAO.merge(
+            new ClanMember(clan.getId(), charEu1.getId(), OffsetDateTime.now()),
+            new ClanMember(clan.getId(), charEu2.getId(), OffsetDateTime.now())
+        );
         Team team4v4Win = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
@@ -604,6 +615,19 @@ public class MatchIT
             .forEach(m->{
                 assertEquals("proNickname", m.getProNickname());
                 assertEquals("proTeamShortName", m.getProTeam());
+            });
+        //char1 and char2 have a clan
+        participants.stream()
+            .flatMap(p->p.getTeam().getMembers().stream())
+            .filter(m->
+                m.getCharacter().getRegion() == Region.EU
+                && (m.getCharacter().getName().equalsIgnoreCase("name#1") || m.getCharacter().getName().equalsIgnoreCase("name#2"))
+            )
+            .forEach(m->{
+                assertNotNull(m.getClan());
+                assertEquals("clanTag", m.getClan().getTag());
+                assertEquals(Region.EU, m.getClan().getRegion());
+                assertEquals("clanName", m.getClan().getName());
             });
 
         participants.stream().map(LadderMatchParticipant::getParticipant).forEach(p->assertEquals(match.getId(), p.getMatchId()));

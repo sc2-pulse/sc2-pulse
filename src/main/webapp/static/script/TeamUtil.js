@@ -233,10 +233,20 @@ class TeamUtil
 
         if(unmasked.maskedName.toLowerCase() != unmasked.unmaskedName.toLowerCase())
         {
+            const maskedContainer = document.createElement("span");
+            maskedContainer.classList.add("player-name-masked-container");
+            if(unmasked.maskedTeam != null)
+            {
+                const teamElem = document.createElement("span");
+                teamElem.classList.add("player-team-masked");
+                teamElem.textContent = unmasked.maskedTeam;
+                maskedContainer.appendChild(teamElem);
+            }
             const maskedNameElem = document.createElement("span");
             maskedNameElem.classList.add("player-name-masked");
             maskedNameElem.textContent = unmasked.maskedName;
-            nameContainer.appendChild(maskedNameElem);
+            maskedContainer.appendChild(maskedNameElem);
+            nameContainer.appendChild(maskedContainer);
         }
         return nameContainer;
     }

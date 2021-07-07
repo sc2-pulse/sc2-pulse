@@ -7,13 +7,11 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
-import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -50,6 +48,7 @@ public class LadderSearchDAO
         + TeamDAO.STD_SELECT + ", "
         + PlayerCharacterDAO.STD_SELECT + ", "
         + AccountDAO.STD_SELECT + ", "
+        + ClanDAO.STD_SELECT + ", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\" ";
 
@@ -61,6 +60,8 @@ public class LadderSearchDAO
 
     private static final String LADDER_SEARCH_TEAM_FROM =
         LADDER_SEARCH_TEAM_FROM_SHORT
+        + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
+        + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
@@ -91,6 +92,8 @@ public class LadderSearchDAO
         + "INNER JOIN team_member ON team_member.team_id = team.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
+        + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
+        + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
@@ -130,6 +133,8 @@ public class LadderSearchDAO
         + "INNER JOIN team_member ON team.id = team_member.team_id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
+        + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
+        + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
@@ -186,10 +191,14 @@ public class LadderSearchDAO
     private static void initLadderTeamMemberMapper()
     {
         if(LADDER_TEAM_MEMBER_MAPPER == null) LADDER_TEAM_MEMBER_MAPPER = (rs, i)->
-            new LadderTeamMember
+        {
+            rs.getInt("clan.id");
+            Clan clan = rs.wasNull() ? null : ClanDAO.getStdRowMapper().mapRow(rs, i);
+            return new LadderTeamMember
             (
                 AccountDAO.getStdRowMapper().mapRow(rs, 0),
                 PlayerCharacterDAO.getStdRowMapper().mapRow(rs, 0),
+                clan,
                 rs.getString("pro_player.nickname"),
                 rs.getString("pro_player.team"),
                 (Integer) rs.getObject("terran_games_played"),
@@ -197,6 +206,7 @@ public class LadderSearchDAO
                 (Integer) rs.getObject("zerg_games_played"),
                 (Integer) rs.getObject("random_games_played")
             );
+        };
     }
 
     private static void initLadderTeamMapper(ConversionService conversionService)

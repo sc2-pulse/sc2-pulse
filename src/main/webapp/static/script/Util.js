@@ -130,13 +130,22 @@ class Util
     static unmaskName(member)
     {
         const maskedName = member.character.name.substring(0, member.character.name.indexOf("#"));
+        const maskedTeam = member.clan ? member.clan.tag : null;
         if(member.proNickname != null)
-            return {maskedName: maskedName, unmaskedName: member.proNickname, ...(member.proTeam != null && {unmaskedTeam: member.proTeam})};
+            return {
+                maskedName: maskedName,
+                maskedTeam: maskedTeam,
+                unmaskedName: member.proNickname,
+                unmaskedTeam: member.proTeam ? member.proTeam : maskedTeam
+            };
 
-        return {maskedName: maskedName,
+        return {
+            maskedName: maskedName,
+            maskedTeam: maskedTeam,
             unmaskedName: Util.needToUnmaskName(maskedName, member.proNickname, member.account.battleTag)
                 ? member.account.battleTag.substring(0, member.account.battleTag.indexOf("#"))
-                : maskedName
+                : maskedName,
+            unmaskedTeam: maskedTeam
         };
     }
 

@@ -60,6 +60,7 @@ public class LadderMatchDAO
         + "NULL as \"race\", "
         + AccountDAO.STD_SELECT + ", "
         + PlayerCharacterDAO.STD_SELECT + ", "
+        + ClanDAO.STD_SELECT + ", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\" "
 
@@ -76,6 +77,8 @@ public class LadderMatchDAO
             + "AND match_participant.team_state_timestamp = team_state.timestamp "
         + "LEFT JOIN player_character ON team_member.player_character_id = player_character.id "
         + "LEFT JOIN account ON player_character.account_id = account.id "
+        + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
+        + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "

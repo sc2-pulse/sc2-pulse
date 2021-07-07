@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.ladder;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 
 import javax.validation.constraints.NotNull;
@@ -35,6 +36,7 @@ public class LadderDistinctCharacter
         Integer ratingCurrent,
         Account account,
         PlayerCharacter character,
+        Clan clan,
         String proNickname,
         String proTeam,
         Integer terranGamesPlayed,
@@ -56,6 +58,7 @@ public class LadderDistinctCharacter
         (
             account,
             character,
+            clan,
             proNickname,
             proTeam,
             terranGamesPlayed,

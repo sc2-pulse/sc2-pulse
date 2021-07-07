@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
@@ -56,6 +57,8 @@ public class AlternativeLadderService
     private final TeamStateDAO teamStateDAO;
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDao;
+    private final ClanDAO clanDAO;
+    private final ClanMemberDAO clanMemberDAO;
     private final TeamMemberDAO teamMemberDao;
     private final ConversionService conversionService;
     private final Validator validator;
@@ -71,6 +74,8 @@ public class AlternativeLadderService
         TeamStateDAO teamStateDAO,
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDao,
+        ClanDAO clanDAO,
+        ClanMemberDAO clanMemberDAO,
         TeamMemberDAO teamMemberDao,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator
@@ -84,6 +89,8 @@ public class AlternativeLadderService
         this.teamStateDAO = teamStateDAO;
         this.accountDAO = accountDAO;
         this.playerCharacterDao = playerCharacterDao;
+        this.clanDAO = clanDAO;
+        this.clanMemberDAO = clanMemberDAO;
         this.teamMemberDao = teamMemberDao;
         this.conversionService = conversionService;
         this.validator = validator;
@@ -223,6 +230,7 @@ public class AlternativeLadderService
         Set<TeamMember> members = new HashSet<>(ladderMemberCount, 1.0F);
         Set<TeamState> states = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
         List<PlayerCharacter> characters = new ArrayList<>();
+        List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams = new ArrayList<>();
         for(BlizzardProfileTeam bTeam : ladder.getLadderTeams())
         {
@@ -233,10 +241,11 @@ public class AlternativeLadderService
             Team team = saveTeam(season, baseLeague, bTeam, division);
             if(team == null) continue; //old team, nothing to update
 
-            extractTeamData(season, team, bTeam, newTeams, characters, members, states);
+            extractTeamData(season, team, bTeam, newTeams, characters, clans, members, states);
         }
         saveNewCharacterData(newTeams, members, states);
         savePlayerCharacters(characters);
+        StatsService.saveClans(clanDAO, clanMemberDAO, clans);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
         teamStateDAO.saveState(states.toArray(TeamState[]::new));
         LOG.debug("Ladder saved: {} {} {}", id.getT1(), id.getT3(), ladder.getLeague());
@@ -249,6 +258,7 @@ public class AlternativeLadderService
         BlizzardProfileTeam bTeam,
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams,
         List<PlayerCharacter> characters,
+        List<Tuple2<PlayerCharacter, Clan>> clans,
         Set<TeamMember> members,
         Set<TeamState> states
     )
@@ -259,8 +269,10 @@ public class AlternativeLadderService
                 .orElse(null);
 
             if(playerCharacter == null) {
-                addNewAlternativeCharacter(season, team, bMember, newTeams);
+                addNewAlternativeCharacter(season, team, bMember, newTeams, clans);
             } else {
+                if(bMember.getClanTag() != null)
+                    clans.add(Tuples.of(playerCharacter, Clan.of(bMember.getClanTag(), playerCharacter.getRegion())));
                 addExistingAlternativeCharacter(team, bTeam, playerCharacter, bMember, characters, members, states);
             }
         }
@@ -274,7 +286,8 @@ public class AlternativeLadderService
         Season season,
         Team team,
         BlizzardProfileTeamMember bMember,
-        List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams
+        List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams,
+        List<Tuple2<PlayerCharacter, Clan>> clans
     )
     {
         String fakeBtag = "f#"
@@ -283,6 +296,8 @@ public class AlternativeLadderService
             + bMember.getId();
         Account fakeAccount = new Account(null, Partition.of(season.getRegion()), fakeBtag);
         PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bMember);
+        if(bMember.getClanTag() != null)
+            clans.add(Tuples.of(character, Clan.of(bMember.getClanTag(), character.getRegion())));
         newTeams.add(Tuples.of(fakeAccount, character, team, bMember.getFavoriteRace()));
     }
 

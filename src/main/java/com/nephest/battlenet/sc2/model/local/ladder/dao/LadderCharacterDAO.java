@@ -5,8 +5,10 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
@@ -66,6 +68,7 @@ public class LadderCharacterDAO
     + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\","
     + AccountDAO.STD_SELECT + ", "
     + PlayerCharacterDAO.STD_SELECT + ", "
+    + ClanDAO.STD_SELECT + ", "
     + "player_character_stats.race AS \"race\", "
     + "player_character_stats.league_max AS \"league_max\", "
     + "player_character_stats.rating_max AS \"rating_max\", "
@@ -78,6 +81,8 @@ public class LadderCharacterDAO
     + "INNER JOIN player_character ON player_character.id = player_character_stats_filtered.player_character_id "
     + "INNER JOIN account ON player_character.account_id = account.id "
     + "INNER JOIN player_character_stats ON player_character_stats_filtered.id = player_character_stats.id "
+    + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
+    + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
     + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
     + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
     + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
@@ -194,6 +199,8 @@ public class LadderCharacterDAO
             gamesPlayedCurrent = rs.wasNull() ? -1 : gamesPlayedCurrent;
             int rankCurrent = rs.getInt("rank_cur");
             rankCurrent = rs.wasNull() ? -1 : rankCurrent;
+            rs.getInt("clan.id");
+            Clan clan = rs.wasNull() ? null : ClanDAO.getStdRowMapper().mapRow(rs, num);
             return new LadderDistinctCharacter
             (
                 conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
@@ -201,6 +208,7 @@ public class LadderCharacterDAO
                 mmrCurrentInt == -1 ? null : mmrCurrentInt,
                 AccountDAO.getStdRowMapper().mapRow(rs, num),
                 PlayerCharacterDAO.getStdRowMapper().mapRow(rs, num),
+                clan,
                 rs.getString("pro_player.nickname"),
                 rs.getString("pro_player.team"),
                 race == Race.TERRAN ? gamesPlayed : null,
