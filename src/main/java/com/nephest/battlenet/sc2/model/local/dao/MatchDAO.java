@@ -144,27 +144,8 @@ extends StandardDAO
             .thenComparing(Match::getType)
             .thenComparing(Match::getMap)
             .thenComparing(Match::getRegion);
-        Arrays.sort(matches, comparator);
-        mergedMatches.sort(comparator);
 
-        //expecting ~1% of duplicates, using dirty but efficient way
-        for(int originalIx = 0, mergedIx = 0; originalIx < matches.length; originalIx++)
-        {
-            if(mergedIx >= mergedMatches.size()) mergedIx = mergedMatches.size() - 1; //should rarely happen
-            Match original = matches[originalIx];
-            Match merged = mergedMatches.get(mergedIx);
-
-            if(!merged.equals(original)) //should rarely happen
-            {
-                mergedIx--;
-                merged = mergedMatches.get(mergedIx);
-                if(!merged.equals(original)) throw new IllegalStateException("Match pair didn't match");
-            }
-            original.setId(merged.getId());
-            mergedIx++;
-        }
-
-        return matches;
+        return DAOUtils.updateOriginals(matches, mergedMatches, comparator, (o, m)->o.setId(m.getId()));
     }
 
 }

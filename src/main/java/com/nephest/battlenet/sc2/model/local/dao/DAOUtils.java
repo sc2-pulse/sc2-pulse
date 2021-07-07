@@ -6,6 +6,11 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
+import java.util.function.BiConsumer;
+
 public final class DAOUtils
 {
 
@@ -43,5 +48,29 @@ public final class DAOUtils
         Long val = rs.getLong(1);
         return rs.wasNull() ? null : val;
     };
+
+    public static <T>  T[] updateOriginals
+    (T[] originalArray, List<T> mergedList, Comparator<T> comparator, BiConsumer<T, T> originalUpdater)
+    {
+        Arrays.sort(originalArray, comparator);
+        mergedList.sort(comparator);
+        for(int originalIx = 0, mergedIx = 0; originalIx < originalArray.length; originalIx++)
+        {
+            if(mergedIx >= mergedList.size()) mergedIx = mergedList.size() - 1; //should rarely happen
+            T original = originalArray[originalIx];
+            T merged = mergedList.get(mergedIx);
+
+            if(!merged.equals(original)) //should rarely happen
+            {
+                mergedIx--;
+                merged = mergedList.get(mergedIx);
+                if(!merged.equals(original)) throw new IllegalStateException("Pair didn't match");
+            }
+            originalUpdater.accept(original, merged);
+            mergedIx++;
+        }
+
+        return originalArray;
+    }
 
 }
