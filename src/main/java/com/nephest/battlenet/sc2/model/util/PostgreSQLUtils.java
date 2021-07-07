@@ -43,4 +43,10 @@ public class PostgreSQLUtils
         template.execute("VACUUM(ANALYZE)");
     }
 
+    //use carefully, sql injection is possible
+    public void reindex(String... indexes)
+    {
+        for(String ix : indexes) template.execute("REINDEX INDEX " + ix);
+    }
+
 }
