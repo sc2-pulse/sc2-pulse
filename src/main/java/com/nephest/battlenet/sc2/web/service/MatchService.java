@@ -85,6 +85,7 @@ public class MatchService
              */
             OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         matchDAO.removeExpired();
+        postgreSQLUtils.reindex("ix_match_updated"); //the index usage pattern leads to a bloated index
         LOG.info("Saved {} matches({} identified)", matchCount, identified);
     }
 
