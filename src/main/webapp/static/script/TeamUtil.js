@@ -112,8 +112,8 @@ class TeamUtil
     {
         const teamId = parent.closest("tr").getAttribute("data-team-id");
         const viewData = Model.DATA.get(ViewUtil.getView(parent));
-        const searchResult = viewData.get(VIEW_DATA.TEAMS) || viewData.get(VIEW_DATA.SEARCH);
-        return searchResult.result.filter(t=>t.id==teamId)[0];
+        return (viewData.get(VIEW_DATA.TEAMS) ? viewData.get(VIEW_DATA.TEAMS).result.find(t=>t.id==teamId) : null)
+            || viewData.get(VIEW_DATA.SEARCH).result.find(t=>t.id==teamId);
     }
 
     static createDynamicRankTable(parent)
