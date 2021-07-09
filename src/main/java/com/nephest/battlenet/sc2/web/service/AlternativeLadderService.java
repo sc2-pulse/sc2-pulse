@@ -180,8 +180,9 @@ public class AlternativeLadderService
     )
     {
         api.getProfileLadders(ladders, queueTypes)
-            .doOnNext((r)->saveProfileLadder(season, r.getT1(), r.getT2()))
-            .sequential().blockLast();
+            .sequential()
+            .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
+            .forEach((r)->saveProfileLadder(season, r.getT1(), r.getT2()));
     }
 
     private ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds

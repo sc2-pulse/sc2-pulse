@@ -389,15 +389,16 @@ public class StatsService
     (Season season, List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds, Instant lastUpdated)
     {
         api.getLadders(ladderIds)
-            .doOnNext(l->{
+            .sequential()
+            .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
+            .forEach(l->
+            {
                 League league = leagueDao.merge(League.of(season, l.getT2().getT1()));
                 LeagueTier tier = leagueTierDao.merge(LeagueTier.of(league, l.getT2().getT3()));
                 Division division = saveDivision(season, league, tier, l.getT2().getT4());
                 updateTeams(l.getT1().getTeams(), season, league, tier, division, lastUpdated);
                 LOG.debug("Ladder saved: {} {} {}", season, division.getBattlenetId(), league);
-            })
-            .sequential()
-            .blockLast();
+            });
     }
 
     public Division saveDivision
