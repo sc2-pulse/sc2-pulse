@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -71,6 +73,20 @@ public final class DAOUtils
         }
 
         return originalArray;
+    }
+
+    public static Integer getInteger(ResultSet rs, String param)
+    throws SQLException
+    {
+        int i = rs.getInt(param);
+        return rs.wasNull() ? null : i;
+    }
+
+    public static Long getLong(ResultSet rs, String param)
+    throws SQLException
+    {
+        long i = rs.getLong(param);
+        return rs.wasNull() ? null : i;
     }
 
 }
