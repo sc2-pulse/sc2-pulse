@@ -66,7 +66,6 @@ public class StatsService
     private AccountDAO accountDao;
     private PlayerCharacterDAO playerCharacterDao;
     private ClanDAO clanDAO;
-    private ClanMemberDAO clanMemberDAO;
     private TeamMemberDAO teamMemberDao;
     private QueueStatsDAO queueStatsDAO;
     private LeagueStatsDAO leagueStatsDao;
@@ -94,7 +93,6 @@ public class StatsService
         AccountDAO accountDao,
         PlayerCharacterDAO playerCharacterDao,
         ClanDAO clanDAO,
-        ClanMemberDAO clanMemberDAO,
         TeamMemberDAO teamMemberDao,
         QueueStatsDAO queueStatsDAO,
         LeagueStatsDAO leagueStatsDao,
@@ -116,7 +114,6 @@ public class StatsService
         this.accountDao = accountDao;
         this.playerCharacterDao = playerCharacterDao;
         this.clanDAO = clanDAO;
-        this.clanMemberDAO = clanMemberDAO;
         this.teamMemberDao = teamMemberDao;
         this.queueStatsDAO = queueStatsDAO;
         this.leagueStatsDao = leagueStatsDao;
@@ -312,8 +309,6 @@ public class StatsService
         }
         postgreSQLUtils.vacuumAnalyze();
         teamStateDAO.removeExpired();
-        clanMemberDAO.removeExpired();
-        postgreSQLUtils.reindex("ix_clan_member_updated");
         postgreSQLUtils.vacuumAnalyze();
         if(seasonId != null)
         {
@@ -460,8 +455,8 @@ public class StatsService
                 if(season.getBattlenetId().equals(curSeason)) states.add(TeamState.of(team));
             }
         }
+        saveClans(clanDAO, clans);
         saveMembersConcurrently(members);
-        saveClans(clanDAO, clanMemberDAO, clans);
         if(states.size() > 0) teamStateDAO.saveState(states.toArray(TeamState[]::new));
     }
 
@@ -539,7 +534,7 @@ public class StatsService
     }
 
     public static void saveClans
-    (ClanDAO clanDAO, ClanMemberDAO clanMemberDAO, List<Tuple2<PlayerCharacter, Clan>> clans)
+    (ClanDAO clanDAO, List<Tuple2<PlayerCharacter, Clan>> clans)
     {
         if(clans.isEmpty()) return;
 
@@ -547,11 +542,7 @@ public class StatsService
             .map(Tuple2::getT2)
             .toArray(Clan[]::new)
         );
-        OffsetDateTime updated = OffsetDateTime.now();
-        clanMemberDAO.merge(clans.stream()
-            .map(c->new ClanMember(c.getT2().getId(), c.getT1().getId(), updated))
-            .toArray(ClanMember[]::new)
-        );
+        for(Tuple2<PlayerCharacter, Clan> t : clans) t.getT1().setClanId(t.getT2().getId());
     }
 
     public static List<Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> getLeagueIds

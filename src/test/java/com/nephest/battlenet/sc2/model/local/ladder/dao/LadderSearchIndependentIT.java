@@ -23,7 +23,6 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -74,9 +73,6 @@ public class LadderSearchIndependentIT
     @Autowired
     private ClanDAO clanDAO;
 
-    @Autowired
-    private ClanMemberDAO clanMemberDAO;
-
     @BeforeEach
     public void beforeAll(@Autowired DataSource dataSource)
     throws SQLException
@@ -124,17 +120,13 @@ public class LadderSearchIndependentIT
         ProPlayer proPlayer = new ProPlayer(null, new byte[]{0x1, 0x2}, "refnickname", "pro name");
         proPlayerDAO.merge(proPlayer);
         proPlayerAccountDAO.link(proPlayer.getId(), acc.getBattleTag(), acc2.getBattleTag());
+        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
         PlayerCharacter character1 = playerCharacterDAO
-            .create(new PlayerCharacter(null, acc.getId(), region, 9998L, 1, "refchar1#123"));
+            .create(new PlayerCharacter(null, acc.getId(), region, 9998L, 1, "refchar1#123", clan.getId()));
         PlayerCharacter character2 = playerCharacterDAO
-            .create(new PlayerCharacter(null, acc.getId(), region, 9999L, 1, "refchar2#123"));
+            .create(new PlayerCharacter(null, acc.getId(), region, 9999L, 1, "refchar2#123", clan.getId()));
         PlayerCharacter character3 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc2.getId(), region, 9997L, 1, "refchar3#123"));
-        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
-        clanMemberDAO.merge(
-            new ClanMember(clan.getId(), character1.getId(), OffsetDateTime.now()),
-            new ClanMember(clan.getId(), character2.getId(), OffsetDateTime.now())
-        );
         Team team1 = new Team
         (
             null, season1.getBattlenetId(), region,

@@ -28,6 +28,8 @@ implements java.io.Serializable
     @NotNull
     private Long battlenetId;
 
+    private Integer clanId;
+
     public PlayerCharacter(){}
 
     public PlayerCharacter(Long id, Long accountId, Region region, Long battlenetId, Integer realm, String name)
@@ -37,6 +39,13 @@ implements java.io.Serializable
         this.accountId = accountId;
         this.region = region;
         this.battlenetId = battlenetId;
+    }
+
+    public PlayerCharacter
+    (Long id, Long accountId, Region region, Long battlenetId, Integer realm, String name, Integer clanId)
+    {
+        this(id, accountId, region, battlenetId, realm, name);
+        this.clanId = clanId;
     }
 
     public static PlayerCharacter of(Account account, Region region, BlizzardPlayerCharacter bCharacter)
@@ -55,7 +64,8 @@ implements java.io.Serializable
     public static boolean shouldUpdate(PlayerCharacter existingChar, PlayerCharacter newChar)
     {
         return !existingChar.getName().equals(newChar.getName())
-            || !existingChar.getAccountId().equals(newChar.getAccountId());
+            || !existingChar.getAccountId().equals(newChar.getAccountId())
+            || !Objects.equals(existingChar.getClanId(), newChar.getClanId());
     }
 
     @Override
@@ -126,6 +136,16 @@ implements java.io.Serializable
     public Long getBattlenetId()
     {
         return battlenetId;
+    }
+
+    public Integer getClanId()
+    {
+        return clanId;
+    }
+
+    public void setClanId(Integer clanId)
+    {
+        this.clanId = clanId;
     }
 
 }

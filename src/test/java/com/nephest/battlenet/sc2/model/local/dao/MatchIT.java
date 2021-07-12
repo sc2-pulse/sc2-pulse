@@ -78,9 +78,6 @@ public class MatchIT
     private ClanDAO clanDAO;
 
     @Autowired
-    private ClanMemberDAO clanMemberDAO;
-
-    @Autowired
     private SeasonGenerator seasonGenerator;
 
     @BeforeEach
@@ -164,8 +161,9 @@ public class MatchIT
         ProTeam proTeam = proTeamDAO.merge(new ProTeam(null, 1L, "proTeamName", "proTeamShortName"));
         proTeamMemberDAO.merge(new ProTeamMember(proTeam.getId(), proPlayer.getId()));
         proPlayerAccountDAO.link(proPlayer.getId(), "tag#1");
-        PlayerCharacter charEu1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
-        PlayerCharacter charEu2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2"));
+        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
+        PlayerCharacter charEu1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1", clan.getId()));
+        PlayerCharacter charEu2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2", clan.getId()));
         PlayerCharacter charEu3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.EU, 3L, 3, "name#3"));
         PlayerCharacter charEu4 = playerCharacterDAO.merge(new PlayerCharacter(null, acc4.getId(), Region.EU, 4L, 4, "name#4"));
         PlayerCharacter charEu5 = playerCharacterDAO.merge(new PlayerCharacter(null, acc5.getId(), Region.EU, 5L, 5, "name#5"));
@@ -182,11 +180,6 @@ public class MatchIT
         PlayerCharacter charKr2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.KR, 2L, 2, "name#2"));
         PlayerCharacter charKr3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.KR, 3L, 3, "name#3"));
         PlayerCharacter charKr4 = playerCharacterDAO.merge(new PlayerCharacter(null, acc4.getId(), Region.KR, 4L, 4, "name#4"));
-        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
-        clanMemberDAO.merge(
-            new ClanMember(clan.getId(), charEu1.getId(), OffsetDateTime.now()),
-            new ClanMember(clan.getId(), charEu2.getId(), OffsetDateTime.now())
-        );
         Team team4v4Win = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),

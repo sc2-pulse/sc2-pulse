@@ -58,7 +58,6 @@ public class AlternativeLadderService
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDao;
     private final ClanDAO clanDAO;
-    private final ClanMemberDAO clanMemberDAO;
     private final TeamMemberDAO teamMemberDao;
     private final ConversionService conversionService;
     private final Validator validator;
@@ -75,7 +74,6 @@ public class AlternativeLadderService
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDao,
         ClanDAO clanDAO,
-        ClanMemberDAO clanMemberDAO,
         TeamMemberDAO teamMemberDao,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator
@@ -90,7 +88,6 @@ public class AlternativeLadderService
         this.accountDAO = accountDAO;
         this.playerCharacterDao = playerCharacterDao;
         this.clanDAO = clanDAO;
-        this.clanMemberDAO = clanMemberDAO;
         this.teamMemberDao = teamMemberDao;
         this.conversionService = conversionService;
         this.validator = validator;
@@ -243,9 +240,9 @@ public class AlternativeLadderService
 
             extractTeamData(season, team, bTeam, newTeams, characters, clans, members, states);
         }
+        StatsService.saveClans(clanDAO, clans);
         saveNewCharacterData(newTeams, members, states);
         savePlayerCharacters(characters);
-        StatsService.saveClans(clanDAO, clanMemberDAO, clans);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
         teamStateDAO.saveState(states.toArray(TeamState[]::new));
         LOG.debug("Ladder saved: {} {} {}", id.getT1(), id.getT3(), ladder.getLeague());

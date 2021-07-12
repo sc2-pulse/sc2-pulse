@@ -21,7 +21,6 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -75,9 +74,6 @@ public class SqlSyntaxIT
 
     @Autowired
     private ClanDAO clanDAO;
-
-    @Autowired
-    private ClanMemberDAO clanMemberDAO;
 
     @Autowired
     private VarDAO varDAO;
@@ -245,7 +241,6 @@ public class SqlSyntaxIT
         );
         assertEquals(clans[0].getId(), mergedClans2[0].getId());
         assertEquals(clans[2].getId(), mergedClans2[1].getId());
-        clanMemberDAO.merge(new ClanMember(clans[0].getId(), character.getId(), OffsetDateTime.now()));
 
         teamMemberDAO.create(new TeamMember(zergTeam.getId(), character.getId(), 0, 0, 6, 0));
         teamMemberDAO.create(new TeamMember(team.getId(), character.getId(), 1, 1, 1, 1));
@@ -272,7 +267,6 @@ public class SqlSyntaxIT
         proTeamDAO.removeExpired();
         proTeamMemberDAO.removeExpired();
         teamStateDAO.removeExpired();
-        clanMemberDAO.removeExpired();
 
         teamMemberDAO.removeByTeamId(zergTeam.getId());
         assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).isEmpty());

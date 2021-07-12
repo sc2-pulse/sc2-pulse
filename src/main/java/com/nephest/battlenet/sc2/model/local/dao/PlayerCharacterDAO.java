@@ -34,17 +34,19 @@ public class PlayerCharacterDAO
         + "player_character.region AS \"player_character.region\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", "
         + "player_character.realm AS \"player_character.realm\", "
-        + "player_character.name AS \"player_character.name\" ";
+        + "player_character.name AS \"player_character.name\", "
+        + "player_character.clan_id AS \"player_character.clan_id\" ";
 
     private static final String CREATE_QUERY = "INSERT INTO player_character "
-        + "(account_id, region, battlenet_id, realm, name) "
-        + "VALUES (:accountId, :region, :battlenetId, :realm, :name)";
+        + "(account_id, region, battlenet_id, realm, name, clan_id) "
+        + "VALUES (:accountId, :region, :battlenetId, :realm, :name, :clanId)";
 
     private static final String MERGE_QUERY = CREATE_QUERY
         + " "
         + "ON CONFLICT(region, realm, battlenet_id) DO UPDATE SET "
         + "account_id=excluded.account_id, "
-        + "name=excluded.name";
+        + "name=excluded.name, "
+        + "clan_id=excluded.clan_id";
 
     private static final String FIND_PRO_PLAYER_CHARACTER_IDS =
         "SELECT player_character.id FROM player_character "
@@ -119,7 +121,8 @@ public class PlayerCharacterDAO
             conversionService.convert(rs.getInt("player_character.region"), Region.class),
             rs.getLong("player_character.battlenet_id"),
             rs.getInt("player_character.realm"),
-            rs.getString("player_character.name")
+            rs.getString("player_character.name"),
+            DAOUtils.getInteger(rs, "player_character.clan_id")
         );
 
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
@@ -184,7 +187,8 @@ public class PlayerCharacterDAO
             .addValue("region", conversionService.convert(character.getRegion(), Integer.class))
             .addValue("battlenetId", character.getBattlenetId())
             .addValue("realm", character.getRealm())
-            .addValue("name", character.getName());
+            .addValue("name", character.getName())
+            .addValue("clanId", character.getClanId());
     }
 
     @Cacheable(cacheNames = "pro-player-characters")

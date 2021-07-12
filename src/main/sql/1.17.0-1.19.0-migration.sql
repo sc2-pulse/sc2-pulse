@@ -35,3 +35,12 @@ CREATE TABLE "clan_member"
 
 CREATE INDEX "ix_clan_member_clan_id" ON "clan_member"("clan_id");
 CREATE INDEX "ix_clan_member_updated" ON "clan_member"("updated");
+
+DROP TABLE "clan_member";
+
+ALTER TABLE "player_character"
+    ADD COLUMN "clan_id" INTEGER,
+    ADD CONSTRAINT "fk_player_character_clan_id"
+        FOREIGN KEY ("clan_id")
+        REFERENCES "clan"("id")
+        ON UPDATE CASCADE;
