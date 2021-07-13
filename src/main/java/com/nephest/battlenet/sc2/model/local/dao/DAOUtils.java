@@ -89,4 +89,32 @@ public final class DAOUtils
         return rs.wasNull() ? null : i;
     }
 
+    public static Double getDouble(ResultSet rs, String param)
+    throws SQLException
+    {
+        double i = rs.getDouble(param);
+        return rs.wasNull() ? null : i;
+    }
+
+    public static Float getFloat(ResultSet rs, String param)
+    throws SQLException
+    {
+        float i = rs.getFloat(param);
+        return rs.wasNull() ? null : i;
+    }
+
+    public static Boolean getBoolean(ResultSet rs, String param)
+    throws SQLException
+    {
+        boolean i = rs.getBoolean(param);
+        return rs.wasNull() ? null : i;
+    }
+
+    public static Byte getByte(ResultSet rs, String param)
+    throws SQLException
+    {
+        byte i = rs.getByte(param);
+        return rs.wasNull() ? null : i;
+    }
+
 }
