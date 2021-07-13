@@ -6,10 +6,7 @@ package com.nephest.battlenet.sc2.config;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
-import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.*;
 import org.slf4j.Logger;
@@ -24,6 +21,7 @@ import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.Objects;
 
 @Profile({"!maintenance & !dev"})
@@ -53,6 +51,9 @@ public class Cron
 
     @Autowired
     private SeasonDAO seasonDAO;
+
+    @Autowired
+    private TeamStateDAO teamStateDAO;
 
     @Autowired
     private PostgreSQLUtils postgreSQLUtils;
@@ -117,8 +118,15 @@ public class Cron
     private boolean calculateHeavyStats()
     {
         if(heavyStatsInstant == null || System.currentTimeMillis() - heavyStatsInstant.toEpochMilli() >= 24 * 60 * 60 * 1000) {
+            Instant defaultInstant = heavyStatsInstant != null
+                ? heavyStatsInstant
+                : Instant.now().minusSeconds(24 * 60 * 60 * 1000);
+            OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
             proPlayerService.update();
             queueStatsDAO.mergeCalculateForSeason(seasonDAO.getMaxBattlenetId());
+            teamStateDAO.archive(defaultOdt);
+            teamStateDAO.cleanArchive(defaultOdt);
+            teamStateDAO.removeExpired();
             postgreSQLUtils.vacuum();
             postgreSQLUtils.analyze();
             heavyStatsInstant = Instant.ofEpochMilli(System.currentTimeMillis());

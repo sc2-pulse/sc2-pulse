@@ -53,14 +53,28 @@ public class PlayerCharacterStatsDAO
         "INSERT INTO player_character_stats "
         + "(player_character_id, queue_type, team_type, race, rating_max, league_max, games_played) "
         + "SELECT team_member.player_character_id, team.queue_type, team.team_type, %1$s, "
-        + "MAX(team.rating), MAX(team.league_type), ";
+        + "GREATEST(MAX(team.rating), MAX(archived_rating.rating)), MAX(team.league_type), ";
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_END =
         "FROM team_member "
-        + "INNER JOIN team ON team_member.team_id=team.id ";
+        + "INNER JOIN team ON team_member.team_id=team.id "
+        + "LEFT JOIN LATERAL ("
+            + "SELECT rating FROM team_state "
+            + "WHERE team_state.team_id = team.id "
+            + "AND team_state.archived = true "
+            + "ORDER BY team_state.rating DESC "
+            + "LIMIT 1"
+        + ") archived_rating ON true ";
     public static final String CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END =
         "FROM player_character_filter "
         + "INNER JOIN team_member USING(player_character_id) "
-        + "INNER JOIN team ON team_member.team_id = team.id ";
+        + "INNER JOIN team ON team_member.team_id = team.id "
+        + "LEFT JOIN LATERAL ("
+            + "SELECT rating FROM team_state "
+            + "WHERE team_state.team_id = team.id "
+            + "AND team_state.archived = true "
+            + "ORDER BY team_state.rating DESC "
+            + "LIMIT 1"
+        + ") archived_rating ON true ";
     public static final String CALCULATE_PLAYER_CHARACTER_STATS_GROUP =
         "GROUP BY team.queue_type, team.team_type, team_member.player_character_id ";
     public static final String MERGE_TEMPLATE =

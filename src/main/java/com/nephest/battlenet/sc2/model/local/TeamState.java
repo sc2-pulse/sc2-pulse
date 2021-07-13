@@ -11,7 +11,7 @@ public class TeamState
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NotNull
     private Long teamId;
@@ -27,6 +27,8 @@ implements java.io.Serializable
 
     @NotNull
     private Integer rating;
+
+    private Boolean archived;
 
     public TeamState(){}
 
@@ -44,6 +46,20 @@ implements java.io.Serializable
         this.divisionId = divisionId;
         this.games = games;
         this.rating = rating;
+    }
+
+    public TeamState
+    (
+        @NotNull Long teamId,
+        @NotNull OffsetDateTime dateTime,
+        @NotNull Integer divisionId,
+        @NotNull Integer games,
+        @NotNull Integer rating,
+        Boolean archived
+    )
+    {
+        this(teamId, dateTime, divisionId, games, rating);
+        this.archived = archived;
     }
 
     public static TeamState of(Team team, OffsetDateTime timestamp)
@@ -137,6 +153,16 @@ implements java.io.Serializable
     public void setRating(Integer rating)
     {
         this.rating = rating;
+    }
+
+    public Boolean getArchived()
+    {
+        return archived;
+    }
+
+    public void setArchived(Boolean archived)
+    {
+        this.archived = archived;
     }
 
 }

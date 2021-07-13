@@ -205,6 +205,7 @@ CREATE TABLE "team_state"
     "division_id" INTEGER NOT NULL,
     "games" SMALLINT NOT NULL,
     "rating" SMALLINT NOT NULL,
+    "archived" BOOLEAN,
 
     PRIMARY KEY ("team_id", "timestamp"),
 
