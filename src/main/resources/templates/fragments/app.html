@@ -195,11 +195,11 @@
                                             </select>
                                         </div>
                                         <div class="form-group col">
-                                            <label for="mmr-depth" class="text-nowrap" th:text="${'Depth('+ T(com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO).MAX_DEPTH_DAYS + ' days max)'}">Depth(days)</label>
+                                            <label for="mmr-depth" class="text-nowrap">Depth(days)</label>
                                             <input id="mmr-depth" class="form-control text-center serializable"
                                                    type="number"
                                                    min="1"
-                                                   th:max="${T(com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO).MAX_DEPTH_DAYS}"
+                                                   max="10000"
                                             />
                                         </div>
                                         <div class="form-group col">
@@ -217,10 +217,6 @@
                                             <option value="6000">
                                             <option value="7000">
                                         </datalist>
-                                    </div>
-                                    <div class="form-check form-check-inline">
-                                        <input id="mmr-changes-only" class="form-check-input serializable" type="checkbox" />
-                                        <label for="mmr-changes-only" class="text-nowrap form-check-label">Changes only</label>
                                     </div>
                                     <div class="form-check form-check-inline">
                                         <input id="mmr-best-race" class="form-check-input serializable" type="checkbox" checked="checked" />
@@ -242,7 +238,7 @@
                                         data-chart-performance="fast"
                                         data-chart-point-radius="0.5"
                                         data-chart-x-type="time"
-                                        data-chart-x-time-unit="day"
+                                        data-chart-x-time-unit="false"
                                         data-chart-direct="true"
                                 >
                                     <thead><tr></tr></thead>

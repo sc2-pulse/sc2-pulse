@@ -267,26 +267,24 @@ class CharacterUtil
         const queue = EnumUtil.enumOfFullName(queueFilterSelect.options[queueFilterSelect.selectedIndex].value, TEAM_FORMAT);
         const queueFilter = queue.code;
         const teamTypeFilter = queue == TEAM_FORMAT._1V1 ? TEAM_TYPE.ARRANGED.code : TEAM_TYPE.RANDOM.code;
-        const depth = document.getElementById("mmr-depth").value || SC2Restful.MMR_HISTORY_DAYS_MAX;
-        const depthStartTimestamp = Date.now() - (depth * 24 * 60 * 60 * 1000);
+        const depth = document.getElementById("mmr-depth").value || null;
+        const depthStartTimestamp = depth ? Date.now() - (depth * 24 * 60 * 60 * 1000) : null;
         const excludeStart = document.getElementById("mmr-exclude-start").value || 0;
         const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
-        const changesOnly = document.getElementById("mmr-changes-only").checked;
         const bestRaceOnly = document.getElementById("mmr-best-race").checked;
 
-        let mmrHistory = CharacterUtil.filterMmrHistory(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history,
-            queueFilter, teamTypeFilter, excludeStart, excludeEnd);
+        const teams = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams
+            .filter(t=>t.queueType == queueFilter && t.teamType == teamTypeFilter)
+            .map(t=>CharacterUtil.createTeamSnapshot(t, Session.currentSeasonsMap.get(t.season)[0].end));
+        let mmrHistory = teams
+            .concat(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
+        mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter, excludeStart, excludeEnd);
         mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
+        mmrHistory.sort((a, b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
         if(queue !== TEAM_FORMAT._1V1) mmrHistory.forEach(h=>h.race = "ALL");
         const historyByRace = Util.groupBy(mmrHistory, h=>h.race);
-        if(changesOnly !== true) mmrHistory = CharacterUtil.injectMmrFlatLines(
-            mmrHistory,
-            historyByRace,
-            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams,
-            queueFilter,
-            teamTypeFilter);
         if(bestRaceOnly === true) mmrHistory = CharacterUtil.filterMmrHistoryBestRace(historyByRace);
-        if(depth != SC2Restful.MMR_HISTORY_DAYS_MAX) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() >= depthStartTimestamp);
+        if(depth) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() >= depthStartTimestamp);
         mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter, excludeStart, excludeEnd);
         const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime.getTime());
         const data = [];
@@ -311,7 +309,7 @@ class CharacterUtil
         );
         document.getElementById("mmr-history-filters").textContent =
             "(" + queue.name
-            + (depth != SC2Restful.MMR_HISTORY_DAYS_MAX ? ", starting from " + Util.DATE_FORMAT.format(new Date(depthStartTimestamp)) : "")
+            + (depth ? ", starting from " + Util.DATE_FORMAT.format(new Date(depthStartTimestamp)) : "")
             + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
         document.getElementById("mmr-history-games-avg-mmr").textContent = CharacterUtil.getGamesAndAverageMmrString(mmrHistory);
@@ -336,10 +334,12 @@ class CharacterUtil
         const mmrHistoryGrouped = Util.groupBy(mmrHistory, h=>h.race);
         for(const [race, histories] of mmrHistoryGrouped.entries())
         {
-            const originalHistories = histories.filter(h=>!h.generated);
+            const originalHistories = histories.filter(h=>!h.injected);
             if(originalHistories.length == 0) continue;
             const games = originalHistories.reduce( (acc, history, i, historyArray)=> {
                 if(i == 0) return acc;
+                if(history.teamState.teamId != historyArray[i - 1].teamState.teamId) return acc + history.teamState.games;
+
                 const diff = history.teamState.games - historyArray[i - 1].teamState.games;
                 const cGames = diff > -1 ? diff : history.teamState.games;
                 return acc + cGames;
@@ -392,7 +392,7 @@ class CharacterUtil
                     .sort((a, b)=>b.season - a.season);
                 if(teamsRacial.length == 0) continue;
 
-                const snap = CharacterUtil.createTeamSnapshot(teamsRacial[0], firstDate);
+                const snap = CharacterUtil.createTeamSnapshot(teamsRacial[0], firstDate, true);
                 racialHistory.set(race.name, [snap]);
                 injectArray.push(snap);
             }
@@ -406,7 +406,7 @@ class CharacterUtil
 
             let teamsRacial = teamsFiltered.sort((a, b)=>b.season - a.season);
 
-            const snap = CharacterUtil.createTeamSnapshot(teamsRacial[0], firstDate);
+            const snap = CharacterUtil.createTeamSnapshot(teamsRacial[0], firstDate, true);
             snap.race = "ALL";
             racialHistory.set("ALL", [snap]);
             injectArray.push(snap);
@@ -469,7 +469,7 @@ class CharacterUtil
         }
     }
 
-    static createTeamSnapshot(team, dateTime)
+    static createTeamSnapshot(team, dateTime, injected = false)
     {
         return {
             team: team,
@@ -488,7 +488,8 @@ class CharacterUtil
             },
             tier: team.tierType,
             season: team.season,
-            generated: true
+            generated: true,
+            injected: injected
         };
     }
 
@@ -846,7 +847,6 @@ class CharacterUtil
         document.getElementById("mmr-depth").addEventListener("input",  CharacterUtil.onMmrInput);
         document.getElementById("mmr-exclude-start").addEventListener("input", CharacterUtil.onMmrInput);
         document.getElementById("mmr-exclude-end").addEventListener("input", CharacterUtil.onMmrInput);
-        document.getElementById("mmr-changes-only").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
         document.getElementById("mmr-best-race").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
     }
 
