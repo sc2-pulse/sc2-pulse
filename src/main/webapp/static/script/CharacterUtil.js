@@ -319,13 +319,17 @@ class CharacterUtil
     {
         let result = "games/avg mmr";
         const gamesMmr = CharacterUtil.getGamesAndAverageMmr(mmrHistory);
+        result += CharacterUtil.getGamesAndAverageMmrEntryString(gamesMmr, "all");
         for(const race of Object.values(RACE))
-        {
-            const val = gamesMmr[race.name.toUpperCase()];
-            if(!val) continue;
-            result += `, ${race.name.toLowerCase()}: ${val.games}/${val.averageMmr}`;
-        }
+            result += CharacterUtil.getGamesAndAverageMmrEntryString(gamesMmr, race.name);
         return result;
+    }
+
+    static getGamesAndAverageMmrEntryString(gamesMmr, keyName)
+    {
+        const val = gamesMmr[keyName.toUpperCase()];
+        if(!val) return "";
+        return `, ${keyName.toLowerCase()}: ${val.games}/${val.averageMmr}`;
     }
 
     static getGamesAndAverageMmr(mmrHistory)
