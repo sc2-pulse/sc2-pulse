@@ -220,6 +220,7 @@ CREATE TABLE "team_state"
 );
 
 CREATE INDEX "ix_team_state_timestamp" ON "team_state"("timestamp");
+CREATE INDEX "ix_team_state_team_id_archived" ON "team_state"("team_id", "archived") WHERE "archived" = true;
 
 CREATE TABLE "queue_stats"
 (

@@ -24,6 +24,7 @@ ALTER TABLE "player_character"
 
 ALTER TABLE "team_state"
     ADD COLUMN "archived" BOOLEAN;
+CREATE INDEX "ix_team_state_team_id_archived" ON "team_state"("team_id", "archived") WHERE "archived" = true;
 
 VACUUM(ANALYZE) "team_state";
 
