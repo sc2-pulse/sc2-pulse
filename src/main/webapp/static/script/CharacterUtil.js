@@ -287,6 +287,7 @@ class CharacterUtil
         if(depth) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() >= depthStartTimestamp);
         mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter, excludeStart, excludeEnd);
         const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime.getTime());
+        const headers = Array.from(historyByRace.keys()).sort((a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order);
         const data = [];
         const rawData = [];
         for(const [dateTime, histories] of mmrHistoryGroped.entries())
@@ -300,7 +301,10 @@ class CharacterUtil
         (
             document.getElementById("player-stats-mmr-table"),
             data,
-            (tableData=>ChartUtil.CHART_RAW_DATA.get("player-stats-mmr-table").data = tableData),
+            (tableData=>{
+                CharacterUtil.injectLeagueImages(tableData, rawData, headers, (raw, header)=>raw.find(e=>e.race == header));
+                ChartUtil.CHART_RAW_DATA.get("player-stats-mmr-table").data = tableData;
+            }),
             queue == TEAM_FORMAT._1V1
                 ? (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order
                 : null,
@@ -313,6 +317,30 @@ class CharacterUtil
             + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
         document.getElementById("mmr-history-games-avg-mmr").textContent = CharacterUtil.getGamesAndAverageMmrString(mmrHistory);
+    }
+
+    static injectLeagueImages(tableData, rawData, headers, getter)
+    {
+        const pointStyles = [];
+        for(const header of headers) {
+            const curStyles = [];
+            pointStyles.push(curStyles);
+            let prevLeague = null;
+            for(const raw of rawData) {
+                const snapshot = getter(raw, header);
+                if(!snapshot) {
+                    curStyles.push('');
+                    continue;
+                }
+                if(snapshot.league.type != prevLeague) {
+                    curStyles.push(SC2Restful.IMAGES.get(EnumUtil.enumOfId(snapshot.league.type, LEAGUE).name.toLowerCase()));
+                    prevLeague = snapshot.league.type;
+                } else {
+                    curStyles.push('');
+                }
+            }
+        }
+        tableData.pointStyles = pointStyles;
     }
     
     static getGamesAndAverageMmrString(mmrHistory)

@@ -486,9 +486,11 @@ class TeamUtil
         TeamUtil.updateTeamsTable(document.querySelector("#team-mmr-teams-table"), Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH));
         let transformedData = [];
         let curEntry = 0;
+        const headers = [];
         for(const [legacyUid, history] of Object.entries(searchResult)) {
             const refTeam = history.teams[history.teams.length - 1];
             const group = TeamUtil.generateTeamName(refTeam);
+            headers.push(group);
             if(!seasonLastOnly) {
                 for(const state of history.states) {
                     state.group = {name: group, order: curEntry};
@@ -519,7 +521,10 @@ class TeamUtil
         (
             document.getElementById("team-mmr-table"),
             data,
-            (tableData=>ChartUtil.CHART_RAW_DATA.get("team-mmr-table").data = tableData),
+            (tableData=>{
+                CharacterUtil.injectLeagueImages(tableData, rawData, headers, (raw, header)=>raw.find(e=>e.group.name == header));
+                ChartUtil.CHART_RAW_DATA.get("team-mmr-table").data = tableData;
+            }),
             null,
             null,
             (dateTime)=>new Date(parseInt(dateTime))
