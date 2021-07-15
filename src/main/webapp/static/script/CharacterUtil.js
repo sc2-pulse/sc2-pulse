@@ -552,7 +552,8 @@ class CharacterUtil
             }
         }
         for(const race of Object.values(RACE)) {
-            if(race != result) racialHistory.delete(race);
+            const raceStr = race.name.toUpperCase();
+            if(raceStr != result) racialHistory.delete(raceStr);
         }
 
         return racialHistory.get(result) ? racialHistory.get(result) : [];
