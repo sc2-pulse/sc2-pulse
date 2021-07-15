@@ -76,13 +76,17 @@ class ElementUtil
         }
     }
 
-    static createImage(prefix, name, classes)
+    static createImage(prefix, name, classes, width, height = width)
     {
         const img = document.createElement("img");
         img.setAttribute("src", `${RESOURCE_PATH}icon/${prefix}${name}.svg`);
         img.setAttribute("alt", name);
         img.setAttribute("title", name);
         img.setAttribute("class", classes);
+        if(width) {
+            img.width = width;
+            img.height = height;
+        }
         return img;
     }
 
