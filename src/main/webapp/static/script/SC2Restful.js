@@ -107,3 +107,5 @@ SC2Restful.SITE_NAME = "SC2 Pulse";
 SC2Restful.UNDEFINED_RANK = 2147483647;
 SC2Restful.MMR_HISTORY_START_DATE = new Date("2021-01-19T00:00:00");
 SC2Restful.MMR_HISTORY_DAYS_MAX = 90;
+
+SC2Restful.REM = parseInt(getComputedStyle(document.documentElement).fontSize);
