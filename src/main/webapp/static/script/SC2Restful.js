@@ -109,3 +109,14 @@ SC2Restful.MMR_HISTORY_START_DATE = new Date("2021-01-19T00:00:00");
 SC2Restful.MMR_HISTORY_DAYS_MAX = 90;
 
 SC2Restful.REM = parseInt(getComputedStyle(document.documentElement).fontSize);
+
+SC2Restful.IMAGES = new Map
+([
+    ["bronze", ElementUtil.createImage("league/", "bronze", "icon-chart", SC2Restful.REM)],
+    ["silver", ElementUtil.createImage("league/", "silver", "icon-chart", SC2Restful.REM)],
+    ["gold", ElementUtil.createImage("league/", "gold", "icon-chart", SC2Restful.REM)],
+    ["platinum", ElementUtil.createImage("league/", "platinum", "icon-chart",  SC2Restful.REM)],
+    ["diamond", ElementUtil.createImage("league/", "diamond", "icon-chart",  SC2Restful.REM)],
+    ["master", ElementUtil.createImage("league/", "master", "icon-chart", SC2Restful.REM)],
+    ["grandmaster", ElementUtil.createImage("league/", "grandmaster", "icon-chart", SC2Restful.REM)],
+]);
