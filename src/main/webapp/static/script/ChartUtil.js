@@ -237,7 +237,8 @@ class ChartUtil
                     {
                         label: tableData.headers[i],
                         data: tableData.values[i],
-                        hidden: !Util.hasNonZeroValues(tableData.values[i])
+                        hidden: !Util.hasNonZeroValues(tableData.values[i]),
+                        ...(tableData.pointStyles) && {pointStyle: tableData.pointStyles[i]}
                     }
                 )
             }
