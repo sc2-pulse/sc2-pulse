@@ -119,4 +119,14 @@ SC2Restful.IMAGES = new Map
     ["diamond", ElementUtil.createImage("league/", "diamond", "icon-chart",  SC2Restful.REM)],
     ["master", ElementUtil.createImage("league/", "master", "icon-chart", SC2Restful.REM)],
     ["grandmaster", ElementUtil.createImage("league/", "grandmaster", "icon-chart", SC2Restful.REM)],
+
+    ["terran", ElementUtil.createImage("race/", "terran", "icon-chart table-image table-image-square", SC2Restful.REM)],
+    ["protoss", ElementUtil.createImage("race/", "protoss", "icon-chart table-image table-image-square", SC2Restful.REM)],
+    ["zerg", ElementUtil.createImage("race/", "zerg", "icon-chart table-image table-image-square", SC2Restful.REM)],
+    ["random", ElementUtil.createImage("race/", "random", "icon-chart table-image table-image-square", SC2Restful.REM)],
+
+    ["us", ElementUtil.createImage("flag/", "us", "icon-chart table-image table-image-long", SC2Restful.REM)],
+    ["eu", ElementUtil.createImage("flag/", "eu", "icon-chart table-image table-image-long", SC2Restful.REM)],
+    ["kr", ElementUtil.createImage("flag/", "kr", "icon-chart table-image table-image-long", SC2Restful.REM)],
+    ["cn", ElementUtil.createImage("flag/", "cn", "icon-chart table-image table-image-long", SC2Restful.REM)]
 ]);
