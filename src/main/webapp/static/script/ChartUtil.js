@@ -21,6 +21,7 @@ class ChartUtil
         config["beginAtZero"] = chartable.getAttribute("data-chart-begin-at-zero");
         config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
         config["chartable"] = chartable.id;
+        config["zoom"] = chartable.getAttribute("data-chart-zoom");
         config["data"] = ChartUtil.collectChartJSData(chartable);
 
         ChartUtil.CHARTS.set(chartable.id, ChartUtil.createGenericChart(config));
@@ -120,12 +121,62 @@ class ChartUtil
                     layout: {padding: {right: 15}},
                     animation:{duration: 0},
                     responsiveAnimationDuration: 0,
+                    plugins:
+                    {
+                        ...(config.zoom) && {
+                        zoom:
+                        {
+                            pan:
+                            {
+                                enabled: true,
+                                mode: config.zoom,
+                                onPan: ChartUtil.onZoom
+                            },
+                            zoom:
+                            {
+                                enabled: true,
+                                drag: false,
+                                mode: config.zoom,
+                                onZoom: ChartUtil.onZoom,
+                            }
+                        }}
+                    },
                     ...(config.performance === "fast") && {elements: {line: {tension: 0}}}
                 }
             }
         );
         chart.customConfig = config;
+        if(config.zoom) ChartUtil.createZoomControls(chart);
         return chart;
+    }
+
+    static createZoomControls(chart)
+    {
+        const zoomCtl = document.createElement("button");
+        zoomCtl.id = "chart-zoom-ctl-" + chart.customConfig.chartable;
+        zoomCtl.setAttribute("type", "button");
+        zoomCtl.classList.add("btn", "btn-outline-info", "chart-zoom-ctl");
+        zoomCtl.setAttribute("data-chartable-id", chart.customConfig.chartable);
+        zoomCtl.textContent = "Wheel/pinch to zoom, mouse/drag to pan";
+        zoomCtl.addEventListener("click", ChartUtil.resetZoom);
+        chart.canvas.closest(".container-chart").prepend(zoomCtl);
+    }
+
+    static resetZoom(evt)
+    {
+        const ctl = evt.target;
+        if(!ctl.classList.contains("active")) return;
+
+        ChartUtil.CHARTS.get(ctl.getAttribute("data-chartable-id")).resetZoom();
+        ctl.textContent = "Wheel/pinch to zoom, mouse/drag to pan";
+        ctl.classList.remove("active");
+    }
+
+    static onZoom(chart)
+    {
+        const ctl = document.getElementById("chart-zoom-ctl-" + chart.chart.customConfig.chartable);
+        ctl.classList.add("active");
+        ctl.textContent = "Reset zoom/pan";
     }
 
     static onLegendClick(e, legendItem)
@@ -212,10 +263,16 @@ class ChartUtil
             tooltipEl.style.opacity = 0;
             return;
         }
-
+        // `this` will be the overall tooltip
+        const position = this._chart.canvas.getBoundingClientRect();
+        if(tooltipModel.caretX < 0 || tooltipModel.caretX > position.width
+            || tooltipModel.caretY < 0 || tooltipModel.caretY > position.height) {
+            tooltipEl.style.opacity = 0;
+            return;
+        }
         ChartUtil.injectTooltipTableHeaders(tooltipEl, tooltipModel);
         ChartUtil.injectTooltipTableData(tooltipEl, tooltipModel);
-        ChartUtil.setTooltipPosition(tooltipEl, tooltipModel, this);
+        ChartUtil.setTooltipPosition(tooltipEl, tooltipModel, this, position);
 
         tooltipEl.style.padding = tooltipModel.yPadding + "px " + tooltipModel.xPadding + "px";
     }
@@ -227,6 +284,8 @@ class ChartUtil
         {
             tooltipEl = document.createElement('div');
             tooltipEl.id = 'chartjs-tooltip';
+            tooltipEl.classList.add("fullscreen-required");
+            tooltipEl.setAttribute("data-original-parent", "body");
             tooltipEl.innerHTML = '<h2></h2><table class="table table-sm"><thead></thead><tbody></tbody></table>';
             tooltipEl.style.position = 'absolute';
             tooltipEl.style.pointerEvents = 'none';
@@ -282,7 +341,7 @@ class ChartUtil
         }
     }
 
-    static setTooltipPosition(tooltipEl, tooltipModel, thiss)
+    static setTooltipPosition(tooltipEl, tooltipModel, thiss, position)
     {
         // Set caret Position
         tooltipEl.classList.remove('above', 'below', 'no-transform');
@@ -291,9 +350,6 @@ class ChartUtil
         } else {
             tooltipEl.classList.add('no-transform');
         }
-
-        // `this` will be the overall tooltip
-        const position = thiss._chart.canvas.getBoundingClientRect();
 
         const yAlign = tooltipModel.yAlign;
         const xAlign = tooltipModel.xAlign;

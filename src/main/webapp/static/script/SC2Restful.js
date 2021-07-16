@@ -34,6 +34,7 @@ class SC2Restful
     static initAll()
     {
         Model.init();
+        ChartUtil.getOrCreateTooltipElement();
     }
 
     static enhance(mode = START_MODE.FULL)

@@ -235,6 +235,13 @@ th.hoverable span
     border-radius: 1em;
 }
 
+.chart-zoom-ctl
+{
+    font-size: 0.7rem;
+    padding: .100rem .200rem;
+    float: right;
+}
+
 .chartable
 {
     display: none;

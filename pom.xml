@@ -161,6 +161,11 @@
         <artifactId>chartjs</artifactId>
         <version>2.9.3</version>
     </dependency>
+    <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>chartjs-plugin-zoom</artifactId>
+        <version>0.7.7</version>
+    </dependency>
 
     <dependency>
       <groupId>org.webjars.npm</groupId>
