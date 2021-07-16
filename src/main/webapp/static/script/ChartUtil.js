@@ -97,6 +97,8 @@ class ChartUtil
                     },
                     tooltips:
                     {
+                        enabled: false,
+                        custom: ChartUtil.createHtmlTooltip,
                         bodyFontFamily: "'Liberation Mono', monospace",
                         mode: (config.data.customMeta.type === "pie" || config.data.customMeta === "doughnut")
                             ? "dataset"
@@ -105,9 +107,14 @@ class ChartUtil
                         intersect: false,
                         callbacks:
                         {
+                            beforeBody: ChartUtil.beforeBody,
                             label: config.tooltipPercentage === "true" ? ChartUtil.addTooltipPercentage : ChartUtil.formatTooltip
                         },
                         ...(config.tooltipSort === "reverse") && {itemSort: ChartUtil.sortTooltipReversed}
+                    },
+                    legend:
+                    {
+                        onClick:ChartUtil.onLegendClick
                     },
                     layout: {padding: {right: 15}},
                     animation:{duration: 0},
@@ -118,6 +125,22 @@ class ChartUtil
         );
         chart.customConfig = config;
         return chart;
+    }
+
+    static onLegendClick(e, legendItem)
+    {
+        const tooltip = document.querySelector("#chartjs-tooltip");
+        if(tooltip) tooltip.style.opacity = 0;
+        var index = legendItem.datasetIndex;
+        var ci = this.chart;
+        var meta = ci.getDatasetMeta(index);
+        meta.hidden = meta.hidden === null ? !ci.data.datasets[index].hidden : null;
+        ci.update();
+    }
+
+    static beforeBody(tooltipItem, data, x)
+    {
+        return data.customMeta.headers;
     }
 
     static formatTooltip(tooltipItem, data)
@@ -134,7 +157,6 @@ class ChartUtil
             labels = data.datasets.map(ds=>ds.label);
             label = labels[tooltipItem.datasetIndex];
         }
-        label = Util.addStringTail(label, labels, " ");
         const rawData = ChartUtil.CHART_RAW_DATA.get(data.customMeta.id);
         if(rawData != null && rawData.additionalDataGetter)
         {
@@ -146,12 +168,12 @@ class ChartUtil
             }
             else
             {
-                label += " " + additional;
+                label = [label, additional];
             }
         }
         else
         {
-            label += " " + Util.NUMBER_FORMAT.format(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]);
+            label = [label, Util.NUMBER_FORMAT.format(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index])];
         }
         return label;
     }
@@ -180,6 +202,124 @@ class ChartUtil
         return a.datasetIndex !== b.datasetIndex
             ? (b.datasetIndex - a.datasetIndex)
             : (b.index - a.index);
+    }
+
+    static createHtmlTooltip(tooltipModel)
+    {
+        const tooltipEl = ChartUtil.getOrCreateTooltipElement();
+        if (tooltipModel.opacity === 0) {
+            tooltipEl.style.opacity = 0;
+            return;
+        }
+
+        ChartUtil.injectTooltipTableHeaders(tooltipEl, tooltipModel);
+        ChartUtil.injectTooltipTableData(tooltipEl, tooltipModel);
+        ChartUtil.setTooltipPosition(tooltipEl, tooltipModel, this);
+
+        tooltipEl.style.padding = tooltipModel.yPadding + "px " + tooltipModel.xPadding + "px";
+    }
+
+    static getOrCreateTooltipElement()
+    {
+        let tooltipEl = document.getElementById('chartjs-tooltip');
+        if(!tooltipEl)
+        {
+            tooltipEl = document.createElement('div');
+            tooltipEl.id = 'chartjs-tooltip';
+            tooltipEl.innerHTML = '<h2></h2><table class="table table-sm"><thead></thead><tbody></tbody></table>';
+            tooltipEl.style.position = 'absolute';
+            tooltipEl.style.pointerEvents = 'none';
+            document.body.appendChild(tooltipEl);
+        }
+        return tooltipEl;
+    }
+
+    static injectTooltipTableHeaders(tooltipEl, tooltipModel)
+    {
+        const thead = tooltipEl.querySelector(":scope table thead");
+        ElementUtil.removeChildren(thead);
+        if(tooltipModel.beforeBody && tooltipModel.beforeBody.length > 0)
+        {
+            const thr = thead.insertRow();
+            TableUtil.createRowTh(thr).textContent = "L";
+            for(const header of tooltipModel.beforeBody) TableUtil.createRowTh(thr).textContent = header;
+        }
+    }
+
+    static injectTooltipTableData(tooltipEl, tooltipModel)
+    {
+        const tbody = tooltipEl.querySelector(":scope table tbody");
+        ElementUtil.removeChildren(tbody);
+        if (tooltipModel.body)
+        {
+            const titleLines = tooltipModel.title || [];
+            const bodyLines = tooltipModel.body.map(bodyItem=>bodyItem.lines);
+
+            titleLines.forEach(title=>tooltipEl.querySelector(":scope h2").textContent = title);
+
+            bodyLines.forEach((body, i)=>{
+                const row = tbody.insertRow();
+                const legendColor = row.insertCell();
+                legendColor.innerHTML ='<div class="legend-color" style="background-color: ' + tooltipModel.labelColors[i].backgroundColor + ';"></div>'
+                for(const l of body) row.insertCell().textContent = l
+            });
+        }
+    }
+
+    static setTooltipPosition(tooltipEl, tooltipModel, thiss)
+    {
+        // Set caret Position
+        tooltipEl.classList.remove('above', 'below', 'no-transform');
+        if (tooltipModel.yAlign) {
+            tooltipEl.classList.add(tooltipModel.yAlign);
+        } else {
+            tooltipEl.classList.add('no-transform');
+        }
+
+        // `this` will be the overall tooltip
+        const position = thiss._chart.canvas.getBoundingClientRect();
+
+        const yAlign = tooltipModel.yAlign;
+        const xAlign = tooltipModel.xAlign;
+
+        tooltipEl.style.opacity = 1;
+        const { height, width } = tooltipEl.getBoundingClientRect();
+
+        const canvasRect = thiss._chart.canvas.getBoundingClientRect();
+        const positionY = canvasRect.top;
+        const positionX = canvasRect.left;
+
+        const caretY = tooltipModel.caretY;
+        const caretX = tooltipModel.caretX;
+
+        // Final coordinates
+        let top = positionY + caretY - height;
+        let left = positionX + caretX - width / 2;
+        let space = 8; // This for making space between the caret and the element.
+
+        if (yAlign === "top") {
+          top += height + space;
+        } else if (yAlign === "center") {
+          top += height / 2;
+        } else if (yAlign === "bottom") {
+          top -= space;
+        }
+        if (xAlign === "left") {
+          left = left + width / 2 - tooltipModel.xPadding - space / 2;
+          if (yAlign === "center") {
+            left = left + space * 2;
+          }
+        } else if (xAlign === "right") {
+          left -= width / 2;
+          if (yAlign === "center") {
+            left = left - space;
+          } else {
+            left += space;
+          }
+        }
+
+        tooltipEl.style.top = `${top + window.pageYOffset}px`;
+        tooltipEl.style.left = `${left + window.pageXOffset}px`;
     }
 
     static decorateChartData(data, config)
@@ -260,7 +400,10 @@ class ChartUtil
             customMeta:
             {
                 id: elem.id,
-                type: type
+                type: type,
+                headers: elem.getAttribute("data-chart-tooltip-table-headers")
+                    ? elem.getAttribute("data-chart-tooltip-table-headers").split(",")
+                    : []
             }
         }
         return data;

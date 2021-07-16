@@ -548,12 +548,11 @@ class CharacterUtil
         const race = races[ix2];
         const curData = Object.values(data)[ix1].find(d=>d.race == race);
         const lines = [];
-        lines.push("mmr:    " + curData.teamState.rating);
-        lines.push("games:  " + curData.teamState.games);
-        lines.push("league: " +  EnumUtil.enumOfId(curData.league.type, LEAGUE).name)
+        lines.push(curData.season);
+        lines.push(EnumUtil.enumOfId(curData.league.type, LEAGUE).name)
             + (ALTERNATIVE_UPDATE_REGIONS.length > 0 ? "" : " " + (curData.tier + 1));
-        lines.push("season: " + curData.season);
-
+        lines.push(curData.teamState.rating);
+        lines.push(curData.teamState.games);
         return lines;
     }
 

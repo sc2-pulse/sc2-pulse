@@ -555,21 +555,13 @@ class TeamUtil
         dataset.datasets.forEach(d=>races.push(d.label));
         const race = races[ix2];
         const curData = Object.values(data)[ix1].find(d=>d.group.name == race);
-        const lines1 = [];
-        const lines2 = [];
-        const lines3 = [];
-        lines1.push("mmr: " + curData.teamState.rating);
-        lines1.push("games: " + curData.teamState.games);
-        lines2.push("league: " +  EnumUtil.enumOfId(curData.league.type, LEAGUE).name)
+        const lines = [];
+        lines.push(curData.season);
+        lines.push(EnumUtil.enumOfId(curData.league.type, LEAGUE).name)
             + (ALTERNATIVE_UPDATE_REGIONS.length > 0 ? "" : " " + (curData.tier + 1));
-        lines2.push("season: " + curData.season);
-        if(curData.team) {
-            const globalRank = TeamUtil.getRank(curData.team, "globalRank", stats=>Object.values(stats.regionTeamCount).reduce((a, b)=>a+b));
-            const regionRank = TeamUtil.getRank(curData.team, "regionRank", stats=>stats.regionTeamCount[curData.team.region]);
-            lines3.push(TeamUtil.getRankString(globalRank, "global", false));
-            lines3.push(TeamUtil.getRankString(regionRank, "region", false));
-        }
-        return lines3.length > 0 ? [lines1.join(", "), lines2.join(", "), lines3.join(", ")] : [lines1.join(", "), lines2.join(", ")];
+        lines.push(curData.teamState.rating);
+        lines.push(curData.teamState.games);
+        return lines;
     }
 
     static generateTeamMmrTitle(params, hash)
