@@ -20,6 +20,7 @@ class ChartUtil
         config["xTimeUnit"] = chartable.getAttribute("data-chart-x-time-unit");
         config["beginAtZero"] = chartable.getAttribute("data-chart-begin-at-zero");
         config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
+        config["chartable"] = chartable.id;
         config["data"] = ChartUtil.collectChartJSData(chartable);
 
         ChartUtil.CHARTS.set(chartable.id, ChartUtil.createGenericChart(config));
