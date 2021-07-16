@@ -260,8 +260,23 @@ class ChartUtil
             bodyLines.forEach((body, i)=>{
                 const row = tbody.insertRow();
                 const legendColor = row.insertCell();
-                legendColor.innerHTML ='<div class="legend-color" style="background-color: ' + tooltipModel.labelColors[i].backgroundColor + ';"></div>'
-                for(const l of body) row.insertCell().textContent = l
+                legendColor.innerHTML ='<div class="legend-color" style="background-color: ' + tooltipModel.labelColors[i].backgroundColor + ';"></div>';
+                const image = SC2Restful.IMAGES.get(body[0]);
+                if(image) {
+                    const cell = row.insertCell();
+                    cell.classList.add("text-center");
+                    cell.appendChild(image.cloneNode());
+                } else {
+                    row.insertCell().textContent = body[0];
+                }
+                for(let i = 1; i < body.length; i++) {
+                    const l = body[i];
+                    if(l.nodeType) {
+                        row.insertCell().appendChild(l);
+                    } else {
+                        row.insertCell().textContent = l;
+                    }
+                }
             });
         }
     }

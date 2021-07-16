@@ -557,8 +557,14 @@ class TeamUtil
         const curData = Object.values(data)[ix1].find(d=>d.group.name == race);
         const lines = [];
         lines.push(curData.season);
-        lines.push(EnumUtil.enumOfId(curData.league.type, LEAGUE).name)
-            + (ALTERNATIVE_UPDATE_REGIONS.length > 0 ? "" : " " + (curData.tier + 1));
+        const leagueContainer = document.createElement("div");
+        leagueContainer.appendChild(SC2Restful.IMAGES.get(EnumUtil.enumOfId(curData.league.type, LEAGUE).name.toLowerCase()).cloneNode());
+        if(ALTERNATIVE_UPDATE_REGIONS.length == 0) {
+            const tierEl = document.createElement("span");
+            tierEl.textContent = curData.tier + 1;
+            leagueContainer.appendChild(tierEl);
+        }
+        lines.push(leagueContainer);
         lines.push(curData.teamState.rating);
         lines.push(curData.teamState.games);
         return lines;
