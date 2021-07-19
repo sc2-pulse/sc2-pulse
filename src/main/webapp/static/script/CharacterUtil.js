@@ -374,7 +374,7 @@ class CharacterUtil
     
     static getGamesAndAverageMmrString(mmrHistory)
     {
-        let result = "games/avg mmr";
+        let result = "games/avg mmr/max mmr";
         const gamesMmr = CharacterUtil.getGamesAndAverageMmr(mmrHistory);
         result += CharacterUtil.getGamesAndAverageMmrEntryString(gamesMmr, "all");
         for(const race of Object.values(RACE))
@@ -386,7 +386,7 @@ class CharacterUtil
     {
         const val = gamesMmr[keyName.toUpperCase()];
         if(!val) return "";
-        return `, ${keyName.toLowerCase()}: ${val.games}/${val.averageMmr}`;
+        return `, ${keyName.toLowerCase()}: ${val.games}/${val.averageMmr}/${val.maximumMmr}`;
     }
 
     static getGamesAndAverageMmr(mmrHistory)
@@ -408,7 +408,8 @@ class CharacterUtil
             const mmr = originalHistories.map(h=>h.teamState.rating);
             const sum = mmr.reduce((a, b) => a + b, 0);
             const avg = (sum / mmr.length) || 0;
-            result[race] = {games : games, averageMmr: Math.round(avg)};
+            const max = mmr.reduce((a, b) => Math.max(a, b));
+            result[race] = {games : games, averageMmr: Math.round(avg), maximumMmr: max};
         }
         return result;
     }
