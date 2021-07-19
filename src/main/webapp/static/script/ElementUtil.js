@@ -167,7 +167,7 @@ class ElementUtil
         cardBody.classList.add("card-body");
         card.appendChild(cardBody);
         const cardHeader = document.createElement("h4");
-        cardHeader.textContent = teamFormat.name + " " + teamType.secondaryName;
+        cardHeader.textContent = Util.getTeamFormatAndTeamTypeString(teamFormat, teamType);
         cardHeader.classList.add("card-title");
         const table = TableUtil.createTable(["Race", "Best League", "Best MMR", "Total Games", "Current MMR", "Current Games"], false);
         table.classList.add("player-stats-table");
@@ -212,7 +212,7 @@ class ElementUtil
 
     static generateLadderTitle(params, hash, includeSeason = true)
     {
-        return `${Session.currentTeamType.secondaryName} ${Session.currentTeamFormat.name} ${ElementUtil.getTabTitle(hash)}${includeSeason ? ", " + Session.currentSeasons.find(s=>s.battlenetId == Session.currentSeason).descriptiveName : ""}`;
+        return `${Util.getTeamFormatAndTeamTypeString(Session.currentTeamFormat, Session.currentTeamType)} ${ElementUtil.getTabTitle(hash)}${includeSeason ? ", " + Session.currentSeasons.find(s=>s.battlenetId == Session.currentSeason).descriptiveName : ""}`;
     }
 
     static generateCharacterTitle(params, hash)

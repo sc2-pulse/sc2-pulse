@@ -63,7 +63,7 @@ class TeamUtil
     {
         const teamFormat = EnumUtil.enumOfId(team.league.queueType, TEAM_FORMAT);
         const teamType = EnumUtil.enumOfId(team.league.teamType, TEAM_TYPE);
-        return document.createTextNode(teamFormat.name + " " + teamType.secondaryName);
+        return document.createTextNode(Util.getTeamFormatAndTeamTypeString(teamFormat, teamType));
     }
 
     static getRank(team, rankType, teamCountCalculator)

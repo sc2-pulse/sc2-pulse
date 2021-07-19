@@ -230,6 +230,11 @@ class Util
         return "rgb(" + r + "," + g + "," + b + ")";
     }
 
+    static getTeamFormatAndTeamTypeString(teamFormat, teamType)
+    {
+        return teamFormat.name + (teamFormat == TEAM_FORMAT._1V1 ? "" : " " + teamType.secondaryName);
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
