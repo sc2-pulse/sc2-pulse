@@ -342,10 +342,14 @@ class ElementUtil
     {
         if(document.fullscreenElement == null)
         {
-            document.getElementById(evt.target.getAttribute("data-target")).requestFullscreen();
+            const el = document.getElementById(evt.target.getAttribute("data-target"));
+            for(const t of document.querySelectorAll(".fullscreen-required")) el.prepend(t)
+            el.requestFullscreen();
         }
         else
         {
+            for(const t of document.querySelectorAll(".fullscreen-required"))
+                document.querySelector(t.getAttribute("data-original-parent")).appendChild(t);
             document.exitFullscreen();
         }
     }
