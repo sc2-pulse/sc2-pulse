@@ -737,7 +737,7 @@ class CharacterUtil
 
     static findCharactersByName()
     {
-        CharacterUtil.updateCharacterSearch(document.getElementById("search-player-name").value);
+        return CharacterUtil.updateCharacterSearch(document.getElementById("search-player-name").value);
     }
 
     static updateCharacterSearchModel(name)
