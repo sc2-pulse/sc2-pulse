@@ -127,6 +127,13 @@ public class LadderCharacterDAO
         + "AND battlenet_id = :battlenetId", ""
     );
 
+    private static final String FIND_DISTINCT_CHARACTER_BY_CLAN_TAG_QUERY = String.format
+    (
+        FIND_DISTINCT_CHARACTER_FORMAT,
+        "INNER JOIN clan ON player_character.clan_id = clan.id "
+        + "WHERE clan.tag = :clanTag ", ""
+    );
+
     private static final String FIND_LINKED_DISTINCT_CHARACTERS_TEMPLATE = String.format
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
@@ -227,6 +234,10 @@ public class LadderCharacterDAO
 
     public List<LadderDistinctCharacter> findDistinctCharacters(String term)
     {
+        if(term.startsWith("[")) {
+            if(term.length() < 3) throw new IllegalArgumentException("Invalid clan tag length");
+            return findDistinctCharactersByClanTag(term.substring(1, term.length() - 1));
+        }
         if(term.contains("#")) return findDistinctCharactersByFullBattleTag(term);
         if(term.contains("/")) {
             LadderDistinctCharacter c = findDistinctCharacterByProfileLink(term).orElse(null);
@@ -279,6 +290,18 @@ public class LadderCharacterDAO
             .addValue("season", seasonDAO.getMaxBattlenetId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class));
         return Optional.ofNullable(template.query(FIND_DISTINCT_CHARACTER_BY_PROFILE_LINK_QUERY, params, DISTINCT_CHARACTER_EXTRACTOR));
+    }
+
+    public List<LadderDistinctCharacter> findDistinctCharactersByClanTag(String clanTag)
+    {
+        if(clanTag == null) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("clanTag", clanTag)
+            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class));
+        return template
+            .query(FIND_DISTINCT_CHARACTER_BY_CLAN_TAG_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
 
     public List<LadderDistinctCharacter> findLinkedDistinctCharactersByCharacterId(Long playerCharacterId)

@@ -45,6 +45,7 @@ class SC2Restful
                 LadderUtil.enhanceLadderForm();
                 CharacterUtil.enhanceSearchForm();
                 CharacterUtil.enhanceLoadMoreMatchesInput();
+                CharacterUtil.enhanceAutoClanSearch();
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");

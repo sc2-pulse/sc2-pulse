@@ -153,32 +153,61 @@ class CharacterUtil
     static updateCharacterInfoName(member)
     {
         let charName;
+        let charClan;
+        let charTeam;
         let charNameAdditional;
+        let charNameAdditionalClan;
         const hashIx = member.character.name.indexOf("#");
         const nameNoHash = member.character.name.substring(0, hashIx);
-        const maskedTeam = member.clan ? "[" + member.clan.tag + "]" : "";
+        const maskedTeam = member.clan ? member.clan.tag : "";
         if(!Util.needToUnmaskName(nameNoHash, member.proNickname, member.account.battleTag))
         {
-            charName = maskedTeam + nameNoHash;
+            charName = nameNoHash;
+            charClan = maskedTeam;
             charNameAdditional = member.character.name.substring(hashIx);
         }
         else
         {
             const unmasked = Util.unmaskName(member);
-            const unmaskedTeam = unmasked.unmaskedTeam ? "[" + unmasked.unmaskedTeam + "]" : "";
-            charName = unmaskedTeam + unmasked.unmaskedName
-            charNameAdditional = `(${maskedTeam}${member.character.name})`;
+            const unmaskedTeam = unmasked.unmaskedTeam ? unmasked.unmaskedTeam : "";
+            charName = unmasked.unmaskedName;
+            charTeam = unmaskedTeam;
+            charNameAdditional = member.character.name;
+            charNameAdditionalClan = maskedTeam;
         }
         document.getElementById("player-info-title-name").textContent = charName;
+        const clanElem = document.getElementById("player-info-title-clan");
+        const teamElem = document.getElementById("player-info-title-team");
         const additionalNameElem = document.getElementById("player-info-title-name-additional");
+        const additionalClanElem = document.getElementById("player-info-title-clan-additional");
+        if(charNameAdditionalClan) {
+            additionalClanElem.textContent = charNameAdditionalClan;
+            additionalClanElem.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=search&name=${"[" + charNameAdditionalClan + "]"}#search`));
+            additionalClanElem.classList.remove("d-none");
+        } else {
+            additionalClanElem.classList.add("d-none");
+        }
+        if(charClan) {
+            clanElem.textContent = charClan;
+            clanElem.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=search&name=${"[" + charClan + "]"}#search`));
+            clanElem.classList.remove("d-none");
+        } else {
+            clanElem.classList.add("d-none");
+        }
+        if(charTeam) {
+            teamElem.textContent = charTeam;
+            teamElem.classList.remove("d-none");
+        } else {
+            teamElem.classList.add("d-none");
+        }
         additionalNameElem.textContent = charNameAdditional;
         if(member.proNickname != null)
         {
-            additionalNameElem.classList.add("player-pro");
+            document.querySelector("#player-info-additional-container").classList.add("player-pro");
         }
         else
         {
-            additionalNameElem.classList.remove("player-pro");
+            document.querySelector("#player-info-additional-container").classList.remove("player-pro");
         }
     }
 
@@ -898,6 +927,23 @@ class CharacterUtil
     static enhanceLoadMoreMatchesInput()
     {
         document.querySelector("#load-more-matches").addEventListener("click", CharacterUtil.loadNextMatches);
+    }
+
+    static enhanceAutoClanSearch()
+    {
+        for(const e of document.querySelectorAll(".clan-auto-search")) e.addEventListener("click", CharacterUtil.autoClanSearch);
+    }
+
+    static autoClanSearch(evt)
+    {
+        evt.preventDefault();
+        const params = new URLSearchParams(evt.target.getAttribute("href").substring(0, evt.target.getAttribute("href").indexOf("#")));
+        document.querySelector("#search-player-name").value = params.get("name");
+        Session.isHistorical = true;
+        return BootstrapUtil.hideActiveModal("error-generation")
+            .then(r=>{Session.isHistorical = false; return CharacterUtil.findCharactersByName();})
+            .then(r=>HistoryUtil.showAnchoredTabs())
+            .then(r=>new Promise((res, rej)=>{window.scrollTo(0, 0); res();}));
     }
 
 }
