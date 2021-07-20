@@ -261,7 +261,7 @@ class ChartUtil
 
     static createHtmlTooltip(tooltipModel)
     {
-        const tooltipEl = ChartUtil.getOrCreateTooltipElement();
+        const tooltipEl = ChartUtil.getOrCreateTooltipElement(this._chart);
         if (tooltipModel.opacity === 0) {
             tooltipEl.style.opacity = 0;
             return;
@@ -280,19 +280,18 @@ class ChartUtil
         tooltipEl.style.padding = tooltipModel.yPadding + "px " + tooltipModel.xPadding + "px";
     }
 
-    static getOrCreateTooltipElement()
+    static getOrCreateTooltipElement(chart)
     {
-        let tooltipEl = document.getElementById('chartjs-tooltip');
+        let tooltipEl = document.getElementById('chartjs-tooltip-' + chart.customConfig.chartable);
         if(!tooltipEl)
         {
             tooltipEl = document.createElement('div');
-            tooltipEl.id = 'chartjs-tooltip';
-            tooltipEl.classList.add("fullscreen-required");
-            tooltipEl.setAttribute("data-original-parent", "body");
+            tooltipEl.id = 'chartjs-tooltip-' + chart.customConfig.chartable;
+            tooltipEl.classList.add("chartjs-tooltip");
             tooltipEl.innerHTML = '<h2></h2><table class="table table-sm"><thead></thead><tbody></tbody></table>';
             tooltipEl.style.position = 'absolute';
             tooltipEl.style.pointerEvents = 'none';
-            document.body.appendChild(tooltipEl);
+            chart.canvas.closest(".container-chart").appendChild(tooltipEl);
         }
         return tooltipEl;
     }
@@ -361,8 +360,8 @@ class ChartUtil
         const { height, width } = tooltipEl.getBoundingClientRect();
 
         const canvasRect = thiss._chart.canvas.getBoundingClientRect();
-        const positionY = canvasRect.top;
-        const positionX = canvasRect.left;
+        const positionY = thiss._chart.canvas.offsetTop;
+        const positionX = thiss._chart.canvas.offsetLeft;
 
         const caretY = tooltipModel.caretY;
         const caretX = tooltipModel.caretX;
@@ -393,8 +392,8 @@ class ChartUtil
           }
         }
 
-        tooltipEl.style.top = `${top + window.pageYOffset}px`;
-        tooltipEl.style.left = `${left + window.pageXOffset}px`;
+        tooltipEl.style.top = `${top}px`;
+        tooltipEl.style.left = `${left}px`;
     }
 
     static decorateChartData(data, config)

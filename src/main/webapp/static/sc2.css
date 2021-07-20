@@ -190,45 +190,45 @@ th.hoverable span
     vertical-align: middle;
 }
 
-#chartjs-tooltip
+.chartjs-tooltip
 {
     background-color: rgba(0, 0, 0, 0.85);
     border-radius: 0.5em;
     z-index: 9999;
 }
 
-#chartjs-tooltip *
+.chartjs-tooltip *
 {
     font-size: 0.75rem;
     color: white;
 }
 
-#chartjs-tooltip h2
+.chartjs-tooltip h2
 {
     font-weight: bold;
 }
 
-#chartjs-tooltip .table
+.chartjs-tooltip .table
 {
     margin-bottom: 0;
 }
 
-#chartjs-tooltip .table td:nth-child(2)
+.chartjs-tooltip .table td:nth-child(2)
 {
     text-align: left;
 }
 
-#chartjs-tooltip thead th
+.chartjs-tooltip thead th
 {
     font-size: 0.9em;
 }
 
-#chartjs-tooltip .table td
+.chartjs-tooltip .table td
 {
     padding: 0.1em;
 }
 
-#chartjs-tooltip .legend-color
+.chartjs-tooltip .legend-color
 {
     height: 1em;
     width: 1em;
