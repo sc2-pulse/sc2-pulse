@@ -140,15 +140,6 @@ class SeasonUtil
             (name)=>EnumUtil.enumOfName(name, REGION).name,
             (dateTime)=>new Date(dateTime)
         );
-        const chart = ChartUtil.CHARTS.get(tableId);
-        const unit = EnumUtil.enumOfName(searchParams.get("period"), PERIOD).timeUnit;
-        if(chart && chart.config.options.scales.xAxes[0].time.unit != unit) {
-            chart.config.options.scales.xAxes[0].time.unit = unit;
-            chart.update();
-        }
-        else {
-            document.getElementById(tableId).setAttribute("data-chart-x-time-unit", unit);
-        }
     }
 
     static enhanceSeasonStateForm()
