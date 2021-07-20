@@ -297,31 +297,32 @@ public class StatsService
     private void updateCurrentSeason
     (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
     {
-        Integer seasonId = null;
+        //there can be two seasons here when a new season starts
+        Set<Integer> seasons = new HashSet<>(2);
         int maxSeason = seasonDao.getMaxBattlenetId();
         for(Region region : regions)
         {
             BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
             Season season = seasonDao.merge(Season.of(bSeason, region));
             updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, updateContext);
-            seasonId = season.getBattlenetId();
-            LOG.debug("Updated leagues: {} {}", seasonId, region);
+            seasons.add(season.getBattlenetId());
+            LOG.debug("Updated leagues: {} {}", season.getBattlenetId(), region);
         }
         postgreSQLUtils.vacuumAnalyze();
         teamStateDAO.removeExpired();
         postgreSQLUtils.vacuumAnalyze();
-        if(seasonId != null)
+        if(queues.length == QueueType.getTypes(VERSION).size()) playerCharacterStatsDAO.mergeCalculate
+        (
+            updateContext.getInternalUpdate() != null
+                ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
+                : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH)
+        );
+        for(int seasonId : seasons)
         {
-            if(queues.length == QueueType.getTypes(VERSION).size())
-            {
+            if(queues.length == QueueType.getTypes(VERSION).size()) {
                 updateSeasonStats(seasonId, allStats);
-                playerCharacterStatsDAO.mergeCalculate(
-                    updateContext.getInternalUpdate() != null
-                    ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
-                    : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH));
             }
-            else
-            {
+            else {
                 leagueStatsDao.mergeCalculateForSeason(seasonId);
                 teamDao.updateRanks(seasonId);
             }
