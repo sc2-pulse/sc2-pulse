@@ -217,9 +217,15 @@ class ElementUtil
 
     static generateCharacterTitle(params, hash)
     {
+        const clanEl = document.querySelector("#player-info-title-clan");
+        const teamEl = document.querySelector("#player-info-title-team");
+        const clanAdditionalEl = document.querySelector("#player-info-title-clan-additional");
         const name = document.querySelector("#player-info-title-name").textContent;
+        const clan = clanEl.classList.contains("d-none") ? "" : "[" + clanEl.textContent + "]";
+        const team = teamEl.classList.contains("d-none") ? "" : "[" + teamEl.textContent + "]";
+        const clanAdditional = clanAdditionalEl.classList.contains("d-none") ? "" : "[" + clanAdditionalEl.textContent + "]";
         const nameAdditional = document.querySelector("#player-info-title-name-additional").textContent;
-        return `${name}${nameAdditional} ${ElementUtil.getTabTitle(hash)}`;
+        return `${clan}${team}${name}(${clanAdditional}${nameAdditional}) ${ElementUtil.getTabTitle(hash)}`;
     }
 
     static generateOnlineTitle(params, hash)
