@@ -167,9 +167,11 @@ class ChartUtil
         const ctl = evt.target;
         if(!ctl.classList.contains("active")) return;
 
-        ChartUtil.CHARTS.get(ctl.getAttribute("data-chartable-id")).resetZoom();
+        const chart = ChartUtil.CHARTS.get(ctl.getAttribute("data-chartable-id"));
+        chart.resetZoom();
         ctl.textContent = "Wheel/pinch to zoom, mouse/drag to pan";
         ctl.classList.remove("active");
+        chart.customConfig.isZoomed = false;
     }
 
     static onZoom(chart)
@@ -177,6 +179,7 @@ class ChartUtil
         const ctl = document.getElementById("chart-zoom-ctl-" + chart.chart.customConfig.chartable);
         ctl.classList.add("active");
         ctl.textContent = "Reset zoom/pan";
+        chart.chart.customConfig.isZoomed = true;
     }
 
     static onLegendClick(e, legendItem)
