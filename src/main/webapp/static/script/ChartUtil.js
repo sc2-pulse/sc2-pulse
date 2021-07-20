@@ -508,6 +508,8 @@ class ChartUtil
             ChartUtil.decorateChartData(data, chart.customConfig);
             chart.data = data;
         }
+        if(chart.customConfig.isZoomed)
+            ChartUtil.resetZoom({target: document.querySelector("#chart-zoom-ctl-" + chart.customConfig.chartable)});
         chart.update();
     }
 
