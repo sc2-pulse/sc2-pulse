@@ -32,7 +32,7 @@ implements Filter
 
     private boolean mustDeny(ServletRequest req)
     {
-        return isOldSeason(req) || hasDeprecatedParams(req);
+        return hasDeprecatedParams(req);
     }
 
     private boolean isOldSeason(ServletRequest req)
