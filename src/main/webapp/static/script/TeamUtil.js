@@ -231,7 +231,8 @@ class TeamUtil
         nameElem.textContent = unmasked.unmaskedName;
         nameContainer.appendChild(nameElem);
 
-        if(unmasked.maskedName.toLowerCase() != unmasked.unmaskedName.toLowerCase())
+        if(unmasked.maskedName.toLowerCase() != unmasked.unmaskedName.toLowerCase()
+            || (unmasked.maskedTeam && unmasked.maskedTeam != unmasked.unmaskedTeam))
         {
             const maskedContainer = document.createElement("span");
             maskedContainer.classList.add("player-name-masked-container");
