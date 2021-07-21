@@ -160,8 +160,8 @@ class Session
     {
         const color = theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)";
         for(const chart of ChartUtil.CHARTS.values()) {
-            chart.config.options.scales.yAxes[0].gridLines.color = color;
-            chart.config.options.scales.yAxes[0].gridLines.zeroLineColor = color;
+            chart.config.options.scales.y.grid.color = color;
+            chart.config.options.scales.y.grid.zeroLineColor = color;
             chart.update();
         }
     }

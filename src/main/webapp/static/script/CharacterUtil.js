@@ -338,7 +338,7 @@ class CharacterUtil
                 ? (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order
                 : null,
             queue == TEAM_FORMAT._1V1 ? (name)=>EnumUtil.enumOfName(name, RACE).name : (name)=>name.toLowerCase(),
-            (dateTime)=>new Date(parseInt(dateTime))
+            dateTime=>parseInt(dateTime)
         );
         document.getElementById("mmr-history-filters").textContent =
             "(" + queue.name

@@ -528,7 +528,7 @@ class TeamUtil
             }),
             null,
             null,
-            (dateTime)=>new Date(parseInt(dateTime))
+            dateTime=>parseInt(dateTime)
         );
         TeamUtil.updateTeamMmrFilters(transformedData, depthDate, excludeStart, excludeEnd);
     }

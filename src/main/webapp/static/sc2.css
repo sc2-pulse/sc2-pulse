@@ -195,6 +195,7 @@ th.hoverable span
     background-color: rgba(0, 0, 0, 0.85);
     border-radius: 0.5em;
     z-index: 9999;
+    padding: 0.5em;
 }
 
 .chartjs-tooltip *

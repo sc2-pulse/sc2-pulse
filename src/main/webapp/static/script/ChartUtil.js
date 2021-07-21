@@ -38,22 +38,21 @@ class ChartUtil
                 data: config.data,
                 options:
                 {
+                    normalized: true,
+                    parsing: {xAxisKey: false, yAxisKey: false},
                     aspectRatio: ChartUtil.ASPECT_RATIO,
-                    title:
-                    {
-                        display: config.title == null ? false : true,
-                        text: config.title
-                    },
                     scales:
                     {
-                        xAxes:
-                        [{
-                            scaleLabel: {display: false, labelString: config.xTitle},
-                            gridLines: {display: false},
+                        x:
+                        {
+                            title: {display: false, text: config.xTitle},
+                            grid: {display: false},
                             ticks:
                             {
-                                callback: (val, valIx, vals)=>
+                                callback: function(value, valIx, vals)
                                 {
+                                    const val = this.getLabelForValue(vals[valIx].value);
+
                                     const indexOfStart = val.lastIndexOf("(");
                                     const indexOfEnd = val.lastIndexOf(")");
                                     if(indexOfStart == -1 || indexOfEnd == -1 || indexOfStart > indexOfEnd) return val;
@@ -70,11 +69,11 @@ class ChartUtil
                                 type: "time",
                                 time: {unit: config.xTimeUnit == "false" ? false : config.xTimeUnit}
                             }
-                        }],
-                        yAxes:
-                        [{
-                            scaleLabel: {display: false, labelString: config.yTitle},
-                            gridLines:
+                        },
+                        y:
+                        {
+                            title: {display: false, text: config.yTitle},
+                            grid:
                             {
                                 color: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)",
                                 zeroLineColor: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)"
@@ -82,10 +81,10 @@ class ChartUtil
                             ticks:
                             {
                                 callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val),
-                                beginAtZero: config.beginAtZero === "true" ? true : false
                             },
-                            stacked: config.stacked === "true" ? true : false
-                        }]
+                            stacked: config.stacked === "true" ? true : false,
+                            beginAtZero: config.beginAtZero === "true" ? true : false
+                        }
                     },
                     spanGaps: true,
                     hover:
@@ -94,54 +93,58 @@ class ChartUtil
                             ? "dataset"
                             : "index",
                         position: "nearest",
-                        intersect: false,
-                        animationDuration: 0
-                    },
-                    tooltips:
-                    {
-                        enabled: false,
-                        custom: ChartUtil.createHtmlTooltip,
-                        bodyFontFamily: "'Liberation Mono', monospace",
-                        mode: (config.data.customMeta.type === "pie" || config.data.customMeta === "doughnut")
-                            ? "dataset"
-                            : "index",
-                        position: "nearest",
-                        intersect: false,
-                        callbacks:
-                        {
-                            beforeBody: ChartUtil.beforeBody,
-                            label: config.tooltipPercentage === "true" ? ChartUtil.addTooltipPercentage : ChartUtil.formatTooltip
-                        },
-                        ...(config.tooltipSort === "reverse") && {itemSort: ChartUtil.sortTooltipReversed}
-                    },
-                    legend:
-                    {
-                        onClick:ChartUtil.onLegendClick
+                        intersect: false
                     },
                     layout: {padding: {right: 15}},
-                    animation:{duration: 0},
-                    responsiveAnimationDuration: 0,
+                    animation: false,
                     plugins:
                     {
+                        tooltip:
+                        {
+                            enabled: false,
+                            external: ChartUtil.createHtmlTooltip,
+                            bodyFontFamily: "'Liberation Mono', monospace",
+                            mode: (config.data.customMeta.type === "pie" || config.data.customMeta === "doughnut")
+                                ? "dataset"
+                                : "index",
+                            position: "nearest",
+                            intersect: false,
+                            callbacks:
+                            {
+                                beforeBody: ChartUtil.beforeBody,
+                                label: config.tooltipPercentage === "true" ? ChartUtil.addTooltipPercentage : ChartUtil.formatTooltip
+                            },
+                            ...(config.tooltipSort === "reverse") && {itemSort: ChartUtil.sortTooltipReversed}
+                        },
+                        legend:
+                        {
+                            onClick:ChartUtil.onLegendClick
+                        },
+                        title:
+                        {
+                            display: config.title == null ? false : true,
+                            text: config.title
+                        },
                         ...(config.zoom) && {
                         zoom:
                         {
                             pan:
                             {
-                                enabled: true,
+                                enabled: (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement) ? false : true,
                                 mode: config.zoom,
                                 onPan: ChartUtil.onZoom
                             },
                             zoom:
                             {
-                                enabled: true,
-                                drag: false,
                                 mode: config.zoom,
                                 onZoom: ChartUtil.onZoom,
+                                wheel:{enabled: true, modifierKey: "ctrl"},
+                                drag:{enabled: true, modifierKey: "shift"},
+                                pinch:{enabled: true}
                             }
                         }}
                     },
-                    ...(config.performance === "fast") && {elements: {line: {tension: 0}}}
+                    elements: {line: {tension: config.performance === "fast" ? 0 : 0.4}}
                 }
             }
         );
@@ -157,7 +160,7 @@ class ChartUtil
         zoomCtl.setAttribute("type", "button");
         zoomCtl.classList.add("btn", "btn-outline-info", "chart-zoom-ctl");
         zoomCtl.setAttribute("data-chartable-id", chart.customConfig.chartable);
-        zoomCtl.textContent = "Wheel/pinch to zoom, mouse/drag to pan";
+        zoomCtl.textContent = "ctrl+wheel/shift+mouse drag/pinch to zoom, mouse drag to pan";
         zoomCtl.addEventListener("click", ChartUtil.resetZoom);
         chart.canvas.closest(".container-chart").prepend(zoomCtl);
     }
@@ -169,13 +172,14 @@ class ChartUtil
 
         const chart = ChartUtil.CHARTS.get(ctl.getAttribute("data-chartable-id"));
         chart.resetZoom();
-        ctl.textContent = "Wheel/pinch to zoom, mouse/drag to pan";
+        ctl.textContent = "ctrl+mouse wheel/shift+mouse drag/pinch to zoom, mouse drag to pan";
         ctl.classList.remove("active");
         chart.customConfig.isZoomed = false;
     }
 
     static onZoom(chart)
     {
+        document.getElementById("chartjs-tooltip-" + chart.chart.customConfig.chartable).style.opacity = 0;
         const ctl = document.getElementById("chart-zoom-ctl-" + chart.chart.customConfig.chartable);
         ctl.classList.add("active");
         ctl.textContent = "Reset zoom/pan";
@@ -193,29 +197,30 @@ class ChartUtil
         ci.update();
     }
 
-    static beforeBody(tooltipItem, data, x)
+    static beforeBody(chart)
     {
-        return data.customMeta.headers;
+        return chart[0].chart.customConfig.data.customMeta.headers;
     }
 
-    static formatTooltip(tooltipItem, data)
+    static formatTooltip(chart)
     {
         let label;
         let labels;
+        const data = chart.chart.customConfig.data;
         if(data.customMeta.type === "pie" || data.customMeta === "doughnut")
         {
             labels = data.labels;
-            label = labels[tooltipItem.index];
+            label = labels[chart.dataIndex];
         }
         else
         {
             labels = data.datasets.map(ds=>ds.label);
-            label = labels[tooltipItem.datasetIndex];
+            label = labels[chart.datasetIndex];
         }
         const rawData = ChartUtil.CHART_RAW_DATA.get(data.customMeta.id);
         if(rawData != null && rawData.additionalDataGetter)
         {
-            const additional = rawData.additionalDataGetter(rawData.rawData, data, tooltipItem.index, tooltipItem.datasetIndex);
+            const additional = rawData.additionalDataGetter(rawData.rawData, data, chart.dataIndex, chart.datasetIndex);
             if(additional.constructor === Array)
             {
                 additional.unshift(label);
@@ -228,27 +233,27 @@ class ChartUtil
         }
         else
         {
-            label = [label, Util.NUMBER_FORMAT.format(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index])];
+            label = [label, Util.NUMBER_FORMAT.format(data.datasets[chart.datasetIndex].data[chart.dataIndex])];
         }
         return label;
     }
 
-    static addTooltipPercentage(tooltipItem, data)
+    static addTooltipPercentage(chart, data)
     {
         let label;
         if(data.customMeta.type === "pie" || data.customMeta === "doughnut")
         {
-            label = data.labels[tooltipItem.index];
+            label = data.labels[chart.dataIndex];
         }
         else
         {
-            label = data.datasets[tooltipItem.datasetIndex].label;
+            label = data.datasets[chart.datasetIndex].label;
         }
         label += " "
-            + Util.NUMBER_FORMAT.format(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index]);
+            + Util.NUMBER_FORMAT.format(data.datasets[chart.datasetIndex].data[chart.dataIndex]);
         let sum = 0;
-        for(const dataset of data.datasets) sum += dataset.data[tooltipItem.index];
-        label += "\t(" + Util.calculatePercentage(data.datasets[tooltipItem.datasetIndex].data[tooltipItem.index], sum) + "%)";
+        for(const dataset of data.datasets) sum += dataset.data[chart.dataIndex];
+        label += "\t(" + Util.calculatePercentage(data.datasets[chart.datasetIndex].data[chart.dataIndex], sum) + "%)";
         return label;
     }
 
@@ -259,8 +264,9 @@ class ChartUtil
             : (b.index - a.index);
     }
 
-    static createHtmlTooltip(tooltipModel)
+    static createHtmlTooltip(context)
     {
+        const tooltipModel = context.tooltip;
         const tooltipEl = ChartUtil.getOrCreateTooltipElement(this._chart);
         if (tooltipModel.opacity === 0) {
             tooltipEl.style.opacity = 0;
@@ -275,9 +281,7 @@ class ChartUtil
         }
         ChartUtil.injectTooltipTableHeaders(tooltipEl, tooltipModel);
         ChartUtil.injectTooltipTableData(tooltipEl, tooltipModel);
-        ChartUtil.setTooltipPosition(tooltipEl, tooltipModel, this, position);
-
-        tooltipEl.style.padding = tooltipModel.yPadding + "px " + tooltipModel.xPadding + "px";
+        ChartUtil.setTooltipPosition(tooltipEl, tooltipModel, context, position);
     }
 
     static getOrCreateTooltipElement(chart)
@@ -343,7 +347,7 @@ class ChartUtil
         }
     }
 
-    static setTooltipPosition(tooltipEl, tooltipModel, thiss, position)
+    static setTooltipPosition(tooltipEl, tooltipModel, context, position)
     {
         // Set caret Position
         tooltipEl.classList.remove('above', 'below', 'no-transform');
@@ -359,9 +363,9 @@ class ChartUtil
         tooltipEl.style.opacity = 1;
         const { height, width } = tooltipEl.getBoundingClientRect();
 
-        const canvasRect = thiss._chart.canvas.getBoundingClientRect();
-        const positionY = thiss._chart.canvas.offsetTop;
-        const positionX = thiss._chart.canvas.offsetLeft;
+        const canvasRect = context.chart.canvas.getBoundingClientRect();
+        const positionY = context.chart.canvas.offsetTop;
+        const positionX = context.chart.canvas.offsetLeft;
 
         const caretY = tooltipModel.caretY;
         const caretX = tooltipModel.caretX;
@@ -379,7 +383,7 @@ class ChartUtil
           top -= space;
         }
         if (xAlign === "left") {
-          left = left + width / 2 - tooltipModel.xPadding - space / 2;
+          left = left + width / 2 - space / 2;
           if (yAlign === "center") {
             left = left + space * 2;
           }
@@ -485,28 +489,13 @@ class ChartUtil
 
     static updateChart(chart, data)
     {
-        if (data === null)
-        {
-            return;
-        }
-        if
-        (
-            chart.data.labels.length === data.labels.length
-            && chart.data.labels.every(function(val, ix){val === data.labels[ix]})
-        )
-        {
-            for (let i = 0; i < data.datasets.length; i++)
-            {
-                chart.data.datasets[i].label = data.datasets[i].label;
-                chart.data.datasets[i].data = data.datasets[i].data;
-                chart.data.datasets[i].hidden = data.datasets[i].hidden;
-            }
-        }
-        else
-        {
-            ChartUtil.decorateChartData(data, chart.customConfig);
-            chart.data = data;
-        }
+        if (data === null) return;
+
+        chart.data.labels.length = 0;
+        chart.data.datasets.length = 0;
+        data.labels.forEach(l=>chart.data.labels.push(l));
+        data.datasets.forEach(d=>chart.data.datasets.push(d));
+        ChartUtil.decorateChartData(data, chart.customConfig);
         if(chart.customConfig.isZoomed)
             ChartUtil.resetZoom({target: document.querySelector("#chart-zoom-ctl-" + chart.customConfig.chartable)});
         chart.update();
@@ -616,14 +605,20 @@ class ChartUtil
     {
         const chart = ChartUtil.CHARTS.get(chartable.id);
         if(!zoom) {
-            chartable.setAttribute("data-chart-begin-at-zero", "true");
-            if(chart != null) chart.options.scales.yAxes.forEach(y=>y.ticks.beginAtZero = true);
+            if(chart) {
+                chart.options.scales.y.beginAtZero = true;
+            } else {
+                chartable.setAttribute("data-chart-begin-at-zero", "true");
+            }
         }
         else {
-            chartable.setAttribute("data-chart-begin-at-zero", "false");
-            if(chart != null) chart.options.scales.yAxes.forEach(y=>y.ticks.beginAtZero = false);
+            if(chart) {
+                chart.options.scales.y.beginAtZero = false;
+            } else {
+                chartable.setAttribute("data-chart-begin-at-zero", "false");
+            }
         }
-        if(chart != null) chart.update();
+        if(chart) chart.update();
     }
 
     static enhanceHeightControls()
@@ -680,17 +675,16 @@ ChartUtil.CHARTABLE_OBSERVER = new MutationObserver(ChartUtil.onChartableMutatio
 ChartUtil.CHART_OBSERVER = new MutationObserver(ChartUtil.onChartMutation);
 ChartUtil.ASPECT_RATIO = 2.5;
 
-Chart.defaults.lineVCursor = Chart.defaults.line;
-Chart.controllers.lineVCursor = Chart.controllers.line.extend
-({
-    draw: function(ease)
+class ChartLineVCursor extends Chart.LineController
+{
+    draw()
     {
-        Chart.controllers.line.prototype.draw.call(this, ease);
+        super.draw(arguments);
         if (this.chart.tooltip._active && this.chart.tooltip._active.length)
         {
             var activePoint = this.chart.tooltip._active[0],
             ctx = this.chart.ctx,
-            x = activePoint.tooltipPosition().x,
+            x = activePoint.element.x,
             topY = this.chart.legend.bottom,
             bottomY = this.chart.chartArea.bottom;
 
@@ -707,4 +701,7 @@ Chart.controllers.lineVCursor = Chart.controllers.line.extend
             ctx.restore();
         }
     }
-});
+}
+ChartLineVCursor.id = "lineVCursor";
+ChartLineVCursor.defaults = Chart.LineController.defaults;
+Chart.register(ChartLineVCursor);

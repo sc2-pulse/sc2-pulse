@@ -138,7 +138,7 @@ class SeasonUtil
             (tableData=>ChartUtil.CHART_RAW_DATA.get(tableId).data = tableData),
             (a, b)=>EnumUtil.enumOfName(a, REGION).order - EnumUtil.enumOfName(b, REGION).order,
             (name)=>EnumUtil.enumOfName(name, REGION).name,
-            (dateTime)=>new Date(dateTime)
+            (dateTime)=>new Date(dateTime).getTime()
         );
     }
 
