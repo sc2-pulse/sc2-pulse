@@ -76,7 +76,7 @@ class ChartUtil
                             grid:
                             {
                                 color: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)",
-                                zeroLineColor: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)"
+                                borderColor: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)"
                              },
                             ticks:
                             {
