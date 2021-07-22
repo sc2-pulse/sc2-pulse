@@ -167,10 +167,17 @@
         <artifactId>chartjs</artifactId>
         <version>3.4.1</version>
     </dependency>
+
     <dependency>
         <groupId>org.webjars.npm</groupId>
         <artifactId>chartjs-plugin-zoom</artifactId>
-        <version>0.7.7</version>
+        <version>1.1.1</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.webjars.npm</groupId>
+        <artifactId>chartjs-adapter-luxon</artifactId>
+        <version>1.0.0</version>
     </dependency>
 
     <dependency>

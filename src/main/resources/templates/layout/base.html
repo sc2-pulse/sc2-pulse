@@ -83,8 +83,8 @@
     <script th:src="@{/webjars/luxon/build/global/luxon.min.js}"></script>
     <script th:src="@{/webjars/hammerjs/hammer.min.js}"></script>
     <script th:src="@{/webjars/chartjs/dist/chart.min.js}"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-luxon@0.2.1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.1.1"></script>
+    <script th:src="@{/webjars/chartjs-adapter-luxon/dist/chartjs-adapter-luxon.min.js}"></script>
+    <script th:src="@{/webjars/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js}"></script>
     <script th:inline="javascript">
         const ROOT_CONTEXT_PATH = /*[[@{/}]]*/ '';
         const RESOURCE_PATH = ROOT_CONTEXT_PATH + "static/";
