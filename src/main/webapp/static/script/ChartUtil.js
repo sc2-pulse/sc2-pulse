@@ -140,7 +140,7 @@ class ChartUtil
                                 onZoom: ChartUtil.onZoom,
                                 wheel:{enabled: true, modifierKey: "ctrl"},
                                 drag:{enabled: true, modifierKey: "shift"},
-                                pinch:{enabled: true}
+                                pinch:{enabled: false}
                             }
                         }}
                     },
@@ -160,7 +160,7 @@ class ChartUtil
         zoomCtl.setAttribute("type", "button");
         zoomCtl.classList.add("btn", "btn-outline-info", "chart-zoom-ctl");
         zoomCtl.setAttribute("data-chartable-id", chart.customConfig.chartable);
-        zoomCtl.textContent = "ctrl+wheel/shift+mouse drag/pinch to zoom, mouse drag to pan";
+        zoomCtl.textContent = "ctrl+wheel/shift+mouse drag to zoom, mouse drag to pan";
         zoomCtl.addEventListener("click", ChartUtil.resetZoom);
         chart.canvas.closest(".container-chart").prepend(zoomCtl);
     }
@@ -172,7 +172,7 @@ class ChartUtil
 
         const chart = ChartUtil.CHARTS.get(ctl.getAttribute("data-chartable-id"));
         chart.resetZoom();
-        ctl.textContent = "ctrl+mouse wheel/shift+mouse drag/pinch to zoom, mouse drag to pan";
+        ctl.textContent = "ctrl+mouse wheel/shift+mouse drag to zoom, mouse drag to pan";
         ctl.classList.remove("active");
         chart.customConfig.isZoomed = false;
     }
