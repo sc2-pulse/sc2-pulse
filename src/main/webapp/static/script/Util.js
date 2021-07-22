@@ -235,6 +235,11 @@ class Util
         return teamFormat.name + (teamFormat == TEAM_FORMAT._1V1 ? "" : " " + teamType.secondaryName);
     }
 
+    static isMobile()
+    {
+        return (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
