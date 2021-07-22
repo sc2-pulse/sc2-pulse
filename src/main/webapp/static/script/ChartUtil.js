@@ -21,7 +21,7 @@ class ChartUtil
         config["beginAtZero"] = chartable.getAttribute("data-chart-begin-at-zero");
         config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
         config["chartable"] = chartable.id;
-        config["zoom"] = chartable.getAttribute("data-chart-zoom");
+        if (!Util.isMobile()) config["zoom"] = chartable.getAttribute("data-chart-zoom");
         config["data"] = ChartUtil.collectChartJSData(chartable);
 
         ChartUtil.CHARTS.set(chartable.id, ChartUtil.createGenericChart(config));
@@ -130,7 +130,7 @@ class ChartUtil
                         {
                             pan:
                             {
-                                enabled: (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement) ? false : true,
+                                enabled: true,
                                 mode: config.zoom,
                                 onPan: ChartUtil.onZoom
                             },
