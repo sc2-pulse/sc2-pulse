@@ -139,7 +139,14 @@ class ChartUtil
                                 mode: config.zoom,
                                 onZoom: ChartUtil.onZoom,
                                 wheel:{enabled: true, modifierKey: "ctrl"},
-                                drag:{enabled: true, modifierKey: "shift"},
+                                drag:
+                                {
+                                    enabled: true,
+                                    modifierKey: "shift",
+                                    backgroundColor: "rgba(0, 176, 244, 0.15)",
+                                    borderColor: "rgb(0, 176, 244)",
+                                    borderWidth: "0.5"
+                                },
                                 pinch:{enabled: false}
                             }
                         }}
