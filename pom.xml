@@ -277,7 +277,7 @@
                                     <classpath>
                                         <path refid="maven.plugin.classpath"/>
                                     </classpath>
-                                    <arg line="--compilation_level SIMPLE_OPTIMIZATIONS --language_in ECMASCRIPT_2020 --js ${basedir}/src/main/webapp/static/script/*.js --js_output_file ${basedir}/target/sc2-webapp/static/script/sc2-restful.min.js"/>
+                                    <arg line="--compilation_level SIMPLE_OPTIMIZATIONS --language_in ECMASCRIPT_2020 --language_out ECMASCRIPT_2015 --js ${basedir}/src/main/webapp/static/script/*.js --js_output_file ${basedir}/target/sc2-webapp/static/script/sc2-restful.min.js"/>
                                 </java>
                             </target>
                         </configuration>
@@ -285,7 +285,7 @@
                             <dependency>
                                 <groupId>com.google.javascript</groupId>
                                 <artifactId>closure-compiler</artifactId>
-                                <version>v20200517</version>
+                                <version>v20210601</version>
                             </dependency>
                         </dependencies>
                     </plugin>
