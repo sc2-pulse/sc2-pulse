@@ -113,11 +113,11 @@ SC2Restful.REM = parseInt(getComputedStyle(document.documentElement).fontSize);
 
 SC2Restful.IMAGES = new Map
 ([
-    ["bronze", ElementUtil.createImage("league/", "bronze", "icon-chart table-image table-image-square", SC2Restful.REM)],
-    ["silver", ElementUtil.createImage("league/", "silver", "icon-chart table-image table-image-square", SC2Restful.REM)],
+    ["bronze", ElementUtil.createImage("league/", "bronze", "icon-chart table-image table-image-square", SC2Restful.REM, SC2Restful.REM / 2)],
+    ["silver", ElementUtil.createImage("league/", "silver", "icon-chart table-image table-image-square", SC2Restful.REM, SC2Restful.REM / 1.33)],
     ["gold", ElementUtil.createImage("league/", "gold", "icon-chart table-image table-image-square", SC2Restful.REM)],
     ["platinum", ElementUtil.createImage("league/", "platinum", "icon-chart table-image table-image-square",  SC2Restful.REM)],
-    ["diamond", ElementUtil.createImage("league/", "diamond", "icon-chart table-image table-image-square",  SC2Restful.REM)],
+    ["diamond", ElementUtil.createImage("league/", "diamond", "icon-chart table-image table-image-square",  SC2Restful.REM, SC2Restful.REM / 1.6 )],
     ["master", ElementUtil.createImage("league/", "master", "icon-chart table-image table-image-square", SC2Restful.REM)],
     ["grandmaster", ElementUtil.createImage("league/", "grandmaster", "icon-chart table-image table-image-square", SC2Restful.REM)],
 
