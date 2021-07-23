@@ -415,7 +415,7 @@ class ChartUtil
             if (config.type === "lineVCursor" || config.type === "line")
             {
                 data.datasets[i]["borderWidth"] = 2;
-                data.datasets[i]["pointRadius"] = config.pointRadius != null ? parseFloat(config.pointRadius) : 0;
+                data.datasets[i]["pointRadius"] = config.pointRadius != null ? parseFloat(config.pointRadius) : 0.01;
                 data.datasets[i]["hoverPointRadius"] = 2;
 
                 data.datasets[i]["borderColor"] = color;
