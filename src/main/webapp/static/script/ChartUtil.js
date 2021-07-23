@@ -59,9 +59,10 @@ class ChartUtil
 
                                     return val.substring(indexOfStart + 1, indexOfEnd);
                                 },
+                                minRotation: 0,
                                 maxRotation: 0,
                                 autoSkipPadding: 20,
-                              //  ...(config.performance === "fast") && {sampleSize: 50}
+                                ...(config.performance === "fast") && {sampleSize: 50}
                             },
                             stacked: config.stacked === "true" ? true : false,
                             offset: config.type === "bar" ? true : false,
@@ -151,7 +152,7 @@ class ChartUtil
                             }
                         }}
                     },
-                    elements: {line: {tension: config.performance === "fast" ? 0 : 0.4}}
+                    elements: {line: {tension: config.performance === "fast" ? false : 0.4}}
                 }
             }
         );
