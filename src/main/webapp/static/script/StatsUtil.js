@@ -216,10 +216,13 @@ class StatsUtil
             th.appendChild(ElementUtil.createImage("flag/", region.toLowerCase(), "table-image table-image-long"));
             headers.appendChild(th);
         }
-        for(const [leagueId, leagueObj] of Object.entries(searchResult[Object.keys(searchResult)[0]]).sort((a, b)=>b[0] - a[0]))
+        const leagues = new Set(Object.values(searchResult)
+            .flatMap(r=>Object.keys(r))
+            .sort((a, b)=>b - a));
+        for(const leagueId of leagues)
         {
             const league = EnumUtil.enumOfId(leagueId, LEAGUE);
-            for(const tierId of Object.keys(leagueObj))
+            for(const tierId of league == LEAGUE.GRANDMASTER ? [0] : [0, 1, 2])
             {
                 const tr = document.createElement("tr");
                 const th = document.createElement("th");
@@ -232,24 +235,27 @@ class StatsUtil
                 tr.appendChild(th);
                 for(const region of Object.keys(searchResult))
                 {
-                    if
+                    const td = document.createElement("td");
+                    if(league === LEAGUE.GRANDMASTER) {
+                        td.textContent = "Top 200";
+                    }
+                    else if
                     (
                         searchResult[region] == null
                         || searchResult[region][leagueId] == null
                         || searchResult[region][leagueId][tierId] == null
+                        || (searchResult[region][leagueId][tierId][0] == 0
+                            && searchResult[region][leagueId][tierId][1] == 0)
                     )
                     {
-                        tr.appendChild(document.createElement("td"));
+                        td.textContent = "";
                     }
                     else
                     {
                         const range = searchResult[region][leagueId][tierId];
-                        const td = document.createElement("td");
-                        td.textContent = league === LEAGUE.GRANDMASTER
-                            ? "Top 200"
-                            : (range[0] + "-" + range[1]);
-                        tr.appendChild(td);
+                        td.textContent = range[0] + "-" + range[1];
                     }
+                    tr.appendChild(td);
                 }
                 body.appendChild(tr);
             }
