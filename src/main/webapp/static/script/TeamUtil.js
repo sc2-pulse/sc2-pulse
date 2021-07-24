@@ -335,7 +335,8 @@ class TeamUtil
     {
         return ALTERNATIVE_UPDATE_REGIONS.length > 0
             && ALTERNATIVE_UPDATE_REGIONS.includes(team.region)
-            && Session.currentSeasonsMap.get(team.season + 1) == null; //is last season
+            && Session.currentSeasonsMap.get(team.season + 1) == null //is last season
+            || team.season == 46 || team.season == 47;
     }
 
     static getFavoriteRace(member)
