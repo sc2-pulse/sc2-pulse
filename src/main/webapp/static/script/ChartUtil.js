@@ -149,7 +149,8 @@ class ChartUtil
                                     borderWidth: "0.5"
                                 },
                                 pinch:{enabled: false}
-                            }
+                            },
+                            limits: {x: {}, y: {}}
                         }}
                     },
                     elements: {line: {tension: config.performance === "fast" ? false : 0.4}}
@@ -158,6 +159,7 @@ class ChartUtil
         );
         chart.customConfig = config;
         if(config.zoom) ChartUtil.createZoomControls(chart);
+        ChartUtil.updateChartZoomLimits(chart);
         return chart;
     }
 
@@ -507,6 +509,17 @@ class ChartUtil
         if(chart.customConfig.isZoomed)
             ChartUtil.resetZoom({target: document.querySelector("#chart-zoom-ctl-" + chart.customConfig.chartable)});
         chart.update();
+        ChartUtil.updateChartZoomLimits(chart);
+    }
+
+    static updateChartZoomLimits(chart)
+    {
+        if(!chart.customConfig.zoom) return;
+
+        chart.options.plugins.zoom.limits.x.min = chart.scales.x.min;
+        chart.options.plugins.zoom.limits.x.max = chart.scales.x.max;
+        chart.options.plugins.zoom.limits.y.min = chart.scales.y.min;
+        chart.options.plugins.zoom.limits.y.max = chart.scales.y.max;
     }
 
     static updateChartable(chartable)
