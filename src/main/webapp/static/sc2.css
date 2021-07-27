@@ -320,6 +320,16 @@ th.hoverable span
   font-size: 0.8em;
 }
 
+.parenthesis:before
+{
+  content: "(";
+}
+
+.parenthesis:after
+{
+  content: ")";
+}
+
 .player-name-masked-container:before
 {
   content: " (";
