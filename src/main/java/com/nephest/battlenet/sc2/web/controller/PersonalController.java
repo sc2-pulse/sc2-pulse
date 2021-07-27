@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.service.AccountFollowingService;
@@ -38,6 +39,17 @@ public class PersonalController
 
     @Autowired
     private AccountFollowingService accountFollowingService;
+
+    @GetMapping("/common")
+    public CommonPersonalData getCommon(@AuthenticationPrincipal BlizzardOidcUser user)
+    {
+        return new CommonPersonalData
+        (
+            user.getAccount(),
+            ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(user.getAccount().getId()),
+            accountFollowingService.getAccountFollowingList(user.getAccount().getId())
+        );
+    }
 
     @GetMapping("/account")
     public Account getAccount(@AuthenticationPrincipal BlizzardOidcUser user)

@@ -236,16 +236,19 @@ class PersonalUtil
     static getMyAccount()
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        const request = ROOT_CONTEXT_PATH + "api/my/account";
+        const request = ROOT_CONTEXT_PATH + "api/my/common";
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{PersonalUtil.updateMyAccount(json); Util.setGeneratingStatus(STATUS.SUCCESS); res()}))
+            .then(json => new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json.characters);
+                Session.currentFollowing = json.accountFollowings;
+                PersonalUtil.updateMyAccount(json); Util.setGeneratingStatus(STATUS.SUCCESS); res()}))
             .catch(error => Session.onPersonalException(error));
     }
 
-    static updateMyAccount(account)
+    static updateMyAccount(data)
     {
-        Session.currentAccount = account;
+        Session.currentAccount = data.account;
         const btagElem = document.querySelector("#login-battletag");
         if(!btagElem) return;
 
