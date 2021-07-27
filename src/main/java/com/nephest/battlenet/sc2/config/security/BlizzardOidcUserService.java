@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.config.security;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
@@ -23,14 +24,13 @@ implements OAuth2UserService<OidcUserRequest, OidcUser>
     private final OidcUserService service = new OidcUserService();
 
     private final AccountDAO accountDAO;
-    private final String adminBattletag;
-    private final int adminPartition;
+    private final AccountRoleDAO accountRoleDAO;
 
-    public BlizzardOidcUserService(AccountDAO accountDAO, String adminBattletag, int adminPartition)
+    public BlizzardOidcUserService
+    (AccountDAO accountDAO, AccountRoleDAO accountRoleDAO)
     {
         this.accountDAO = accountDAO;
-        this.adminBattletag = adminBattletag;
-        this.adminPartition = adminPartition;
+        this.accountRoleDAO = accountRoleDAO;
     }
 
     @Override
@@ -44,11 +44,14 @@ implements OAuth2UserService<OidcUserRequest, OidcUser>
             Partition.ofIssuer((URL) user.getAttribute("iss")),
             user.getAttribute("battle_tag"))
         );
-        GrantedAuthority[] authorities = adminBattletag == null || adminBattletag.isEmpty()
-            ? new GrantedAuthority[0]
-            : account.getBattleTag().equals(adminBattletag) && account.getPartition().getId() == adminPartition
-                ? new GrantedAuthority[]{new SimpleGrantedAuthority(SC2PulseAuthority.ADMIN.getRoleName())}
-                : new GrantedAuthority[0];
-        return new BlizzardOidcUser(user, account, authorities);
+        return new BlizzardOidcUser(user, account, getAuthorities(account));
     }
+
+    private GrantedAuthority[] getAuthorities(Account account)
+    {
+        return accountRoleDAO.getRoles(account.getId()).stream()
+            .map(r->new SimpleGrantedAuthority(r.getRoleName()))
+            .toArray(GrantedAuthority[]::new);
+    }
+
 }

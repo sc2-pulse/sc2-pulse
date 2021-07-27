@@ -42,6 +42,7 @@ public class CoreTestConfig
         service.addConverter(new IntegerToSocialMediaConverter());
         service.addConverter(new IntegerToMatchTypeConverter());
         service.addConverter(new IntegerToDecisionConverter());
+        service.addConverter(new IntegerToSC2PulseAuthority());
         return service;
     }
 

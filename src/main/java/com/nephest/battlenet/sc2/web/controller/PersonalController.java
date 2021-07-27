@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
+import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
@@ -32,6 +33,9 @@ public class PersonalController
 {
 
     @Autowired
+    private AccountRoleDAO accountRoleDAO;
+
+    @Autowired
     private LadderSearchDAO ladderSearchDAO;
 
     @Autowired
@@ -46,6 +50,7 @@ public class PersonalController
         return new CommonPersonalData
         (
             user.getAccount(),
+            accountRoleDAO.getRoles(user.getAccount().getId()),
             ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(user.getAccount().getId()),
             accountFollowingService.getAccountFollowingList(user.getAccount().getId())
         );

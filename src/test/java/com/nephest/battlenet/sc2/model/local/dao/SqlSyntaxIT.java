@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
@@ -32,6 +33,9 @@ public class SqlSyntaxIT
 {
     @Autowired
     private AccountDAO accountDAO;
+
+    @Autowired
+    private AccountRoleDAO accountRoleDAO;
 
     @Autowired
     private PlayerCharacterDAO playerCharacterDAO;
@@ -209,6 +213,17 @@ public class SqlSyntaxIT
         assertEquals(createdAccount.getId(), account.getId());
         assertEquals("newtag#2", account.getBattleTag());
         assertEquals(account, accountDAO.find(Partition.GLOBAL, "newtag#2").get());
+
+        accountRoleDAO.addRoles(account.getId(), SC2PulseAuthority.MODERATOR);
+        List<SC2PulseAuthority> roles = accountRoleDAO.getRoles(account.getId());
+        assertEquals(2, roles.size());
+        assertTrue(roles.contains(SC2PulseAuthority.MODERATOR));
+        assertTrue(roles.contains(SC2PulseAuthority.USER)); //user is a default role
+
+        accountRoleDAO.addRoles(account.getId(), SC2PulseAuthority.NONE);
+        List<SC2PulseAuthority> roles2 = accountRoleDAO.getRoles(account.getId());
+        assertEquals(1, roles2.size());
+        assertTrue(roles2.contains(SC2PulseAuthority.NONE));
 
         PlayerCharacter createdCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1");
         playerCharacterDAO.create(createdCharacter);

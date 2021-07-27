@@ -3,18 +3,39 @@
 
 package com.nephest.battlenet.sc2.config.security;
 
+import com.nephest.battlenet.sc2.model.Identifiable;
+
 public enum SC2PulseAuthority
+implements Identifiable
 {
 
-    ADMIN("ROLE_ADMIN", "ADMIN");
+    ADMIN("ROLE_ADMIN", "ADMIN", 127),
+    MODERATOR("ROLE_MODERATOR", "MODERATOR", 10),
+    USER("ROLE_USER", "USER", 1),
+    NONE("ROLE_NONE", "NONE", 0);
 
     private final String roleName;
     private final String name;
+    private final int id;
 
-    SC2PulseAuthority(String roleName, String name)
+    SC2PulseAuthority(String roleName, String name, int id)
     {
         this.roleName = roleName;
         this.name = name;
+        this.id = id;
+    }
+
+    public static SC2PulseAuthority from(int id)
+    {
+        for(SC2PulseAuthority authority : SC2PulseAuthority.values())
+            if(authority.id == id) return authority;
+        throw new IllegalArgumentException("Invalid id " + id);
+    }
+
+    @Override
+    public int getId()
+    {
+        return id;
     }
 
     public String getName()

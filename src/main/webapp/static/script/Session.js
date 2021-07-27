@@ -216,6 +216,7 @@ Session.currentPersonalTeamFormat = null;
 Session.currentPersonalTeamType = null;
 Session.currentAccount = null;
 Session.currentFollowing = null;
+Session.currentRoles = null;
 Session.currentSearchParams = null;
 Session.isHistorical = false;
 Session.currentStateRestoration = Promise.resolve();
@@ -242,6 +243,7 @@ class PersonalUtil
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json.characters);
                 Session.currentFollowing = json.accountFollowings;
+                Session.currentRoles = json.roles;
                 PersonalUtil.updateMyAccount(json); Util.setGeneratingStatus(STATUS.SUCCESS); res()}))
             .catch(error => Session.onPersonalException(error));
     }
@@ -250,8 +252,9 @@ class PersonalUtil
     {
         Session.currentAccount = data.account;
         const btagElem = document.querySelector("#login-battletag");
-        if(!btagElem) return;
+        if(btagElem) btagElem.textContent = Session.currentAccount.battleTag;
 
-        btagElem.textContent = Session.currentAccount.battleTag;
+        const rolesElem = document.querySelector("#login-roles");
+        if(rolesElem) rolesElem.textContent = data.roles.sort((a, b)=>a.localeCompare(b)).join(", ");
     }
 }

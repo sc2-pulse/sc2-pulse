@@ -31,6 +31,14 @@ CREATE TABLE "account"
 
 CREATE INDEX "ix_account_battle_tag" ON "account"(LOWER("battle_tag") text_pattern_ops);
 
+CREATE TABLE "account_role"
+(
+    "account_id" BIGINT NOT NULL,
+    "role" SMALLINT NOT NULL,
+
+    PRIMARY KEY ("account_id", "role")
+);
+
 CREATE TABLE "player_character"
 (
 

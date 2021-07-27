@@ -5,8 +5,8 @@ package com.nephest.battlenet.sc2.config.security;
 
 import com.nephest.battlenet.sc2.config.filter.RobotsDenyFilter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -30,13 +30,10 @@ extends WebSecurityConfigurerAdapter
     private AccountDAO accountDAO;
 
     @Autowired
+    private AccountRoleDAO accountRoleDAO;
+
+    @Autowired
     private SameSiteRememberMeAuthenticationSuccessfulHandler sameSiteRememberMeAuthenticationSuccessfulHandler;
-
-    @Value("${com.nephest.battlenet.sc2.admin.btag:#{''}}")
-    private String adminBattletag;
-
-    @Value("${com.nephest.battlenet.sc2.admin.partition:#{'-1'}}")
-    private int adminPartition;
 
     @Override
     public void configure(HttpSecurity http)
@@ -60,7 +57,7 @@ extends WebSecurityConfigurerAdapter
             .and().oauth2Login()
                 .loginPage("/?#personal")
                 .successHandler(sameSiteRememberMeAuthenticationSuccessfulHandler)
-                .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, adminBattletag, adminPartition));
+                .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, accountRoleDAO));
     }
 
     @Bean
