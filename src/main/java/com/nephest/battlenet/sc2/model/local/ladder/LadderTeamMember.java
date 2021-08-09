@@ -29,6 +29,7 @@ implements java.io.Serializable
 
     private final String proNickname;
     private final String proTeam;
+    private final Integer confirmedCheaterReportId;
 
     public LadderTeamMember
     (
@@ -37,6 +38,7 @@ implements java.io.Serializable
         Clan clan,
         String proNickname,
         String proTeam,
+        Integer confirmedCheaterReportId,
         Integer terranGamesPlayed,
         Integer protossGamesPlayed,
         Integer zergGamesPlayed,
@@ -49,6 +51,7 @@ implements java.io.Serializable
         this.clan = clan;
         this.proNickname = proNickname;
         this.proTeam = proTeam;
+        this.confirmedCheaterReportId = confirmedCheaterReportId;
     }
 
     public PlayerCharacter getCharacter()
@@ -74,6 +77,11 @@ implements java.io.Serializable
     public String getProTeam()
     {
         return proTeam;
+    }
+
+    public Integer getConfirmedCheaterReportId()
+    {
+        return confirmedCheaterReportId;
     }
 
 }

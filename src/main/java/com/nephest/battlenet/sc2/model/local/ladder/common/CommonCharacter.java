@@ -26,6 +26,9 @@ public class CommonCharacter
     
     private final List<LadderTeamState> history;
 
+    @NotNull
+    private final List<LadderPlayerCharacterReport> reports;
+
     public CommonCharacter
     (
         @NotNull List<LadderTeam> teams,
@@ -33,7 +36,8 @@ public class CommonCharacter
         @NotNull List<LadderPlayerCharacterStats> stats,
         LadderProPlayer proPlayer,
         List<LadderMatch> matches,
-        List<LadderTeamState> history
+        List<LadderTeamState> history,
+        List<LadderPlayerCharacterReport> reports
     )
     {
         this.teams = teams;
@@ -42,6 +46,7 @@ public class CommonCharacter
         this.proPlayer = proPlayer;
         this.matches = matches;
         this.history = history;
+        this.reports = reports;
     }
 
     public List<LadderTeam> getTeams()
@@ -72,6 +77,11 @@ public class CommonCharacter
     public List<LadderTeamState> getHistory()
     {
         return history;
+    }
+
+    public List<LadderPlayerCharacterReport> getReports()
+    {
+        return reports;
     }
 
 }

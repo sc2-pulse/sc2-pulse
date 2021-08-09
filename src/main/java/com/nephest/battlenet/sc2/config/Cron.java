@@ -18,10 +18,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.Objects;
 
 @Profile({"!maintenance & !dev"})
@@ -32,6 +29,8 @@ public class Cron
     private static final Logger LOG = LoggerFactory.getLogger(Cron.class);
 
     public static final Duration MATCH_UPDATE_FRAME = Duration.ofMinutes(50);
+    public static final OffsetDateTime REPORT_UPDATE_FROM =
+        OffsetDateTime.of(2021, 8, 17, 0, 0, 0, 0, ZoneOffset.UTC);
 
     private Instant heavyStatsInstant;
     private Instant matchInstant;
@@ -65,6 +64,9 @@ public class Cron
     private QueueStatsDAO queueStatsDAO;
 
     @Autowired
+    private PlayerCharacterReportService characterReportService;
+
+    @Autowired
     private VarDAO varDAO;
 
     @Autowired
@@ -86,10 +88,23 @@ public class Cron
         }
     }
 
+    public static OffsetDateTime getNextCharacterReportUpdateTime()
+    {
+        OffsetDateTime dt = OffsetDateTime.now().withHour(5).withMinute(0).withSecond(0).withNano(0);
+        if(dt.compareTo(OffsetDateTime.now()) < 0) dt = dt.plusDays(1);
+        return dt;
+    }
+
     @Scheduled(fixedDelay = 30_000)
     public void updateAll()
     {
         nonStopUpdate();
+    }
+
+    @Scheduled(cron="0 0 5 * * *")
+    public void updateCharacterReports()
+    {
+        characterReportService.update(REPORT_UPDATE_FROM);
     }
 
     @Scheduled(cron="0 59 * * * *")

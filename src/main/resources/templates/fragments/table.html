@@ -69,5 +69,35 @@
         <tbody></tbody>
     </table>
 </div>
+<div th:id="${containerId}" class="table-responsive" th:fragment="reports-character (containerId, id, class)">
+    <table th:id="${id}" th:class="${'table table-sm table-hover ' + class}">
+        <thead>
+        <tr>
+            <th scope="col">Status (report)</th>
+            <th scope="col">Player</th>
+            <th scope="col">Type</th>
+            <th scope="col">Alt account</th>
+            <th scope="col">Status (evidence)</th>
+            <th scope="col">Evidence</th>
+            <th scope="col">Created</th>
+            <th scope="col"
+                class="hoverable"
+                title="Hover over this column values to get a more detailed view"
+                data-toggle="tooltip"
+            >
+                <span>Votes (yes)</span>
+            </th>
+            <th scope="col"
+                class="hoverable"
+                title="Hover over this column values to get a more detailed view"
+                data-toggle="tooltip"
+            >
+                <span>Votes (no)</span>
+            </th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 </body>
 </html>

@@ -205,9 +205,10 @@ class TeamUtil
         playerLink.addEventListener("click", CharacterUtil.showCharacterInfo);
         const container = document.createElement("span");
         container.classList.add("player-link-container");
-        if(member.proNickname != null) container.classList.add("player-pro");
         if(appendRaces) container.appendChild(TeamUtil.createRacesElem(member));
         container.appendChild(TeamUtil.createNameElem(member));
+        if(member.confirmedCheaterReportId) container.appendChild(ElementUtil.createCheaterFlag());
+        if(member.proNickname) container.appendChild(ElementUtil.createProFlag());
         playerLink.appendChild(container);
         return playerLink
     }

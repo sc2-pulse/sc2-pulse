@@ -38,8 +38,41 @@ class CharacterUtil
                 searchStd.result = jsons[0].teams;
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, searchStd);
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, id);
+                Model.DATA.get(VIEW.CHARACTER).set("reports", jsons[0].reports)
                 res(jsons);
              }));
+    }
+
+    static updateCharacterReportsModel()
+    {
+        return fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)}`)
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.CHARACTER).set("reports", json);
+                res();
+            }));
+    }
+
+    static updateAllCharacterReportsModel()
+    {
+        return fetch(`${ROOT_CONTEXT_PATH}api/character/report/list`)
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(json => new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.CHARACTER_REPORTS).set("reports", json);
+                res();
+            }));
+    }
+
+    static updateAllCharacterReports()
+    {
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        return CharacterUtil.updateAllCharacterReportsModel()
+            .then(e=>new Promise((res, rej)=>{
+                CharacterUtil.updateAllCharacterReportsView();
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+                res();
+            }))
+            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
     }
 
     static updateCharacterTeamsView()
@@ -60,6 +93,7 @@ class CharacterUtil
                 CharacterUtil.updateCharacterStatsView();
                 CharacterUtil.updateCharacterLinkedCharactersView(id);
                 CharacterUtil.updateCharacterMmrHistoryView();
+                CharacterUtil.updateCharacterReportsView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
@@ -201,14 +235,10 @@ class CharacterUtil
             teamElem.classList.add("d-none");
         }
         additionalNameElem.textContent = charNameAdditional;
-        if(member.proNickname != null)
-        {
-            document.querySelector("#player-info-additional-container").classList.add("player-pro");
-        }
-        else
-        {
-            document.querySelector("#player-info-additional-container").classList.remove("player-pro");
-        }
+        const additionalContainer = document.querySelector("#player-info-additional-container");
+        additionalContainer.querySelectorAll(":scope .player-flag").forEach(f=>f.remove());
+        if(member.confirmedCheaterReportId) additionalContainer.appendChild(ElementUtil.createCheaterFlag());
+        if(member.proNickname) additionalContainer.appendChild(ElementUtil.createProFlag());
     }
 
     static updateCharacterTeamsSection(searchResultFull)
@@ -945,6 +975,267 @@ class CharacterUtil
             .then(r=>{Session.isHistorical = false; return CharacterUtil.findCharactersByName();})
             .then(r=>HistoryUtil.showAnchoredTabs())
             .then(r=>new Promise((res, rej)=>{window.scrollTo(0, 0); res();}));
+    }
+
+    static updateCharacterReportsView()
+    {
+        const reportsContainer = document.querySelector("#character-reports");
+        const tbody = reportsContainer.querySelector(":scope #character-reports-table tbody");
+        const reports = Model.DATA.get(VIEW.CHARACTER).get("reports");
+        if(!reports || reports.length == 0) {
+            reportsContainer.classList.add("d-none");
+            return;
+        }
+        reportsContainer.classList.remove("d-none");
+        CharacterUtil.updateCharacterReportsTable(tbody, reports);
+    }
+
+    static updateAllCharacterReportsView()
+    {
+        const reportsContainer = document.querySelector("#all-character-reports");
+        const tbody = reportsContainer.querySelector(":scope #all-character-reports-table tbody");
+        const reports = Model.DATA.get(VIEW.CHARACTER_REPORTS).get("reports");
+        if(!reports || reports.length == 0) return;
+        CharacterUtil.updateCharacterReportsTable(tbody, reports);
+        Session.updateReportsNotifications();
+    }
+
+    static updateCharacterReportsTable(tbody, reports, removeChildren = true)
+    {
+        if(removeChildren) ElementUtil.removeChildren(tbody);
+        for(const report of reports)
+        {
+            let tr = tbody.insertRow();
+
+            const rowSpan = report.evidence ? report.evidence.length : 1;
+
+            CharacterUtil.appendStatusCell(tr, report.report.status).setAttribute("rowspan", rowSpan);
+
+            const playerCell = tr.insertCell();
+            playerCell.setAttribute("rowspan", rowSpan);
+            playerCell.appendChild(TeamUtil.createPlayerLink(null, report.member, false));
+            const typeCell = tr.insertCell();
+            typeCell.setAttribute("rowspan", rowSpan);
+            typeCell.textContent = report.report.type;
+
+            if(report.additionalMember)
+            {
+                const additionalPlayerCell = tr.insertCell();
+                additionalPlayerCell.setAttribute("rowspan", rowSpan);
+                additionalPlayerCell.appendChild(TeamUtil.createPlayerLink(null, report.additionalMember, false));
+            } else
+            {
+                tr.insertCell().setAttribute("rowspan", rowSpan);
+            }
+
+            if(!report.evidence) continue;
+
+            for(let i = 0; i < report.evidence.length; i++)
+            {
+                const evidence = report.evidence[i];
+                if(i > 0) tr = tbody.insertRow();
+                tr.setAttribute("data-report-id", report.report.id);
+                tr.setAttribute("data-evidence-id", evidence.evidence.id);
+                CharacterUtil.appendStatusCell(tr, evidence.evidence.status);
+
+                const evidenceDescription = tr.insertCell();
+                evidenceDescription.classList.add("cell-main", "text-break");
+                evidenceDescription.textContent = evidence.evidence.description;
+
+                tr.insertCell().textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(evidence.evidence.created));
+
+                CharacterUtil.appendVotes(tr, evidence.votes);
+            }
+        }
+
+        $(tbody.closest("table")).popover
+        ({
+            html: true,
+            boundary: "body",
+            placement: "auto",
+            trigger: "hover",
+            selector: '[data-toggle="popover"]',
+            content: function(){return CharacterUtil.createDynamicVotersTable($(this)[0]).outerHTML;}
+        });
+    }
+    
+    static appendStatusCell(tr, status)
+    {
+        const statusCell = tr.insertCell();
+        statusCell.classList.add("text-white", "font-weight-bold");
+        if(status == true) {
+            statusCell.classList.add("bg-success");
+            statusCell.textContent = "Confirmed";
+        } else if (status == false) {
+            statusCell.classList.add("bg-danger");
+            statusCell.textContent = "Denied";
+        } else {
+            statusCell.classList.add("bg-secondary");
+            statusCell.textContent = "Undecided";
+        }
+        return statusCell;
+    }
+
+    static appendVotes(tr, votes)
+    {
+        CharacterUtil.appendVotesCell(tr, votes.filter(v=>v.vote.vote == true), "text-success", "bg-success", "true");
+        CharacterUtil.appendVotesCell(tr, votes.filter(v=>v.vote.vote == false), "text-danger", "bg-danger", "false");
+    }
+
+    static appendVotesCell(tr, votes, textClass, bgClass, vote)
+    {
+        const votesCell = tr.insertCell();
+        votesCell.setAttribute("data-toggle", "popover");
+        votesCell.setAttribute("data-vote", vote);
+        if(Session.currentAccount && votes.find(v=>v.vote.voterAccountId == Session.currentAccount.id)) {
+            votesCell.classList.add("text-white", "font-weight-bold", bgClass);
+        } else {
+            votesCell.classList.add(textClass);
+        }
+
+        if(Session.currentRoles && Session.currentRoles.find(r=>r == "MODERATOR")) {
+            votesCell.addEventListener("click", CharacterUtil.onEvidenceVote);
+            votesCell.setAttribute("role", "button");
+        }
+
+        votesCell.textContent = votes.length;
+    }
+
+    static voteOnEvidence(id, vote)
+    {
+        return fetch(`${ROOT_CONTEXT_PATH}api/character/report/vote/${id}/${vote}`, {method: "POST"})
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json()})
+    }
+
+    static onEvidenceVote(evt)
+    {
+        const td = evt.target;
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        //remove popovers to avoid the popover bug on td removal
+        document.querySelectorAll(".popover").forEach(e=>e.remove());
+        CharacterUtil.voteOnEvidence(td.closest("tr").getAttribute("data-evidence-id"), td.getAttribute("data-vote"))
+            .then(updatedVotes=>
+            {
+                const rows = document.querySelectorAll('[data-evidence-id="' + updatedVotes[0].vote.evidenceId + '"]');
+                for(const row of rows)
+                {
+                    const evidence = Model.DATA.get(ViewUtil.getView(row)).get("reports")
+                        .flatMap(r=>r.evidence)
+                        .find(e=>e.evidence.id == updatedVotes[0].vote.evidenceId);
+                    evidence.votes = updatedVotes;
+                    row.children[row.children.length - 1].remove();
+                    row.children[row.children.length - 1].remove();
+                    CharacterUtil.appendVotes(row, evidence.votes);
+                }
+                Session.updateReportsNotifications();
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+            })
+            .catch(error => Session.onPersonalException(error));
+    }
+
+    static createDynamicVotersTable(parent)
+    {
+        const votersTable = TableUtil.createTable(["Date", "Moderator"], false);
+        const tbody = votersTable.querySelector(":scope tbody");
+        const row = parent.closest("tr");
+        const reportId = row.getAttribute("data-report-id");
+        const evidenceId = row.getAttribute("data-evidence-id");
+        const vote = parent.getAttribute("data-vote") == "true" ? true : false;
+        Model.DATA.get(ViewUtil.getView(parent)).get("reports")
+            .find(r=>r.report.id == reportId).evidence
+            .find(e=>e.evidence.id == evidenceId).votes
+            .filter(v=>v.vote.vote == vote)
+            .forEach(v=>{
+                const tr = tbody.insertRow();
+                tr.insertCell().textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(v.vote.updated));
+                tr.insertCell().textContent = v.voterAccount.battleTag;
+            });
+        return votersTable;
+    }
+
+    static enhanceReportForm()
+    {
+        document.querySelector("#report-character-type").addEventListener("change", e=>CharacterUtil.updateReportForm());
+        $(document.querySelector("#report-character-dropdown").closest(".btn-group"))
+            .on("show.bs.dropdown", CharacterUtil.updateReportAlternativeCharacterList);
+        document.querySelector("#report-character-form").addEventListener("submit", e=>{
+            e.preventDefault();
+            const fd = new FormData(document.querySelector("#report-character-form"));
+            fd.set("playerCharacterId", Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR));
+            Util.setGeneratingStatus(STATUS.BEGIN);
+            CharacterUtil.reportCharacter(fd)
+                .then(e => Util.setGeneratingStatus(STATUS.SUCCESS))
+                .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+        })
+    }
+
+    static updateReportAlternativeCharacterList()
+    {
+        const select = document.querySelector("#report-character-additional");
+        for(const team of TeamUtil.teamBuffer.values()) {
+            team.members.forEach(m=>
+            {
+                if(m.character.id == Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)) return;
+
+                const unmasked = Util.unmaskName(m);
+                const option = document.createElement("option");
+                option.textContent = (unmasked.unmaskedTeam ? "[" + unmasked.unmaskedTeam + "]" : "")
+                    + unmasked.unmaskedName;
+                option.value = m.character.id;
+                select.appendChild(option);
+            })
+        }
+    }
+
+    static reportCharacter(fd)
+    {
+        return fetch(ROOT_CONTEXT_PATH + "api/character/report/new", {method: "POST", body: fd})
+           .then(resp => {
+                if (!resp.ok) {
+                    let desc;
+                    switch(resp.status)
+                    {
+                        case 429:
+                            desc = "Daily report cap reached";
+                            break;
+                        case 409:
+                            desc= "Confirmed evidence per report cap reached"
+                            break
+                        default:
+                            desc = "";
+                            break;
+                    }
+                    throw new Error(resp.status + " " + resp.statusText + " " + desc);
+                }
+                return resp.json();
+            })
+            .then(e=>CharacterUtil.updateCharacterReportsModel())
+            .then(json=>BootstrapUtil.showTab("player-stats-player-tab"))
+            .then(e=>new Promise((res, rej)=>{
+                $("#report-character-toggle").dropdown('toggle');
+                CharacterUtil.updateCharacterReportsView();
+                res();
+            }));
+    }
+
+    static updateReportForm()
+    {
+        const select = document.querySelector("#report-character-type");
+        const additionalGroup = document.querySelector("#report-character-additional-group");
+        const additionalInput = additionalGroup.querySelector(":scope #report-character-additional");
+        if(select.value == "CHEATER") {
+           additionalGroup.classList.add("d-none");
+           additionalInput.setAttribute("disabled", "disabled");
+        } else {
+            additionalGroup.classList.remove("d-none");
+            additionalInput.removeAttribute("disabled");
+        }
+    }
+
+    static enhanceLoadAllCharacterReportsButton()
+    {
+        const button = document.querySelector("#load-all-character-reports");
+        if(button) button.addEventListener("click", e=>CharacterUtil.updateAllCharacterReports());
     }
 
 }

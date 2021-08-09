@@ -2,7 +2,10 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::section}, ~{::script})}">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::section}, ~{::script})}">
 <head>
     <title>Stats - SC2 Pulse</title>
     <meta name="description" content="Flexible StarCraft&reg;2 stats aggregator for any team format"/>
@@ -65,7 +68,8 @@
                             aria-controls="personal"
                             aria-selected="false"
                         >
-                            My
+                            <span class="tab-name">My</span>
+                            <span class="tab-alert parenthesis d-none text-danger ml-1"></span>
                         </a>
                     </li>
                     <li class="nav-item">
@@ -562,6 +566,21 @@
                                 Characters
                             </a>
                         </li>
+                        <li class="nav-item" sec:authorize="hasAnyRole('MODERATOR', 'ADMIN')">
+                            <a
+                                    id="all-character-reports-tab"
+                                    class="nav-link"
+                                    data-toggle="pill"
+                                    data-target="#all-character-reports"
+                                    href="#all-character-reports"
+                                    role="tab"
+                                    aria-controls="all-character-reports"
+                                    aria-selected="false"
+                            >
+                                <span class="tab-name">Reports</span>
+                                <span class="tab-alert parenthesis d-none text-danger ml-1"></span>
+                            </a>
+                        </li>
                         <li class="nav-item">
                             <a
                                     id="personal-account-tab"
@@ -609,6 +628,22 @@
                             <span th:text="${@accountFollowingService.getFollowingMax()}" th:remove="tag"></span> players max.
                         </p>
                         <div th:replace="~{fragments/table :: team('following-ladder-container', 'following-ladder', '', _)}"></div>
+                    </section>
+                    <section
+                            id="all-character-reports"
+                            class="tab-pane fade"
+                            data-view-name="all-character-reports"
+                            data-view-title="All player reports"
+                            sec:authorize="hasAnyRole('MODERATOR', 'ADMIN')"
+                    >
+                        <h3>Reports</h3>
+                        <ul>
+                            <li th:text="|Votes required: ${@evidenceDAO.getRequiredVotes()}|"></li>
+                            <li>Next update: <span class="datetime-iso" th:text="${T(com.nephest.battlenet.sc2.config.Cron).getNextCharacterReportUpdateTime().toString()}"></span></li>
+                            <li th:text="|Mods: ${@userController.getModTags().stream().collect(T(java.util.stream.Collectors).joining(', '))}|"></li>
+                        </ul>
+                        <button id="load-all-character-reports" type="button" class="btn btn-primary mb-3">Refresh</button>
+                        <div th:replace="~{fragments/table :: reports-character('all-character-reports-table-container', 'all-character-reports-table', '')}"></div>
                     </section>
                 </div>
             </div>

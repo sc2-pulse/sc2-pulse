@@ -13,6 +13,10 @@ class BootstrapUtil
         $.fn.popover.Constructor.Default.whiteList.div = [];
         $.fn.popover.Constructor.Default.whiteList.tbody = [];
         $.fn.popover.Constructor.Default.whiteList.thead = [];
+        document.querySelectorAll('.stop-propagation *')
+            .forEach(e=>e.addEventListener("click", e=>e.stopPropagation()));
+        document.querySelectorAll('.dropdown-menu .close').forEach(e=>e.addEventListener("click", e=>
+                $(e.currentTarget.closest(".btn-group").querySelector(":scope .dropdown-toggle")).dropdown('toggle')));
     }
 
     static enhanceTabs()

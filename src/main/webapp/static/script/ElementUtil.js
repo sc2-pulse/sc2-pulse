@@ -382,6 +382,24 @@ class ElementUtil
         input.dispatchEvent(new Event("change"));
     }
 
+    static createCheaterFlag()
+    {
+        const cheaterFlag = document.createElement("span");
+        cheaterFlag.classList.add("player-flag", "player-flag-cheater");
+        cheaterFlag.textContent = "CHEATER";
+        cheaterFlag.title="This player has a confirmed evidence of cheating. See 'Player' and 'Characters' tabs for more info.";
+        return cheaterFlag;
+    }
+
+    static createProFlag()
+    {
+        const flag = document.createElement("span");
+        flag.classList.add("player-flag", "player-flag-pro");
+        flag.textContent = "PRO";
+        flag.title="This player is identified by sc2revealed.com as a pro player. See 'Player' tab for more info";
+        return flag;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();

@@ -7,10 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.Clan;
-import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.LeagueTier;
-import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
@@ -50,7 +47,8 @@ public class LadderSearchDAO
         + AccountDAO.STD_SELECT + ", "
         + ClanDAO.STD_SELECT + ", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
-        + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\" ";
+        + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\", "
+        + "confirmed_cheater_report.id AS \"confirmed_cheater_report.id\" ";
 
     private static final String LADDER_SEARCH_TEAM_FROM_SHORT =
         "FROM team_member "
@@ -64,7 +62,11 @@ public class LadderSearchDAO
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
-        + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id ";
+        + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
+        + "LEFT JOIN player_character_report AS confirmed_cheater_report "
+            + "ON player_character.id = confirmed_cheater_report.player_character_id "
+            + "AND confirmed_cheater_report.type = :cheaterReportType "
+            + "AND confirmed_cheater_report.status = true ";
 
     private static final String LADDER_SEARCH_TEAM_WHERE =
         "WHERE "
@@ -96,6 +98,10 @@ public class LadderSearchDAO
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
         + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
+        + "LEFT JOIN player_character_report AS confirmed_cheater_report "
+            + "ON player_character.id = confirmed_cheater_report.player_character_id "
+            + "AND confirmed_cheater_report.type = :cheaterReportType "
+            + "AND confirmed_cheater_report.status = true "
         + "ORDER BY team.rating DESC, team.id DESC";
 
     private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =
@@ -136,6 +142,10 @@ public class LadderSearchDAO
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
         + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
+        + "LEFT JOIN player_character_report AS confirmed_cheater_report "
+            + "ON player_character.id = confirmed_cheater_report.player_character_id "
+            + "AND confirmed_cheater_report.type = :cheaterReportType "
+            + "AND confirmed_cheater_report.status = true "
 
         + "ORDER BY team.season DESC, "
         + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
@@ -198,6 +208,7 @@ public class LadderSearchDAO
                 clan,
                 rs.getString("pro_player.nickname"),
                 rs.getString("pro_player.team"),
+                DAOUtils.getInteger(rs, "confirmed_cheater_report.id"),
                 (Integer) rs.getObject("terran_games_played"),
                 (Integer) rs.getObject("protoss_games_played"),
                 (Integer) rs.getObject("zerg_games_played"),
@@ -323,7 +334,9 @@ public class LadderSearchDAO
                 .addValue("offset", offset)
                 .addValue("limit", limit)
                 .addValue("ratingAnchor", ratingAnchor)
-                .addValue("idAnchor", idAnchor);
+                .addValue("idAnchor", idAnchor)
+                .addValue("cheaterReportType", conversionService
+                    .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
 
         String q = forward ? FIND_TEAM_MEMBERS_ANCHOR_QUERY : FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY;
         List<LadderTeam> teams = template
@@ -345,7 +358,9 @@ public class LadderSearchDAO
     public List<LadderTeam> findCharacterTeams(long id)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterId", id);
+            .addValue("playerCharacterId", id)
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template
             .query(FIND_CARACTER_TEAM_MEMBERS_QUERY, params, LADDER_TEAMS_EXTRACTOR);
     }
@@ -362,7 +377,9 @@ public class LadderSearchDAO
     {
         MapSqlParameterSource params =
             LadderUtil.createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType)
-            .addValue("accountId", accountId);
+            .addValue("accountId", accountId)
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template
             .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAMS_EXTRACTOR);
     }
@@ -379,7 +396,9 @@ public class LadderSearchDAO
             })
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("legacyUids", legacyUids);
+            .addValue("legacyUids", legacyUids)
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template.query(FIND_LEGACY_TEAM_MEMBERS, params, LADDER_TEAMS_EXTRACTOR);
     }
 

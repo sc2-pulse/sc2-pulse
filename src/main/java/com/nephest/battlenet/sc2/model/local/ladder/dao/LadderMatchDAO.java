@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,7 +63,8 @@ public class LadderMatchDAO
         + PlayerCharacterDAO.STD_SELECT + ", "
         + ClanDAO.STD_SELECT + ", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
-        + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\" "
+        + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\", "
+        + "confirmed_cheater_report.id AS \"confirmed_cheater_report.id\" "
 
         + "FROM valid_match_filter "
         + "INNER JOIN match ON valid_match_filter.id = match.id "
@@ -82,6 +84,10 @@ public class LadderMatchDAO
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
         + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
+        + "LEFT JOIN player_character_report AS confirmed_cheater_report "
+            + "ON player_character.id = confirmed_cheater_report.player_character_id "
+            + "AND confirmed_cheater_report.type = :cheaterReportType "
+            + "AND confirmed_cheater_report.status = true "
         + "ORDER BY (match.date , match.type , match.map) %2$s, "
             + "(match_participant.match_id, match_participant.player_character_id) %2$s ";
 
@@ -194,7 +200,9 @@ public class LadderMatchDAO
             .addValue("dateAnchor", dateAnchor)
             .addValue("typeAnchor", conversionService.convert(typeAnchor, Integer.class))
             .addValue("mapAnchor", mapAnchor)
-            .addValue("limit", getResultsPerPage());
+            .addValue("limit", getResultsPerPage())
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);

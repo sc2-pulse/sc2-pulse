@@ -316,6 +316,10 @@
                                     <a href="http://sc2revealed.com/" rel="noopener nofollow" target="_blank">sc2revealed</a>
                                     and your info will show up here too.</p>
                             </section>
+                            <section id="character-reports" class="d-none">
+                                <h3>Reports</h3>
+                                <div th:replace="~{fragments/table :: reports-character('character-reports-table-container', 'character-reports-table', '')}"></div>
+                            </section>
                             <section>
                                 <button id="follow-button" type="button" class="btn btn-primary d-none">Follow</button>
                                 <button id="unfollow-button" type="button" class="btn btn-primary d-none">Unfollow</button>
@@ -370,6 +374,41 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <div id="report-character-dropdown" class="btn-group dropup">
+                        <button class="btn btn-danger dropdown-toggle" type="button" id="report-character-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                            Report
+                        </button>
+                        <div id="report-character-menu" class="dropdown-menu dropdown-menu-lg stop-propagation">
+                            <button type="button" class="close allow-propagation" data-dismiss="dropdown-menu" aria-label="Close">
+                                ×
+                            </button>
+                            <form id="report-character-form" class="px-4 py-3" method="post">
+                                <div class="form-group">
+                                    <label for="report-character-type">Report for</label>
+                                    <select id="report-character-type" class="form-control text-center" name="type" required="required">
+                                        <option value="CHEATER" selected="selected">Cheating</option>
+                                        <option value="LINK">Multiacc</option>
+                                    </select>
+                                </div>
+                                <div id="report-character-additional-group" class="form-group d-none">
+                                    <label for="report-character-additional">Alt account(populated from the team buffer, "green plus" button)</label>
+                                    <select id="report-character-additional" class="form-control text-center"  name="additionalPlayerCharacterId" required="required" disabled="disabled">
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="report-character-evidence" th:text="${'Evidence(replay links, description, ' + T(com.nephest.battlenet.sc2.model.local.Evidence).MAX_LENGTH + ' characters max)'}">Evidence</label>
+                                    <textarea
+                                        id="report-character-evidence"
+                                        class="form-control text-center"
+                                        name="evidence"
+                                        th:maxlength="${T(com.nephest.battlenet.sc2.model.local.Evidence).MAX_LENGTH}"
+                                        minLength="10"
+                                        required="required"></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-primary">Report</button>
+                            </form>
+                        </div>
+                    </div>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>

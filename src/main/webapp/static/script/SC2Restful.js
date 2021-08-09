@@ -46,6 +46,7 @@ class SC2Restful
                 CharacterUtil.enhanceSearchForm();
                 CharacterUtil.enhanceLoadMoreMatchesInput();
                 CharacterUtil.enhanceAutoClanSearch();
+                CharacterUtil.enhanceLoadAllCharacterReportsButton();
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");
@@ -57,6 +58,8 @@ class SC2Restful
                 BootstrapUtil.enhanceModals();
                 BootstrapUtil.enhanceCollapsibles();
                 CharacterUtil.enhanceMmrForm();
+                CharacterUtil.enhanceReportForm();
+                CharacterUtil.updateReportForm();
                 FollowUtil.enhanceFollowButtons();
                 BootstrapUtil.enhanceTabs();
                 TeamUtil.enhanceTeamBuffer();

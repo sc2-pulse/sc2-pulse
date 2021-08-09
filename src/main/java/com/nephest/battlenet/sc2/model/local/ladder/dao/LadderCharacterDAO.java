@@ -7,10 +7,8 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,7 +28,7 @@ public class LadderCharacterDAO
 {
 
     private static final String FIND_DISTINCT_CHARACTER_FORMAT =
-    "WITH %2$s "
+    "WITH RECURSIVE %2$s "
     + "player_character_filtered AS "
     + "( "
         + "SELECT player_character.id "
@@ -66,6 +64,7 @@ public class LadderCharacterDAO
     + "SELECT "
     + "pro_player.nickname AS \"pro_player.nickname\", "
     + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\","
+    + "confirmed_cheater_report.id AS \"confirmed_cheater_report.id\", "
     + AccountDAO.STD_SELECT + ", "
     + PlayerCharacterDAO.STD_SELECT + ", "
     + ClanDAO.STD_SELECT + ", "
@@ -86,6 +85,10 @@ public class LadderCharacterDAO
     + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
     + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
     + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
+    + "LEFT JOIN player_character_report AS confirmed_cheater_report "
+        + "ON player_character.id = confirmed_cheater_report.player_character_id "
+        + "AND confirmed_cheater_report.type = :cheaterReportType "
+        + "AND confirmed_cheater_report.status = true "
     + "LEFT JOIN player_character_stats_current ON player_character_stats_current.player_character_id = player_character_stats_filtered.player_character_id "
 
     + "ORDER BY rating_cur DESC NULLS LAST, rating_max DESC";
@@ -105,7 +108,7 @@ public class LadderCharacterDAO
         + "INNER JOIN account ON player_character.account_id = account.id "
         + "LEFT JOIN pro_player_account ON account.id = pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
-        + "WHERE LOWER(pro_player.nickname)=LOWER(:name)", ""
+        + "WHERE LOWER(pro_player.nickname)=LOWER(:name) ", ""
     );
     private static final String FIND_DISTINCT_CHARACTER_BY_FULL_BATTLE_TAG_QUERY = String.format
     (
@@ -124,7 +127,7 @@ public class LadderCharacterDAO
         FIND_DISTINCT_CHARACTER_FORMAT,
         "WHERE region = :region "
         + "AND realm = :realm "
-        + "AND battlenet_id = :battlenetId", ""
+        + "AND battlenet_id = :battlenetId ", ""
     );
 
     private static final String FIND_DISTINCT_CHARACTER_BY_CLAN_TAG_QUERY = String.format
@@ -138,14 +141,7 @@ public class LadderCharacterDAO
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
         "INNER JOIN account ON player_character.account_id=account.id "
-        + "INNER JOIN account_filtered ON account_filtered.id=account.id "
-        + "UNION "
-        + "SELECT player_character.id "
-        + "FROM pro_player_filtered "
-        + "INNER JOIN pro_player_account ON pro_player_filtered.id = pro_player_account.pro_player_id "
-        + "INNER JOIN account ON pro_player_account.account_id = account.id "
-        + "INNER JOIN player_character ON account.id = player_character.account_id",
-
+        + "INNER JOIN account_linked ON account_linked.id=account.id ",
         "pro_player_filtered AS "
         + "("
             + "SELECT pro_player.id FROM pro_player "
@@ -157,6 +153,35 @@ public class LadderCharacterDAO
         + "("
             + "SELECT account.id FROM account "
             + "%1$s"
+        + "),"
+        + "account_linked AS "
+        + "("
+            + "("
+                + "SELECT id, null::bigint AS pro_player_id FROM account_filtered "
+                + "UNION "
+                + "SELECT account.id, pro_player_account.pro_player_id "
+                + "FROM pro_player_filtered "
+                + "INNER JOIN pro_player_account ON pro_player_filtered.id = pro_player_account.pro_player_id "
+                + "INNER JOIN account ON pro_player_account.account_id=account.id "
+            + ") "
+            + "UNION "
+            + "SELECT DISTINCT(unnest(array[player_character.account_id, ab.id, ac.id])), ppab.pro_player_id "
+            + "FROM account_linked "
+            + "LEFT JOIN pro_player_account ppac ON account_linked.pro_player_id = ppac.pro_player_id "
+            + "LEFT JOIN account ac ON ppac.account_id = ac.id "
+            + "INNER JOIN player_character ON account_linked.id = player_character.account_id "
+            + "OR ac.id = player_character.account_id "
+            + "INNER JOIN player_character_report ON "
+                + "("
+                    + "player_character_id = player_character.id "
+                    + "OR additional_player_character_id = player_character.id"
+                + ") "
+                + "AND player_character_report.type = :linkedReportType "
+                + "AND player_character_report.status = true "
+            + "INNER JOIN player_character pcb ON player_character_report.player_character_id = pcb.id "
+            + "OR player_character_report.additional_player_character_id = pcb.id "
+            + "INNER JOIN account ab ON pcb.account_id = ab.id "
+            + "LEFT JOIN pro_player_account ppab ON ab.id = ppab.account_id "
         + "),"
     );
 
@@ -217,6 +242,7 @@ public class LadderCharacterDAO
                 clan,
                 rs.getString("pro_player.nickname"),
                 rs.getString("pro_player.team"),
+                DAOUtils.getInteger(rs, "confirmed_cheater_report.id"),
                 race == Race.TERRAN ? gamesPlayed : null,
                 race == Race.PROTOSS ? gamesPlayed : null,
                 race == Race.ZERG ? gamesPlayed : null,
@@ -254,7 +280,9 @@ public class LadderCharacterDAO
             .addValue("name", name)
             .addValue("likeName", likeName)
             .addValue("season", seasonDAO.getMaxBattlenetId())
-            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class));
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template
             .query(FIND_DISTINCT_CHARACTER_BY_NAME_OR_BATTLE_TAG_OR_PRO_NICKNAME_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
@@ -264,7 +292,9 @@ public class LadderCharacterDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("battleTag", battleTag)
             .addValue("season", seasonDAO.getMaxBattlenetId())
-            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class));
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template
             .query(FIND_DISTINCT_CHARACTER_BY_FULL_BATTLE_TAG_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
@@ -274,7 +304,9 @@ public class LadderCharacterDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("accountId", accountId)
             .addValue("season", seasonDAO.getMaxBattlenetId())
-            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class));
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template
             .query(FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
@@ -288,7 +320,9 @@ public class LadderCharacterDAO
             .addValue("realm", Integer.parseInt(split[split.length - 2]))
             .addValue("battlenetId", Long.parseLong(split[split.length - 1]))
             .addValue("season", seasonDAO.getMaxBattlenetId())
-            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class));
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return Optional.ofNullable(template.query(FIND_DISTINCT_CHARACTER_BY_PROFILE_LINK_QUERY, params, DISTINCT_CHARACTER_EXTRACTOR));
     }
 
@@ -299,7 +333,9 @@ public class LadderCharacterDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("clanTag", clanTag)
             .addValue("season", seasonDAO.getMaxBattlenetId())
-            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class));
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template
             .query(FIND_DISTINCT_CHARACTER_BY_CLAN_TAG_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
@@ -309,7 +345,11 @@ public class LadderCharacterDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterId", playerCharacterId)
             .addValue("season", seasonDAO.getMaxBattlenetId())
-            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class));
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))
+            .addValue("linkedReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.LINK, Integer.class));
         return template
             .query(FIND_LINKED_DISTINCT_CHARACTERS_BY_PLAYER_CHARACTER_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
@@ -319,7 +359,11 @@ public class LadderCharacterDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("accountId", accountId)
             .addValue("season", seasonDAO.getMaxBattlenetId())
-            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class));
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))
+            .addValue("linkedReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.LINK, Integer.class));
         return template
             .query(FIND_LINKED_DISTINCT_CHARACTERS_BY_ACCOUNT_ID_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }

@@ -16,6 +16,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.*;
+import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -53,6 +54,9 @@ public class LadderController
 
     @Autowired
     private LadderTeamStateDAO ladderTeamStateDAO;
+
+    @Autowired
+    private PlayerCharacterReportService reportService;
 
     @GetMapping("/ladder/a/{ratingAnchor}/{idAnchor}/{count}")
     public PagedSearchResult<List<LadderTeam>> getLadderAnchored
@@ -225,7 +229,8 @@ public class LadderController
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
             ladderMatchDAO.findMatchesByCharacterId(
                 id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult(),
-            ladderTeamStateDAO.find(id)
+            ladderTeamStateDAO.find(id),
+            reportService.findReportsByCharacterId(id)
         );
     }
 

@@ -79,7 +79,8 @@ const VIEW = Object.freeze
     PERSONAL_CHARACTERS: {name: "personal-characters", order: 6},
     ONLINE: {name: "online", order: 7},
     TEAM_BUFFER: {name: "team-buffer", order: 8},
-    TEAM_MMR:{name: "team-mmr", order: 9}
+    TEAM_MMR:{name: "team-mmr", order: 9},
+    CHARACTER_REPORTS: {name:"all-character-reports", order: 10}
 });
 
 const VIEW_DATA = Object.freeze

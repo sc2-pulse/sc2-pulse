@@ -67,6 +67,7 @@ extends SpringBootServletInitializer
         service.addConverter(new IntegerToMatchTypeConverter());
         service.addConverter(new IntegerToDecisionConverter());
         service.addConverter(new IntegerToSC2PulseAuthority());
+        service.addConverter(new IntegerToPlayerCharacterReportTypeConverter());
         return service;
     }
 

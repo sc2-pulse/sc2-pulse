@@ -57,6 +57,7 @@ class Session
         {
             CharacterUtil.updatePersonalCharacters();
             FollowUtil.getMyFollowing();
+            CharacterUtil.updateAllCharacterReports();
             for(const e of document.querySelectorAll(".login-anonymous")) e.classList.add("d-none");
             for(const e of document.querySelectorAll(".login-user")) e.classList.remove("d-none");
         }
@@ -65,6 +66,32 @@ class Session
             for(const e of document.querySelectorAll(".login-anonymous")) e.classList.remove("d-none");
             for(const e of document.querySelectorAll(".login-user")) e.classList.add("d-none");
         }
+    }
+
+    static updateReportsNotifications()
+    {
+        if(!Session.currentRoles || !Session.currentRoles.find(r=>r == "MODERATOR")) return;
+
+        const reports = Model.DATA.get(VIEW.CHARACTER_REPORTS).get("reports");
+        if(!reports || reports.length == 0) return;
+
+        let unreviewedReports = 0;
+        reports.flatMap(r=>r.evidence).forEach(e=>{
+            if(!e.votes || !e.votes.find(v=>v.vote.voterAccountId == Session.currentAccount.id)) unreviewedReports++;
+        })
+        const alerts = [
+            document.querySelector("#all-character-reports-tab .tab-alert"),
+            document.querySelector("#personal-tab .tab-alert")
+        ];
+        for(const alert of alerts) {
+        alert.textContent = unreviewedReports;
+            if(unreviewedReports > 0) {
+                alert.classList.remove("d-none");
+            } else {
+                alert.classList.add("d-none");
+            }
+        }
+
     }
 
     static locationSearch()
