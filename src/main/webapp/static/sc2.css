@@ -618,6 +618,11 @@ body.theme-dark :fullscreen, body.theme-dark #team-buffer
     content: url("icon/misc/shrink.svg");
 }
 
+#error-generation
+{
+    z-index: 9999;
+}
+
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;
