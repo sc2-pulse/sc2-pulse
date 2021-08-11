@@ -94,7 +94,7 @@
                         matches and pro stats for pro players</dd>
                         <dt><code><a th:href="@{/api/status/stale}" target="_blank" rel="noopener nofollow">/api/status/stale</a></code></dt>
                         <dd>List of Blizzard API regions that return stale data</dd>
-                        <dt><code><a th:href="@{'/api/season/state/' + ${T(java.lang.System).currentTimeMillis()} + '/MONTH'}" target="_blank" rel="noopener nofollow">/api/season/status/{endTimestampMillis}/{period}</a></code></dt>
+                        <dt><code><a th:href="@{'/api/season/state/' + ${#execInfo.now.getTimeInMillis()} + '/MONTH'}" target="_blank" rel="noopener nofollow">/api/season/status/{endTimestampMillis}/{period}</a></code></dt>
                         <dd>Steam-like online stats. Hour resolution, player count and games played, divided by region. See Period enum for available periods.</dd>
                     </dl>
                 </p>
