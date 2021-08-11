@@ -53,7 +53,7 @@ class BootstrapUtil
             return Promise.resolve();
         }
 
-        const promise = new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(tab.id, res));
+        const promise = new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(tab.getAttribute("data-target").substring(1), res));
         $(tab).tab('show');
         return promise;
     }
