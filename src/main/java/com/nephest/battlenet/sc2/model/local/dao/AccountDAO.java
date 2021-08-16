@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +17,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -53,6 +55,13 @@ public class AccountDAO
         + "FROM account "
         + "WHERE partition = :partition "
         + "AND battle_tag = :battleTag";
+
+    private static final String FIND_BY_ROLE =
+        "SELECT " + STD_SELECT
+        + "FROM account_role "
+        + "INNER JOIN account ON account_role.account_id = account.id "
+        + "WHERE account_role.role = :role "
+        + "ORDER BY account.id";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -120,6 +129,13 @@ public class AccountDAO
             .addValue("partition", conversionService.convert(partition, Integer.class))
             .addValue("battleTag", battleTag);
         return Optional.ofNullable(template.query(FIND_BY_PARTITION_AND_BATTLE_TAG, params, STD_EXTRACTOR));
+    }
+
+    public List<Account> findByRole(SC2PulseAuthority authority)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("role", conversionService.convert(authority, Integer.class));
+        return template.query(FIND_BY_ROLE, params, STD_ROW_MAPPER);
     }
 
     private MapSqlParameterSource createParameterSource(Account account)

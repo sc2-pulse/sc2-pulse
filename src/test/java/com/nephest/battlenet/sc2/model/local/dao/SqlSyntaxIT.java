@@ -220,6 +220,10 @@ public class SqlSyntaxIT
         assertTrue(roles.contains(SC2PulseAuthority.MODERATOR));
         assertTrue(roles.contains(SC2PulseAuthority.USER)); //user is a default role
 
+        List<Account> mods = accountDAO.findByRole(SC2PulseAuthority.MODERATOR);
+        assertEquals(1, mods.size());
+        assertEquals(account.getId(), mods.get(0).getId());
+
         accountRoleDAO.addRoles(account.getId(), SC2PulseAuthority.NONE);
         List<SC2PulseAuthority> roles2 = accountRoleDAO.getRoles(account.getId());
         assertEquals(1, roles2.size());
