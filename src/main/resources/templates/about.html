@@ -9,7 +9,7 @@
 </head>
 <body>
 <div th:replace="~{fragments/generic :: content(~{::section})}">
-    <section id="about">
+    <section id="about" th:with="mods=${@userController.getModTags()}">
         <header>
             <h2>What is this site?</h2>
             <p>
@@ -57,6 +57,10 @@
                     </ul>
                 </li>
             </ul>
+        </section>
+        <section th:if="${mods.size() > 0}">
+            <h3>Moderators</h3>
+            <p th:text="${mods.stream().collect(T(java.util.stream.Collectors).joining(', '))}"></p>
         </section>
         <section>
             <h3>Tech</h3>
