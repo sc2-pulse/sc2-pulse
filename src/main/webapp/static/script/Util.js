@@ -240,6 +240,14 @@ class Util
         return (navigator.maxTouchPoints || 'ontouchstart' in document.documentElement);
     }
 
+    static formatDateTimes()
+    {
+        document.querySelectorAll(".datetime-iso").forEach(t=>{
+            t.textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(t.textContent));
+            t.classList.remove("datetime-iso");
+        });
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =

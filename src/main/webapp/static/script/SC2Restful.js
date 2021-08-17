@@ -34,6 +34,7 @@ class SC2Restful
     static initAll()
     {
         Model.init();
+        Util.formatDateTimes();
     }
 
     static enhance(mode = START_MODE.FULL)
