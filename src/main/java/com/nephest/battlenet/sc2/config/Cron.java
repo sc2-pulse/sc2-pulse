@@ -70,6 +70,9 @@ public class Cron
     private VarDAO varDAO;
 
     @Autowired
+    private VarService varService;
+
+    @Autowired
     private UpdateService updateService;
 
     @PostConstruct
@@ -105,6 +108,12 @@ public class Cron
     public void updateCharacterReports()
     {
         characterReportService.update(REPORT_UPDATE_FROM);
+    }
+
+    @Scheduled(cron="0 0 0/2 * * *")
+    public void evictVarCache()
+    {
+        varService.evictCache();
     }
 
     @Scheduled(cron="0 59 * * * *")

@@ -10,6 +10,7 @@
         <section class="d-top-global-mild mb-3 text-center" th:fragment="error (header, description)">
             <h1 th:replace="${header}">Unexpected error</h1>
             <p class="text-secondary" th:include="${description}"></p>
+            <aside th:if="${@varService.getMessage('message.global') != null}" th:utext="${@varService.getMessage('message.global')}"></aside>
             <a href="/" th:href="@{/}">Back to home</a>
         </section>
         <section class="mt-3 mb-3 text-center" th:fragment="content (content)">

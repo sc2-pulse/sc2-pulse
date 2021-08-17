@@ -89,6 +89,7 @@
                 </ul>
             </nav>
             <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}" class="mr-1"  alt="Pulse"/><span> SC2 Pulse</span></a></h1>
+            <aside th:if="${@varService.getMessage('message.global') != null}" th:utext="${@varService.getMessage('message.global')}"></aside>
             <div class="c-divider-hr"></div>
         </header>
         <div class="tab-content tab-content-main">
