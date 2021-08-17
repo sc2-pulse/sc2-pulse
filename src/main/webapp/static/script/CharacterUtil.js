@@ -210,10 +210,13 @@ class CharacterUtil
             charNameAdditionalClan = maskedTeam;
         }
         document.getElementById("player-info-title-name").textContent = charName;
+        const titleElem = document.getElementById("player-info-title");
         const clanElem = document.getElementById("player-info-title-clan");
         const teamElem = document.getElementById("player-info-title-team");
         const additionalNameElem = document.getElementById("player-info-title-name-additional");
         const additionalClanElem = document.getElementById("player-info-title-clan-additional");
+        titleElem.querySelectorAll(":scope .player-info-region").forEach(e=>e.remove());
+        titleElem.prepend(ElementUtil.createImage("flag/", member.character.region.toLowerCase(), "table-image-long player-info-region"));
         if(charNameAdditionalClan) {
             additionalClanElem.textContent = charNameAdditionalClan;
             additionalClanElem.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=search&name=${"[" + charNameAdditionalClan + "]"}#search`));
