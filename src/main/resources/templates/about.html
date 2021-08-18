@@ -60,6 +60,7 @@
         </section>
         <section th:if="${mods.size() > 0}">
             <h3>Moderators</h3>
+            <aside><p>All moderators are approved by team league admins</p></aside>
             <p th:text="${mods.stream().collect(T(java.util.stream.Collectors).joining(', '))}"></p>
         </section>
         <section>
