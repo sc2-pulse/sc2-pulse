@@ -8,6 +8,7 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * Career summary
     * History: all teams and seasons, mmr chart, matches
     * Linked profiles
+    * Public reports
 * BattleNet integration
     * Log in with a BattleNet account
     * Easy access to personal stats
