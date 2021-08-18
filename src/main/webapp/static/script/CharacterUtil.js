@@ -335,9 +335,17 @@ class CharacterUtil
         const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
         const bestRaceOnly = document.getElementById("mmr-best-race").checked;
 
+        const seasonStartDates = CharacterUtil.getSeasonStartDates(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         const teams = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams
             .filter(t=>t.queueType == queueFilter && t.teamType == teamTypeFilter)
-            .map(t=>CharacterUtil.createTeamSnapshot(t, Session.currentSeasonsMap.get(t.season)[0].end));
+            .map(t=>{
+                const nextSeasonDate = seasonStartDates.get(t.season + 1)
+                    || Session.currentSeasonsMap.get(t.season)[0].end;
+                const date = nextSeasonDate.getTime() < Session.currentSeasonsMap.get(t.season)[0].end.getTime()
+                    ? new Date(nextSeasonDate.getTime() - 1000)
+                    : Session.currentSeasonsMap.get(t.season)[0].end;
+                return CharacterUtil.createTeamSnapshot(t, date);
+            });
         let mmrHistory = teams
             .concat(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter, excludeStart, excludeEnd);
@@ -379,6 +387,18 @@ class CharacterUtil
             + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
         document.getElementById("mmr-history-games-avg-mmr").textContent = CharacterUtil.getGamesAndAverageMmrString(mmrHistory);
+    }
+
+    static getSeasonStartDates(states)
+    {
+        const result = new Map();
+        let season = 0;
+        for(let state of states)
+            if(state.season > season) {
+                season = state.season;
+                result.set(season, Util.parseIsoDateTime(state.teamState.dateTime));
+            }
+        return result;
     }
 
     static injectLeagueImages(tableData, rawData, headers, getter)
