@@ -1195,6 +1195,7 @@ class CharacterUtil
     static updateReportAlternativeCharacterList()
     {
         const select = document.querySelector("#report-character-additional");
+        select.querySelectorAll("option").forEach(o=>o.remove());
         for(const team of TeamUtil.teamBuffer.values()) {
             team.members.forEach(m=>
             {
