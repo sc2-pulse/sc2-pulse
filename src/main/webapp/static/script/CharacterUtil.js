@@ -660,7 +660,7 @@ class CharacterUtil
         let result = null;
         for(const [race, vals] of racialHistory.entries())
         {
-            const curTop = vals[vals.length - 1].teamState.rating;
+            const curTop = vals.map(v=>v.teamState.rating).reduce((a, b) => Math.max(a, b));
             if(curTop > top)
             {
                 top = curTop;
