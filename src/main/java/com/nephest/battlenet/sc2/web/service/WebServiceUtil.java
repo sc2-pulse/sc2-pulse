@@ -32,6 +32,8 @@ public class WebServiceUtil
 {
 
     public static final Logger LOG = LoggerFactory.getLogger(WebServiceUtil.class);
+    public static final String TRACE_EXCEPTION_LOG_TEMPLATE =
+        "{} (x-trace-traceid: {}, x-trace-spanid: {}, x-trace-parentspanid: {})";
 
     private WebServiceUtil(){}
 
@@ -120,6 +122,14 @@ public class WebServiceUtil
                     TemplatedException te = (TemplatedException) t;
                     LogUtil.log(LOG, logLevelFunction.apply(t), te.getLogTemplate(), te.getLogArgs());
                 }
+                else if(t instanceof WebClientResponseException)
+                {
+                    logWebClientException((WebClientResponseException) t, logLevelFunction);
+                }
+                else if(ExceptionUtils.getRootCause(t) instanceof WebClientResponseException)
+                {
+                    logWebClientException((WebClientResponseException) ExceptionUtils.getRootCause(t), logLevelFunction);
+                }
                 else
                 {
                     LogUtil.log(LOG, logLevelFunction.apply(t), ExceptionUtils.getRootCauseMessage(t));
@@ -132,6 +142,27 @@ public class WebServiceUtil
     public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono(Mono<T> mono, int fullDelay)
     {
         return getOnErrorLogAndSkipRateDelayedMono(mono, fullDelay, (t)->LogUtil.LogLevel.ERROR);
+    }
+
+    public static void logWebClientException
+    (WebClientResponseException wcre, Function<Throwable, LogUtil.LogLevel> logLevelFunction)
+    {
+        if
+        (
+            wcre.getHeaders().containsKey("x-trace-traceid")
+            && wcre.getHeaders().containsKey("x-trace-spanid")
+            && wcre.getHeaders().containsKey("x-trace-parentspanid")
+        )
+        {
+            LogUtil.log(LOG, logLevelFunction.apply(wcre), TRACE_EXCEPTION_LOG_TEMPLATE,
+                ExceptionUtils.getRootCauseMessage(wcre),
+                wcre.getHeaders().get("x-trace-traceid").get(0),
+                wcre.getHeaders().get("x-trace-spanid").get(0),
+                wcre.getHeaders().get("x-trace-parentspanid").get(0));
+        } else
+        {
+            LogUtil.log(LOG, logLevelFunction.apply(wcre), ExceptionUtils.getRootCauseMessage(wcre));
+        }
     }
 
 }
