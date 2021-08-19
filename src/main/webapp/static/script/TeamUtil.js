@@ -494,6 +494,7 @@ class TeamUtil
             const refTeam = history.teams[history.teams.length - 1];
             const group = TeamUtil.generateTeamName(refTeam);
             headers.push(group);
+            const seasonStartDates = CharacterUtil.getSeasonStartDates(history.states);
             if(!seasonLastOnly) {
                 for(const state of history.states) {
                     state.group = {name: group, order: curEntry};
@@ -502,7 +503,12 @@ class TeamUtil
                 }
             }
             for(const team of history.teams) {
-                const state = CharacterUtil.createTeamSnapshot(team, Session.currentSeasonsMap.get(team.season)[0].end);
+                const nextSeasonDate = seasonStartDates.get(team.season + 1)
+                    || Session.currentSeasonsMap.get(team.season)[0].end;
+                const date = nextSeasonDate.getTime() < Session.currentSeasonsMap.get(team.season)[0].end.getTime()
+                    ? new Date(nextSeasonDate.getTime() - 1000)
+                    : Session.currentSeasonsMap.get(team.season)[0].end;
+                const state = CharacterUtil.createTeamSnapshot(team, date);
                 state.group = {name: group, order: curEntry};
                 transformedData.push(state);
             }
