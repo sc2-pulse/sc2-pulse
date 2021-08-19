@@ -65,6 +65,8 @@ class CharacterUtil
 
     static updateAllCharacterReports()
     {
+        if(!document.querySelector("#all-character-reports")) return Promise.resolve();
+
         Util.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updateAllCharacterReportsModel()
             .then(e=>new Promise((res, rej)=>{
