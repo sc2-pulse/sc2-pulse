@@ -74,7 +74,7 @@ class CharacterUtil
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+            .catch(error => Session.onPersonalException(error));
     }
 
     static updateCharacterTeamsView()
@@ -99,7 +99,7 @@ class CharacterUtil
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+            .catch(error => Session.onPersonalException(error));
     }
 
     static updateCharacterInfo(commonCharacter, id)
@@ -891,7 +891,7 @@ class CharacterUtil
             Util.setGeneratingStatus(STATUS.SUCCESS);
             res();
          }))
-         .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+         .catch(error => Session.onPersonalException(error));
     }
 
     static loadNextMatchesModel(id, dateAnchor, typeAnchor, mapAnchor)
@@ -920,7 +920,7 @@ class CharacterUtil
                 Session.currentSearchParams = stringParams;
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+            .catch(error => Session.onPersonalException(error));
     }
 
     static updatePersonalCharactersModel()
@@ -950,7 +950,7 @@ class CharacterUtil
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+            .catch(error => Session.onPersonalException(error));
     }
 
     static enhanceSearchForm()
@@ -1190,7 +1190,7 @@ class CharacterUtil
             Util.setGeneratingStatus(STATUS.BEGIN);
             CharacterUtil.reportCharacter(fd)
                 .then(e => Util.setGeneratingStatus(STATUS.SUCCESS))
-                .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+                .catch(error => Session.onPersonalException(error));
         })
     }
 

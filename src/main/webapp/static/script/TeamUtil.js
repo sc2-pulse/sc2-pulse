@@ -457,7 +457,7 @@ class TeamUtil
                 if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+            .catch(error => Session.onPersonalException(error));
     }
 
     static updateTeamMmrModel(searchParams)

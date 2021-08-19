@@ -18,7 +18,7 @@ class SeasonUtil
         return fetch(ROOT_CONTEXT_PATH + "api/seasons")
             .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{SeasonUtil.updateSeasons(json); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+            .catch(error => Session.onPersonalException(error));
     }
 
     static updateSeasons(seasons)
@@ -103,7 +103,7 @@ class SeasonUtil
                 if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+            .catch(error => Session.onPersonalException(error));
     }
 
     static updateSeasonStateModel(searchParams)

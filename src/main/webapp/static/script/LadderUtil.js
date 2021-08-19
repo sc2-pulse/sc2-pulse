@@ -110,7 +110,7 @@ class LadderUtil
                 Session.currentSearchParams = stringParams;
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+            .catch(error => Session.onPersonalException(error));
     }
 
     static updateMyLadderModel(formParams)
@@ -162,7 +162,7 @@ class LadderUtil
                 Session.currentSearchParams = stringParams;
                 res();
             }))
-            .catch(error => Util.setGeneratingStatus(STATUS.ERROR, error.message, error));
+            .catch(error => Session.onPersonalException(error));
     }
 
     static ladderPaginationPageClick(evt)
