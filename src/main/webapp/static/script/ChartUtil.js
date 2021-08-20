@@ -639,7 +639,11 @@ class ChartUtil
                 chartable.setAttribute("data-chart-begin-at-zero", "false");
             }
         }
-        if(chart) chart.update();
+        if(chart) {
+            chart.update();
+            ChartUtil.resetZoom({target: document.querySelector("#chart-zoom-ctl-" + chartable.id)});
+            ChartUtil.updateChartZoomLimits(chart);
+        }
     }
 
     static enhanceHeightControls()
