@@ -125,7 +125,7 @@ class CharacterUtil
             }
         }
 
-        CharacterUtil.updateCharacterInfoName(member);
+        CharacterUtil.updateCharacterInfoName(commonCharacter, member);
         const region = EnumUtil.enumOfName(character.region, REGION);
         const profileLinkElement = document.getElementById("link-sc2");
         if(region == REGION.CN)
@@ -186,7 +186,7 @@ class CharacterUtil
         }
     }
 
-    static updateCharacterInfoName(member)
+    static updateCharacterInfoName(commonCharacter, member)
     {
         let charName;
         let charClan;
@@ -242,7 +242,10 @@ class CharacterUtil
         additionalNameElem.textContent = charNameAdditional;
         const additionalContainer = document.querySelector("#player-info-additional-container");
         additionalContainer.querySelectorAll(":scope .player-flag").forEach(f=>f.remove());
-        if(member.confirmedCheaterReportId) additionalContainer.appendChild(ElementUtil.createCheaterFlag());
+        if(commonCharacter.linkedDistinctCharacters
+            .flatMap(dc=>dc.members)
+            .find(m=>m.confirmedCheaterReportId)
+        ) additionalContainer.appendChild(ElementUtil.createCheaterFlag());
         if(member.proNickname) additionalContainer.appendChild(ElementUtil.createProFlag());
     }
 
