@@ -92,7 +92,7 @@ public class PlayerCharacterReportService
             .filter(Objects::nonNull)
             .toArray(Long[]::new)).stream()
                 .collect(groupingBy(m->m.getCharacter().getId()));
-        Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll().stream()
+        Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll(true).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
         Map<Integer, List<LadderEvidenceVote>> evidenceVotes = ladderEvidenceVoteDAO.findAll().stream()
             .collect(groupingBy(v->v.getVote().getEvidenceId()));
@@ -119,7 +119,7 @@ public class PlayerCharacterReportService
             .toArray(Long[]::new)).stream()
                 .collect(groupingBy(m->m.getCharacter().getId()));
         Map<Integer, List<Evidence>> evidences = evidenceDAO
-            .findByReportIds(reports.stream().map(r->r.getReport().getId()).toArray(Integer[]::new)).stream()
+            .findByReportIds(true, reports.stream().map(r->r.getReport().getId()).toArray(Integer[]::new)).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
         Map<Integer, List<LadderEvidenceVote>> evidenceVotes =
             ladderEvidenceVoteDAO.findByEvidenceIds(evidences.values().stream().flatMap(l->l.stream().map(Evidence::getId)).toArray(Integer[]::new)).stream()
@@ -147,6 +147,7 @@ public class PlayerCharacterReportService
         evidenceDAO.evictRequiredVotesCache();
         evidenceDAO.getRequiredVotes();
         playerCharacterReportDAO.removeExpired();
+        evidenceDAO.removeExpired();
     }
 
 }

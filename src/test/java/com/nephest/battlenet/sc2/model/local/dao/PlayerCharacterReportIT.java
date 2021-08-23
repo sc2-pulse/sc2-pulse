@@ -583,15 +583,36 @@ public class PlayerCharacterReportIT
         //verify removal and hiding
         reports = getReports(csrfToken);
         assertEquals(5, reports.length);
-        playerCharacterReportDAO.merge(new PlayerCharacterReport(
+        long evidenceCountEnd = Arrays.stream(reports).flatMap(r->r.getEvidence().stream()).count();
+        PlayerCharacterReport expiredReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
-        assertEquals(6, playerCharacterReportDAO.getAll().size());
+        PlayerCharacterReport expiredConfirmedReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
+            null, 9L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            true, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+        Evidence expiredEvidence = evidenceDAO.create(
+            new Evidence(null, expiredReport.getId(), null, localhost, "description asda",
+            false, OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),OffsetDateTime.now()));
+        Evidence expiredConfirmedEvidence = evidenceDAO.create(
+            new Evidence(null, expiredConfirmedReport.getId(), null, localhost, "description asda",
+                true, OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),OffsetDateTime.now()));
+        assertEquals(7, playerCharacterReportDAO.getAll().size());
+        assertEquals(evidenceCountEnd + 2, evidenceDAO.findAll(false).size());
         reports = getReports(csrfToken);
-        assertEquals(5, reports.length); //hidden
-        playerCharacterReportDAO.removeExpired();
-        assertEquals(5, playerCharacterReportDAO.getAll().size()); //expired and denied report is removed
+        //hidden
+        assertEquals(6, reports.length);
+        assertEquals(evidenceCountEnd + 1, evidenceDAO.findAll(true).size());
 
+        playerCharacterReportDAO.removeExpired();
+        evidenceDAO.removeExpired();
+        //expired and denied report and evidence are removed
+        List<PlayerCharacterReport> endReports = playerCharacterReportDAO.getAll();
+        List<Evidence> endEvidences = evidenceDAO.findAll(false);
+        assertEquals(6, endReports.size());
+        assertEquals(evidenceCountEnd + 1, endEvidences.size());
+        //expired and confirmed report and evidence are not removed
+        assertTrue(endReports.stream().anyMatch(r->r.getId().equals(expiredConfirmedReport.getId())));
+        assertTrue(endEvidences.stream().anyMatch(e->e.getId().equals(expiredConfirmedEvidence.getId())));
     }
 
     private static void verifyReports

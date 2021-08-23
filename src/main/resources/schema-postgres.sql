@@ -529,8 +529,9 @@ CREATE INDEX "ix_evidence_created_reporter_ip" ON "evidence"("created", "reporte
 CREATE INDEX "ix_evidence_created_reporter_account_id"
     ON "evidence"("created", "reporter_account_id")
     WHERE "reporter_account_id" IS NOT NULL;
-CREATE INDEX "ix_evidence_status_change_timestamp" ON "evidence"("status_change_timestamp");
 CREATE INDEX "ix_evidence_player_character_report_id" ON "evidence"("player_character_report_id");
+CREATE INDEX "ix_evidence_status_status_change_timestamp"
+    ON "evidence"("status", "status_change_timestamp");
 
 CREATE TABLE "evidence_vote"
 (

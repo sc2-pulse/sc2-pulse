@@ -26,6 +26,8 @@ public class EvidenceDAO
 {
 
     public static final int ACTIVE_MOD_THRESHOLD_DAYS = 14;
+    public static final int HIDE_DENIED_EVIDENCE_DAYS = 30;
+    public static final int DENIED_EVIDENCE_TTL_DAYS = 180;
 
     public static final String STD_SELECT =
         "evidence.id AS \"evidence.id\", "
@@ -54,6 +56,12 @@ public class EvidenceDAO
         return STD_ROW_MAPPER.mapRow(rs, 0);
     };
 
+    private static final String VISIBLE_AND =
+        "("
+            + "status IS NULL "
+            + "OR status = true "
+            + "OR status_change_timestamp >= :from "
+        + ") ";
     private static final String CREATE_QUERY =
         "INSERT INTO evidence "
         + "(player_character_report_id, reporter_account_id, reporter_ip, description, status, "
@@ -71,11 +79,24 @@ public class EvidenceDAO
         + "WHERE player_character_report_id = :playerCharacterReportId "
         + "AND status = true";
     private static final String GET_ALL_QUERY = "SELECT " + STD_SELECT + "FROM evidence ORDER BY created DESC";
+    private static final String GET_ALL_HIDE_DENIED_QUERY =
+        "SELECT " + STD_SELECT
+        + "FROM evidence "
+        + "WHERE "
+        + VISIBLE_AND
+        + "ORDER BY created DESC";
     private static final String GET_BY_ID = "SELECT " + STD_SELECT + " FROM evidence WHERE id = :id";
+    private static final String GET_BY_ID_HIDE_DENIED = GET_BY_ID + " AND " + VISIBLE_AND;
     private static final String GET_BY_REPORT_IDS =
         "SELECT " + STD_SELECT
         + "FROM evidence "
         + "WHERE player_character_report_id IN (:reportIds) "
+        + "ORDER BY created DESC";
+    private static final String GET_BY_REPORT_IDS_HIDE_DENIED =
+        "SELECT " + STD_SELECT
+        + "FROM evidence "
+        + "WHERE player_character_report_id IN (:reportIds) "
+        + "AND " + VISIBLE_AND
         + "ORDER BY created DESC";
     private static final String UPDATE_STATUS_QUERY =
         "WITH recent_evidence AS "
@@ -129,6 +150,10 @@ public class EvidenceDAO
         + ") "
         + "SELECT last_not_reviewed.count "
         + "FROM last_not_reviewed";
+    private static final String REMOVE_EXPIRED_QUERY =
+        "DELETE FROM evidence "
+        + "WHERE status = false "
+        + "AND status_change_timestamp < :from";
 
     private final NamedParameterJdbcTemplate template;
 
@@ -166,26 +191,29 @@ public class EvidenceDAO
         );
     }
 
-    public List<Evidence> findAll()
+    public List<Evidence> findAll(boolean hideDenied)
     {
-        return template.query(GET_ALL_QUERY, STD_ROW_MAPPER);
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_EVIDENCE_DAYS));
+        return template.query(hideDenied ? GET_ALL_HIDE_DENIED_QUERY : GET_ALL_QUERY, params, STD_ROW_MAPPER);
     }
 
-    public Optional<Evidence> findById(int id)
+    public Optional<Evidence> findById(boolean hideDenied, int id)
     {
-        return Optional.ofNullable(
-            template.query(GET_BY_ID, new MapSqlParameterSource().addValue("id", id), STD_EXTRACTOR));
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
+            .addValue("id", id);
+        return Optional.ofNullable(template.query(hideDenied ? GET_BY_ID_HIDE_DENIED : GET_BY_ID, params, STD_EXTRACTOR));
     }
 
-    public List<Evidence> findByReportIds(Integer... reportIds)
+    public List<Evidence> findByReportIds(boolean hideDenied, Integer... reportIds)
     {
         if(reportIds.length == 0) return List.of();
-        return template.query
-        (
-            GET_BY_REPORT_IDS,
-            new MapSqlParameterSource().addValue("reportIds", Set.of(reportIds)),
-            STD_ROW_MAPPER
-        );
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
+            .addValue("reportIds", Set.of(reportIds));
+        return template.query(hideDenied ? GET_BY_REPORT_IDS_HIDE_DENIED : GET_BY_REPORT_IDS, params, STD_ROW_MAPPER);
     }
 
     public int getActiveModCount()
@@ -212,6 +240,13 @@ public class EvidenceDAO
             .addValue("from", from)
             .addValue("votesRequired", getRequiredVotes());
         return template.update(UPDATE_STATUS_QUERY, params);
+    }
+
+    public int removeExpired()
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("from", OffsetDateTime.now().minusDays(DENIED_EVIDENCE_TTL_DAYS));
+        return template.update(REMOVE_EXPIRED_QUERY, params);
     }
 
     private MapSqlParameterSource createParams(Evidence evidence)
