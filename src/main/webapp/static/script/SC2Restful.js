@@ -60,6 +60,7 @@ class SC2Restful
                 CharacterUtil.enhanceMmrForm();
                 CharacterUtil.enhanceReportForm();
                 CharacterUtil.updateReportForm();
+                CharacterUtil.enhanceMatchesHistoricalMmrInput();
                 FollowUtil.enhanceFollowButtons();
                 BootstrapUtil.enhanceTabs();
                 TeamUtil.enhanceTeamBuffer();

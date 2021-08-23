@@ -718,7 +718,17 @@ class CharacterUtil
                 if(!p.team) {
                     teams.push({id: -1, alternativeData: p.participant.playerCharacterId + "," + p.participant.decision})
                 } else if(teams.length == 0 || teams[teams.length - 1].id != p.team.id) {
-                    teams.push(p.team);
+                    if(localStorage.getItem("matches-historical-mmr") == "true") {
+                        let teamClone = {};
+                        Object.assign(teamClone, p.team);
+                        teamClone.rating = p.teamState.teamState.rating;
+                        teamClone.league = p.teamState.league;
+                        teamClone.leagueType = p.teamState.league.type;
+                        teamClone.tierType = p.teamState.tier;
+                        teams.push(teamClone);
+                    } else {
+                        teams.push(p.team);
+                    }
                 }
             }
 
@@ -1265,6 +1275,12 @@ class CharacterUtil
     {
         const button = document.querySelector("#load-all-character-reports");
         if(button) button.addEventListener("click", e=>CharacterUtil.updateAllCharacterReports());
+    }
+
+    static enhanceMatchesHistoricalMmrInput()
+    {
+        document.querySelector("#matches-historical-mmr").addEventListener("change",
+            e=>window.setTimeout(CharacterUtil.updateCharacterMatchesView, 1));
     }
 
 }
