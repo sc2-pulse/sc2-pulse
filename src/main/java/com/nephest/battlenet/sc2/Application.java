@@ -5,8 +5,11 @@ package com.nephest.battlenet.sc2;
 
 import com.nephest.battlenet.sc2.config.convert.*;
 import com.nephest.battlenet.sc2.config.filter.MaintenanceFilter;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.web.client.RestTemplateBuilderConfigurer;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
@@ -15,6 +18,7 @@ import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
+import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -69,6 +73,19 @@ extends SpringBootServletInitializer
         service.addConverter(new IntegerToSC2PulseAuthority());
         service.addConverter(new IntegerToPlayerCharacterReportTypeConverter());
         return service;
+    }
+
+    @Bean
+    public ClientHttpConnector clientHttpConnector()
+    {
+        return WebServiceUtil.getClientHttpConnector();
+    }
+
+    @Bean
+    public RestTemplateBuilder restTemplateBuilder(RestTemplateBuilderConfigurer configurer) {
+        return configurer.configure(new RestTemplateBuilder())
+            .setConnectTimeout(WebServiceUtil.CONNECT_TIMEOUT)
+            .setReadTimeout(WebServiceUtil.IO_TIMEOUT);
     }
 
     @Bean
