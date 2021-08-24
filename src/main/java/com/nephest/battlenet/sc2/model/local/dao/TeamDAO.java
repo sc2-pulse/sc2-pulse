@@ -235,7 +235,7 @@ public class TeamDAO
                         conversionService.convert(rs.getInt("team.queue_type"), QueueType.class),
                         conversionService.convert(rs.getInt("team.team_type"), TeamType.class)
                     ),
-                conversionService.convert(rs.getInt("team.tier_type"), LeagueTier.LeagueTierType.class),
+                conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), LeagueTier.LeagueTierType.class),
                 ((BigDecimal) rs.getObject("team.legacy_id")).toBigInteger(),
                 rs.getInt("team.division_id"),
                 rs.getLong("team.rating"),

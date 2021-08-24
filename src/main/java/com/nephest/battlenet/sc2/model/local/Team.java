@@ -35,7 +35,6 @@ implements java.io.Serializable
     @NotNull
     private BaseLeague league;
 
-    @NotNull
     private LeagueTier.LeagueTierType tierType;
 
     @NotNull

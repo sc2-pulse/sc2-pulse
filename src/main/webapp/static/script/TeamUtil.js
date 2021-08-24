@@ -311,8 +311,8 @@ class TeamUtil
         const leagueDiv = document.createElement("div");
         leagueDiv.classList.add("text-nowrap");
         leagueDiv.appendChild(ElementUtil.createImage("league/", league.name, "table-image table-image-square mr-1"));
-            leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (team.tierType + 1),
-                "table-image-additional" + (TeamUtil.isAlternativelyUpdatedTeam(team) ? " invisible" : "")));
+            leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (team.tierType != null ? team.tierType + 1 : 1),
+                "table-image-additional" + (team.tierType == null ? " invisible" : "")));
         return leagueDiv;
     }
 
@@ -566,14 +566,8 @@ class TeamUtil
         const curData = Object.values(data)[ix1].find(d=>d.group.name == race);
         const lines = [];
         lines.push(curData.season);
-        const leagueContainer = document.createElement("div");
-        leagueContainer.appendChild(SC2Restful.IMAGES.get(EnumUtil.enumOfId(curData.league.type, LEAGUE).name.toLowerCase()).cloneNode());
-        if(ALTERNATIVE_UPDATE_REGIONS.length == 0) {
-            const tierEl = document.createElement("span");
-            tierEl.textContent = curData.tier + 1;
-            leagueContainer.appendChild(tierEl);
-        }
-        lines.push(leagueContainer);
+        curData.tierType = curData.tier;
+        lines.push(TeamUtil.createLeagueDiv(curData));
         lines.push(curData.teamState.rating);
         lines.push(curData.teamState.games);
         return lines;

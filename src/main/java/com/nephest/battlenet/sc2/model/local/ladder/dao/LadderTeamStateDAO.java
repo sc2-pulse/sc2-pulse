@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
@@ -33,10 +34,11 @@ public class LadderTeamStateDAO
     private static final String SELECT_QUERY_PART =
         "SELECT team_filter.race, "
         + TeamStateDAO.STD_SELECT + ", "
-        + "league_tier.type AS \"league_tier.type\", "
+        + "team.tier_type AS \"team.tier_type\", "
         + LeagueDAO.STD_SELECT + ", "
         + "season.battlenet_id as \"season.battlenet_id\" "
         + "FROM team_filter "
+        + "INNER JOIN team USING(id) "
         + "INNER JOIN team_state ON team_filter.id = team_state.team_id "
         + "INNER JOIN division ON team_state.division_id = division.id "
         + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
@@ -116,7 +118,7 @@ public class LadderTeamStateDAO
             return new LadderTeamState(
                 TeamStateDAO.STD_ROW_MAPPER.mapRow(rs, 0),
                 race,
-                conversionService.convert(rs.getInt("league_tier.type"), BaseLeagueTier.LeagueTierType.class),
+                conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), BaseLeagueTier.LeagueTierType.class),
                 LeagueDAO.getStdRowMapper().mapRow(rs, 0),
                 rs.getInt("season.battlenet_id")
             );

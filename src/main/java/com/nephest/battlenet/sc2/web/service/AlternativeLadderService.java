@@ -417,7 +417,7 @@ public class AlternativeLadderService
         (
             null,
             season.getBattlenetId(), season.getRegion(),
-            baseLeague, ALTERNATIVE_TIER,
+            baseLeague, null,
             teamDao.legacyIdOf(baseLeague, bTeam), division.getId(),
             bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
         );

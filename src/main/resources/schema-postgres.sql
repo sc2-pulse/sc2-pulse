@@ -160,7 +160,7 @@ CREATE TABLE "team"
     "league_type" SMALLINT NOT NULL,
     "queue_type" SMALLINT NOT NULL,
     "team_type" SMALLINT NOT NULL,
-    "tier_type" SMALLINT NOT NULL,
+    "tier_type" SMALLINT,
     "rating" SMALLINT NOT NULL,
     "points" SMALLINT NOT NULL,
     "wins" SMALLINT NOT NULL,
