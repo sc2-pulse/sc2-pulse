@@ -339,6 +339,7 @@ class CharacterUtil
         const excludeStart = document.getElementById("mmr-exclude-start").value || 0;
         const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
         const bestRaceOnly = document.getElementById("mmr-best-race").checked;
+        const seasonLastOnly = document.getElementById("mmr-season-last").checked;
 
         const seasonStartDates = CharacterUtil.getSeasonStartDates(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         const teams = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams
@@ -351,7 +352,8 @@ class CharacterUtil
                     : Session.currentSeasonsMap.get(t.season)[0].end;
                 return CharacterUtil.createTeamSnapshot(t, date);
             });
-        let mmrHistory = teams
+        let mmrHistory = teams;
+        if(!seasonLastOnly) mmrHistory = mmrHistory
             .concat(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter, excludeStart, excludeEnd);
         mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
@@ -984,6 +986,7 @@ class CharacterUtil
         document.getElementById("mmr-exclude-start").addEventListener("input", CharacterUtil.onMmrInput);
         document.getElementById("mmr-exclude-end").addEventListener("input", CharacterUtil.onMmrInput);
         document.getElementById("mmr-best-race").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
+        document.getElementById("mmr-season-last").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
     }
 
     static onMmrInput(evt)
