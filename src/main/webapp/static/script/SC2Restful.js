@@ -44,7 +44,6 @@ class SC2Restful
             case START_MODE.FULL:
                 LadderUtil.enhanceLadderForm();
                 CharacterUtil.enhanceSearchForm();
-                CharacterUtil.enhanceLoadMoreMatchesInput();
                 CharacterUtil.enhanceAutoClanSearch();
                 CharacterUtil.enhanceLoadAllCharacterReportsButton();
                 LadderUtil.enhanceMyLadderForm();
@@ -61,6 +60,7 @@ class SC2Restful
                 CharacterUtil.enhanceReportForm();
                 CharacterUtil.updateReportForm();
                 CharacterUtil.enhanceMatchesHistoricalMmrInput();
+                CharacterUtil.enhanceLoadMoreMatchesInput();
                 FollowUtil.enhanceFollowButtons();
                 BootstrapUtil.enhanceTabs();
                 TeamUtil.enhanceTeamBuffer();
