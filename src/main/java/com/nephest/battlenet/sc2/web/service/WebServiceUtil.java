@@ -74,6 +74,7 @@ public class WebServiceUtil
     (ObjectMapper objectMapper, int inMemorySize)
     {
         return WebClient.builder()
+            .clientConnector(new ReactorClientHttpConnector(getHttpClient(CONNECT_TIMEOUT, IO_TIMEOUT)))
             .exchangeStrategies(ExchangeStrategies.builder().codecs(conf->
             {
                 conf.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
