@@ -4,6 +4,8 @@
 package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.config.convert.*;
+import org.springframework.boot.autoconfigure.web.client.RestTemplateBuilderConfigurer;
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
@@ -12,10 +14,14 @@ import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.transaction.PlatformTransactionManager;
 
 import javax.sql.DataSource;
+import java.time.Duration;
 import java.util.Random;
 
 public class CoreTestConfig
 {
+
+    public static final Duration IO_TIMEOUT = Duration.ofMillis(500);
+
     @Bean
     public PlatformTransactionManager txManager(DataSource dataSource)
     {
@@ -51,6 +57,13 @@ public class CoreTestConfig
     public Random simpleRng()
     {
         return new Random();
+    }
+
+    @Bean
+    public RestTemplateBuilder restTemplateBuilder(RestTemplateBuilderConfigurer configurer) {
+        return configurer.configure(new RestTemplateBuilder())
+            .setConnectTimeout(IO_TIMEOUT)
+            .setReadTimeout(IO_TIMEOUT);
     }
 
 }
