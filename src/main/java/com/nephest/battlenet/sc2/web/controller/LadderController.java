@@ -18,7 +18,9 @@ import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.*;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
@@ -30,6 +32,8 @@ import java.util.Set;
 @RequestMapping("/api")
 public class LadderController
 {
+
+    public static final int PAGE_COUNT_MAX = 15;
 
     @Autowired
     private LadderSearchDAO ladderSearch;
@@ -81,6 +85,9 @@ public class LadderController
             @RequestParam(name = "gra", required = false) boolean grandmaster
         )
     {
+        if(Math.abs(count) > PAGE_COUNT_MAX)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page count is too big");
+
         Set<Region> regions = EnumSet.noneOf(Region.class);
         if(us) regions.add(Region.US);
         if(eu) regions.add(Region.EU);
