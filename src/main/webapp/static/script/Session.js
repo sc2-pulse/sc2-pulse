@@ -45,10 +45,10 @@ class Session
             + ";path=" + ROOT_CONTEXT_PATH
             + ";max-age=300"
             + ";secure;SameSite=Lax";
-        return BootstrapUtil.hideActiveModal().then(e=>BootstrapUtil.showGenericModal(
+        return BootstrapUtil.showGenericModal(
             "BattleNet authorization...",
             "Fetching your BattleNet identity and permissions. It usually takes ~5 seconds for BattleNet to respond, please standby.",
-            true))
+            true)
             .then(e=>{window.location.href=ROOT_CONTEXT_PATH + "oauth2/authorization/" + Util.getCookie("oauth-reg"); return "reauth"});
     }
 
