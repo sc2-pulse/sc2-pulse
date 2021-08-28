@@ -644,6 +644,11 @@ body.theme-dark :fullscreen, body.theme-dark #team-buffer
     content: url("icon/misc/shrink.svg");
 }
 
+#error-session
+{
+    z-index: 9998;
+}
+
 #error-generation
 {
     z-index: 9999;
