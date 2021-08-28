@@ -13,7 +13,8 @@ class Session
 
     static onPersonalException(error)
     {
-        if (error.message.startsWith("401") && document.cookie.includes("oauth-reg"))
+        if ((error.message.startsWith("401") || error.message.toLowerCase().startsWith("unauthorized"))
+            && document.cookie.includes("oauth-reg"))
         {
             return Session.renewBlizzardRegistration();
         }
