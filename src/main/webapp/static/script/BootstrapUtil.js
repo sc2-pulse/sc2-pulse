@@ -186,7 +186,6 @@ class BootstrapUtil
             })
             .on("show.bs.modal", e=>{BootstrapUtil.onModalShow(e.currentTarget)})
             .on("shown.bs.modal", e=>{BootstrapUtil.onModalShown(e.currentTarget)});
-        $("#error-session").on("hide.bs.modal", Session.doRenewBlizzardRegistration);
         $("#error-session").on("shown.bs.modal", e=>window.setTimeout(Session.doRenewBlizzardRegistration, 3500));
     }
 
