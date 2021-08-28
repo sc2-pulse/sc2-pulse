@@ -11,7 +11,7 @@ class StatsUtil
         const teamType = EnumUtil.enumOfFullName(params.get("team-type"), TEAM_TYPE);
         const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/queue/${queueType.fullName}/${teamType.fullName}`;
         return fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.QUEUE_STATS, json); res(json);}));
     }
 
@@ -99,7 +99,7 @@ class StatsUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/ladder/stats?" + formParams;
         return fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LADDER_STATS, json); res(json);}));
     }
 
@@ -192,7 +192,7 @@ class StatsUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/ladder/league/bounds?" + formParams;
         return fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LEAGUE_BOUNDS, json); res(json);}));
     }
 
@@ -273,7 +273,7 @@ class StatsUtil
     static updateBundleModel()
     {
         return fetch(ROOT_CONTEXT_PATH + "api/ladder/stats/bundle")
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.BUNDLE, json); res(json);}));
     }
 

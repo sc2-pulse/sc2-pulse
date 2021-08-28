@@ -14,7 +14,7 @@ class FollowUtil
             (
                 resp =>
                 {
-                    if (!resp.ok) throw new Error(resp.statusText);
+                    if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
                     document.querySelector("#follow-button").classList.add("d-none");
                     document.querySelector("#unfollow-button").classList.remove("d-none");
                     return FollowUtil.getMyFollowing();
@@ -34,7 +34,7 @@ class FollowUtil
             (
                 resp =>
                 {
-                    if (!resp.ok) throw new Error(resp.statusText);
+                    if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
                     document.querySelector("#follow-button").classList.remove("d-none");
                     document.querySelector("#unfollow-button").classList.add("d-none");
                     return FollowUtil.getMyFollowing();

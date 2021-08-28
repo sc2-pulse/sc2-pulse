@@ -31,7 +31,7 @@ class CharacterUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common";
         const characterPromise =
-            fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
         return Promise.all([characterPromise, StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
                 const searchStd = jsons[0];
@@ -838,7 +838,7 @@ class CharacterUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/characters?name=" + encodeURIComponent(name);
         return fetch(request)
-            .then(resp => {if (!resp.ok) throw new Error(resp.statusText); return resp.json();})
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.SEARCH, json);
                 Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.VAR, name);
