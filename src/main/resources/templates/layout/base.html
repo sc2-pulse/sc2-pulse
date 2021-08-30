@@ -72,6 +72,15 @@
              th:if="${@supporterService.getSponsoredLink() != null}"
              th:utext="${@supporterService.getSponsoredLink()}">
         </div>
+        <div class="container text-secondary"
+            th:if="${@supporterService.getSponsoredT2Links().size() > 0}">
+            <div class="row">
+                <th:block th:each="t2Link : ${@supporterService.getSponsoredT2Links()}">
+                    <div th:class="|mb-3 col-lg-${12 / @supporterService.getSponsoredT2Links().size()}|"
+                        th:utext="${t2Link}"></div>
+                </th:block>
+            </div>
+        </div>
         <div class="container mb-3 text-secondary"
              th:if="${@supporterService.getSupporters().size() > 0}"
              th:text="${'Supported by ' + @supporterService.getRandomSupporter()}">

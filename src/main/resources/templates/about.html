@@ -102,16 +102,23 @@
                 </p>
             </section>
         </section>
-        <section>
+        <section id="supporters">
             <h3>Supporters</h3>
-            <section th:if="${@supporterService.getSupporters().size() > 0 or @supporterService.getSponsor() != null}">
-                <h4 class="text-secondary">The following people are currently supporting this project via Patreon</h4>
-                <p th:if="${@supporterService.getSponsor() != null}" th:utext="${@supporterService.getSponsor()} + ' - the sponsor-patron'"></p>
-                <p th:if="${@supporterService.getSupporters().size() > 0}" th:utext="${#strings.toString(@supporterService.getSupporters())}"></p>
+            <section th:if="${@supporterService.getSponsor() != null}">
+                <h4>Sponsor</h4>
+                <p th:utext="${@supporterService.getSponsor()}"></p>
+            </section>
+            <section th:if="${@supporterService.getSponsorsT2().size() > 0}" >
+                <h4>T2 Sponsors</h4>
+                <p th:utext="${#strings.toString(@supporterService.getSponsorsT2())}"></p>
+            </section>
+            <section th:if="${@supporterService.getSupporters().size() > 0}">
+                <h4>Supporters</h4>
+                <p th:utext="${#strings.toString(@supporterService.getSupporters())}"></p>
             </section>
             <section th:if="${@supporterService.getDonors().size() > 0}">
-                <h4 class="text-secondary">The following people support the project with direct donations or have been patrons in the past</h4>
-                <p th:if="${@supporterService.getDonors().size() > 0}" th:utext="${#strings.toString(@supporterService.getDonors())}"></p>
+                <h4>Donors/former patrons</h4>
+                <p th:utext="${#strings.toString(@supporterService.getDonors())}"></p>
             </section>
             <aside><p>Thank you for the support!</p></aside>
         </section>
