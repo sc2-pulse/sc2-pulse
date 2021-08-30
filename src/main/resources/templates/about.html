@@ -110,15 +110,15 @@
             </section>
             <section th:if="${@supporterService.getSponsorsT2().size() > 0}" >
                 <h4>T2 Sponsors</h4>
-                <p th:utext="${#strings.toString(@supporterService.getSponsorsT2())}"></p>
+                <p th:utext="${@supporterService.getSponsorsT2().stream().collect(@formatUtil.joining(', '))}"></p>
             </section>
             <section th:if="${@supporterService.getSupporters().size() > 0}">
                 <h4>Supporters</h4>
-                <p th:utext="${#strings.toString(@supporterService.getSupporters())}"></p>
+                <p th:utext="${@supporterService.getSupporters().stream().collect(@formatUtil.joining(', '))}"></p>
             </section>
             <section th:if="${@supporterService.getDonors().size() > 0}">
                 <h4>Donors/former patrons</h4>
-                <p th:utext="${#strings.toString(@supporterService.getDonors())}"></p>
+                <p th:utext="${@supporterService.getDonors().stream().collect(@formatUtil.joining(', '))}"></p>
             </section>
             <aside><p>Thank you for the support!</p></aside>
         </section>
