@@ -418,7 +418,9 @@ class ChartUtil
             if (config.type === "lineVCursor" || config.type === "line")
             {
                 data.datasets[i]["borderWidth"] = 2;
-                data.datasets[i]["pointRadius"] = config.pointRadius != null ? parseFloat(config.pointRadius) : 0.01;
+                data.datasets[i]["pointRadius"] = config.performance == "fast"
+                    ? ChartUtil.drawOnlyImagePoints
+                    : (config.pointRadius != null ? parseFloat(config.pointRadius) : 0.01);
                 data.datasets[i]["hoverPointRadius"] = 2;
 
                 data.datasets[i]["borderColor"] = color;
@@ -445,6 +447,11 @@ class ChartUtil
                 data.datasets[i]["borderColor"] = "rgba(0, 0, 0, 0)";
             }
         }
+    }
+
+    static drawOnlyImagePoints(context, options)
+    {
+        return options ? (options.pointStyle ? 0.5 : 0) : 0.5;
     }
 
     static collectChartJSData(elem)
