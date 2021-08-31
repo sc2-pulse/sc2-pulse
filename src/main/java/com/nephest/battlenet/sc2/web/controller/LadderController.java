@@ -5,31 +5,27 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
-import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
-import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.*;
-import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.*;
-import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.OffsetDateTime;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 @RestController
-@RequestMapping("/api")
+@RequestMapping("/api/ladder")
 public class LadderController
 {
 
@@ -39,30 +35,9 @@ public class LadderController
     private LadderSearchDAO ladderSearch;
 
     @Autowired
-    private LadderCharacterDAO ladderCharacterDAO;
-
-    @Autowired
     private LadderStatsDAO ladderStatsDAO;
 
-    @Autowired
-    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
-
-    @Autowired
-    private LadderPlayerCharacterStatsDAO ladderPlayerCharacterStatsDAO;
-
-    @Autowired
-    private LadderProPlayerDAO ladderProPlayerDAO;
-
-    @Autowired
-    private LadderMatchDAO ladderMatchDAO;
-
-    @Autowired
-    private LadderTeamStateDAO ladderTeamStateDAO;
-
-    @Autowired
-    private PlayerCharacterReportService reportService;
-
-    @GetMapping("/ladder/a/{ratingAnchor}/{idAnchor}/{count}")
+    @GetMapping("/a/{ratingAnchor}/{idAnchor}/{count}")
     public PagedSearchResult<List<LadderTeam>> getLadderAnchored
         (
             @PathVariable("ratingAnchor") long ratingAnchor,
@@ -116,7 +91,7 @@ public class LadderController
         );
     }
 
-    @GetMapping("/ladder/stats/queue/{queueType}/{teamType}")
+    @GetMapping("/stats/queue/{queueType}/{teamType}")
     public List<QueueStats> getQueueStats
     (
         @PathVariable("queueType") QueueType queueType,
@@ -126,7 +101,7 @@ public class LadderController
         return ladderStatsDAO.findQueueStats(queueType, teamType);
     }
 
-    @GetMapping("/ladder/stats")
+    @GetMapping("/stats")
     public Map<Integer, MergedLadderSearchStatsResult> getLadderStats
     (
         @RequestParam("queue") QueueType queue,
@@ -167,13 +142,13 @@ public class LadderController
         );
     }
 
-    @GetMapping("/ladder/stats/bundle")
+    @GetMapping("/stats/bundle")
     public Map<QueueType, Map<TeamType, Map<Integer, MergedLadderSearchStatsResult>>> getLadderStatsBundle()
     {
         return ladderStatsDAO.findStats();
     }
 
-    @GetMapping("/ladder/league/bounds")
+    @GetMapping("/league/bounds")
     public Map<Region, Map<LeagueType, Map<LeagueTierType, Integer[]>>> getLadderLeagueBounds
     (
         @RequestParam("season") int season,
@@ -216,77 +191,4 @@ public class LadderController
         );
     }
 
-    @GetMapping("/seasons")
-    public List<Season> getSeasons()
-    {
-        return ladderSearch.findSeasonList();
-    }
-
-    @GetMapping("/character/{id}/common")
-    public CommonCharacter getCommonCharacter
-    (
-        @PathVariable("id") long id
-    )
-    {
-        return new CommonCharacter
-        (
-            ladderSearch.findCharacterTeams(id),
-            ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id),
-            ladderPlayerCharacterStatsDAO.findGlobalList(id),
-            ladderProPlayerDAO.getProPlayerByCharacterId(id),
-            ladderMatchDAO.findMatchesByCharacterId(
-                id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult(),
-            ladderTeamStateDAO.find(id),
-            reportService.findReportsByCharacterId(id)
-        );
-    }
-
-    @GetMapping("/character/{id}/matches/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}")
-    public PagedSearchResult<List<LadderMatch>> getCharacterMatches
-    (
-        @PathVariable("id") long id,
-        @PathVariable("dateAnchor") String dateAnchor,
-        @PathVariable("typeAnchor") BaseMatch.MatchType typeAnchor,
-        @PathVariable("mapAnchor") String mapAnchor,
-        @PathVariable("page") int page,
-        @PathVariable("pageDiff") int pageDiff
-    )
-    {
-        return ladderMatchDAO.findMatchesByCharacterId
-        (
-            id,
-            OffsetDateTime.parse(dateAnchor),
-            typeAnchor,
-            mapAnchor,
-            page,
-            pageDiff
-        );
-    }
-
-    @GetMapping("/character/{id}/teams")
-    public List<LadderTeam> getCharacterTeams
-    (
-        @PathVariable("id") long id
-    )
-    {
-        return ladderSearch.findCharacterTeams(id);
-    }
-
-    @GetMapping("/character/{id}/stats")
-    public List<PlayerCharacterStats> getCharacterStats
-    (
-        @PathVariable("id") long id
-    )
-    {
-        return playerCharacterStatsDAO.findGlobalList(id);
-    }
-
-    @GetMapping("/characters")
-    public List<LadderDistinctCharacter> getCharacterTeams
-    (
-        @RequestParam("name") String name
-    )
-    {
-        return ladderCharacterDAO.findDistinctCharacters(name);
-    }
 }
