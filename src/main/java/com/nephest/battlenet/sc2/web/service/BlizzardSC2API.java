@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.util.LogUtil;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -189,7 +190,7 @@ extends BaseAPI
                 if(t.getCause() != null && t.getCause() instanceof WebClientResponseException.NotFound)
                 {
                     WebClientResponseException.NotFound nfe = (WebClientResponseException.NotFound) t.getCause();
-                    LOG.warn("Current league not found. New season started recently? ({})", nfe.getRequest().getURI());
+                    LOG.debug("Current league not found. New season started recently? ({})", nfe.getRequest().getURI());
                     return true;
                 }
                 return false;
@@ -330,7 +331,10 @@ extends BaseAPI
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
             .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(
-                    getProfileLadderId(region, l), DELAY, (t)->LogUtil.LogLevel.WARNING),
+                getProfileLadderId(region, l), DELAY,
+                (t)->ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound
+                    ? LogUtil.LogLevel.DEBUG
+                    : LogUtil.LogLevel.WARNING),
                 true, 1);
     }
 
@@ -341,7 +345,10 @@ extends BaseAPI
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
             .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(
-                    getProfileLadderId(region, l), DELAY, (t)->LogUtil.LogLevel.WARNING),
+                getProfileLadderId(region, l), DELAY,
+                (t)->ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound
+                    ? LogUtil.LogLevel.DEBUG
+                    : LogUtil.LogLevel.WARNING),
                 true, 1);
     }
 
@@ -443,7 +450,9 @@ extends BaseAPI
             .flatMap(id->WebServiceUtil
                 .getOnErrorLogAndSkipRateDelayedMono(
                     getProfileLadder(id, queueTypes), DELAY,
-                    (t)->t.getMessage().startsWith("Invalid game mode") ? LogUtil.LogLevel.DEBUG : LogUtil.LogLevel.WARNING)
+                    (t)->t.getMessage().startsWith("Invalid game mode")
+                        ? LogUtil.LogLevel.DEBUG
+                        : LogUtil.LogLevel.WARNING)
                 .zipWith(Mono.just(id)),
                 true, 1);
     }
