@@ -623,8 +623,8 @@
                         <h3><a id="following-generator-collapse" class="c-dropdown" href="#form-following-ladder" data-toggle="collapse" role="button" aria-expanded="true" aria-controls="form-following-ladder">Filters</a></h3>
                         <div th:replace="~{fragments/generator-form :: form('form-following-ladder', 'following-generator-collapse', 'following-ladder')}"></div>
                         <p>This ladder consists of players you follow. You can follow a player by clicking the "Follow"
-                            button in the player info section(click on a player to get there, then click on "Player" tab). When following a player,
-                            you will follow all of their profiles in all regions. You can follow
+                            button in the player info section(click on a player to get there, the button is located at the bottom of the section). When following a player,
+                            you will follow all their profiles in all regions. You can follow
                             <span th:text="${@accountFollowingService.getFollowingMax()}" th:remove="tag"></span> players max.
                         </p>
                         <div th:replace="~{fragments/table :: team('following-ladder-container', 'following-ladder', '', _)}"></div>

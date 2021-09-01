@@ -325,10 +325,6 @@
                                 <h3>Reports</h3>
                                 <div th:replace="~{fragments/table :: reports-character('character-reports-table-container', 'character-reports-table', '')}"></div>
                             </section>
-                            <section>
-                                <button id="follow-button" type="button" class="btn btn-primary d-none">Follow</button>
-                                <button id="unfollow-button" type="button" class="btn btn-primary d-none">Unfollow</button>
-                            </section>
                         </section>
                         <section id="player-stats-matches" class="tab-pane fade" data-view-title="Matches">
                             <h3>
@@ -393,6 +389,8 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button id="follow-button" type="button" class="btn btn-primary d-none">Follow</button>
+                    <button id="unfollow-button" type="button" class="btn btn-primary d-none">Unfollow</button>
                     <div id="report-character-dropdown" class="btn-group dropup">
                         <button class="btn btn-danger dropdown-toggle" type="button" id="report-character-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                             Report
