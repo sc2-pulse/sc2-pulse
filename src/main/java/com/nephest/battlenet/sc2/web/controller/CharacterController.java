@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.web.controller;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
+import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -28,6 +30,9 @@ import java.util.List;
 public class CharacterController
 {
 
+    public static final int SUMMARY_DEPTH_MAX = 120;
+    public static final int SUMMARY_IDS_MAX = 50;
+
     @Autowired
     private LadderSearchDAO ladderSearch;
 
@@ -39,6 +44,9 @@ public class CharacterController
 
     @Autowired
     private LadderPlayerCharacterStatsDAO ladderPlayerCharacterStatsDAO;
+
+    @Autowired
+    private PlayerCharacterSummaryDAO playerCharacterSummaryDAO;
 
     @Autowired
     private LadderProPlayerDAO ladderProPlayerDAO;
@@ -111,6 +119,21 @@ public class CharacterController
     )
     {
         return playerCharacterStatsDAO.findGlobalList(id);
+    }
+
+    @GetMapping("/{ids}/summary/1v1/{depthDays}")
+    public List<PlayerCharacterSummary> getCharacterSummary
+    (
+        @PathVariable("ids") Long[] ids,
+        @PathVariable("depthDays") int depth
+    )
+    {
+        if(ids.length > SUMMARY_IDS_MAX)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id list is too long, max: " + SUMMARY_IDS_MAX);
+        if(depth > SUMMARY_DEPTH_MAX)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Depth is too big, max: " + SUMMARY_DEPTH_MAX);
+
+        return playerCharacterSummaryDAO.find(ids, OffsetDateTime.now().minusDays(depth));
     }
 
 }
