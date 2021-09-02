@@ -110,7 +110,7 @@ public class Cron
         characterReportService.update(REPORT_UPDATE_FROM);
     }
 
-    @Scheduled(cron="0 0 0/2 * * *")
+    @Scheduled(cron="0 0 0/1 * * *")
     public void evictVarCache()
     {
         varService.evictCache();
