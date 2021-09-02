@@ -151,6 +151,12 @@
     </dependency>
 
     <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.2.23</version>
+    </dependency>
+
+    <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>webjars-locator</artifactId>
         <version>0.41</version>
@@ -216,11 +222,6 @@
             </properties>
             <dependencies>
                 <dependency>
-                    <groupId>org.postgresql</groupId>
-                    <artifactId>postgresql</artifactId>
-                    <version>42.2.23</version>
-                </dependency>
-                <dependency>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-tomcat</artifactId>
                 </dependency>
@@ -254,12 +255,6 @@
                 <packaging.type>war</packaging.type>
             </properties>
             <dependencies>
-                <dependency>
-                    <groupId>org.postgresql</groupId>
-                    <artifactId>postgresql</artifactId>
-                    <version>42.2.23</version>
-                    <scope>test</scope>
-                </dependency>
                 <dependency>
                     <groupId>org.springframework.boot</groupId>
                     <artifactId>spring-boot-starter-tomcat</artifactId>
