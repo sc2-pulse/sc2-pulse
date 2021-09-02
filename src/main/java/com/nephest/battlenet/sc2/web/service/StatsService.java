@@ -55,6 +55,8 @@ public class StatsService
     @Value("${com.nephest.battlenet.sc2.ladder.forceUpdate:#{'false'}}")
     private boolean forceUpdate;
 
+    private final Set<Integer> pendingStatsUpdates = new HashSet<>();
+
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
     private SeasonDAO seasonDao;
@@ -226,7 +228,7 @@ public class StatsService
         {
             long start = System.currentTimeMillis();
 
-            checkStaleData();
+            checkStaleData(regions);
             updateCurrentSeason(regions, queues, leagues, allStats, updateContext);
 
             isUpdating.set(false);
@@ -278,6 +280,12 @@ public class StatsService
         updateSeasonStats(seasonId, true);
     }
 
+    public void updatePendingStats(boolean allStats)
+    {
+        for(int season : pendingStatsUpdates) updateSeasonStats(season, allStats);
+        pendingStatsUpdates.clear();
+    }
+
     private void updateSeasonStats
     (int seasonId, boolean allStats)
     {
@@ -317,16 +325,8 @@ public class StatsService
                 ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
                 : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH)
         );
-        for(int seasonId : seasons)
-        {
-            if(queues.length == QueueType.getTypes(VERSION).size()) {
-                updateSeasonStats(seasonId, allStats);
-            }
-            else {
-                leagueStatsDao.mergeCalculateForSeason(seasonId);
-                teamDao.updateRanks(seasonId);
-            }
-        }
+
+        pendingStatsUpdates.addAll(seasons);
     }
 
     private void updateOrAlternativeUpdate
@@ -603,10 +603,10 @@ public class StatsService
         return max.get();
     }
 
-    public void checkStaleData()
+    public void checkStaleData(Region[] regions)
     {
         int maxSeason = seasonDao.getMaxBattlenetId();
-        for(Region region : Region.values())
+        for(Region region : regions)
         {
             BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
             long maxId = getMaxLadderId(bSeason, region);

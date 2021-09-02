@@ -130,9 +130,10 @@ public class Cron
             Instant lastMatchInstant = matchInstant;
 
             doUpdateSeasons();
+            statsService.updatePendingStats(false);
             calculateHeavyStats();
             updateService.updated(begin);
-            if(!Objects.equals(lastMatchInstant, matchInstant)) matchUpdateContext = updateService.getUpdateContext();
+            if(!Objects.equals(lastMatchInstant, matchInstant)) matchUpdateContext = updateService.getUpdateContext(null);
         }
         catch(RuntimeException ex) {
             LOG.error(ex.getMessage(), ex);
@@ -162,27 +163,45 @@ public class Cron
 
     private boolean doUpdateSeasons()
     {
+        boolean result = true;
+        for(Region region : Region.values())
+        {
+            try
+            {
+                Instant begin = Instant.now();
+                statsService.updateCurrent
+                (
+                    new Region[]{region},
+                    QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
+                    BaseLeague.LeagueType.values(),
+                    false,
+                    updateService.getUpdateContext(region)
+                );
+                updateService.updated(region, begin);
+            }
+            catch (RuntimeException ex)
+            {
+                //API can be broken randomly. All we can do at this point is log the exception.
+                LOG.error(ex.getMessage(), ex);
+                result = false;
+            }
+        }
+
         try
         {
-            statsService.updateCurrent
-            (
-                Region.values(),
-                QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
-                BaseLeague.LeagueType.values(),
-                false, updateService.getUpdateContext()
-            );
-            if(shouldUpdateMatches()) {
-                matchService.update(matchUpdateContext == null ? updateService.getUpdateContext() : matchUpdateContext);
+            if (shouldUpdateMatches())
+            {
+                matchService.update(matchUpdateContext == null ? updateService.getUpdateContext(null) : matchUpdateContext);
                 matchInstant = Instant.now();
             }
         }
-        catch(RuntimeException ex)
+        catch (RuntimeException ex)
         {
             //API can be broken randomly. All we can do at this point is log the exception.
             LOG.error(ex.getMessage(), ex);
-            return false;
+            result = false;
         }
-        return true;
+        return result;
     }
 
     private boolean shouldUpdateMatches()

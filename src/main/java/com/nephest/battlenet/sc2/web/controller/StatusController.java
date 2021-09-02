@@ -36,7 +36,7 @@ public class StatusController
     @GetMapping("/updated")
     public UpdateContext updated()
     {
-        return updateService.getUpdateContext();
+        return updateService.getUpdateContext(null);
     }
 
 }
