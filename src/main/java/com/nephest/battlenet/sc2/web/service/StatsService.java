@@ -237,7 +237,7 @@ public class StatsService
 
             isUpdating.set(false);
             long seconds = (System.currentTimeMillis() - start) / 1000;
-            LOG.info("Updated current after {} seconds", seconds);
+            LOG.info("Updated current for {} after {} seconds", regions, seconds);
         }
         catch(RuntimeException ex)
         {

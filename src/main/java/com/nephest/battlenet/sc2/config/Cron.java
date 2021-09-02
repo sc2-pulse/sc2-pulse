@@ -134,6 +134,7 @@ public class Cron
             calculateHeavyStats();
             updateService.updated(begin);
             if(!Objects.equals(lastMatchInstant, matchInstant)) matchUpdateContext = updateService.getUpdateContext(null);
+            LOG.info("Update cycle completed. Duration: {} seconds", (System.currentTimeMillis() - begin.toEpochMilli()) / 1000);
         }
         catch(RuntimeException ex) {
             LOG.error(ex.getMessage(), ex);
