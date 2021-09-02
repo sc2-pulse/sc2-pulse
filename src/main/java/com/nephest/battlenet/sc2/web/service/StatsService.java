@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +22,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BeanPropertyBindingResult;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.*;
 
 import javax.annotation.PostConstruct;
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
@@ -45,6 +48,7 @@ public class StatsService
     public static final int STALE_LADDER_DEPTH = 10;
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 27;
     public static final int LADDER_BATCH_SIZE = 400;
+    public static final int EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD = 10;
 
     @Autowired
     private StatsService statsService;
@@ -601,6 +605,25 @@ public class StatsService
             .sequential()
             .blockLast();
         return max.get();
+    }
+
+    public BlizzardSeason getCurrentOrLastOrExistingSeason(Region region, int maxSeason)
+    {
+        try
+        {
+            return api.getCurrentOrLastSeason(region, maxSeason).block();
+        }
+        catch(RuntimeException ex)
+        {
+            if(!(ExceptionUtils.getRootCause(ex) instanceof WebClientResponseException)) throw ex;
+            LOG.warn(ExceptionUtils.getRootCauseMessage(ex));
+        }
+        Season s = seasonDao.findListByRegion(region).stream()
+            .filter(ss->ss.getBattlenetId().equals(maxSeason))
+            .findAny().orElseThrow();
+        if(!LocalDate.now().isBefore(s.getEnd().minusDays(EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD)))
+            throw new IllegalStateException("Could not find any season for " + region.name());
+        return new BlizzardSeason(s.getBattlenetId(), s.getYear(), s.getNumber(), s.getStart(), s.getEnd());
     }
 
     public void checkStaleData(Region[] regions)
