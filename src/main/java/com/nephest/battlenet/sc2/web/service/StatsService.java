@@ -290,6 +290,20 @@ public class StatsService
         pendingStatsUpdates.clear();
     }
 
+    public void afterCurrentSeasonUpdate(UpdateContext updateContext, boolean allStats)
+    {
+        postgreSQLUtils.vacuumAnalyze();
+        teamStateDAO.removeExpired();
+        postgreSQLUtils.vacuumAnalyze();
+        playerCharacterStatsDAO.mergeCalculate
+        (
+            updateContext.getInternalUpdate() != null
+                ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
+                : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH)
+        );
+        updatePendingStats(allStats);
+    }
+
     private void updateSeasonStats
     (int seasonId, boolean allStats)
     {
@@ -320,16 +334,6 @@ public class StatsService
             seasons.add(season.getBattlenetId());
             LOG.debug("Updated leagues: {} {}", season.getBattlenetId(), region);
         }
-        postgreSQLUtils.vacuumAnalyze();
-        teamStateDAO.removeExpired();
-        postgreSQLUtils.vacuumAnalyze();
-        if(queues.length == QueueType.getTypes(VERSION).size()) playerCharacterStatsDAO.mergeCalculate
-        (
-            updateContext.getInternalUpdate() != null
-                ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
-                : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH)
-        );
-
         pendingStatsUpdates.addAll(seasons);
     }
 

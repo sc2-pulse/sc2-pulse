@@ -130,7 +130,7 @@ public class Cron
             Instant lastMatchInstant = matchInstant;
 
             doUpdateSeasons();
-            statsService.updatePendingStats(false);
+            statsService.afterCurrentSeasonUpdate(updateService.getUpdateContext(null), false);
             calculateHeavyStats();
             updateService.updated(begin);
             if(!Objects.equals(lastMatchInstant, matchInstant)) matchUpdateContext = updateService.getUpdateContext(null);
