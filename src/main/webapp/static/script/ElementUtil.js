@@ -169,11 +169,11 @@ class ElementUtil
         const cardHeader = document.createElement("h4");
         cardHeader.textContent = Util.getTeamFormatAndTeamTypeString(teamFormat, teamType);
         cardHeader.classList.add("card-title");
-        const table = TableUtil.createTable(["Race", "Best League", "Best MMR", "Total Games", "Current MMR", "Current Games"], false);
+        const table = TableUtil.createTable(["Race", "Best League", "Best MMR", "Total Games", "Current MMR", "Current Games"], true);
         table.classList.add("player-stats-table");
         const tableCaption = document.createElement("caption");
         tableCaption.appendChild(cardHeader);
-        table.prepend(tableCaption);
+        table.querySelector(":scope table").prepend(tableCaption);
         const tbody = table.getElementsByTagName("tbody")[0];
         for(const race of Object.values(RACE)) tbody.appendChild(ElementUtil.createPlayerStatsRaceRow(race.name));
         tbody.appendChild(ElementUtil.createPlayerStatsRaceRow("all"));
