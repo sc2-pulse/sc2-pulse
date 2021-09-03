@@ -8,13 +8,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
-import java.util.Collections;
 
 @Repository
 public class TeamStateDAO
@@ -22,7 +22,8 @@ public class TeamStateDAO
 
     private static final Logger LOG = LoggerFactory.getLogger(TeamStateDAO.class);
 
-    public static final int MAX_DEPTH_DAYS = 120;
+    private static int MAX_DEPTH_DAYS_MAIN = 120;
+    private static int MAX_DEPTH_DAYS_SECONDARY = 120;
 
     public static final String STD_SELECT =
         "team_state.team_id AS \"team_state.team_id\", "
@@ -30,11 +31,12 @@ public class TeamStateDAO
         + "team_state.division_id AS \"team_state.division_id\", "
         + "team_state.games AS \"team_state.games\", "
         + "team_state.rating AS \"team_state.rating\", "
-        + "team_state.archived AS \"team_state.archived\" ";
+        + "team_state.archived AS \"team_state.archived\", "
+        + "team_state.secondary AS \"team_state.secondary\" ";
 
     public static final String CREATE_QUERY =
-        "INSERT INTO team_state (team_id, \"timestamp\", division_id, games, rating) "
-        + "VALUES (:teamId, :timestamp, :divisionId, :games, :rating)";
+        "INSERT INTO team_state (team_id, \"timestamp\", division_id, games, rating, secondary) "
+        + "VALUES (:teamId, :timestamp, :divisionId, :games, :rating, :secondary)";
     
     public static final String ARCHIVE_QUERY =
         "WITH "
@@ -103,9 +105,14 @@ public class TeamStateDAO
         + "AND team_state.timestamp != max_filter.timestamp "
         + "AND team_state.archived = true";
 
-    public static final String REMOVE_EXPIRED_QUERY =
+    public static final String REMOVE_EXPIRED_MAIN_QUERY =
         "DELETE FROM team_state "
-        + "WHERE timestamp < NOW() - INTERVAL '" + MAX_DEPTH_DAYS + " days' "
+        + "WHERE timestamp < :from "
+        + "AND (archived IS NULL OR archived = false)";
+    private static final String REMOVE_EXPIRED_SECONDARY_QUERY =
+        "DELETE FROM team_state "
+        + "WHERE secondary = true "
+        + "AND timestamp < :from "
         + "AND (archived IS NULL OR archived = false)";
 
     public static final RowMapper<TeamState> STD_ROW_MAPPER = (rs, i)->
@@ -116,15 +123,42 @@ public class TeamStateDAO
         rs.getInt("team_state.division_id"),
         rs.getInt("team_state.games"),
         rs.getInt("team_state.rating"),
-        DAOUtils.getBoolean(rs, "team_state.archived")
+        DAOUtils.getBoolean(rs, "team_state.archived"),
+        DAOUtils.getBoolean(rs, "team_state.secondary")
     );
 
     private final NamedParameterJdbcTemplate template;
+    private final ConversionService conversionService;
 
     @Autowired
-    public TeamStateDAO(@Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template)
+    public TeamStateDAO
+    (
+        @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+    )
     {
         this.template = template;
+        this.conversionService = conversionService;
+    }
+
+    public static int getMaxDepthDaysMain()
+    {
+        return MAX_DEPTH_DAYS_MAIN;
+    }
+
+    public static int getMaxDepthDaysSecondary()
+    {
+        return MAX_DEPTH_DAYS_SECONDARY;
+    }
+
+    protected static void setMaxDepthDaysMain(int days)
+    {
+        MAX_DEPTH_DAYS_MAIN = days;
+    }
+
+    protected  static void setMaxDepthDaysSecondary(int days)
+    {
+        MAX_DEPTH_DAYS_SECONDARY = days;
     }
 
     public static MapSqlParameterSource createParameterSource(TeamState history)
@@ -134,7 +168,8 @@ public class TeamStateDAO
             .addValue("timestamp", history.getDateTime())
             .addValue("divisionId", history.getDivisionId())
             .addValue("games", history.getGames())
-            .addValue("rating", history.getRating());
+            .addValue("rating", history.getRating())
+            .addValue("secondary", history.getSecondary());
     }
 
     public int[] saveState(TeamState... states)
@@ -163,9 +198,14 @@ public class TeamStateDAO
 
     public int removeExpired()
     {
-        int removed = template.update(REMOVE_EXPIRED_QUERY, Collections.emptyMap());
-        LOG.debug("Removed {} expired team states", removed);
-        return removed;
+        MapSqlParameterSource paramsMain = new MapSqlParameterSource()
+            .addValue("from", OffsetDateTime.now().minusDays(getMaxDepthDaysMain()));
+        MapSqlParameterSource paramsSecondary = new MapSqlParameterSource()
+            .addValue("from", OffsetDateTime.now().minusDays(getMaxDepthDaysSecondary()));
+        int removed1v1 = template.update(REMOVE_EXPIRED_MAIN_QUERY, paramsMain);
+        int removedTeam = template.update(REMOVE_EXPIRED_SECONDARY_QUERY, paramsSecondary);
+        LOG.debug("Removed expired team states({} 1v1, {} team)", removed1v1, removedTeam);
+        return removed1v1 + removedTeam;
     }
 
 }

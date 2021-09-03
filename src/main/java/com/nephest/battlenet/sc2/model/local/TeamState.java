@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
+import com.nephest.battlenet.sc2.model.QueueType;
+
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -30,6 +32,8 @@ implements java.io.Serializable
 
     private Boolean archived;
 
+    private Boolean secondary;
+
     public TeamState(){}
 
     public TeamState
@@ -55,11 +59,13 @@ implements java.io.Serializable
         @NotNull Integer divisionId,
         @NotNull Integer games,
         @NotNull Integer rating,
-        Boolean archived
+        Boolean archived,
+        Boolean secondary
     )
     {
         this(teamId, dateTime, divisionId, games, rating);
         this.archived = archived;
+        this.secondary = secondary;
     }
 
     public static TeamState of(Team team, OffsetDateTime timestamp)
@@ -70,7 +76,9 @@ implements java.io.Serializable
             timestamp,
             team.getDivisionId(),
             team.getWins() + team.getLosses() + team.getTies(),
-            team.getRating().intValue()
+            team.getRating().intValue(),
+            null,
+            team.getQueueType() != QueueType.LOTV_1V1 ? true : null
         );
     }
 
@@ -163,6 +171,16 @@ implements java.io.Serializable
     public void setArchived(Boolean archived)
     {
         this.archived = archived;
+    }
+
+    public Boolean getSecondary()
+    {
+        return secondary;
+    }
+
+    public void setSecondary(Boolean secondary)
+    {
+        this.secondary = secondary;
     }
 
 }

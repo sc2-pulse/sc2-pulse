@@ -138,8 +138,9 @@ public class PlayerCharacterStatsDAOIT
         createTeam(season1, Race.ZERG, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, BigInteger.valueOf(10002L), 3L, character);
         createTeam(season2, Race.ZERG, region, BaseLeague.LeagueType.GOLD, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, gold2, BigInteger.valueOf(10003L), 2L, character);
         createTeam(season2, null, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, BigInteger.valueOf(10004L), 2L, character);
-        teamStateDAO.archive(OffsetDateTime.now().minusDays(TeamStateDAO.MAX_DEPTH_DAYS + 2));
-        teamStateDAO.cleanArchive(OffsetDateTime.now().minusDays(TeamStateDAO.MAX_DEPTH_DAYS + 2));
+        int depth = QUEUE_TYPE == QueueType.LOTV_1V1 ? TeamStateDAO.getMaxDepthDaysMain() : TeamStateDAO.getMaxDepthDaysSecondary();
+        teamStateDAO.archive(OffsetDateTime.now().minusDays(depth + 2));
+        teamStateDAO.cleanArchive(OffsetDateTime.now().minusDays(depth + 2));
         teamStateDAO.removeExpired();
         return character;
     }
@@ -188,7 +189,8 @@ public class PlayerCharacterStatsDAOIT
         );
         teamDAO.create(team);
         teamStateDAO.saveState(TeamState.of(team));
-        TeamState maxState = TeamState.of(team, OffsetDateTime.now().minusDays(TeamStateDAO.MAX_DEPTH_DAYS + 1));
+        TeamState maxState = TeamState.of(team, OffsetDateTime.now().minusDays(
+            (queueType == QueueType.LOTV_1V1 ? TeamStateDAO.getMaxDepthDaysMain() : TeamStateDAO.getMaxDepthDaysSecondary()) + 1));
         maxState.setRating((int) (team.getRating() + 1));
         teamStateDAO.saveState(maxState);
         TeamMember member;

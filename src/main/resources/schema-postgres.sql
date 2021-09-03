@@ -215,6 +215,7 @@ CREATE TABLE "team_state"
     "games" SMALLINT NOT NULL,
     "rating" SMALLINT NOT NULL,
     "archived" BOOLEAN,
+    "secondary" BOOLEAN,
 
     PRIMARY KEY ("team_id", "timestamp"),
 
@@ -230,6 +231,7 @@ CREATE TABLE "team_state"
 
 CREATE INDEX "ix_team_state_timestamp" ON "team_state"("timestamp");
 CREATE INDEX "ix_team_state_team_id_archived" ON "team_state"("team_id", "archived") WHERE "archived" = true;
+CREATE INDEX "ix_team_state_secondary_timestamp" ON "team_state"("secondary", "timestamp") WHERE "secondary" = true;
 
 CREATE TABLE "queue_stats"
 (

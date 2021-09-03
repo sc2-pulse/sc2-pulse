@@ -59,7 +59,7 @@ public class LegacySearchIT
     public static final BigInteger LEGACY_ID_1 = new BigInteger("99999");
     public static final BigInteger LEGACY_ID_2 = new BigInteger("999999");
     public static final BigInteger LEGACY_ID_3 = new BigInteger("9999999");
-    public static final OffsetDateTime ODT = OffsetDateTime.now().minusDays(TeamStateDAO.MAX_DEPTH_DAYS + 1);
+    public static final OffsetDateTime ODT = OffsetDateTime.now().minusDays(TeamStateDAO.getMaxDepthDaysMain() + 1);
 
     @BeforeAll
     public static void beforeAll
