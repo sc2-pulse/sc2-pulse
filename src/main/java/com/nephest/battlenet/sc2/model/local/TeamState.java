@@ -30,6 +30,12 @@ implements java.io.Serializable
     @NotNull
     private Integer rating;
 
+    private Integer globalRank;
+    private Integer globalTeamCount;
+
+    private Integer regionRank;
+    private Integer regionTeamCount;
+
     private Boolean archived;
 
     private Boolean secondary;
@@ -59,11 +65,19 @@ implements java.io.Serializable
         @NotNull Integer divisionId,
         @NotNull Integer games,
         @NotNull Integer rating,
+        Integer globalRank,
+        Integer globalTeamCount,
+        Integer regionRank,
+        Integer regionTeamCount,
         Boolean archived,
         Boolean secondary
     )
     {
         this(teamId, dateTime, divisionId, games, rating);
+        this.globalRank = globalRank;
+        this.globalTeamCount = globalTeamCount;
+        this.regionRank = regionRank;
+        this.regionTeamCount = regionTeamCount;
         this.archived = archived;
         this.secondary = secondary;
     }
@@ -77,6 +91,7 @@ implements java.io.Serializable
             team.getDivisionId(),
             team.getWins() + team.getLosses() + team.getTies(),
             team.getRating().intValue(),
+            null, null, null, null,
             null,
             team.getQueueType() != QueueType.LOTV_1V1 ? true : null
         );
@@ -161,6 +176,46 @@ implements java.io.Serializable
     public void setRating(Integer rating)
     {
         this.rating = rating;
+    }
+
+    public Integer getGlobalRank()
+    {
+        return globalRank;
+    }
+
+    public void setGlobalRank(Integer globalRank)
+    {
+        this.globalRank = globalRank;
+    }
+
+    public Integer getGlobalTeamCount()
+    {
+        return globalTeamCount;
+    }
+
+    public void setGlobalTeamCount(Integer globalTeamCount)
+    {
+        this.globalTeamCount = globalTeamCount;
+    }
+
+    public Integer getRegionRank()
+    {
+        return regionRank;
+    }
+
+    public void setRegionRank(Integer regionRank)
+    {
+        this.regionRank = regionRank;
+    }
+
+    public Integer getRegionTeamCount()
+    {
+        return regionTeamCount;
+    }
+
+    public void setRegionTeamCount(Integer regionTeamCount)
+    {
+        this.regionTeamCount = regionTeamCount;
     }
 
     public Boolean getArchived()

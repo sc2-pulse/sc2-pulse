@@ -19,6 +19,7 @@ class SC2Restful
                 SC2Restful.initAll();
                 Session.restoreState();
                 SC2Restful.enhance(mode);
+                SC2Restful.afterEnhance(mode);
                 ChartUtil.observeChartables();
                 PaginationUtil.createPaginations();
                 ElementUtil.createPlayerStatsCards(document.getElementById("player-stats-container"));
@@ -71,6 +72,12 @@ class SC2Restful
                 ChartUtil.updateAspectRatioFromLocalStorage();
                 Session.refreshTheme();
         }
+    }
+
+    static afterEnhance(mode = START_MODE.FULL)
+    {
+        CharacterUtil.afterEnhance();
+        TeamUtil.afterEnhance();
     }
 
     static getPredefinedOrRandomColor(name, ix)

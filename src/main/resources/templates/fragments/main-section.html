@@ -214,6 +214,14 @@
             <form>
                 <div class="form-row">
                     <div class="form-group col">
+                        <label for="team-mmr-y-axis" class="text-nowrap">Y axis</label>
+                        <select id="team-mmr-y-axis" class="form-control text-center serializable" data-chartable="team-mmr-table">
+                            <option value="mmr" selected="selected">MMR</option>
+                            <option value="percent-global">Top% Global</option>
+                            <option value="percent-region">Top% Region</option>
+                        </select>
+                    </div>
+                    <div class="form-group col">
                         <label for="team-mmr-depth" class="text-nowrap">Depth(days)</label>
                         <input id="team-mmr-depth" class="form-control text-center serializable" type="number" min="0"/>
                     </div>
@@ -249,7 +257,7 @@
                         class="chartable"
                         data-chart-type="line"
                         data-chart-tooltip-percentage="false"
-                        data-chart-tooltip-table-headers="Team,Season,League,MMR,Games"
+                        data-chart-tooltip-table-headers="Team,Season,League,MMR,Games,Global Rank,Region rank"
                         data-chart-id="team-mmr-chart"
                         data-chart-x-title="Date" data-chart-y-title="MMR"
                         data-chart-performance="fast"

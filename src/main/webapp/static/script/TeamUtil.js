@@ -486,6 +486,7 @@ class TeamUtil
         const depthDate = depth > 0 ? new Date(Date.now() - (depth * 24 * 60 * 60 * 1000)) : null;
         const excludeStart = document.getElementById("team-mmr-exclude-start").value || 0;
         const excludeEnd = document.getElementById("team-mmr-exclude-end").value || 0;
+        const yAxis = document.getElementById("team-mmr-y-axis").value;
         TeamUtil.updateTeamsTable(document.querySelector("#team-mmr-teams-table"), Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH));
         let transformedData = [];
         let curEntry = 0;
@@ -516,6 +517,7 @@ class TeamUtil
         }
         transformedData = TeamUtil.filterTeamMmrHistory(transformedData, depthDate, excludeStart, excludeEnd);
         transformedData.sort((a,b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
+        transformedData.forEach(CharacterUtil.calculateMmrHistoryTopPercentage);
         const mmrHistoryGrouped = Util.groupBy(transformedData, h=>h.teamState.dateTime.getTime());
         const data = [];
         const rawData = [];
@@ -523,7 +525,7 @@ class TeamUtil
         {
             rawData.push(histories);
             data[dateTime] = {};
-            for(const history of histories) data[dateTime][history.group.name] = history.teamState.rating;
+            for(const history of histories) data[dateTime][history.group.name] = CharacterUtil.getMmrYValue(history, yAxis);;
         }
         ChartUtil.CHART_RAW_DATA.set("team-mmr-table", {rawData: rawData, additionalDataGetter: TeamUtil.getAdditionalMmrHistoryData});
         TableUtil.updateVirtualColRowTable
@@ -570,6 +572,7 @@ class TeamUtil
         lines.push(TeamUtil.createLeagueDiv(curData));
         lines.push(curData.teamState.rating);
         lines.push(curData.teamState.games);
+        CharacterUtil.appendAdditionalMmrHistoryRanks(curData, lines);
         return lines;
     }
 
@@ -601,6 +604,17 @@ class TeamUtil
         document.getElementById("team-mmr-exclude-start").addEventListener("input", TeamUtil.onMmrInput);
         document.getElementById("team-mmr-exclude-end").addEventListener("input", TeamUtil.onMmrInput);
         document.getElementById("team-mmr-season-last").addEventListener("change", evt=>TeamUtil.updateTeamMmrView());
+        document.getElementById("team-mmr-y-axis").addEventListener("change", e=>{
+            CharacterUtil.setMmrYAxis(e.target.value, e.target.getAttribute("data-chartable"));
+            TeamUtil.updateTeamMmrView()
+        });
+    }
+
+    static afterEnhance()
+    {
+        const el = document.getElementById("team-mmr-y-axis");
+        if(!el) return;
+        CharacterUtil.setMmrYAxis(el.value, el.getAttribute("data-chartable"));
     }
 
     static onMmrInput(evt)

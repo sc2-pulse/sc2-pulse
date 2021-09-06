@@ -301,7 +301,9 @@ public class StatsService
                 ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
                 : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH)
         );
+        Set<Integer> pendingSeasons = Set.copyOf(pendingStatsUpdates);
         updatePendingStats(allStats);
+        teamStateDAO.updateRanks(OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault()), pendingSeasons);
     }
 
     private void updateSeasonStats

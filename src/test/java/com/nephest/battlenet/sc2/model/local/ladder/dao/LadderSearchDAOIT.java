@@ -7,10 +7,7 @@ import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
-import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
-import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.local.ladder.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -21,17 +18,20 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import reactor.util.function.Tuples;
 
 import javax.sql.DataSource;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
 import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.*;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
@@ -55,7 +55,8 @@ public class LadderSearchDAOIT
     public static final TeamType TEAM_TYPE = TeamType.ARRANGED;
     public static final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
     public static final Set<BaseLeague.LeagueType> LEAGUES_SET = Collections.unmodifiableSet(EnumSet.copyOf(SEARCH_LEAGUES));
-    public static final int TEAMS_PER_REGION = REGIONS.size() * TEAMS_PER_LEAGUE;
+    public static final int TEAMS_PER_REGION = (BaseLeague.LeagueType.values()).length * TEAMS_PER_LEAGUE;
+    public static final int TEAMS_PER_LEAGUE_REGION = REGIONS.size() * TEAMS_PER_LEAGUE;
     public static final int TEAMS_TOTAL = REGIONS.size() * (BaseLeague.LeagueType.values()).length * TEAMS_PER_LEAGUE;
     public static final int PLAYERS_TOTAL = TEAMS_TOTAL * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE);
 
@@ -71,6 +72,9 @@ public class LadderSearchDAOIT
     @Autowired
     private QueueStatsDAO queueStatsDAO;
 
+    @Autowired
+    private LadderTeamStateDAO ladderTeamStateDAO;
+
     @BeforeAll
     public static void beforeAll
     (
@@ -81,7 +85,8 @@ public class LadderSearchDAOIT
         @Autowired SeasonDAO seasonDAO,
         @Autowired DivisionDAO divisionDAO,
         @Autowired TeamDAO teamDAO,
-        @Autowired TeamMemberDAO teamMemberDAO
+        @Autowired TeamMemberDAO teamMemberDAO,
+        @Autowired TeamStateDAO teamStateDAO
     )
     throws SQLException
     {
@@ -148,6 +153,10 @@ public class LadderSearchDAOIT
         //old player
         teamMemberDAO.create(new TeamMember(team.getId(), 1L, 1, 2, 3, 4));
 
+        //this state should have no rank info because it's too old
+        TeamState oldTeamState = TeamState.of(newTeam, DEFAULT_SEASON_START.minusDays(30).atStartOfDay().atOffset(ZoneOffset.UTC));
+        teamStateDAO.saveState(oldTeamState);
+
         teamDAO.updateRanks(DEFAULT_SEASON_ID);
         teamDAO.updateRanks(DEFAULT_SEASON_ID + 1);
         teamDAO.updateRanks(DEFAULT_SEASON_ID + 2);
@@ -155,10 +164,14 @@ public class LadderSearchDAOIT
         leagueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
+        teamStateDAO.updateRanks(oldTeamState.getDateTime().plusSeconds(1),
+            Set.of(DEFAULT_SEASON_ID, DEFAULT_SEASON_ID + 1, DEFAULT_SEASON_ID + 2));
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
         queueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
+
+        assertNull(oldTeamState.getGlobalRank());
     }
 
     @AfterAll
@@ -281,7 +294,12 @@ public class LadderSearchDAOIT
             assertEquals(teamId, team.getWins());
             assertEquals(teamId + 1, team.getLosses());
             assertEquals(teamId + 2, team.getTies());
-            verifyTeamRanks(team, 1);
+            TeamState state = ladderTeamStateDAO
+                .find(Set.of(Tuples.of(team.getQueueType(), team.getRegion(), team.getLegacyId()))).stream()
+                .map(LadderTeamState::getTeamState)
+                .findAny()
+                .orElseThrow();
+            verifyTeamRanks(team, state, 1);
             //validate members
             //no reason to sort members in query, sorting manually for testing
             team.getMembers().sort(Comparator.comparing(m->m.getCharacter().getBattlenetId()));
@@ -299,12 +317,12 @@ public class LadderSearchDAOIT
         }
     }
 
-    private void verifyTeamRanks(LadderTeam team, int seasonOrdinal)
+    private void verifyTeamRanks(LadderTeam team, TeamState state, int seasonOrdinal)
     {
         long expectedGlobalRank = (TEAMS_TOTAL - team.getId() + 1) / seasonOrdinal;
-        long expectedLeagueRank = (TEAMS_PER_REGION - ((team.getId() - 1) % TEAMS_PER_REGION)) / seasonOrdinal;
+        long expectedLeagueRank = (TEAMS_PER_LEAGUE_REGION - ((team.getId() - 1) % TEAMS_PER_LEAGUE_REGION)) / seasonOrdinal;
         long expectedRegionRank =
-            (((TEAMS_TOTAL - team.getId()) / TEAMS_PER_REGION) * TEAMS_PER_LEAGUE //prev region ranks
+            (((TEAMS_TOTAL - team.getId()) / TEAMS_PER_LEAGUE_REGION) * TEAMS_PER_LEAGUE //prev region ranks
             + expectedLeagueRank //cur region ranks
             - (REGIONS.size() - 1 - REGIONS.indexOf(team.getRegion())) * TEAMS_PER_LEAGUE) //region offset
             / seasonOrdinal;
@@ -312,6 +330,11 @@ public class LadderSearchDAOIT
         assertEquals(expectedGlobalRank, (long) team.getGlobalRank());
         assertEquals(expectedRegionRank, (long) team.getRegionRank());
         assertEquals(expectedLeagueRank, (long) team.getLeagueRank());
+
+        assertEquals(expectedGlobalRank, (long) state.getGlobalRank());
+        assertEquals(TEAMS_TOTAL, (long) state.getGlobalTeamCount());
+        assertEquals(expectedRegionRank, (long) state.getRegionRank());
+        assertEquals(TEAMS_PER_REGION, (long) state.getRegionTeamCount());
     }
 
     private void verifyLadderOffset

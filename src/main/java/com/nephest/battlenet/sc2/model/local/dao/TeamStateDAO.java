@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
+import java.util.Set;
 
 @Repository
 public class TeamStateDAO
@@ -31,6 +32,10 @@ public class TeamStateDAO
         + "team_state.division_id AS \"team_state.division_id\", "
         + "team_state.games AS \"team_state.games\", "
         + "team_state.rating AS \"team_state.rating\", "
+        + "team_state.global_rank AS \"team_state.global_rank\", "
+        + "team_state.global_team_count AS \"team_state.global_team_count\", "
+        + "team_state.region_rank AS \"team_state.region_rank\", "
+        + "team_state.region_team_count AS \"team_state.region_team_count\", "
         + "team_state.archived AS \"team_state.archived\", "
         + "team_state.secondary AS \"team_state.secondary\" ";
 
@@ -105,6 +110,40 @@ public class TeamStateDAO
         + "AND team_state.timestamp != max_filter.timestamp "
         + "AND team_state.archived = true";
 
+    private static final String UPDATE_RANK_QUERY =
+        "WITH "
+        + "region_team_count AS "
+        + "("
+            + "SELECT season.battlenet_id AS season, queue_type, team_type, region, SUM(team_count) AS count  "
+            + "FROM league_stats "
+            + "INNER JOIN league ON league_stats.league_id = league.id "
+            + "INNER JOIN season ON league.season_id = season.id "
+            + "WHERE season.battlenet_id IN(:seasons) "
+            + "GROUP BY season.battlenet_id, season.region, queue_type, team_type "
+        + "), "
+        + "global_team_count AS "
+        + "("
+            + "SELECT season, queue_type, team_type, SUM(count) AS count  "
+            + "FROM region_team_count "
+            + "GROUP BY season, queue_type, team_type "
+        + ") "
+        + "UPDATE team_state "
+        + "SET global_rank = team.global_rank, "
+        + "global_team_count = global_team_count.count, "
+        + "region_rank = team.region_rank, "
+        + "region_team_count = region_team_count.count "
+        + "FROM team "
+        + "INNER JOIN region_team_count ON team.season = region_team_count.season "
+            + "AND team.queue_type = region_team_count.queue_type "
+            + "AND team.team_type = region_team_count.team_type "
+            + "AND team.region = region_team_count.region "
+        + "INNER JOIN global_team_count ON team.season = global_team_count.season "
+            + "AND team.queue_type = global_team_count.queue_type "
+            + "AND team.team_type = global_team_count.team_type "
+        + "WHERE team_state.team_id = team.id "
+        + "AND team_state.timestamp > :from "
+        + "AND team_state.global_rank IS NULL";
+
     public static final String REMOVE_EXPIRED_MAIN_QUERY =
         "DELETE FROM team_state "
         + "WHERE timestamp < :from "
@@ -123,6 +162,10 @@ public class TeamStateDAO
         rs.getInt("team_state.division_id"),
         rs.getInt("team_state.games"),
         rs.getInt("team_state.rating"),
+        DAOUtils.getInteger(rs, "team_state.global_rank"),
+        DAOUtils.getInteger(rs, "team_state.global_team_count"),
+        DAOUtils.getInteger(rs, "team_state.region_rank"),
+        DAOUtils.getInteger(rs, "team_state.region_team_count"),
         DAOUtils.getBoolean(rs, "team_state.archived"),
         DAOUtils.getBoolean(rs, "team_state.secondary")
     );
@@ -180,6 +223,16 @@ public class TeamStateDAO
         for(int i = 0; i < states.length; i++) params[i] = createParameterSource(states[i]);
 
         return template.batchUpdate(CREATE_QUERY, params);
+    }
+
+    public int updateRanks(OffsetDateTime from, Set<Integer> seasons)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("from", from)
+            .addValue("seasons", seasons);
+        int updated = template.update(UPDATE_RANK_QUERY, params);
+        LOG.debug("Updated ranks of {} team states({}, {})", updated, seasons, from);
+        return updated;
     }
 
     public void archive(OffsetDateTime from)

@@ -214,6 +214,10 @@ CREATE TABLE "team_state"
     "division_id" INTEGER NOT NULL,
     "games" SMALLINT NOT NULL,
     "rating" SMALLINT NOT NULL,
+    "global_rank" INTEGER,
+    "global_team_count" INTEGER,
+    "region_rank" INTEGER,
+    "region_team_count" INTEGER,
     "archived" BOOLEAN,
     "secondary" BOOLEAN,
 

@@ -340,6 +340,7 @@ class CharacterUtil
         const excludeEnd = document.getElementById("mmr-exclude-end").value || 0;
         const bestRaceOnly = document.getElementById("mmr-best-race").checked;
         const seasonLastOnly = document.getElementById("mmr-season-last").checked;
+        const yAxis = document.getElementById("mmr-y-axis").value;
 
         const seasonStartDates = CharacterUtil.getSeasonStartDates(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         const teams = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams
@@ -355,6 +356,7 @@ class CharacterUtil
         let mmrHistory = teams;
         if(!seasonLastOnly) mmrHistory = mmrHistory
             .concat(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
+        mmrHistory.forEach(CharacterUtil.calculateMmrHistoryTopPercentage);
         mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter, excludeStart, excludeEnd);
         mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
         mmrHistory.sort((a, b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
@@ -371,7 +373,7 @@ class CharacterUtil
         {
             rawData.push(histories);
             data[dateTime] = {};
-            for(const history of histories) data[dateTime][history.race] = history.teamState.rating;
+            for(const history of histories) data[dateTime][history.race] = CharacterUtil.getMmrYValue(history, yAxis);
         }
         ChartUtil.CHART_RAW_DATA.set("player-stats-mmr-table", {rawData: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
         TableUtil.updateVirtualColRowTable
@@ -396,6 +398,21 @@ class CharacterUtil
         document.getElementById("mmr-history-games-avg-mmr").textContent = CharacterUtil.getGamesAndAverageMmrString(mmrHistory);
     }
 
+    static getMmrYValue(history, mode)
+    {
+        switch(mode)
+        {
+            case "mmr":
+                return history.teamState.rating;
+            case "percent-global":
+                return history.teamState.globalTopPercent;
+            case "percent-region":
+                return history.teamState.regionTopPercent;
+            default:
+                return history.teamState.rating;
+        }
+    }
+
     static getSeasonStartDates(states)
     {
         const result = new Map();
@@ -406,6 +423,13 @@ class CharacterUtil
                 result.set(season, Util.parseIsoDateTime(state.teamState.dateTime));
             }
         return result;
+    }
+
+    static calculateMmrHistoryTopPercentage(h)
+    {
+        if(h.globalTopPercent) return;
+        h.teamState.globalTopPercent = (h.teamState.globalRank / h.teamState.globalTeamCount) * 100;
+        h.teamState.regionTopPercent = (h.teamState.regionRank / h.teamState.regionTeamCount) * 100;
     }
 
     static injectLeagueImages(tableData, rawData, headers, getter)
@@ -593,6 +617,8 @@ class CharacterUtil
 
     static createTeamSnapshot(team, dateTime, injected = false)
     {
+        const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
+        const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
         return {
             team: team,
             teamState: {
@@ -600,7 +626,13 @@ class CharacterUtil
                 dateTime: dateTime,
                 divisionId: team.divisionId,
                 games: team.wins + team.losses + team.ties,
-                rating: team.rating
+                rating: team.rating,
+                globalRank: team.globalRank,
+                globalTeamCount: Object.values(stats.regionTeamCount).reduce((a, b)=>a+b),
+                globalTopPercent: (team.globalRank / Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)) * 100,
+                regionRank: team.regionRank,
+                regionTeamCount: stats.regionTeamCount[team.region],
+                regionTopPercent: (team.regionRank / stats.regionTeamCount[team.region]) * 100
             },
             race: TeamUtil.getFavoriteRace(team.members[0]).name.toUpperCase(),
             league: {
@@ -643,7 +675,26 @@ class CharacterUtil
         lines.push(TeamUtil.createLeagueDiv(curData));
         lines.push(curData.teamState.rating);
         lines.push(curData.teamState.games);
+        CharacterUtil.appendAdditionalMmrHistoryRanks(curData, lines);
         return lines;
+    }
+
+    static appendAdditionalMmrHistoryRanks(curData, lines)
+    {
+        const globalRank = document.createElement("span");
+        globalRank.classList.add("tooltip-mmr-rank");
+        globalRank.innerHTML = curData.teamState.globalRank
+            ? `${Util.NUMBER_FORMAT.format(curData.teamState.globalRank)}/${Util.NUMBER_FORMAT.format(curData.teamState.globalTeamCount)}<br/>
+                (${Util.DECIMAL_FORMAT.format(curData.teamState.globalTopPercent)}%)`
+            : "-"
+        lines.push(globalRank);
+        const regionRank = document.createElement("span");
+        regionRank.classList.add("tooltip-mmr-rank");
+        regionRank.innerHTML = curData.teamState.regionRank
+            ? `${Util.NUMBER_FORMAT.format(curData.teamState.regionRank)}/${Util.NUMBER_FORMAT.format(curData.teamState.regionTeamCount)}<br/>
+                (${Util.DECIMAL_FORMAT.format(curData.teamState.regionTopPercent)}%)`
+            : "-"
+        lines.push(regionRank);
     }
 
     static filterMmrHistory(history, queueFilter, teamTypeFilter, excludeStart, excludeEnd)
@@ -981,6 +1032,19 @@ class CharacterUtil
         document.getElementById("mmr-exclude-end").addEventListener("input", CharacterUtil.onMmrInput);
         document.getElementById("mmr-best-race").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
         document.getElementById("mmr-season-last").addEventListener("change", evt=>CharacterUtil.updateCharacterMmrHistoryView());
+        document.getElementById("mmr-y-axis").addEventListener("change", e=>{
+            CharacterUtil.setMmrYAxis(e.target.value, e.target.getAttribute("data-chartable"));
+            CharacterUtil.updateCharacterMmrHistoryView();
+        });
+    }
+
+    static setMmrYAxis(mode, chartable)
+    {
+        if(mode == "mmr") {
+            ChartUtil.setNormalYAxis(chartable);
+        } else {
+            ChartUtil.setTopPercentYAxis(chartable);
+        }
     }
 
     static onMmrInput(evt)
@@ -998,6 +1062,12 @@ class CharacterUtil
     static enhanceAutoClanSearch()
     {
         for(const e of document.querySelectorAll(".clan-auto-search")) e.addEventListener("click", CharacterUtil.autoClanSearch);
+    }
+
+    static afterEnhance()
+    {
+        CharacterUtil.setMmrYAxis(document.getElementById("mmr-y-axis").value,
+            document.getElementById("mmr-y-axis").getAttribute("data-chartable"));
     }
 
     static autoClanSearch(evt)

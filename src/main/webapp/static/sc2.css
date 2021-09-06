@@ -236,6 +236,11 @@ th.hoverable span
     border-radius: 1em;
 }
 
+.tooltip-mmr-rank
+{
+    font-size: 0.9em;
+}
+
 .chart-zoom-ctl
 {
     font-size: 0.7rem;
