@@ -114,7 +114,7 @@ public class LegacySearchIT
         }
     }
 
-    private static Team setupTeam
+    public static Team setupTeam
     (
         QueueType queueType, Region region, int season, BigInteger legacyId, BaseLeague.LeagueType league, int wins,
         DivisionDAO divisionDAO, TeamDAO teamDAO, TeamMemberDAO teamMemberDAO, TeamStateDAO teamStateDAO
