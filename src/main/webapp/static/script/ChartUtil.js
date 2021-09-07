@@ -88,8 +88,8 @@ class ChartUtil
                             },
                             stacked: config.stacked === "true" ? true : false,
                             beginAtZero: config.beginAtZero === "true" ? true : false,
-                            min: config.beginAtZero === "true" ? config.yMin : null,
-                            max: config.beginAtZero === "true" ? config.yMax : null,
+                            suggestedMin: config.beginAtZero === "true" ? config.yMin : null,
+                            suggestedMax: config.beginAtZero === "true" ? config.yMax : null,
                             reverse: config.yReversed === "true" ? true : false
                         }
                     },
@@ -643,8 +643,8 @@ class ChartUtil
         if(!zoom) {
             if(chart) {
                 chart.options.scales.y.beginAtZero = true;
-                chart.options.scales.y.min = chart.customConfig.yMin;
-                chart.options.scales.y.max = chart.customConfig.yMax;
+                chart.options.scales.y.suggestedMin = chart.customConfig.yMin;
+                chart.options.scales.y.suggestedMax = chart.customConfig.yMax;
             } else {
                 chartable.setAttribute("data-chart-begin-at-zero", "true");
             }
@@ -652,8 +652,8 @@ class ChartUtil
         else {
             if(chart) {
                 chart.options.scales.y.beginAtZero = false;
-                chart.options.scales.y.min = undefined;
-                chart.options.scales.y.max = undefined;
+                chart.options.scales.y.suggestedMin = undefined;
+                chart.options.scales.y.suggestedMax = undefined;
             } else {
                 chartable.setAttribute("data-chart-begin-at-zero", "false");
             }
@@ -702,8 +702,8 @@ class ChartUtil
             switch(chart.options.scales.y.beginAtZero)
             {
                 case true:
-                    chart.options.scales.y.min = 0;
-                    chart.options.scales.y.max = 100;
+                    chart.options.scales.y.suggestedMin = 0;
+                    chart.options.scales.y.suggestedMax = 100;
                 case false:
                     chart.customConfig.yMin = 0;
                     chart.customConfig.yMax = 100;
@@ -725,8 +725,8 @@ class ChartUtil
         const chart = ChartUtil.CHARTS.get(chartable);
         if(chart)
         {
-            chart.options.scales.y.min = undefined;
-            chart.options.scales.y.max = undefined;
+            chart.options.scales.y.suggestedMin = undefined;
+            chart.options.scales.y.suggestedMax = undefined;
             chart.options.scales.y.reverse = false;
         }
         else
