@@ -184,7 +184,7 @@ class ChartUtil
     static resetZoom(evt)
     {
         const ctl = evt.target;
-        if(!ctl.classList.contains("active")) return;
+        if(!ctl || !ctl.classList.contains("active")) return;
 
         const chart = ChartUtil.CHARTS.get(ctl.getAttribute("data-chartable-id"));
         chart.resetZoom();
