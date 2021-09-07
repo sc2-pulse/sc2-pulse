@@ -12,6 +12,9 @@ class ChartUtil
         config["title"] = chartable.getAttribute("data-chart-title");
         config["xTitle"] = chartable.getAttribute("data-chart-x-title");
         config["yTitle"] = chartable.getAttribute("data-chart-y-title");
+        config["yReversed"] = chartable.getAttribute("data-chart-y-reversed");
+        config["yMin"] = chartable.getAttribute("data-chart-y-min");
+        config["yMax"] = chartable.getAttribute("data-chart-y-max");
         config["tooltipPercentage"] = chartable.getAttribute("data-chart-tooltip-percentage");
         config["tooltipSort"] = chartable.getAttribute("data-chart-tooltip-sort");
         config["performance"] = chartable.getAttribute("data-chart-performance");
@@ -84,7 +87,10 @@ class ChartUtil
                                 callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val),
                             },
                             stacked: config.stacked === "true" ? true : false,
-                            beginAtZero: config.beginAtZero === "true" ? true : false
+                            beginAtZero: config.beginAtZero === "true" ? true : false,
+                            min: config.beginAtZero === "true" ? config.yMin : null,
+                            max: config.beginAtZero === "true" ? config.yMax : null,
+                            reverse: config.yReversed === "true" ? true : false
                         }
                     },
                     spanGaps: true,
@@ -637,6 +643,8 @@ class ChartUtil
         if(!zoom) {
             if(chart) {
                 chart.options.scales.y.beginAtZero = true;
+                chart.options.scales.y.min = chart.customConfig.yMin;
+                chart.options.scales.y.max = chart.customConfig.yMax;
             } else {
                 chartable.setAttribute("data-chart-begin-at-zero", "true");
             }
@@ -644,6 +652,8 @@ class ChartUtil
         else {
             if(chart) {
                 chart.options.scales.y.beginAtZero = false;
+                chart.options.scales.y.min = undefined;
+                chart.options.scales.y.max = undefined;
             } else {
                 chartable.setAttribute("data-chart-begin-at-zero", "false");
             }
