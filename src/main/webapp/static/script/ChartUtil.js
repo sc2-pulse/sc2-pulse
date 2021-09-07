@@ -694,6 +694,50 @@ class ChartUtil
         }
     }
 
+    static setTopPercentYAxis(chartable)
+    {
+        const chart = ChartUtil.CHARTS.get(chartable)
+        if(chart)
+        {
+            switch(chart.options.scales.y.beginAtZero)
+            {
+                case true:
+                    chart.options.scales.y.min = 0;
+                    chart.options.scales.y.max = 100;
+                case false:
+                    chart.customConfig.yMin = 0;
+                    chart.customConfig.yMax = 100;
+                    chart.options.scales.y.reverse = true;
+                    break;
+            }
+        }
+        else
+        {
+            const chEl = document.getElementById(chartable);
+            chEl.setAttribute("data-chart-y-min", 0);
+            chEl.setAttribute("data-chart-y-max", 100);
+            chEl.setAttribute("data-chart-y-reversed", true);
+        }
+    }
+
+    static setNormalYAxis(chartable)
+    {
+        const chart = ChartUtil.CHARTS.get(chartable);
+        if(chart)
+        {
+            chart.options.scales.y.min = undefined;
+            chart.options.scales.y.max = undefined;
+            chart.options.scales.y.reverse = false;
+        }
+        else
+        {
+            const chEl = document.getElementById(chartable);
+            chEl.removeAttribute("data-chart-y-min");
+            chEl.removeAttribute("data-chart-y-max");
+            chEl.removeAttribute("data-chart-y-reversed");
+        }
+    }
+
 }
 
 ChartUtil.CHARTS = new Map();
