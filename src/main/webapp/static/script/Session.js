@@ -119,7 +119,7 @@ class Session
                     elem.removeAttribute("checked");
                 }
             } else {
-                elem.setAttribute("value", savedState);
+                elem.value = savedState;
             }
         }
     }
