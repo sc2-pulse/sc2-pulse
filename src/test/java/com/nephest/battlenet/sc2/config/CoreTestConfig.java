@@ -4,8 +4,7 @@
 package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.config.convert.*;
-import org.springframework.boot.autoconfigure.web.client.RestTemplateBuilderConfigurer;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
@@ -60,10 +59,8 @@ public class CoreTestConfig
     }
 
     @Bean
-    public RestTemplateBuilder restTemplateBuilder(RestTemplateBuilderConfigurer configurer) {
-        return configurer.configure(new RestTemplateBuilder())
-            .setConnectTimeout(IO_TIMEOUT)
-            .setReadTimeout(IO_TIMEOUT);
+    public RestTemplateCustomizer restTemplateCustomizer() {
+        return new GlobalRestTemplateCustomizer((int) IO_TIMEOUT.toMillis());
     }
 
 }

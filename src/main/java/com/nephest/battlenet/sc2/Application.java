@@ -3,13 +3,13 @@
 
 package com.nephest.battlenet.sc2;
 
+import com.nephest.battlenet.sc2.config.GlobalRestTemplateCustomizer;
 import com.nephest.battlenet.sc2.config.convert.*;
 import com.nephest.battlenet.sc2.config.filter.MaintenanceFilter;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.web.client.RestTemplateBuilderConfigurer;
-import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
@@ -82,10 +82,8 @@ extends SpringBootServletInitializer
     }
 
     @Bean
-    public RestTemplateBuilder restTemplateBuilder(RestTemplateBuilderConfigurer configurer) {
-        return configurer.configure(new RestTemplateBuilder())
-            .setConnectTimeout(WebServiceUtil.CONNECT_TIMEOUT)
-            .setReadTimeout(WebServiceUtil.IO_TIMEOUT);
+    public RestTemplateCustomizer restTemplateCustomizer() {
+        return new GlobalRestTemplateCustomizer();
     }
 
     @Bean
