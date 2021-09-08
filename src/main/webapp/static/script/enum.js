@@ -113,3 +113,25 @@ const START_MODE = Object.freeze
   FULL: {name: "full", order: 1},
   MINIMAL: {name: "minimal", order: 2}
 });
+
+const TIER_RANGE = Object.freeze
+({
+    1: {bottomThreshold: 1.333, league: LEAGUE.MASTER, tierType: 0, order: 1},
+    2: {bottomThreshold: 2.666, league: LEAGUE.MASTER, tierType: 1, order: 2},
+    3: {bottomThreshold: 4, league: LEAGUE.MASTER, tierType: 2, order: 3},
+    4: {bottomThreshold: 11.666, league: LEAGUE.DIAMOND, tierType: 0, order: 4},
+    5: {bottomThreshold: 19.333, league: LEAGUE.DIAMOND, tierType: 1, order: 5},
+    6: {bottomThreshold: 27, league: LEAGUE.DIAMOND, tierType: 2, order: 6},
+    7: {bottomThreshold: 34.666, league: LEAGUE.PLATINUM, tierType: 0, order: 7},
+    8: {bottomThreshold: 42.333, league: LEAGUE.PLATINUM, tierType: 1, order: 8},
+    9: {bottomThreshold: 50, league: LEAGUE.PLATINUM, tierType: 2, order: 9},
+    10: {bottomThreshold: 57.666, league: LEAGUE.GOLD, tierType: 0, order: 10},
+    11: {bottomThreshold: 65.333, league: LEAGUE.GOLD, tierType: 1, order: 11},
+    12: {bottomThreshold: 73, league: LEAGUE.GOLD, tierType: 2, order: 12},
+    13: {bottomThreshold: 80.666, league: LEAGUE.SILVER, tierType: 0, order: 13},
+    14: {bottomThreshold: 88.333, league: LEAGUE.SILVER, tierType: 1, order: 14},
+    15: {bottomThreshold: 96, league: LEAGUE.SILVER, tierType: 2, order: 15},
+    16: {bottomThreshold: 97.333, league: LEAGUE.BRONZE, tierType: 0, order: 16},
+    17: {bottomThreshold: 98.666, league: LEAGUE.BRONZE, tierType: 1, order: 17},
+    18: {bottomThreshold: 100, league: LEAGUE.BRONZE, tierType: 2, order: 18}
+});

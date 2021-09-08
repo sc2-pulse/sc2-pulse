@@ -23,7 +23,7 @@ class TeamUtil
             if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
             TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, i);
             row.insertCell().textContent = team.rating;
-            row.insertCell().appendChild(TeamUtil.createLeagueDiv(team));
+            TeamUtil.appendLeagueDiv(row.insertCell(), team);
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), "table-image-long"));
             row.appendChild(TeamUtil.createMembersCell(team));
             TeamUtil.appendGamesInfo(row.insertCell(), team);
@@ -52,6 +52,9 @@ class TeamUtil
                 break;
             case "games":
                 content = TeamUtil.createDynamicGamesTable(parent);
+                break;
+            case "league":
+                content = TeamUtil.createDynamicLeagueTable(parent);
                 break;
             default:
                 throw new Error("invalid popover data type");
@@ -186,6 +189,46 @@ class TeamUtil
         return gamesTable;
     }
 
+    static createDynamicLeagueTable(parent)
+    {
+        const team = TeamUtil.getTeamFromElement(parent);
+        const stats = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE)[team.league.queueType][team.league.teamType][team.season];
+
+        const globalRange = TeamUtil.getGlobalLeagueRange(team, stats);
+        const regionRange = TeamUtil.getRegionLeagueRange(team, stats);
+
+        const leagueTable = TableUtil.createTable(["Type", "League"], false);
+        const tbody = leagueTable.querySelector("tbody");
+
+        let tr = tbody.insertRow();
+        TableUtil.createRowTh(tr).textContent = "Top% Global"
+        tr.insertCell().appendChild(TeamUtil.createLeagueDivFromEnum(globalRange.league, globalRange.tierType));
+        tr = tbody.insertRow();
+        TableUtil.createRowTh(tr).textContent = "Top% Region"
+        tr.insertCell().appendChild(TeamUtil.createLeagueDivFromEnum(regionRange.league, regionRange.tierType));
+
+        return leagueTable;
+    }
+
+    static getRegionLeagueRange(team, stats)
+    {
+        if(team.regionRank <= 200) return {league: LEAGUE.GRANDMASTER, tierType: 0};
+
+        const regionTeamCount = stats.regionTeamCount[team.region];
+        const regionTopPercent = (team.regionRank / regionTeamCount) * 100;
+        return Object.values(TIER_RANGE).find(r=>regionTopPercent <= r.bottomThreshold);
+    }
+
+    static getGlobalLeagueRange(team, stats)
+    {
+        if(team.globalRank <= Object.values(REGION).length * 200) return {league: LEAGUE.GRANDMASTER, tierType: 0};
+
+        const globalTeamCount = Object.values(stats.regionTeamCount).reduce((a, b)=>a+b);
+        const globalTopPercent = (team.globalRank / globalTeamCount) * 100;
+        return Object.values(TIER_RANGE).find(r=>globalTopPercent <= r.bottomThreshold);
+    }
+
+
     static createMemberInfo(team, member, appendRaces = true)
     {
         const result = document.createElement("span");
@@ -305,14 +348,27 @@ class TeamUtil
         return membersCell;
     }
 
+    static appendLeagueDiv(parent, team)
+    {
+        parent.setAttribute("data-toggle", "popover");
+        parent.setAttribute("data-ctype", "league");
+        parent.appendChild(TeamUtil.createLeagueDiv(team));
+    }
+
     static createLeagueDiv(team)
     {
         const league = EnumUtil.enumOfId(team.league.type, LEAGUE);
+        const div = TeamUtil.createLeagueDivFromEnum(league, team.tierType);
+        return div;
+    }
+
+    static createLeagueDivFromEnum(league, tierType)
+    {
         const leagueDiv = document.createElement("div");
         leagueDiv.classList.add("text-nowrap");
         leagueDiv.appendChild(ElementUtil.createImage("league/", league.name, "table-image table-image-square mr-1"));
-            leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (team.tierType != null ? team.tierType + 1 : 1),
-                "table-image-additional" + (team.tierType == null ? " invisible" : "")));
+            leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (tierType != null ? tierType + 1 : 1),
+                "table-image-additional" + (tierType == null ? " invisible" : "")));
         return leagueDiv;
     }
 
