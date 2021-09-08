@@ -25,6 +25,9 @@ public class MatchDAO
 extends StandardDAO
 {
 
+    public static final int UPDATED_TTL_DAYS = 30;
+    public static final int TTL_DAYS = 90;
+
     public static final String STD_SELECT =
         "match.id AS \"match.id\", "
         + "match.date AS \"match.date\", "
@@ -77,6 +80,8 @@ extends StandardDAO
         + "UNION ALL "
         + "SELECT * FROM inserted";
 
+    private static final String REMOVE_EXPIRED_QUERY = "DELETE FROM match WHERE date < :toDate OR updated < :toUpdated";
+
     private static RowMapper<Match> STD_ROW_MAPPER;
     private final ConversionService conversionService;
 
@@ -90,6 +95,15 @@ extends StandardDAO
         super(template, "match", "30 DAYS");
         this.conversionService = conversionService;
         initMappers(conversionService);
+    }
+
+    @Override
+    public int removeExpired()
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("toDate", OffsetDateTime.now().minusDays(TTL_DAYS))
+            .addValue("toUpdated", OffsetDateTime.now().minusDays(UPDATED_TTL_DAYS));
+        return getTemplate().update(REMOVE_EXPIRED_QUERY, params);
     }
 
     private static void initMappers(ConversionService conversionService)
