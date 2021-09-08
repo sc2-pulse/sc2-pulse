@@ -180,7 +180,8 @@ CREATE TABLE "team"
     CONSTRAINT "uq_team_queue_type_region_legacy_id_season"
         UNIQUE ("queue_type", "region", "legacy_id", "season")
 
-);
+)
+WITH (fillfactor = 50);
 
 CREATE INDEX "ix_team_ladder_search_full" ON "team"("season", "queue_type", "team_type", "rating", "id");
 
@@ -305,7 +306,8 @@ CREATE TABLE "player_character_stats"
         FOREIGN KEY ("player_character_id")
         REFERENCES "player_character"("id")
         ON DELETE CASCADE ON UPDATE CASCADE
-);
+)
+WITH (fillfactor = 90);
 
 CREATE UNIQUE INDEX "uq_player_character_stats_main"
     ON "player_character_stats"("player_character_id", COALESCE("race", -32768), "queue_type", "team_type");
@@ -436,7 +438,8 @@ CREATE TABLE "match"
 
     CONSTRAINT "uq_match_date_type_map_region"
         UNIQUE("date", "type", "map", "region")
-);
+)
+WITH (fillfactor = 90);
 
 CREATE INDEX "ix_match_updated" ON "match"("updated");
 

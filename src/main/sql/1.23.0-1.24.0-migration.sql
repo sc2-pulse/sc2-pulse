@@ -18,3 +18,18 @@ ALTER TABLE "team_state"
     ADD COLUMN "global_team_count" INTEGER,
     ADD COLUMN "region_rank" INTEGER,
     ADD COLUMN "region_team_count" INTEGER;
+
+ALTER TABLE "team" SET (fillfactor = 50);
+VACUUM FULL "team";
+
+ALTER TABLE "player_character_stats" SET (fillfactor = 90);
+VACUUM FULL "player_character_stats";
+
+ALTER TABLE "match" SET (fillfactor = 90);
+VACUUM FULL "match";
+
+VACUUM FULL "account";
+VACUUM FULL "team_state";
+
+VACUUM(ANALYZE);
+
