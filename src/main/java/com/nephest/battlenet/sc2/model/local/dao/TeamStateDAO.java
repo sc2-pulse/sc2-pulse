@@ -23,8 +23,8 @@ public class TeamStateDAO
 
     private static final Logger LOG = LoggerFactory.getLogger(TeamStateDAO.class);
 
-    private static int MAX_DEPTH_DAYS_MAIN = 120;
-    private static int MAX_DEPTH_DAYS_SECONDARY = 120;
+    private static int MAX_DEPTH_DAYS_MAIN = 180;
+    private static int MAX_DEPTH_DAYS_SECONDARY = 180;
 
     public static final String STD_SELECT =
         "team_state.team_id AS \"team_state.team_id\", "
