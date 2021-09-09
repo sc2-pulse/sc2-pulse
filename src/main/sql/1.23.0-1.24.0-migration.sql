@@ -22,9 +22,9 @@ ALTER TABLE "team_state"
 WITH ranks AS
 (
     SELECT id,
-    RANK() OVER(PARTITION BY queue_type, team_type ORDER BY rating DESC) as global_rank,
-    RANK() OVER(PARTITION BY queue_type, team_type, region ORDER BY rating DESC) as region_rank,
-    RANK() OVER(PARTITION BY queue_type, team_type, league_type ORDER BY rating DESC) as league_rank
+    RANK() OVER(PARTITION BY season, queue_type, team_type ORDER BY rating DESC) as global_rank,
+    RANK() OVER(PARTITION BY season, queue_type, team_type, region ORDER BY rating DESC) as region_rank,
+    RANK() OVER(PARTITION BY season, queue_type, team_type, league_type ORDER BY rating DESC) as league_rank
     FROM team
     WHERE season < 40
 )
@@ -38,9 +38,9 @@ WHERE team.id = ranks.id;
 WITH ranks AS
 (
     SELECT id,
-    RANK() OVER(PARTITION BY queue_type, team_type ORDER BY rating DESC) as global_rank,
-    RANK() OVER(PARTITION BY queue_type, team_type, region ORDER BY rating DESC) as region_rank,
-    RANK() OVER(PARTITION BY queue_type, team_type, league_type ORDER BY rating DESC) as league_rank
+    RANK() OVER(PARTITION BY season, queue_type, team_type ORDER BY rating DESC) as global_rank,
+    RANK() OVER(PARTITION BY season, queue_type, team_type, region ORDER BY rating DESC) as region_rank,
+    RANK() OVER(PARTITION BY season, queue_type, team_type, league_type ORDER BY rating DESC) as league_rank
     FROM team
     WHERE season >= 40
 )
