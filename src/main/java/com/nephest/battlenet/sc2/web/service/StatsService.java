@@ -33,7 +33,6 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -80,8 +79,6 @@ public class StatsService
     private PostgreSQLUtils postgreSQLUtils;
     private Validator validator;
     private ConversionService conversionService;
-
-    private final AtomicBoolean isUpdating = new AtomicBoolean(false);
 
     public StatsService(){}
 
@@ -147,16 +144,6 @@ public class StatsService
         this.statsService = statsService;
     }
 
-    protected void setIsUpdating(boolean isUpdating)
-    {
-        this.isUpdating.set(isUpdating);
-    }
-
-    public boolean isUpdating()
-    {
-        return isUpdating.get();
-    }
-
     public Set<Region> getAlternativeRegions()
     {
         return alternativeRegions;
@@ -174,37 +161,20 @@ public class StatsService
         },
         allEntries=true
     )
-    public boolean updateAll(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    public void updateAll(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
-        if(!isUpdating.compareAndSet(false, true))
+        long start = System.currentTimeMillis();
+        int lastSeasonIx = api.getLastSeason(Region.EU, seasonDao.getMaxBattlenetId()).block().getId() + 1;
+        for(int season = BlizzardSC2API.FIRST_SEASON; season < lastSeasonIx; season++)
         {
-            LOG.info("Service is already updating");
-            return false;
+            updateSeason(season, regions, queues, leagues);
+            LOG.info("Updated season {}", season);
         }
+        teamStateDAO.removeExpired();
+        playerCharacterStatsDAO.mergeCalculate();
 
-        try
-        {
-            long start = System.currentTimeMillis();
-            int lastSeasonIx = api.getLastSeason(Region.EU, seasonDao.getMaxBattlenetId()).block().getId() + 1;
-            for(int season = BlizzardSC2API.FIRST_SEASON; season < lastSeasonIx; season++)
-            {
-                updateSeason(season, regions, queues, leagues);
-                LOG.info("Updated season {}", season);
-            }
-            teamStateDAO.removeExpired();
-            playerCharacterStatsDAO.mergeCalculate();
-
-            isUpdating.set(false);
-            long seconds = (System.currentTimeMillis() - start) / 1000;
-            LOG.info("Updated all after {} seconds", seconds);
-        }
-        catch(RuntimeException ex)
-        {
-            isUpdating.set(false);
-            throw ex;
-        }
-
-        return true;
+        long seconds = (System.currentTimeMillis() - start) / 1000;
+        LOG.info("Updated all after {} seconds", seconds);
     }
 
     @CacheEvict
@@ -219,33 +189,16 @@ public class StatsService
         },
         allEntries=true
     )
-    public boolean updateCurrent
+    public void updateCurrent
     (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
     {
-        if(!isUpdating.compareAndSet(false, true))
-        {
-            LOG.info("Service is already updating");
-            return false;
-        }
+        long start = System.currentTimeMillis();
 
-        try
-        {
-            long start = System.currentTimeMillis();
+        checkStaleData(regions);
+        updateCurrentSeason(regions, queues, leagues, allStats, updateContext);
 
-            checkStaleData(regions);
-            updateCurrentSeason(regions, queues, leagues, allStats, updateContext);
-
-            isUpdating.set(false);
-            long seconds = (System.currentTimeMillis() - start) / 1000;
-            LOG.info("Updated current for {} after {} seconds", regions, seconds);
-        }
-        catch(RuntimeException ex)
-        {
-            isUpdating.set(false);
-            throw ex;
-        }
-
-        return true;
+        long seconds = (System.currentTimeMillis() - start) / 1000;
+        LOG.info("Updated current for {} after {} seconds", regions, seconds);
     }
 
     public void updateLadders(int seasonId, Region region, Long[] ids)

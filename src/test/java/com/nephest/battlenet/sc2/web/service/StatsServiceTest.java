@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
@@ -21,7 +20,6 @@ import org.springframework.validation.Validator;
 
 import java.time.Instant;
 
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -40,26 +38,6 @@ public class StatsServiceTest
             null, null, null, null, null, null, null, mock(Validator.class));
         StatsService nss = mock(StatsService.class);
         ss.setNestedService(nss);
-    }
-
-    @Test
-    public void testAlreadyUpdating()
-    {
-        ss.setIsUpdating(true);
-        assertFalse(ss.updateAll(Region.values(), QueueType.values(), BaseLeague.LeagueType.values()));
-        assertFalse(ss.updateCurrent(
-            Region.values(), QueueType.values(), BaseLeague.LeagueType.values(), false, new UpdateContext()));
-    }
-
-    @Test
-    public void testIsUpdatingFlagResetOnException()
-    {
-        try{ss.updateAll(Region.values(), QueueType.values(), BaseLeague.LeagueType.values());} catch(Exception ex){}
-        assertFalse(ss.isUpdating());
-
-        try{ss.updateCurrent(Region.values(), QueueType.values(), BaseLeague.LeagueType.values(), false, new UpdateContext());}
-        catch(Exception ex){}
-        assertFalse(ss.isUpdating());
     }
 
     @Test
