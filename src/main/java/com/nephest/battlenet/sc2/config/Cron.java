@@ -19,7 +19,11 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.time.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.Future;
 
 @Profile({"!maintenance & !dev"})
 @Component
@@ -177,10 +181,10 @@ public class Cron
         return false;
     }
 
-    private boolean doUpdateSeasons()
+    private boolean doUpdateSeasons(Region... regions)
     {
         boolean result = true;
-        for(Region region : Region.values())
+        for(Region region : regions)
         {
             try
             {
@@ -202,6 +206,35 @@ public class Cron
                 result = false;
             }
         }
+        return result;
+    }
+
+    private void doUpdateSeasons()
+    {
+        List<Future<?>> tasks = new ArrayList<>();
+        if(statsService.getAlternativeRegions().size() > 1)
+        {
+            tasks.add(executor.submit(()->doUpdateSeasons(Region.US, Region.CN)));
+            tasks.add(executor.submit(()->doUpdateSeasons(Region.KR, Region.EU)));
+        }
+        else
+        {
+            for(Region region : Region.values()) tasks.add(executor.submit(()->doUpdateSeasons(region)));
+        }
+
+        Exception cause = null;
+        for(Future<?> f : tasks)
+        {
+            try
+            {
+                f.get();
+            }
+            catch (InterruptedException | ExecutionException e)
+            {
+                cause = e;
+            }
+        }
+        if(cause != null) throw new IllegalStateException(cause);
 
         try
         {
@@ -215,9 +248,7 @@ public class Cron
         {
             //API can be broken randomly. All we can do at this point is log the exception.
             LOG.error(ex.getMessage(), ex);
-            result = false;
         }
-        return result;
     }
 
     private boolean shouldUpdateMatches()
