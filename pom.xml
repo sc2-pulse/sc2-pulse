@@ -244,6 +244,7 @@
                             <arguments>
                                 <argument>--logging.level.com.nephest=DEBUG</argument>
                             </arguments>
+                            <jvmArguments>-Dsun.net.client.defaultConnectTimeout=30000 -Dsun.net.client.defaultReadTimeout=30000</jvmArguments>
                         </configuration>
                     </plugin>
                 </plugins>
