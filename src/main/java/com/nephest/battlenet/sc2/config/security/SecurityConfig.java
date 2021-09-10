@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.config.security;
 
+import com.nephest.battlenet.sc2.config.GlobalRestTemplateCustomizer;
 import com.nephest.battlenet.sc2.config.filter.RobotsDenyFilter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
@@ -12,13 +13,19 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.FormHttpMessageConverter;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.oauth2.client.*;
+import org.springframework.security.oauth2.client.endpoint.DefaultClientCredentialsTokenResponseClient;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.core.http.converter.OAuth2AccessTokenResponseHttpMessageConverter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.Arrays;
 
 @Configuration
 @EnableWebSecurity
@@ -69,21 +76,37 @@ extends WebSecurityConfigurerAdapter
         OAuth2AuthorizedClientService authorizedClientService
     )
     {
-        OAuth2AuthorizedClientProvider authorizedClientProvider =
-            OAuth2AuthorizedClientProviderBuilder.builder()
-                .clientCredentials()
-                .authorizationCode()
-                .build();
+        OAuth2AuthorizedClientProvider authorizedClientProvider = getAuthorizedClientProvider();
 
         AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
-            new AuthorizedClientServiceOAuth2AuthorizedClientManager
-            (
-                clientRegistrationRepository,
-                authorizedClientService
-            );
+        new AuthorizedClientServiceOAuth2AuthorizedClientManager
+        (
+            clientRegistrationRepository,
+            authorizedClientService
+        );
         authorizedClientManager.setAuthorizedClientProvider(authorizedClientProvider);
 
         return authorizedClientManager;
+    }
+
+    //this properly sets the IO timeouts for internal RestTemplate
+    private OAuth2AuthorizedClientProvider getAuthorizedClientProvider()
+    {
+        DefaultClientCredentialsTokenResponseClient accessTokenResponseClient
+            = new DefaultClientCredentialsTokenResponseClient();
+        RestTemplate restTemplate = new RestTemplate(Arrays.asList
+        (
+            new FormHttpMessageConverter(),
+            new OAuth2AccessTokenResponseHttpMessageConverter()
+        ));
+        GlobalRestTemplateCustomizer.setTimeouts(restTemplate);
+        accessTokenResponseClient.setRestOperations(restTemplate);
+
+        ClientCredentialsOAuth2AuthorizedClientProvider cp = new ClientCredentialsOAuth2AuthorizedClientProvider();
+        cp.setAccessTokenResponseClient(accessTokenResponseClient);
+
+        DelegatingOAuth2AuthorizedClientProvider authorizedClientProvider = new DelegatingOAuth2AuthorizedClientProvider(cp);
+        return authorizedClientProvider;
     }
 
     @Bean
