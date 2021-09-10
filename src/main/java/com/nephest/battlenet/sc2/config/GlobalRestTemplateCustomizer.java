@@ -24,20 +24,30 @@ implements RestTemplateCustomizer
     @Override
     public void customize(RestTemplate restTemplate)
     {
-        SimpleClientHttpRequestFactory factory = restTemplate.getRequestFactory() instanceof SimpleClientHttpRequestFactory
-            ? (SimpleClientHttpRequestFactory) restTemplate.getRequestFactory()
-            : new SimpleClientHttpRequestFactory();
         if(timeout == -1)
         {
-            factory.setConnectTimeout((int) WebServiceUtil.CONNECT_TIMEOUT.toMillis());
-            factory.setReadTimeout((int) WebServiceUtil.IO_TIMEOUT.toMillis());
+            setTimeouts(restTemplate);
         }
         else
         {
-            factory.setConnectTimeout(timeout);
-            factory.setReadTimeout(timeout);
+            setTimeouts(restTemplate, timeout, timeout);
         }
+    }
+
+    public static RestTemplate setTimeouts(RestTemplate restTemplate, int connectTimeout, int ioTimeout)
+    {
+        SimpleClientHttpRequestFactory factory = restTemplate.getRequestFactory() instanceof SimpleClientHttpRequestFactory
+            ? (SimpleClientHttpRequestFactory) restTemplate.getRequestFactory()
+            : new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(connectTimeout);
+        factory.setReadTimeout(ioTimeout);
         restTemplate.setRequestFactory(factory);
+        return restTemplate;
+    }
+
+    public static RestTemplate setTimeouts(RestTemplate restTemplate)
+    {
+        return setTimeouts(restTemplate, (int) WebServiceUtil.CONNECT_TIMEOUT.toMillis(), (int) WebServiceUtil.IO_TIMEOUT.toMillis());
     }
 
 }
