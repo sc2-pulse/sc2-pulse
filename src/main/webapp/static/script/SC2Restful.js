@@ -7,6 +7,7 @@ class SC2Restful
     static baseStart()
     {
         Session.initThemes();
+        Session.updateStyleOverride();
     }
 
     static start(mode = START_MODE.FULL)
@@ -52,6 +53,7 @@ class SC2Restful
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");
                 BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
                 Session.enhanceThemeInputs();
+                Session.enhanceCheaterVisibilityInput();
                 ChartUtil.enhanceHeightControls();
             case START_MODE.MINIMAL:
                 BootstrapUtil.init();

@@ -230,6 +230,35 @@ class Session
         }
     }
 
+    static getStyleOverride()
+    {
+        let style = document.querySelector("#personal-style-override");
+        if(!style) {
+            style = document.createElement("style");
+            style.id = "personal-style-override";
+            document.head.appendChild(style);
+        }
+        return style;
+    }
+
+    static updateCheaterVisibility()
+    {
+        const visible = localStorage.getItem("cheaters-visible") || "false";
+        const sheet = Session.getStyleOverride().sheet;
+        for(let i = 0; i < sheet.cssRules.length; i++) if(sheet.cssRules[i].cssText.startsWith(".team-cheater")) sheet.deleteRule(i);
+        if(visible != "true") sheet.insertRule(".team-cheater {display: none !important;}", 0);
+    }
+
+    static enhanceCheaterVisibilityInput()
+    {
+        document.querySelector("#cheaters-visible").addEventListener("click", e=>window.setTimeout(Session.updateCheaterVisibility, 1));
+    }
+
+    static updateStyleOverride()
+    {
+        Session.updateCheaterVisibility();
+    }
+
 }
 
 Session.isSilent = false;

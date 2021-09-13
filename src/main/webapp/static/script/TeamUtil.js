@@ -20,6 +20,7 @@ class TeamUtil
             }
 
             row.setAttribute("data-team-id", team.id);
+            if(team.members.find(m=>m.confirmedCheaterReportId)) row.classList.add("team-cheater");
             if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
             TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, i);
             row.insertCell().textContent = team.rating;
