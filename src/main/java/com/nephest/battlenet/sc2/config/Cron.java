@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.config;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.*;
@@ -38,10 +39,10 @@ public class Cron
     public static final Duration MAINTENANCE_FREQUENT_FRAME = Duration.ofDays(2);
     public static final Duration MAINTENANCE_INFREQUENT_FRAME = Duration.ofDays(10);
 
-    private Instant heavyStatsInstant;
-    private Instant maintenanceFrequentInstant;
-    private Instant maintenanceInfrequentInstant;
-    private Instant matchInstant;
+    private InstantVar heavyStatsInstant;
+    private InstantVar maintenanceFrequentInstant;
+    private InstantVar maintenanceInfrequentInstant;
+    private InstantVar matchInstant;
     private UpdateContext matchUpdateContext;
 
     @Autowired
@@ -88,21 +89,10 @@ public class Cron
     {
         //catch exceptions to allow service autowiring for tests
         try {
-            varDAO.find("ladder.stats.heavy.timestamp")
-                .ifPresent(timestampStr->{
-                    heavyStatsInstant = Instant.ofEpochMilli(Long.parseLong(timestampStr));
-                    LOG.debug("Loaded ladder heavy stats instant: {}", heavyStatsInstant);
-                });
-            varDAO.find("maintenance.frequent")
-                .ifPresent(timestampStr->{
-                    maintenanceFrequentInstant = Instant.ofEpochMilli(Long.parseLong(timestampStr));
-                    LOG.debug("Loaded frequent maintenance instant: {}", maintenanceFrequentInstant);
-                });
-            varDAO.find("maintenance.infrequent")
-                .ifPresent(timestampStr->{
-                    maintenanceInfrequentInstant = Instant.ofEpochMilli(Long.parseLong(timestampStr));
-                    LOG.debug("Loaded infrequent maintenance instant: {}", maintenanceInfrequentInstant);
-                });
+            heavyStatsInstant = new InstantVar(varDAO, "ladder.stats.heavy.timestamp");
+            maintenanceFrequentInstant = new InstantVar(varDAO, "maintenance.frequent");
+            maintenanceInfrequentInstant = new InstantVar(varDAO, "maintenance.infrequent");
+            matchInstant = new InstantVar(varDAO, "match.updated");
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -145,13 +135,14 @@ public class Cron
         try
         {
             Instant begin = Instant.now();
-            Instant lastMatchInstant = matchInstant;
+            Instant lastMatchInstant = matchInstant.getValue();
 
             doUpdateSeasons();
             statsService.afterCurrentSeasonUpdate(updateService.getUpdateContext(null), false);
             calculateHeavyStats();
             updateService.updated(begin);
-            if(!Objects.equals(lastMatchInstant, matchInstant)) matchUpdateContext = updateService.getUpdateContext(null);
+            if(!Objects.equals(lastMatchInstant, matchInstant.getValue())) matchUpdateContext =
+                updateService.getUpdateContext(null);
             commenceMaintenance();
             LOG.info("Update cycle completed. Duration: {} seconds", (System.currentTimeMillis() - begin.toEpochMilli()) / 1000);
         }
@@ -162,9 +153,9 @@ public class Cron
 
     private boolean calculateHeavyStats()
     {
-        if(heavyStatsInstant == null || System.currentTimeMillis() - heavyStatsInstant.toEpochMilli() >= 24 * 60 * 60 * 1000) {
-            Instant defaultInstant = heavyStatsInstant != null
-                ? heavyStatsInstant
+        if(heavyStatsInstant.getValue() == null || System.currentTimeMillis() - heavyStatsInstant.getValue().toEpochMilli() >= 24 * 60 * 60 * 1000) {
+            Instant defaultInstant = heavyStatsInstant.getValue() != null
+                ? heavyStatsInstant.getValue()
                 : Instant.now().minusSeconds(24 * 60 * 60 * 1000);
             OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
             proPlayerService.update();
@@ -174,8 +165,7 @@ public class Cron
             teamStateDAO.removeExpired();
             postgreSQLUtils.vacuum();
             postgreSQLUtils.analyze();
-            heavyStatsInstant = Instant.ofEpochMilli(System.currentTimeMillis());
-            varDAO.merge("ladder.stats.heavy.timestamp", String.valueOf(heavyStatsInstant.toEpochMilli()));
+            heavyStatsInstant.saveValue(Instant.ofEpochMilli(System.currentTimeMillis()));
             return true;
         }
         return false;
@@ -241,7 +231,7 @@ public class Cron
             if (shouldUpdateMatches())
             {
                 matchService.update(matchUpdateContext == null ? updateService.getUpdateContext(null) : matchUpdateContext);
-                matchInstant = Instant.now();
+                matchInstant.saveValue(Instant.now());
             }
         }
         catch (RuntimeException ex)
@@ -253,22 +243,22 @@ public class Cron
 
     private boolean shouldUpdateMatches()
     {
-        return matchInstant == null
-            || System.currentTimeMillis() - matchInstant.toEpochMilli() >= MATCH_UPDATE_FRAME.toMillis();
+        return matchInstant.getValue() == null
+            || System.currentTimeMillis() - matchInstant.getValue().toEpochMilli() >= MATCH_UPDATE_FRAME.toMillis();
     }
 
     private void commenceMaintenance()
     {
         if
         (
-            maintenanceFrequentInstant == null
-            || System.currentTimeMillis() - maintenanceFrequentInstant.toEpochMilli() >= MAINTENANCE_FREQUENT_FRAME.toMillis()
+            maintenanceFrequentInstant.getValue() == null
+            || System.currentTimeMillis() - maintenanceFrequentInstant.getValue().toEpochMilli() >= MAINTENANCE_FREQUENT_FRAME.toMillis()
         )
             commenceFrequentMaintenance();
         if
         (
-            maintenanceInfrequentInstant == null
-            || System.currentTimeMillis() - maintenanceInfrequentInstant.toEpochMilli() >= MAINTENANCE_INFREQUENT_FRAME.toMillis()
+            maintenanceInfrequentInstant.getValue() == null
+            || System.currentTimeMillis() - maintenanceInfrequentInstant.getValue().toEpochMilli() >= MAINTENANCE_INFREQUENT_FRAME.toMillis()
         )
             commenceInfrequentMaintenance();
     }
@@ -276,15 +266,13 @@ public class Cron
     private void commenceFrequentMaintenance()
     {
         postgreSQLUtils.reindex("ix_match_updated");
-        this.maintenanceFrequentInstant = Instant.now();
-        varDAO.merge("maintenance.frequent", String.valueOf(maintenanceFrequentInstant.toEpochMilli()));
+        this.maintenanceFrequentInstant.saveValue(Instant.now());
     }
 
     private void commenceInfrequentMaintenance()
     {
         postgreSQLUtils.reindex("ix_team_state_team_id_archived", "ix_team_state_timestamp");
-        this.maintenanceInfrequentInstant = Instant.now();
-        varDAO.merge("maintenance.infrequent", String.valueOf(maintenanceInfrequentInstant.toEpochMilli()));
+        this.maintenanceInfrequentInstant.saveValue(Instant.now());
     }
 
 }

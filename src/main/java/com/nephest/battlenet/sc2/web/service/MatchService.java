@@ -8,7 +8,10 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,7 +46,6 @@ public class MatchService
     private final MatchParticipantDAO matchParticipantDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SeasonDAO seasonDAO;
-    private final VarDAO varDAO;
     private final PostgreSQLUtils postgreSQLUtils;
 
     @Autowired @Lazy
@@ -57,7 +59,6 @@ public class MatchService
         MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
         SeasonDAO seasonDAO,
-        VarDAO varDAO,
         PostgreSQLUtils postgreSQLUtils
     )
     {
@@ -66,7 +67,6 @@ public class MatchService
         this.matchDAO = matchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
         this.seasonDAO = seasonDAO;
-        this.varDAO = varDAO;
         this.postgreSQLUtils = postgreSQLUtils;
     }
 
