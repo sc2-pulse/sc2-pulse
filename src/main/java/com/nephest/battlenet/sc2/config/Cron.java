@@ -165,7 +165,7 @@ public class Cron
             teamStateDAO.removeExpired();
             postgreSQLUtils.vacuum();
             postgreSQLUtils.analyze();
-            heavyStatsInstant.saveValue(Instant.ofEpochMilli(System.currentTimeMillis()));
+            heavyStatsInstant.setValueAndSave(Instant.ofEpochMilli(System.currentTimeMillis()));
             return true;
         }
         return false;
@@ -231,7 +231,7 @@ public class Cron
             if (shouldUpdateMatches())
             {
                 matchService.update(matchUpdateContext == null ? updateService.getUpdateContext(null) : matchUpdateContext);
-                matchInstant.saveValue(Instant.now());
+                matchInstant.setValueAndSave(Instant.now());
             }
         }
         catch (RuntimeException ex)
@@ -266,13 +266,13 @@ public class Cron
     private void commenceFrequentMaintenance()
     {
         postgreSQLUtils.reindex("ix_match_updated");
-        this.maintenanceFrequentInstant.saveValue(Instant.now());
+        this.maintenanceFrequentInstant.setValueAndSave(Instant.now());
     }
 
     private void commenceInfrequentMaintenance()
     {
         postgreSQLUtils.reindex("ix_team_state_team_id_archived", "ix_team_state_timestamp");
-        this.maintenanceInfrequentInstant.saveValue(Instant.now());
+        this.maintenanceInfrequentInstant.setValueAndSave(Instant.now());
     }
 
 }

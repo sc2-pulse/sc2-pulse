@@ -70,7 +70,7 @@ public class Var<T>
         this.value = value;
     }
 
-    public void saveValue(T value)
+    public void setValueAndSave(T value)
     {
         setValue(value);
         save();
