@@ -45,7 +45,7 @@ public class StatsService
     public static final Version VERSION = Version.LOTV;
     public static final int STALE_LADDER_TOLERANCE = 3;
     public static final int STALE_LADDER_DEPTH = 10;
-    public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 27;
+    public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 2;
     public static final int LADDER_BATCH_SIZE = 400;
     public static final int EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD = 10;
 
