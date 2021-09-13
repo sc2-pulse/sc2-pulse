@@ -148,6 +148,7 @@ public class Cron
             calculateHeavyStats();
             updateService.updated(begin);
             if(!Objects.equals(lastMatchInstant, matchInstant)) matchUpdateContext = updateService.getUpdateContext(null);
+            commenceMaintenance();
             LOG.info("Update cycle completed. Duration: {} seconds", (System.currentTimeMillis() - begin.toEpochMilli()) / 1000);
         }
         catch(RuntimeException ex) {
@@ -227,9 +228,17 @@ public class Cron
 
     private void commenceMaintenance()
     {
-        if(System.currentTimeMillis() - maintenanceFrequentInstant.toEpochMilli() >= MAINTENANCE_FREQUENT_FRAME.toMillis())
+        if
+        (
+            maintenanceFrequentInstant == null
+            || System.currentTimeMillis() - maintenanceFrequentInstant.toEpochMilli() >= MAINTENANCE_FREQUENT_FRAME.toMillis()
+        )
             commenceFrequentMaintenance();
-        if(System.currentTimeMillis() - maintenanceInfrequentInstant.toEpochMilli() >= MAINTENANCE_INFREQUENT_FRAME.toMillis())
+        if
+        (
+            maintenanceInfrequentInstant == null
+            || System.currentTimeMillis() - maintenanceInfrequentInstant.toEpochMilli() >= MAINTENANCE_INFREQUENT_FRAME.toMillis()
+        )
             commenceInfrequentMaintenance();
     }
 
