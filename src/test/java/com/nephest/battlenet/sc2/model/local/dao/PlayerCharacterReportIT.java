@@ -109,7 +109,8 @@ public class PlayerCharacterReportIT
     (
         @Autowired DataSource dataSource,
         @Autowired AccountDAO accountDAO,
-        @Autowired WebApplicationContext webApplicationContext
+        @Autowired WebApplicationContext webApplicationContext,
+        @Autowired SeasonGenerator seasonGenerator
     )
     throws SQLException
     {
@@ -118,6 +119,13 @@ public class PlayerCharacterReportIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
             account = accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
+            seasonGenerator.generateDefaultSeason
+            (
+                List.of(Region.EU),
+                List.of(BaseLeague.LeagueType.BRONZE),
+                List.of(QueueType.LOTV_1V1),
+                TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST, 10
+            );
             mvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
@@ -142,13 +150,6 @@ public class PlayerCharacterReportIT
     throws Exception
     {
         byte[] localhost = InetAddress.getByName("127.0.0.1").getAddress();
-        seasonGenerator.generateDefaultSeason
-        (
-            List.of(Region.EU),
-            List.of(BaseLeague.LeagueType.BRONZE),
-            List.of(QueueType.LOTV_1V1),
-            TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST, 10
-        );
         OffsetDateTime matchDateTime = SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay(ZoneId.of("UTC")).toOffsetDateTime();
         Match match = matchDAO.merge(new Match(null, matchDateTime, BaseMatch.MatchType._1V1, "map", Region.EU))[0];
         matchParticipantDAO.merge
@@ -759,6 +760,27 @@ public class PlayerCharacterReportIT
         )
         .andExpect(status().isForbidden())
         .andReturn();
+    }
+
+    @Test
+    public void testReporterIpPrivacy()
+    throws Exception
+    {
+        byte[] privateIp = InetAddress.getByName("192.168.1.2").getAddress();
+        PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
+            null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+            false, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+        Evidence evidence = evidenceDAO.create(new Evidence(
+            null, report.getId(), null, privateIp, "description asda",false,
+            OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,OffsetDateTime.now()));
+
+        HttpSessionCsrfTokenRepository httpSessionCsrfTokenRepository = new HttpSessionCsrfTokenRepository();
+        CsrfToken csrfToken = httpSessionCsrfTokenRepository.generateToken(new MockHttpServletRequest());
+
+        LadderPlayerCharacterReport[] reports = getReports(csrfToken);
+        Arrays.stream(reports)
+            .flatMap(r->r.getEvidence().stream())
+            .forEach(e->assertArrayEquals(EvidenceDAO.REPORTER_IP_PRIVATE_REPLACEMENT, e.getEvidence().getReporterIp()));
     }
 
 }
