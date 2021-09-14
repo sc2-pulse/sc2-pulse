@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
+import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.Connection;
@@ -71,6 +72,12 @@ public class PlayerCharacterReportIT
 
     @Autowired
     private MatchDAO matchDAO;
+
+    @Autowired
+    private TeamDAO teamDAO;
+
+    @Autowired
+    private TeamMemberDAO teamMemberDAO;
 
     @Autowired
     private MatchParticipantDAO matchParticipantDAO;
@@ -258,6 +265,7 @@ public class PlayerCharacterReportIT
         //not enough votes, nothing to update
         verifyReports(reports, new Boolean[]{null, null, null}, new Boolean[]{null, null, null, null});
         assertEquals(2, evidenceDAO.getRequiredVotes());
+        assertTrue(teamDAO.findCheaterTeamIds(SeasonGenerator.DEFAULT_SEASON_ID).isEmpty());
 
         //verify vote structure
         Arrays.stream(reports)
@@ -613,6 +621,27 @@ public class PlayerCharacterReportIT
         //expired and confirmed report and evidence are not removed
         assertTrue(endReports.stream().anyMatch(r->r.getId().equals(expiredConfirmedReport.getId())));
         assertTrue(endEvidences.stream().anyMatch(e->e.getId().equals(expiredConfirmedEvidence.getId())));
+
+        //cheater team is a team where at least on of its members is a cheater
+        Team secondCheaterTeam = teamDAO.merge(new Team
+        (
+            null,
+            SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
+            new BaseLeague(BaseLeague.LeagueType.GOLD, QueueType.LOTV_2V2, TeamType.ARRANGED),
+            BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("12344"), 1, 10L, 10, 0, 0, 0
+        ));
+        teamMemberDAO.merge
+        (
+            new TeamMember(secondCheaterTeam.getId(), 1L, 0, 0, 0, 10),
+            new TeamMember(secondCheaterTeam.getId(), 2L, 0, 0, 0, 10)
+        );
+
+        List<Long> cheaterTeams = teamDAO.findCheaterTeamIds(SeasonGenerator.DEFAULT_SEASON_ID);
+        assertEquals(4, cheaterTeams.size());
+        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(1L)));
+        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(5L)));
+        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(9L)));
+        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(secondCheaterTeam.getId())));
     }
 
     private static void verifyReports

@@ -140,6 +140,16 @@ public class TeamDAO
         + "FROM ranks "
         + "WHERE team.id = ranks.id";
 
+    private static final String FIND_CHEATER_TEAM_IDS_BY_SEASON =
+        "SELECT DISTINCT(team_id) "
+        + "FROM team "
+        + "INNER JOIN team_member ON team.id = team_member.team_id "
+        + "INNER JOIN player_character_report AS confirmed_cheater_report "
+            + "ON team_member.player_character_id = confirmed_cheater_report.player_character_id "
+            + "AND confirmed_cheater_report.type = :cheaterReportType "
+            + "AND confirmed_cheater_report.status = true "
+        + "WHERE team.season = :season";
+
     private static final Map<Race, String> FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES = new EnumMap<>(Race.class);
 
     private static RowMapper<Team> STD_ROW_MAPPER;
@@ -332,6 +342,18 @@ public class TeamDAO
             .addValue("region", conversionService.convert(playerCharacter.getRegion(), Integer.class))
             .addValue("playerCharacterId", playerCharacter.getId());
         return template.query(FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES.get(race), params, BY_FAVOURITE_RACE_EXTRACTOR);
+    }
+
+    public List<Long> findCheaterTeamIds(int season)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("season", season)
+            .addValue
+            (
+                "cheaterReportType",
+                conversionService.convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class)
+            );
+        return template.query(FIND_CHEATER_TEAM_IDS_BY_SEASON, params, DAOUtils.LONG_MAPPER);
     }
 
     private MapSqlParameterSource createParameterSource(Team team)
