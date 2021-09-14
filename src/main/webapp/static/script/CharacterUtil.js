@@ -96,6 +96,7 @@ class CharacterUtil
                 CharacterUtil.updateCharacterLinkedCharactersView(id);
                 CharacterUtil.updateCharacterMmrHistoryView();
                 CharacterUtil.updateCharacterReportsView();
+                for(const link of document.querySelectorAll(".character-link-follow-only[rel~=nofollow]")) link.relList.remove("nofollow");
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 res();
             }))
