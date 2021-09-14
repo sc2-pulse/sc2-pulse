@@ -123,7 +123,7 @@ public class TeamDAO
 
     private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
 
-    private static final String CALCULATE_RANK_QUERY =
+    private static final String CALCULATE_RANK_TEMPLATE =
         "WITH ranks AS "
         + "( "
             + "SELECT id, "
@@ -131,7 +131,7 @@ public class TeamDAO
             + "RANK() OVER(PARTITION BY queue_type, team_type, region ORDER BY rating DESC) as region_rank, "
             + "RANK() OVER(PARTITION BY queue_type, team_type, league_type ORDER BY rating DESC) as league_rank "
             + "FROM team "
-            + "WHERE season = :season "
+            + "WHERE season = :season %1$s"
         + ") "
         + "UPDATE team "
         + "set global_rank = ranks.global_rank, "
@@ -139,6 +139,10 @@ public class TeamDAO
         + "league_rank = ranks.league_rank "
         + "FROM ranks "
         + "WHERE team.id = ranks.id";
+
+    private static final String CALCULATE_RANK_QUERY = String.format(CALCULATE_RANK_TEMPLATE, "");
+    private static final String CALCULATE_RANK_EXCLUDING_TEAMS_QUERY =
+        String.format(CALCULATE_RANK_TEMPLATE, "AND id NOT IN(:excludeTeamIds)");
 
     private static final String FIND_CHEATER_TEAM_IDS_BY_SEASON =
         "SELECT DISTINCT(team_id) "
@@ -324,9 +328,11 @@ public class TeamDAO
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void updateRanks(int season)
     {
+        List<Long> cheaterIds = findCheaterTeamIds(season);
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("season", season);
-        template.update(CALCULATE_RANK_QUERY, params);
+            .addValue("season", season)
+            .addValue("excludeTeamIds", cheaterIds);
+        template.update(cheaterIds.isEmpty() ? CALCULATE_RANK_QUERY : CALCULATE_RANK_EXCLUDING_TEAMS_QUERY, params);
         LOG.debug("Calculated team ranks for {} season", season);
     }
 

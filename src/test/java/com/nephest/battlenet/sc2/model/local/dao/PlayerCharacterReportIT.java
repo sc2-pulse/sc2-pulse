@@ -642,6 +642,13 @@ public class PlayerCharacterReportIT
         assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(5L)));
         assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(9L)));
         assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(secondCheaterTeam.getId())));
+
+        //cheaters are excluded from ranking
+        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
+        Team foundSecondCheaterTeam = teamDAO.findById(secondCheaterTeam.getId()).orElseThrow();
+        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getGlobalRank());
+        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getRegionRank());
+        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getLeagueRank());
     }
 
     private static void verifyReports
