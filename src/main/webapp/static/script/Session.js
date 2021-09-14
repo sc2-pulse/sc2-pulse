@@ -245,8 +245,8 @@ class Session
     {
         const visible = localStorage.getItem("cheaters-visible") || "false";
         const sheet = Session.getStyleOverride().sheet;
-        for(let i = 0; i < sheet.cssRules.length; i++) if(sheet.cssRules[i].cssText.startsWith(".team-cheater")) sheet.deleteRule(i);
-        if(visible != "true") sheet.insertRule(".team-cheater {display: none !important;}", 0);
+        for(let i = 0; i < sheet.cssRules.length; i++) if(sheet.cssRules[i].cssText.startsWith("#cheater-visibility")) sheet.deleteRule(i);
+        if(visible != "true") sheet.insertRule("#cheater-visibility, #ladder .team-cheater {display: none !important;}", 0);
     }
 
     static enhanceCheaterVisibilityInput()
