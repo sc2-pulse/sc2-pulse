@@ -108,9 +108,8 @@ To run the local server execute the following command in a terminal
 mvn spring-boot:run
 ```
 ## Blizzard API clients
-You can use different API clients for each region. This can be helpful in production: if your server is performant enough, then
-you can hit requests per hour cap, which reduces API consumption performance. Use different API keys for some/all regions
-to completely mitigate this issue.
+The default config expects you to use different API clients/keys for each region. You **must** reduce the 
+`BlizzardSC2API.REQUESTS_PER_SECOND_CAP` to 25 if you want to use one API client for all regions. 
 ## Alternative update
 The Blizzard API can sometimes break and return stale data. The app checks the API state before every update and will
 switch the endpoint route if any problems are found. This happens automatically and individually for each region,
