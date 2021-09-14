@@ -16,6 +16,8 @@ extends BaseTeam
 implements java.io.Serializable
 {
 
+    public static final Integer DEFAULT_RANK = 2147483647;
+
     private static final long serialVersionUID = 8L;
 
     private Long id;
@@ -38,13 +40,13 @@ implements java.io.Serializable
     private LeagueTier.LeagueTierType tierType;
 
     @NotNull
-    private Integer globalRank = 2147483647;
+    private Integer globalRank = DEFAULT_RANK;
 
     @NotNull
-    private Integer regionRank = 2147483647;
+    private Integer regionRank = DEFAULT_RANK;
 
     @NotNull
-    private Integer leagueRank = 2147483647;
+    private Integer leagueRank = DEFAULT_RANK;
 
     public Team(){}
 
