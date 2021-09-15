@@ -39,6 +39,7 @@ public class Cron
     public static final Duration MAINTENANCE_FREQUENT_FRAME = Duration.ofDays(2);
     public static final Duration MAINTENANCE_INFREQUENT_FRAME = Duration.ofDays(10);
     public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(12);
+    public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(210);
 
     private InstantVar heavyStatsInstant;
     private InstantVar maintenanceFrequentInstant;
@@ -135,6 +136,8 @@ public class Cron
 
     private void nonStopUpdate()
     {
+        if(!shouldUpdate()) return;
+
         try
         {
             Instant begin = Instant.now();
@@ -251,6 +254,13 @@ public class Cron
     {
         return matchInstant.getValue() == null
             || System.currentTimeMillis() - matchInstant.getValue().toEpochMilli() >= MATCH_UPDATE_FRAME.toMillis();
+    }
+
+    private boolean shouldUpdate()
+    {
+        return updateService.getUpdateContext(null).getExternalUpdate() == null
+            || System.currentTimeMillis() - updateService.getUpdateContext(null).getExternalUpdate().toEpochMilli()
+                >= MIN_UPDATE_FRAME.toMillis();
     }
 
     private UpdateContext getLadderUpdateContext(Region region)
