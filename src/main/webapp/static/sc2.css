@@ -620,6 +620,11 @@ body.theme-dark .popover
     background-color: black;
 }
 
+body.theme-dark .popover-body
+{
+    color: #d3d3d3;
+}
+
 body :fullscreen, body #team-buffer
 {
     background-color: white;
