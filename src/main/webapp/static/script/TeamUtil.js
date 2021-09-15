@@ -10,19 +10,21 @@ class TeamUtil
         const ladderBody = table.getElementsByTagName("tbody")[0];
         if(clear) ElementUtil.removeChildren(ladderBody);
 
+        let nonCheaterIx = 0;
         for(let i = 0; i < searchResult.result.length; i++)
         {
             const team = searchResult.result[i];
             const row = ladderBody.insertRow();
             if(team.id == -1) {
                 row.setAttribute("data-team-alternative-data", team.alternativeData);
+                nonCheaterIx++;
                 continue;
             }
 
             row.setAttribute("data-team-id", team.id);
-            if(team.members.find(m=>m.confirmedCheaterReportId)) row.classList.add("team-cheater");
+            const isCheater = TeamUtil.isCheaterTeam(team);
             if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
-            TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, i);
+            TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, isCheater ? -1 : nonCheaterIx);
             row.insertCell().textContent = team.rating;
             TeamUtil.appendLeagueDiv(row.insertCell(), team);
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), "table-image-long"));
@@ -30,6 +32,11 @@ class TeamUtil
             TeamUtil.appendGamesInfo(row.insertCell(), team);
             row.insertCell().textContent = Math.round( team.wins / (team.wins + team.losses) * 100);
             row.appendChild(TeamUtil.createMiscCell(team));
+            if(isCheater) {
+                row.classList.add("team-cheater");
+            } else {
+                nonCheaterIx++;
+            }
         }
 
         $(table).popover
@@ -41,6 +48,11 @@ class TeamUtil
             selector: '[data-toggle="popover"]',
             content: function(){return TeamUtil.createDynamicPopoverContent($(this)[0]).outerHTML;}
         });
+    }
+
+    static isCheaterTeam(team)
+    {
+        return team.members.find(m=>m.confirmedCheaterReportId);
     }
 
     static createDynamicPopoverContent(parent)
@@ -93,14 +105,18 @@ class TeamUtil
         const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
         const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
 
-        const rank = searchResult.meta != null
-            ? Util.NUMBER_FORMAT.format(Util.calculateRank(searchResult, teamIx))
-            : (!Util.isUndefinedRank(team.globalRank) ? Util.NUMBER_FORMAT.format(team.globalRank) : "-");
-        const topPercentage = searchResult.meta != null
-            ? Util.DECIMAL_FORMAT.format((Util.calculateRank(searchResult, teamIx) / searchResult.meta.totalCount) * 100)
-            : (!Util.isUndefinedRank(team.globalRank)
-                ? Util.DECIMAL_FORMAT.format( (team.globalRank / Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)) * 100)
-                : "");
+        const rank = teamIx == -1
+            ? "-"
+            : searchResult.meta != null
+                ? Util.NUMBER_FORMAT.format(Util.calculateRank(searchResult, teamIx))
+                : (!Util.isUndefinedRank(team.globalRank) ? Util.NUMBER_FORMAT.format(team.globalRank) : "-");
+        const topPercentage = teamIx == -1
+            ? "-"
+            : searchResult.meta != null
+                ? Util.DECIMAL_FORMAT.format((Util.calculateRank(searchResult, teamIx) / searchResult.meta.totalCount) * 100)
+                : (!Util.isUndefinedRank(team.globalRank)
+                    ? Util.DECIMAL_FORMAT.format( (team.globalRank / Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)) * 100)
+                    : "");
 
         parent.setAttribute("data-toggle", "popover");
         parent.setAttribute("data-ctype", "rank");
@@ -127,6 +143,12 @@ class TeamUtil
         const team = TeamUtil.getTeamFromElement(parent);
         const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
         const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
+        if(TeamUtil.isCheaterTeam(team))
+        {
+            const span = document.createElement("span");
+            span.textContent = "No rank info available";
+            return span;
+        }
 
         const ranksTable = TableUtil.createTable(["Scope", "Rank", "Total", "Top%"], false);
         const tbody = ranksTable.querySelector("tbody");

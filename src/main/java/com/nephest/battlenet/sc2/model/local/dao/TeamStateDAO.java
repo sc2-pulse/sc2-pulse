@@ -113,6 +113,10 @@ public class TeamStateDAO
 
     private static final String UPDATE_RANK_QUERY =
         "WITH "
+        + "cheaters AS "
+        + "("
+            + String.format(TeamDAO.FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE, "DISTINCT(team_id)")
+        + "),"
         + "cheaters_region AS "
         + "( "
             + String.format(TeamDAO.FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE,
@@ -160,7 +164,8 @@ public class TeamStateDAO
             + "AND team.team_type = global_team_count.team_type "
         + "WHERE team_state.team_id = team.id "
         + "AND team_state.timestamp > :from "
-        + "AND team_state.global_rank IS NULL";
+        + "AND team_state.global_rank IS NULL "
+        + "AND team_state.team_id NOT IN (SELECT team_id FROM cheaters)";
 
     public static final String REMOVE_EXPIRED_MAIN_QUERY =
         "DELETE FROM team_state "

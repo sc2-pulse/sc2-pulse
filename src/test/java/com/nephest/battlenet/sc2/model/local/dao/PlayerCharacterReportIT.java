@@ -647,30 +647,47 @@ public class PlayerCharacterReportIT
             new TeamMember(secondCheaterTeam.getId(), 1L, 0, 0, 0, 10),
             new TeamMember(secondCheaterTeam.getId(), 2L, 0, 0, 0, 10)
         );
-
-        List<Long> cheaterTeams = teamDAO.findCheaterTeamIds(SeasonGenerator.DEFAULT_SEASON_ID);
-        assertEquals(4, cheaterTeams.size());
-        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(1L)));
-        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(5L)));
-        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(9L)));
-        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(secondCheaterTeam.getId())));
+        teamStateDAO.saveState(TeamState.of(secondCheaterTeam));
 
         //cheaters are excluded from ranking
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
-        Team foundSecondCheaterTeam = teamDAO.findById(secondCheaterTeam.getId()).orElseThrow();
-        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getGlobalRank());
-        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getRegionRank());
-        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getLeagueRank());
-
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         teamStateDAO.updateRanks
         (
             SeasonGenerator.DEFAULT_SEASON_START.minusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC),
             Set.of(SeasonGenerator.DEFAULT_SEASON_ID)
         );
+
+        List<Long> cheaterTeams = teamDAO.findCheaterTeamIds(SeasonGenerator.DEFAULT_SEASON_ID);
+        assertEquals(4, cheaterTeams.size());
+        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(1L)));
+        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(5L)));
+        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(9L)));
+        //cheater team is a team where at least on of its members is a cheater
+        assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(secondCheaterTeam.getId())));
+
+        //cheaters are excluded from ranking
+        Team foundSecondCheaterTeam = teamDAO.findById(secondCheaterTeam.getId()).orElseThrow();
+        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getGlobalRank());
+        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getRegionRank());
+        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getLeagueRank());
+
+        //cheaters are excluded from ranking
+        LadderTeamState cheaterTeamState = ladderTeamStateDAO.find(1L).stream()
+            .filter(s->s.getTeamState().getTeamId().equals(foundSecondCheaterTeam.getId()))
+            .findAny().orElseThrow();
+        assertNull(cheaterTeamState.getTeamState().getGlobalRank());
+        assertNull(cheaterTeamState.getTeamState().getGlobalTeamCount());
+        assertNull(cheaterTeamState.getTeamState().getRegionRank());
+        assertNull(cheaterTeamState.getTeamState().getRegionTeamCount());
+
         LadderTeamState nonCheaterTeamState = ladderTeamStateDAO.find(2L).get(0);
         //11 team in total, 4 teams with cheater members, 7 valid teams(11 - 4)
         assertEquals(7, nonCheaterTeamState.getTeamState().getGlobalTeamCount());
+        assertEquals(7, nonCheaterTeamState.getTeamState().getRegionTeamCount());
+        assertEquals(7, nonCheaterTeamState.getTeamState().getGlobalRank());
+        assertEquals(7, nonCheaterTeamState.getTeamState().getGlobalTeamCount());
+        assertEquals(7, nonCheaterTeamState.getTeamState().getRegionRank());
         assertEquals(7, nonCheaterTeamState.getTeamState().getRegionTeamCount());
     }
 

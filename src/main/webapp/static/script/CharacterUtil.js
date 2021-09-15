@@ -620,21 +620,26 @@ class CharacterUtil
     {
         const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
         const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
+        const teamState = 
+        {
+            teamId: team.id,
+            dateTime: dateTime,
+            divisionId: team.divisionId,
+            games: team.wins + team.losses + team.ties,
+            rating: team.rating,
+        };
+        if(!TeamUtil.isCheaterTeam(team) && !Util.isUndefinedRank(team.globalRank) )
+        {
+            teamState.globalRank = team.globalRank;
+            teamState.globalTeamCount = Object.values(stats.regionTeamCount).reduce((a, b)=>a+b);
+            teamState.globalTopPercent = (team.globalRank / Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)) * 100;
+            teamState.regionRank = team.regionRank;
+            teamState.regionTeamCount = stats.regionTeamCount[team.region];
+            teamState.regionTopPercent = (team.regionRank / stats.regionTeamCount[team.region]) * 10;
+        }
         return {
             team: team,
-            teamState: {
-                teamId: team.id,
-                dateTime: dateTime,
-                divisionId: team.divisionId,
-                games: team.wins + team.losses + team.ties,
-                rating: team.rating,
-                globalRank: team.globalRank,
-                globalTeamCount: Object.values(stats.regionTeamCount).reduce((a, b)=>a+b),
-                globalTopPercent: (team.globalRank / Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)) * 100,
-                regionRank: team.regionRank,
-                regionTeamCount: stats.regionTeamCount[team.region],
-                regionTopPercent: (team.regionRank / stats.regionTeamCount[team.region]) * 100
-            },
+            teamState: teamState,
             race: TeamUtil.getFavoriteRace(team.members[0]).name.toUpperCase(),
             league: {
                 type: team.league.type,
