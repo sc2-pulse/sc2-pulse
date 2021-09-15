@@ -93,14 +93,10 @@ class TeamUtil
         const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
         const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
 
-        const rank = searchResult.meta != null
-            ? Util.NUMBER_FORMAT.format(Util.calculateRank(searchResult, teamIx))
-            : (!Util.isUndefinedRank(team.globalRank) ? Util.NUMBER_FORMAT.format(team.globalRank) : "-");
-        const topPercentage = searchResult.meta != null
-            ? Util.DECIMAL_FORMAT.format((Util.calculateRank(searchResult, teamIx) / searchResult.meta.totalCount) * 100)
-            : (!Util.isUndefinedRank(team.globalRank)
+        const rank = !Util.isUndefinedRank(team.globalRank) ? Util.NUMBER_FORMAT.format(team.globalRank) : "-";
+        const topPercentage = !Util.isUndefinedRank(team.globalRank)
                 ? Util.DECIMAL_FORMAT.format( (team.globalRank / Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)) * 100)
-                : "");
+                : "";
 
         parent.setAttribute("data-toggle", "popover");
         parent.setAttribute("data-ctype", "rank");
