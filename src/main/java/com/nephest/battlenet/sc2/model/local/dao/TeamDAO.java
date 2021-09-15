@@ -123,15 +123,31 @@ public class TeamDAO
 
     private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
 
-    private static final String CALCULATE_RANK_TEMPLATE =
-        "WITH ranks AS "
+    private static final String FIND_CHEATER_TEAM_IDS_BY_SEASON =
+        "SELECT DISTINCT(team_id) "
+        + "FROM team "
+        + "INNER JOIN team_member ON team.id = team_member.team_id "
+        + "INNER JOIN player_character_report AS confirmed_cheater_report "
+        + "ON team_member.player_character_id = confirmed_cheater_report.player_character_id "
+        + "AND confirmed_cheater_report.type = :cheaterReportType "
+        + "AND confirmed_cheater_report.status = true "
+        + "WHERE team.season = :season";
+
+    private static final String CALCULATE_RANK_QUERY =
+        "WITH "
+        + "cheaters AS "
+        + "( "
+            + FIND_CHEATER_TEAM_IDS_BY_SEASON
+        + "), "
+        + "ranks AS "
         + "( "
             + "SELECT id, "
             + "RANK() OVER(PARTITION BY queue_type, team_type ORDER BY rating DESC) as global_rank, "
             + "RANK() OVER(PARTITION BY queue_type, team_type, region ORDER BY rating DESC) as region_rank, "
             + "RANK() OVER(PARTITION BY queue_type, team_type, league_type ORDER BY rating DESC) as league_rank "
             + "FROM team "
-            + "WHERE season = :season %1$s"
+            + "WHERE season = :season "
+            + "AND id NOT IN(SELECT team_id FROM cheaters)"
         + ") "
         + "UPDATE team "
         + "set global_rank = ranks.global_rank, "
@@ -139,20 +155,6 @@ public class TeamDAO
         + "league_rank = ranks.league_rank "
         + "FROM ranks "
         + "WHERE team.id = ranks.id";
-
-    private static final String CALCULATE_RANK_QUERY = String.format(CALCULATE_RANK_TEMPLATE, "");
-    private static final String CALCULATE_RANK_EXCLUDING_TEAMS_QUERY =
-        String.format(CALCULATE_RANK_TEMPLATE, "AND id NOT IN(:excludeTeamIds)");
-
-    private static final String FIND_CHEATER_TEAM_IDS_BY_SEASON =
-        "SELECT DISTINCT(team_id) "
-        + "FROM team "
-        + "INNER JOIN team_member ON team.id = team_member.team_id "
-        + "INNER JOIN player_character_report AS confirmed_cheater_report "
-            + "ON team_member.player_character_id = confirmed_cheater_report.player_character_id "
-            + "AND confirmed_cheater_report.type = :cheaterReportType "
-            + "AND confirmed_cheater_report.status = true "
-        + "WHERE team.season = :season";
 
     private static final Map<Race, String> FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES = new EnumMap<>(Race.class);
 
@@ -328,11 +330,14 @@ public class TeamDAO
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void updateRanks(int season)
     {
-        List<Long> cheaterIds = findCheaterTeamIds(season);
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("season", season)
-            .addValue("excludeTeamIds", cheaterIds);
-        template.update(cheaterIds.isEmpty() ? CALCULATE_RANK_QUERY : CALCULATE_RANK_EXCLUDING_TEAMS_QUERY, params);
+            .addValue
+            (
+                "cheaterReportType",
+                conversionService.convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class)
+            );
+        template.update(CALCULATE_RANK_QUERY, params);
         LOG.debug("Calculated team ranks for {} season", season);
     }
 
