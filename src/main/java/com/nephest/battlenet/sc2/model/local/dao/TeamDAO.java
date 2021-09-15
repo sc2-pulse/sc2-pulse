@@ -123,21 +123,24 @@ public class TeamDAO
 
     private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
 
-    private static final String FIND_CHEATER_TEAM_IDS_BY_SEASON =
-        "SELECT DISTINCT(team_id) "
+    public static final String FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE =
+        "SELECT %1$s "
         + "FROM team "
         + "INNER JOIN team_member ON team.id = team_member.team_id "
         + "INNER JOIN player_character_report AS confirmed_cheater_report "
         + "ON team_member.player_character_id = confirmed_cheater_report.player_character_id "
         + "AND confirmed_cheater_report.type = :cheaterReportType "
         + "AND confirmed_cheater_report.status = true "
-        + "WHERE team.season = :season";
+        + "WHERE team.season IN(:seasons)";
+
+    private static final String FIND_CHEATER_TEAM_IDS_BY_SEASON_QUERY =
+        String.format(FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE, "DISTINCT(team_id)");
 
     private static final String CALCULATE_RANK_QUERY =
         "WITH "
         + "cheaters AS "
         + "( "
-            + FIND_CHEATER_TEAM_IDS_BY_SEASON
+            + FIND_CHEATER_TEAM_IDS_BY_SEASON_QUERY
         + "), "
         + "ranks AS "
         + "( "
@@ -332,6 +335,7 @@ public class TeamDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("season", season)
+            .addValue("seasons", season)
             .addValue
             (
                 "cheaterReportType",
@@ -358,13 +362,13 @@ public class TeamDAO
     public List<Long> findCheaterTeamIds(int season)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("season", season)
+            .addValue("seasons", season)
             .addValue
             (
                 "cheaterReportType",
                 conversionService.convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class)
             );
-        return template.query(FIND_CHEATER_TEAM_IDS_BY_SEASON, params, DAOUtils.LONG_MAPPER);
+        return template.query(FIND_CHEATER_TEAM_IDS_BY_SEASON_QUERY, params, DAOUtils.LONG_MAPPER);
     }
 
     private MapSqlParameterSource createParameterSource(Team team)

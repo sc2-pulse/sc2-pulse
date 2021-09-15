@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -112,19 +113,36 @@ public class TeamStateDAO
 
     private static final String UPDATE_RANK_QUERY =
         "WITH "
+        + "cheaters_region AS "
+        + "( "
+            + String.format(TeamDAO.FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE,
+                "COUNT(DISTINCT(team.id)) as count, season AS battlenet_id, region, queue_type, team_type") + " "
+            + "GROUP BY season, region, queue_type, team_type"
+        + "), "
+        + "cheaters_global AS "
+        + "( "
+            + "SELECT battlenet_id AS season, queue_type, team_type, SUM(count) AS count "
+            + "FROM cheaters_region "
+            + "GROUP BY battlenet_id, queue_type, team_type "
+        + "), "
         + "region_team_count AS "
         + "("
-            + "SELECT season.battlenet_id AS season, queue_type, team_type, region, SUM(team_count) AS count  "
+            + "SELECT season.battlenet_id AS season, queue_type, team_type, region, "
+            + "SUM(team_count) - COALESCE(MAX(cheaters_region.count), 0) AS count,  "
+            + "SUM(team_count) AS count_original "
             + "FROM league_stats "
             + "INNER JOIN league ON league_stats.league_id = league.id "
             + "INNER JOIN season ON league.season_id = season.id "
+            + "LEFT JOIN cheaters_region USING(battlenet_id, region ,queue_type, team_type) "
             + "WHERE season.battlenet_id IN(:seasons) "
             + "GROUP BY season.battlenet_id, season.region, queue_type, team_type "
         + "), "
         + "global_team_count AS "
         + "("
-            + "SELECT season, queue_type, team_type, SUM(count) AS count  "
+            + "SELECT season, queue_type, team_type, "
+            + "SUM(region_team_count.count_original) - COALESCE(MAX(cheaters_global.count), 0) AS count  "
             + "FROM region_team_count "
+            + "LEFT JOIN cheaters_global USING(season, queue_type, team_type) "
             + "GROUP BY season, queue_type, team_type "
         + ") "
         + "UPDATE team_state "
@@ -229,7 +247,12 @@ public class TeamStateDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("from", from)
-            .addValue("seasons", seasons);
+            .addValue("seasons", seasons)
+            .addValue
+            (
+                "cheaterReportType",
+                conversionService.convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class)
+            );
         int updated = template.update(UPDATE_RANK_QUERY, params);
         LOG.debug("Updated ranks of {} team states({}, {})", updated, seasons, from);
         return updated;

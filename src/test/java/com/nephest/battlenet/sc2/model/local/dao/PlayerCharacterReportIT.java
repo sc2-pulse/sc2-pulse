@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.*;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -37,6 +38,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -75,6 +77,15 @@ public class PlayerCharacterReportIT
 
     @Autowired
     private TeamDAO teamDAO;
+
+    @Autowired
+    private TeamStateDAO teamStateDAO;
+
+    @Autowired
+    private LadderTeamStateDAO ladderTeamStateDAO;
+
+    @Autowired
+    private LeagueStatsDAO leagueStatsDAO;
 
     @Autowired
     private TeamMemberDAO teamMemberDAO;
@@ -628,7 +639,7 @@ public class PlayerCharacterReportIT
         (
             null,
             SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
-            new BaseLeague(BaseLeague.LeagueType.GOLD, QueueType.LOTV_2V2, TeamType.ARRANGED),
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("12344"), 1, 10L, 10, 0, 0, 0
         ));
         teamMemberDAO.merge
@@ -650,6 +661,17 @@ public class PlayerCharacterReportIT
         assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getGlobalRank());
         assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getRegionRank());
         assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getLeagueRank());
+
+        leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
+        teamStateDAO.updateRanks
+        (
+            SeasonGenerator.DEFAULT_SEASON_START.minusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC),
+            Set.of(SeasonGenerator.DEFAULT_SEASON_ID)
+        );
+        LadderTeamState nonCheaterTeamState = ladderTeamStateDAO.find(2L).get(0);
+        //11 team in total, 4 teams with cheater members, 7 valid teams(11 - 4)
+        assertEquals(7, nonCheaterTeamState.getTeamState().getGlobalTeamCount());
+        assertEquals(7, nonCheaterTeamState.getTeamState().getRegionTeamCount());
     }
 
     private static void verifyReports
