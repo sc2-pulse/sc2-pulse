@@ -38,7 +38,7 @@ public class Cron
         OffsetDateTime.of(2021, 8, 17, 0, 0, 0, 0, ZoneOffset.UTC);
     public static final Duration MAINTENANCE_FREQUENT_FRAME = Duration.ofDays(2);
     public static final Duration MAINTENANCE_INFREQUENT_FRAME = Duration.ofDays(10);
-    public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(12);
+    public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(6);
     public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(210);
 
     private InstantVar heavyStatsInstant;
