@@ -412,7 +412,7 @@ class ChartUtil
           }
         }
         if(left < 0) left = 0;
-        if(left > window.innerWidth - width) left = window.innerWidth - width;
+        if(left > canvasRect.width - width) left = canvasRect.width - width;
 
         tooltipEl.style.top = `${top}px`;
         tooltipEl.style.left = `${left}px`;
