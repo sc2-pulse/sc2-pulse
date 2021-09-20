@@ -49,7 +49,7 @@
     </div>
     <!-- Modal player info-->
     <div
-            class="modal fade"
+            class="modal fade no-popup d-none"
             id="player-info"
             tabindex="-1"
             role="dialog"
@@ -60,6 +60,9 @@
         <div class="modal-dialog modal-complex modal-xl" role="document">
             <div class="modal-content">
                 <div class="modal-header">
+                    <button class="close close-left" type="button" data-dismiss="modal" aria-label="Back">
+                        <span aria-hidden="true">&lArr;</span>
+                    </button>
                     <h2 class="modal-title" id="player-info-title">
                         <a id="player-info-title-clan" class="clan-auto-search player-team"></a>
                         <span id="player-info-title-team" class="player-team"></span>

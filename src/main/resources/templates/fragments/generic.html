@@ -13,8 +13,8 @@
             <aside th:if="${@varService.getMessage('message.global') != null}" th:utext="${@varService.getMessage('message.global')}"></aside>
             <a href="/" th:href="@{/}">Back to home</a>
         </section>
-        <section class="mt-3 mb-3 text-center" th:fragment="content (content)">
-            <h1 class="text-dark"><a th:href="@{/}"><img th:src="@{/static/icon/misc/pulse.svg}" class="mr-1" alt="Pulse"/><span> SC2 Pulse</span></a></h1>
+        <section class="mb-3 text-center" th:fragment="content (content)">
+            <h1 class="text-dark no-popup-hide mt-3"><a th:href="@{/}"><img width="32" height="32" th:src="@{/static/icon/misc/pulse.svg}" class="mr-1" alt="Pulse"/><span> SC2 Pulse</span></a></h1>
             <section th:replace="${content}"></section>
         </section>
     </body>

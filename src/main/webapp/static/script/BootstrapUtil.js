@@ -134,8 +134,16 @@ class BootstrapUtil
 
     static showModal(id)
     {
+        const elem = document.getElementById(id);
+        if(elem.classList.contains("no-popup"))
+        {
+            Session.lastNonModalScroll = window.pageYOffset;
+            document.body.classList.add("modal-open-no-popup");
+            document.getElementById(id).classList.remove("d-none");
+            document.querySelectorAll(".no-popup-hide").forEach(e=>e.classList.add("d-none"));
+            elem.scrollIntoView();
+        }
         return new Promise((res, rej)=>{
-            const elem = document.getElementById(id);
             if(!elem.classList.contains("show"))
             {
                 ElementUtil.ELEMENT_RESOLVERS.set(id, res);
@@ -175,6 +183,11 @@ class BootstrapUtil
 
     static enhanceModals()
     {
+        document.querySelectorAll(".modal.no-popup").forEach(m=>{
+            m.classList.add("d-none", "mb-3");
+            m.classList.remove("fade");
+        });
+        document.querySelectorAll(".section-side").forEach(s=>s.addEventListener("click", e=>BootstrapUtil.hideActiveModal()));
         $(".modal")
             .on("hidden.bs.modal", e=>{
                 ElementUtil.resolveElementPromise(e.target.id);
@@ -182,6 +195,14 @@ class BootstrapUtil
                 {
                     HistoryUtil.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
                     document.title = Session.lastNonModalTitle;
+                }
+            })
+            .on("hide.bs.modal", e=>{
+                if(e.target.classList.contains("no-popup")) {
+                    document.querySelectorAll(".no-popup-hide").forEach(e=>e.classList.remove("d-none"));
+                    document.body.classList.remove("modal-open-no-popup");
+                    e.target.classList.add("d-none");
+                    window.scrollBy(0, Session.lastNonModalScroll);
                 }
             })
             .on("show.bs.modal", e=>{BootstrapUtil.onModalShow(e.currentTarget)})

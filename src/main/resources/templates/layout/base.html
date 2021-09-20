@@ -33,7 +33,10 @@
     <link rel="icon" type="image/svg+xml" th:href="@{/static/icon/misc/pulse.svg(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
 </head>
 <body th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder)}"
-      th:class="${'theme-' + uiTheme}">
+      th:class="|theme-${uiTheme}|">
+    <div class="d-flex">
+    <div id="section-side-left" class="section-side"></div>
+    <div id="section-center" class="container d-flex flex-column">
     <div class="container">
         <div th:replace="${content}"></div>
         <!-- Modal generic-->
@@ -87,6 +90,10 @@
              th:text="${'Supported by ' + @supporterService.getRandomSupporter()}">
         </div>
     </footer>
+    <div id="section-side-bottom" class="section-side"></div>
+    </div>
+    <div id="section-side-right" class="section-side"></div>
+    </div>
     <script th:src="@{/webjars/jquery/jquery.slim.min.js}"></script>
     <script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>
     <script th:src="@{/webjars/bootstrap/js/bootstrap.min.js}"></script>

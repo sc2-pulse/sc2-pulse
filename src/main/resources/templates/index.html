@@ -12,7 +12,7 @@
 </head>
 <body data-view-name="global">
     <section>
-        <header>
+        <header class="no-popup-hide">
             <nav>
                 <ul id="main-tabs" class="nav nav-fill nav-pills nav-pills-main mb-3 justify-content-center" role="tablist">
                     <li class="nav-item">
@@ -92,7 +92,7 @@
             <aside th:if="${@varService.getMessage('message.global') != null}" th:utext="${@varService.getMessage('message.global')}"></aside>
             <div class="c-divider-hr"></div>
         </header>
-        <div class="tab-content tab-content-main">
+        <div class="tab-content tab-content-main no-popup-hide">
         <section id="stats" class="tab-pane fade show active"
                  data-view-name="ladder"
                  data-view-title="Stats"
@@ -651,7 +651,7 @@
         <section th:replace="~{fragments/main-section :: settings}"></section>
 
         </div><!--Tab content-->
-        <div class="c-divider-hr"></div>
+        <div class="c-divider-hr no-popup-hide"></div>
         <section th:replace="~{fragments/app :: modal}"></section>
     </section><!--Container-->
     <script>$(document).ready(function(){SC2Restful.start();});</script>
