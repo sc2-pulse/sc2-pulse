@@ -1,8 +1,3 @@
-html, #status-generating-fullscreen
-{
-    margin-left: calc(100vw - 100%);
-}
-
 body
 {
     text-align: center;
@@ -662,6 +657,11 @@ body.theme-dark :fullscreen, body.theme-dark #team-buffer
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;
+    }
+
+    html, #status-generating-fullscreen
+    {
+        margin-left: calc(100vw - 100%);
     }
 }
 
