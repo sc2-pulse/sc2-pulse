@@ -24,6 +24,7 @@ import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -154,7 +155,8 @@ public class BlizzardSC2APIIT
     @Test @Order(2)
     public void testFetchMatches()
     {
-        api.getMatches(Set.of(SERRAL, HEROMARINE, MARU))
+        Set<PlayerCharacter> failedCharacters = new HashSet<>();
+        api.getMatches(Set.of(SERRAL, HEROMARINE, MARU), failedCharacters)
             .doOnNext((m)->
             {
                 assertTrue(m.getT1().getMatches().length > 0);
@@ -165,6 +167,7 @@ public class BlizzardSC2APIIT
                     assertFalse(errors.hasErrors());
                 }
             }).blockLast();
+        assertTrue(failedCharacters.isEmpty());
     }
 
     @Test @Order(3)

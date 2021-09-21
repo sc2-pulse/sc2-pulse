@@ -488,15 +488,15 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(getRetry(WebServiceUtil.RETRY))
-            //API can be broken randomly, accepting this as a normal behavior
-            .onErrorReturn(Tuples.of(new BlizzardMatches(), playerCharacter));
+            .retryWhen(getRetry(WebServiceUtil.RETRY));
     }
 
-    public Flux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(Iterable<? extends PlayerCharacter> playerCharacters)
+    public Flux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches
+    (Iterable<? extends PlayerCharacter> playerCharacters, Set<PlayerCharacter> errors)
     {
         return Flux.fromIterable(playerCharacters)
-            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getMatches(p), DELAY), SAFE_REQUESTS_PER_SECOND_CAP);
+            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getMatches(p), t->errors.add(p), DELAY),
+            SAFE_REQUESTS_PER_SECOND_CAP);
     }
 
 }

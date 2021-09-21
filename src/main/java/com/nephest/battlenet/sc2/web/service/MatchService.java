@@ -29,7 +29,9 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -47,6 +49,7 @@ public class MatchService
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SeasonDAO seasonDAO;
     private final PostgreSQLUtils postgreSQLUtils;
+    private final Set<PlayerCharacter> failedCharacters = new HashSet<>();
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -91,8 +94,19 @@ public class MatchService
     @Transactional
     protected int saveMatches(Instant lastUpdated)
     {
+        LOG.debug("Retrying {} previously failed matches", failedCharacters.size());
+        int r1 = saveMatches(failedCharacters);
+        LOG.debug("Saved {} previously failed matches", r1);
+        //clear here to avoid unbound retries of the same characters
+        failedCharacters.clear();
+        return r1
+            + saveMatches(playerCharacterDAO.findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault())));
+    }
+
+    private int saveMatches(Iterable<? extends PlayerCharacter> characters)
+    {
         AtomicInteger count = new AtomicInteger(0);
-        api.getMatches(playerCharacterDAO.findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault())))
+        api.getMatches(characters, failedCharacters)
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
             .buffer(BATCH_SIZE)
