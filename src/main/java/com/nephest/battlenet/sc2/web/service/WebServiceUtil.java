@@ -26,6 +26,7 @@ import reactor.netty.resources.LoopResources;
 import reactor.util.retry.Retry;
 
 import java.time.Duration;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 @Service
@@ -102,24 +103,30 @@ public class WebServiceUtil
     }
 
     public static <T> Mono<T> getRateDelayedMono
-    (Mono<T> mono, Function<? super Throwable,? extends Mono<? extends T>> fallback, int fullDelay)
+    (
+        Mono<T> mono,
+        Function<? super Throwable,? extends Mono<? extends T>> fallback,
+        Consumer<? super Throwable> onError,
+        int fullDelay
+    )
     {
         long start = System.currentTimeMillis();
-        return mono.delayUntil(r->Mono.just(r)
+        Mono<T> result = mono.delayUntil(r->Mono.just(r)
             .delaySubscription(Duration.ofMillis(Math.max(0, fullDelay - (System.currentTimeMillis() - start))))
-        )
-        .onErrorResume(t->Mono.empty()
+        );
+        if(onError != null) result = result.doOnError(onError);
+        return result.onErrorResume(t->Mono.empty()
             .delaySubscription(Duration.ofMillis(Math.max(0, fullDelay - (System.currentTimeMillis() - start))))
             .then(fallback.apply(t)));
     }
 
     public static <T> Mono<T> getRateDelayedMono(Mono<T> mono, int fullDelay)
     {
-        return getRateDelayedMono(mono, t->Mono.empty(), fullDelay);
+        return getRateDelayedMono(mono, null, t->Mono.empty(), fullDelay);
     }
 
     public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono
-    (Mono<T> mono, int fullDelay, Function<Throwable, LogUtil.LogLevel> logLevelFunction)
+    (Mono<T> mono, Consumer<? super Throwable> onError, int fullDelay, Function<Throwable, LogUtil.LogLevel> logLevelFunction)
     {
         return getRateDelayedMono(
             mono,
@@ -142,12 +149,24 @@ public class WebServiceUtil
                 }
                 return Mono.empty();
             },
+            onError,
             fullDelay);
+    }
+
+    public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono
+    (Mono<T> mono, int fullDelay, Function<Throwable, LogUtil.LogLevel> logLevelFunction)
+    {
+        return getOnErrorLogAndSkipRateDelayedMono(mono, null, fullDelay, logLevelFunction);
+    }
+
+    public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono(Mono<T> mono,Consumer<? super Throwable> onError, int fullDelay)
+    {
+        return getOnErrorLogAndSkipRateDelayedMono(mono, onError, fullDelay, (t)->LogUtil.LogLevel.ERROR);
     }
 
     public static <T> Mono<T> getOnErrorLogAndSkipRateDelayedMono(Mono<T> mono, int fullDelay)
     {
-        return getOnErrorLogAndSkipRateDelayedMono(mono, fullDelay, (t)->LogUtil.LogLevel.ERROR);
+        return getOnErrorLogAndSkipRateDelayedMono(mono, null, fullDelay);
     }
 
     public static void logWebClientException

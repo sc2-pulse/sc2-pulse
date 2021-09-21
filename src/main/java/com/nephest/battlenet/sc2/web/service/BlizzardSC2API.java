@@ -253,12 +253,20 @@ extends BaseAPI
     }
 
     public ParallelFlux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>> getLadders
-    (Iterable<? extends Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds)
+    (
+        Iterable<? extends Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds,
+        Map<Region, Set<Long>> errors
+    )
     {
         return Flux.fromIterable(ladderIds)
             .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
             .runOn(Schedulers.boundedElastic())
-            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getLadder(d.getT2(), d.getT4()).zipWith(Mono.just(d)), DELAY),
+            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono
+            (
+                getLadder(d.getT2(), d.getT4()).zipWith(Mono.just(d)),
+                t->errors.get(d.getT2()).add(d.getT4().getLadderId()),
+                DELAY
+            ),
                 true, 1);
     }
 

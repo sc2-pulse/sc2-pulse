@@ -59,6 +59,7 @@ public class StatsService
     private boolean forceUpdate;
 
     private final Set<Integer> pendingStatsUpdates = new HashSet<>();
+    private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
 
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
@@ -125,6 +126,7 @@ public class StatsService
         this.postgreSQLUtils = postgreSQLUtils;
         this.conversionService = conversionService;
         this.validator = validator;
+        for(Region r : Region.values()) failedLadders.put(r, new HashSet<>());
     }
 
     @PostConstruct
@@ -352,7 +354,7 @@ public class StatsService
     public void updateLadders
     (Season season, List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds, Instant lastUpdated)
     {
-        api.getLadders(ladderIds)
+        api.getLadders(ladderIds, failedLadders)
             .sequential()
             .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
             .forEach(l->
@@ -360,8 +362,16 @@ public class StatsService
                 League league = leagueDao.merge(League.of(season, l.getT2().getT1()));
                 LeagueTier tier = leagueTierDao.merge(LeagueTier.of(league, l.getT2().getT3()));
                 Division division = saveDivision(season, league, tier, l.getT2().getT4());
-                updateTeams(l.getT1().getTeams(), season, league, tier, division, lastUpdated);
-                LOG.debug("Ladder saved: {} {} {}", season, division.getBattlenetId(), league);
+                //force update previously failed ladders, this will pick up all skipped teams
+                Instant lastUpdatedToUse = failedLadders.get(l.getT2().getT2()).remove(l.getT2().getT4().getLadderId())
+                    ? null
+                    : lastUpdated;
+                updateTeams(l.getT1().getTeams(), season, league, tier, division, lastUpdatedToUse);
+                LOG.debug
+                (
+                    "Ladder saved: {} {} {} {}",
+                    season, division.getBattlenetId(), league, lastUpdatedToUse == null ? "forced" : ""
+                );
             });
     }
 
