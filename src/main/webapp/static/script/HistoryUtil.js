@@ -244,6 +244,7 @@ class HistoryUtil
                 promises.push(CharacterUtil.updateCharacterSearch(name));
                 break;
             case "team-mmr":
+                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                  promises.push(TeamUtil.updateTeamMmr(params));
                  break;
             case "online":
