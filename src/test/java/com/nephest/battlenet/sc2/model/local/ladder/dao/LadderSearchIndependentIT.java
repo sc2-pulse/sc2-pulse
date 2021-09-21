@@ -197,6 +197,21 @@ public class LadderSearchIndependentIT
             0, 0, 100, 0
         );
         teamMemberDAO.create(member3);
+
+        Team team3_2 = new Team
+        (
+            null, season2.getBattlenetId(), region,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
+            BigInteger.valueOf(11113L), bronze1.getId(),
+            102L, 100, 0, 0, 0
+        );
+        teamDAO.create(team3_2);
+        TeamMember member3_2 = new TeamMember
+        (
+            team3_2.getId(), character3.getId(),
+            0, 0, 100, 0
+        );
+        teamMemberDAO.create(member3_2);
         playerCharacterStatsDAO.mergeCalculate();
 
         List<LadderDistinctCharacter> byName = ladderCharacterDAO.findDistinctCharacters("refchar1");
@@ -300,18 +315,18 @@ public class LadderSearchIndependentIT
     {
         assertEquals(3, byAccount.size());
         //sorted by rating max
-        LadderDistinctCharacter char13 = byAccount.get(1);
+        LadderDistinctCharacter char13 = byAccount.get(0);
         assertEquals("refaccount2#123", char13.getMembers().getAccount().getBattleTag());
         assertEquals("refchar3#123", char13.getMembers().getCharacter().getName());
         assertNull(char13.getMembers().getClan());
         assertEquals(BaseLeague.LeagueType.BRONZE, char13.getLeagueMax());
         assertEquals(102, char13.getRatingMax());
-        assertEquals(100, char13.getTotalGamesPlayed());
-        assertNull(char13.getRatingCurrent());
-        assertNull(char13.getGamesPlayedCurrent());
-        assertNull(char13.getRankCurrent());
+        assertEquals(200, char13.getTotalGamesPlayed());
+        assertEquals(102, char13.getRatingCurrent());
+        assertEquals(100, char13.getGamesPlayedCurrent());
+        assertEquals(2147483647, char13.getRankCurrent());
 
-        verifyCharacterAccountStats(List.of(byAccount.get(0), byAccount.get(2)));
+        verifyCharacterAccountStats(List.of(byAccount.get(1), byAccount.get(2)));
     }
 
     @Test

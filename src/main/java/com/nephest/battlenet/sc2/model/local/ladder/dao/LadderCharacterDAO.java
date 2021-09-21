@@ -31,7 +31,7 @@ public class LadderCharacterDAO
     "WITH RECURSIVE %2$s "
     + "player_character_filtered AS "
     + "( "
-        + "SELECT player_character.id "
+        + "SELECT DISTINCT(player_character.id) "
         + "FROM player_character "
         + "%1$s"
     + "), "
