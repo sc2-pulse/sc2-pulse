@@ -56,6 +56,11 @@ public class AccountDAO
         + "WHERE partition = :partition "
         + "AND battle_tag = :battleTag";
 
+    private static final String FIND_BY_IDS =
+        "SELECT " + STD_SELECT
+        + "FROM account "
+        + "WHERE id IN(:ids)";
+
     private static final String FIND_BY_ROLE =
         "SELECT " + STD_SELECT
         + "FROM account_role "
@@ -129,6 +134,15 @@ public class AccountDAO
             .addValue("partition", conversionService.convert(partition, Integer.class))
             .addValue("battleTag", battleTag);
         return Optional.ofNullable(template.query(FIND_BY_PARTITION_AND_BATTLE_TAG, params, STD_EXTRACTOR));
+    }
+
+    public List<Account> findByIds(Long... ids)
+    {
+        if(ids.length == 0) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("ids", List.of(ids));
+        return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
     public List<Account> findByRole(SC2PulseAuthority authority)
