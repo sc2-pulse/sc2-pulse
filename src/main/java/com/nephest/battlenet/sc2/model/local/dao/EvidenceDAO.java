@@ -19,7 +19,6 @@ import org.springframework.stereotype.Repository;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 @Repository
 public class EvidenceDAO
@@ -214,7 +213,7 @@ public class EvidenceDAO
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
-            .addValue("reportIds", Set.of(reportIds));
+            .addValue("reportIds", List.of(reportIds));
         return template.query(hideDenied ? GET_BY_REPORT_IDS_HIDE_DENIED : GET_BY_REPORT_IDS, params, STD_ROW_MAPPER);
     }
 

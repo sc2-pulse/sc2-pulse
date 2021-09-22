@@ -13,7 +13,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Set;
 
 @Repository
 public class EvidenceVoteDAO
@@ -81,7 +80,7 @@ public class EvidenceVoteDAO
         return template.query
         (
             GET_BY_EVIDENCE_IDS,
-            new MapSqlParameterSource().addValue("evidenceIds", Set.of(evidenceIds)),
+            new MapSqlParameterSource().addValue("evidenceIds", List.of(evidenceIds)),
             STD_ROW_MAPPER
         );
     }

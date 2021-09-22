@@ -15,7 +15,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Set;
 
 @Repository
 public class LadderEvidenceVoteDAO
@@ -69,7 +68,7 @@ public class LadderEvidenceVoteDAO
         return template.query
         (
             FIND_BY_EVIDENCE_IDS,
-            new MapSqlParameterSource().addValue("evidenceIds", Set.of(evidenceIds)),
+            new MapSqlParameterSource().addValue("evidenceIds", List.of(evidenceIds)),
             STD_ROW_MAPPER
         );
     }

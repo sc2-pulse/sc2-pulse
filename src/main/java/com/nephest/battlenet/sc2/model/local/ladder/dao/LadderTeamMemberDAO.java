@@ -16,7 +16,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Set;
 
 @Repository
 public class LadderTeamMemberDAO
@@ -65,7 +64,7 @@ public class LadderTeamMemberDAO
     {
         if(characterIds.length == 0) return List.of();
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterIds", Set.of(characterIds))
+            .addValue("playerCharacterIds", List.of(characterIds))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template.query(FIND_BY_CHARACTER_IDS, params, LadderSearchDAO.getLadderTeamMemberMapper());
