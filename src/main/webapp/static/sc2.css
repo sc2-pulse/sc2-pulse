@@ -690,6 +690,17 @@ body.theme-dark :fullscreen, body.theme-dark #team-buffer
     margin-bottom: 1rem;
 }
 
+.modal.no-popup .modal-header .close
+{
+    color: #007bff;
+    opacity: 1;
+}
+
+.modal.no-popup .modal-header .close:hover
+{
+    opacity: 0.75;
+}
+
 .modal.no-popup .modal-body
 {
     padding: 0;
