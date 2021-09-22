@@ -713,6 +713,7 @@ public class PlayerCharacterReportIT
         );
         assertEquals("evidence text 2", evidence1_1.getEvidence().getDescription());
         assertEquals(expectedStatus[0], evidence1_1.getEvidence().getStatus());
+        assertEquals(account, evidence1_1.getReporterAccount());
 
         LadderEvidence evidence1_2 = report1.getEvidence().get(1);
         assertEquals(account.getId(), evidence1_2.getEvidence().getReporterAccountId());
@@ -723,6 +724,7 @@ public class PlayerCharacterReportIT
         );
         assertEquals("evidence text", evidence1_2.getEvidence().getDescription());
         assertEquals(expectedStatus[1], evidence1_2.getEvidence().getStatus());
+        assertEquals(account, evidence1_2.getReporterAccount());
 
         LadderPlayerCharacterReport report2 = reports[1];
         assertEquals(2, report2.getReport().getPlayerCharacterId());
@@ -740,6 +742,7 @@ public class PlayerCharacterReportIT
         );
         assertEquals("evidence text link 2", evidence2_1.getEvidence().getDescription());
         assertEquals(expectedStatus[2], evidence2_1.getEvidence().getStatus());
+        assertEquals(account, evidence2_1.getReporterAccount());
 
         LadderPlayerCharacterReport report3 = reports[2];
         assertEquals(1, report3.getReport().getPlayerCharacterId());
@@ -757,6 +760,7 @@ public class PlayerCharacterReportIT
         );
         assertEquals("evidence text link", evidence3_1.getEvidence().getDescription());
         assertEquals(expectedStatus[3], evidence3_1.getEvidence().getStatus());
+        assertEquals(account, evidence3_1.getReporterAccount());
     }
 
     private LadderPlayerCharacterReport[] getReports(CsrfToken csrfToken)

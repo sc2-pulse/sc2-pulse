@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.ladder;
 
+import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Evidence;
 
 import javax.validation.constraints.NotNull;
@@ -17,10 +18,13 @@ public class LadderEvidence
     @NotNull
     private final List<LadderEvidenceVote> votes;
 
-    public LadderEvidence(Evidence evidence, List<LadderEvidenceVote> votes)
+    private final Account reporterAccount;
+
+    public LadderEvidence(Evidence evidence, List<LadderEvidenceVote> votes, Account reporterAccount)
     {
         this.evidence = evidence;
         this.votes = votes;
+        this.reporterAccount = reporterAccount;
     }
 
     public Evidence getEvidence()
@@ -31,6 +35,11 @@ public class LadderEvidence
     public List<LadderEvidenceVote> getVotes()
     {
         return votes;
+    }
+
+    public Account getReporterAccount()
+    {
+        return reporterAccount;
     }
 
 }

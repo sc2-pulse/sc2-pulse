@@ -3,8 +3,10 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Evidence;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterReportDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidence;
@@ -19,10 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.groupingBy;
@@ -39,6 +38,7 @@ public class PlayerCharacterReportService
     private final LadderEvidenceVoteDAO ladderEvidenceVoteDAO;
     private final LadderPlayerCharacterReportDAO ladderPlayerCharacterReportDAO;
     private final LadderTeamMemberDAO ladderTeamMemberDAO;
+    private final AccountDAO accountDAO;
 
     @Autowired
     public PlayerCharacterReportService
@@ -47,7 +47,8 @@ public class PlayerCharacterReportService
         EvidenceDAO evidenceDAO,
         LadderEvidenceVoteDAO ladderEvidenceVoteDAO,
         LadderPlayerCharacterReportDAO ladderPlayerCharacterReportDAO,
-        LadderTeamMemberDAO ladderTeamMemberDAO
+        LadderTeamMemberDAO ladderTeamMemberDAO,
+        AccountDAO accountDAO
     )
     {
         this.playerCharacterReportDAO = playerCharacterReportDAO;
@@ -55,6 +56,7 @@ public class PlayerCharacterReportService
         this.ladderEvidenceVoteDAO = ladderEvidenceVoteDAO;
         this.ladderPlayerCharacterReportDAO = ladderPlayerCharacterReportDAO;
         this.ladderTeamMemberDAO = ladderTeamMemberDAO;
+        this.accountDAO = accountDAO;
     }
 
     @Transactional
@@ -94,6 +96,7 @@ public class PlayerCharacterReportService
                 .collect(groupingBy(m->m.getCharacter().getId()));
         Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll(true).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
+        Map<Long, List<Account>> reporters = getReporters(evidences);
         Map<Integer, List<LadderEvidenceVote>> evidenceVotes = ladderEvidenceVoteDAO.findAll().stream()
             .collect(groupingBy(v->v.getVote().getEvidenceId()));
         Comparator<LadderPlayerCharacterReport> comparator = Comparator.comparing(r->r.getEvidence().stream()
@@ -102,7 +105,9 @@ public class PlayerCharacterReportService
             .forEach(r->
             {
                 r.setEvidence(evidences.getOrDefault(r.getReport().getId(), List.of()).stream()
-                    .map(e->new LadderEvidence(e, evidenceVotes.getOrDefault(e.getId(), List.of()))).collect(Collectors.toList()));
+                    .map(e->new LadderEvidence(e, evidenceVotes.getOrDefault(e.getId(), List.of()),
+                        e.getReporterAccountId() == null ? null : reporters.get(e.getReporterAccountId()).get(0)))
+                    .collect(Collectors.toList()));
                 if(r.getReport().getAdditionalPlayerCharacterId() != null)
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
@@ -121,6 +126,7 @@ public class PlayerCharacterReportService
         Map<Integer, List<Evidence>> evidences = evidenceDAO
             .findByReportIds(true, reports.stream().map(r->r.getReport().getId()).toArray(Integer[]::new)).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
+        Map<Long, List<Account>> reporters = getReporters(evidences);
         Map<Integer, List<LadderEvidenceVote>> evidenceVotes =
             ladderEvidenceVoteDAO.findByEvidenceIds(evidences.values().stream().flatMap(l->l.stream().map(Evidence::getId)).toArray(Integer[]::new)).stream()
             .collect(groupingBy(v->v.getVote().getEvidenceId()));
@@ -130,12 +136,25 @@ public class PlayerCharacterReportService
             .forEach(r->
             {
                 r.setEvidence(evidences.getOrDefault(r.getReport().getId(), List.of()).stream()
-                    .map(e->new LadderEvidence(e, evidenceVotes.getOrDefault(e.getId(), List.of()))).collect(Collectors.toList()));
+                    .map(e->new LadderEvidence(e, evidenceVotes.getOrDefault(e.getId(), List.of()),
+                        e.getReporterAccountId() == null ? null : reporters.get(e.getReporterAccountId()).get(0)))
+                    .collect(Collectors.toList()));
                 if(r.getReport().getAdditionalPlayerCharacterId() != null)
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
         reports.sort(comparator.reversed());
         return reports;
+    }
+
+    private Map<Long, List<Account>> getReporters(Map<Integer, List<Evidence>> evidences)
+    {
+        return accountDAO.findByIds(evidences.values().stream()
+            .flatMap(Collection::stream)
+            .map(Evidence::getReporterAccountId)
+            .filter(Objects::nonNull)
+            .distinct()
+            .toArray(Long[]::new)).stream()
+                .collect(groupingBy(Account::getId));
     }
 
 

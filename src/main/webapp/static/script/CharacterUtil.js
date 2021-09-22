@@ -1153,6 +1153,9 @@ class CharacterUtil
                 evidenceDescription.classList.add("cell-main", "text-break");
                 evidenceDescription.textContent = evidence.evidence.description;
 
+                const reporter = tr.insertCell()
+                reporter.textContent = evidence.reporterAccount ? evidence.reporterAccount.battleTag : "";
+                reporter.classList.add("text-break");
                 tr.insertCell().textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(evidence.evidence.created));
 
                 CharacterUtil.appendVotes(tr, evidence.votes);
