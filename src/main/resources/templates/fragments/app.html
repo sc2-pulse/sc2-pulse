@@ -84,13 +84,13 @@
                             <li class="nav-item">
                                 <a
                                         id="player-stats-summary-tab"
-                                        class="nav-link active"
+                                        class="nav-link"
                                         data-toggle="pill"
                                         data-target="#player-stats-summary"
                                         href="#player-stats-summary"
                                         role="tab"
                                         aria-controls="player-stats-summary"
-                                        aria-selected="true"
+                                        aria-selected="false"
                                 >
                                     Summary
                                 </a>
@@ -98,13 +98,13 @@
                             <li class="nav-item">
                                 <a
                                         id="player-stats-mmr-tab"
-                                        class="nav-link"
+                                        class="nav-link active"
                                         data-toggle="pill"
                                         data-target="#player-stats-mmr"
                                         href="#player-stats-mmr"
                                         role="tab"
                                         aria-controls="player-stats-mmr"
-                                        aria-selected="false"
+                                        aria-selected="true"
                                 >
                                     MMR
                                 </a>
@@ -168,7 +168,7 @@
                         </ul>
                     </nav>
                     <div id="player-stats-all" class="tab-content">
-                        <section id="player-stats-summary" class="tab-pane fade show active" data-view-title="Summary">
+                        <section id="player-stats-summary" class="tab-pane fade" data-view-title="Summary">
                             <section id="player-stats">
                                 <h3>
                                     Career summary
@@ -188,7 +188,7 @@
                                 </aside>
                             </section>
                         </section>
-                        <section id="player-stats-mmr" class="tab-pane fade" data-view-title="MMR history">
+                        <section id="player-stats-mmr" class="tab-pane fade show active" data-view-title="MMR history">
                             <section id="character-mmr-section">
                                 <h3>Solo MMR history
                                     <span class="fullscreen-toggle align-middle" data-target="player-stats-mmr"></span></h3>
