@@ -673,11 +673,6 @@ body.theme-dark :fullscreen, body.theme-dark #team-buffer
     margin: 0;
 }
 
-.modal-backdrop
-{
-    display: none !important;
-}
-
 .modal.no-popup .modal-content,
 .modal.no-popup .modal-header
 {

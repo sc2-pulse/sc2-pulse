@@ -186,6 +186,7 @@ class BootstrapUtil
         document.querySelectorAll(".modal.no-popup").forEach(m=>{
             m.classList.add("d-none", "mb-3");
             m.classList.remove("fade");
+            m.setAttribute("data-backdrop", "false");
         });
         document.querySelectorAll(".section-side").forEach(s=>s.addEventListener("click", e=>BootstrapUtil.hideActiveModal()));
         $(".modal")
