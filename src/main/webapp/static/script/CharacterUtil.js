@@ -1270,8 +1270,8 @@ class CharacterUtil
     static enhanceReportForm()
     {
         document.querySelector("#report-character-type").addEventListener("change", e=>CharacterUtil.updateReportForm());
-        $(document.querySelector("#report-character-dropdown").closest(".btn-group"))
-            .on("show.bs.dropdown", CharacterUtil.updateReportAlternativeCharacterList);
+        $(document.querySelector("#report-character-modal"))
+            .on("show.bs.modal", CharacterUtil.updateReportAlternativeCharacterList);
         document.querySelector("#report-character-form").addEventListener("submit", e=>{
             e.preventDefault();
             const fd = new FormData(document.querySelector("#report-character-form"));
@@ -1327,7 +1327,7 @@ class CharacterUtil
             .then(e=>CharacterUtil.updateCharacterReportsModel())
             .then(json=>BootstrapUtil.showTab("player-stats-player-tab"))
             .then(e=>new Promise((res, rej)=>{
-                $("#report-character-toggle").dropdown('toggle');
+                $("#report-character-modal").modal('hide');
                 CharacterUtil.updateCharacterReportsView();
                 res();
             }));

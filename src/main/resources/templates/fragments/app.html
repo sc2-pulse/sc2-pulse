@@ -47,6 +47,56 @@
             </div>
         </div>
     </div>
+    <div class="modal fade c-no-history" id="report-character-modal" tabindex="-1" role="dialog" aria-labelledby="report-character-modal-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="report-character-modal-title">Report player</h2>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <div id="report-character-menu">
+                        <form id="report-character-form" class="px-4 py-3" method="post">
+                            <div class="form-group">
+                                <label for="report-character-type">Report for</label>
+                                <select id="report-character-type" class="form-control text-center" name="type" required="required">
+                                    <option value="CHEATER" selected="selected">Cheating</option>
+                                    <option value="LINK">Multiacc</option>
+                                </select>
+                            </div>
+                            <div id="report-character-additional-group" class="form-group d-none">
+                                <label for="report-character-additional">Alt account(populated from the team buffer, "green plus" button)</label>
+                                <select id="report-character-additional" class="form-control text-center"  name="additionalPlayerCharacterId" required="required" disabled="disabled">
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="report-character-evidence">
+                                    Evidence.
+                                    Upload a replay to <a class="character-link-follow-only" href="https://drop.sc/" target="_blank" rel="nofollow noopener">drop.sc</a>
+                                    and link it here.
+                                    You can also refer to current match and mmr history(on this website) as evidence.
+                                    <strong>Reports without direct evidence will be removed.</strong>
+                                </label>
+                                <textarea
+                                        id="report-character-evidence"
+                                        class="form-control text-center"
+                                        name="evidence"
+                                        th:maxlength="${T(com.nephest.battlenet.sc2.model.local.Evidence).MAX_LENGTH}"
+                                        minLength="10"
+                                        required="required"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Report</button>
+                        </form>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
     <!-- Modal player info-->
     <div
             class="modal fade no-popup d-none"
@@ -402,47 +452,7 @@
                 <div class="modal-footer">
                     <button id="follow-button" type="button" class="btn btn-primary d-none">Follow</button>
                     <button id="unfollow-button" type="button" class="btn btn-primary d-none">Unfollow</button>
-                    <div id="report-character-dropdown" class="btn-group dropup">
-                        <button class="btn btn-danger dropdown-toggle" type="button" id="report-character-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                            Report
-                        </button>
-                        <div id="report-character-menu" class="dropdown-menu dropdown-menu-lg stop-propagation">
-                            <button type="button" class="close allow-propagation" data-dismiss="dropdown-menu" aria-label="Close">
-                                ×
-                            </button>
-                            <form id="report-character-form" class="px-4 py-3" method="post">
-                                <div class="form-group">
-                                    <label for="report-character-type">Report for</label>
-                                    <select id="report-character-type" class="form-control text-center" name="type" required="required">
-                                        <option value="CHEATER" selected="selected">Cheating</option>
-                                        <option value="LINK">Multiacc</option>
-                                    </select>
-                                </div>
-                                <div id="report-character-additional-group" class="form-group d-none">
-                                    <label for="report-character-additional">Alt account(populated from the team buffer, "green plus" button)</label>
-                                    <select id="report-character-additional" class="form-control text-center"  name="additionalPlayerCharacterId" required="required" disabled="disabled">
-                                    </select>
-                                </div>
-                                <div class="form-group">
-                                    <label for="report-character-evidence">
-                                        Evidence.
-                                        Upload a replay to <a class="character-link-follow-only" href="https://drop.sc/" target="_blank" rel="nofollow noopener">drop.sc</a>
-                                        and link it here.
-                                        You can also refer to current match and mmr history(on this website) as evidence.
-                                        <strong>Reports without direct evidence will be removed.</strong>
-                                    </label>
-                                    <textarea
-                                        id="report-character-evidence"
-                                        class="form-control text-center"
-                                        name="evidence"
-                                        th:maxlength="${T(com.nephest.battlenet.sc2.model.local.Evidence).MAX_LENGTH}"
-                                        minLength="10"
-                                        required="required"></textarea>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Report</button>
-                            </form>
-                        </div>
-                    </div>
+                    <button class="btn btn-danger" type="button" id="report-character-toggle" data-toggle="modal" data-target="#report-character-modal">Report</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
