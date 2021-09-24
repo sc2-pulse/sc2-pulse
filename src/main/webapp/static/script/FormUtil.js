@@ -41,4 +41,10 @@ class FormUtil
 
     }
 
+    static selectAndFocusOnInput(input, preventScroll)
+    {
+        input.focus({preventScroll: preventScroll});
+        input.select();
+    }
+
 }
