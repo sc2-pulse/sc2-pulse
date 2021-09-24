@@ -73,6 +73,14 @@ class BootstrapUtil
         ElementUtil.resolveElementPromise(dataTarget.substring(1));
         if(Session.isHistorical) return;
 
+        if(!e.target.closest(".modal"))
+        {
+            Session.isHistorical = true;
+            Session.lastNonModalScroll = 0;
+            BootstrapUtil.hideActiveModal();
+            Session.isHistorical = false;
+        }
+
         const params = new URLSearchParams();
         const modal = e.target.closest(".modal");
         const root = modal != null ? ("#" + modal.id) : "body";
@@ -196,6 +204,7 @@ class BootstrapUtil
                 {
                     HistoryUtil.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
                     document.title = Session.lastNonModalTitle;
+                    if(e.target.classList.contains("no-popup")) HistoryUtil.showAnchoredTabs(true);
                 }
             })
             .on("hide.bs.modal", e=>{
@@ -222,6 +231,8 @@ class BootstrapUtil
             if(!Session.isHistorical && modal.getAttribute("data-modal-singleton") != null)
                 HistoryUtil.pushState({}, modal.getAttribute("data-view-title"), "?type=modal&id=" + modal.id + "&m=1");
             if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
+            if(modal.classList.contains("no-popup"))
+                document.querySelectorAll("#main-tabs .nav-link.active").forEach(l=>l.classList.remove("active"));
             const prev = HistoryUtil.previousTitleAndUrl();
             if(!prev[1].includes("m=1"))
             {
