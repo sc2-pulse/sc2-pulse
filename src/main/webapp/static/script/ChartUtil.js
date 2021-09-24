@@ -516,8 +516,9 @@ class ChartUtil
     {
         if (data === null) return;
 
-        chart.data.labels.length = 0;
-        chart.data.datasets.length = 0;
+        chart.data.labels = [];
+        chart.data.datasets = [];
+
         data.labels.forEach(l=>chart.data.labels.push(l));
         data.datasets.forEach(d=>chart.data.datasets.push(d));
         ChartUtil.decorateChartData(data, chart.customConfig);
