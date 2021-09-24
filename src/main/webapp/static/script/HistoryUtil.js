@@ -147,31 +147,35 @@ class HistoryUtil
                 hash != null ? hash : deepestDocumentTab));
     }
 
-    static showAnchoredTabs()
+    static showAnchoredTabs(activateOnly = false)
     {
         if(Session.locationHash() == null || Session.locationHash().length == 0) return Promise.resolve();
 
         Util.setGeneratingStatus(STATUS.BEGIN);
         const promises = [];
         let prevTab = document.querySelector(Session.locationHash());
-        HistoryUtil.showAnchoredTab(prevTab, promises);
+        HistoryUtil.showAnchoredTab(prevTab, promises, activateOnly);
         while(true)
         {
             const curTab = prevTab.parentNode.closest(".tab-pane");
             if(curTab == null || curTab == prevTab) break;
-            HistoryUtil.showAnchoredTab(curTab, promises);
+            HistoryUtil.showAnchoredTab(curTab, promises, activateOnly);
             prevTab = curTab;
         }
         return Promise.all(promises).then(e=>new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}));
     }
 
-    static showAnchoredTab(tab, promises)
+    static showAnchoredTab(tab, promises, activateOnly = false)
     {
         const tabEl = document.querySelector('.nav-pills a[data-target="#' + tab.id + '"]');
         if(tabEl.classList.contains("active")) return;
 
-        if(tabEl.offsetParent != null) promises.push(new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(tab.id, res)));
-        $(tabEl).tab('show');
+        if(activateOnly) {
+            tabEl.classList.add("active")
+        } else {
+            if(tabEl.offsetParent != null) promises.push(new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(tab.id, res)));
+            $(tabEl).tab('show');
+        }
     }
 
     static restoreState(e)
