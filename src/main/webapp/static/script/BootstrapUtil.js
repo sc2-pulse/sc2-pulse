@@ -96,6 +96,7 @@ class BootstrapUtil
             : (newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2]);
         const lastDataTarget = "#" + newTabs[newTabs.length - 1];
         ElementUtil.setMainContent(lastDataTarget);
+        document.querySelectorAll(dataTarget + " .c-autofocus").forEach(e=>FormUtil.selectAndFocusOnInput(e, true));
 
         const parentParamsStr = Session.sectionParams.get(parentDataTarget);
         const fullParams = new URLSearchParams(parentParamsStr == null ? "" : parentParamsStr);
@@ -205,6 +206,7 @@ class BootstrapUtil
                     HistoryUtil.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
                     document.title = Session.lastNonModalTitle;
                     if(e.target.classList.contains("no-popup")) HistoryUtil.showAnchoredTabs(true);
+                    if(!Util.isMobile()) document.querySelectorAll(".tab-pane.active.show .c-autofocus").forEach(e=>FormUtil.selectAndFocusOnInput(e, true));
                 }
             })
             .on("hide.bs.modal", e=>{
