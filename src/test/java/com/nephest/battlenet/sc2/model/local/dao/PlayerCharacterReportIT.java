@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
@@ -156,7 +157,12 @@ public class PlayerCharacterReportIT
     }
 
     @Test
-    @WithBlizzardMockUser(partition = Partition.GLOBAL, username = BATTLETAG, roles={"USER", "MODERATOR"})
+    @WithBlizzardMockUser
+    (
+        partition = Partition.GLOBAL,
+        username = BATTLETAG,
+        roles={SC2PulseAuthority.USER, SC2PulseAuthority.MODERATOR}
+    )
     public void testChain()
     throws Exception
     {

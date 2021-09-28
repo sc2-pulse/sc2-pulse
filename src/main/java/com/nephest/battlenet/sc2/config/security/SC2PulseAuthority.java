@@ -4,9 +4,10 @@
 package com.nephest.battlenet.sc2.config.security;
 
 import com.nephest.battlenet.sc2.model.Identifiable;
+import org.springframework.security.core.GrantedAuthority;
 
 public enum SC2PulseAuthority
-implements Identifiable
+implements Identifiable, GrantedAuthority
 {
 
     ADMIN("ROLE_ADMIN", "ADMIN", 127),
@@ -36,6 +37,12 @@ implements Identifiable
     public int getId()
     {
         return id;
+    }
+
+    @Override
+    public String getAuthority()
+    {
+        return getRoleName();
     }
 
     public String getName()

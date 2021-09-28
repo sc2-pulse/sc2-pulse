@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -15,5 +15,5 @@ public @interface WithBlizzardMockUser
 {
     Partition partition();
     String username();
-    String[] roles() default {"USER"};
+    SC2PulseAuthority[] roles() default {SC2PulseAuthority.USER};
 }

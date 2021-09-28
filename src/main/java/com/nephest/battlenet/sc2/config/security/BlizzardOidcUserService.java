@@ -7,8 +7,6 @@ import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -47,11 +45,9 @@ implements OAuth2UserService<OidcUserRequest, OidcUser>
         return new BlizzardOidcUser(user, account, getAuthorities(account));
     }
 
-    private GrantedAuthority[] getAuthorities(Account account)
+    private SC2PulseAuthority[] getAuthorities(Account account)
     {
-        return accountRoleDAO.getRoles(account.getId()).stream()
-            .map(r->new SimpleGrantedAuthority(r.getRoleName()))
-            .toArray(GrantedAuthority[]::new);
+        return accountRoleDAO.getRoles(account.getId()).toArray(SC2PulseAuthority[]::new);
     }
 
 }

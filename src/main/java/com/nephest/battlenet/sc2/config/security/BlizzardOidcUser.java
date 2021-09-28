@@ -4,7 +4,6 @@
 package com.nephest.battlenet.sc2.config.security;
 
 import com.nephest.battlenet.sc2.model.local.Account;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
 import org.springframework.security.oauth2.core.oidc.user.OidcUser;
@@ -19,7 +18,7 @@ implements OidcUser
     private final Account account;
     private Set<GrantedAuthority> authorities;
 
-    public BlizzardOidcUser(OidcUser user, Account account, GrantedAuthority... authorities)
+    public BlizzardOidcUser(OidcUser user, Account account, SC2PulseAuthority... authorities)
     {
         this.user = user;
         this.account = account;
