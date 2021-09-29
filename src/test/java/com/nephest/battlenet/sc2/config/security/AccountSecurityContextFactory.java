@@ -32,7 +32,7 @@ implements WithSecurityContextFactory<WithBlizzardMockUser>
     {
         OAuth2User principal =
             new BlizzardOidcUser(mock(OidcUser.class), accountDAO.merge(new Account(
-                null, withMockUser.partition(), withMockUser.username())));
+                null, withMockUser.partition(), withMockUser.username())), List.of());
         Authentication auth = new OAuth2AuthenticationToken(principal, List.of(withMockUser.roles()), withMockUser.username());
         SecurityContext ctxt = SecurityContextHolder.createEmptyContext();
         ctxt.setAuthentication(auth);

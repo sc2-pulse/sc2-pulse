@@ -3,7 +3,8 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
-import com.nephest.battlenet.sc2.config.security.BlizzardOidcUser;
+import com.nephest.battlenet.sc2.config.security.AccountUser;
+import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/my")
@@ -45,31 +47,31 @@ public class PersonalController
     private AccountFollowingService accountFollowingService;
 
     @GetMapping("/common")
-    public CommonPersonalData getCommon(@AuthenticationPrincipal BlizzardOidcUser user)
+    public CommonPersonalData getCommon(@AuthenticationPrincipal AccountUser user)
     {
         return new CommonPersonalData
         (
             user.getAccount(),
-            accountRoleDAO.getRoles(user.getAccount().getId()),
+            user.getAuthorities().stream().map(a->(SC2PulseAuthority) a).collect(Collectors.toList()),
             ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(user.getAccount().getId()),
             accountFollowingService.getAccountFollowingList(user.getAccount().getId())
         );
     }
 
     @GetMapping("/account")
-    public Account getAccount(@AuthenticationPrincipal BlizzardOidcUser user)
+    public Account getAccount(@AuthenticationPrincipal AccountUser user)
     {
         return user.getAccount();
     }
 
     @GetMapping("/characters")
-    public List<LadderDistinctCharacter> getCharacters(@AuthenticationPrincipal BlizzardOidcUser user)
+    public List<LadderDistinctCharacter> getCharacters(@AuthenticationPrincipal AccountUser user)
     {
         return ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(user.getAccount().getId());
     }
 
     @PostMapping("/following/{id}")
-    public ResponseEntity<String> follow(@AuthenticationPrincipal BlizzardOidcUser user, @PathVariable("id") long id)
+    public ResponseEntity<String> follow(@AuthenticationPrincipal AccountUser user, @PathVariable("id") long id)
     {
         if(!accountFollowingService.canFollow(id) || !accountFollowingService.follow(user.getAccount().getId(), id))
         {
@@ -81,13 +83,13 @@ public class PersonalController
     }
 
     @DeleteMapping("/following/{id}")
-    public void unfollow(@AuthenticationPrincipal BlizzardOidcUser user, @PathVariable("id") long id)
+    public void unfollow(@AuthenticationPrincipal AccountUser user, @PathVariable("id") long id)
     {
         accountFollowingService.unfollow(user.getAccount().getId(), id);
     }
 
     @GetMapping("/following")
-    public List<AccountFollowing> getFollowingList(@AuthenticationPrincipal BlizzardOidcUser user)
+    public List<AccountFollowing> getFollowingList(@AuthenticationPrincipal AccountUser user)
     {
         return accountFollowingService.getAccountFollowingList(user.getAccount().getId());
     }
@@ -95,7 +97,7 @@ public class PersonalController
     @GetMapping("/following/ladder")
     public List<LadderTeam> getFollowingLadder
     (
-        @AuthenticationPrincipal BlizzardOidcUser user,
+        @AuthenticationPrincipal AccountUser user,
         @RequestParam("season") int season,
         @RequestParam("queue") QueueType queue,
         @RequestParam("team-type") TeamType teamType,

@@ -42,12 +42,7 @@ implements OAuth2UserService<OidcUserRequest, OidcUser>
             Partition.ofIssuer((URL) user.getAttribute("iss")),
             user.getAttribute("battle_tag"))
         );
-        return new BlizzardOidcUser(user, account, getAuthorities(account));
-    }
-
-    private SC2PulseAuthority[] getAuthorities(Account account)
-    {
-        return accountRoleDAO.getRoles(account.getId()).toArray(SC2PulseAuthority[]::new);
+        return new BlizzardOidcUser(user, account, accountRoleDAO.getRoles(account.getId()));
     }
 
 }

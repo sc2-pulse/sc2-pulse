@@ -3,7 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
-import com.nephest.battlenet.sc2.config.security.BlizzardOidcUser;
+import com.nephest.battlenet.sc2.config.security.AccountUser;
 import com.nephest.battlenet.sc2.model.local.EvidenceVote;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
@@ -56,7 +56,7 @@ public class PlayerCharacterReportController
     @PostMapping("/new")
     public ResponseEntity<String> reportPlayerCharacter
     (
-        @AuthenticationPrincipal BlizzardOidcUser user,
+        @AuthenticationPrincipal AccountUser user,
         @RequestParam(name = "playerCharacterId") Long characterId,
         @RequestParam(name = "additionalPlayerCharacterId", required = false) Long additionalCharacterId,
         @RequestParam(name = "type") PlayerCharacterReport.PlayerCharacterReportType type,
@@ -88,7 +88,7 @@ public class PlayerCharacterReportController
     @PostMapping("/vote/{evidenceId}/{vote}")
     public List<LadderEvidenceVote> vote
     (
-        @AuthenticationPrincipal BlizzardOidcUser user,
+        @AuthenticationPrincipal AccountUser user,
         @PathVariable(name = "evidenceId") Integer evidenceId,
         @PathVariable(name = "vote") Boolean vote
     )

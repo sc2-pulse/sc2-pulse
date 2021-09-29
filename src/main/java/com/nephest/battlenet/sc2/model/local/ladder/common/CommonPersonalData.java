@@ -19,7 +19,7 @@ public class CommonPersonalData
     private final Account account;
 
     @NotNull
-    private final Collection<SC2PulseAuthority> roles;
+    private final Collection<? extends SC2PulseAuthority> roles;
 
     @NotNull
     private final List<LadderDistinctCharacter> characters;
@@ -30,7 +30,7 @@ public class CommonPersonalData
     public CommonPersonalData
     (
         Account account,
-        Collection<SC2PulseAuthority> roles,
+        Collection<? extends SC2PulseAuthority> roles,
         List<LadderDistinctCharacter> characters,
         List<AccountFollowing> accountFollowings
     )
@@ -46,7 +46,7 @@ public class CommonPersonalData
         return account;
     }
 
-    public Collection<SC2PulseAuthority> getRoles()
+    public Collection<? extends SC2PulseAuthority> getRoles()
     {
         return roles;
     }
