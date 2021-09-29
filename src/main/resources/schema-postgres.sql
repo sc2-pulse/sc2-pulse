@@ -564,6 +564,14 @@ CREATE TABLE "evidence_vote"
 
 CREATE INDEX "ix_evidence_vote_updated" ON "evidence_vote"("updated");
 
+CREATE TABLE "persistent_logins"
+(
+    "username" TEXT NOT NULL,
+    "series" TEXT PRIMARY KEY,
+    "token" TEXT NOT NULL,
+    "last_used" TIMESTAMP WITH TIME ZONE NOT NULL
+);
+
 CREATE TYPE player_character_summary AS
 (
     player_character_id BIGINT,

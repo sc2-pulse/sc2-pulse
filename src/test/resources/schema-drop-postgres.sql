@@ -1,5 +1,6 @@
 DROP TYPE IF EXISTS "player_character_summary" CASCADE;
 DROP FUNCTION IF EXISTS "get_player_character_summary" CASCADE;
+DROP TABLE IF EXISTS "persistent_logins" CASCADE;
 DROP TABLE IF EXISTS "evidence_vote" CASCADE;
 DROP TABLE IF EXISTS "evidence" CASCADE;
 DROP TABLE IF EXISTS "player_character_report" CASCADE;

@@ -112,6 +112,7 @@
             .replace(/ /g, '')
             .split(",");
         const MATCH_BATCH_SIZE = /*[[${@ladderMatchDAO.getResultsPerPage()}]]*/ '';
+        const AUTHENTICATED = /*[[${#authentication.name}]]*/ '';
     </script>
     <th:block  id="script-additional" th:switch="${#arrays.contains(@environment.getActiveProfiles(), 'dev')}">
         <th:block th:case="true">

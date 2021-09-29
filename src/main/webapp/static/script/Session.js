@@ -6,22 +6,14 @@ class Session
 
     static getMyInfo()
     {
-        if(!document.cookie.includes("oauth-reg")) return Promise.resolve(1);
+        if(!Session.isAuthenticated()) return Promise.resolve(1);
         return PersonalUtil.getMyAccount()
             .then(e=>{Session.updateMyInfoThen(); return e});
     }
 
     static onPersonalException(error)
     {
-        if ((error.message.startsWith("401") || error.message.toLowerCase().startsWith("unauthorized"))
-            && document.cookie.includes("oauth-reg"))
-        {
-            return Session.renewBlizzardRegistration();
-        }
-        else
-        {
-            Util.setGeneratingStatus(STATUS.ERROR, error.message, error);
-        }
+        Util.setGeneratingStatus(STATUS.ERROR, error.message, error);
     }
 
     static renewBlizzardRegistration()
@@ -257,6 +249,11 @@ class Session
     static updateStyleOverride()
     {
         Session.updateCheaterVisibility();
+    }
+
+    static isAuthenticated()
+    {
+        return AUTHENTICATED == "anonymousUser" || AUTHENTICATED == "" || AUTHENTICATED == null ? false : true;
     }
 
 }

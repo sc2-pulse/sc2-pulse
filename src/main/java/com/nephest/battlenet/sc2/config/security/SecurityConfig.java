@@ -15,16 +15,25 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.oauth2.client.*;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import javax.servlet.ServletContext;
+import javax.sql.DataSource;
+import java.time.Duration;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig
 extends WebSecurityConfigurerAdapter
 {
+
+    public static final Duration REMEMBER_ME_DURATION = Duration.ofDays(365);
 
     @Autowired
     private AccountDAO accountDAO;
@@ -33,7 +42,13 @@ extends WebSecurityConfigurerAdapter
     private AccountRoleDAO accountRoleDAO;
 
     @Autowired
-    private SameSiteRememberMeAuthenticationSuccessfulHandler sameSiteRememberMeAuthenticationSuccessfulHandler;
+    private AccountUserDetailsService accountUserDetailsService;
+
+    @Autowired
+    private PersistentTokenRepository persistentTokenRepository;
+
+    @Autowired
+    private ServletContext servletContext;
 
     @Override
     public void configure(HttpSecurity http)
@@ -55,11 +70,29 @@ extends WebSecurityConfigurerAdapter
                 .antMatchers("/api/my/**").authenticated()
             .and().logout()
                 .logoutSuccessUrl("/?#stats")
-                .deleteCookies(SameSiteRememberMeAuthenticationSuccessfulHandler.COOKIE_NAME)
             .and().oauth2Login()
                 .loginPage("/?#personal")
-                .successHandler(sameSiteRememberMeAuthenticationSuccessfulHandler)
-                .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, accountRoleDAO));
+                .defaultSuccessUrl(servletContext.getContextPath() + "/?#personal-characters")
+                .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, accountRoleDAO))
+            .and().and().rememberMe()
+                .tokenRepository(persistentTokenRepository)
+                .alwaysRemember(true)
+                .tokenValiditySeconds((int) REMEMBER_ME_DURATION.toSeconds());
+    }
+
+    //the been definition is needed by remember me
+    @Bean
+    public UserDetailsService userDetailsService()
+    {
+        return accountUserDetailsService;
+    }
+
+    @Bean
+    public PersistentTokenRepository persistentTokenRepository(@Autowired DataSource dataSource)
+    {
+        JdbcTokenRepositoryImpl repository = new JdbcTokenRepositoryImpl();
+        repository.setDataSource(dataSource);
+        return repository;
     }
 
     @Bean

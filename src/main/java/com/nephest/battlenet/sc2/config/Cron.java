@@ -67,6 +67,9 @@ public class Cron
     private TeamStateDAO teamStateDAO;
 
     @Autowired
+    private PersistentLoginDAO persistentLoginDAO;
+
+    @Autowired
     private PostgreSQLUtils postgreSQLUtils;
 
     @Autowired
@@ -290,6 +293,7 @@ public class Cron
     private void commenceFrequentMaintenance()
     {
         postgreSQLUtils.reindex("ix_match_updated");
+        persistentLoginDAO.removeExpired();
         this.maintenanceFrequentInstant.setValueAndSave(Instant.now());
     }
 

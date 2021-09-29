@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
@@ -35,6 +36,9 @@ public class PersonalController
 {
 
     @Autowired
+    private AccountDAO accountDAO;
+
+    @Autowired
     private AccountRoleDAO accountRoleDAO;
 
     @Autowired
@@ -51,7 +55,7 @@ public class PersonalController
     {
         return new CommonPersonalData
         (
-            user.getAccount(),
+            getAccount(user),
             user.getAuthorities().stream().map(a->(SC2PulseAuthority) a).collect(Collectors.toList()),
             ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(user.getAccount().getId()),
             accountFollowingService.getAccountFollowingList(user.getAccount().getId())
@@ -61,7 +65,8 @@ public class PersonalController
     @GetMapping("/account")
     public Account getAccount(@AuthenticationPrincipal AccountUser user)
     {
-        return user.getAccount();
+        //Spring security nullifies battletags, fetching account by id until I figure out how to fix the issue
+        return accountDAO.findByIds(user.getAccount().getId()).get(0);
     }
 
     @GetMapping("/characters")

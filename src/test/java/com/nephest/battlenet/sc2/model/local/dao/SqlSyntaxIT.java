@@ -83,6 +83,9 @@ public class SqlSyntaxIT
     private VarDAO varDAO;
 
     @Autowired
+    private PersistentLoginDAO persistentLoginDAO;
+
+    @Autowired
     private PostgreSQLUtils postgreSQLUtils;
 
     @BeforeAll
@@ -286,6 +289,7 @@ public class SqlSyntaxIT
         proTeamDAO.removeExpired();
         proTeamMemberDAO.removeExpired();
         teamStateDAO.removeExpired();
+        persistentLoginDAO.removeExpired();
 
         teamMemberDAO.removeByTeamId(zergTeam.getId());
         assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).isEmpty());
