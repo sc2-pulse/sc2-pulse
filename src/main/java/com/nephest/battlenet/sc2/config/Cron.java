@@ -293,13 +293,13 @@ public class Cron
     private void commenceFrequentMaintenance()
     {
         postgreSQLUtils.reindex("ix_match_updated");
-        persistentLoginDAO.removeExpired();
         this.maintenanceFrequentInstant.setValueAndSave(Instant.now());
     }
 
     private void commenceInfrequentMaintenance()
     {
         postgreSQLUtils.reindex("ix_team_state_team_id_archived", "ix_team_state_timestamp");
+        persistentLoginDAO.removeExpired();
         this.maintenanceInfrequentInstant.setValueAndSave(Instant.now());
     }
 
