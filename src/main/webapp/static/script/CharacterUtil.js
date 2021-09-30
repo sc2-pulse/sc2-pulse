@@ -1217,7 +1217,7 @@ class CharacterUtil
 
     static voteOnEvidence(id, vote)
     {
-        return fetch(`${ROOT_CONTEXT_PATH}api/character/report/vote/${id}/${vote}`, {method: "POST"})
+        return fetch(`${ROOT_CONTEXT_PATH}api/character/report/vote/${id}/${vote}`, Util.addCsrfHeader({method: "POST"}))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json()})
     }
 
@@ -1304,7 +1304,7 @@ class CharacterUtil
 
     static reportCharacter(fd)
     {
-        return fetch(ROOT_CONTEXT_PATH + "api/character/report/new", {method: "POST", body: fd})
+        return fetch(ROOT_CONTEXT_PATH + "api/character/report/new", Util.addCsrfHeader({method: "POST", body: fd}))
            .then(resp => {
                 if (!resp.ok) {
                     let desc;

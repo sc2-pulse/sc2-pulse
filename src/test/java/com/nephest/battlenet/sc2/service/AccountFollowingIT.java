@@ -17,9 +17,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -33,6 +30,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -191,16 +189,12 @@ public class AccountFollowingIT
         );
         teamMemberDAO.create(member3);
 
-        String TOKEN_ATTR_NAME = "org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository.CSRF_TOKEN";
-        HttpSessionCsrfTokenRepository httpSessionCsrfTokenRepository = new HttpSessionCsrfTokenRepository();
-        CsrfToken csrfToken = httpSessionCsrfTokenRepository.generateToken(new MockHttpServletRequest());
-
         //follow a random account from the first season
         mvc.perform
         (
-            post("/api/my/following/10").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/my/following/10")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -208,9 +202,9 @@ public class AccountFollowingIT
         //follow ref account
         mvc.perform
         (
-            post("/api/my/following/" + account.getId()).contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/my/following/" + account.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -259,9 +253,9 @@ public class AccountFollowingIT
         accountFollowingService.setFollowingMax(2);
         mvc.perform
         (
-            post("/api/my/following/" + 10).contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/my/following/" + 10)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
         )
             .andExpect(status().is4xxClientError())
             .andReturn();
@@ -269,9 +263,9 @@ public class AccountFollowingIT
         //unfollowing
         mvc.perform
         (
-            delete("/api/my/following/" + account.getId()).contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            delete("/api/my/following/" + account.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
         )
             .andExpect(status().isOk())
             .andReturn();

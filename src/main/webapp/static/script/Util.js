@@ -248,6 +248,13 @@ class Util
         });
     }
 
+    static addCsrfHeader(options)
+    {
+        if(!options.headers) options.headers = {};
+        options.headers["X-XSRF-TOKEN"] = Util.getCookie("XSRF-TOKEN");
+        return options;
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =

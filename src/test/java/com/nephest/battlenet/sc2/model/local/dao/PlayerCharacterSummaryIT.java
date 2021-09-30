@@ -18,9 +18,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -36,7 +33,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import static com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterReportIT.TOKEN_ATTR_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -215,15 +211,10 @@ public class PlayerCharacterSummaryIT
             new TeamState(team1v1_t_s3.getId(), OffsetDateTime.now().minusDays(31), team1v1_t_s3.getDivisionId(), 3, 5)
         );
 
-        HttpSessionCsrfTokenRepository httpSessionCsrfTokenRepository = new HttpSessionCsrfTokenRepository();
-        CsrfToken csrfToken = httpSessionCsrfTokenRepository.generateToken(new MockHttpServletRequest());
-
         PlayerCharacterSummary[] summary = objectMapper.readValue(mvc.perform
         (
             get("/api/character/{ids}/summary/1v1/50", charEu1.getId() + "," + charEu2.getId() + "," + charEu2.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
         )
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString(), PlayerCharacterSummary[].class);
@@ -263,15 +254,10 @@ public class PlayerCharacterSummaryIT
     public void testConstraints()
     throws Exception
     {
-        HttpSessionCsrfTokenRepository httpSessionCsrfTokenRepository = new HttpSessionCsrfTokenRepository();
-        CsrfToken csrfToken = httpSessionCsrfTokenRepository.generateToken(new MockHttpServletRequest());
-
         mvc.perform
         (
             get("/api/character/1/summary/1v1/" + CharacterController.SUMMARY_DEPTH_MAX + 1)
                 .contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
         )
         .andExpect(status().isBadRequest())
         //bugs out when parsing join, must be fixed in hte future
@@ -285,8 +271,6 @@ public class PlayerCharacterSummaryIT
         (
             get("/api/character/{ids}/summary/1v1/" + CharacterController.SUMMARY_DEPTH_MAX,  longList)
                 .contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
         )
         .andExpect(status().isBadRequest())
         //bugs out when parsing join, must be fixed in hte future

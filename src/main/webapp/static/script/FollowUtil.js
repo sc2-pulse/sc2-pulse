@@ -9,7 +9,7 @@ class FollowUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
-        return fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, {method: "POST"})
+        return fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "POST"}))
             .then
             (
                 resp =>
@@ -29,7 +29,7 @@ class FollowUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
-        return fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, {method: "DELETE"})
+        return fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "DELETE"}))
             .then
             (
                 resp =>

@@ -23,9 +23,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
-import org.springframework.mock.web.MockHttpServletRequest;
-import org.springframework.security.web.csrf.CsrfToken;
-import org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -45,6 +42,7 @@ import java.util.List;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -114,8 +112,6 @@ public class PlayerCharacterReportIT
     private static Account account;
     private static MockMvc mvc;
 
-    public static final String TOKEN_ATTR_NAME = "org.springframework.security.web.csrf.HttpSessionCsrfTokenRepository.CSRF_TOKEN";
-
     @BeforeAll
     public static void beforeAll
     (
@@ -179,23 +175,16 @@ public class PlayerCharacterReportIT
 
         OffsetDateTime start = OffsetDateTime.now();
 
-        HttpSessionCsrfTokenRepository httpSessionCsrfTokenRepository = new HttpSessionCsrfTokenRepository();
-        CsrfToken csrfToken = httpSessionCsrfTokenRepository.generateToken(new MockHttpServletRequest());
-        mvc.perform
-        (
-            get("/api/character/report/list").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
-        )
-        .andExpect(status().isOk())
-        .andExpect(content().json("[]"))
-        .andReturn();
+        mvc.perform(get("/api/character/report/list").contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andExpect(content().json("[]"))
+            .andReturn();
 
         mvc.perform
         (
-            post("/api/character/report/new").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text")
@@ -205,9 +194,9 @@ public class PlayerCharacterReportIT
 
         mvc.perform
         (
-            post("/api/character/report/new").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
                 .param("playerCharacterId", "1")
                 .param("additionalPlayerCharacterId", "2")
                 .param("type", "LINK")
@@ -218,9 +207,9 @@ public class PlayerCharacterReportIT
 
         mvc.perform
         (
-            post("/api/character/report/new").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
                 .param("playerCharacterId", "2")
                 .param("additionalPlayerCharacterId", "3")
                 .param("type", "LINK")
@@ -231,9 +220,9 @@ public class PlayerCharacterReportIT
 
         mvc.perform
         (
-            post("/api/character/report/new").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text 2")
@@ -241,45 +230,45 @@ public class PlayerCharacterReportIT
         .andExpect(status().isOk())
         .andReturn();
 
-        LadderPlayerCharacterReport[] reports = getReports(csrfToken);
+        LadderPlayerCharacterReport[] reports = getReports();
 
         verifyReports(reports, new Boolean[]{null, null, null}, new Boolean[]{null, null, null, null});
         //no votes, nothing to update
         reportService.update(start);
-        reports = getReports(csrfToken);
+        reports = getReports();
         verifyReports(reports, new Boolean[]{null, null, null}, new Boolean[]{null, null, null, null});
 
         assertEquals(2, evidenceDAO.getRequiredVotes()); //2 is a minimal value
 
         mvc.perform
         (
-            post("/api/character/report/vote/" + reports[0].getEvidence().get(0).getEvidence().getId() + "/true").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/vote/" + reports[0].getEvidence().get(0).getEvidence().getId() + "/true")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
         )
         .andExpect(status().isOk())
         .andReturn();
 
         mvc.perform
         (
-            post("/api/character/report/vote/" + reports[1].getEvidence().get(0).getEvidence().getId() + "/true").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/vote/" + reports[1].getEvidence().get(0).getEvidence().getId() + "/true")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
         )
         .andExpect(status().isOk())
         .andReturn();
 
         mvc.perform
         (
-            post("/api/character/report/vote/" + reports[2].getEvidence().get(0).getEvidence().getId() + "/true").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/vote/" + reports[2].getEvidence().get(0).getEvidence().getId() + "/true")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
         )
         .andExpect(status().isOk())
         .andReturn();
 
         reportService.update(start);
-        reports = getReports(csrfToken);
+        reports = getReports();
         //not enough votes, nothing to update
         verifyReports(reports, new Boolean[]{null, null, null}, new Boolean[]{null, null, null, null});
         assertEquals(2, evidenceDAO.getRequiredVotes());
@@ -293,9 +282,9 @@ public class PlayerCharacterReportIT
             .forEach(a->assertEquals(account, a));
         LadderEvidenceVote[] votes = objectMapper.readValue(mvc.perform
         (
-            post("/api/character/report/vote/" + reports[0].getEvidence().get(0).getEvidence().getId() + "/true").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/vote/" + reports[0].getEvidence().get(0).getEvidence().getId() + "/true")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
         )
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString(), LadderEvidenceVote[].class);
@@ -351,7 +340,7 @@ public class PlayerCharacterReportIT
         ));
 
         reportService.update(start);
-        reports = getReports(csrfToken);
+        reports = getReports();
         assertEquals(2, evidenceDAO.getActiveModCount());
         assertEquals(2, evidenceDAO.getRequiredVotes());
         //true votes confirmed the reports, but one false vote is not enough to deny it
@@ -435,16 +424,15 @@ public class PlayerCharacterReportIT
         reportService.update(start);
         assertEquals(3, evidenceDAO.getActiveModCount());
         assertEquals(2, evidenceDAO.getRequiredVotes());
-        reports = getReports(csrfToken);
+        reports = getReports();
         //one evidence is denied, but the report still has confirmed status because there is one confirmed evidence
         verifyReports(reports, new Boolean[]{true, true, true}, new Boolean[]{true, false, true, true});
 
         //verify find by character id
         LadderPlayerCharacterReport[] characterReports = objectMapper.readValue(mvc.perform
         (
-            get("/api/character/report/list/1").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            get("/api/character/report/list/1")
+                .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString(), LadderPlayerCharacterReport[].class);
@@ -528,9 +516,9 @@ public class PlayerCharacterReportIT
         for(int i = 0; i < PlayerCharacterReportService.CONFIRMED_EVIDENCE_MAX; i++)
         mvc.perform
         (
-            post("/api/character/report/new").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text " + i)
@@ -566,9 +554,9 @@ public class PlayerCharacterReportIT
         //and expect conflict
         mvc.perform
         (
-            post("/api/character/report/new").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
                 .param("playerCharacterId", "5")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text ")
@@ -582,9 +570,9 @@ public class PlayerCharacterReportIT
         for(int i = 0; i < PlayerCharacterReportService.EVIDENCE_PER_DAY - PlayerCharacterReportService.CONFIRMED_EVIDENCE_MAX - 4; i++)
             mvc.perform
             (
-                post("/api/character/report/new").contentType(MediaType.APPLICATION_JSON)
-                    .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                    .param(csrfToken.getParameterName(), csrfToken.getToken())
+                post("/api/character/report/new")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .with(csrf().asHeader())
                     .param("playerCharacterId", "1")
                     .param("type", "CHEATER")
                     .param("evidence", "evidence text " + i)
@@ -595,9 +583,9 @@ public class PlayerCharacterReportIT
         //and expect too many requests
         mvc.perform
         (
-            post("/api/character/report/new").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text 999")
@@ -607,7 +595,7 @@ public class PlayerCharacterReportIT
         .andReturn();
 
         //verify removal and hiding
-        reports = getReports(csrfToken);
+        reports = getReports();
         assertEquals(5, reports.length);
         long evidenceCountEnd = Arrays.stream(reports).flatMap(r->r.getEvidence().stream()).count();
         PlayerCharacterReport expiredReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
@@ -624,7 +612,7 @@ public class PlayerCharacterReportIT
                 true, OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),OffsetDateTime.now()));
         assertEquals(7, playerCharacterReportDAO.getAll().size());
         assertEquals(evidenceCountEnd + 2, evidenceDAO.findAll(false).size());
-        reports = getReports(csrfToken);
+        reports = getReports();
         //hidden
         assertEquals(6, reports.length);
         assertEquals(evidenceCountEnd + 1, evidenceDAO.findAll(true).size());
@@ -769,14 +757,13 @@ public class PlayerCharacterReportIT
         assertEquals(account, evidence3_1.getReporterAccount());
     }
 
-    private LadderPlayerCharacterReport[] getReports(CsrfToken csrfToken)
+    private LadderPlayerCharacterReport[] getReports()
     throws Exception
     {
         return objectMapper.readValue(mvc.perform
         (
-            get("/api/character/report/list").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            get("/api/character/report/list")
+                .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString(), LadderPlayerCharacterReport[].class);
@@ -787,14 +774,11 @@ public class PlayerCharacterReportIT
     public void testNonModVote()
     throws Exception
     {
-        HttpSessionCsrfTokenRepository httpSessionCsrfTokenRepository = new HttpSessionCsrfTokenRepository();
-        CsrfToken csrfToken = httpSessionCsrfTokenRepository.generateToken(new MockHttpServletRequest());
-
         mvc.perform
         (
-            post("/api/character/report/vote/1/true").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/vote/1/true")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
                 .param("evidenceId", "1")
                 .param("vote", "true")
         )
@@ -803,9 +787,9 @@ public class PlayerCharacterReportIT
 
         mvc.perform
         (
-            post("/api/character/report/vote/1/true/").contentType(MediaType.APPLICATION_JSON)
-                .sessionAttr(TOKEN_ATTR_NAME, csrfToken)
-                .param(csrfToken.getParameterName(), csrfToken.getToken())
+            post("/api/character/report/vote/1/true/")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
         )
         .andExpect(status().isForbidden())
         .andReturn();
@@ -823,10 +807,7 @@ public class PlayerCharacterReportIT
             null, report.getId(), null, privateIp, "description asda",false,
             OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,OffsetDateTime.now()));
 
-        HttpSessionCsrfTokenRepository httpSessionCsrfTokenRepository = new HttpSessionCsrfTokenRepository();
-        CsrfToken csrfToken = httpSessionCsrfTokenRepository.generateToken(new MockHttpServletRequest());
-
-        LadderPlayerCharacterReport[] reports = getReports(csrfToken);
+        LadderPlayerCharacterReport[] reports = getReports();
         Arrays.stream(reports)
             .flatMap(r->r.getEvidence().stream())
             .forEach(e->assertArrayEquals(EvidenceDAO.REPORTER_IP_PRIVATE_REPLACEMENT, e.getEvidence().getReporterIp()));

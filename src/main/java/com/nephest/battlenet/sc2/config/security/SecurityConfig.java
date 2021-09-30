@@ -21,6 +21,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import javax.servlet.ServletContext;
@@ -55,8 +56,9 @@ extends WebSecurityConfigurerAdapter
     throws Exception
     {
         http
-            .csrf().disable() //handled by sameSite
-            .exceptionHandling()
+            .csrf()
+                .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+            .and().exceptionHandling()
                 .defaultAuthenticationEntryPointFor
                 (
                     new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
