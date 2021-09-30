@@ -572,6 +572,8 @@ CREATE TABLE "persistent_logins"
     "last_used" TIMESTAMP WITH TIME ZONE NOT NULL
 );
 
+CREATE INDEX "ix_persistent_logins_username" ON "persistent_logins"("username");
+
 CREATE TYPE player_character_summary AS
 (
     player_character_id BIGINT,

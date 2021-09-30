@@ -9,3 +9,5 @@ CREATE TABLE "persistent_logins"
     "token" TEXT NOT NULL,
     "last_used" TIMESTAMP WITH TIME ZONE NOT NULL
 );
+
+CREATE INDEX "ix_persistent_logins_username" ON "persistent_logins"("username");
