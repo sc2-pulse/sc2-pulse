@@ -7,6 +7,7 @@ import javax.servlet.*;
 import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletResponse;
 
+//this filter protects personal data when SpringSecurity is disabled
 @WebFilter({"/api/my/*", "/api/character/report/*"})
 public class NoCacheFilter
 implements Filter

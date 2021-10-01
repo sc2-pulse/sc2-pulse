@@ -3,21 +3,26 @@
 
 package com.nephest.battlenet.sc2.config.filter;
 
-import javax.servlet.*;
-import javax.servlet.annotation.WebFilter;
-import javax.servlet.http.HttpServletResponse;
+import org.springframework.core.annotation.Order;
 
-@WebFilter("/api/*")
-public class ApiFilter
+import javax.servlet.*;
+import javax.servlet.http.HttpServletResponse;
+import java.time.Duration;
+
+@Order(-1) //pre-security order
+public class AverageSessionCacheFilter
 implements Filter
 {
+
+    public static final Duration CACHE_DURATION = Duration.ofSeconds(240);
+    private static final String MAX_AGE = "max-age=" + CACHE_DURATION.toSeconds();
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
     throws java.io.IOException, ServletException
     {
         HttpServletResponse hresp = (HttpServletResponse) resp;
-        hresp.setHeader("Cache-Control", "max-age=300");
+        hresp.setHeader("Cache-Control", MAX_AGE);
         chain.doFilter(req, resp);
     }
 

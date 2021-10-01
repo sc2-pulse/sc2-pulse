@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2;
 
 import com.nephest.battlenet.sc2.config.GlobalRestTemplateCustomizer;
 import com.nephest.battlenet.sc2.config.convert.*;
+import com.nephest.battlenet.sc2.config.filter.AverageSessionCacheFilter;
 import com.nephest.battlenet.sc2.config.filter.MaintenanceFilter;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import org.springframework.boot.SpringApplication;
@@ -90,6 +91,16 @@ extends SpringBootServletInitializer
     public Random simpleRng()
     {
         return new Random();
+    }
+
+    @Bean
+    public FilterRegistrationBean<AverageSessionCacheFilter> sessionWebCacheFilter(){
+        FilterRegistrationBean<AverageSessionCacheFilter> registrationBean = new FilterRegistrationBean<>();
+
+        registrationBean.setFilter(new AverageSessionCacheFilter());
+        registrationBean.addUrlPatterns("/api/ladder/stats/*");
+
+        return registrationBean;
     }
 
     @Bean @Profile("maintenance")
