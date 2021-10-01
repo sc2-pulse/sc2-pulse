@@ -230,7 +230,6 @@ class HistoryUtil
                 const count = params.get("count"); params.delete("count");
                 const formParams = params.toString();
                 scrollTo = "generated-info-all";
-                lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-ladder"));
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(LadderUtil.updateLadder(formParams, ratingAnchor, idAnchor, count));
                 promises.push(StatsUtil.updateQueueStats(formParams));
@@ -260,7 +259,6 @@ class HistoryUtil
             case "following-ladder":
                 LadderUtil.restoreLadderFormState(document.getElementById("form-following-ladder"), params);
                 scrollTo = "following-ladder";
-                lazyPromises.push(e=>BootstrapUtil.hideCollapsible("form-following-ladder"));
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(LadderUtil.updateMyLadder(params.toString()));
                 break;

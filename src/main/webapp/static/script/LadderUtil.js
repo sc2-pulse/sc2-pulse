@@ -189,7 +189,7 @@ class LadderUtil
                 Session.currentSeason = document.getElementById("form-ladder-season-picker").value;
                 Session.currentTeamFormat = EnumUtil.enumOfFullName(document.getElementById("form-ladder-team-format-picker").value, TEAM_FORMAT);
                 Session.currentTeamType = EnumUtil.enumOfName(document.getElementById("form-ladder-team-type-picker").value, TEAM_TYPE);
-                Promise.all([LadderUtil.getLadderAll(), BootstrapUtil.hideCollapsible("form-ladder")])
+                LadderUtil.getLadderAll()
                     .then(e=>{Util.scrollIntoViewById(form.getAttribute("data-on-success-scroll-to")); HistoryUtil.updateActiveTabs();});
             }
         );
@@ -209,7 +209,7 @@ class LadderUtil
                 Session.currentPersonalSeason = document.getElementById("form-following-ladder-season-picker").value;
                 Session.currentPersonalTeamFormat = EnumUtil.enumOfFullName(document.getElementById("form-following-ladder-team-format-picker").value, TEAM_FORMAT);
                 Session.currentPersonalTeamType = EnumUtil.enumOfName(document.getElementById("form-following-ladder-team-type-picker").value, TEAM_TYPE);
-                Promise.all([LadderUtil.updateMyLadder(Util.urlencodeFormData(new FormData(document.getElementById("form-following-ladder"))), BootstrapUtil.hideCollapsible("form-following-ladder"))])
+                LadderUtil.updateMyLadder(Util.urlencodeFormData(new FormData(document.getElementById("form-following-ladder"))))
                     .then(e=>{Util.scrollIntoViewById(form.getAttribute("data-on-success-scroll-to")); HistoryUtil.updateActiveTabs();});
             }
         );
