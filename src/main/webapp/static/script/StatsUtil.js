@@ -97,15 +97,37 @@ class StatsUtil
 
     static updateLadderStatsModel(formParams)
     {
+
+        const urlParams = new URLSearchParams("?" + formParams);
+        return Promise.all([StatsUtil.updateLadderStatsGlobalModel(formParams), StatsUtil.updateLadderStatsSeasonModel(urlParams)])
+            .then(jsons=>Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LADDER_STATS, {all: jsons[0], current: jsons[1]}));
+    }
+
+    static updateLadderStatsGlobalModel(formParams)
+    {
         const request = ROOT_CONTEXT_PATH + "api/ladder/stats?" + formParams;
         return fetch(request)
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
-            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LADDER_STATS, json); res(json);}));
+            .then(json => json);
+    }
+
+    static updateLadderStatsSeasonModel(urlParams)
+    {
+        const regions = [];
+        for(const region of Object.values(REGION)) if(urlParams.has(region.name)) regions.push(region.name.toUpperCase());
+        const leagues = [];
+        for(const league of Object.values(LEAGUE)) if(urlParams.has(league.shortName)) leagues.push(league.name.toUpperCase());
+
+        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/league/${urlParams.get('season')}/${urlParams.get('queue')}/${urlParams.get('team-type')}/${regions.join(',')}/${leagues.join(',')}`;
+        return fetch(request)
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(json => json);
     }
 
     static updateLadderStatsView()
     {
-        const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
+        StatsUtil.updateLadderStatsCurrentView();
+        const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).all;
         const globalResult = {gamesPlayed: {}, teamCount: {}};
         const percentageResult = {};
         for(const [seasonId, stats] of Object.entries(searchResult))
@@ -178,6 +200,109 @@ class StatsUtil
             (name)=>EnumUtil.enumOfId(name, LEAGUE).name,
             SeasonUtil.seasonIdTranslator
         );
+    }
+
+    static updateLadderStatsCurrentView()
+    {
+        const stats = Util.groupBy(Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current, s=>s.season.region);
+        StatsUtil.updateLadderStatsCurrentRaceView(stats);
+        StatsUtil.updateLadderStatsCurrentLeagueView(stats);
+    }
+
+    static updateLadderStatsCurrentRaceView(stats)
+    {
+        document.querySelectorAll(".table-race-league-region").forEach(t=>t.closest("section").classList.add("d-none"));
+        const formattedLeagueStats = {};
+        const formattedStatsPercentage = {};
+        for(const [region, regionStats] of stats)
+        {
+            const regionStatsPercentage = {};
+            formattedStatsPercentage[region] = regionStatsPercentage;
+            for(const leagueStats of regionStats)
+            {
+                let totalGamesPlayed = 0;
+                Object.values(RACE).forEach(race=>totalGamesPlayed += leagueStats.leagueStats[race.name + "GamesPlayed"]);
+                const league = EnumUtil.enumOfId(leagueStats.league.type, LEAGUE).name;
+                if(!formattedLeagueStats[league]) formattedLeagueStats[league] = {};
+                regionStatsPercentage[league] = {};
+                for(const race of Object.values(RACE))
+                {
+                    const raceGamesStr = race.name + "GamesPlayed";
+                    if(leagueStats.leagueStats[raceGamesStr]) {
+                        formattedLeagueStats[league][race.name] = formattedLeagueStats[league][race.name] == null
+                            ? leagueStats.leagueStats[raceGamesStr]
+                            : formattedLeagueStats[league][race.name] + leagueStats.leagueStats[raceGamesStr];
+                        regionStatsPercentage[league][race.name] =
+                            (leagueStats.leagueStats[raceGamesStr] / totalGamesPlayed) * 100;
+                    } 
+                }
+            }
+        }
+        for(const [league, lStats] of Object.entries(formattedLeagueStats)) {
+            const totalGamesPlayed = Object.values(lStats).reduce((a, b)=>a+b);
+            for(const [race, games] of Object.entries(lStats)) lStats[race] = (games / totalGamesPlayed) * 100;
+        }
+
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("games-played-race-league-global-table"), formattedLeagueStats,
+            (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order,
+            (name)=>EnumUtil.enumOfName(name, RACE).name,
+            (league)=>EnumUtil.enumOfName(league, LEAGUE).name
+        );
+        for(const [region, regionStats] of Object.entries(formattedStatsPercentage))
+        {
+            const table = document.getElementById("games-played-race-league-" + region.toLowerCase() + "-table");
+            table.closest("section").classList.remove("d-none");
+            TableUtil.updateColRowTable
+            (
+                table, regionStats,
+                (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order,
+                (name)=>EnumUtil.enumOfName(name, RACE).name,
+                (league)=>EnumUtil.enumOfName(league, LEAGUE).name
+            );
+        }
+        if(Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current.length > 0 )
+        {
+            const season = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current[0].season.battlenetId;
+            document.querySelectorAll("#stats-race .season-current").forEach(s=>s.textContent = "s" + season)
+        }
+    }
+
+    static updateLadderStatsCurrentLeagueView(stats)
+    {
+        const formattedStats = {};
+        const formattedStatsPercentage = {};
+        for(const [region, regionStats] of stats)
+        {
+             formattedStats[region] = {};
+             for(const leagueStats of regionStats)
+             {
+                 const league = EnumUtil.enumOfId(leagueStats.league.type, LEAGUE).name;
+                 formattedStats[region][league] = leagueStats.leagueStats.teamCount;
+             }
+        }
+        for(const [region, regionStats] of Object.entries(formattedStats))
+        {
+            const teamsTotal = Object.values(regionStats).reduce((a, b)=>a+b);
+            formattedStatsPercentage[region] = {};
+            for(const [league, games] of Object.entries(regionStats))
+            {
+                formattedStatsPercentage[region][league] = (formattedStats[region][league] / teamsTotal) * 100;
+            }
+        }
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("team-count-region-league-table"), formattedStatsPercentage,
+            (a, b)=>EnumUtil.enumOfName(a, LEAGUE).order - EnumUtil.enumOfName(b, LEAGUE).order,
+            (name)=>EnumUtil.enumOfName(name, LEAGUE).name,
+            (region)=>EnumUtil.enumOfName(region, REGION).name
+        );
+        if(Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current.length > 0 )
+        {
+            const season = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current[0].season.battlenetId;
+            document.querySelectorAll("#stats-league .season-current").forEach(s=>s.textContent = "s" + season)
+        }
     }
 
     static updateLadderStats(formParams)

@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderLeagueStats;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -44,6 +46,10 @@ public class LadderStatsDAO
         + "AND league.type IN (:leagueTypes) "
         + "AND league.queue_type=:queueType "
         + "AND league.team_type=:teamType ";
+
+    private static final String LADDER_SEARCH_STATS_SEASON_QUERY = LADDER_SEARCH_STATS_QUERY
+        + "AND season.battlenet_id = :seasonId "
+        + "ORDER BY season.region, league.type";
 
     private static final String FIND_LEAGUE_TIER_BOUNDS_QUERY =
         "SELECT "
@@ -113,6 +119,13 @@ public class LadderStatsDAO
         return result;
     };
 
+    public static final RowMapper<LadderLeagueStats> STD_ROW_MAPPER = (rs, i)->new LadderLeagueStats
+    (
+        SeasonDAO.getStdRowMapper().mapRow(rs, i),
+        LeagueDAO.getStdRowMapper().mapRow(rs, i),
+        LeagueStatsDAO.STD_ROW_MAPPER.mapRow(rs, i)
+    );
+
     @Autowired
     public LadderStatsDAO
     (
@@ -147,6 +160,21 @@ public class LadderStatsDAO
         return template
             .query(FIND_LEAGUE_TIER_BOUNDS_QUERY, params, LEAGUE_TIER_BOUNDS_EXTRACTOR);
     }
+
+    public List<LadderLeagueStats> findLeagueStats
+    (
+        int season,
+        List<Region> regions,
+        List<League.LeagueType> leagueTypes,
+        QueueType queueType,
+        TeamType teamType
+    )
+    {
+        MapSqlParameterSource params =
+            LadderUtil.createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType);
+        return template.query(LADDER_SEARCH_STATS_SEASON_QUERY, params, STD_ROW_MAPPER);
+    }
+
 
     @Cacheable(cacheNames="search-ladder-stats")
     public Map<Integer, MergedLadderSearchStatsResult> findStats

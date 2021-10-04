@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderLeagueStats;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -146,6 +147,19 @@ public class LadderController
     public Map<QueueType, Map<TeamType, Map<Integer, MergedLadderSearchStatsResult>>> getLadderStatsBundle()
     {
         return ladderStatsDAO.findStats();
+    }
+
+    @GetMapping("/stats/league/{season}/{queueType}/{teamType}/{regions}/{leagues}")
+    public List<LadderLeagueStats> getLadderLeagueStats
+    (
+        @PathVariable("season") Integer season,
+        @PathVariable("queueType") QueueType queue,
+        @PathVariable("teamType") TeamType teamType,
+        @PathVariable("regions") Region[] regions,
+        @PathVariable("leagues") LeagueType[] leagues
+    )
+    {
+        return ladderStatsDAO.findLeagueStats(season, List.of(regions), List.of(leagues), queue, teamType);
     }
 
     @GetMapping("/league/bounds")

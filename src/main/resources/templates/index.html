@@ -408,6 +408,11 @@
                         </table>
                         <div class="container-chart"><canvas id="games-played-race-chart" class="c-chart"></canvas></div>
                     </section>
+                    <section th:replace="~{fragments/section :: stats-race-league-region('global')}"></section>
+                    <section th:replace="~{fragments/section :: stats-race-league-region('us')}"></section>
+                    <section th:replace="~{fragments/section :: stats-race-league-region('eu')}"></section>
+                    <section th:replace="~{fragments/section :: stats-race-league-region('kr')}"></section>
+                    <section th:replace="~{fragments/section :: stats-race-league-region('cn')}"></section>
                 </div>
             </section>
             <section id="stats-league" class="tab-pane fade c-height-linked" data-view-title="League distribution">
@@ -444,6 +449,22 @@
                             <tbody><tr></tr></tbody>
                         </table>
                         <div class="container-chart"><canvas id="team-count-league-chart" class="c-chart"></canvas></div>
+                    </section>
+                    <section id="team-count-region-league" class="col-lg-6 mb-3">
+                        <h4>Team count by league (<span class="season-current"></span>) (%)</h4>
+                        <table
+                                id="team-count-region-league-table"
+                                class="chartable"
+                                data-chart-type="bar"
+                                data-chart-tooltip-percentage="false"
+                                data-chart-tooltip-sort="reverse"
+                                data-chart-id="team-count-region-league-chart"
+                                data-chart-x-title="Region" data-chart-y-title="%"
+                        >
+                            <thead><tr></tr></thead>
+                            <tbody><tr></tr></tbody>
+                        </table>
+                        <div class="container-chart"><canvas id="team-count-region-league-chart" class="c-chart"></canvas></div>
                     </section>
                 </div>
             </section>

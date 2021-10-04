@@ -1,0 +1,32 @@
+<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pulse</title>
+</head>
+<body>
+<section th:id="|games-played-race-league-${region}|" class="col-lg-6 mb-3" th:fragment="stats-race-league-region (region)">
+    <h4>Games played by race, distribution by league,
+        <span th:switch="${region}">
+            <span th:case="global">Global</span>
+            <img th:case="*" th:src="@{'/static/icon/flag/' + ${region} + '.svg'}" th:alt="${region}" th:title=${region} class="table-image-long"/> (<span class="season-current"></span>)
+        </span>
+    </h4>
+    <table
+            th:id="|games-played-race-league-${region}-table|"
+            th:class="|chartable ${region == 'global' ? '' : 'table-race-league-region'}|"
+            data-chart-type="bar"
+            data-chart-tooltip-percentage="false"
+            th:data-chart-id="|games-played-race-league-${region}-chart|"
+            data-chart-x-title="League" data-chart-y-title="%"
+    >
+        <thead><tr></tr></thead>
+        <tbody><tr></tr></tbody>
+    </table>
+    <div class="container-chart"><canvas th:id="|games-played-race-league-${region}-chart|" class="c-chart"></canvas></div>
+</section>
+</body>
+</html>
