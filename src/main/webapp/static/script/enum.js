@@ -19,13 +19,13 @@ const RACE = Object.freeze
 
 const LEAGUE = Object.freeze
 ({
-    BRONZE: {code:0, name: "bronze", order: 1},
-    SILVER: {code:1, name: "silver", order: 2},
-    GOLD: {code:2, name: "gold", order: 3},
-    PLATINUM: {code:3, name: "platinum", order: 4},
-    DIAMOND: {code:4, name: "diamond", order: 5},
-    MASTER: {code:5, name: "master", order: 6},
-    GRANDMASTER: {code:6, name: "grandmaster", order: 7}
+    BRONZE: {code:0, name: "bronze", shortName: "bro", order: 1},
+    SILVER: {code:1, name: "silver", shortName: "sil", order: 2},
+    GOLD: {code:2, name: "gold", shortName: "gol", order: 3},
+    PLATINUM: {code:3, name: "platinum", shortName: "pla", order: 4},
+    DIAMOND: {code:4, name: "diamond", shortName: "dia", order: 5},
+    MASTER: {code:5, name: "master", shortName: "mas", order: 6},
+    GRANDMASTER: {code:6, name: "grandmaster", shortName: "gra", order: 7}
 });
 
 const TEAM_FORMAT = Object.freeze
