@@ -64,7 +64,7 @@ class ChartUtil
                                 },
                                 minRotation: 0,
                                 maxRotation: 0,
-                                autoSkipPadding: 20,
+                                autoSkipPadding: config.type === "bar" && config.xType !== "time" ? 3 : 20,
                                 ...(config.performance === "fast") && {sampleSize: 50}
                             },
                             stacked: config.stacked === "true" ? true : false,
