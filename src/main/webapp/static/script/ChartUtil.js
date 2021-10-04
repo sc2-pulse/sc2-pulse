@@ -249,7 +249,9 @@ class ChartUtil
         }
         else
         {
-            label = [label, Util.NUMBER_FORMAT.format(data.datasets[chart.datasetIndex].data[chart.dataIndex])];
+            const val = data.datasets[chart.datasetIndex].data[chart.dataIndex];
+            const format = Number.isInteger(val) ? Util.NUMBER_FORMAT : Util.DECIMAL_FORMAT;
+            label = [label, format.format(val)];
         }
         return label;
     }
