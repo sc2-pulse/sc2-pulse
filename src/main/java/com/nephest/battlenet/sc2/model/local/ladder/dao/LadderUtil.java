@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.local.League;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
+import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,8 +23,8 @@ public final class LadderUtil
     (
         ConversionService conversionService,
         int season,
-        Set<Region> regions,
-        Set<League.LeagueType> leagueTypes,
+        Collection<Region> regions,
+        Collection<League.LeagueType> leagueTypes,
         QueueType queueType,
         TeamType teamType
     )
