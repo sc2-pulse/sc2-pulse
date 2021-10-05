@@ -24,7 +24,9 @@
                 });
             </script>
         </th:block>
-        <script th:if="${showAds == true and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.url') != null}"
+        <script th:if="${showAds == true
+                    and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.url') != null
+                    and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}"
                 async th:src="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.url')}"
                 crossorigin="anonymous"></script>
     </th:block>

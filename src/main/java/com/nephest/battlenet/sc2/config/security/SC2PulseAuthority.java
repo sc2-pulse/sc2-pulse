@@ -12,6 +12,7 @@ implements Identifiable, GrantedAuthority
 
     ADMIN("ROLE_ADMIN", "ADMIN", 127),
     MODERATOR("ROLE_MODERATOR", "MODERATOR", 10),
+    SUPPORTER("ROLE_SUPPORTER", "SUPPORTER", 3),
     USER("ROLE_USER", "USER", 1),
     NONE("ROLE_NONE", "NONE", 0);
 
