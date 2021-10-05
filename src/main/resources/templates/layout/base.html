@@ -2,7 +2,9 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:fragment="layout (title, description, content, script)" lang="en"
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:fragment="layout (title, description, content, script, showAds)" lang="en"
       th:with="uiTheme=${#strings.equals(T(org.springframework.web.util.WebUtils).getCookie(#request, 'theme')?.getValue(), 'dark')} ? 'dark' : 'light'">
 <head>
     <th:block th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')}">
@@ -19,6 +21,9 @@
                 {'description': `${e.filename}(${e.lineno}:${e.colno}): ${e.message}`});
         });
     </script>
+    <script th:if="${showAds == true}"
+            async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9011221167335037"
+            crossorigin="anonymous"></script>
     </th:block>
     <title th:replace="${title}">SC2 Pulse</title>
     <meta charset="utf-8"/>

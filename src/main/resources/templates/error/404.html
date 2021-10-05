@@ -1,7 +1,10 @@
-<!DOCTYPE html>
-<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
+<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _)}">
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _, false)}">
 <head>
     <title>404 - Not Found</title>
     <meta name="description" content="Such page does not exist"/>
