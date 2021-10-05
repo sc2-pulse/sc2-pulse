@@ -9,21 +9,24 @@
 <head>
     <th:block th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')}">
     <!-- Global site tag (gtag.js) - Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-PL1L36TKM6"></script>
-    <script>
-        window.dataLayer = window.dataLayer || [];
-        function gtag(){dataLayer.push(arguments);}
-        gtag('js', new Date());
+        <th:block th:if="${@environment.getProperty('com.nephest.battlenet.sc2.google.analytics.url') != null}">
+            <script
+                async th:src="${@environment.getProperty('com.nephest.battlenet.sc2.google.analytics.url')}"></script>
+            <script>
+                window.dataLayer = window.dataLayer || [];
+                function gtag(){dataLayer.push(arguments);}
+                gtag('js', new Date());
 
-        gtag('config', 'G-PL1L36TKM6');
-        window.addEventListener("error", e=>{
-            if(typeof(gtag) == "function") gtag('event', 'exception',
-                {'description': `${e.filename}(${e.lineno}:${e.colno}): ${e.message}`});
-        });
-    </script>
-    <script th:if="${showAds == true}"
-            async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9011221167335037"
-            crossorigin="anonymous"></script>
+                gtag('config', '[[${@environment.getProperty('com.nephest.battlenet.sc2.google.analytics.id')}]]');
+                window.addEventListener("error", e=>{
+                    if(typeof(gtag) == "function") gtag('event', 'exception',
+                        {'description': `${e.filename}(${e.lineno}:${e.colno}): ${e.message}`});
+                });
+            </script>
+        </th:block>
+        <script th:if="${showAds == true and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.url') != null}"
+                async th:src="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.url')}"
+                crossorigin="anonymous"></script>
     </th:block>
     <title th:replace="${title}">SC2 Pulse</title>
     <meta charset="utf-8"/>
