@@ -1,5 +1,5 @@
 # About
-SC2 Pulse is fast and flexible StarCraft&reg;2 ladder statistics aggregator. It is a Spring Boot web application.
+SC2 Pulse is the fastest and most reliable ranked ladder tracker for StarCraft&reg;2. It is a Spring Boot web application.
 The [reference website](https://www.nephest.com/sc2/) (runs the latest release) is available 24/7.
 ## Features
 * Flexible, user defined filters
