@@ -632,8 +632,10 @@
                         <div class="mb-3">
                             <span id="login-battletag"></span>
                             <span class="parenthesis text-secondary text-lowercase mr-3" id="login-roles"></span>
-                            <a class="btn btn-primary" href="logout" role="button">Log out</a>
                         </div>
+                        <form th:action="@{/logout}" method="post">
+                            <button type="submit" class="btn btn-primary">Log out</button>
+                        </form>
                     </section>
                     <section
                             id="personal-following"
