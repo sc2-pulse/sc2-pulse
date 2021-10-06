@@ -24,7 +24,6 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
-import javax.servlet.ServletContext;
 import javax.sql.DataSource;
 import java.time.Duration;
 
@@ -47,9 +46,6 @@ extends WebSecurityConfigurerAdapter
 
     @Autowired
     private PersistentTokenRepository persistentTokenRepository;
-
-    @Autowired
-    private ServletContext servletContext;
 
     @Override
     public void configure(HttpSecurity http)
@@ -74,7 +70,7 @@ extends WebSecurityConfigurerAdapter
                 .logoutSuccessUrl("/?#stats")
             .and().oauth2Login()
                 .loginPage("/?#personal")
-                .defaultSuccessUrl(servletContext.getContextPath() + "/?#personal-characters")
+                .defaultSuccessUrl("/?#personal-characters")
                 .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, accountRoleDAO))
             .and().and().rememberMe()
                 .tokenRepository(persistentTokenRepository)
