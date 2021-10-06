@@ -8,8 +8,11 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class SupporterService
@@ -22,6 +25,7 @@ public class SupporterService
     private final String sponsoredLink;
     private final List<String> sponsorsT2;
     private final List<String> sponsoredT2Links;
+    private final List<String> patrons;
 
     @Autowired
     private SupporterService
@@ -42,6 +46,8 @@ public class SupporterService
         this.sponsoredLink = sponsoredLink;
         this.sponsorsT2 = sponsorsT2;
         this.sponsoredT2Links = sponsoredT2Links;
+        this.patrons = Stream.concat(Stream.of(supporters, sponsorsT2).flatMap(Collection::stream), Stream.of(sponsor))
+            .collect(Collectors.toList());
     }
 
     public List<String> getDonors()
@@ -49,9 +55,9 @@ public class SupporterService
         return donors;
     }
 
-    public String getRandomSupporter()
+    public String getRandomPatron()
     {
-        return supporters.get(rng.nextInt(supporters.size()));
+        return patrons.get(rng.nextInt(patrons.size()));
     }
 
     public List<String> getSupporters()
