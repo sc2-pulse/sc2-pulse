@@ -255,6 +255,11 @@ class Util
         return options;
     }
 
+    static updateCsrfForm(form)
+    {
+        form.querySelector(':scope [name="_csrf"]').value = Util.getCookie("XSRF-TOKEN");
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =

@@ -137,6 +137,17 @@ class Session
         }
     }
 
+    static enhanceCsrfForms()
+    {
+        document.querySelectorAll(".form-csrf").forEach(f=>{
+            f.addEventListener("submit", e=>{
+                e.preventDefault();
+                Util.updateCsrfForm(e.target);
+                e.target.submit();
+            });
+        });
+    }
+
     static setTheme(theme)
     {
         if(Session.theme == theme) return;

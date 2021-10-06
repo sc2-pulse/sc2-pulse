@@ -54,6 +54,7 @@ class SC2Restful
                 BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
                 Session.enhanceThemeInputs();
                 Session.enhanceCheaterVisibilityInput();
+                Session.enhanceCsrfForms();
                 ChartUtil.enhanceHeightControls();
             case START_MODE.MINIMAL:
                 BootstrapUtil.init();
