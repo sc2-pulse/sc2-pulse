@@ -45,7 +45,22 @@
 <body th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder)}"
       th:class="|theme-${uiTheme}|">
     <div class="d-flex">
-    <div id="section-side-left" class="section-side"></div>
+    <div id="section-side-left" class="section-side">
+        <div id="dd-desktop-left-container" th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')
+                and showAds == true
+                and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.url') != null
+                and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}">
+            <div id="dd-desktop-left" class="dd-block mt-3" >
+                <!-- desktop-left -->
+                <ins class="adsbygoogle"
+                     data-ad-client="ca-pub-9011221167335037"
+                     data-ad-slot="3186461269"></ins>
+                <script>
+                     (adsbygoogle = window.adsbygoogle || []).push({});
+                </script>
+            </div>
+        </div>
+    </div>
     <div id="section-center" class="container d-flex flex-column">
     <div class="container">
         <div th:replace="${content}"></div>
@@ -100,6 +115,18 @@
              th:utext="${'Supported by ' + @supporterService.getRandomPatron()}">
         </div>
     </footer>
+    <div id="dd-mobile" class="dd-block container" th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')
+        and showAds == true
+        and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.url') != null
+        and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}">
+        <!-- all-footer -->
+        <ins class="adsbygoogle"
+             data-ad-client="ca-pub-9011221167335037"
+             data-ad-slot="9591909908"></ins>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
     <div id="section-side-bottom" class="section-side"></div>
     </div>
     <div id="section-side-right" class="section-side"></div>
