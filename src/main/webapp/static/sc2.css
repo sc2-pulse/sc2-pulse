@@ -143,6 +143,13 @@ caption
     opacity: 1;
 }
 
+#status-generating-fullscreen .spinner-border
+{
+    position: fixed;
+    left: calc(50vw - 1rem);
+    top: calc(50vh - 1rem);
+}
+
 #modal-generic
 {
     z-index: 10000;
@@ -766,7 +773,7 @@ body.modal-open.modal-open-no-popup
         max-width: 540px;
     }
 
-    html, #status-generating-fullscreen
+    html
     {
         margin-left: calc(100vw - 100%);
     }
