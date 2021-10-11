@@ -24,7 +24,8 @@ class LadderUtil
     static chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count, isLastPage = false)
     {
         const request = `${ROOT_CONTEXT_PATH}api/ladder/a/${ratingAnchor}/${idAnchor}/${count}?` + formParams;
-        const ladderPromise = fetch(request)
+        const ladderPromise = Session.beforeRequest()
+        .then(n=>fetch(request))
         .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
         .then(json => {
             json.meta.isLastPage = isLastPage;
@@ -115,7 +116,8 @@ class LadderUtil
 
     static updateMyLadderModel(formParams)
     {
-        const ladderPromise = fetch(ROOT_CONTEXT_PATH + "api/my/following/ladder?" + formParams)
+        const ladderPromise = Session.beforeRequest()
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/ladder?" + formParams))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 const result =

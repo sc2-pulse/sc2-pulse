@@ -150,6 +150,9 @@
             .split(",");
         const MATCH_BATCH_SIZE = /*[[${@ladderMatchDAO.getResultsPerPage()}]]*/ '';
         const AUTHENTICATED = /*[[${#authentication.name}]]*/ '';
+        const SESSION_TIMEOUT_SECONDS = parseInt(/*[[${!#strings.isEmpty(@environment.getProperty('server.servlet.session.timeout'))
+            ? @environment.getProperty('server.servlet.session.timeout')
+            : 1800}]]*/ 1800);
     </script>
     <th:block  id="script-additional" th:switch="${#arrays.contains(@environment.getActiveProfiles(), 'dev')}">
         <th:block th:case="true">

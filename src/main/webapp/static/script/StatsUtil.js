@@ -10,7 +10,8 @@ class StatsUtil
         const queueType = EnumUtil.enumOfFullName(params.get("queue"), TEAM_FORMAT);
         const teamType = EnumUtil.enumOfFullName(params.get("team-type"), TEAM_TYPE);
         const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/queue/${queueType.fullName}/${teamType.fullName}`;
-        return fetch(request)
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.QUEUE_STATS, json); res(json);}));
     }
@@ -106,7 +107,8 @@ class StatsUtil
     static updateLadderStatsGlobalModel(formParams)
     {
         const request = ROOT_CONTEXT_PATH + "api/ladder/stats?" + formParams;
-        return fetch(request)
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => json);
     }
@@ -119,7 +121,8 @@ class StatsUtil
         for(const league of Object.values(LEAGUE)) if(urlParams.has(league.shortName)) leagues.push(league.name.toUpperCase());
 
         const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/league/${urlParams.get('season')}/${urlParams.get('queue')}/${urlParams.get('team-type')}/${regions.join(',')}/${leagues.join(',')}`;
-        return fetch(request)
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => json);
     }
@@ -316,7 +319,8 @@ class StatsUtil
     static updateLeagueBoundsModel(formParams)
     {
         const request = ROOT_CONTEXT_PATH + "api/ladder/league/bounds?" + formParams;
-        return fetch(request)
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LEAGUE_BOUNDS, json); res(json);}));
     }
@@ -397,7 +401,8 @@ class StatsUtil
 
     static updateBundleModel()
     {
-        return fetch(ROOT_CONTEXT_PATH + "api/ladder/stats/bundle")
+        return Session.beforeRequest()
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/ladder/stats/bundle"))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.BUNDLE, json); res(json);}));
     }

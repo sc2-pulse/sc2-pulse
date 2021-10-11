@@ -30,8 +30,8 @@ class CharacterUtil
     static updateCharacterModel(id)
     {
         const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common";
-        const characterPromise =
-            fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+        const characterPromise = Session.beforeRequest()
+            .then(n=>fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();}));
         return Promise.all([characterPromise, StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
                 const searchStd = jsons[0];
@@ -45,7 +45,8 @@ class CharacterUtil
 
     static updateCharacterReportsModel()
     {
-        return fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)}`)
+        return Session.beforeRequest()
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)}`))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.CHARACTER).set("reports", json);
@@ -55,7 +56,8 @@ class CharacterUtil
 
     static updateAllCharacterReportsModel()
     {
-        return fetch(`${ROOT_CONTEXT_PATH}api/character/report/list`)
+        return Session.beforeRequest()
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list`))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.CHARACTER_REPORTS).set("reports", json);
@@ -894,7 +896,8 @@ class CharacterUtil
     static updateCharacterSearchModel(name)
     {
         const request = ROOT_CONTEXT_PATH + "api/characters?name=" + encodeURIComponent(name);
-        return fetch(request)
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.SEARCH, json);
@@ -962,7 +965,8 @@ class CharacterUtil
 
     static loadNextMatchesModel(id, dateAnchor, typeAnchor, mapAnchor)
     {
-        return fetch(`${ROOT_CONTEXT_PATH}api/character/${id}/matches/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1`)
+        return Session.beforeRequest()
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${id}/matches/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1`))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
@@ -991,7 +995,8 @@ class CharacterUtil
 
     static updatePersonalCharactersModel()
     {
-        return fetch(ROOT_CONTEXT_PATH + "api/my/characters")
+        return Session.beforeRequest()
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/characters"))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json);
@@ -1217,7 +1222,8 @@ class CharacterUtil
 
     static voteOnEvidence(id, vote)
     {
-        return fetch(`${ROOT_CONTEXT_PATH}api/character/report/vote/${id}/${vote}`, Util.addCsrfHeader({method: "POST"}))
+        return Session.beforeRequest()
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/vote/${id}/${vote}`, Util.addCsrfHeader({method: "POST"})))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json()})
     }
 
@@ -1304,7 +1310,8 @@ class CharacterUtil
 
     static reportCharacter(fd)
     {
-        return fetch(ROOT_CONTEXT_PATH + "api/character/report/new", Util.addCsrfHeader({method: "POST", body: fd}))
+        return Session.beforeRequest()
+           .then(n=>fetch(ROOT_CONTEXT_PATH + "api/character/report/new", Util.addCsrfHeader({method: "POST", body: fd})))
            .then(resp => {
                 if (!resp.ok) {
                     let desc;

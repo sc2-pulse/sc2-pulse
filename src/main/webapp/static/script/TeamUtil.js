@@ -533,7 +533,8 @@ class TeamUtil
         const reqParams = new URLSearchParams();
         for(const id of searchParams.getAll("legacyUid")) reqParams.append("legacyUid", id);
         const request = `${ROOT_CONTEXT_PATH}api/team/history/common?${reqParams.toString()}`;
-        const mmrPromise = fetch(request)
+        const mmrPromise = Session.beforeRequest()
+            .then(n=>fetch(request))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 const teams = [];

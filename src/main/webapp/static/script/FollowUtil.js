@@ -9,7 +9,8 @@ class FollowUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
-        return fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "POST"}))
+        return Session.beforeRequest()
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "POST"})))
             .then
             (
                 resp =>
@@ -29,7 +30,8 @@ class FollowUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         const profile = document.querySelector("#player-info");
         const id = profile.getAttribute("data-account-id");
-        return fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "DELETE"}))
+        return Session.beforeRequest()
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "DELETE"})))
             .then
             (
                 resp =>
@@ -47,7 +49,8 @@ class FollowUtil
     static getMyFollowing()
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return fetch(ROOT_CONTEXT_PATH + "api/my/following")
+        return Session.beforeRequest()
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following"))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{Session.currentFollowing = json; Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
             .catch(error => Session.onPersonalException(error));

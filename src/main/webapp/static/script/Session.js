@@ -8,12 +8,40 @@ class Session
     {
         if(!Session.isAuthenticated()) return Promise.resolve(1);
         return PersonalUtil.getMyAccount()
-            .then(e=>{Session.updateMyInfoThen(); return e});
+            .then(e=>{
+                Session.updateMyInfoThen();
+                Session.sessionStartTimestamp = Date.now();
+                return e
+            });
     }
 
     static onPersonalException(error)
     {
         Util.setGeneratingStatus(STATUS.ERROR, error.message, error);
+    }
+
+    //make 1 request to renew all cookies/etc to prevent conflicts in request batches
+    static renewSession()
+    {
+        if(Session.currentSessionRenewal) return Session.currentSessionRenewal;
+
+        //-45 just to be safe
+        if(Session.sessionStartTimestamp && Date.now() - Session.sessionStartTimestamp >= (SESSION_TIMEOUT_SECONDS - 45) * 1000) {
+            Session.currentSessionRenewal = fetch(ROOT_CONTEXT_PATH + "api/status/stale")
+                .then(e=>new Promise((res, rej)=>{
+                     Session.sessionStartTimestamp = Date.now();
+                     Session.currentSessionRenewal = null;
+                     res();
+                }));
+            return Session.currentSessionRenewal || Promise.resolve();
+        } else {
+            return Promise.resolve();
+        }
+    }
+
+    static beforeRequest()
+    {
+        return Session.renewSession();
     }
 
     static renewBlizzardRegistration()
@@ -294,6 +322,8 @@ Session.theme = null;
 Session.themeLinks = new Map();
 Session.deviceThemeCallback=function(e){Session.setTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
     ? THEME.DARK : THEME.LIGHT)};
+Session.sessionStartTimestamp = null;
+Session.currentSessionRenewal = null;
 
 Session.sectionParams = new Map();
 
@@ -303,7 +333,8 @@ class PersonalUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         const request = ROOT_CONTEXT_PATH + "api/my/common";
-        return fetch(request)
+        return Session.beforeRequest()
+            .then(e=>fetch(request))
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json.characters);
