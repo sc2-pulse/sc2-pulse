@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Set;
 
-@Profile({"!maintenance & !dev"})
+@Profile({"!maintenance"})
 @RestController
 @RequestMapping("/api/status")
 public class StatusController
