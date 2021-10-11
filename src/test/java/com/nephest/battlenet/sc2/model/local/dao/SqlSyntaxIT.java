@@ -113,8 +113,9 @@ public class SqlSyntaxIT
     public void testSqlSyntax()
     {
         Region region = Region.EU;
-        seasonDAO.create(new Season(null, 40, region, 2020, 1, LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1)));
-        seasonDAO.merge(new Season(null, 40, region, 2019, 2, LocalDate.of(2019, 2, 1), LocalDate.of(2019, 3, 1)));
+        Season s1 = seasonDAO.merge(new Season(null, 40, region, 2020, 1, LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1)));
+        Season s2 = seasonDAO.merge(new Season(null, 40, region, 2019, 2, LocalDate.of(2019, 2, 1), LocalDate.of(2019, 3, 1)));
+        assertEquals(s1.getId(), s2.getId());
         List<Season> seasons = seasonDAO.findListByRegion(region);
         assertEquals(1, seasons.size());
         Season season = seasons.get(0);
@@ -122,11 +123,14 @@ public class SqlSyntaxIT
         assertEquals(2019, season.getYear());
         assertEquals(2, season.getNumber());
 
-        leagueDAO.create(new League(null, season.getId(), League.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED));
+        League leagueOrig = leagueDAO.merge(new League(null, season.getId(), League.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED));
         League league = leagueDAO.merge(new League(null, season.getId(), League.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED));
+        assertEquals(leagueOrig.getId(), league.getId());
         League league2 = leagueDAO.merge(new League(null, season.getId(), League.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED));
-        leagueTierDAO.create(new LeagueTier(null, league.getId(), LeagueTier.LeagueTierType.FIRST, 0, 1));
+        LeagueTier tierOrig = leagueTierDAO.merge(new LeagueTier(null, league.getId(), LeagueTier.LeagueTierType.FIRST, 0, 1));
         LeagueTier tier = leagueTierDAO.merge(new LeagueTier(null, league.getId(), LeagueTier.LeagueTierType.FIRST, 1, 2));
+        assertEquals(tierOrig.getId(), tier.getId());
+        leagueTierDAO.merge(new LeagueTier(null, league2.getId(), LeagueTier.LeagueTierType.SECOND, 0, 1));
         LeagueTier tier2 = leagueTierDAO.merge(new LeagueTier(null, league2.getId(), LeagueTier.LeagueTierType.SECOND, 1, 2));
         assertEquals(1, tier.getMinRating());
         assertEquals(2, tier.getMaxRating());
@@ -216,6 +220,7 @@ public class SqlSyntaxIT
         assertEquals(createdAccount.getId(), account.getId());
         assertEquals("newtag#2", account.getBattleTag());
         assertEquals(account, accountDAO.find(Partition.GLOBAL, "newtag#2").get());
+        Account account2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "newtag#3"));
 
         accountRoleDAO.addRoles(account.getId(), SC2PulseAuthority.MODERATOR);
         List<SC2PulseAuthority> roles = accountRoleDAO.getRoles(account.getId());
@@ -232,21 +237,8 @@ public class SqlSyntaxIT
         assertEquals(1, roles2.size());
         assertTrue(roles2.contains(SC2PulseAuthority.NONE));
 
-        PlayerCharacter createdCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1");
-        playerCharacterDAO.create(createdCharacter);
-        PlayerCharacter mergedCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#2");
-        playerCharacterDAO.merge(mergedCharacter);
-        assertEquals(playerCharacterDAO.find(createdCharacter.getRegion(), createdCharacter.getRealm(), createdCharacter.getBattlenetId())
-            .get().getName(), mergedCharacter.getName());
-        assertEquals(createdCharacter.getId(), mergedCharacter.getId());
-
-        PlayerCharacter character = playerCharacterDAO
-            .merge(new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 2, "newname#2"));
-        assertEquals(2, character.getRealm());
-        assertEquals("newname#2", character.getName());
-        assertEquals(character,
-            playerCharacterDAO.find(character.getRegion(), character.getRealm(), character.getBattlenetId()).get());
-        Clan[] clans = new Clan[]{
+        Clan[] clans = new Clan[]
+        {
             new Clan(null, "clanTag1", Region.EU, "clanName1"),
             new Clan(null, "clanTag2", Region.EU, "clanName2"),
             new Clan(null, "clanTag1", Region.EU, "clanName1")//duplicate
@@ -256,13 +248,48 @@ public class SqlSyntaxIT
         for(Clan clan : mergedClans) assertNotNull(clan.getId());
         for(Clan clan : clans) assertNotNull(clan.getId());
         assertEquals(clans[0].getId(), clans[1].getId());
-        Clan[] mergedClans2 = clanDAO.merge(
+        Clan[] mergedClans2 = clanDAO.merge
+        (
             new Clan(null, "clanTag1", Region.EU, "clanName1"), //nothing
             new Clan(null, "clanTag2", Region.EU, "clanAnotherName2"), //update
             new Clan(null, "clanTag3", Region.EU, "clanName3") //insert
         );
         assertEquals(clans[0].getId(), mergedClans2[0].getId());
         assertEquals(clans[2].getId(), mergedClans2[1].getId());
+
+        PlayerCharacter createdCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1");
+        playerCharacterDAO.merge(createdCharacter);
+        //update on accountId change
+        PlayerCharacter mergedCharacter = new PlayerCharacter(null, account2.getId(), season.getRegion(), 1L, 1, "name#1");
+        playerCharacterDAO.merge(mergedCharacter);
+        assertEquals(mergedCharacter.getAccountId(),
+            playerCharacterDAO.find(createdCharacter.getRegion(),createdCharacter.getRealm(), createdCharacter.getBattlenetId())
+                .orElseThrow().getAccountId()
+        );
+        //update on clanId change
+        mergedCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1", clans[0].getId());
+        playerCharacterDAO.merge(mergedCharacter);
+        assertEquals(mergedCharacter.getClanId(),
+            playerCharacterDAO.find(createdCharacter.getRegion(), createdCharacter.getRealm(), createdCharacter.getBattlenetId())
+            .orElseThrow().getClanId()
+        );
+        //update on name change
+        mergedCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#2");
+        playerCharacterDAO.merge(mergedCharacter);
+        PlayerCharacter foundCharacter = playerCharacterDAO
+            .find(createdCharacter.getRegion(), createdCharacter.getRealm(), createdCharacter.getBattlenetId())
+            .orElseThrow();
+        assertEquals(mergedCharacter.getName(), foundCharacter.getName());
+        assertEquals(mergedCharacter.getAccountId(), foundCharacter.getAccountId());
+        assertEquals(mergedCharacter.getClanId(), foundCharacter.getClanId());
+        assertEquals(createdCharacter.getId(), mergedCharacter.getId());
+
+        PlayerCharacter character = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 2, "newname#2"));
+        assertEquals(2, character.getRealm());
+        assertEquals("newname#2", character.getName());
+        assertEquals(character,
+            playerCharacterDAO.find(character.getRegion(), character.getRealm(), character.getBattlenetId()).get());
 
         teamMemberDAO.create(new TeamMember(zergTeam.getId(), character.getId(), 0, 0, 6, 0));
         teamMemberDAO.create(new TeamMember(team.getId(), character.getId(), 1, 1, 1, 1));

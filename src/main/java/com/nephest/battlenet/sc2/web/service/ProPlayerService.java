@@ -146,7 +146,7 @@ public class ProPlayerService
                         members.add(member);
                     }
                 }
-                proPlayerDAO.merge(Arrays.copyOf(proPlayers, ix));
+                proPlayerDAO.mergeWithoutIds(Arrays.copyOf(proPlayers, ix));
                 proTeamMemberDAO.merge(members.toArray(new ProTeamMember[0]));
                 members.clear();
                 ix = 0;

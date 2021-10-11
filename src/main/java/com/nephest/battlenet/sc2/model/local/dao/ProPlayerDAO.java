@@ -9,10 +9,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Types;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -38,15 +37,41 @@ extends StandardDAO
         "INSERT INTO pro_player (revealed_id, aligulac_id, nickname, name, country, birthday, earnings, updated) "
         + "VALUES (:revealedId, :aligulacId, :nickname, :name, :country, :birthday, :earnings, :updated)";
     private static final String MERGE_QUERY =
-        CREATE_QUERY + " "
-        + "ON CONFLICT(revealed_id) DO UPDATE SET "
-        + "aligulac_id=excluded.aligulac_id,"
-        + "name=excluded.name,"
-        + "nickname=excluded.nickname,"
-        + "country=excluded.country,"
-        + "birthday=excluded.birthday,"
-        + "earnings=excluded.earnings,"
-        + "updated=excluded.updated";
+        "WITH "
+        + "vals AS (VALUES(:revealedId, :aligulacId, :nickname, :name, :country, :birthday, :earnings, :updated)), "
+        + "updated AS "
+        + "("
+            + "UPDATE pro_player "
+            + "SET "
+            + "aligulac_id=v.aligulac_id, "
+            + "name=v.name, "
+            + "nickname=v.nickname, "
+            + "country=v.country, "
+            + "birthday=v.birthday, "
+            + "earnings=v.earnings, "
+            + "updated=v.updated "
+            + "FROM vals v (revealed_id, aligulac_id, nickname, name, country, birthday, earnings, updated) "
+            + "WHERE pro_player.revealed_id = v.revealed_id "
+            + "RETURNING id "
+        + "), "
+        + "inserted AS "
+        + "("
+            + "INSERT INTO pro_player (revealed_id, aligulac_id, nickname, name, country, birthday, earnings, updated) "
+            + "SELECT * FROM vals "
+            + "WHERE NOT EXISTS(SELECT 1 FROM updated) "
+            + "ON CONFLICT(revealed_id) DO UPDATE SET "
+            + "aligulac_id=excluded.aligulac_id,"
+            + "name=excluded.name,"
+            + "nickname=excluded.nickname,"
+            + "country=excluded.country,"
+            + "birthday=excluded.birthday,"
+            + "earnings=excluded.earnings,"
+            + "updated=excluded.updated "
+            + "RETURNING id "
+        + ") "
+        + "SELECT id FROM updated "
+        + "UNION "
+        + "SELECT id FROM inserted";
     private static final String FIND_ALIGULAC_LIST = "SELECT " + STD_SELECT
         + "FROM pro_player WHERE aligulac_id IS NOT NULL";
 
@@ -92,26 +117,24 @@ extends StandardDAO
     {
         return new MapSqlParameterSource()
             .addValue("revealedId", proPlayer.getRevealedId())
-            .addValue("aligulacId", proPlayer.getAligulacId())
+            .addValue("aligulacId", proPlayer.getAligulacId(), Types.BIGINT)
             .addValue("nickname", proPlayer.getNickname())
             .addValue("name", proPlayer.getName())
-            .addValue("country", proPlayer.getCountry())
-            .addValue("birthday", proPlayer.getBirthday())
-            .addValue("earnings", proPlayer.getEarnings())
+            .addValue("country", proPlayer.getCountry(), Types.VARCHAR)
+            .addValue("birthday", proPlayer.getBirthday(), Types.DATE)
+            .addValue("earnings", proPlayer.getEarnings(), Types.INTEGER)
             .addValue("updated", proPlayer.getUpdated());
     }
 
     public ProPlayer merge(ProPlayer proPlayer)
     {
         proPlayer.setUpdated(OffsetDateTime.now());
-        KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(proPlayer);
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        proPlayer.setId(keyHolder.getKey().longValue());
+        proPlayer.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return proPlayer;
     }
 
-    public int[] merge(ProPlayer... proPlayers)
+    public int[] mergeWithoutIds(ProPlayer... proPlayers)
     {
         if(proPlayers.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
 

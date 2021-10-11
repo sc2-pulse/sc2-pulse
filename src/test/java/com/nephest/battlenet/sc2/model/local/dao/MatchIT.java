@@ -158,6 +158,9 @@ public class MatchIT
         Account acc10 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#10"));
         ProPlayer proPlayer = new ProPlayer(null, new byte[]{0x1, 0x1}, "proNickname", "proName");
         proPlayerDAO.merge(proPlayer);
+
+        //data should be updated
+        proTeamDAO.merge(new ProTeam(null, 2L, "proTeamNam e", "proTeamShortName_remove"));
         ProTeam proTeam = proTeamDAO.merge(new ProTeam(null, 1L, "proTeamName", "proTeamShortName"));
         proTeamMemberDAO.merge(new ProTeamMember(proTeam.getId(), proPlayer.getId()));
         proPlayerAccountDAO.link(proPlayer.getId(), "tag#1");

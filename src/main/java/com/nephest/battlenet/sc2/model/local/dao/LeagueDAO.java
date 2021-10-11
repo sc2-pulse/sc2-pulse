@@ -32,10 +32,30 @@ public class LeagueDAO
         + "(season_id, type, queue_type, team_type) "
         + "VALUES (:seasonId, :type, :queueType, :teamType)";
 
-    private static final String MERGE_QUERY = CREATE_QUERY
-        + " "
-        + "ON CONFLICT(season_id, type, queue_type, team_type) DO UPDATE SET "
-        + "type=excluded.type";
+    private static final String MERGE_QUERY =
+        "WITH "
+        + "vals AS "
+        + "( "
+            + "VALUES(:seasonId, :type, :queueType, :teamType) "
+        + "), "
+        + "selected AS "
+        + "( "
+            + "SELECT id "
+            + "FROM league "
+            + "INNER JOIN vals v(season_id, type, queue_type, team_type) USING(season_id, type, queue_type, team_type) "
+        + "), "
+        + "inserted AS "
+        + "( "
+            + "INSERT INTO league(season_id, type, queue_type, team_type)  "
+            + "SELECT * FROM vals "
+            + "WHERE NOT EXISTS(SELECT 1 FROM selected) "
+            + "ON CONFLICT(season_id, type, queue_type, team_type) DO UPDATE SET "
+            + "type=excluded.type "
+            + "RETURNING id "
+        + ") "
+        + "SELECT id from selected "
+        + "UNION "
+        + "SELECT id FROM inserted";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -83,10 +103,8 @@ public class LeagueDAO
     @Cacheable(cacheNames = "ladder-skeleton")
     public League merge(League league)
     {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(league);
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        league.setId(keyHolder.getKey().intValue());
+        league.setId(template.query(MERGE_QUERY, params, DAOUtils.INT_EXTRACTOR));
         return league;
     }
 

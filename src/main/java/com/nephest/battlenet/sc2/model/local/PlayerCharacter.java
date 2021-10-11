@@ -61,13 +61,6 @@ implements java.io.Serializable
         );
     }
 
-    public static boolean shouldUpdate(PlayerCharacter existingChar, PlayerCharacter newChar)
-    {
-        return !existingChar.getName().equals(newChar.getName())
-            || !existingChar.getAccountId().equals(newChar.getAccountId())
-            || !Objects.equals(existingChar.getClanId(), newChar.getClanId());
-    }
-
     @Override
     public int hashCode()
     {

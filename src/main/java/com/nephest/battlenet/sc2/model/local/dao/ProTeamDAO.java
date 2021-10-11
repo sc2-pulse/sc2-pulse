@@ -9,10 +9,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.support.GeneratedKeyHolder;
-import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Types;
 import java.time.OffsetDateTime;
 
 @Repository
@@ -31,11 +30,34 @@ extends StandardDAO
     private static final String CREATE_QUERY =
         "INSERT INTO pro_team (aligulac_id, name, short_name, updated) "
         + "VALUES (:aligulacId, :name, :shortName, :updated)";
-    private static final String MERGE_QUERY = CREATE_QUERY + " "
-        + "ON CONFLICT(LOWER(REPLACE(name, ' ', ''))) DO UPDATE SET "
-        + "short_name=excluded.short_name, "
-        + "aligulac_id=excluded.aligulac_id, "
-        + "updated=excluded.updated";
+    private static final String MERGE_QUERY =
+        "WITH "
+        + "vals AS (VALUES(:aligulacId, :name, :shortName, :updated)), "
+        + "updated AS "
+        + "("
+            + "UPDATE pro_team "
+            + "SET "
+            + "short_name=v.short_name, "
+            + "aligulac_id=v.aligulac_id, "
+            + "updated=v.updated "
+            + "FROM vals v(aligulac_id, name, short_name, updated) "
+            + "WHERE LOWER(REPLACE(pro_team.name, ' ', '')) = LOWER(REPLACE(v.name, ' ', '')) "
+            + "RETURNING id"
+        + "), "
+        + "inserted AS "
+        + "("
+            + "INSERT INTO pro_team (aligulac_id, name, short_name, updated) "
+            + "SELECT * FROM vals "
+            + "WHERE NOT EXISTS(SELECT 1 FROM updated) "
+            + "ON CONFLICT(LOWER(REPLACE(name, ' ', ''))) DO UPDATE SET "
+            + "short_name=excluded.short_name, "
+            + "aligulac_id=excluded.aligulac_id, "
+            + "updated=excluded.updated "
+            + "RETURNING id"
+        + ") "
+        + "SELECT id FROM updated "
+        + "UNION "
+        + "SELECT id FROM inserted";
 
     private final NamedParameterJdbcTemplate template;
 
@@ -74,23 +96,21 @@ extends StandardDAO
     private MapSqlParameterSource createParameterSource(ProTeam proTeam)
     {
         return new MapSqlParameterSource()
-            .addValue("aligulacId", proTeam.getAligulacId())
+            .addValue("aligulacId", proTeam.getAligulacId(), Types.BIGINT)
             .addValue("name", proTeam.getName())
-            .addValue("shortName", proTeam.getShortName())
+            .addValue("shortName", proTeam.getShortName(), Types.VARCHAR)
             .addValue("updated", proTeam.getUpdated());
     }
 
     public ProTeam merge(ProTeam proTeam)
     {
         proTeam.setUpdated(OffsetDateTime.now());
-        KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(proTeam);
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        proTeam.setId(keyHolder.getKey().longValue());
+        proTeam.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return proTeam;
     }
 
-    public int[] merge(ProTeam... proTeams)
+    public int[] mergeWithoutIds(ProTeam... proTeams)
     {
         if(proTeams.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
 

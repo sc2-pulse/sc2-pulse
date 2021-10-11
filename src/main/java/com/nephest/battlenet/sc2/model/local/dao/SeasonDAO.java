@@ -35,13 +35,49 @@ public class SeasonDAO
         + "(battlenet_id, region, year, number, \"start\", \"end\") "
         + "VALUES (:battlenetId, :region, :year, :number, :start, :end)";
 
-    private static final String MERGE_QUERY = CREATE_QUERY
-        + " "
-        + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
-        + "year=excluded.year, "
-        + "number=excluded.number, "
-        + "\"start\"=excluded.start, "
-        + "\"end\"=excluded.end";
+    private static final String MERGE_QUERY =
+        "WITH "
+        + "vals AS (VALUES(:battlenetId, :region, :year, :number, :start, :end)), "
+        + "selected AS "
+        + "("
+            + "SELECT id, region, battlenet_id "
+            + "FROM season "
+            + "INNER JOIN vals v(battlenet_id, region, year, number, \"start\", \"end\") USING (region, battlenet_id) "
+        + "), "
+        + "updated AS "
+        + "("
+            + "UPDATE season "
+            + "SET year = v.year, "
+            + "number = v.number, "
+            + "\"start\" = v.start, "
+            + "\"end\" = v.end "
+            + "FROM selected "
+            + "INNER JOIN vals v(battlenet_id, region, year, number, \"start\", \"end\") USING (region, battlenet_id) "
+            + "WHERE season.id = selected.id "
+            + "AND"
+            + "("
+                + "season.year != v.year "
+                + "OR season.number != v.number "
+                + "OR season.\"start\" != v.start "
+                + "OR season.\"end\" != v.end "
+            + ") "
+        + "), "
+        + "inserted AS "
+        + "("
+            + "INSERT INTO season "
+            + "(battlenet_id, region, year, number, \"start\", \"end\") "
+            + "SELECT * FROM vals "
+            + "WHERE NOT EXISTS (SELECT 1 FROM selected) "
+            + "ON CONFLICT(region, battlenet_id) DO UPDATE SET "
+            + "year=excluded.year, "
+            + "number=excluded.number, "
+            + "\"start\"=excluded.start, "
+            + "\"end\"=excluded.end "
+            + "RETURNING id "
+        + ") "
+        + "SELECT id FROM selected "
+        + "UNION "
+        + "SELECT id FROM inserted";
 
     private static final String FIND_LIST_BY_REGION = "SELECT "
         + STD_SELECT
@@ -107,10 +143,8 @@ public class SeasonDAO
 
     public Season merge(Season season)
     {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(season);
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        season.setId(keyHolder.getKey().intValue());
+        season.setId(template.query(MERGE_QUERY, params, DAOUtils.INT_EXTRACTOR));
         return season;
     }
 

@@ -21,6 +21,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -41,12 +42,48 @@ public class PlayerCharacterDAO
         + "(account_id, region, battlenet_id, realm, name, clan_id) "
         + "VALUES (:accountId, :region, :battlenetId, :realm, :name, :clanId)";
 
-    private static final String MERGE_QUERY = CREATE_QUERY
-        + " "
-        + "ON CONFLICT(region, realm, battlenet_id) DO UPDATE SET "
-        + "account_id=excluded.account_id, "
-        + "name=excluded.name, "
-        + "clan_id=excluded.clan_id";
+    private static final String MERGE_QUERY =
+        "WITH "
+        + "vals AS (VALUES(:accountId, :region, :battlenetId, :realm, :name, :clanId)), "
+        + "selected AS "
+        + "("
+            + "SELECT id, region, realm, battlenet_id "
+            + "FROM player_character "
+            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name, clan_id) "
+                + "USING (region, realm, battlenet_id)"
+        + "), "
+        + "updated AS "
+        + "("
+            + "UPDATE player_character "
+            + "SET account_id=v.account_id, "
+            + "name=v.name, "
+            + "clan_id=v.clan_id "
+            + "FROM selected "
+            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name, clan_id) "
+                + "USING (region, realm, battlenet_id) "
+            + "WHERE player_character.id = selected.id "
+            + "AND "
+            + "("
+                + "player_character.account_id != v.account_id "
+                + "OR player_character.name != v.name "
+                + "OR player_character.clan_id IS DISTINCT FROM v.clan_id "
+            + ")"
+        + "), "
+        + "inserted AS "
+        + "("
+            + "INSERT INTO player_character "
+            + "(account_id, region, battlenet_id, realm, name, clan_id) "
+            + "SELECT * FROM vals "
+            + "WHERE NOT EXISTS(SELECT 1 FROM selected) "
+            + "ON CONFLICT(region, realm, battlenet_id) DO UPDATE SET "
+            + "account_id=excluded.account_id, "
+            + "name=excluded.name, "
+            + "clan_id=excluded.clan_id "
+            + "RETURNING id"
+        + ") "
+        + "SELECT id FROM selected "
+        + "UNION "
+        + "SELECT id FROM inserted";
 
     private static final String FIND_PRO_PLAYER_CHARACTER_IDS =
         "SELECT player_character.id FROM player_character "
@@ -154,29 +191,10 @@ public class PlayerCharacterDAO
         return character;
     }
 
-    public PlayerCharacter merge(PlayerCharacter character, boolean force)
-    {
-        if(force) return doMerge(character);
-
-        PlayerCharacter found =
-            find(character.getRegion(), character.getRealm(), character.getBattlenetId()).orElse(null);
-        if(found == null || PlayerCharacter.shouldUpdate(found, character)) return doMerge(character);
-
-        character.setId(found.getId());
-        return character;
-    }
-
     public PlayerCharacter merge(PlayerCharacter character)
     {
-        return merge(character, false);
-    }
-
-    private PlayerCharacter doMerge(PlayerCharacter character)
-    {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(character);
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        character.setId(keyHolder.getKey().longValue());
+        character.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return character;
     }
 
@@ -188,7 +206,7 @@ public class PlayerCharacterDAO
             .addValue("battlenetId", character.getBattlenetId())
             .addValue("realm", character.getRealm())
             .addValue("name", character.getName())
-            .addValue("clanId", character.getClanId());
+            .addValue("clanId", character.getClanId(), Types.BIGINT);
     }
 
     @Cacheable(cacheNames = "pro-player-characters")

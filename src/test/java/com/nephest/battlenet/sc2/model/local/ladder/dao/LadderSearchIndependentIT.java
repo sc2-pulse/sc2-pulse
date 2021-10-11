@@ -117,6 +117,8 @@ public class LadderSearchIndependentIT
             BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE).get(0);
         Account acc = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount#123"));
         Account acc2 = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount2#123"));
+        //the names should be updated
+        proPlayerDAO.merge(new ProPlayer(null, new byte[]{0x1, 0x2}, "refnickname_remove", "pro name_remove"));
         ProPlayer proPlayer = new ProPlayer(null, new byte[]{0x1, 0x2}, "refnickname", "pro name");
         proPlayerDAO.merge(proPlayer);
         proPlayerAccountDAO.link(proPlayer.getId(), acc.getBattleTag(), acc2.getBattleTag());

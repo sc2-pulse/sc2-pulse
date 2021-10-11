@@ -34,11 +34,37 @@ public class LeagueTierDAO
         + "(league_id, type, min_rating, max_rating) "
         + "VALUES (:leagueId, :type, :minRating, :maxRating)";
 
-    private static final String MERGE_QUERY = CREATE_QUERY
-        + " "
-        + "ON CONFLICT(league_id, type) DO UPDATE SET "
-        + "min_rating=excluded.min_rating, "
-        + "max_rating=excluded.max_rating";
+    private static final String MERGE_QUERY =
+        "WITH vals AS (VALUES(:leagueId, :type, :minRating, :maxRating)), "
+        + "selected AS "
+        + "("
+            + "SELECT id, league_id, type "
+            + "FROM league_tier "
+            + "INNER JOIN vals v(league_id, type, min_rating, max_rating) USING (league_id, type) "
+        + "), "
+        + "updated AS "
+        + "("
+            + "UPDATE league_tier "
+            + "SET min_rating = v.min_rating, "
+            + "max_rating = v.max_rating "
+            + "FROM selected "
+            + "INNER JOIN vals v(league_id, type, min_rating, max_rating) USING (league_id, type) "
+            + "WHERE league_tier.id = selected.id "
+            + "AND (league_tier.min_rating != v.min_rating OR league_tier.max_rating != v.max_rating) "
+        + "), "
+        + "inserted AS "
+        + "("
+            + "INSERT INTO league_tier(league_id, type, min_rating, max_rating) "
+            + "SELECT * FROM vals "
+            + "WHERE NOT EXISTS(SELECT 1 FROM selected) "
+            + "ON CONFLICT(league_id, type) DO UPDATE SET "
+            + "min_rating=excluded.min_rating, "
+            + "max_rating=excluded.max_rating "
+            + "RETURNING id "
+        + ") "
+        + "SELECT id FROM selected "
+        + "UNION "
+        + "SELECT id FROM inserted";
 
     private static final String FIND_BY_LADDER_QUERY =
         "SELECT " + STD_SELECT + " FROM league_tier "
@@ -108,10 +134,8 @@ public class LeagueTierDAO
     @Cacheable(cacheNames = "ladder-skeleton")
     public LeagueTier merge(LeagueTier tier)
     {
-        KeyHolder keyHolder = new GeneratedKeyHolder();
         MapSqlParameterSource params = createParameterSource(tier);
-        template.update(MERGE_QUERY, params, keyHolder, new String[]{"id"});
-        tier.setId(keyHolder.getKey().intValue());
+        tier.setId(template.query(MERGE_QUERY, params, DAOUtils.INT_EXTRACTOR));
         return tier;
     }
 
