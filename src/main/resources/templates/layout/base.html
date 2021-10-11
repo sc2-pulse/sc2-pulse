@@ -25,9 +25,9 @@
             </script>
         </th:block>
         <script th:if="${showAds == true
-                    and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.url') != null
+                    and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.id') != null
                     and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}"
-                async th:src="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.url')}"
+                async th:src="|https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.id')}|"
                 crossorigin="anonymous"></script>
     </th:block>
     <title th:replace="${title}">SC2 Pulse</title>
@@ -48,13 +48,13 @@
     <div id="section-side-left" class="section-side">
         <div id="dd-desktop-left-container" th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')
                 and showAds == true
-                and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.url') != null
+                and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.desktop.left.id') != null
                 and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}">
             <div id="dd-desktop-left" class="dd-block mt-3" >
                 <!-- desktop-left -->
                 <ins class="adsbygoogle"
-                     data-ad-client="ca-pub-9011221167335037"
-                     data-ad-slot="3186461269"></ins>
+                     th:data-ad-client="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.id')}"
+                     th:data-ad-slot="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.desktop.left.id')}"></ins>
                 <script>
                      (adsbygoogle = window.adsbygoogle || []).push({});
                 </script>
@@ -117,12 +117,12 @@
     </footer>
     <div id="dd-mobile" class="dd-block container" th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')
         and showAds == true
-        and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.url') != null
+        and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.mobile.id') != null
         and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}">
         <!-- all-footer -->
         <ins class="adsbygoogle"
-             data-ad-client="ca-pub-9011221167335037"
-             data-ad-slot="9591909908"></ins>
+             th:data-ad-client="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.id')}"
+             th:data-ad-slot="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.mobile.id')}"></ins>
         <script>
             (adsbygoogle = window.adsbygoogle || []).push({});
         </script>
