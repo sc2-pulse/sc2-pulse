@@ -166,7 +166,7 @@ public class BlizzardSC2APIIT
                     validator.validate(match, errors);
                     assertFalse(errors.hasErrors());
                 }
-            }).blockLast();
+            }).sequential().blockLast();
         assertTrue(failedCharacters.isEmpty());
     }
 

@@ -491,12 +491,14 @@ extends BaseAPI
             .retryWhen(getRetry(WebServiceUtil.RETRY));
     }
 
-    public Flux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches
+    public ParallelFlux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches
     (Iterable<? extends PlayerCharacter> playerCharacters, Set<PlayerCharacter> errors)
     {
         return Flux.fromIterable(playerCharacters)
+            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
+            .runOn(Schedulers.boundedElastic())
             .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getMatches(p), t->errors.add(p), DELAY),
-            SAFE_REQUESTS_PER_SECOND_CAP);
+                true, 1);
     }
 
 }
