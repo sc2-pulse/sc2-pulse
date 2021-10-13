@@ -207,9 +207,9 @@ public class StatsService
     {
         Season season = seasonDao.merge(Season.of(api.getSeason(region, seasonId).block(), region));
         api.getLadders(region, ids)
-            .doOnNext(l->statsService.saveLadder(season, l.getT1(), l.getT2(), alternativeLadderService))
-        .sequential()
-        .blockLast();
+            .sequential()
+            .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
+            .forEach(l->statsService.saveLadder(season, l.getT1(), l.getT2(), alternativeLadderService));
 
     }
 
@@ -553,8 +553,8 @@ public class StatsService
                     .flatMap(t-> Arrays.stream(t.getDivisions())
                         .map(d->Tuples.of(l.getT1(), l.getT2(), t, d)))))
             .sequential()
-            .doOnNext(ladderIds::add)
-            .blockLast();
+            .toStream()
+            .forEach(ladderIds::add);
         return ladderIds;
     }
 

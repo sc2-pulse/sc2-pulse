@@ -28,7 +28,6 @@ import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
 import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -107,11 +106,11 @@ public class AlternativeLadderService
             leagues,
             queueTypes, TeamType.ARRANGED
         );
-        ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
-            new ConcurrentLinkedQueue<>();
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds = new ArrayList<>();
         api.getProfileLadderIds(season.getRegion(), divisions)
-            .doOnNext(profileLadderIds::add)
-            .sequential().blockLast();
+            .sequential()
+            .toStream()
+            .forEach(profileLadderIds::add);
         batchUpdateLadders(season, Set.of(queueTypes), profileLadderIds);
     }
 
@@ -150,8 +149,7 @@ public class AlternativeLadderService
     {
         LOG.info("Discovering {} ladders", season);
 
-        ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds =
-            getProfileLadderIds(season, lastDivision);
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds = getProfileLadderIds(season, lastDivision);
         LOG.info("{} {} ladders found", profileIds.size(), season);
         batchUpdateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds);
     }
@@ -160,17 +158,16 @@ public class AlternativeLadderService
     (
         Season season,
         Set<QueueType> queueTypes,
-        ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds
     )
     {
-        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> list = new ArrayList<>(profileIds);
-        int batches = (int) Math.ceil(list.size() / (double) LADDER_BATCH_SIZE);
+        int batches = (int) Math.ceil(profileIds.size() / (double) LADDER_BATCH_SIZE);
         for(int i = 0; i < batches; i++)
         {
             int to = (i + 1) * LADDER_BATCH_SIZE;
-            if (to > list.size()) to = list.size();
+            if (to > profileIds.size()) to = profileIds.size();
             List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> batch =
-                list.subList(i * LADDER_BATCH_SIZE, to);
+                profileIds.subList(i * LADDER_BATCH_SIZE, to);
             alternativeLadderService.updateLadders(season, queueTypes, batch);
         }
     }
@@ -189,23 +186,22 @@ public class AlternativeLadderService
             .forEach((r)->saveProfileLadder(season, r.getT1(), r.getT2()));
     }
 
-    private ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
+    private List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
     (Season season, long lastDivision)
     {
-        ConcurrentLinkedQueue<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
-        new ConcurrentLinkedQueue<>();
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds = new ArrayList<>();
         AtomicInteger discovered = new AtomicInteger(1);
         while(discovered.get() > 0)
         {
             discovered.set(0);
             api.getProfileLadderIds(season.getRegion(), lastDivision,lastDivision + LEGACY_LADDER_BATCH_SIZE)
-                .doOnNext((id)->{
+                .sequential()
+                .toStream()
+                .forEach((id)->{
                     profileLadderIds.add(id);
                     discovered.getAndIncrement();
                     LOG.debug("Ladder discovered: {} {}", id.getT1(), id.getT3());
-                })
-                .sequential()
-                .blockLast();
+                });
             if(LEGACY_LADDER_BATCH_SIZE - discovered.get() > ALTERNATIVE_LADDER_ERROR_THRESHOLD) break;
             lastDivision+=LEGACY_LADDER_BATCH_SIZE;
         }

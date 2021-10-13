@@ -157,7 +157,9 @@ public class BlizzardSC2APIIT
     {
         Set<PlayerCharacter> failedCharacters = new HashSet<>();
         api.getMatches(Set.of(SERRAL, HEROMARINE, MARU), failedCharacters)
-            .doOnNext((m)->
+            .sequential()
+            .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
+            .forEach((m)->
             {
                 assertTrue(m.getT1().getMatches().length > 0);
                 for(BlizzardMatch match : m.getT1().getMatches())
@@ -166,7 +168,7 @@ public class BlizzardSC2APIIT
                     validator.validate(match, errors);
                     assertFalse(errors.hasErrors());
                 }
-            }).sequential().blockLast();
+            });
         assertTrue(failedCharacters.isEmpty());
     }
 
