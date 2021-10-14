@@ -97,6 +97,16 @@ caption
     z-index: 99 !important;
 }
 
+ins.adsbygoogle[data-ad-status="unfilled"]
+{
+    background-color: #f1f3f4;
+}
+
+body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
+{
+    background-color: #22272a;
+}
+
 #dd-desktop-left-container
 {
     width: 100%;
