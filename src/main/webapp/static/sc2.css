@@ -775,7 +775,7 @@ body.modal-open.modal-open-no-popup
 
     html
     {
-        margin-left: calc(100vw - 100%);
+        overflow-y: scroll;
     }
 }
 
