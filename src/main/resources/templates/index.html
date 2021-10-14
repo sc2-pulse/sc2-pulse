@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="https://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
-      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::section}, ~{::script}, true)}">
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::section}, ~{::#main-script-block}, true)}">
 <head>
     <title>Stats - SC2 Pulse</title>
     <meta name="description" content="Comprehensive ladder statistics for StarCraft2. Online population, mmr ranking, race/league/region distribution, tier mmr ranges, match history, pro player unmasking and earnings."/>
@@ -689,6 +689,6 @@
         <div class="c-divider-hr no-popup-hide"></div>
         <section th:replace="~{fragments/app :: modal}"></section>
     </section><!--Container-->
-    <script>$(document).ready(function(){SC2Restful.start();});</script>
+    <script id="main-script-block">$(document).ready(function(){SC2Restful.start();});</script>
 </body>
 </html>

@@ -4,7 +4,7 @@
 <!DOCTYPE html>
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="https://www.thymeleaf.org"
-      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, ~{::script}, true)}">
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, ~{::#main-script-block}, true)}">
 <head>
     <title>Team MMR history - SC2 Pulse</title>
     <meta name="description" content="Complete mmr history for multiple teams of any format."/>
@@ -14,6 +14,6 @@
     <section th:replace="~{fragments/main-section :: team-mmr}"></section>
 </div>
 <section th:replace="~{fragments/app :: modal}"></section>
-<script>SC2Restful.start(START_MODE.MINIMAL); TeamUtil.enhanceMmrForm();</script>
+<script id="main-script-block">SC2Restful.start(START_MODE.MINIMAL); TeamUtil.enhanceMmrForm();</script>
 </body>
 </html>
