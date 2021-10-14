@@ -131,17 +131,15 @@ caption
     width: 100%;
     min-width: 300px;
     max-width: 980px;
-    min-height: 50px;
-    max-height: 180px;
+    height: 50px;
 }
 
 #dd-mobile .adsbygoogle
 {
     width: 100%;
-    min-width: 468px;
+    min-width: 300px;
     max-width: 980px;
-    min-height: 60px;
-    max-height: 180px;
+    height: 50px;
 }
 
 #status-generating-fullscreen
@@ -786,12 +784,23 @@ body.modal-open.modal-open-no-popup
     {
         overflow-y: scroll;
     }
+
+    #dd-small-header .adsbygoogle, #dd-mobile .adsbygoogle
+    {
+        height: 60px;
+    }
 }
 
 @media (min-width: 768px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 720px;
     }
+
+    #dd-mobile .adsbygoogle
+    {
+        height: 90px;
+    }
+
 }
 
 @media (min-width: 992px) {
