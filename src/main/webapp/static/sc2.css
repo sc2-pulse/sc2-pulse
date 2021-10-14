@@ -814,7 +814,7 @@ body.modal-open.modal-open-no-popup
 
     .dd-full-width
     {
-        display: none !important;
+        display: none;
     }
 }
 
@@ -834,7 +834,7 @@ body.modal-open.modal-open-no-popup
 
     #dd-desktop-left, .dd-skyscraper
     {
-        display: none !important;
+        display: none;
     }
 
 }
@@ -851,7 +851,7 @@ body.modal-open.modal-open-no-popup
 
     .dd-full-width
     {
-        display: none !important;
+        display: none;
     }
 
 }
