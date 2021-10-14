@@ -92,12 +92,12 @@
             <aside class="no-popup-hide" th:if="${@varService.getMessage('message.global') != null}" th:utext="${@varService.getMessage('message.global')}"></aside>
             <div class="c-divider-hr no-popup-hide"></div>
         </header>
-        <div id="dd-small-header" class="dd-block container mt-4 mb-4" th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')
+        <div id="dd-small-header" class="dd-block mt-4 mb-4" th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')
                 and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.small.header.id') != null
                 and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}"
         >
             <!-- small-header -->
-            <ins class="adsbygoogle"
+            <ins class="adsbygoogle dd-full-width"
                  th:data-ad-client="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.id')}"
                  th:data-ad-slot="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.small.header.id')}"></ins>
             <script>

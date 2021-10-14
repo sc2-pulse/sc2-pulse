@@ -120,7 +120,6 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     position: absolute;
     top: 0;
     left: 0;
-    width: 160px;
 }
 
 .adsbygoogle
@@ -128,28 +127,9 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     display:inline-block;
 }
 
-#dd-desktop-left .adsbygoogle
+.dd-skyscraper
 {
-    width: 100%;
-    min-width: 120px;
-    max-width: 160px;
     height: 600px;
-}
-
-#dd-small-header .adsbygoogle
-{
-    width: 100%;
-    min-width: 300px;
-    max-width: 980px;
-    height: 50px;
-}
-
-#dd-mobile .adsbygoogle
-{
-    width: 100%;
-    min-width: 300px;
-    max-width: 980px;
-    height: 50px;
 }
 
 #status-generating-fullscreen
@@ -794,21 +774,11 @@ body.modal-open.modal-open-no-popup
     {
         overflow-y: scroll;
     }
-
-    #dd-small-header .adsbygoogle, #dd-mobile .adsbygoogle
-    {
-        height: 60px;
-    }
 }
 
 @media (min-width: 768px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 720px;
-    }
-
-    #dd-mobile .adsbygoogle
-    {
-        height: 90px;
     }
 
 }
@@ -825,32 +795,67 @@ body.modal-open.modal-open-no-popup
     }
 }
 
-@media (min-width: 1500px) {
-    #dd-desktop-left-container, #dd-desktop-left, #dd-desktop-left .adsbygoogle
-    {
-        max-width: 160px !important;
-    }
-}
-
 @media (min-width: 1395px) {
-    #dd-desktop-left-container, #dd-desktop-left, #dd-desktop-left .adsbygoogle
+    .dd-skyscraper
+    {
+        width: 120px;
+    }
+
+    #dd-desktop-left-container
     {
         max-width: 120px;
     }
 
-    #dd-small-header, #dd-small-header .adsbygoogle, #dd-mobile .adsbygoogle
+    .dd-full-width
     {
         display: none !important;
+    }
+}
+
+@media (min-width: 1500px) {
+    .dd-skyscraper
+    {
+        width: 160px;
+    }
+
+    #dd-desktop-left-container
+    {
+        max-width: 160px;
     }
 }
 
 @media (max-width: 1394px) {
 
-    #dd-desktop-left, #dd-desktop-left .adsbygoogle
+    #dd-desktop-left, .dd-skyscraper
     {
         display: none !important;
     }
 
+    .dd-full-width
+    {
+        width: 728px;
+        height: 90px;
+    }
+
+}
+
+@media (max-width: 992px) {
+
+    .dd-full-width
+    {
+        width: 468px;
+        height: 60px;
+    }
+
+}
+
+@media (max-width: 540px) {
+
+    .dd-full-width
+    {
+        width: 300px;
+        height: 50px;
+    }
 }
 
 @media (max-width: 1200px) {

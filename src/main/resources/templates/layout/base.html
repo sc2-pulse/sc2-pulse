@@ -52,7 +52,7 @@
                 and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}">
             <div id="dd-desktop-left" class="dd-block mt-5" >
                 <!-- desktop-left -->
-                <ins class="adsbygoogle"
+                <ins class="adsbygoogle dd-skyscraper"
                      th:data-ad-client="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.id')}"
                      th:data-ad-slot="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.desktop.left.id')}"></ins>
                 <script>
@@ -120,7 +120,7 @@
         and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.mobile.id') != null
         and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}">
         <!-- all-footer -->
-        <ins class="adsbygoogle"
+        <ins class="adsbygoogle dd-full-width"
              th:data-ad-client="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.id')}"
              th:data-ad-slot="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.mobile.id')}"></ins>
         <script>
