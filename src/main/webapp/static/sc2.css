@@ -126,6 +126,15 @@ caption
     height: 600px;
 }
 
+#dd-small-header .adsbygoogle
+{
+    width: 100%;
+    min-width: 300px;
+    max-width: 980px;
+    min-height: 50px;
+    max-height: 180px;
+}
+
 #dd-mobile .adsbygoogle
 {
     width: 100%;
@@ -810,7 +819,7 @@ body.modal-open.modal-open-no-popup
         max-width: 120px;
     }
 
-    #dd-mobile .adsbygoogle
+    #dd-small-header, #dd-small-header .adsbygoogle, #dd-mobile .adsbygoogle
     {
         display: none !important;
     }

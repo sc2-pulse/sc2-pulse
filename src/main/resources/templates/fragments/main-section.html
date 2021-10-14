@@ -178,6 +178,18 @@
             </li>
         </ul>
     </nav>
+    <div id="dd-small-header" class="dd-block container mt-4 mb-4" th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')
+                and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.small.header.id') != null
+                and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}"
+    >
+        <!-- small-header -->
+        <ins class="adsbygoogle"
+             th:data-ad-client="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.id')}"
+             th:data-ad-slot="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.small.header.id')}"></ins>
+        <script>
+            (adsbygoogle = window.adsbygoogle || []).push({});
+        </script>
+    </div>
     <div id="team-mmr-global" class="tab-pane show active">
     <header class="no-popup-hide">
         <h2>Team MMR history</h2>
