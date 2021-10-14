@@ -798,9 +798,16 @@ body.modal-open.modal-open-no-popup
 }
 
 @media (min-width: 1500px) {
-    #dd-desktop-left-container
+    #dd-desktop-left-container, #dd-desktop-left, #dd-desktop-left .adsbygoogle
     {
-        max-width: 160px;
+        max-width: 160px !important;
+    }
+}
+
+@media (min-width: 1395px) {
+    #dd-desktop-left-container, #dd-desktop-left, #dd-desktop-left .adsbygoogle
+    {
+        max-width: 120px;
     }
 
     #dd-mobile .adsbygoogle
@@ -809,7 +816,7 @@ body.modal-open.modal-open-no-popup
     }
 }
 
-@media (max-width: 1499px) {
+@media (max-width: 1394px) {
 
     #dd-desktop-left, #dd-desktop-left .adsbygoogle
     {
