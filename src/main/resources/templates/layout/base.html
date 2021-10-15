@@ -149,7 +149,7 @@
             .replace(/ /g, '')
             .split(",");
         const MATCH_BATCH_SIZE = /*[[${@ladderMatchDAO.getResultsPerPage()}]]*/ '';
-        const AUTHENTICATED = /*[[${#authentication.name}]]*/ '';
+        const AUTHENTICATED = /*[[${#authentication?.name}]]*/ '';
         const SESSION_TIMEOUT_SECONDS = parseInt(/*[[${!#strings.isEmpty(@environment.getProperty('server.servlet.session.timeout'))
             ? @environment.getProperty('server.servlet.session.timeout')
             : 1800}]]*/ 1800);
