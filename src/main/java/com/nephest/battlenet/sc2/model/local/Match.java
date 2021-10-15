@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 
 import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class Match
@@ -16,7 +17,13 @@ extends BaseMatch
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
+
+    public static final Comparator<Match> NATURAL_ID_COMPARATOR =
+        Comparator.comparing(Match::getDate)
+            .thenComparing(Match::getType)
+            .thenComparing(Match::getRegion)
+            .thenComparing(Match::getMap);
 
     private Long id;
 

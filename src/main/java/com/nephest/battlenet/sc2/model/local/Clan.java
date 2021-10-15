@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardClan;
 
 import javax.validation.constraints.NotNull;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class Clan
@@ -15,7 +16,11 @@ extends BaseClan
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+
+    public static final Comparator<Clan> NATURAL_ID_COMPARATOR =
+        Comparator.comparing(Clan::getTag)
+            .thenComparing(Clan::getRegion);
 
     private Integer id;
 

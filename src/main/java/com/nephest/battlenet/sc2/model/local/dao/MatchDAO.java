@@ -16,7 +16,6 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -154,12 +153,8 @@ extends StandardDAO
             .addValue("matchUids", matchUids);
 
         List<Match> mergedMatches = getTemplate().query(MERGE_QUERY, params, getStdRowMapper());
-        Comparator<Match> comparator = Comparator.comparing(Match::getDate)
-            .thenComparing(Match::getType)
-            .thenComparing(Match::getMap)
-            .thenComparing(Match::getRegion);
 
-        return DAOUtils.updateOriginals(matches, mergedMatches, comparator, (o, m)->o.setId(m.getId()));
+        return DAOUtils.updateOriginals(matches, mergedMatches, Match.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()));
     }
 
 }

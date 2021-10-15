@@ -14,7 +14,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -130,9 +129,8 @@ public class ClanDAO
             .addValue("clans", clanData);
 
         List<Clan> mergedClans = template.query(MERGE_QUERY, params, STD_ROW_MAPPER);
-        Comparator<Clan> comparator = Comparator.comparing(Clan::getTag);
 
-        return DAOUtils.updateOriginals(clans, mergedClans, comparator, (o, m)->o.setId(m.getId()));
+        return DAOUtils.updateOriginals(clans, mergedClans, Clan.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()));
     }
 
 }

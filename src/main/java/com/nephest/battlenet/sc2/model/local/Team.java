@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 
 import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class Team
@@ -18,7 +19,13 @@ implements java.io.Serializable
 
     public static final Integer DEFAULT_RANK = 2147483647;
 
-    private static final long serialVersionUID = 8L;
+    public static final Comparator<Team> NATURAL_ID_COMPARATOR =
+        Comparator.comparing(Team::getLegacyId)
+            .thenComparing(Team::getQueueType)
+            .thenComparing(Team::getRegion)
+            .thenComparing(Team::getSeason);
+
+    private static final long serialVersionUID = 9L;
 
     private Long id;
 

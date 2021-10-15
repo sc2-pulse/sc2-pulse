@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
 
 import javax.validation.constraints.NotNull;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class Account
@@ -16,7 +17,11 @@ extends BaseAccount
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
+
+    public static final Comparator<Account> NATURAL_ID_COMPARATOR =
+        Comparator.comparing(Account::getBattleTag)
+            .thenComparing(Account::getPartition);
 
     private Long id;
 

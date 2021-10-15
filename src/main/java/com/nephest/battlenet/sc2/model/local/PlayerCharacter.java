@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 
 import javax.validation.constraints.NotNull;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class PlayerCharacter
@@ -15,7 +16,12 @@ extends BasePlayerCharacter
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 4L;
+    private static final long serialVersionUID = 5L;
+
+    public static final Comparator<PlayerCharacter> NATURAL_ID_COMPARATOR =
+        Comparator.comparing(PlayerCharacter::getBattlenetId)
+            .thenComparing(PlayerCharacter::getRegion)
+            .thenComparing(PlayerCharacter::getRealm);
 
     private Long id;
 
