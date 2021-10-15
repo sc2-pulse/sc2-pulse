@@ -17,6 +17,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Types;
 import java.util.Optional;
 
 @Repository
@@ -50,7 +51,11 @@ public class LeagueTierDAO
             + "FROM selected "
             + "INNER JOIN vals v(league_id, type, min_rating, max_rating) USING (league_id, type) "
             + "WHERE league_tier.id = selected.id "
-            + "AND (league_tier.min_rating != v.min_rating OR league_tier.max_rating != v.max_rating) "
+            + "AND "
+            + "("
+                + "league_tier.min_rating IS DISTINCT FROM v.min_rating "
+                + "OR league_tier.max_rating IS DISTINCT FROM v.max_rating"
+            + ") "
         + "), "
         + "inserted AS "
         + "("
@@ -144,8 +149,8 @@ public class LeagueTierDAO
         return new MapSqlParameterSource()
             .addValue("leagueId", tier.getLeagueId())
             .addValue("type", conversionService.convert(tier.getType(), Integer.class))
-            .addValue("minRating", tier.getMinRating())
-            .addValue("maxRating", tier.getMaxRating());
+            .addValue("minRating", tier.getMinRating(), Types.SMALLINT)
+            .addValue("maxRating", tier.getMaxRating(), Types.SMALLINT);
     }
 
     public Optional<LeagueTier> findByLadder
