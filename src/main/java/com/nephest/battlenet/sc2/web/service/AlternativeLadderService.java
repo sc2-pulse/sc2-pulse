@@ -339,10 +339,10 @@ public class AlternativeLadderService
     {
         if(newTeams.size() == 0) return;
 
-        newTeams.sort(Comparator.comparing(a -> a.getT1().getBattleTag()));
+        newTeams.sort(Comparator.comparing(Tuple2::getT1, Account.NATURAL_ID_COMPARATOR));
         for(Tuple4<Account, PlayerCharacter, Team, Race> curMembers : newTeams) accountDAO.merge(curMembers.getT1());
 
-        newTeams.sort(Comparator.comparing(a -> a.getT2().getBattlenetId()));
+        newTeams.sort(Comparator.comparing(Tuple2::getT2, PlayerCharacter.NATURAL_ID_COMPARATOR));
         for(Tuple4<Account, PlayerCharacter, Team, Race> curNewTeam : newTeams)
         {
             Account account = curNewTeam.getT1();
@@ -363,7 +363,7 @@ public class AlternativeLadderService
     {
         if(characters.isEmpty()) return;
 
-        characters.sort(Comparator.comparing(PlayerCharacter::getBattlenetId));
+        characters.sort(PlayerCharacter.NATURAL_ID_COMPARATOR);
         for(PlayerCharacter c : characters) playerCharacterDao.merge(c);
     }
 

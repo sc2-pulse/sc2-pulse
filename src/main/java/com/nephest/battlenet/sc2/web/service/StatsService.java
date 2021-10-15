@@ -500,10 +500,10 @@ public class StatsService
 
         Set<TeamMember> teamMembers = new HashSet<>(members.size(), 1.0F);
 
-        members.sort(Comparator.comparing(a -> a.getT1().getBattleTag()));
+        members.sort(Comparator.comparing(Tuple2::getT1, Account.NATURAL_ID_COMPARATOR));
         for(Tuple3<Account, PlayerCharacter, TeamMember> curMembers : members) accountDao.merge(curMembers.getT1());
 
-        members.sort(Comparator.comparing(a -> a.getT2().getBattlenetId()));
+        members.sort(Comparator.comparing(Tuple2::getT2, PlayerCharacter.NATURAL_ID_COMPARATOR));
         for(Tuple3<Account, PlayerCharacter, TeamMember> curMembers : members)
         {
             Account account = curMembers.getT1();
@@ -523,6 +523,7 @@ public class StatsService
     {
         if(clans.isEmpty()) return;
 
+        clans.sort(Comparator.comparing(Tuple2::getT2, Clan.NATURAL_ID_COMPARATOR));
         clanDAO.merge(clans.stream()
             .map(Tuple2::getT2)
             .toArray(Clan[]::new)
