@@ -26,10 +26,7 @@ import reactor.core.publisher.ParallelFlux;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.function.*;
 
-import java.util.Arrays;
-import java.util.EnumMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.LongStream;
 
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
@@ -239,6 +236,46 @@ extends BaseAPI
             .retryWhen(getRetry(WebServiceUtil.RETRY));
     }
 
+    public Mono<BlizzardLadder> getFilteredLadder
+    (
+        Region region,
+        Long id,
+        long startingFromEpochSeconds
+    )
+    {
+        return getWebClient(region)
+            .get()
+            .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "data/sc2/ladder/{0}"), id)
+            .accept(APPLICATION_JSON)
+            .retrieve()
+            .bodyToMono(String.class)
+            .map(s->extractNewTeams(s, startingFromEpochSeconds))
+            .retryWhen(getRetry(WebServiceUtil.RETRY));
+    }
+
+    private BlizzardLadder extractNewTeams(String s, long startingFromEpochSeconds)
+    {
+        try
+        {
+            ArrayList<BlizzardTeam> teams = new ArrayList<>();
+            JsonNode root = objectMapper.readTree(s);
+            for(JsonNode team : root.at("/team"))
+            {
+                long timestamp = team.findValue("last_played_time_stamp").asLong();
+                if(timestamp > startingFromEpochSeconds) teams.add(objectMapper.treeToValue(team, BlizzardTeam.class));
+            }
+            return new BlizzardLadder
+            (
+                teams.toArray(BlizzardTeam[]::new),
+                objectMapper.treeToValue(root.at("/league"), BlizzardLadderLeague.class)
+            );
+        }
+        catch (JsonProcessingException e)
+        {
+            throw new IllegalStateException("Invalid json structure", e);
+        }
+    }
+
     public ParallelFlux<Tuple2<BlizzardLadder, Long>> getLadders
     (
         Region region,
@@ -255,6 +292,7 @@ extends BaseAPI
     public ParallelFlux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>> getLadders
     (
         Iterable<? extends Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds,
+        long startingFromEpochSeconds,
         Map<Region, Set<Long>> errors
     )
     {
@@ -263,7 +301,9 @@ extends BaseAPI
             .runOn(Schedulers.boundedElastic())
             .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono
             (
-                getLadder(d.getT2(), d.getT4()).zipWith(Mono.just(d)),
+                startingFromEpochSeconds < 1
+                    ? getLadder(d.getT2(), d.getT4()).zipWith(Mono.just(d))
+                    : getFilteredLadder(d.getT2(), d.getT4().getLadderId(), startingFromEpochSeconds).zipWith(Mono.just(d)),
                 t->errors.get(d.getT2()).add(d.getT4().getLadderId()),
                 DELAY
             ),

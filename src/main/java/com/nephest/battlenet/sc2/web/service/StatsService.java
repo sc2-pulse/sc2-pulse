@@ -348,7 +348,7 @@ public class StatsService
     (Season season, List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds, Instant lastUpdated)
     {
         List<Future<?>> dbTasks = new ArrayList<>();
-        api.getLadders(ladderIds, failedLadders)
+        api.getLadders(ladderIds, lastUpdated != null ? lastUpdated.toEpochMilli() / 1000 : -1, failedLadders)
             .sequential()
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
