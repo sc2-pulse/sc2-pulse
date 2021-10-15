@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.config;
 
+import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.config.convert.*;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
@@ -15,6 +16,8 @@ import org.springframework.transaction.PlatformTransactionManager;
 import javax.sql.DataSource;
 import java.time.Duration;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class CoreTestConfig
 {
@@ -61,6 +64,12 @@ public class CoreTestConfig
     @Bean
     public RestTemplateCustomizer restTemplateCustomizer() {
         return new GlobalRestTemplateCustomizer((int) IO_TIMEOUT.toMillis());
+    }
+
+    @Bean
+    public ExecutorService databaseExecutor()
+    {
+        return Executors.newFixedThreadPool(Application.DB_THREADS);
     }
 
 }

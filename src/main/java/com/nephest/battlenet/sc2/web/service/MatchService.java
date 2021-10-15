@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.util.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +33,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -49,6 +52,7 @@ public class MatchService
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SeasonDAO seasonDAO;
     private final PostgreSQLUtils postgreSQLUtils;
+    private final ExecutorService executorService;
     private final Set<PlayerCharacter> failedCharacters = new HashSet<>();
 
     @Autowired @Lazy
@@ -62,7 +66,8 @@ public class MatchService
         MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
         SeasonDAO seasonDAO,
-        PostgreSQLUtils postgreSQLUtils
+        PostgreSQLUtils postgreSQLUtils,
+        ExecutorService executorService
     )
     {
         this.api = api;
@@ -71,6 +76,7 @@ public class MatchService
         this.matchParticipantDAO = matchParticipantDAO;
         this.seasonDAO = seasonDAO;
         this.postgreSQLUtils = postgreSQLUtils;
+        this.executorService = executorService;
     }
 
     public void update(UpdateContext updateContext)
@@ -78,7 +84,7 @@ public class MatchService
         if(updateContext.getExternalUpdate() == null || updateContext.getInternalUpdate() == null) return;
 
         //Active players can't be updated retroactively, so there is no reason to sync with other services here
-        int matchCount = matchService.saveMatches(updateContext.getInternalUpdate());
+        int matchCount = saveMatches(updateContext.getInternalUpdate());
         postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),
@@ -91,8 +97,7 @@ public class MatchService
         LOG.info("Saved {} matches({} identified)", matchCount, identified);
     }
 
-    @Transactional
-    protected int saveMatches(Instant lastUpdated)
+    private int saveMatches(Instant lastUpdated)
     {
         LOG.debug("Retrying {} previously failed matches", failedCharacters.size());
         int r1 = saveMatches(failedCharacters);
@@ -105,6 +110,7 @@ public class MatchService
 
     private int saveMatches(Iterable<? extends PlayerCharacter> characters)
     {
+        List<Future<?>> dbTasks = new ArrayList<>();
         AtomicInteger count = new AtomicInteger(0);
         api.getMatches(characters, failedCharacters)
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
@@ -112,12 +118,14 @@ public class MatchService
             .sequential()
             .buffer(BATCH_SIZE)
             .doOnNext(b->count.getAndAdd(b.size()))
-            .toStream(4)
-            .forEach(this::saveMatches);
+            .toStream()
+            .forEach(m->dbTasks.add(executorService.submit(()->matchService.saveMatches(m))));
+        MiscUtil.awaitAndLogExceptions(dbTasks);
         return count.get();
     }
 
-    private void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacter>> matches)
+    @Transactional
+    protected void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacter>> matches)
     {
         Match[] matchBatch = new Match[matches.size()];
         MatchParticipant[] participantBatch = new MatchParticipant[matches.size()];

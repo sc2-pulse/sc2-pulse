@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.util.MiscUtil;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,6 +34,8 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
@@ -46,7 +49,7 @@ public class StatsService
     public static final int STALE_LADDER_TOLERANCE = 3;
     public static final int STALE_LADDER_DEPTH = 10;
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 2;
-    public static final int LADDER_BATCH_SIZE = 400;
+    public static final int LADDER_BATCH_SIZE = 100;
     public static final int EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD = 10;
 
     @Autowired
@@ -80,6 +83,7 @@ public class StatsService
     private PostgreSQLUtils postgreSQLUtils;
     private Validator validator;
     private ConversionService conversionService;
+    private ExecutorService executorService;
 
     public StatsService(){}
 
@@ -104,7 +108,8 @@ public class StatsService
         VarDAO varDAO,
         PostgreSQLUtils postgreSQLUtils,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
-        Validator validator
+        Validator validator,
+        ExecutorService executorService
     )
     {
         this.alternativeLadderService = alternativeLadderService;
@@ -126,6 +131,7 @@ public class StatsService
         this.postgreSQLUtils = postgreSQLUtils;
         this.conversionService = conversionService;
         this.validator = validator;
+        this.executorService = executorService;
         for(Region r : Region.values()) failedLadders.put(r, new HashSet<>());
     }
 
@@ -335,15 +341,19 @@ public class StatsService
         LOG.debug("Updating season {} using {} checkpoint", season, updateContext.getExternalUpdate());
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             getLadderIds(getLeagueIds(bSeason, season.getRegion(), queues, leagues), currentSeason);
-        int batches = (int) Math.ceil(ladderIds.size() / (double) LADDER_BATCH_SIZE);
-        for(int i = 0; i < batches; i++)
-        {
-            int to = (i + 1) * LADDER_BATCH_SIZE;
-            if (to > ladderIds.size()) to = ladderIds.size();
-            List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>  batch =
-                ladderIds.subList(i * LADDER_BATCH_SIZE, to);
-            statsService.updateLadders(season, batch, updateContext.getExternalUpdate());
-        }
+        updateLadders(season, ladderIds, updateContext.getExternalUpdate());
+    }
+
+    private void updateLadders
+    (Season season, List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds, Instant lastUpdated)
+    {
+        List<Future<?>> dbTasks = new ArrayList<>();
+        api.getLadders(ladderIds, failedLadders)
+            .sequential()
+            .buffer(LADDER_BATCH_SIZE)
+            .toStream()
+            .forEach(l->dbTasks.add(executorService.submit(()->statsService.saveLadders(season, l, lastUpdated))));
+        MiscUtil.awaitAndLogExceptions(dbTasks);
     }
 
     @Transactional
@@ -351,28 +361,29 @@ public class StatsService
         //isolation = Isolation.READ_COMMITTED,
         propagation = Propagation.REQUIRES_NEW
     )
-    public void updateLadders
-    (Season season, List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds, Instant lastUpdated)
+    public void saveLadders
+    (
+        Season season,
+        List<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>> ladders,
+        Instant lastUpdated
+    )
     {
-        api.getLadders(ladderIds, failedLadders)
-            .sequential()
-            .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
-            .forEach(l->
-            {
-                League league = leagueDao.merge(League.of(season, l.getT2().getT1()));
-                LeagueTier tier = leagueTierDao.merge(LeagueTier.of(league, l.getT2().getT3()));
-                Division division = saveDivision(season, league, tier, l.getT2().getT4());
-                //force update previously failed ladders, this will pick up all skipped teams
-                Instant lastUpdatedToUse = failedLadders.get(l.getT2().getT2()).remove(l.getT2().getT4().getLadderId())
-                    ? null
-                    : lastUpdated;
-                updateTeams(l.getT1().getTeams(), season, league, tier, division, lastUpdatedToUse);
-                LOG.debug
-                (
-                    "Ladder saved: {} {} {} {}",
-                    season, division.getBattlenetId(), league, lastUpdatedToUse == null ? "forced" : ""
-                );
-            });
+        for(Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> l : ladders)
+        {
+            League league = leagueDao.merge(League.of(season, l.getT2().getT1()));
+            LeagueTier tier = leagueTierDao.merge(LeagueTier.of(league, l.getT2().getT3()));
+            Division division = saveDivision(season, league, tier, l.getT2().getT4());
+            //force update previously failed ladders, this will pick up all skipped teams
+            Instant lastUpdatedToUse = failedLadders.get(l.getT2().getT2()).remove(l.getT2().getT4().getLadderId())
+                ? null
+                : lastUpdated;
+            updateTeams(l.getT1().getTeams(), season, league, tier, division, lastUpdatedToUse);
+            LOG.debug
+            (
+                "Ladder saved: {} {} {} {}",
+                season, division.getBattlenetId(), league, lastUpdatedToUse == null ? "forced" : ""
+            );
+        }
     }
 
     public Division saveDivision

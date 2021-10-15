@@ -28,6 +28,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.sql.DataSource;
 import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 @SpringBootApplication
 @EnableCaching
@@ -39,6 +41,7 @@ extends SpringBootServletInitializer
 {
 
     public static final String VERSION = Application.class.getPackage().getImplementationVersion();
+    public static final int DB_THREADS = Math.max(4, Runtime.getRuntime().availableProcessors());
 
     public static void main(String[] args)
     {
@@ -91,6 +94,12 @@ extends SpringBootServletInitializer
     public Random simpleRng()
     {
         return new Random();
+    }
+
+    @Bean
+    public ExecutorService databaseExecutor()
+    {
+        return Executors.newFixedThreadPool(DB_THREADS);
     }
 
     @Bean

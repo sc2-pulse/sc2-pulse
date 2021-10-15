@@ -20,6 +20,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.validation.Validator;
 
 import java.time.Instant;
+import java.util.concurrent.ExecutorService;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,12 +41,15 @@ public class StatsServiceIT
     @Autowired
     private BlizzardSC2API api;
 
+    @Autowired
+    private ExecutorService executorService;
+
     @BeforeEach
     public void beforeEach(@Autowired Validator validator)
     {
         teamDAO = mock(TeamDAO.class);
         statsService = new StatsService(null, null, mock(SeasonDAO.class), null, null, null, teamDAO, null, null,
-            null, null, null, null, null, null, null, null, null, validator);
+            null, null, null, null, null, null, null, null, null, validator, executorService);
         StatsService nss = mock(StatsService.class);
         statsService.setNestedService(nss);
     }

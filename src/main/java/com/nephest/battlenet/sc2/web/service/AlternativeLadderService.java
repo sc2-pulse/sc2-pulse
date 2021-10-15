@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeamMember;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.util.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +29,8 @@ import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Service
@@ -60,6 +63,7 @@ public class AlternativeLadderService
     private final TeamMemberDAO teamMemberDao;
     private final ConversionService conversionService;
     private final Validator validator;
+    private final ExecutorService executorService;
 
     @Autowired
     public AlternativeLadderService
@@ -75,7 +79,8 @@ public class AlternativeLadderService
         ClanDAO clanDAO,
         TeamMemberDAO teamMemberDao,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
-        Validator validator
+        Validator validator,
+        ExecutorService executorService
     )
     {
         this.api = api;
@@ -90,6 +95,7 @@ public class AlternativeLadderService
         this.teamMemberDao = teamMemberDao;
         this.conversionService = conversionService;
         this.validator = validator;
+        this.executorService = executorService;
     }
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 100;
@@ -111,7 +117,7 @@ public class AlternativeLadderService
             .sequential()
             .toStream()
             .forEach(profileLadderIds::add);
-        batchUpdateLadders(season, Set.of(queueTypes), profileLadderIds);
+        updateLadders(season, Set.of(queueTypes), profileLadderIds);
     }
 
     public void updateThenSmartDiscoverSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
@@ -151,39 +157,23 @@ public class AlternativeLadderService
 
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds = getProfileLadderIds(season, lastDivision);
         LOG.info("{} {} ladders found", profileIds.size(), season);
-        batchUpdateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds);
+        updateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds);
     }
 
-    private void batchUpdateLadders
-    (
-        Season season,
-        Set<QueueType> queueTypes,
-        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds
-    )
-    {
-        int batches = (int) Math.ceil(profileIds.size() / (double) LADDER_BATCH_SIZE);
-        for(int i = 0; i < batches; i++)
-        {
-            int to = (i + 1) * LADDER_BATCH_SIZE;
-            if (to > profileIds.size()) to = profileIds.size();
-            List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> batch =
-                profileIds.subList(i * LADDER_BATCH_SIZE, to);
-            alternativeLadderService.updateLadders(season, queueTypes, batch);
-        }
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void updateLadders
+    private void updateLadders
     (
         Season season,
         Set<QueueType> queueTypes,
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladders
     )
     {
+        List<Future<?>> dbTasks = new ArrayList<>();
         api.getProfileLadders(ladders, queueTypes)
             .sequential()
-            .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
-            .forEach((r)->saveProfileLadder(season, r.getT1(), r.getT2()));
+            .buffer(LADDER_BATCH_SIZE)
+            .toStream()
+            .forEach((r)->dbTasks.add(executorService.submit(()->alternativeLadderService.saveProfileLadders(season, r))));
+        MiscUtil.awaitAndLogExceptions(dbTasks);
     }
 
     private List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
@@ -208,9 +198,12 @@ public class AlternativeLadderService
         return profileLadderIds;
     }
 
-    private void saveProfileLadder(Season season, BlizzardProfileLadder ladder, Tuple3<Region, BlizzardPlayerCharacter[], Long> id)
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void saveProfileLadders
+    (Season season, List<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> ids)
     {
-        updateTeams(season, id, ladder);
+        for(Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>> id : ids)
+            updateTeams(season, id.getT2(), id.getT1());
     }
 
     private void updateTeams(Season season, Tuple3<Region, BlizzardPlayerCharacter[], Long> id, BlizzardProfileLadder ladder)
