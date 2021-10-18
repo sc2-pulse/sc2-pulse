@@ -635,7 +635,7 @@ public class PlayerCharacterReportIT
             SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("12344"), 1, 10L, 10, 0, 0, 0
-        ));
+        ))[0];
         teamMemberDAO.merge
         (
             new TeamMember(secondCheaterTeam.getId(), 1L, 0, 0, 0, 10),

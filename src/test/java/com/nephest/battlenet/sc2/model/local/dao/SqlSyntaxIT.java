@@ -160,6 +160,12 @@ public class SqlSyntaxIT
             BigInteger.ONE, division.getId(),
             1L, 1, 1, 1, 1
         );
+        Team newTeam2 = new Team
+        (
+            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
+            BigInteger.TEN, division.getId(),
+            1L, 1, 1, 1, 1
+        );
         Team mergedTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
@@ -184,21 +190,40 @@ public class SqlSyntaxIT
             BigInteger.TWO, division2.getId(),
             4L, 3, 3, 0, 3
         );
+        Team zergTeamClone = new Team
+        (
+            null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
+            BigInteger.TWO, division2.getId(),
+            4L, 3, 3, 0, 3
+        );
         teamDAO.create(newTeam);
         teamDAO.create(zergTeam);
-        Team team = teamDAO.merge(mergedTeam);
+        //zergTeamClone is existing, merged is updated, same is a clone, newTeam is inserted
+        Team[] teams = teamDAO.merge(zergTeamClone, mergedTeam, sameTeam, newTeam2);
+        //existing team is excluded
+        assertEquals(3, teams.length);
+        assertEquals(teams[0], mergedTeam);
+        assertEquals(teams[1], sameTeam);
+        assertEquals(teams[2], newTeam2);
+        assertNull(zergTeamClone.getId());
+        assertNotNull(mergedTeam.getId());
+        assertNotNull(sameTeam.getId());
+        assertNotNull(newTeam2.getId());
+        assertEquals(mergedTeam.getId(), sameTeam.getId());
+        assertNotEquals(mergedTeam.getId(), newTeam2.getId());
+        Team team = teams[0];
         assertNotNull(team.getId());
         assertEquals(2, team.getRating());
         assertEquals(2, team.getWins());
         assertEquals(2, team.getLosses());
         assertEquals(2, team.getTies());
         assertEquals(2, team.getPoints());
-        assertNull(teamDAO.merge(team)); //do not update a team when games played or division is the same
+        assertEquals(0, teamDAO.merge(team).length); //do not update a team when games played or division is the same
         team.setDivisionId(division2.getId());
-        assertNotNull(teamDAO.merge(team));
+        assertEquals(1, teamDAO.merge(team).length);
         team.setDivisionId(division.getId());
-        assertNotNull(teamDAO.merge(team));
-        assertNull(teamDAO.merge(sameTeam));
+        assertEquals(1, teamDAO.merge(team).length);
+        assertEquals(0, teamDAO.merge(sameTeam).length);
         teamDAO.merge(updatedTeam);
         Team foundTeam = teamDAO.findById(updatedTeam.getId()).orElse(null);
         assertEquals(updatedTeam.getId(), foundTeam.getId());

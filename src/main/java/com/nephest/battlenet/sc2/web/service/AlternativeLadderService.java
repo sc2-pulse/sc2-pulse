@@ -32,6 +32,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 @Service
 public class AlternativeLadderService
@@ -219,17 +220,32 @@ public class AlternativeLadderService
         List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans = new ArrayList<>();
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams = new ArrayList<>();
-        for(BlizzardProfileTeam bTeam : ladder.getLadderTeams())
-        {
-            Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
-            validator.validate(bTeam, errors);
-            if(errors.hasErrors() || !isValidTeam(bTeam, teamMemberCount)) continue;
-
-            Team team = saveTeam(season, baseLeague, bTeam, division);
-            if(team == null) continue; //old team, nothing to update
-
-            extractTeamData(season, team, bTeam, newTeams, characters, clans, existingCharacterClans, members, states);
-        }
+        List<Tuple2<Team, BlizzardProfileTeam>> validTeams = Arrays.stream(ladder.getLadderTeams())
+            .filter(bTeam->{
+                Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
+                validator.validate(bTeam, errors);
+                return !errors.hasErrors() && isValidTeam(bTeam, teamMemberCount);
+            })
+            .map
+            (
+                bTeam->Tuples.of
+                (
+                    new Team
+                    (
+                        null,
+                        season.getBattlenetId(), season.getRegion(),
+                        baseLeague, null,
+                        teamDao.legacyIdOf(baseLeague, bTeam), division.getId(),
+                        bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
+                    ),
+                    bTeam
+                )
+            )
+            .collect(Collectors.toList());
+        teamDao.merge(validTeams.stream().map(Tuple2::getT1).toArray(Team[]::new));
+        validTeams.stream()
+            .filter(t->t.getT1().getId() != null)
+            .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, existingCharacterClans, members, states));
         StatsService.saveClans(clanDAO, clans);
         saveExistingCharacterClans(existingCharacterClans, characters);
         saveNewCharacterData(newTeams, members, states);
@@ -392,25 +408,6 @@ public class AlternativeLadderService
                     .merge(new League(null, season.getId(), bLeague.getType(), bLeague.getQueueType(), bLeague.getTeamType()));
                 return leagueTierDao.merge(new LeagueTier(null, league.getId(), ALTERNATIVE_TIER, 0, 0));
             });
-    }
-
-    private Team saveTeam
-    (
-        Season season,
-        BaseLeague baseLeague,
-        BlizzardProfileTeam bTeam,
-        Division division
-    )
-    {
-        Team team = new Team
-        (
-            null,
-            season.getBattlenetId(), season.getRegion(),
-            baseLeague, null,
-            teamDao.legacyIdOf(baseLeague, bTeam), division.getId(),
-            bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
-        );
-        return teamDao.merge(team);
     }
 
     private boolean isValidTeam(BlizzardProfileTeam team, int expectedMemberCount)

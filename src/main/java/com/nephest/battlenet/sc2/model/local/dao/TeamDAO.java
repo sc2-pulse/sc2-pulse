@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Repository
 public class TeamDAO
@@ -77,50 +78,87 @@ public class TeamDAO
         + "ties=excluded.ties ";
 
     private static final String MERGE_BY_FAVORITE_RACE_QUERY =
-        "WITH existing AS ("
-            + "SELECT team.id "
+        "WITH "
+        + "vals AS(VALUES :teams), "
+        + "existing AS "
+        + "("
+            + "SELECT team.queue_type, "
+            + "team.id, "
+            + "team.region, "
+            + "team.legacy_id, "
+            + "team.season "
             + "FROM team "
-            + "WHERE team.season = :season "
-            + "AND team.region = :region "
-            + "AND team.queue_type = :queueType "
-            + "AND team.legacy_id = :legacyId "
-        + "), "
-        + "inserted AS ("
-            + "INSERT INTO team "
+            + "INNER JOIN vals v"
             + "("
-            + "legacy_id, division_id, "
-            + "season, region, league_type, queue_type, team_type, tier_type, "
-            + "rating, points, wins, losses, ties "
+                + "legacy_id, division_id, "
+                + "season, region, league_type, queue_type, team_type, tier_type, "
+                + "rating, points, wins, losses, ties "
             + ") "
-            + "SELECT "
-            + ":legacyId, :divisionId, "
-            + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
-            + ":rating, :points, :wins, :losses, :ties "
-            + "WHERE NOT EXISTS (SELECT 1 FROM existing) "
-            + MERGE_CLAUSE
-            + "RETURNING id"
+                + "USING(queue_type, region, legacy_id, season) "
         + "), "
-        + "updated AS ("
+        + "updated AS "
+        + "("
             + "UPDATE team "
             + "SET "
-            + "division_id=:divisionId, "
-            + "league_type=:leagueType, "
-            + "tier_type=:tierType, "
-            + "rating=:rating, "
-            + "points=:points, "
-            + "wins=:wins, "
-            + "losses=:losses, "
-            + "ties=:ties "
-            + "FROM existing "
-            + "WHERE team.id = existing.id "
-            + "AND (team.division_id != :divisionId OR (team.wins + team.losses + team.ties) != :gamesPlayed) "
-            + "RETURNING team.id"
+            + "division_id=v.division_id, "
+            + "league_type=v.league_type, "
+            + "tier_type=v.tier_type, "
+            + "rating=v.rating, "
+            + "points=v.points, "
+            + "wins=v.wins, "
+            + "losses=v.losses, "
+            + "ties=v.ties "
+            + "FROM vals v"
+            + "("
+                + "legacy_id, division_id, "
+                + "season, region, league_type, queue_type, team_type, tier_type, "
+                + "rating, points, wins, losses, ties "
+            + ") "
+            + "WHERE team.queue_type = v.queue_type "
+            + "AND team.region = v.region "
+            + "AND team.legacy_id = v.legacy_id "
+            + "AND team.season = v.season "
+            + "AND "
+            + "("
+                + "team.division_id != v.division_id OR "
+                + "(team.wins + team.losses + team.ties) != (v.wins + v.losses + v.ties) "
+            + ") "
+            + "RETURNING " + STD_SELECT
+        + "), "
+        + "missing AS "
+        + "("
+            + "SELECT "
+            + "v.legacy_id, v.division_id, "
+            + "v.season, v.region, v.league_type, v.queue_type, v.team_type, v.tier_type, "
+            + "v.rating, v.points, v.wins, v.losses, v.ties "
+            + "FROM vals v"
+            + "("
+                + "legacy_id, division_id, "
+                + "season, region, league_type, queue_type, team_type, tier_type, "
+                + "rating, points, wins, losses, ties "
+            + ") "
+            + "LEFT JOIN existing ON "
+                + "v.queue_type = existing.queue_type "
+                + "AND v.region = existing.region "
+                + "AND v.legacy_id = existing.legacy_id "
+                + "AND v.season = existing.season "
+            + "WHERE existing.id IS NULL"
+        + "), "
+        + "inserted AS "
+        + "("
+            + "INSERT INTO team "
+            + "("
+                + "legacy_id, division_id, "
+                + "season, region, league_type, queue_type, team_type, tier_type, "
+                + "rating, points, wins, losses, ties "
+            + ") "
+            + "SELECT * FROM missing "
+            + MERGE_CLAUSE
+            + "RETURNING " + STD_SELECT
         + ") "
-        + "SELECT id FROM inserted "
-        + "UNION ALL "
-        + "SELECT id FROM updated "
-        + "LIMIT 1";
-
+        + "SELECT * FROM updated "
+        + "UNION "
+        + "SELECT * FROM inserted";
     private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
 
     public static final String FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE =
@@ -314,14 +352,33 @@ public class TeamDAO
         return team;
     }
 
-    public Team merge(Team team)
+    public Team[] merge(Team... teams)
     {
-        MapSqlParameterSource params = createParameterSource(team);
-        params.addValue("gamesPlayed", team.getWins() + team.getLosses() + team.getTies());
-        team.setId(template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
-        if(team.getId() == null)  return null;
+        if(teams.length == 0) return new Team[0];
 
-        return team;
+        List<Object[]> data = Arrays.stream(teams)
+            .map(t->new Object[]{
+                t.getLegacyId(),
+                t.getDivisionId(),
+                t.getSeason(),
+                conversionService.convert(t.getRegion(), Integer.class),
+                conversionService.convert(t.getLeagueType(), Integer.class),
+                conversionService.convert(t.getQueueType(), Integer.class),
+                conversionService.convert(t.getTeamType(), Integer.class),
+                conversionService.convert(t.getTierType(), Integer.class),
+                t.getRating(),
+                t.getPoints(),
+                t.getWins(),
+                t.getLosses(),
+                t.getTies()
+            })
+            .collect(Collectors.toList());
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("teams", data);
+        List<Team> mergedTeams = template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, STD_ROW_MAPPER);
+
+        return Arrays.stream(DAOUtils.updateOriginals(teams, mergedTeams, Team.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()), o->o.setId(null)))
+            .filter(t->t.getId() != null)
+            .toArray(Team[]::new);
     }
 
     public Optional<Team> findById(long id)

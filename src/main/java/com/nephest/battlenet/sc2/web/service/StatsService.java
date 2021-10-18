@@ -427,34 +427,26 @@ public class StatsService
         Set<TeamState> states = new HashSet<>(bTeams.length, 1f);
         List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
         Integer curSeason = seasonDao.getMaxBattlenetId() == null ? 0 : seasonDao.getMaxBattlenetId();
-        for (BlizzardTeam bTeam : bTeams)
-        {
-            Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
-            validator.validate(bTeam, errors);
-            if(!errors.hasErrors() && isValidTeam(bTeam, memberCount))
-            {
-                Team team = saveTeam(season, league, tier, division, bTeam);
-                //old team, nothing to update
-                if(team == null) continue;
-                extractTeamMembers(bTeam.getMembers(), members, clans, season, team);
-                if(season.getBattlenetId().equals(curSeason)) states.add(TeamState.of(team));
-            }
-        }
+        List<Tuple2<Team, BlizzardTeam>> validTeams = Arrays.stream(bTeams)
+            .filter(bTeam->{
+                Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
+                validator.validate(bTeam, errors);
+                return !errors.hasErrors() && isValidTeam(bTeam, memberCount);
+            })
+            .map(bTeam->Tuples.of(Team.of(season, league, tier, division, bTeam, teamDao), bTeam))
+            .collect(Collectors.toList());
+        if(validTeams.isEmpty()) return;
+
+        teamDao.merge(validTeams.stream().map(Tuple2::getT1).toArray(Team[]::new));
+        validTeams.stream()
+            .filter(t->t.getT1().getId() != null)
+            .forEach(t->{
+                extractTeamMembers(t.getT2().getMembers(), members, clans, season, t.getT1());
+                if(season.getBattlenetId().equals(curSeason)) states.add(TeamState.of(t.getT1()));
+            });
         saveClans(clanDAO, clans);
         saveMembersConcurrently(members);
         if(states.size() > 0) teamStateDAO.saveState(states.toArray(TeamState[]::new));
-    }
-
-    private Team saveTeam
-    (
-        Season season,
-        League league,
-        LeagueTier tier,
-        Division division,
-        BlizzardTeam bTeam
-    )
-    {
-        return teamDao.merge(Team.of(season, league, tier, division, bTeam, teamDao));
     }
 
     //cross field validation

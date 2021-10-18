@@ -99,12 +99,12 @@ public class PlayerCharacterDAOIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("1"), division.getId(), 1L, 1, 1, 1, 1
-        ));
+        ))[0];
         Team team2 = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("2"), division.getId(), 2L, 2, 2, 2, 2
-        ));
+        ))[0];
         teamMemberDAO.merge
         (
             new TeamMember(team1.getId(), char1.getId(), 1, 0, 0, 0),
