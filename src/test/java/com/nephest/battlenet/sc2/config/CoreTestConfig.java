@@ -67,7 +67,7 @@ public class CoreTestConfig
     }
 
     @Bean
-    public ExecutorService databaseExecutor()
+    public ExecutorService dbExecutorService()
     {
         return Executors.newFixedThreadPool(Application.DB_THREADS);
     }

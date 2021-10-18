@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.validation.Validator;
@@ -41,15 +42,15 @@ public class StatsServiceIT
     @Autowired
     private BlizzardSC2API api;
 
-    @Autowired
-    private ExecutorService executorService;
+    @Autowired @Qualifier("dbExecutorService")
+    private ExecutorService dbExecutorService;
 
     @BeforeEach
     public void beforeEach(@Autowired Validator validator)
     {
         teamDAO = mock(TeamDAO.class);
         statsService = new StatsService(null, null, mock(SeasonDAO.class), null, null, null, teamDAO, null, null,
-            null, null, null, null, null, null, null, null, null, validator, executorService);
+            null, null, null, null, null, null, null, null, null, validator, dbExecutorService);
         StatsService nss = mock(StatsService.class);
         statsService.setNestedService(nss);
     }

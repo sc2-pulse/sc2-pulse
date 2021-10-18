@@ -83,7 +83,7 @@ public class StatsService
     private PostgreSQLUtils postgreSQLUtils;
     private Validator validator;
     private ConversionService conversionService;
-    private ExecutorService executorService;
+    private ExecutorService dbExecutorService;
 
     public StatsService(){}
 
@@ -109,7 +109,7 @@ public class StatsService
         PostgreSQLUtils postgreSQLUtils,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
-        ExecutorService executorService
+        @Qualifier("dbExecutorService") ExecutorService dbExecutorService
     )
     {
         this.alternativeLadderService = alternativeLadderService;
@@ -131,7 +131,7 @@ public class StatsService
         this.postgreSQLUtils = postgreSQLUtils;
         this.conversionService = conversionService;
         this.validator = validator;
-        this.executorService = executorService;
+        this.dbExecutorService = dbExecutorService;
         for(Region r : Region.values()) failedLadders.put(r, new HashSet<>());
     }
 
@@ -352,7 +352,7 @@ public class StatsService
             .sequential()
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
-            .forEach(l->dbTasks.add(executorService.submit(()->statsService.saveLadders(season, l, lastUpdated))));
+            .forEach(l->dbTasks.add(dbExecutorService.submit(()->statsService.saveLadders(season, l, lastUpdated))));
         MiscUtil.awaitAndLogExceptions(dbTasks);
     }
 

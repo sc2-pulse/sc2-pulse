@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.util.MiscUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,7 +53,7 @@ public class MatchService
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SeasonDAO seasonDAO;
     private final PostgreSQLUtils postgreSQLUtils;
-    private final ExecutorService executorService;
+    private final ExecutorService dbExecutorService;
     private final Set<PlayerCharacter> failedCharacters = new HashSet<>();
 
     @Autowired @Lazy
@@ -67,7 +68,7 @@ public class MatchService
         MatchParticipantDAO matchParticipantDAO,
         SeasonDAO seasonDAO,
         PostgreSQLUtils postgreSQLUtils,
-        ExecutorService executorService
+        @Qualifier("dbExecutorService") ExecutorService dbExecutorService
     )
     {
         this.api = api;
@@ -76,7 +77,7 @@ public class MatchService
         this.matchParticipantDAO = matchParticipantDAO;
         this.seasonDAO = seasonDAO;
         this.postgreSQLUtils = postgreSQLUtils;
-        this.executorService = executorService;
+        this.dbExecutorService = dbExecutorService;
     }
 
     public void update(UpdateContext updateContext)
@@ -119,7 +120,7 @@ public class MatchService
             .buffer(BATCH_SIZE)
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream()
-            .forEach(m->dbTasks.add(executorService.submit(()->matchService.saveMatches(m))));
+            .forEach(m->dbTasks.add(dbExecutorService.submit(()->matchService.saveMatches(m))));
         MiscUtil.awaitAndLogExceptions(dbTasks);
         return count.get();
     }

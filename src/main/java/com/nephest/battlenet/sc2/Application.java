@@ -97,7 +97,7 @@ extends SpringBootServletInitializer
     }
 
     @Bean
-    public ExecutorService databaseExecutor()
+    public ExecutorService dbExecutorService()
     {
         return Executors.newFixedThreadPool(DB_THREADS);
     }

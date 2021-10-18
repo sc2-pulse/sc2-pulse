@@ -64,7 +64,7 @@ public class AlternativeLadderService
     private final TeamMemberDAO teamMemberDao;
     private final ConversionService conversionService;
     private final Validator validator;
-    private final ExecutorService executorService;
+    private final ExecutorService dbExecutorService;
 
     @Autowired
     public AlternativeLadderService
@@ -81,7 +81,7 @@ public class AlternativeLadderService
         TeamMemberDAO teamMemberDao,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
-        ExecutorService executorService
+        @Qualifier("dbExecutorService") ExecutorService dbExecutorService
     )
     {
         this.api = api;
@@ -96,7 +96,7 @@ public class AlternativeLadderService
         this.teamMemberDao = teamMemberDao;
         this.conversionService = conversionService;
         this.validator = validator;
-        this.executorService = executorService;
+        this.dbExecutorService = dbExecutorService;
     }
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 100;
@@ -173,7 +173,7 @@ public class AlternativeLadderService
             .sequential()
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
-            .forEach((r)->dbTasks.add(executorService.submit(()->alternativeLadderService.saveProfileLadders(season, r))));
+            .forEach((r)->dbTasks.add(dbExecutorService.submit(()->alternativeLadderService.saveProfileLadders(season, r))));
         MiscUtil.awaitAndLogExceptions(dbTasks);
     }
 
