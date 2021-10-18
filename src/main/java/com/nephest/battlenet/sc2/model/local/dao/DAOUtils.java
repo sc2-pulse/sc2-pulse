@@ -12,6 +12,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 
 public final class DAOUtils
 {
@@ -52,27 +53,54 @@ public final class DAOUtils
     };
 
     public static <T>  T[] updateOriginals
-    (T[] originalArray, List<T> mergedList, Comparator<T> comparator, BiConsumer<T, T> originalUpdater)
+    (
+        T[] originalArray,
+        List<T> mergedList,
+        Comparator<T> comparator, BiConsumer<T, T> originalUpdater,
+        Consumer<T> originalNullifier
+    )
     {
+        if(originalNullifier != null) for(T t : originalArray) originalNullifier.accept(t);
+        if(mergedList.isEmpty()) return originalArray;
+
         Arrays.sort(originalArray, comparator);
         mergedList.sort(comparator);
         for(int originalIx = 0, mergedIx = 0; originalIx < originalArray.length; originalIx++)
         {
-            if(mergedIx >= mergedList.size()) mergedIx = mergedList.size() - 1; //should rarely happen
+            //merged list can be smaller than original arrays due to original clones, reuse the max ix
+            if(mergedIx >= mergedList.size()) mergedIx = mergedList.size() - 1;
             T original = originalArray[originalIx];
             T merged = mergedList.get(mergedIx);
 
-            if(!merged.equals(original)) //should rarely happen
+            //if there are multiple clones in the original array
+            if(!merged.equals(original))
             {
+                //the merged list contains one entity for multiple original clones, use it repeatedly
                 mergedIx--;
                 merged = mergedList.get(mergedIx);
-                if(!merged.equals(original)) throw new IllegalStateException("Pair didn't match");
+                if(!merged.equals(original))
+                {
+                    //for nullables, if it's not a clone, than it's a null entity, skip it, +2 to offset the --
+                    if(originalNullifier != null)
+                    {
+                        mergedIx +=2;
+                        continue;
+                    }
+                    //this can happen only if db query is invalid
+                    throw new IllegalStateException("Pair didn't match");
+                }
             }
             originalUpdater.accept(original, merged);
             mergedIx++;
         }
 
         return originalArray;
+    }
+
+    public static <T>  T[] updateOriginals
+    (T[] originalArray, List<T> mergedList, Comparator<T> comparator, BiConsumer<T, T> originalUpdater)
+    {
+        return updateOriginals(originalArray, mergedList, comparator, originalUpdater, null);
     }
 
     public static Integer getInteger(ResultSet rs, String param)
