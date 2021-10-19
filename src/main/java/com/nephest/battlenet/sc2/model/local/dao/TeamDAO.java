@@ -299,12 +299,9 @@ public class TeamDAO
                 rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
                 rs.getInt("team.points")
             );
-            int gRank = rs.getInt("team.global_rank");
-            if(!rs.wasNull()) team.setGlobalRank(gRank);
-            int rRank = rs.getInt("team.region_rank");
-            if(!rs.wasNull()) team.setRegionRank(rRank);
-            int lRank = rs.getInt("team.league_rank");
-            if(!rs.wasNull()) team.setLeagueRank(lRank);
+            team.setGlobalRank(DAOUtils.getInteger(rs, "team.global_rank"));
+            team.setRegionRank(DAOUtils.getInteger(rs, "team.region_rank"));
+            team.setLeagueRank(DAOUtils.getInteger(rs, "team.league_rank"));
             return team;
         };
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->

@@ -222,21 +222,15 @@ public class LadderCharacterDAO
         (rs, num)->
         {
             Integer gamesPlayed = rs.getInt("games_played");
-            int raceInt = rs.getInt("race");
-            Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
-            int mmrCurrentInt = rs.getInt("rating_cur");
-            mmrCurrentInt = rs.wasNull() ? -1 : mmrCurrentInt;
-            int gamesPlayedCurrent = rs.getInt("games_played_cur");
-            gamesPlayedCurrent = rs.wasNull() ? -1 : gamesPlayedCurrent;
-            int rankCurrent = rs.getInt("rank_cur");
-            rankCurrent = rs.wasNull() ? -1 : rankCurrent;
-            rs.getInt("clan.id");
-            Clan clan = rs.wasNull() ? null : ClanDAO.getStdRowMapper().mapRow(rs, num);
+            Race race = DAOUtils.getConvertedObjectFromInteger(rs, "race", conversionService, Race.class);
+            Clan clan = DAOUtils.getInteger(rs, "clan.id") == null
+                ? null
+                : ClanDAO.getStdRowMapper().mapRow(rs, num);
             return new LadderDistinctCharacter
             (
                 conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
                 rs.getInt("rating_max"),
-                mmrCurrentInt == -1 ? null : mmrCurrentInt,
+                DAOUtils.getInteger(rs, "rating_cur"),
                 AccountDAO.getStdRowMapper().mapRow(rs, num),
                 PlayerCharacterDAO.getStdRowMapper().mapRow(rs, num),
                 clan,
@@ -248,8 +242,8 @@ public class LadderCharacterDAO
                 race == Race.ZERG ? gamesPlayed : null,
                 race == Race.RANDOM ? gamesPlayed : null,
                 gamesPlayed,
-                gamesPlayedCurrent == -1 ? null : gamesPlayedCurrent,
-                rankCurrent == -1 ? null : rankCurrent
+                DAOUtils.getInteger(rs, "games_played_cur"),
+                DAOUtils.getInteger(rs, "rank_cur")
             );
         };
         DISTINCT_CHARACTER_EXTRACTOR = (rs)->{

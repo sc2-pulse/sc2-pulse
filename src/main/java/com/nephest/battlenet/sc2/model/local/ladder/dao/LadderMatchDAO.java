@@ -129,8 +129,7 @@ public class LadderMatchDAO
             if(rs.isAfterLast()) return null;
 
             MatchParticipant participant = MatchParticipantDAO.getStdRowMapper().mapRow(rs, 0);
-            rs.getLong("team.id");
-            if(rs.wasNull()) {
+            if(DAOUtils.getLong(rs, "team.id") == null) {
                 rs.next();
                 return new LadderMatchParticipant(participant, null, null);
             }

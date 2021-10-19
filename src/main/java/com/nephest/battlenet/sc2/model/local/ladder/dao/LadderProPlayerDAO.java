@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProTeam;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
@@ -52,11 +53,10 @@ public class LadderProPlayerDAO
             if(proPlayer == null) proPlayer = ProPlayerDAO.getStdRowMapper().mapRow(rs, 1);
             if(proTeam == null)
             {
-                rs.getLong("pro_team.id");
-                if(!rs.wasNull()) proTeam = ProTeamDAO.getStdRowMapper().mapRow(rs,1);
+                if(DAOUtils.getLong(rs, "pro_team.id") != null) proTeam = ProTeamDAO.getStdRowMapper().mapRow(rs,1);
             }
-            rs.getLong("social_media_link.pro_player_id");
-            if(!rs.wasNull()) links.add(SocialMediaLinkDAO.getStdRowMapper().mapRow(rs, 1));
+            if(DAOUtils.getLong(rs, "social_media_link.pro_player_id") != null)
+                links.add(SocialMediaLinkDAO.getStdRowMapper().mapRow(rs, 1));
         }
         return new LadderProPlayer(proPlayer, proTeam, links);
     };

@@ -76,18 +76,14 @@ public class SeasonStateDAO
     private final NamedParameterJdbcTemplate template;
 
     public static final RowMapper<SeasonState> STD_ROW_MAPPER = (rs, num)->
-    {
-        int g = rs.getInt("season_state.games_played");
-        Integer games = rs.wasNull() ? null : g;
-        return new SeasonState
+        new SeasonState
         (
             rs.getInt("season_state.season_id"),
             rs.getObject("season_state.period_start", OffsetDateTime.class),
             rs.getInt("season_state.player_count"),
             rs.getInt("season_state.total_games_played"),
-            games
+            DAOUtils.getInteger(rs, "season_state.games_played")
         );
-    };
 
 
     @Autowired

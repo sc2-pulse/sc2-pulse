@@ -199,8 +199,9 @@ public class LadderSearchDAO
     {
         if(LADDER_TEAM_MEMBER_MAPPER == null) LADDER_TEAM_MEMBER_MAPPER = (rs, i)->
         {
-            rs.getInt("clan.id");
-            Clan clan = rs.wasNull() ? null : ClanDAO.getStdRowMapper().mapRow(rs, i);
+            Clan clan = DAOUtils.getInteger(rs, "clan.id") == null
+                ? null
+                : ClanDAO.getStdRowMapper().mapRow(rs, i);
             return new LadderTeamMember
             (
                 AccountDAO.getStdRowMapper().mapRow(rs, 0),

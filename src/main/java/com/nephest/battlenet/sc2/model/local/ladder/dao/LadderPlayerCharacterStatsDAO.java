@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
@@ -123,18 +124,12 @@ public class LadderPlayerCharacterStatsDAO
 
     private static void initMappers(ConversionService conversionService)
     {
-        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num) ->
-        {
-
-            int ratingCur = rs.getInt("rating_current");
-            if(rs.wasNull()) ratingCur = -1;
-            int gamesCur = rs.getInt("games_current");
-            if(rs.wasNull()) gamesCur = -1;
-            return new LadderPlayerCharacterStats(
-                PlayerCharacterStatsDAO.getStdRowMapper().mapRow(rs, num),
-                ratingCur == -1 ? null : ratingCur,
-                gamesCur == -1 ? null : gamesCur);
-        };
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num) -> new LadderPlayerCharacterStats
+        (
+            PlayerCharacterStatsDAO.getStdRowMapper().mapRow(rs, num),
+            DAOUtils.getInteger(rs, "rating_current"),
+            DAOUtils.getInteger(rs, "games_current")
+        );
     }
 
     public static RowMapper<LadderPlayerCharacterStats> getStdRowMapper()

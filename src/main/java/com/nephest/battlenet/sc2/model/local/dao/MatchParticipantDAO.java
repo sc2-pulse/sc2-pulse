@@ -166,8 +166,7 @@ public class MatchParticipantDAO
                 rs.getLong("match_participant.player_character_id"),
                 conversionService.convert(rs.getInt("match_participant.decision"), BaseMatch.Decision.class)
             );
-            long teamId = rs.getLong("match_participant.team_id");
-            if(!rs.wasNull()) participant.setTeamId(teamId);
+            participant.setTeamId(DAOUtils.getLong(rs, "match_participant.team_id"));
             participant.setTeamStateDateTime(rs.getObject("match_participant.team_state_timestamp", OffsetDateTime.class));
            return participant;
         };

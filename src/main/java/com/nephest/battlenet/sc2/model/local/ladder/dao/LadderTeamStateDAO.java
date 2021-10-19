@@ -111,18 +111,14 @@ public class LadderTeamStateDAO
 
     private static void initMappers(ConversionService conversionService)
     {
-        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)->
-        {
-            int raceInt = rs.getInt("race");
-            Race race = rs.wasNull() ? null : conversionService.convert(raceInt, Race.class);
-            return new LadderTeamState(
-                TeamStateDAO.STD_ROW_MAPPER.mapRow(rs, 0),
-                race,
-                conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), BaseLeagueTier.LeagueTierType.class),
-                LeagueDAO.getStdRowMapper().mapRow(rs, 0),
-                rs.getInt("season.battlenet_id")
-            );
-        };
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)-> new LadderTeamState
+        (
+            TeamStateDAO.STD_ROW_MAPPER.mapRow(rs, 0),
+            DAOUtils.getConvertedObjectFromInteger(rs, "race", conversionService, Race.class),
+            conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), BaseLeagueTier.LeagueTierType.class),
+            LeagueDAO.getStdRowMapper().mapRow(rs, 0),
+            rs.getInt("season.battlenet_id")
+        );
 
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
         {

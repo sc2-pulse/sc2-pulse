@@ -207,22 +207,17 @@ public class PlayerCharacterStatsDAO
 
     private static void initMappers(ConversionService conversionService)
     {
-        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num) ->
-        {
-            rs.getInt("race");
-            Race race = rs.wasNull() ? null : conversionService.convert(rs.getInt("race"), Race.class);
-            return new PlayerCharacterStats
-            (
-                rs.getLong("id"),
-                rs.getLong("player_character_id"),
-                conversionService.convert(rs.getInt("queue_type"), QueueType.class),
-                conversionService.convert(rs.getInt("team_type"), TeamType.class),
-                race,
-                rs.getInt("rating_max"),
-                conversionService.convert(rs.getInt("league_max"), BaseLeague.LeagueType.class),
-                rs.getInt("games_played")
-            );
-        };
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num) -> new PlayerCharacterStats
+        (
+            rs.getLong("id"),
+            rs.getLong("player_character_id"),
+            conversionService.convert(rs.getInt("queue_type"), QueueType.class),
+            conversionService.convert(rs.getInt("team_type"), TeamType.class),
+            DAOUtils.getConvertedObjectFromInteger(rs, "race", conversionService, Race.class),
+            rs.getInt("rating_max"),
+            conversionService.convert(rs.getInt("league_max"), BaseLeague.LeagueType.class),
+            rs.getInt("games_played")
+        );
     }
 
     public static RowMapper<PlayerCharacterStats> getStdRowMapper()
