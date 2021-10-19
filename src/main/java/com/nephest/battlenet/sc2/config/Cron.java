@@ -232,7 +232,9 @@ public class Cron
             if (shouldUpdateMatches())
             {
                 UpdateContext muc = matchUpdateContext == null ? updateService.getUpdateContext(null) : matchUpdateContext;
-                matchService.update(muc, Region.values());
+                for(Region region : Region.values())
+                    tasks.add(webExecutorService.submit(()->matchService.update(muc, region)));
+                MiscUtil.awaitAndThrowException(tasks, true, true);
                 matchInstant.setValueAndSave(Instant.now());
             }
         }
