@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
@@ -80,12 +81,12 @@ public class MatchService
         this.dbExecutorService = dbExecutorService;
     }
 
-    public void update(UpdateContext updateContext)
+    public void update(UpdateContext updateContext, Region... regions)
     {
         if(updateContext.getExternalUpdate() == null || updateContext.getInternalUpdate() == null) return;
 
         //Active players can't be updated retroactively, so there is no reason to sync with other services here
-        int matchCount = saveMatches(updateContext.getInternalUpdate());
+        int matchCount = saveMatches(updateContext.getInternalUpdate(), regions);
         postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),
@@ -98,15 +99,15 @@ public class MatchService
         LOG.info("Saved {} matches({} identified)", matchCount, identified);
     }
 
-    private int saveMatches(Instant lastUpdated)
+    private int saveMatches(Instant lastUpdated, Region... regions)
     {
         LOG.debug("Retrying {} previously failed matches", failedCharacters.size());
         int r1 = saveMatches(failedCharacters);
         LOG.debug("Saved {} previously failed matches", r1);
         //clear here to avoid unbound retries of the same characters
         failedCharacters.clear();
-        return r1
-            + saveMatches(playerCharacterDAO.findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault())));
+        return r1 + saveMatches(playerCharacterDAO
+            .findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()), regions));
     }
 
     private int saveMatches(Iterable<? extends PlayerCharacter> characters)

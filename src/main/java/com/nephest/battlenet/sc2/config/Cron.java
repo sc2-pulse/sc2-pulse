@@ -231,7 +231,8 @@ public class Cron
         {
             if (shouldUpdateMatches())
             {
-                matchService.update(matchUpdateContext == null ? updateService.getUpdateContext(null) : matchUpdateContext);
+                UpdateContext muc = matchUpdateContext == null ? updateService.getUpdateContext(null) : matchUpdateContext;
+                matchService.update(muc, Region.values());
                 matchInstant.setValueAndSave(Instant.now());
             }
         }

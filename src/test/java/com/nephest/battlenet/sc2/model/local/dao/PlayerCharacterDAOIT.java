@@ -119,15 +119,15 @@ public class PlayerCharacterDAOIT
         state2.setDateTime(now.minusHours(2));
         teamStateDAO.saveState(state1, state2);
 
-        assertTrue(playerCharacterDAO.findRecentlyActiveCharacters(now.minusMinutes(59)).isEmpty());
+        assertTrue(playerCharacterDAO.findRecentlyActiveCharacters(now.minusMinutes(59), Region.values()).isEmpty());
 
-        List<PlayerCharacter> search1 = playerCharacterDAO.findRecentlyActiveCharacters(now.minusHours(1));
+        List<PlayerCharacter> search1 = playerCharacterDAO.findRecentlyActiveCharacters(now.minusHours(1), Region.values());
         search1.sort(Comparator.comparing(PlayerCharacter::getId));
         assertEquals(2, search1.size());
         assertEquals(char1, search1.get(0));
         assertEquals(char2, search1.get(1));
 
-        List<PlayerCharacter> search2 = playerCharacterDAO.findRecentlyActiveCharacters(now.minusHours(2));
+        List<PlayerCharacter> search2 = playerCharacterDAO.findRecentlyActiveCharacters(now.minusHours(2), Region.values());
         search2.sort(Comparator.comparing(PlayerCharacter::getId));
         assertEquals(3, search2.size());
         assertEquals(char1, search2.get(0));

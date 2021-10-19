@@ -23,8 +23,10 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Repository
 public class PlayerCharacterDAO
@@ -122,7 +124,8 @@ public class PlayerCharacterDAO
         + STD_SELECT
         + "FROM team_filter "
         + "INNER JOIN team_member USING(team_id) "
-        + "INNER JOIN player_character ON team_member.player_character_id = player_character.id";
+        + "INNER JOIN player_character ON team_member.player_character_id = player_character.id "
+        + "WHERE player_character.region IN (:regions)";
 
     private static final String FIND_BY_REGION_AND_REALM_AND_BATTLENET_ID = "SELECT " + STD_SELECT
         + "FROM player_character "
@@ -240,9 +243,15 @@ public class PlayerCharacterDAO
         return template.query(FIND_TOP_PLAYER_CHARACTERS, params, BOOKMARKED_STD_ROW_EXTRACTOR);
     }
 
-    public List<PlayerCharacter> findRecentlyActiveCharacters(OffsetDateTime from)
+    public List<PlayerCharacter> findRecentlyActiveCharacters(OffsetDateTime from, Region... regions)
     {
+        if(regions.length == 0) return List.of();
+
+        List<Integer> regionInts = Arrays.stream(regions)
+            .map(r->conversionService.convert(r, Integer.class))
+            .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("regions", regionInts)
             .addValue("point", from);
         return template.query(FIND_RECENTLY_ACTIVE_CHARACTERS, params, getStdRowMapper());
     }
