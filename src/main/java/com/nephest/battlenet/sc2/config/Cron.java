@@ -13,9 +13,9 @@ import com.nephest.battlenet.sc2.web.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.scheduling.concurrent.ThreadPoolTaskScheduler;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
 @Profile({"!maintenance & !dev"})
@@ -72,8 +73,8 @@ public class Cron
     @Autowired
     private PostgreSQLUtils postgreSQLUtils;
 
-    @Autowired
-    private ThreadPoolTaskScheduler executor;
+    @Autowired @Qualifier("webExecutorService")
+    private ExecutorService webExecutorService;
 
     @Autowired
     private QueueStatsDAO queueStatsDAO;
@@ -216,12 +217,12 @@ public class Cron
         List<Future<?>> tasks = new ArrayList<>();
         if(statsService.getAlternativeRegions().size() > 1)
         {
-            tasks.add(executor.submit(()->doUpdateSeasons(Region.US, Region.CN)));
-            tasks.add(executor.submit(()->doUpdateSeasons(Region.KR, Region.EU)));
+            tasks.add(webExecutorService.submit(()->doUpdateSeasons(Region.US, Region.CN)));
+            tasks.add(webExecutorService.submit(()->doUpdateSeasons(Region.KR, Region.EU)));
         }
         else
         {
-            for(Region region : Region.values()) tasks.add(executor.submit(()->doUpdateSeasons(region)));
+            for(Region region : Region.values()) tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
         }
 
         Exception cause = null;

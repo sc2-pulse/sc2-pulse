@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.config.GlobalRestTemplateCustomizer;
 import com.nephest.battlenet.sc2.config.convert.*;
 import com.nephest.battlenet.sc2.config.filter.AverageSessionCacheFilter;
 import com.nephest.battlenet.sc2.config.filter.MaintenanceFilter;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -42,6 +43,7 @@ extends SpringBootServletInitializer
 
     public static final String VERSION = Application.class.getPackage().getImplementationVersion();
     public static final int DB_THREADS = Math.max(4, Runtime.getRuntime().availableProcessors());
+    public static final int WEB_THREADS = Region.values().length;
 
     public static void main(String[] args)
     {
@@ -100,6 +102,12 @@ extends SpringBootServletInitializer
     public ExecutorService dbExecutorService()
     {
         return Executors.newFixedThreadPool(DB_THREADS);
+    }
+
+    @Bean
+    public ExecutorService webExecutorService()
+    {
+        return Executors.newFixedThreadPool(WEB_THREADS);
     }
 
     @Bean

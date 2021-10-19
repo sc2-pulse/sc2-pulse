@@ -72,4 +72,10 @@ public class CoreTestConfig
         return Executors.newFixedThreadPool(Application.DB_THREADS);
     }
 
+    @Bean
+    public ExecutorService webExecutorService()
+    {
+        return Executors.newFixedThreadPool(Application.WEB_THREADS);
+    }
+
 }
