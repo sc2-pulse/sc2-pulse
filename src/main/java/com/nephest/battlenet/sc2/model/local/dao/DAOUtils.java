@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 
@@ -143,6 +144,14 @@ public final class DAOUtils
     {
         byte i = rs.getByte(param);
         return rs.wasNull() ? null : i;
+    }
+
+    public static <T> T getConvertedObjectFromInteger
+    (ResultSet rs, String param, ConversionService conversionService, Class<T> clazz)
+    throws SQLException
+    {
+        int i = rs.getInt(param);
+        return rs.wasNull() ? null : conversionService.convert(i, clazz);
     }
 
 }
