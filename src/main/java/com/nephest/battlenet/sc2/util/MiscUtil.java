@@ -30,4 +30,28 @@ public final class MiscUtil
         }
     }
 
+    public static void awaitAndThrowException(List<Future<?>> tasks, boolean clear, boolean delayException)
+    {
+        Exception cause = null;
+
+        for(Future<?> f : tasks)
+        {
+            try
+            {
+                f.get();
+            }
+            catch (InterruptedException | ExecutionException e)
+            {
+                if(!delayException) throw new IllegalStateException(e);
+
+                cause = e;
+                LOG.error(e.getMessage(), e);
+            }
+        }
+
+        if(cause != null) throw new IllegalStateException(cause);
+        if(clear) tasks.clear();
+    }
+
+
 }

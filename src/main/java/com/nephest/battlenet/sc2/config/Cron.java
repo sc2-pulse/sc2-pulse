@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.web.service.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,6 @@ import java.time.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -225,19 +225,7 @@ public class Cron
             for(Region region : Region.values()) tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
         }
 
-        Exception cause = null;
-        for(Future<?> f : tasks)
-        {
-            try
-            {
-                f.get();
-            }
-            catch (InterruptedException | ExecutionException e)
-            {
-                cause = e;
-            }
-        }
-        if(cause != null) throw new IllegalStateException(cause);
+        MiscUtil.awaitAndThrowException(tasks, true, true);
 
         try
         {
