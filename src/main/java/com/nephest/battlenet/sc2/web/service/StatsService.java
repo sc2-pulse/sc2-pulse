@@ -353,7 +353,7 @@ public class StatsService
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
             .forEach(l->dbTasks.add(dbExecutorService.submit(()->statsService.saveLadders(season, l, lastUpdated))));
-        MiscUtil.awaitAndLogExceptions(dbTasks);
+        MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 
     @Transactional

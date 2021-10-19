@@ -15,7 +15,7 @@ public final class MiscUtil
 
     private static final Logger LOG = LoggerFactory.getLogger(MiscUtil.class);
 
-    public static void awaitAndLogExceptions(List<Future<?>> tasks)
+    public static void awaitAndLogExceptions(List<Future<?>> tasks, boolean clear)
     {
         for(Future<?> task : tasks)
         {
@@ -28,6 +28,7 @@ public final class MiscUtil
                 LOG.error(e.getMessage(), e);
             }
         }
+        if(clear) tasks.clear();
     }
 
     public static void awaitAndThrowException(List<Future<?>> tasks, boolean clear, boolean delayException)

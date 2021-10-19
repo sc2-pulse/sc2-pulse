@@ -121,7 +121,7 @@ public class MatchService
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream()
             .forEach(m->dbTasks.add(dbExecutorService.submit(()->matchService.saveMatches(m))));
-        MiscUtil.awaitAndLogExceptions(dbTasks);
+        MiscUtil.awaitAndLogExceptions(dbTasks, true);
         return count.get();
     }
 

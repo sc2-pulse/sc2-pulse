@@ -174,7 +174,7 @@ public class AlternativeLadderService
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
             .forEach((r)->dbTasks.add(dbExecutorService.submit(()->alternativeLadderService.saveProfileLadders(season, r))));
-        MiscUtil.awaitAndLogExceptions(dbTasks);
+        MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 
     private List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
