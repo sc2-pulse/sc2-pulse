@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.dao;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.dao.BlizzardDAO;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
@@ -18,6 +19,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import reactor.util.function.Tuple3;
 
 import javax.sql.DataSource;
 import java.math.BigInteger;
@@ -43,6 +45,9 @@ public class StandardDataReadonlyIT
 
     @Autowired
     private TeamDAO teamDAO;
+
+    @Autowired
+    private BlizzardDAO blizzardDAO;
 
     @BeforeAll
     public static void init
@@ -142,6 +147,37 @@ public class StandardDataReadonlyIT
             new BigInteger("111213"),
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{c1, c2}, Race.ZERG, Race.TERRAN)
         );
+    }
+
+    @Test
+    public void testLadderLegacyIdFinder()
+    {
+        int charCount = 5;
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids = blizzardDAO.findLegacyLadderIds
+        (
+            SeasonGenerator.DEFAULT_SEASON_ID,
+            new Region[]{Region.US},
+            new QueueType[]{QueueType.LOTV_2V2},
+            BaseLeague.LeagueType.values(),
+            charCount
+        );
+        assertEquals(BaseLeague.LeagueType.values().length, ids.size());
+
+        int queuePosition = 9; //4 wol, 4 hots, 1 lotv(1v1)
+        int teamPosition = TEAMS_PER_LEAGUE * BaseLeague.LeagueType.values().length * Region.values().length * queuePosition;
+        int divisionPosition = teamPosition / TEAMS_PER_LEAGUE;
+        for(int i = 0; i < ids.size(); i++)
+        {
+            Tuple3<Region, BlizzardPlayerCharacter[], Long> id = ids.get(i);
+            assertEquals(Region.US, id.getT1());
+            //replicating SeasonGenerator's division id
+            assertEquals(Long.valueOf((divisionPosition + (long) i * Region.values().length) + "0" + i), id.getT3());
+            assertEquals(charCount, id.getT2().length);
+            for(int charIx = 0; charIx < id.getT2().length; charIx++)
+                //0 at the end means it's a first team member only
+                assertEquals(Long.valueOf(teamPosition + (i * Region.values().length * TEAMS_PER_LEAGUE) + charIx + "0"), id.getT2()[charIx].getId());
+        }
+
     }
 
 }
