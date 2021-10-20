@@ -36,6 +36,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class StandardDataReadonlyIT
 {
 
+    public static final int TEAMS_PER_LEAGUE = 5;
+
     @Autowired
     private DivisionDAO divisionDAO;
 
@@ -63,7 +65,7 @@ public class StandardDataReadonlyIT
             List.of(QueueType.values()),
             TeamType.ARRANGED,
             BaseLeagueTier.LeagueTierType.FIRST,
-            5
+            TEAMS_PER_LEAGUE
         );
     }
 
