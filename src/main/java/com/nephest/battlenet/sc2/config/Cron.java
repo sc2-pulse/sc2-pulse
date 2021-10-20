@@ -39,14 +39,12 @@ public class Cron
         OffsetDateTime.of(2021, 8, 17, 0, 0, 0, 0, ZoneOffset.UTC);
     public static final Duration MAINTENANCE_FREQUENT_FRAME = Duration.ofDays(2);
     public static final Duration MAINTENANCE_INFREQUENT_FRAME = Duration.ofDays(10);
-    public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(2);
     public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(210);
 
     private InstantVar heavyStatsInstant;
     private InstantVar maintenanceFrequentInstant;
     private InstantVar maintenanceInfrequentInstant;
     private InstantVar matchInstant;
-    private InstantVar forcedLadderScanInstant;
     private UpdateContext matchUpdateContext;
 
     @Autowired
@@ -97,7 +95,6 @@ public class Cron
         //catch exceptions to allow service autowiring for tests
         try {
             heavyStatsInstant = new InstantVar(varDAO, "ladder.stats.heavy.timestamp");
-            forcedLadderScanInstant = new InstantVar(varDAO, "ladder.updated.forced");
             maintenanceFrequentInstant = new InstantVar(varDAO, "maintenance.frequent");
             maintenanceInfrequentInstant = new InstantVar(varDAO, "maintenance.infrequent");
             matchInstant = new InstantVar(varDAO, "match.updated");
@@ -189,18 +186,15 @@ public class Cron
             try
             {
                 Instant begin = Instant.now();
-                UpdateContext ctx = getLadderUpdateContext(region);
-                if(ctx.getInternalUpdate() == null) LOG.info("Starting forced ladder scan: {}", region);
                 statsService.updateCurrent
                 (
                     new Region[]{region},
                     QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
                     BaseLeague.LeagueType.values(),
                     false,
-                    ctx
+                    updateService.getUpdateContext(region)
                 );
                 updateService.updated(region, begin);
-                if(ctx.getInternalUpdate() == null) forcedLadderScanInstant.setValueAndSave(begin);
             }
             catch (RuntimeException ex)
             {
@@ -256,14 +250,6 @@ public class Cron
         return updateService.getUpdateContext(null).getExternalUpdate() == null
             || System.currentTimeMillis() - updateService.getUpdateContext(null).getExternalUpdate().toEpochMilli()
                 >= MIN_UPDATE_FRAME.toMillis();
-    }
-
-    private UpdateContext getLadderUpdateContext(Region region)
-    {
-        return forcedLadderScanInstant.getValue() == null
-            || System.currentTimeMillis() - forcedLadderScanInstant.getValue().toEpochMilli() >= FORCED_LADDER_SCAN_FRAME.toMillis()
-                ? new UpdateContext(null, null)
-                : updateService.getUpdateContext(region);
     }
 
     private void commenceMaintenance()

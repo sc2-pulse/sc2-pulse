@@ -29,10 +29,7 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.*;
 
 import javax.annotation.PostConstruct;
-import java.time.Instant;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.*;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -51,6 +48,7 @@ public class StatsService
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 2;
     public static final int LADDER_BATCH_SIZE = 100;
     public static final int EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD = 10;
+    public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(2);
 
     @Autowired
     private StatsService statsService;
@@ -63,6 +61,7 @@ public class StatsService
 
     private final Set<Integer> pendingStatsUpdates = new HashSet<>();
     private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
+    private final Map<Region, InstantVar> forcedUpdateInstants = new HashMap<>();
 
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
@@ -141,6 +140,8 @@ public class StatsService
         //catch exceptions to allow service autowiring for tests
         try {
             loadAlternativeRegions();
+            for(Region region : Region.values())
+                forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced"));
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -291,10 +292,12 @@ public class StatsService
         int maxSeason = seasonDao.getMaxBattlenetId();
         for(Region region : regions)
         {
+            UpdateContext regionalContext = getLadderUpdateContext(region, updateContext);
             BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
             Season season = seasonDao.merge(Season.of(bSeason, region));
-            updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, updateContext);
+            updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, regionalContext);
             seasons.add(season.getBattlenetId());
+            if(regionalContext.getInternalUpdate() == null) forcedUpdateInstants.get(region).setValueAndSave(Instant.now());
             LOG.debug("Updated leagues: {} {}", season.getBattlenetId(), region);
         }
         pendingStatsUpdates.addAll(seasons);
@@ -338,6 +341,7 @@ public class StatsService
         UpdateContext updateContext
     )
     {
+        if(updateContext.getInternalUpdate() == null) LOG.info("Starting forced ladder scan: {}", season.getRegion());
         LOG.debug("Updating season {} using {} checkpoint", season, updateContext.getExternalUpdate());
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             getLadderIds(getLeagueIds(bSeason, season.getRegion(), queues, leagues), currentSeason);
@@ -657,6 +661,15 @@ public class StatsService
             .map(String::valueOf)
             .collect(Collectors.joining(","));
         varDAO.merge("region.alternative", var);
+    }
+
+    private UpdateContext getLadderUpdateContext(Region region, UpdateContext def)
+    {
+        Instant instant = forcedUpdateInstants.get(region).getValue();
+        return instant == null
+            || System.currentTimeMillis() - instant.toEpochMilli() >= FORCED_LADDER_SCAN_FRAME.toMillis()
+            ? new UpdateContext(null, null)
+            : def;
     }
 
 }
