@@ -148,7 +148,8 @@ public class SeasonGenerator
             season.getRegion().ordinal() + type.ordinal() + 1
         );
         LeagueTier tier = leagueTierDAO.create(newTier);
-        Division division = divisionDAO.create(new Division(null, tier.getId(), Long.valueOf(season.getRegion().ordinal() + "" + type.ordinal())));
+        Division division = divisionDAO.create(new Division(null, tier.getId(),
+            Long.valueOf((teamsPerLeague > 0 ? teamCount / teamsPerLeague : 0) + "" + season.getRegion().ordinal() + "" + type.ordinal())));
         for(int teamIx = 0; teamIx < teamsPerLeague; teamIx++)
         {
             Team newTeam = new Team

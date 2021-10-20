@@ -86,16 +86,16 @@ public class StandardDataReadonlyIT
             .collect(Collectors.toList());
         //diamond
         assertEquals(divisionDAO.findDivision(SeasonGenerator.DEFAULT_SEASON_ID,
-            Region.US, QueueType.LOTV_1V1, TeamType.ARRANGED, 4).get(),
+            Region.US, QueueType.LOTV_1V1, TeamType.ARRANGED, 24004).get(),
             orderedIds.get(0).getKey());
         //master
         assertEquals(divisionDAO.findDivision(SeasonGenerator.DEFAULT_SEASON_ID,
-            Region.US, QueueType.LOTV_1V1, TeamType.ARRANGED, 5).get(),
+            Region.US, QueueType.LOTV_1V1, TeamType.ARRANGED, 24405).get(),
             orderedIds.get(1).getKey());
         //grandmaster
-        assertEquals(6, divisionDAO.findLastDivision(SeasonGenerator.DEFAULT_SEASON_ID,
+        assertEquals(24806, divisionDAO.findLastDivision(SeasonGenerator.DEFAULT_SEASON_ID,
             Region.US, QueueType.LOTV_1V1, TeamType.ARRANGED).get());
-        assertEquals(16, divisionDAO.findLastDivision(SeasonGenerator.DEFAULT_SEASON_ID, Region.EU).get());
+        assertEquals(36116, divisionDAO.findLastDivision(SeasonGenerator.DEFAULT_SEASON_ID, Region.EU).get());
 
         List<Long> longIds = divisionDAO.findDivisionIds
         (
