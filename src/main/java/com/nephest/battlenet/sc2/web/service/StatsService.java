@@ -318,7 +318,7 @@ public class StatsService
             }
             else
             {
-                alternativeLadderService.discoverSeason(season);
+                alternativeLadderService.updateSeason(season, queues, leagues);
             }
         }
     }

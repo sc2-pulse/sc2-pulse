@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeamMember;
+import com.nephest.battlenet.sc2.model.blizzard.dao.BlizzardDAO;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.util.MiscUtil;
@@ -28,6 +29,9 @@ import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
+import javax.annotation.PostConstruct;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -48,6 +52,9 @@ public class AlternativeLadderService
 
     public static final long FIRST_DIVISION_ID = 33080L;
     public static final int LADDER_BATCH_SIZE = StatsService.LADDER_BATCH_SIZE;
+    public static final Duration DISCOVERY_TIME_FRAME = Duration.ofMinutes(30);
+
+    private final Map<Region, InstantVar> discoveryInstants = new HashMap<>();
 
     @Autowired
     private AlternativeLadderService alternativeLadderService;
@@ -62,6 +69,8 @@ public class AlternativeLadderService
     private final PlayerCharacterDAO playerCharacterDao;
     private final ClanDAO clanDAO;
     private final TeamMemberDAO teamMemberDao;
+    private final BlizzardDAO blizzardDAO;
+    private final VarDAO varDAO;
     private final ConversionService conversionService;
     private final Validator validator;
     private final ExecutorService dbExecutorService;
@@ -79,6 +88,8 @@ public class AlternativeLadderService
         PlayerCharacterDAO playerCharacterDao,
         ClanDAO clanDAO,
         TeamMemberDAO teamMemberDao,
+        BlizzardDAO blizzardDAO,
+        VarDAO varDAO,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService
@@ -94,6 +105,8 @@ public class AlternativeLadderService
         this.playerCharacterDao = playerCharacterDao;
         this.clanDAO = clanDAO;
         this.teamMemberDao = teamMemberDao;
+        this.blizzardDAO = blizzardDAO;
+        this.varDAO = varDAO;
         this.conversionService = conversionService;
         this.validator = validator;
         this.dbExecutorService = dbExecutorService;
@@ -103,21 +116,38 @@ public class AlternativeLadderService
     public static final int LEGACY_LADDER_BATCH_SIZE = 500;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
+    @PostConstruct
+    public void init()
+    {
+        //catch exceptions to allow service autowiring for tests
+        try {
+            for(Region region : Region.values())
+                discoveryInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.discovery"));
+        }
+        catch(RuntimeException ex) {
+            LOG.warn(ex.getMessage(), ex);
+        }
+    }
+
     public void updateSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
         LOG.debug("Updating season {}", season);
-        List<Long> divisions = divisionDao.findDivisionIds
+        Instant discoveryInstant = discoveryInstants.get(season.getRegion()).getValue();
+        if(discoveryInstant == null
+            || System.currentTimeMillis() - discoveryInstant.toEpochMilli() >= DISCOVERY_TIME_FRAME.toMillis())
+        {
+            discoverSeason(season);
+            return;
+        }
+
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds = blizzardDAO.findLegacyLadderIds
         (
             season.getBattlenetId(),
-            season.getRegion(),
+            new Region[]{season.getRegion()},
+            queueTypes,
             leagues,
-            queueTypes, TeamType.ARRANGED
+            BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT
         );
-        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds = new ArrayList<>();
-        api.getProfileLadderIds(season.getRegion(), divisions)
-            .sequential()
-            .toStream()
-            .forEach(profileLadderIds::add);
         updateLadders(season, Set.of(queueTypes), profileLadderIds);
     }
 
@@ -159,6 +189,7 @@ public class AlternativeLadderService
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds = getProfileLadderIds(season, lastDivision);
         LOG.info("{} {} ladders found", profileIds.size(), season);
         updateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds);
+        discoveryInstants.get(season.getRegion()).setValueAndSave(Instant.now());
     }
 
     private void updateLadders
