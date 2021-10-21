@@ -112,7 +112,7 @@ public class Cron
         return dt;
     }
 
-    @Scheduled(initialDelay = 30_000, fixedDelay = 30_000)
+    @Scheduled(initialDelay = 30_000, fixedDelay = 10_000)
     public void updateAll()
     {
         nonStopUpdate();
