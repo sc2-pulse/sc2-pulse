@@ -91,8 +91,8 @@ public class TeamDAO
             + "INNER JOIN vals v"
             + "("
                 + "legacy_id, division_id, "
-                + "season, region, league_type, queue_type, team_type, tier_type, "
-                + "rating, points, wins, losses, ties "
+                + "season, region, league_type, queue_type, team_type, "
+                + "rating, points, wins, losses, ties, tier_type "
             + ") "
                 + "USING(queue_type, region, legacy_id, season) "
         + "), "
@@ -102,7 +102,7 @@ public class TeamDAO
             + "SET "
             + "division_id=v.division_id, "
             + "league_type=v.league_type, "
-            + "tier_type=v.tier_type, "
+            + "tier_type=v.tier_type::smallint, "
             + "rating=v.rating, "
             + "points=v.points, "
             + "wins=v.wins, "
@@ -111,8 +111,8 @@ public class TeamDAO
             + "FROM vals v"
             + "("
                 + "legacy_id, division_id, "
-                + "season, region, league_type, queue_type, team_type, tier_type, "
-                + "rating, points, wins, losses, ties "
+                + "season, region, league_type, queue_type, team_type, "
+                + "rating, points, wins, losses, ties, tier_type "
             + ") "
             + "WHERE team.queue_type = v.queue_type "
             + "AND team.region = v.region "
@@ -129,13 +129,13 @@ public class TeamDAO
         + "("
             + "SELECT "
             + "v.legacy_id, v.division_id, "
-            + "v.season, v.region, v.league_type, v.queue_type, v.team_type, v.tier_type, "
-            + "v.rating, v.points, v.wins, v.losses, v.ties "
+            + "v.season, v.region, v.league_type, v.queue_type, v.team_type, "
+            + "v.rating, v.points, v.wins, v.losses, v.ties, v.tier_type::smallint "
             + "FROM vals v"
             + "("
                 + "legacy_id, division_id, "
-                + "season, region, league_type, queue_type, team_type, tier_type, "
-                + "rating, points, wins, losses, ties "
+                + "season, region, league_type, queue_type, team_type, "
+                + "rating, points, wins, losses, ties, tier_type "
             + ") "
             + "LEFT JOIN existing ON "
                 + "v.queue_type = existing.queue_type "
@@ -149,8 +149,8 @@ public class TeamDAO
             + "INSERT INTO team "
             + "("
                 + "legacy_id, division_id, "
-                + "season, region, league_type, queue_type, team_type, tier_type, "
-                + "rating, points, wins, losses, ties "
+                + "season, region, league_type, queue_type, team_type, "
+                + "rating, points, wins, losses, ties, tier_type "
             + ") "
             + "SELECT * FROM missing "
             + MERGE_CLAUSE
@@ -362,12 +362,12 @@ public class TeamDAO
                 conversionService.convert(t.getLeagueType(), Integer.class),
                 conversionService.convert(t.getQueueType(), Integer.class),
                 conversionService.convert(t.getTeamType(), Integer.class),
-                conversionService.convert(t.getTierType(), Integer.class),
                 t.getRating(),
                 t.getPoints(),
                 t.getWins(),
                 t.getLosses(),
-                t.getTies()
+                t.getTies(),
+                conversionService.convert(t.getTierType(), Integer.class),
             })
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("teams", data);
