@@ -57,12 +57,8 @@ public class ClanDAO
         + "("
             + "INSERT INTO clan (tag, region, name) "
             + "SELECT * FROM missing "
-            /*
-                2 matched clans(2 parts from different players) can be absent in the db
-                do nothing to verify that this is the case, because it will fail otherwise as there will be no second
-                 match in filtering phase
-             */
-            + "ON CONFLICT(tag, region) DO NOTHING "
+            + "ON CONFLICT(tag, region) DO UPDATE "
+            + "SET name = COALESCE(excluded.name, clan.name) "
             + "RETURNING "
             + "id AS \"clan.id\", "
             + "tag AS \"clan.tag\", "
@@ -119,6 +115,7 @@ public class ClanDAO
         if(clans.length == 0) return new Clan[0];
 
         List<Object[]> clanData = Arrays.stream(clans)
+            .distinct()
             .map(clan->new Object[]{
                 clan.getTag(),
                 conversionService.convert(clan.getRegion(), Integer.class),
