@@ -48,7 +48,7 @@ public class MatchService
 
     private static final Logger LOG = LoggerFactory.getLogger(MatchService.class);
     public static final int BATCH_SIZE = 1000;
-    public static final int FAILED_MATCHES_MAX = 200;
+    public static final int FAILED_MATCHES_MAX = 100;
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
