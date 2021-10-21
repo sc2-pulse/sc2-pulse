@@ -372,6 +372,7 @@ public class AlternativeLadderService
 
         clanDAO.merge(clans.stream()
             .map(Tuple2::getT2)
+            .sorted(Clan.NATURAL_ID_COMPARATOR)
             .toArray(Clan[]::new)
         );
         for(Tuple2<PlayerCharacter, Clan> t : clans) {
