@@ -76,6 +76,8 @@ public final class DAOUtils
             //if there are multiple clones in the original array
             if(!merged.equals(original))
             {
+                //for nullables, if it's not a clone, than it's a null entity, skip it
+                if(originalNullifier != null && mergedIx == 0) continue;
                 //the merged list contains one entity for multiple original clones, use it repeatedly
                 mergedIx--;
                 merged = mergedList.get(mergedIx);

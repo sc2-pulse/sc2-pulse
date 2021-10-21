@@ -187,19 +187,19 @@ public class SqlSyntaxIT
         Team zergTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
-            BigInteger.TWO, division2.getId(),
+            BigInteger.valueOf(-1), division2.getId(),
             4L, 3, 3, 0, 3
         );
         Team zergTeamClone = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
-            BigInteger.TWO, division2.getId(),
+            BigInteger.valueOf(-1), division2.getId(),
             4L, 3, 3, 0, 3
         );
         teamDAO.create(newTeam);
         teamDAO.create(zergTeam);
         //zergTeamClone is existing, merged is updated, same is a clone, newTeam is inserted
-        Team[] teams = teamDAO.merge(zergTeamClone, mergedTeam, sameTeam, newTeam2);
+        Team[] teams = teamDAO.merge(zergTeamClone, mergedTeam, newTeam2, sameTeam);
         //existing team is excluded
         assertEquals(3, teams.length);
         assertEquals(teams[0], mergedTeam);
