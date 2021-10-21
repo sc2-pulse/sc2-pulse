@@ -48,6 +48,7 @@ public class MatchService
 
     private static final Logger LOG = LoggerFactory.getLogger(MatchService.class);
     public static final int BATCH_SIZE = 1000;
+    public static final int FAILED_MATCHES_MAX = 200;
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
@@ -115,8 +116,15 @@ public class MatchService
         Set<PlayerCharacter> chars;
         while((chars = failedCharacters.poll()) != null)
         {
-            LOG.debug("Retrying {} previously failed matches", chars.size());
-            i += saveMatches(chars);
+            if(chars.size() > FAILED_MATCHES_MAX)
+            {
+                LOG.debug("Dropped failed matches batch: {}/{}", chars.size(), FAILED_MATCHES_MAX);
+            }
+            else
+            {
+                LOG.debug("Retrying {} previously failed matches", chars.size());
+                i += saveMatches(chars);
+            }
         }
         return i;
     }
