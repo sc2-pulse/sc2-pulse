@@ -35,6 +35,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -55,7 +56,7 @@ public class MatchService
     private final SeasonDAO seasonDAO;
     private final PostgreSQLUtils postgreSQLUtils;
     private final ExecutorService dbExecutorService;
-    private final Set<PlayerCharacter> failedCharacters = new HashSet<>();
+    private final ConcurrentLinkedQueue<Set<PlayerCharacter>> failedCharacters = new ConcurrentLinkedQueue<>();
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -101,20 +102,31 @@ public class MatchService
 
     private int saveMatches(Instant lastUpdated, Region... regions)
     {
-        LOG.debug("Retrying {} previously failed matches", failedCharacters.size());
-        int r1 = saveMatches(failedCharacters);
+        int r1 = saveFailedMatches();
         LOG.debug("Saved {} previously failed matches", r1);
         //clear here to avoid unbound retries of the same characters
-        failedCharacters.clear();
         return r1 + saveMatches(playerCharacterDAO
             .findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()), regions));
+    }
+
+    private int saveFailedMatches()
+    {
+        int i = 0;
+        Set<PlayerCharacter> chars;
+        while((chars = failedCharacters.poll()) != null)
+        {
+            LOG.debug("Retrying {} previously failed matches", chars.size());
+            i += saveMatches(chars);
+        }
+        return i;
     }
 
     private int saveMatches(Iterable<? extends PlayerCharacter> characters)
     {
         List<Future<?>> dbTasks = new ArrayList<>();
         AtomicInteger count = new AtomicInteger(0);
-        api.getMatches(characters, failedCharacters)
+        Set<PlayerCharacter> errors = new HashSet<>();
+        api.getMatches(characters, errors)
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
             .sequential()
@@ -123,6 +135,7 @@ public class MatchService
             .toStream()
             .forEach(m->dbTasks.add(dbExecutorService.submit(()->matchService.saveMatches(m))));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
+        failedCharacters.add(errors);
         return count.get();
     }
 
