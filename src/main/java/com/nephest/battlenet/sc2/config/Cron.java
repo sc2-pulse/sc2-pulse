@@ -39,7 +39,8 @@ public class Cron
         OffsetDateTime.of(2021, 8, 17, 0, 0, 0, 0, ZoneOffset.UTC);
     public static final Duration MAINTENANCE_FREQUENT_FRAME = Duration.ofDays(2);
     public static final Duration MAINTENANCE_INFREQUENT_FRAME = Duration.ofDays(10);
-    public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(210);
+    public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(300);
+    public static final Duration MIN_UPDATE_FRAME_ALTERNATIVE = Duration.ofSeconds(360);
 
     private InstantVar heavyStatsInstant;
     private InstantVar maintenanceFrequentInstant;
@@ -250,7 +251,7 @@ public class Cron
     {
         return updateService.getUpdateContext(null).getExternalUpdate() == null
             || System.currentTimeMillis() - updateService.getUpdateContext(null).getExternalUpdate().toEpochMilli()
-                >= MIN_UPDATE_FRAME.toMillis();
+                >= getMinUpdateFrame().toMillis();
     }
 
     private void commenceMaintenance()
@@ -280,6 +281,15 @@ public class Cron
         postgreSQLUtils.reindex("ix_team_state_team_id_archived", "ix_team_state_timestamp");
         persistentLoginDAO.removeExpired();
         this.maintenanceInfrequentInstant.setValueAndSave(Instant.now());
+    }
+
+    public Duration getMinUpdateFrame()
+    {
+        return statsService.getAlternativeRegions().contains(Region.EU)
+            || statsService.getAlternativeRegions().contains(Region.US)
+            || statsService.getAlternativeRegions().contains(Region.CN)
+                ? MIN_UPDATE_FRAME_ALTERNATIVE
+                : MIN_UPDATE_FRAME;
     }
 
 }
