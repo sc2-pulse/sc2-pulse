@@ -122,7 +122,7 @@ public class AlternativeLadderService
         //catch exceptions to allow service autowiring for tests
         try {
             for(Region region : Region.values())
-                discoveryInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.discovery"));
+                discoveryInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.discovered"));
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
