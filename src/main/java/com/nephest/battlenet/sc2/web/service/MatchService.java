@@ -90,7 +90,7 @@ public class MatchService
         //Active players can't be updated retroactively, so there is no reason to sync with other services here
         int matchCount = saveMatches(updateContext.getInternalUpdate(), regions);
         matchDAO.removeExpired();
-        LOG.info("Saved {} matches", matchCount);
+        LOG.info("Saved {} matches for {}", matchCount, regions);
     }
 
     private int saveMatches(Instant lastUpdated, Region... regions)
