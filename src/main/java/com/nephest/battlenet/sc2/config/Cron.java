@@ -229,6 +229,7 @@ public class Cron
                 for(Region region : Region.values())
                     tasks.add(webExecutorService.submit(()->matchService.update(muc, region)));
                 MiscUtil.awaitAndThrowException(tasks, true, true);
+                matchService.identify(muc);
                 matchInstant.setValueAndSave(Instant.now());
             }
         }

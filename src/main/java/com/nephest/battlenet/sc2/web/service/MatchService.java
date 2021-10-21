@@ -89,16 +89,8 @@ public class MatchService
 
         //Active players can't be updated retroactively, so there is no reason to sync with other services here
         int matchCount = saveMatches(updateContext.getInternalUpdate(), regions);
-        postgreSQLUtils.vacuumAnalyze();
-        int identified = matchParticipantDAO.identify(
-            seasonDAO.getMaxBattlenetId(),
-            /*
-                Matches are fetched retroactively, some of them can happen before the lastUpdated instant.
-                Try to catch these matches by moving the start instant back in time.
-             */
-            OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         matchDAO.removeExpired();
-        LOG.info("Saved {} matches({} identified)", matchCount, identified);
+        LOG.info("Saved {} matches", matchCount);
     }
 
     private int saveMatches(Instant lastUpdated, Region... regions)
@@ -173,6 +165,20 @@ public class MatchService
         }
         matchParticipantDAO.merge(participantBatch);
         LOG.debug("Saved {} matches", matches.size());
+    }
+
+    public void identify(UpdateContext updateContext)
+    {
+        postgreSQLUtils.vacuumAnalyze();
+        int identified = matchParticipantDAO.identify(
+            seasonDAO.getMaxBattlenetId(),
+            /*
+                Matches are fetched retroactively, some of them can happen before the lastUpdated instant.
+                Try to catch these matches by moving the start instant back in time.
+             */
+            OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES)
+        );
+        LOG.info("Identified {} matches", identified);
     }
 
 }
