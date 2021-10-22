@@ -56,6 +56,7 @@ class SC2Restful
                 Session.enhanceCheaterVisibilityInput();
                 Session.enhanceCsrfForms();
                 ChartUtil.enhanceHeightControls();
+                ChartUtil.enhanceBeginAtZeroControls();
             case START_MODE.MINIMAL:
                 BootstrapUtil.init();
                 BootstrapUtil.enhanceModals();

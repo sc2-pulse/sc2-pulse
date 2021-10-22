@@ -21,7 +21,8 @@ class ChartUtil
         config["pointRadius"] = chartable.getAttribute("data-chart-point-radius");
         config["xType"] = chartable.getAttribute("data-chart-x-type");
         config["xTimeUnit"] = chartable.getAttribute("data-chart-x-time-unit");
-        config["beginAtZero"] = chartable.getAttribute("data-chart-begin-at-zero");
+        config["beginAtZero"] = chartable.getAttribute("data-chart-begin-at-zero")
+            || (localStorage.getItem("chart-begin-at-zero") === "false" ? false : "true");
         config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
         config["chartable"] = chartable.id;
         if (!Util.isMobile()) config["zoom"] = chartable.getAttribute("data-chart-zoom");
@@ -739,6 +740,17 @@ class ChartUtil
             chEl.removeAttribute("data-chart-y-max");
             chEl.removeAttribute("data-chart-y-reversed");
         }
+    }
+
+    static updateBeginAtZero()
+    {
+        for(const [id, chart] of ChartUtil.CHARTS.entries())
+            ChartUtil.changeZoomState(document.getElementById(id));
+    }
+
+    static enhanceBeginAtZeroControls()
+    {
+        document.querySelector("#chart-begin-at-zero").addEventListener("click", e=>window.setTimeout(ChartUtil.updateBeginAtZero, 1));
     }
 
 }
