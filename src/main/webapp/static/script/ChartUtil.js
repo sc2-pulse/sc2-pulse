@@ -165,7 +165,11 @@ class ChartUtil
             }
         );
         chart.customConfig = config;
-        if(config.zoom) ChartUtil.createZoomControls(chart);
+        if(config.zoom)
+        {
+            ChartUtil.createZoomControls(chart);
+            chart.canvas.addEventListener("mousemove", ChartUtil.onCanvasMouseMove);
+        }
         ChartUtil.updateChartZoomLimits(chart);
         return chart;
     }
@@ -180,6 +184,12 @@ class ChartUtil
         zoomCtl.textContent = "ctrl+wheel/shift+mouse drag to zoom, mouse drag to pan";
         zoomCtl.addEventListener("click", ChartUtil.resetZoom);
         chart.canvas.closest(".container-chart").prepend(zoomCtl);
+    }
+
+    static onCanvasMouseMove(evt)
+    {
+        if(!evt.shiftKey) return true;
+        document.querySelector('#chartjs-tooltip-' + document.querySelector('[data-chart-id="' + evt.target.id +  '"]').id).style.opacity = 0;
     }
 
     static resetZoom(evt)
