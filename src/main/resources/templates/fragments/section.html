@@ -28,5 +28,19 @@
     </table>
     <div class="container-chart"><canvas th:id="|games-played-race-league-${region}-chart|" class="c-chart"></canvas></div>
 </section>
+<section th:id="${id}" class="col-lg-6 mb-3" th:fragment="stats (id, title, titleY, type)">
+    <h4 th:replace="${title}"></h4>
+    <table
+            th:id="|${id}-table|"
+            class="chartable"
+            th:data-chart-type="${type}"
+            th:data-chart-id="|${id}-chart|"
+            data-chart-x-title="Date" th:data-chart-y-title="${titleY}"
+    >
+        <thead><tr></tr></thead>
+        <tbody><tr></tr></tbody>
+    </table>
+    <div class="container-chart"><canvas th:id="|${id}-chart|" class="c-chart"></canvas></div>
+</section>
 </body>
 </html>

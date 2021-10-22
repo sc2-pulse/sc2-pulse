@@ -231,56 +231,31 @@
             <section id="stats-global" class="tab-pane fade c-height-linked" data-view-title="Global statistics">
                 <h3>Global stats</h3>
                 <div class="row no-gutters">
-                    <section id="games-played-global" class="col-lg-6 mb-3">
+                    <section id="games-played-global" class="col-lg-6 mb-3"
+                             th:replace="~{fragments/section :: stats('games-played-global', ~{::#games-played-global/h4}, 'Games', 'line')}"
+                    >
                         <h4>Games played</h4>
-                        <table
-                                id="games-played-global-table"
-                                class="chartable"
-                                data-chart-type="line"
-                                data-chart-id="games-played-global-chart"
-                                data-chart-x-title="Date" data-chart-y-title="Games"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="games-played-global-chart" class="c-chart"></canvas></div>
                     </section>
-                    <section id="team-count-global" class="col-lg-6 mb-3">
+                    <section id="team-count-global" class="col-lg-6 mb-3"
+                             th:replace="~{fragments/section :: stats('team-count-global', ~{::#team-count-global/h4}, 'Teams', 'line')}"
+                    >
                         <h4>Team count</h4>
-                        <table
-                                id="team-count-global-table"
-                                class="chartable"
-                                data-chart-type="line"
-                                data-chart-id="team-count-global-chart"
-                                data-chart-x-title="Date" data-chart-y-title="Teams"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="team-count-global-chart" class="c-chart"></canvas></div>
                     </section>
-                    <section id="player-count-global" class="col-lg-6 mb-3">
+                    <section id="player-count-global" class="col-lg-6 mb-3"
+                             th:replace="~{fragments/section :: stats('player-count-global', ~{::#player-count-global/h4}, 'Players', 'line')}"
+                    >
                         <h4>Player count
                             (<img
-                                th:src="@{/static/icon/misc/filter.svg}"
-                                alt="Some filters are not applicable: region, league"
-                                title="Some filters are not applicable: region, league"
-                                data-toggle="tooltip"
+                                    th:src="@{/static/icon/misc/filter.svg}"
+                                    alt="Some filters are not applicable: region, league"
+                                    title="Some filters are not applicable: region, league"
+                                    data-toggle="tooltip"
                             />)
                         </h4>
-                        <table
-                                id="player-count-global-table"
-                                class="chartable"
-                                data-chart-type="line"
-                                data-chart-id="player-count-global-chart"
-                                data-chart-x-title="Date" data-chart-y-title="Players"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="player-count-global-chart" class="c-chart"></canvas></div>
                     </section>
-                    <section id="player-count-daily-activity-tier" class="col-lg-6 mb-3">
+                    <section id="player-count-daily-activity-tier" class="col-lg-6 mb-3"
+                             th:replace="~{fragments/section :: stats('player-count-daily-activity-tier', ~{::#player-count-daily-activity-tier/h4}, 'Players', 'line')}"
+                    >
                         <h4>Player count by activity tier
                             (
                             <img
@@ -297,52 +272,28 @@
                             />
                             )
                         </h4>
-                        <table
-                                id="player-count-daily-activity-tier-table"
-                                class="chartable"
-                                data-chart-type="line"
-                                data-chart-id="player-count-daily-activity-tier-chart"
-                                data-chart-x-title="Date" data-chart-y-title="Players"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="player-count-daily-activity-tier-chart" class="c-chart"></canvas></div>
                     </section>
                 </div>
             </section>
             <section id="stats-day" class="tab-pane fade c-height-linked" data-view-title="Daily activity statistics">
                 <h3>Daily activity stats</h3>
                 <div class="row no-gutters">
-                    <section id="games-played-day" class="col-lg-6 mb-3">
+                    <section
+                            id="games-played-day" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('games-played-day', ~{::#games-played-day/h4}, 'Games/day', 'line')}"
+                    >
                         <h4>Games played per day</h4>
-                        <table
-                                id="games-played-day-table"
-                                class="chartable"
-                                data-chart-type="line"
-                                data-chart-id="games-played-day-chart"
-                                data-chart-x-title="Date" data-chart-y-title="Games/day"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="games-played-day-chart" class="c-chart c-ref"></canvas></div>
                     </section>
-                    <section id="team-count-day" class="col-lg-6 mb-3">
+                    <section
+                            id="team-count-day" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('team-count-day', ~{::#team-count-day/h4}, 'New teams/day', 'line')}"
+                    >
                         <h4>New teams per day</h4>
-                        <table
-                                id="team-count-day-table"
-                                class="chartable"
-                                data-chart-type="line"
-                                data-chart-id="team-count-day-chart"
-                                data-chart-x-title="Date" data-chart-y-title="New teams/day"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="team-count-day-chart" class="c-chart"></canvas></div>
                     </section>
-                    <section id="player-count-day" class="col-lg-6 mb-3">
+                    <section
+                            id="player-count-day" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('player-count-day', ~{::#player-count-day/h4}, 'New players/day', 'line')}"
+                    >
                         <h4>New players per day
                             (<img
                                     th:src="@{/static/icon/misc/filter.svg}"
@@ -351,46 +302,27 @@
                                     data-toggle="tooltip"
                             />)
                         </h4>
-                        <table
-                                id="player-count-day-table"
-                                class="chartable"
-                                data-chart-type="line"
-                                data-chart-id="player-count-day-chart"
-                                data-chart-x-title="Date" data-chart-y-title="New players/day"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="player-count-day-chart" class="c-chart"></canvas></div>
                     </section>
-                    <section id="player-count-daily-activity-tier-day" class="col-lg-6 mb-3">
+                    <section
+                            id="player-count-daily-activity-tier-day" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('player-count-daily-activity-tier-day', ~{::#player-count-daily-activity-tier-day/h4}, 'Players/day', 'line')}"
+                    >
                         <h4>New players per day by activity tier
                             (
-                                <img
-                                        th:src="@{/static/icon/misc/filter.svg}"
-                                        alt="Some filters are not applicable: region, league"
-                                        title="Some filters are not applicable: region, league"
-                                        data-toggle="tooltip"
-                                />
-                                <img
-                                        th:src="@{/static/icon/misc/info.svg}"
-                                        alt="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
-                                        title="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
-                                        data-toggle="tooltip"
-                                />
+                            <img
+                                    th:src="@{/static/icon/misc/filter.svg}"
+                                    alt="Some filters are not applicable: region, league"
+                                    title="Some filters are not applicable: region, league"
+                                    data-toggle="tooltip"
+                            />
+                            <img
+                                    th:src="@{/static/icon/misc/info.svg}"
+                                    alt="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
+                                    title="Games played per day tiers. Low: <0.3. Medium: 0.3-1. High: >1."
+                                    data-toggle="tooltip"
+                            />
                             )
                         </h4>
-                        <table
-                                id="player-count-daily-activity-tier-day-table"
-                                class="chartable"
-                                data-chart-type="line"
-                                data-chart-id="player-count-daily-activity-tier-day-chart"
-                                data-chart-x-title="Date" data-chart-y-title="Players/day"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="player-count-daily-activity-tier-day-chart" class="c-chart"></canvas></div>
                     </section>
                 </div>
                 <p>
@@ -405,20 +337,10 @@
             <section id="stats-race" class="tab-pane fade c-height-linked" data-view-title="Race distribution">
                 <h3>Race distribution</h3>
                 <div class="row no-gutters ml-3">
-                    <section id="games-played-race" class="col-lg-6 mb-3">
+                    <section id="games-played-race" class="col-lg-6 mb-3"
+                             th:replace="~{fragments/section :: stats('games-played-race', ~{::#games-played-race/h4}, '%', 'line')}"
+                    >
                         <h4>Games played by race (%)</h4>
-                        <table
-                            id="games-played-race-table"
-                            class="chartable"
-                            data-chart-type="line"
-                            data-chart-tooltip-percentage="false"
-                            data-chart-id="games-played-race-chart"
-                            data-chart-x-title="Date" data-chart-y-title="%"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="games-played-race-chart" class="c-chart"></canvas></div>
                     </section>
                     <section th:replace="~{fragments/section :: stats-race-league-region('global')}"></section>
                     <section th:replace="~{fragments/section :: stats-race-league-region('us')}"></section>
@@ -430,88 +352,40 @@
             <section id="stats-league" class="tab-pane fade c-height-linked" data-view-title="League distribution">
                 <h3>League distribution</h3>
                 <div class="row no-gutters">
-                    <section id="games-played-league" class="col-lg-6 mb-3">
+                    <section
+                            id="games-played-league" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('games-played-league', ~{::#games-played-league/h4}, '%', 'line')}"
+                    >
                         <h4>Games played by league (%)</h4>
-                        <table
-                            id="games-played-league-table"
-                            class="chartable"
-                            data-chart-type="line"
-                            data-chart-tooltip-percentage="false"
-                            data-chart-tooltip-sort="reverse"
-                            data-chart-id="games-played-league-chart"
-                            data-chart-x-title="Date" data-chart-y-title="%"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="games-played-league-chart" class="c-chart"></canvas></div>
                     </section>
-                    <section id="team-count-league" class="col-lg-6 mb-3">
+                    <section
+                            id="team-count-league" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('team-count-league', ~{::#team-count-league/h4}, '%', 'line')}"
+                    >
                         <h4>Team count by league (%)</h4>
-                        <table
-                            id="team-count-league-table"
-                            class="chartable"
-                            data-chart-type="line"
-                            data-chart-tooltip-percentage="false"
-                            data-chart-tooltip-sort="reverse"
-                            data-chart-id="team-count-league-chart"
-                            data-chart-x-title="Date" data-chart-y-title="%"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="team-count-league-chart" class="c-chart"></canvas></div>
                     </section>
-                    <section id="team-count-region-league" class="col-lg-6 mb-3">
+                    <section
+                            id="team-count-region-league" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('team-count-region-league', ~{::#team-count-region-league/h4}, '%', 'bar')}"
+                    >
                         <h4>Team count by league (<span class="season-current"></span>) (%)</h4>
-                        <table
-                                id="team-count-region-league-table"
-                                class="chartable"
-                                data-chart-type="bar"
-                                data-chart-tooltip-percentage="false"
-                                data-chart-tooltip-sort="reverse"
-                                data-chart-id="team-count-region-league-chart"
-                                data-chart-x-title="Region" data-chart-y-title="%"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="team-count-region-league-chart" class="c-chart"></canvas></div>
                     </section>
                 </div>
             </section>
             <section id="stats-region" class="tab-pane fade c-height-linked" data-view-title="Region distribution">
                 <h3>Region distribution</h3>
                 <div class="row no-gutters">
-                    <section id="games-played-region" class="col-lg-6 mb-3">
+                    <section
+                            id="games-played-region" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('games-played-region', ~{::#games-played-region/h4}, '%', 'line')}"
+                    >
                         <h4>Games played by region (%)</h4>
-                        <table
-                            id="games-played-region-table"
-                            class="chartable"
-                            data-chart-type="line"
-                            data-chart-tooltip-percentage="false"
-                            data-chart-id="games-played-region-chart"
-                            data-chart-x-title="Date" data-chart-y-title="%"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="games-played-region-chart" class="c-chart"></canvas></div>
                     </section>
-                    <section id="team-count-region" class="col-lg-6 mb-3">
+                    <section
+                            id="team-count-region" class="col-lg-6 mb-3"
+                            th:replace="~{fragments/section :: stats('team-count-region', ~{::#team-count-region/h4}, '%', 'line')}"
+                    >
                         <h4>Team count by region (%)</h4>
-                        <table
-                            id="team-count-region-table"
-                            class="chartable"
-                            data-chart-type="line"
-                            data-chart-tooltip-percentage="false"
-                            data-chart-id="team-count-region-chart"
-                            data-chart-x-title="Date" data-chart-y-title="%"
-                        >
-                            <thead><tr></tr></thead>
-                            <tbody><tr></tr></tbody>
-                        </table>
-                        <div class="container-chart"><canvas id="team-count-region-chart" class="c-chart"></canvas></div>
                     </section>
                 </div>
             </section>
