@@ -348,14 +348,7 @@ class CharacterUtil
         const seasonStartDates = CharacterUtil.getSeasonStartDates(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         const teams = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams
             .filter(t=>t.queueType == queueFilter && t.teamType == teamTypeFilter)
-            .map(t=>{
-                const nextSeasonDate = seasonStartDates.get(t.season + 1)
-                    || Session.currentSeasonsMap.get(t.season)[0].end;
-                const date = nextSeasonDate.getTime() < Session.currentSeasonsMap.get(t.season)[0].end.getTime()
-                    ? new Date(nextSeasonDate.getTime() - 1000)
-                    : Session.currentSeasonsMap.get(t.season)[0].end;
-                return CharacterUtil.createTeamSnapshot(t, date);
-            });
+            .map(t=>CharacterUtil.convertTeamToTeamSnapshot(t, seasonStartDates, seasonLastOnly));
         let mmrHistory = teams;
         if(!seasonLastOnly) mmrHistory = mmrHistory
             .concat(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
@@ -426,6 +419,18 @@ class CharacterUtil
                 result.set(season, Util.parseIsoDateTime(state.teamState.dateTime));
             }
         return result;
+    }
+
+    static convertTeamToTeamSnapshot(t, seasonStartDates, seasonLastOnly)
+    {
+        if(seasonLastOnly) return CharacterUtil.createTeamSnapshot(t, Session.currentSeasonsMap.get(t.season)[0].end);
+
+        const nextSeasonDate = seasonStartDates.get(t.season + 1)
+            || Session.currentSeasonsMap.get(t.season)[0].end;
+        const date = nextSeasonDate.getTime() < Session.currentSeasonsMap.get(t.season)[0].end.getTime()
+            ? new Date(nextSeasonDate.getTime() - 1000)
+            : Session.currentSeasonsMap.get(t.season)[0].end;
+        return CharacterUtil.createTeamSnapshot(t, date);
     }
 
     static calculateMmrHistoryTopPercentage(h)

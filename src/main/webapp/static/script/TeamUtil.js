@@ -573,12 +573,7 @@ class TeamUtil
                 }
             }
             for(const team of history.teams) {
-                const nextSeasonDate = seasonStartDates.get(team.season + 1)
-                    || Session.currentSeasonsMap.get(team.season)[0].end;
-                const date = nextSeasonDate.getTime() < Session.currentSeasonsMap.get(team.season)[0].end.getTime()
-                    ? new Date(nextSeasonDate.getTime() - 1000)
-                    : Session.currentSeasonsMap.get(team.season)[0].end;
-                const state = CharacterUtil.createTeamSnapshot(team, date);
+                const state = CharacterUtil.convertTeamToTeamSnapshot(team, seasonStartDates, seasonLastOnly);
                 state.group = {name: group, order: curEntry};
                 transformedData.push(state);
             }
