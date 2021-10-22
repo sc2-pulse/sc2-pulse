@@ -33,7 +33,7 @@ extends StandardDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
-        super(template, "pro_team_member", "30 DAYS");
+        super(template, "pro_team_member", "7 DAYS");
         this.template = template;
     }
 
