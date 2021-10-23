@@ -168,7 +168,9 @@ class ChartUtil
         if(config.zoom)
         {
             ChartUtil.createZoomControls(chart);
-            chart.canvas.addEventListener("mousemove", ChartUtil.onCanvasMouseMove);
+            chart.canvas.addEventListener("mousemove", ChartUtil.onCanvasInteraction);
+            chart.canvas.addEventListener("click", ChartUtil.onCanvasInteraction);
+            chart.canvas.addEventListener("mouseout", ChartUtil.onCanvasMouseOut);
         }
         ChartUtil.updateChartZoomLimits(chart);
         return chart;
@@ -186,10 +188,20 @@ class ChartUtil
         chart.canvas.closest(".container-chart").prepend(zoomCtl);
     }
 
-    static onCanvasMouseMove(evt)
+    static onCanvasInteraction(evt)
     {
-        if(!evt.shiftKey) return true;
-        document.querySelector('#chartjs-tooltip-' + document.querySelector('[data-chart-id="' + evt.target.id +  '"]').id).style.opacity = 0;
+        const chartable = document.querySelector('[data-chart-id="' + evt.target.id +  '"]').id;
+        const active = evt.shiftKey || evt.ctrlKey;
+        if(active) document.querySelector('#chartjs-tooltip-' + chartable).style.opacity = 0;
+        ChartUtil.CHARTS.get(chartable).customConfig.zoomModKeyDown = active;
+        return true;
+    }
+
+    static onCanvasMouseOut(evt)
+    {
+        const chartable = document.querySelector('[data-chart-id="' + evt.target.id +  '"]').id;
+        ChartUtil.CHARTS.get(chartable).customConfig.zoomModKeyDown = false;
+        return true;
     }
 
     static resetZoom(evt)
@@ -297,7 +309,7 @@ class ChartUtil
     {
         const tooltipModel = context.tooltip;
         const tooltipEl = ChartUtil.getOrCreateTooltipElement(this._chart);
-        if (tooltipModel.opacity === 0) {
+        if (tooltipModel.opacity === 0 || this._chart.customConfig.zoomModKeyDown == true) {
             tooltipEl.style.opacity = 0;
             return;
         }
