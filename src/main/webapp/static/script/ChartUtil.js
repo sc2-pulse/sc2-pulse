@@ -194,14 +194,12 @@ class ChartUtil
         const active = evt.shiftKey || evt.ctrlKey;
         if(active) document.querySelector('#chartjs-tooltip-' + chartable).style.opacity = 0;
         ChartUtil.CHARTS.get(chartable).customConfig.zoomModKeyDown = active;
-        return true;
     }
 
     static onCanvasMouseOut(evt)
     {
         const chartable = document.querySelector('[data-chart-id="' + evt.target.id +  '"]').id;
         ChartUtil.CHARTS.get(chartable).customConfig.zoomModKeyDown = false;
-        return true;
     }
 
     static resetZoom(evt)
