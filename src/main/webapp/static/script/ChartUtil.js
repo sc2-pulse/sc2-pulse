@@ -428,10 +428,10 @@ class ChartUtil
         } else if (yAlign === "top") {
           top -= space;
         }
-        if (xAlign === "right" || (xAlign === "center" && !isLeft)) {
+        if (xAlign === "right") {
           left = left + width / 2 - space / 2;
           left = left + space * 2;
-        } else if (xAlign === "left" || (xAlign === "center" && isLeft)) {
+        } else if (xAlign === "left") {
           left -= width / 2;
           left = left - space;
         }
