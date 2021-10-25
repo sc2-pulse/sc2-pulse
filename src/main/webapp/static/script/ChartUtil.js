@@ -396,11 +396,6 @@ class ChartUtil
             tooltipEl.classList.add('no-transform');
         }
 
-        const yAlign = localStorage.getItem("chart-tooltip-y-align") == "auto"
-            ? tooltipModel.yAlign
-            : localStorage.getItem("chart-tooltip-y-align") || "bottom";
-        const xAlign = tooltipModel.xAlign;
-
         tooltipEl.style.opacity = 1;
         const { height, width } = tooltipEl.getBoundingClientRect();
 
@@ -417,6 +412,12 @@ class ChartUtil
         let space = SC2Restful.REM; // This for making space between the caret and the element.
 
         const isLeft = left < (canvasRect.width - 40) / 2 ? true : false;
+        const isTop = top < (canvasRect.height - 40) / 2 ? true : false;
+
+        const xAlign = tooltipModel.xAlign;
+        const yAlign = localStorage.getItem("chart-tooltip-y-align") == "auto"
+            ? isTop ? "bottom" : "top"
+            : localStorage.getItem("chart-tooltip-y-align") || "bottom";
 
         if (yAlign === "top") {
           top += height + space;
