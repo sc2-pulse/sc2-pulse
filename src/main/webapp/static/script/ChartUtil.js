@@ -115,7 +115,7 @@ class ChartUtil
                             mode: (config.data.customMeta.type === "pie" || config.data.customMeta === "doughnut")
                                 ? "dataset"
                                 : "index",
-                            position: "nearest",
+                            position: "configurable",
                             intersect: false,
                             callbacks:
                             {
@@ -396,7 +396,9 @@ class ChartUtil
             tooltipEl.classList.add('no-transform');
         }
 
-        const yAlign = tooltipModel.yAlign;
+        const yAlign = localStorage.getItem("chart-tooltip-y-align") == "auto"
+            ? tooltipModel.yAlign
+            : localStorage.getItem("chart-tooltip-y-align") || "bottom";
         const xAlign = tooltipModel.xAlign;
 
         tooltipEl.style.opacity = 1;
@@ -412,7 +414,9 @@ class ChartUtil
         // Final coordinates
         let top = positionY + caretY - height;
         let left = positionX + caretX - width / 2;
-        let space = 8; // This for making space between the caret and the element.
+        let space = SC2Restful.REM; // This for making space between the caret and the element.
+
+        const isLeft = left < (canvasRect.width - 40) / 2 ? true : false;
 
         if (yAlign === "top") {
           top += height + space;
@@ -421,18 +425,12 @@ class ChartUtil
         } else if (yAlign === "bottom") {
           top -= space;
         }
-        if (xAlign === "left") {
+        if (xAlign === "left" || (xAlign === "center" && isLeft)) {
           left = left + width / 2 - space / 2;
-          if (yAlign === "center") {
-            left = left + space * 2;
-          }
-        } else if (xAlign === "right") {
+          left = left + space * 2;
+        } else if (xAlign === "right" || (xAlign === "center" && !isLeft)) {
           left -= width / 2;
-          if (yAlign === "center") {
-            left = left - space;
-          } else {
-            left += space;
-          }
+          left = left - space;
         }
         if(left < 0) left = 0;
         if(left > canvasRect.width - width) left = canvasRect.width - width;
@@ -828,3 +826,15 @@ class ChartLineVCursor extends Chart.LineController
 ChartLineVCursor.id = "lineVCursor";
 ChartLineVCursor.defaults = Chart.LineController.defaults;
 Chart.register(ChartLineVCursor);
+Chart.registry.getPlugin('tooltip').positioners.dataXCursorY = (chartElements, coordinates)=>{
+    if(chartElements.length > 0) {
+        return {x:chartElements[0].element.x, y: coordinates.y}
+    } else {
+        return coordinates;
+    }
+}
+Chart.registry.getPlugin('tooltip').positioners.cursorXCursorY = (chartElements, coordinates)=>coordinates;
+Chart.registry.getPlugin('tooltip').positioners.configurable = (chartElements, coordinates)=>{
+    const mode = localStorage.getItem("chart-tooltip-position") || "dataXCursorY";
+    return Chart.registry.getPlugin('tooltip').positioners[mode](chartElements, coordinates);
+}
