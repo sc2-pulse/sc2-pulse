@@ -227,7 +227,8 @@ class Session
 
     static initThemes()
     {
-        Session.theme = THEME.LIGHT;
+        const themeCookie = Util.getCookie("theme");
+        Session.theme = themeCookie ? EnumUtil.enumOfName(themeCookie, THEME) : THEME.LIGHT;
         Session.themeLinks.set(THEME.LIGHT, document.querySelector("#bootstrap-theme-light"));
         let darkThemeLink = document.querySelector("#bootstrap-theme-dark");
         if(!darkThemeLink)
