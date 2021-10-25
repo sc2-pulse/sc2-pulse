@@ -252,6 +252,8 @@ th.hoverable span
     border-radius: 0.5em;
     z-index: 9999;
     padding: 0.5em;
+    transition-property: all;
+    transition-duration: 0.1s;
 }
 
 .chartjs-tooltip *
