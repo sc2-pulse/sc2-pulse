@@ -411,8 +411,8 @@ class ChartUtil
         let left = positionX + caretX - width / 2;
         let space = SC2Restful.REM; // This for making space between the caret and the element.
 
-        const isLeft = left < (canvasRect.width - 40) / 2 ? true : false;
-        const isTop = top < (canvasRect.height - 40) / 2 ? true : false;
+        const isLeft = caretX < (canvasRect.width) / 2 ? true : false;
+        const isTop = caretY < (canvasRect.height) / 2 ? true : false;
 
         const xAlign = localStorage.getItem("chart-tooltip-x-align") == "auto"
             ? isLeft ? "left" : "right"
