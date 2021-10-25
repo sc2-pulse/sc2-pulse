@@ -104,7 +104,26 @@ class ChartUtil
                         intersect: false
                     },
                     layout: {padding: {right: 15}},
-                    animation: false,
+                    ...(config.performance === "fast") && {animation:
+                    {
+                        duration: 0
+                    }},
+                    transitions:
+                    {
+                        active:{animation:{duration: config.performance === "fast" ? 0 : 300}},
+                        resize:{animation:{duration: 0}},
+                        show: {animation:{duration: 0}},
+                        hide: {animation:{duration: 0}},
+                        reset: {animation:{duration: 0}},
+                        zoom:
+                        {
+                            animation:
+                            {
+                                duration: 500,
+                                easing: 'easeInSine'
+                            }
+                        }
+                    },
                     plugins:
                     {
                         tooltip:
@@ -208,7 +227,7 @@ class ChartUtil
         if(!ctl || !ctl.classList.contains("active")) return;
 
         const chart = ChartUtil.CHARTS.get(ctl.getAttribute("data-chartable-id"));
-        chart.resetZoom();
+        chart.resetZoom('zoom');
         ctl.textContent = "ctrl+mouse wheel/shift+mouse drag to zoom, mouse drag to pan";
         ctl.classList.remove("active");
         chart.customConfig.isZoomed = false;
