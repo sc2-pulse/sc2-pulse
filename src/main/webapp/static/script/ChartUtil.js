@@ -415,23 +415,23 @@ class ChartUtil
         const isTop = top < (canvasRect.height - 40) / 2 ? true : false;
 
         const xAlign = localStorage.getItem("chart-tooltip-x-align") == "auto"
-            ? isLeft ? "right" : "left"
-            : localStorage.getItem("chart-tooltip-x-align") || "right"
+            ? isLeft ? "left" : "right"
+            : localStorage.getItem("chart-tooltip-x-align") || "left"
         const yAlign = localStorage.getItem("chart-tooltip-y-align") == "auto"
-            ? isTop ? "bottom" : "top"
-            : localStorage.getItem("chart-tooltip-y-align") || "bottom";
+            ? isTop ? "top" : "bottom"
+            : localStorage.getItem("chart-tooltip-y-align") || "top";
 
-        if (yAlign === "top") {
+        if (yAlign === "bottom") {
           top += height + space;
         } else if (yAlign === "center") {
           top += height / 2;
-        } else if (yAlign === "bottom") {
+        } else if (yAlign === "top") {
           top -= space;
         }
-        if (xAlign === "left" || (xAlign === "center" && isLeft)) {
+        if (xAlign === "right" || (xAlign === "center" && !isLeft)) {
           left = left + width / 2 - space / 2;
           left = left + space * 2;
-        } else if (xAlign === "right" || (xAlign === "center" && !isLeft)) {
+        } else if (xAlign === "left" || (xAlign === "center" && isLeft)) {
           left -= width / 2;
           left = left - space;
         }
