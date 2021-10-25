@@ -415,7 +415,7 @@ class ChartUtil
         const isTop = caretY < (canvasRect.height) / 2 ? true : false;
 
         const xAlign = localStorage.getItem("chart-tooltip-x-align") == "auto"
-            ? isLeft ? "left" : "right"
+            ? isLeft ? "right" : "left"
             : localStorage.getItem("chart-tooltip-x-align") || "left"
         const yAlign = localStorage.getItem("chart-tooltip-y-align") == "auto"
             ? isTop ? "top" : "bottom"
