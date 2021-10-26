@@ -1,6 +1,9 @@
 // Copyright (C) 2020 Oleksandr Masniuk and contributors
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
+const CHART_ZOOM_MOD_KEY = "ctrl";
+const CHART_ZOOM_EVENT_MOD_KEY = CHART_ZOOM_MOD_KEY + "Key";
+
 class ChartUtil
 {
 
@@ -167,17 +170,17 @@ class ChartUtil
                                 enabled: true,
                                 mode: config.zoom,
                                 onPan: ChartUtil.onZoom,
-                                onPanStart: ctx=>!ctx.event.srcEvent.ctrlKey
+                                onPanStart: ctx=>!ctx.event.srcEvent[CHART_ZOOM_EVENT_MOD_KEY]
                             },
                             zoom:
                             {
                                 mode: config.zoom,
                                 onZoom: ChartUtil.onZoom,
-                                wheel:{enabled: true, modifierKey: "ctrl"},
+                                wheel:{enabled: true, modifierKey: CHART_ZOOM_MOD_KEY},
                                 drag:
                                 {
                                     enabled: true,
-                                    modifierKey: "ctrl",
+                                    modifierKey: CHART_ZOOM_MOD_KEY,
                                     backgroundColor: "rgba(0, 176, 244, 0.15)",
                                     borderColor: "rgb(0, 176, 244)",
                                     borderWidth: "0.5"
@@ -210,7 +213,7 @@ class ChartUtil
         zoomCtl.setAttribute("type", "button");
         zoomCtl.classList.add("btn", "btn-outline-info", "chart-zoom-ctl");
         zoomCtl.setAttribute("data-chartable-id", chart.customConfig.chartable);
-        zoomCtl.textContent = "ctrl+wheel/ctrl+mouse drag to zoom, mouse drag to pan";
+        zoomCtl.textContent = `${CHART_ZOOM_MOD_KEY}+mouse wheel/${CHART_ZOOM_MOD_KEY}+mouse drag to zoom, mouse drag to pan`;;
         zoomCtl.addEventListener("click", ChartUtil.resetZoom);
         chart.canvas.closest(".container-chart").prepend(zoomCtl);
     }
@@ -218,7 +221,7 @@ class ChartUtil
     static onCanvasInteraction(evt)
     {
         const chartable = document.querySelector('[data-chart-id="' + evt.target.id +  '"]').id;
-        const active = evt.shiftKey || evt.ctrlKey;
+        const active = evt[CHART_ZOOM_EVENT_MOD_KEY];
         if(active) document.querySelector('#chartjs-tooltip-' + chartable).style.opacity = 0;
         ChartUtil.CHARTS.get(chartable).customConfig.zoomModKeyDown = active;
     }
@@ -236,7 +239,7 @@ class ChartUtil
 
         const chart = ChartUtil.CHARTS.get(ctl.getAttribute("data-chartable-id"));
         chart.resetZoom('zoom');
-        ctl.textContent = "ctrl+mouse wheel/ctrl+mouse drag to zoom, mouse drag to pan";
+        ctl.textContent = `${CHART_ZOOM_MOD_KEY}+mouse wheel/${CHART_ZOOM_MOD_KEY}+mouse drag to zoom, mouse drag to pan`;
         ctl.classList.remove("active");
         chart.customConfig.isZoomed = false;
     }
