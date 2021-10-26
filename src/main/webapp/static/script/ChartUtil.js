@@ -166,7 +166,8 @@ class ChartUtil
                             {
                                 enabled: true,
                                 mode: config.zoom,
-                                onPan: ChartUtil.onZoom
+                                onPan: ChartUtil.onZoom,
+                                onPanStart: ctx=>!ctx.event.srcEvent.ctrlKey
                             },
                             zoom:
                             {
