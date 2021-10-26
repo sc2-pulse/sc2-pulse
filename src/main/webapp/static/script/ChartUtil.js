@@ -103,7 +103,14 @@ class ChartUtil
                         position: "nearest",
                         intersect: false
                     },
-                    layout: {padding: {right: 15}},
+                    layout:
+                    {
+                        padding:
+                        {
+                            left: config.xType === "time" && config.zoom ? 20 : 0,
+                            right: config.xType === "time" && config.zoom ? 20 : 15
+                        }
+                    },
                     ...(config.performance === "fast") && {animation:
                     {
                         duration: 0
