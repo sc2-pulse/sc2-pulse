@@ -99,7 +99,7 @@ public class MatchService
         LOG.debug("Saved {} previously failed matches", r1);
         //clear here to avoid unbound retries of the same characters
         return r1 + saveMatches(playerCharacterDAO
-            .findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()), regions));
+            .findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()), regions), true);
     }
 
     private int saveFailedMatches()
@@ -115,13 +115,13 @@ public class MatchService
             else
             {
                 LOG.debug("Retrying {} previously failed matches", chars.size());
-                i += saveMatches(chars);
+                i += saveMatches(chars, false);
             }
         }
         return i;
     }
 
-    private int saveMatches(Iterable<? extends PlayerCharacter> characters)
+    private int saveMatches(Iterable<? extends PlayerCharacter> characters, boolean saveFailedCharacters)
     {
         List<Future<?>> dbTasks = new ArrayList<>();
         AtomicInteger count = new AtomicInteger(0);
@@ -135,7 +135,7 @@ public class MatchService
             .toStream()
             .forEach(m->dbTasks.add(dbExecutorService.submit(()->matchService.saveMatches(m))));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
-        failedCharacters.add(errors);
+        if(saveFailedCharacters) failedCharacters.add(errors);
         return count.get();
     }
 
