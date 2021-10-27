@@ -54,6 +54,8 @@ class ChartUtil
                         {
                             title: {display: false, text: config.xTitle},
                             grid: {display: false},
+                            //this fixes axis jitter when panning via zoom plugin
+                            ...(config.zoom) && {beforeFit: ChartUtil.trimTicks},
                             ticks:
                             {
                                 callback: function(value, valIx, vals)
@@ -66,18 +68,36 @@ class ChartUtil
 
                                     return val.substring(indexOfStart + 1, indexOfEnd);
                                 },
+                                //this fixes axis jitter when panning via zoom plugin
+                                ...(config.zoom) && {align: "start"},
                                 minRotation: 0,
                                 maxRotation: 0,
                                 autoSkipPadding: config.type === "bar" && config.xType !== "time"
                                     ? 3
-                                    : config.xType !== "time" ? 20 : 60,
+                                    : config.xType !== "time" ? 20 : 40,
                                 ...(config.performance === "fast") && {sampleSize: 50}
                             },
                             stacked: config.stacked === "true" ? true : false,
                             offset: config.type === "bar" ? true : false,
                             ...(config.xType === "time") && {
                                 type: "time",
-                                time: {unit: config.xTimeUnit == "false" ? false : config.xTimeUnit}
+                                time:
+                                {
+                                    unit: config.xTimeUnit == "false" ? false : config.xTimeUnit,
+                                    displayFormats:
+                                    {
+                                      datetime: luxon.DateTime.DATETIME_SHORT,
+                                      millisecond: luxon.DateTime.DATETIME_SHORT,
+                                      second: luxon.DateTime.DATETIME_SHORT,
+                                      minute: luxon.DateTime.DATETIME_SHORT,
+                                      hour: luxon.DateTime.DATETIME_SHORT,
+                                      day: luxon.DateTime.DATETIME_SHORT,
+                                      week: luxon.DateTime.DATETIME_SHORT,
+                                      month: luxon.DateTime.DATETIME_SHORT,
+                                      quarter: luxon.DateTime.DATETIME_SHORT,
+                                      year: luxon.DateTime.DATETIME_SHORT
+                                    }
+                                }
                             }
                         },
                         y:
@@ -112,8 +132,7 @@ class ChartUtil
                     {
                         padding:
                         {
-                            left: config.xType === "time" && config.zoom ? 20 : 0,
-                            right: config.xType === "time" && config.zoom ? 20 : 15
+                            right: 15
                         }
                     },
                     ...(config.performance === "fast") && {animation:
@@ -206,6 +225,13 @@ class ChartUtil
         }
         ChartUtil.updateChartZoomLimits(chart);
         return chart;
+    }
+
+    static trimTicks(ctx)
+    {
+        if(ctx.ticks.length <= 1) return;
+
+        ctx.ticks[ctx.ticks.length - 1] = {label: ""};
     }
 
     static createZoomControls(chart)
