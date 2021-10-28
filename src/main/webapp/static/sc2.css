@@ -107,7 +107,8 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     background-color: #22272a;
 }
 
-#dd-desktop-left-container
+#dd-desktop-left-container,
+.sponsor-desktop-side-container
 {
     width: 100%;
     height: 100%;
@@ -115,11 +116,17 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     position: relative;
 }
 
-#dd-desktop-left
+#dd-desktop-left,
+.sponsor-desktop-side
 {
     position: absolute;
     top: 0;
     left: 0;
+}
+
+.sponsor-desktop-side
+{
+    width: 100%;
 }
 
 .adsbygoogle
@@ -856,4 +863,18 @@ body.modal-open.modal-open-no-popup
         display: none;
     }
 
+}
+
+@media (min-width: 1700px) {
+    .sponsor-mobile-container
+    {
+        display: none;
+    }
+}
+
+@media (max-width: 1699px) {
+    .sponsor-desktop-side-container
+    {
+        display: none;
+    }
 }

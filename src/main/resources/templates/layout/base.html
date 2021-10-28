@@ -101,14 +101,13 @@
              th:if="${@supporterService.getSponsoredLink() != null}"
              th:utext="${@supporterService.getSponsoredLink()}">
         </div>
-        <div class="container text-secondary"
-            th:if="${@supporterService.getSponsoredT2Links().size() > 0}">
-            <div class="row">
-                <th:block th:each="t2Link : ${@supporterService.getSponsoredT2Links()}">
-                    <div th:class="|mb-3 col-lg-${12 / @supporterService.getSponsoredT2Links().size()}|"
-                        th:utext="${t2Link}"></div>
-                </th:block>
-            </div>
+        <div class="container sponsor-mobile-container"
+             th:if="${not @supporterService.getSponsoredImageLinks().isEmpty()}">
+            <th:block th:each="sponsorRightEntry : ${@supporterService.getSponsoredImageLinks().entrySet()}">
+                <a th:href="${sponsorRightEntry.getValue()}" target="_blank" rel="noopener sponsored">
+                    <img th:src="@{|/static/icon/sponsor/${sponsorRightEntry.getKey()}|}" alt="sponsored link" class="mb-3 mr-3">
+                </a>
+            </th:block>
         </div>
         <div class="container mb-3 text-secondary"
              th:if="${@supporterService.getSupporters().size() > 0}"
@@ -129,7 +128,20 @@
     </div>
     <div id="section-side-bottom" class="section-side"></div>
     </div>
-    <div id="section-side-right" class="section-side"></div>
+    <div id="section-side-right" class="section-side">
+        <div id="sponsor-desktop-right-container"
+             class="sponsor-desktop-side-container"
+             th:if="${not @supporterService.getSponsoredImageLinks().isEmpty()}">
+            <div id="sponsor-desktop-right" class="dd-block mt-5 sponsor-desktop-side" >
+                <th:block th:each="sponsorRightEntry : ${@supporterService.getSponsoredImageLinks().entrySet()}">
+                    <a th:href="${sponsorRightEntry.getValue()}" target="_blank" rel="noopener sponsored">
+                        <img th:src="@{|/static/icon/sponsor/${sponsorRightEntry.getKey()}|}" alt="sponsored link" class="mb-3">
+                    </a>
+                    <br/>
+                </th:block>
+            </div>
+        </div>
+    </div>
     </div>
     <script th:src="@{/webjars/jquery/jquery.slim.min.js}"></script>
     <script th:src="@{/webjars/popper.js/umd/popper.min.js}"></script>

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -26,6 +27,7 @@ public class SupporterService
     private final List<String> sponsorsT2;
     private final List<String> sponsoredT2Links;
     private final List<String> patrons;
+    private final Map<String, String> sponsoredImageLinks;
 
     @Autowired
     private SupporterService
@@ -36,7 +38,8 @@ public class SupporterService
         @Value("${com.nephest.battlenet.sc2.sponsor:#{''}}") String sponsor,
         @Value("${com.nephest.battlenet.sc2.sponsor.link:#{''}}") String sponsoredLink,
         @Value("${com.nephest.battlenet.sc2.sponsor.t2:#{''}}") List<String> sponsorsT2,
-        @Value("${com.nephest.battlenet.sc2.sponsor.t2.link:#{''}}") List<String> sponsoredT2Links
+        @Value("${com.nephest.battlenet.sc2.sponsor.t2.link:#{''}}") List<String> sponsoredT2Links,
+        @Value("#{${com.nephest.battlenet.sc2.sponsor.img:{:}}}") Map<String, String> sponsoredImageLinks
     )
     {
         this.rng = rng;
@@ -48,6 +51,7 @@ public class SupporterService
         this.sponsoredT2Links = sponsoredT2Links;
         this.patrons = Stream.concat(Stream.of(supporters, sponsorsT2).flatMap(Collection::stream), Stream.of(sponsor))
             .collect(Collectors.toList());
+        this.sponsoredImageLinks = sponsoredImageLinks;
     }
 
     public List<String> getDonors()
@@ -83,6 +87,11 @@ public class SupporterService
     public List<String> getSponsoredT2Links()
     {
         return sponsoredT2Links;
+    }
+
+    public Map<String, String> getSponsoredImageLinks()
+    {
+        return sponsoredImageLinks;
     }
 
 }
