@@ -414,7 +414,7 @@
             <header>
                 <h2>Find players by name, BattleTag, clan tag, or profile link</h2>
                 <form id="form-search" class="form-inline justify-content-center">
-                    <label class="sr-only" for="search-player-name">name, bTaG#123, [cLaN], link</label>
+                    <label class="sr-only" for="search-player-name">name, btag#123, [cLaN], link</label>
                     <input type="text" class="form-control mb-3 c-autofocus" id="search-player-name" name="name" placeholder="name, bTaG#123, [cLaN], link" required="required"/>
                     <button class="btn btn-primary mb-3" type="submit">
                         <span>Find</span>
@@ -422,7 +422,7 @@
                 </form>
             </header>
             <p>
-                Search is case-sensitive for BattleTags and clan tags.
+                Clan tag search is case sensitive.
             </p>
             <div id="search-result-all" class="d-none">
                 <div th:replace="~{fragments/table :: player-search('search-table', 'Players', '')}"></div>

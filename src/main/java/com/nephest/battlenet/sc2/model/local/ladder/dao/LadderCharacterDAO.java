@@ -114,7 +114,7 @@ public class LadderCharacterDAO
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
         "INNER JOIN account ON player_character.account_id = account.id "
-        + "WHERE account.battle_tag = :battleTag ", ""
+        + "WHERE LOWER(account.battle_tag) = LOWER(:battleTag) ", ""
     );
     private static final String FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY = String.format
     (

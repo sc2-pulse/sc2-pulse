@@ -233,7 +233,7 @@ public class LadderSearchIndependentIT
         verifyCharacterAccountStats(byAccountName);
         List<LadderDistinctCharacter> byProNickname = ladderCharacterDAO.findDistinctCharacters("refnickname");
         verifyProCharacterAccountStats(byProNickname);
-        List<LadderDistinctCharacter> byFullAccountName = ladderCharacterDAO.findDistinctCharacters("refaccount#123");
+        List<LadderDistinctCharacter> byFullAccountName = ladderCharacterDAO.findDistinctCharacters("rEfaccount#123");
         verifyCharacterAccountStats(byFullAccountName);
         List<LadderDistinctCharacter> byClanTag = ladderCharacterDAO.findDistinctCharacters("[clanTag]");
         verifyCharacterAccountStats(byClanTag);
