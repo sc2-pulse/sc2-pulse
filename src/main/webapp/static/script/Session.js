@@ -76,9 +76,8 @@ class Session
     {
         if (Session.currentAccount != null)
         {
-            CharacterUtil.updatePersonalCharacters();
+            CharacterUtil.updatePersonalCharactersView();
             CharacterUtil.updateFollowingCharactersView();
-            FollowUtil.getMyFollowing();
             CharacterUtil.updateAllCharacterReports();
             for(const e of document.querySelectorAll(".login-anonymous")) e.classList.add("d-none");
             for(const e of document.querySelectorAll(".login-user")) e.classList.remove("d-none");
