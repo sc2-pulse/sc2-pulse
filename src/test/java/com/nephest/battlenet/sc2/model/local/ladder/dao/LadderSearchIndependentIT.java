@@ -3,31 +3,47 @@
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringJUnitConfig(classes = DatabaseTestConfig.class)
+@SpringBootTest(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class LadderSearchIndependentIT
@@ -73,19 +89,48 @@ public class LadderSearchIndependentIT
     @Autowired
     private ClanDAO clanDAO;
 
-    @BeforeEach
-    public void beforeAll(@Autowired DataSource dataSource)
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    private static MockMvc mvc;
+
+    private static final String BATTLETAG = "refaccount123#123";
+
+    @BeforeAll
+    public static void beforeAll
+    (
+        @Autowired DataSource dataSource,
+        @Autowired AccountDAO accountDAO,
+        @Autowired WebApplicationContext webApplicationContext
+    )
     throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+            mvc = MockMvcBuilders
+                .webAppContextSetup(webApplicationContext)
+                .apply(springSecurity())
+                .alwaysDo(print())
+                .build();
         }
     }
 
-    @AfterEach
-    public void afterAll(@Autowired DataSource dataSource)
+    @BeforeEach
+    public void beforeEach(@Autowired DataSource dataSource)
+    throws SQLException
+    {
+        try(Connection connection = dataSource.getConnection())
+        {
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+            accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
+        }
+    }
+
+    @AfterAll
+    public static void afterAll(@Autowired DataSource dataSource)
     throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
@@ -95,7 +140,9 @@ public class LadderSearchIndependentIT
     }
 
     @Test
+    @WithBlizzardMockUser(partition = Partition.GLOBAL, username = BATTLETAG)
     public void testStatsCalculation()
+    throws Exception
     {
         Region region = Region.EU;
         Season season1 = new Season(null, 1, region, 2020, 1,
@@ -249,6 +296,42 @@ public class LadderSearchIndependentIT
         assertEquals(98, byProfileLink.getRatingCurrent());
         assertEquals(149, byProfileLink.getGamesPlayedCurrent());
         assertEquals(2147483647, byProfileLink.getRankCurrent());
+
+        mvc.perform
+        (
+            get("/api/my/following/characters")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+        .andExpect(status().isOk())
+        .andExpect(content().json("[]"))
+        .andReturn();
+
+        mvc.perform
+        (
+            post("/api/my/following/" + acc.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+        mvc.perform
+        (
+            post("/api/my/following/" + acc2.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+        .andExpect(status().isOk())
+        .andReturn();
+
+        List<LadderDistinctCharacter> byFollowing = Arrays.stream(objectMapper.readValue(mvc.perform(get(
+            "/api/my/following/characters").contentType(MediaType.APPLICATION_JSON))
+            .andExpect(status().isOk())
+            .andReturn()
+            .getResponse()
+            .getContentAsString(), LadderDistinctCharacter[].class)).collect(Collectors.toList());
+        verifyProCharacterAccountStats(byFollowing);
 
         //sorted asc
         List<Long> proCharacterIds = playerCharacterDAO.findProPlayerCharacterIds();

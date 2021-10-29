@@ -1029,6 +1029,14 @@ class CharacterUtil
             .catch(error => Session.onPersonalException(error));
     }
 
+    static updateFollowingCharactersView()
+    {
+        const table = document.querySelector("#following-characters-table");
+        if(!table) return;
+
+        CharacterUtil.updateCharacters(table, Model.DATA.get(VIEW.FOLLOWING_CHARACTERS).get(VIEW_DATA.SEARCH));
+    }
+
     static enhanceSearchForm()
     {
         const form = document.getElementById("form-search");

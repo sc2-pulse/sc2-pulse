@@ -27,18 +27,23 @@ public class CommonPersonalData
     @NotNull
     private final List<AccountFollowing> accountFollowings;
 
+    @NotNull
+    private final List<LadderDistinctCharacter> followingCharacters;
+
     public CommonPersonalData
     (
         Account account,
         Collection<? extends SC2PulseAuthority> roles,
         List<LadderDistinctCharacter> characters,
-        List<AccountFollowing> accountFollowings
+        List<AccountFollowing> accountFollowings,
+        List<LadderDistinctCharacter> followingCharacters
     )
     {
         this.account = account;
         this.roles = roles;
         this.characters = characters;
         this.accountFollowings = accountFollowings;
+        this.followingCharacters = followingCharacters;
     }
 
     public Account getAccount()
@@ -59,6 +64,11 @@ public class CommonPersonalData
     public List<AccountFollowing> getAccountFollowings()
     {
         return accountFollowings;
+    }
+
+    public List<LadderDistinctCharacter> getFollowingCharacters()
+    {
+        return followingCharacters;
     }
 
 }

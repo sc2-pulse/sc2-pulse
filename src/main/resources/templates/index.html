@@ -461,6 +461,20 @@
                         </li>
                         <li class="nav-item">
                             <a
+                                    id="personal-following-characters-tab"
+                                    class="nav-link"
+                                    data-toggle="pill"
+                                    data-target="#personal-following-characters"
+                                    href="#personal-following-characters"
+                                    role="tab"
+                                    aria-controls="personal-following-characters"
+                                    aria-selected="false"
+                            >
+                                Following
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a
                                     id="personal-characters-tab"
                                     class="nav-link active"
                                     data-toggle="pill"
@@ -537,6 +551,13 @@
                             <span th:text="${@accountFollowingService.getFollowingMax()}" th:remove="tag"></span> players max.
                         </p>
                         <div th:replace="~{fragments/table :: team('following-ladder-container', 'following-ladder', '', _)}"></div>
+                    </section>
+                    <section id="personal-following-characters"
+                             class="tab-pane fade"
+                             data-view-title="Following"
+                             data-view-name="following-characters"
+                    >
+                        <div th:replace="~{fragments/table :: player-search('following-characters-table', 'Players you follow', '')}"></div>
                     </section>
                     <section
                             id="all-character-reports"

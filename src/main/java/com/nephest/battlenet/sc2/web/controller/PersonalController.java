@@ -58,7 +58,8 @@ public class PersonalController
             getAccount(user),
             user.getAuthorities().stream().map(a->(SC2PulseAuthority) a).collect(Collectors.toList()),
             ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(user.getAccount().getId()),
-            accountFollowingService.getAccountFollowingList(user.getAccount().getId())
+            accountFollowingService.getAccountFollowingList(user.getAccount().getId()),
+            ladderCharacterDAO.findDistinctCharactersByFollowing(user.getAccount().getId())
         );
     }
 
@@ -97,6 +98,12 @@ public class PersonalController
     public List<AccountFollowing> getFollowingList(@AuthenticationPrincipal AccountUser user)
     {
         return accountFollowingService.getAccountFollowingList(user.getAccount().getId());
+    }
+
+    @GetMapping("/following/characters")
+    public List<LadderDistinctCharacter> getFollowingCharacters(@AuthenticationPrincipal AccountUser user)
+    {
+        return ladderCharacterDAO.findDistinctCharactersByFollowing(user.getAccount().getId());
     }
 
     @GetMapping("/following/ladder")

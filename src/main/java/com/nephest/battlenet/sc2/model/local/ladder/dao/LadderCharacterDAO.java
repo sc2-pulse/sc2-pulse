@@ -137,6 +137,14 @@ public class LadderCharacterDAO
         + "WHERE clan.tag = :clanTag ", ""
     );
 
+    private static final String FIND_DISTINCT_CHARACTER_BY_FOLLOWING_QUERY = String.format
+    (
+        FIND_DISTINCT_CHARACTER_FORMAT,
+        "INNER JOIN account ON player_character.account_id = account.id "
+        + "INNER JOIN account_following ON account.id = account_following.following_account_id "
+        + "WHERE account_following.account_id = :accountId", ""
+    );
+
     private static final String FIND_LINKED_DISTINCT_CHARACTERS_TEMPLATE = String.format
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
@@ -332,6 +340,20 @@ public class LadderCharacterDAO
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template
             .query(FIND_DISTINCT_CHARACTER_BY_CLAN_TAG_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
+    }
+
+    public List<LadderDistinctCharacter> findDistinctCharactersByFollowing(Long accountId)
+    {
+        if(accountId == null) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("accountId", accountId)
+            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
+        return template
+            .query(FIND_DISTINCT_CHARACTER_BY_FOLLOWING_QUERY, params, DISTINCT_CHARACTER_ROW_MAPPER);
     }
 
     public List<LadderDistinctCharacter> findLinkedDistinctCharactersByCharacterId(Long playerCharacterId)

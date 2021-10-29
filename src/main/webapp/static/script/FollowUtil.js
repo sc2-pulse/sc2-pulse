@@ -39,6 +39,10 @@ class FollowUtil
                     if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
                     document.querySelector("#follow-button").classList.remove("d-none");
                     document.querySelector("#unfollow-button").classList.add("d-none");
+                    const updatedFollowing = Model.DATA.get(VIEW.FOLLOWING_CHARACTERS).get(VIEW_DATA.SEARCH)
+                        .filter(f=>f.members.account.id != id);
+                    Model.DATA.get(VIEW.FOLLOWING_CHARACTERS).set(VIEW_DATA.SEARCH, updatedFollowing);
+                    CharacterUtil.updateFollowingCharactersView();
                     return FollowUtil.getMyFollowing();
                 }
             )

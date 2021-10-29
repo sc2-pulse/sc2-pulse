@@ -77,6 +77,7 @@ class Session
         if (Session.currentAccount != null)
         {
             CharacterUtil.updatePersonalCharacters();
+            CharacterUtil.updateFollowingCharactersView();
             FollowUtil.getMyFollowing();
             CharacterUtil.updateAllCharacterReports();
             for(const e of document.querySelectorAll(".login-anonymous")) e.classList.add("d-none");
@@ -339,6 +340,7 @@ class PersonalUtil
             .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json.characters);
+                Model.DATA.get(VIEW.FOLLOWING_CHARACTERS).set(VIEW_DATA.SEARCH, json.followingCharacters);
                 Session.currentFollowing = json.accountFollowings;
                 Session.currentRoles = json.roles;
                 PersonalUtil.updateMyAccount(json); Util.setGeneratingStatus(STATUS.SUCCESS); res()}))
