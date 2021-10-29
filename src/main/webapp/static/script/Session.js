@@ -20,28 +20,9 @@ class Session
         Util.setGeneratingStatus(STATUS.ERROR, error.message, error);
     }
 
-    //make 1 request to renew all cookies/etc to prevent conflicts in request batches
-    static renewSession()
-    {
-        if(Session.currentSessionRenewal) return Session.currentSessionRenewal;
-
-        //-45 just to be safe
-        if(Session.sessionStartTimestamp && Date.now() - Session.sessionStartTimestamp >= (SESSION_TIMEOUT_SECONDS - 45) * 1000) {
-            Session.currentSessionRenewal = fetch(ROOT_CONTEXT_PATH + "api/status/stale")
-                .then(e=>new Promise((res, rej)=>{
-                     Session.sessionStartTimestamp = Date.now();
-                     Session.currentSessionRenewal = null;
-                     res();
-                }));
-            return Session.currentSessionRenewal || Promise.resolve();
-        } else {
-            return Promise.resolve();
-        }
-    }
-
     static beforeRequest()
     {
-        return Session.renewSession();
+        return Promise.resolve();
     }
 
     static renewBlizzardRegistration()
@@ -324,7 +305,6 @@ Session.themeLinks = new Map();
 Session.deviceThemeCallback=function(e){Session.setTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
     ? THEME.DARK : THEME.LIGHT)};
 Session.sessionStartTimestamp = null;
-Session.currentSessionRenewal = null;
 
 Session.sectionParams = new Map();
 

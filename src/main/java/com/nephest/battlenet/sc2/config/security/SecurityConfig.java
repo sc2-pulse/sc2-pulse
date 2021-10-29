@@ -16,10 +16,12 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
 import org.springframework.security.oauth2.client.*;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -34,6 +36,7 @@ extends WebSecurityConfigurerAdapter
 {
 
     public static final Duration REMEMBER_ME_DURATION = Duration.ofDays(365);
+    public static final String REMEMBER_ME_COOKIE_NAME = "remember-me";
 
     @Autowired
     private AccountDAO accountDAO;
@@ -46,6 +49,9 @@ extends WebSecurityConfigurerAdapter
 
     @Autowired
     private PersistentTokenRepository persistentTokenRepository;
+
+    @Autowired
+    private ConcurrentPersistentTokenBasedRememberMeService concurrentPersistentTokenBasedRememberMeService;
 
     @Override
     public void configure(HttpSecurity http)
@@ -71,9 +77,8 @@ extends WebSecurityConfigurerAdapter
                 .defaultSuccessUrl("/?#personal-characters")
                 .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, accountRoleDAO))
             .and().and().rememberMe()
-                .tokenRepository(persistentTokenRepository)
-                .alwaysRemember(true)
-                .tokenValiditySeconds((int) REMEMBER_ME_DURATION.toSeconds());
+                .rememberMeServices(concurrentPersistentTokenBasedRememberMeService)
+                .key(concurrentPersistentTokenBasedRememberMeService.getKey());
     }
 
     //the been definition is needed by remember me
@@ -89,6 +94,25 @@ extends WebSecurityConfigurerAdapter
         JdbcTokenRepositoryImpl repository = new JdbcTokenRepositoryImpl();
         repository.setDataSource(dataSource);
         return repository;
+    }
+
+    @Bean
+    public ConcurrentPersistentTokenBasedRememberMeService concurrentPersistentTokenBasedRememberMeService
+    (
+        @Autowired UserDetailsService userDetailsService,
+        @Autowired PersistentTokenRepository persistentTokenRepository
+    )
+    {
+        PersistentTokenBasedRememberMeServices services = new PersistentTokenBasedRememberMeServices
+        (
+            new Base64StringKeyGenerator().generateKey(),
+            userDetailsService,
+            persistentTokenRepository
+        );
+        services.setAlwaysRemember(true);
+        services.setTokenValiditySeconds((int) REMEMBER_ME_DURATION.toSeconds());
+        services.setCookieName(REMEMBER_ME_COOKIE_NAME);
+        return new ConcurrentPersistentTokenBasedRememberMeService(services);
     }
 
     @Bean
