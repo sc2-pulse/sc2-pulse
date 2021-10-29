@@ -141,7 +141,7 @@ class LadderUtil
             document.getElementById("following-ladder"),
             Model.DATA.get(VIEW.FOLLOWING_LADDER).get(VIEW_DATA.SEARCH)
         );
-        document.getElementById("following-ladder-container").classList.remove("d-none");
+        document.getElementById("following-ladder").classList.remove("d-none");
     }
 
     static updateMyLadder(formParams)
