@@ -102,7 +102,7 @@
              th:utext="${@supporterService.getSponsoredLink()}">
         </div>
         <div class="container sponsor-mobile-container"
-             th:if="${not @supporterService.getSponsoredImageLinks().isEmpty()}">
+             th:if="${not @supporterService.getSponsoredImageLinks().isEmpty() and showAds == true}">
             <th:block th:each="sponsorRightEntry : ${@supporterService.getSponsoredImageLinks().entrySet()}">
                 <a th:href="${sponsorRightEntry.getValue()}" target="_blank" rel="noopener sponsored" class="text-break d-inline-block mb-3 mr-3">
                     <img th:src="@{|/static/icon/sponsor/${sponsorRightEntry.getKey()}|}" th:alt="${sponsorRightEntry.getValue()}">
@@ -131,7 +131,7 @@
     <div id="section-side-right" class="section-side">
         <div id="sponsor-desktop-right-container"
              class="sponsor-desktop-side-container"
-             th:if="${not @supporterService.getSponsoredImageLinks().isEmpty()}">
+             th:if="${not @supporterService.getSponsoredImageLinks().isEmpty() and showAds == true}">
             <div id="sponsor-desktop-right" class="dd-block mt-5 sponsor-desktop-side" >
                 <th:block th:each="sponsorRightEntry : ${@supporterService.getSponsoredImageLinks().entrySet()}">
                     <a th:href="${sponsorRightEntry.getValue()}" target="_blank" rel="noopener sponsored" class="text-break d-inline-block mb-3">
