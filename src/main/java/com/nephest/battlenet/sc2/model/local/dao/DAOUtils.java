@@ -122,6 +122,23 @@ public final class DAOUtils
         return updateOriginals(originalArray, mergedList, comparator, originalUpdater, null);
     }
 
+    public static <T, K>  T[] updateOriginalIds
+    (
+        T[] originalArray,
+        List<K> mergedList,
+        Comparator<T> comparator,
+        BiConsumer<T, K> originalUpdater
+    )
+    {
+        Arrays.sort(originalArray, comparator);
+        for(int i = 0, mergedIx = -1; i < originalArray.length; i++)
+        {
+            if(i == 0 || !originalArray[i].equals(originalArray[i - 1])) mergedIx++;
+            originalUpdater.accept(originalArray[i], mergedList.get(mergedIx));
+        }
+        return originalArray;
+    }
+
     public static <T> Predicate<T> beanValidationPredicate(Validator validator){
         return o->
         {
