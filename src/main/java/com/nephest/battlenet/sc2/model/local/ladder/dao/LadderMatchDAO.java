@@ -43,13 +43,14 @@ public class LadderMatchDAO
             + "FROM match_filter "
             + "INNER JOIN match USING(id) "
             + "INNER JOIN match_participant ON match_filter.id = match_participant.match_id "
-            + "WHERE (date, type, map) %1$s (:dateAnchor, :typeAnchor, :mapAnchor) "
-            + "GROUP BY date, type, map "
-            + "ORDER BY (date, type, map) %2$s "
+            + "WHERE (date, type, map_id) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor) "
+            + "GROUP BY date, type, map_id "
+            + "ORDER BY (date, type, map_id) %2$s "
             + "LIMIT :limit"
         + ") "
         + "SELECT "
         + MatchDAO.STD_SELECT + ", "
+        + SC2MapDAO.STD_SELECT + ", "
         + MatchParticipantDAO.STD_SELECT + ", "
         + TeamDAO.STD_SELECT + ", "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
@@ -68,6 +69,7 @@ public class LadderMatchDAO
 
         + "FROM valid_match_filter "
         + "INNER JOIN match ON valid_match_filter.id = match.id "
+        + "INNER JOIN map ON match.map_id = map.id "
         + "INNER JOIN match_participant ON match.id = match_participant.match_id "
         + "LEFT JOIN team ON match_participant.team_id = team.id "
         + "LEFT JOIN division ON team.division_id = division.id "
@@ -88,7 +90,7 @@ public class LadderMatchDAO
             + "ON player_character.id = confirmed_cheater_report.player_character_id "
             + "AND confirmed_cheater_report.type = :cheaterReportType "
             + "AND confirmed_cheater_report.status = true "
-        + "ORDER BY (match.date , match.type , match.map) %2$s, "
+        + "ORDER BY (match.date , match.type , match.map_id) %2$s, "
             + "(match_participant.match_id, match_participant.player_character_id) %2$s ";
 
     public static String FIND_MATCHES_BY_CHARACTER_ID =
@@ -157,7 +159,12 @@ public class LadderMatchDAO
 
             do
             {
-                LadderMatch match = new LadderMatch(MatchDAO.getStdRowMapper().mapRow(rs, 0), new ArrayList<>());
+                LadderMatch match = new LadderMatch
+                (
+                    MatchDAO.getStdRowMapper().mapRow(rs, 0),
+                    SC2MapDAO.STD_ROW_MAPPER.mapRow(rs, 0),
+                    new ArrayList<>()
+                );
                 matches.add(match);
                 while(!rs.isAfterLast() && rs.getLong("match.id") == match.getMatch().getId())
                     match.getParticipants().add(getParticipantExtractor().extractData(rs));
@@ -188,7 +195,7 @@ public class LadderMatchDAO
     }
 
     public PagedSearchResult<List<LadderMatch>> findMatchesByCharacterId
-    (long characterId, OffsetDateTime dateAnchor, BaseMatch.MatchType typeAnchor, String mapAnchor, int page, int pageDiff)
+    (long characterId, OffsetDateTime dateAnchor, BaseMatch.MatchType typeAnchor, int mapAnchor, int page, int pageDiff)
     {
         if(Math.abs(pageDiff) != 1) throw new IllegalArgumentException("Invalid page diff");
         boolean forward = pageDiff > -1;
@@ -198,7 +205,7 @@ public class LadderMatchDAO
             .addValue("playerCharacterId", characterId)
             .addValue("dateAnchor", dateAnchor)
             .addValue("typeAnchor", conversionService.convert(typeAnchor, Integer.class))
-            .addValue("mapAnchor", mapAnchor)
+            .addValue("mapIdAnchor", mapAnchor)
             .addValue("limit", getResultsPerPage())
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));

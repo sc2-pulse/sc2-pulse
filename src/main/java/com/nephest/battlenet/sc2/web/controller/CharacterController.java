@@ -73,7 +73,7 @@ public class CharacterController
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
             ladderMatchDAO.findMatchesByCharacterId(
-                id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult(),
+                id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1).getResult(),
             ladderTeamStateDAO.find(id),
             reportService.findReportsByCharacterId(id)
         );
@@ -85,7 +85,7 @@ public class CharacterController
         @PathVariable("id") long id,
         @PathVariable("dateAnchor") String dateAnchor,
         @PathVariable("typeAnchor") BaseMatch.MatchType typeAnchor,
-        @PathVariable("mapAnchor") String mapAnchor,
+        @PathVariable("mapAnchor") int mapAnchor,
         @PathVariable("page") int page,
         @PathVariable("pageDiff") int pageDiff
     )

@@ -425,19 +425,35 @@ CREATE TABLE "pro_team_member"
 CREATE INDEX "ix_pro_team_member_pro_team_id" ON "pro_team_member"("pro_team_id");
 CREATE INDEX "ix_pro_team_member_updated" ON "pro_team_member"("updated");
 
+CREATE TABLE "map"
+(
+    "id" SERIAL,
+    "name" TEXT NOT NULL,
+
+    PRIMARY KEY ("id"),
+
+    CONSTRAINT "uq_map_name"
+        UNIQUE("name")
+);
+
 CREATE TABLE "match"
 (
     "id" BIGSERIAL,
     "date" TIMESTAMP WITH TIME ZONE NOT NULL,
     "type" SMALLINT NOT NULL,
-    "map" TEXT NOT NULL,
+    "map_id" INTEGER NOT NULL,
     "region" SMALLINT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
 
-    CONSTRAINT "uq_match_date_type_map_region"
-        UNIQUE("date", "type", "map", "region")
+    CONSTRAINT "fk_match_map_id"
+        FOREIGN KEY ("map_id")
+        REFERENCES "map"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+
+    CONSTRAINT "uq_match_date_type_map_id_region"
+        UNIQUE("date", "type", "map_id", "region")
 )
 WITH (fillfactor = 90);
 

@@ -102,6 +102,9 @@ public class PlayerCharacterReportIT
     private LadderCharacterDAO ladderCharacterDAO;
 
     @Autowired
+    private SC2MapDAO mapDAO;
+
+    @Autowired
     private SeasonGenerator seasonGenerator;
 
     @Autowired
@@ -164,7 +167,8 @@ public class PlayerCharacterReportIT
     {
         byte[] localhost = InetAddress.getByName("127.0.0.1").getAddress();
         OffsetDateTime matchDateTime = SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay(ZoneId.of("UTC")).toOffsetDateTime();
-        Match match = matchDAO.merge(new Match(null, matchDateTime, BaseMatch.MatchType._1V1, "map", Region.EU))[0];
+        SC2Map map = mapDAO.merge(new SC2Map(null, "map"))[0];
+        Match match = matchDAO.merge(new Match(null, matchDateTime, BaseMatch.MatchType._1V1, map.getId(), Region.EU))[0];
         matchParticipantDAO.merge
         (
             new MatchParticipant(match.getId(), 1L, BaseMatch.Decision.WIN),
@@ -365,7 +369,7 @@ public class PlayerCharacterReportIT
             1L,
             OffsetDateTime.now(),
             BaseMatch.MatchType._1V1,
-            "map",
+            0,
             0, 1
         ).getResult().get(0);
         LadderPlayerCharacterReport[] reportsFinal = reports;

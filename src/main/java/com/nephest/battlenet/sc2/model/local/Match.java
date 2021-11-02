@@ -23,9 +23,12 @@ implements java.io.Serializable
         Comparator.comparing(Match::getDate)
             .thenComparing(Match::getType)
             .thenComparing(Match::getRegion)
-            .thenComparing(Match::getMap);
+            .thenComparing(Match::getMapId);
 
     private Long id;
+
+    @NotNull
+    private Integer mapId;
 
     @NotNull
     private Region region;
@@ -35,16 +38,17 @@ implements java.io.Serializable
 
     public Match(){}
 
-    public Match(Long id, @NotNull OffsetDateTime date, @NotNull MatchType type, @NotNull String map, @NotNull Region region)
+    public Match(Long id, @NotNull OffsetDateTime date, @NotNull MatchType type, @NotNull Integer mapId, @NotNull Region region)
     {
-        super(date, type, map);
+        super(date, type);
         this.id = id;
+        this.mapId = mapId;
         this.region = region;
     }
 
-    public static Match of(BlizzardMatch match, Region region)
+    public static Match of(BlizzardMatch match, Integer mapId, Region region)
     {
-        return new Match(null, match.getDate(), match.getType(), match.getMap(), region);
+        return new Match(null, match.getDate(), match.getType(), mapId, region);
     }
 
     @Override
@@ -55,20 +59,20 @@ implements java.io.Serializable
         Match otherMatch = (Match) o;
         return getDate().isEqual(otherMatch.getDate())
             && getType() == otherMatch.getType()
-            && getMap().equals(otherMatch.getMap())
+            && getMapId().equals(otherMatch.getMapId())
             && getRegion() == otherMatch.getRegion();
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getDate().toEpochSecond(), getType(), getMap(), getRegion());
+        return Objects.hash(getDate().toEpochSecond(), getType(), getMapId(), getRegion());
     }
 
     @Override
     public String toString()
     {
-        return String.format("%s[%s %s %s %s]", Match.class.getSimpleName(), getDate(), getType(), getMap(), getRegion());
+        return String.format("%s[%s %s %s %s]", Match.class.getSimpleName(), getDate(), getType(), getMapId(), getRegion());
     }
 
     public Long getId()
@@ -79,6 +83,16 @@ implements java.io.Serializable
     public void setId(Long id)
     {
         this.id = id;
+    }
+
+    public Integer getMapId()
+    {
+        return mapId;
+    }
+
+    public void setMapId(Integer mapId)
+    {
+        this.mapId = mapId;
     }
 
     public Region getRegion()

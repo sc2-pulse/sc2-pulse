@@ -80,6 +80,9 @@ public class SqlSyntaxIT
     private ClanDAO clanDAO;
 
     @Autowired
+    private SC2MapDAO mapDAO;
+
+    @Autowired
     private VarDAO varDAO;
 
     @Autowired
@@ -300,6 +303,19 @@ public class SqlSyntaxIT
         );
         assertEquals(clans[0].getId(), mergedClans2[0].getId());
         assertEquals(clans[2].getId(), mergedClans2[1].getId());
+
+        SC2Map map2 = mapDAO.merge(new SC2Map(null, "map2v2"))[0];
+        SC2Map[] maps = mapDAO.merge
+        (
+            new SC2Map(null, "map1v1_1"), //insert
+            new SC2Map(null, "map1v1_1"), //identical, insert without errors
+            new SC2Map(null, "map1v1_2"), //insert
+            new SC2Map(null, "map2v2") //existing
+        );
+        assertEquals(4, maps.length);
+        assertEquals(maps[0].getId(), maps[1].getId());
+        assertNotNull(maps[2].getId());
+        assertEquals(maps[3].getId(), map2.getId());
 
         PlayerCharacter createdCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1");
         playerCharacterDAO.merge(createdCharacter);

@@ -802,7 +802,7 @@ class CharacterUtil
             tr.classList.add("section-splitter");
             const mapCell = document.createElement("td");
             mapCell.setAttribute("rowspan", teams.length);
-            mapCell.textContent = match.match.map;
+            mapCell.textContent = match.map.name;
             tr.prepend(mapCell);
             const typeCell = document.createElement("td");
             typeCell.setAttribute("rowspan", teams.length);
@@ -957,10 +957,10 @@ class CharacterUtil
         evt.preventDefault();
         Util.setGeneratingStatus(STATUS.BEGIN);
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-        const lastMatch = commonCharacter.matches[commonCharacter.matches.length - 1].match;
+        const lastMatch = commonCharacter.matches[commonCharacter.matches.length - 1];
         CharacterUtil.loadNextMatchesModel(
             Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR),
-            lastMatch.date, lastMatch.type, lastMatch.map
+            lastMatch.match.date, lastMatch.match.type, lastMatch.map.id
         ).then(json => new Promise((res, rej)=>{
             if(json.result.length > 0) CharacterUtil.updateCharacterMatchesView();
             if(json.result.length < MATCH_BATCH_SIZE) document.querySelector("#load-more-matches").classList.add("d-none");

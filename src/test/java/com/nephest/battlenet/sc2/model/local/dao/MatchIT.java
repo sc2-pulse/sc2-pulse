@@ -78,6 +78,9 @@ public class MatchIT
     private ClanDAO clanDAO;
 
     @Autowired
+    private SC2MapDAO mapDAO;
+
+    @Autowired
     private SeasonGenerator seasonGenerator;
 
     @BeforeEach
@@ -327,25 +330,33 @@ public class MatchIT
             new TeamMember(team1v1LossInvalidState.getId(), charKr4.getId(), 1, 0, 0, 0)
         );
         OffsetDateTime now = OffsetDateTime.now().minusSeconds(1);
+        SC2Map map1v1_1 = mapDAO.merge(new SC2Map(null, "map1v1_1"))[0];
+        SC2Map map1v1_2 = mapDAO.merge(new SC2Map(null, "map1v1_2"))[0];
+        SC2Map map1v1_3 = mapDAO.merge(new SC2Map(null, "map1v1_3"))[0];
+        SC2Map map1v1_4 = mapDAO.merge(new SC2Map(null, "map1v1_4"))[0];
+        SC2Map map1v1_5 = mapDAO.merge(new SC2Map(null, "map1v1_5"))[0];
+        SC2Map map1v1_6 =mapDAO.merge(new SC2Map(null, "map1v1_6"))[0];
+        SC2Map map2v2 = mapDAO.merge(new SC2Map(null, "map2v2"))[0];
+        SC2Map map4v4 = mapDAO.merge(new SC2Map(null, "map4v4"))[0];
         Match[] matches1 = matchDAO.merge
         (
-            new Match(null, now, BaseMatch.MatchType._4V4, "map4v4", Region.EU), //insert
-            new Match(null, now, BaseMatch.MatchType._4V4, "map4v4", Region.EU), //identical, insert without errors
-            new Match(null, now, BaseMatch.MatchType._2V2, "map2v2", Region.US) //insert
+            new Match(null, now, BaseMatch.MatchType._4V4, map4v4.getId(), Region.EU), //insert
+            new Match(null, now, BaseMatch.MatchType._4V4, map4v4.getId(), Region.EU), //identical, insert without errors
+            new Match(null, now, BaseMatch.MatchType._2V2, map2v2.getId(), Region.US) //insert
         );
         assertEquals(3, matches1.length);
         assertEquals(matches1[1].getId(), matches1[2].getId()); //clone object is updated, ASC order
-        Match match4v4 = new Match(null, now, BaseMatch.MatchType._4V4, "map4v4", Region.EU);
-        Match match2v2 = new Match(null, now, BaseMatch.MatchType._2V2, "map2v2", Region.US);
-        Match match1v1_1 = new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_1", Region.KR);
-        Match match1v1_2 = new Match(null, now.plusSeconds(1), BaseMatch.MatchType._1V1, "map1v1_2", Region.KR);
+        Match match4v4 = new Match(null, now, BaseMatch.MatchType._4V4, map4v4.getId(), Region.EU);
+        Match match2v2 = new Match(null, now, BaseMatch.MatchType._2V2, map2v2.getId(), Region.US);
+        Match match1v1_1 = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.KR);
+        Match match1v1_2 = new Match(null, now.plusSeconds(1), BaseMatch.MatchType._1V1, map1v1_2.getId(), Region.KR);
         Match match1v1_3 = new Match(null, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1),
-            BaseMatch.MatchType._1V1, "map1v1_1", Region.KR);
-        Match match1v1_4 = new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_1", Region.EU);
-        Match match1v1InvalidState = new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_3", Region.KR);
-        Match match1v1InvalidCount =  new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_4", Region.KR);
-        Match match1v1InvalidDecision = new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_5", Region.KR);
-        Match match1v1UnidentifiedMembers = new Match(null, now, BaseMatch.MatchType._1V1, "map1v1_6", Region.KR);
+            BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.KR);
+        Match match1v1_4 = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
+        Match match1v1InvalidState = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_3.getId(), Region.KR);
+        Match match1v1InvalidCount =  new Match(null, now, BaseMatch.MatchType._1V1, map1v1_4.getId(), Region.KR);
+        Match match1v1InvalidDecision = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_5.getId(), Region.KR);
+        Match match1v1UnidentifiedMembers = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_6.getId(), Region.KR);
         matchDAO.merge
         (
             match4v4, //update
@@ -436,7 +447,7 @@ public class MatchIT
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr4.getId(), BaseMatch.Decision.LOSS)
         );
 
-        List<LadderMatch> matches4v4 = ladderMatchDAO.findMatchesByCharacterId(charEu1.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
+        List<LadderMatch> matches4v4 = ladderMatchDAO.findMatchesByCharacterId(charEu1.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
         assertEquals(1, matches4v4.size());
         assertEquals(match4v4, matches4v4.get(0).getMatch());
         assertEquals(8, matches4v4.get(0).getParticipants().size());
@@ -449,7 +460,7 @@ public class MatchIT
         verifyMatch(losers1, 4, 4, team4v4Loss, Set.of(state4v4Loss, state4v4Loss2), BaseLeague.LeagueType.SILVER,
             Set.of(charEu5, charEu6, charEu7, charEu8), match4v4);
 
-        List<LadderMatch> matches2v2 = ladderMatchDAO.findMatchesByCharacterId(charUs3.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
+        List<LadderMatch> matches2v2 = ladderMatchDAO.findMatchesByCharacterId(charUs3.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
         assertEquals(1, matches2v2.size());
         assertEquals(match2v2, matches2v2.get(0).getMatch());
         assertEquals(4, matches2v2.get(0).getParticipants().size());
@@ -472,7 +483,7 @@ public class MatchIT
 
         List<LadderMatch> matches1v1 = ladderMatchDAO.findMatchesByCharacterId(charKr1.getId(),
             OffsetDateTime.now().plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1),
-            BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
+            BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
         assertEquals(6, matches1v1.size());
         assertEquals(match1v1_3, matches1v1.get(0).getMatch());
         assertEquals(2, matches1v1.get(0).getParticipants().size());
@@ -556,7 +567,7 @@ public class MatchIT
         assertEquals(charKr4.getId(), losersUnidentified2.get(0).getParticipant().getPlayerCharacterId());
 
 
-        List<LadderMatch> matches1v1_2 = ladderMatchDAO.findMatchesByCharacterId(charEu9.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, "map", 0, 1).getResult();
+        List<LadderMatch> matches1v1_2 = ladderMatchDAO.findMatchesByCharacterId(charEu9.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
         assertEquals(1, matches1v1_2.size());
         assertEquals(match1v1_4, matches1v1_2.get(0).getMatch());
         assertEquals(2, matches1v1_2.get(0).getParticipants().size());

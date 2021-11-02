@@ -153,19 +153,15 @@ public class BaseMatch
     @NotNull
     private MatchType type;
 
-    @NotNull
-    private String map;
-
     public BaseMatch(){}
 
     public BaseMatch
     (
-        @NotNull OffsetDateTime date, @NotNull MatchType type, @NotNull String map
+        @NotNull OffsetDateTime date, @NotNull MatchType type
     )
     {
         this.date = date;
         this.type = type;
-        this.map = map;
     }
 
     public OffsetDateTime getDate()
@@ -186,16 +182,6 @@ public class BaseMatch
     public void setType(MatchType type)
     {
         this.type = type;
-    }
-
-    public String getMap()
-    {
-        return map;
-    }
-
-    public void setMap(String map)
-    {
-        this.map = map;
     }
 
 }

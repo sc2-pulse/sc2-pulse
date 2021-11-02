@@ -31,7 +31,7 @@ extends StandardDAO
         "match.id AS \"match.id\", "
         + "match.date AS \"match.date\", "
         + "match.type AS \"match.type\", "
-        + "match.map AS \"match.map\", "
+        + "match.map_id AS \"match.map_id\", "
         + "match.region AS \"match.region\", "
         + "match.updated AS \"match.updated\" ";
     private static final String MERGE_QUERY =
@@ -41,28 +41,28 @@ extends StandardDAO
         + "("
             + "UPDATE match "
             + "SET updated = NOW() "
-            + "FROM vals v (date, type, map, region)"
+            + "FROM vals v (date, type, map_id, region)"
             + "WHERE match.date = v.date "
             + "AND match.type = v.type "
-            + "AND match.map = v.map "
+            + "AND match.map_id = v.map_id "
             + "AND match.region = v.region "
             + "RETURNING " + STD_SELECT
         + "), "
         + "missing AS "
         + "("
-            + "SELECT v.date, v.type, v.map, v.region "
-            + "FROM vals v (date, type, map, region) "
+            + "SELECT v.date, v.type, v.map_id, v.region "
+            + "FROM vals v (date, type, map_id, region) "
             + "LEFT JOIN updated ON v.date = updated.\"match.date\"  "
             + "AND v.type = updated.\"match.type\" "
-            + "AND v.map = updated.\"match.map\" "
+            + "AND v.map_id = updated.\"match.map_id\" "
             + "AND v.region = updated.\"match.region\" "
             + "WHERE updated.\"match.id\" IS NULL "
         + "), "
         + "inserted AS "
         + "("
-            + "INSERT INTO match (date, type, map, region) "
+            + "INSERT INTO match (date, type, map_id, region) "
             + "SELECT * FROM missing "
-            + "ON CONFLICT(date, type, map, region) DO UPDATE "
+            + "ON CONFLICT(date, type, map_id, region) DO UPDATE "
             + "SET updated = NOW() "
             + "RETURNING " + STD_SELECT
         + ") "
@@ -105,7 +105,7 @@ extends StandardDAO
                 rs.getLong("match.id"),
                 rs.getObject("match.date", OffsetDateTime.class),
                 conversionService.convert(rs.getInt("match.type"), BaseMatch.MatchType.class),
-                rs.getString("match.map"),
+                rs.getInt("match.map_id"),
                 conversionService.convert(rs.getInt("match.region"), Region.class)
             );
             match.setUpdated(rs.getObject("match.updated", OffsetDateTime.class));
@@ -123,7 +123,7 @@ extends StandardDAO
         return new MapSqlParameterSource()
             .addValue("date", match.getDate())
             .addValue("type", conversionService.convert(match.getType(), Integer.class))
-            .addValue("map", match.getMap())
+            .addValue("mapId", match.getMapId())
             .addValue("region", conversionService.convert(match.getRegion(), Integer.class))
             .addValue("updated", match.getUpdated());
     }
@@ -137,7 +137,7 @@ extends StandardDAO
             .map(match->new Object[]{
                 match.getDate(),
                 conversionService.convert(match.getType(), Integer.class),
-                match.getMap(),
+                match.getMapId(),
                 conversionService.convert(match.getRegion(), Integer.class)
             })
             .collect(Collectors.toList());

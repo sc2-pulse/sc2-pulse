@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
@@ -22,17 +23,14 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
-import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -55,6 +53,7 @@ public class MatchService
     private final MatchParticipantDAO matchParticipantDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SeasonDAO seasonDAO;
+    private final SC2MapDAO mapDAO;
     private final PostgreSQLUtils postgreSQLUtils;
     private final ExecutorService dbExecutorService;
     private final Predicate<BlizzardMatch> validationPredicate;
@@ -71,6 +70,7 @@ public class MatchService
         MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
         SeasonDAO seasonDAO,
+        SC2MapDAO mapDAO,
         PostgreSQLUtils postgreSQLUtils,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         Validator validator
@@ -81,6 +81,7 @@ public class MatchService
         this.matchDAO = matchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
         this.seasonDAO = seasonDAO;
+        this.mapDAO = mapDAO;
         this.postgreSQLUtils = postgreSQLUtils;
         this.dbExecutorService = dbExecutorService;
         validationPredicate = DAOUtils.beanValidationPredicate(validator);
@@ -148,25 +149,32 @@ public class MatchService
         matches = matches.stream()
             .filter(t->validationPredicate.test(t.getT1()))
             .collect(Collectors.toList());
+        SC2Map[] mapBatch = new SC2Map[matches.size()];
         Match[] matchBatch = new Match[matches.size()];
         MatchParticipant[] participantBatch = new MatchParticipant[matches.size()];
-        List<Tuple3<Match, BaseMatch.Decision, PlayerCharacter>> meta = new ArrayList<>();
+        List<Tuple4<SC2Map, Match, BaseMatch.Decision, PlayerCharacter>> meta = new ArrayList<>();
         for(int i = 0; i < matches.size(); i++)
         {
             Tuple2<BlizzardMatch, PlayerCharacter> match = matches.get(i);
-            Match localMatch = Match.of(match.getT1(), match.getT2().getRegion());
+            SC2Map map = new SC2Map(null, match.getT1().getMap());
+            Match localMatch = Match.of(match.getT1(), null, match.getT2().getRegion());
+            mapBatch[i] = map;
             matchBatch[i] = localMatch;
-            meta.add(Tuples.of(localMatch, match.getT1().getDecision(), match.getT2()));
+            meta.add(Tuples.of(map, localMatch, match.getT1().getDecision(), match.getT2()));
         }
+        Arrays.sort(mapBatch, SC2Map.NATURAL_ID_COMPARATOR);
+        mapDAO.merge(mapBatch);
+        meta.forEach(t->t.getT2().setMapId(t.getT1().getId()));
+        Arrays.sort(matchBatch, Match.NATURAL_ID_COMPARATOR);
         matchDAO.merge(matchBatch);
         for(int i = 0; i < meta.size(); i++)
         {
-            Tuple3<Match, BaseMatch.Decision, PlayerCharacter> participant = meta.get(i);
+            Tuple4<SC2Map, Match, BaseMatch.Decision, PlayerCharacter> participant = meta.get(i);
             participantBatch[i] = new MatchParticipant
             (
-                participant.getT1().getId(),
-                participant.getT3().getId(),
-                participant.getT2()
+                participant.getT2().getId(),
+                participant.getT4().getId(),
+                participant.getT3()
             );
         }
         matchParticipantDAO.merge(participantBatch);

@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2021 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
@@ -15,6 +15,9 @@ extends BaseMatch
     @NotNull
     private Decision decision;
 
+    @NotNull
+    private String map;
+
     public BlizzardMatch(){}
 
     public BlizzardMatch
@@ -25,8 +28,9 @@ extends BaseMatch
         @NotNull Decision decision
     )
     {
-        super(date, type, map);
+        super(date, type);
         this.decision = decision;
+        this.map = map;
     }
 
     public Decision getDecision()
@@ -37,6 +41,16 @@ extends BaseMatch
     public void setDecision(Decision decision)
     {
         this.decision = decision;
+    }
+
+    public String getMap()
+    {
+        return map;
+    }
+
+    public void setMap(String map)
+    {
+        this.map = map;
     }
 
 }
