@@ -181,7 +181,7 @@ public class MatchService
         LOG.debug("Saved {} matches", matches.size());
     }
 
-    public void identify(UpdateContext updateContext)
+    private void identify(UpdateContext updateContext)
     {
         postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
@@ -193,6 +193,20 @@ public class MatchService
             OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES)
         );
         LOG.info("Identified {} matches", identified);
+    }
+
+    private void calculateDuration(UpdateContext updateContext)
+    {
+        OffsetDateTime from = OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault())
+            .minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES);
+        int updated = matchDAO.updateDuration(from);
+        LOG.debug("Calculated duration of {} matches", updated);
+    }
+
+    public void updateMeta(UpdateContext updateContext)
+    {
+        identify(updateContext);
+        calculateDuration(updateContext);
     }
 
 }

@@ -26,6 +26,7 @@ extends StandardDAO
 
     public static final int UPDATED_TTL_DAYS = 30;
     public static final int TTL_DAYS = 90;
+    public static final int DURATION_MAX = 5400;
 
     public static final String STD_SELECT =
         "match.id AS \"match.id\", "
@@ -33,7 +34,8 @@ extends StandardDAO
         + "match.type AS \"match.type\", "
         + "match.map_id AS \"match.map_id\", "
         + "match.region AS \"match.region\", "
-        + "match.updated AS \"match.updated\" ";
+        + "match.updated AS \"match.updated\", "
+        + "match.duration AS \"match.duration\" ";
     private static final String MERGE_QUERY =
         "WITH "
         + "vals AS (VALUES :matchUids), "
@@ -69,6 +71,32 @@ extends StandardDAO
         + "SELECT * FROM updated "
         + "UNION "
         + "SELECT * FROM inserted";
+
+    private static final String UPDATE_DURATION_QUERY =
+        "WITH  "
+        + "match_duration AS "
+        + "( "
+            + "SELECT id, EXTRACT(EPOCH FROM (match.date - match_duration.date)) AS duration "
+            + "FROM match "
+            + "JOIN LATERAL "
+            + "( "
+                + "SELECT mb.date "
+                + "FROM match_participant  "
+                + "INNER JOIN match_participant mpb USING(player_character_id) "
+                + "INNER JOIN match mb ON mpb.match_id = mb.id "
+                + "WHERE match_participant.match_id = match.id  "
+                + "AND mb.date < match.date "
+                + "ORDER BY mb.date DESC "
+                + "LIMIT 1 "
+            + ") match_duration ON true "
+        + ") "
+        + "UPDATE match "
+        + "SET duration = match_duration.duration "
+        + "FROM match_duration "
+        + "WHERE match.id = match_duration.id "
+        + "AND match.date >= :from "
+        + "AND match_duration.duration BETWEEN 1 AND " + DURATION_MAX + " "
+        + "AND (match.duration IS NULL OR match.duration > match_duration.duration)";
 
     private static final String REMOVE_EXPIRED_QUERY = "DELETE FROM match WHERE date < :toDate OR updated < :toUpdated";
 
@@ -106,7 +134,8 @@ extends StandardDAO
                 rs.getObject("match.date", OffsetDateTime.class),
                 conversionService.convert(rs.getInt("match.type"), BaseMatch.MatchType.class),
                 rs.getInt("match.map_id"),
-                conversionService.convert(rs.getInt("match.region"), Region.class)
+                conversionService.convert(rs.getInt("match.region"), Region.class),
+                DAOUtils.getInteger(rs, "match.duration")
             );
             match.setUpdated(rs.getObject("match.updated", OffsetDateTime.class));
             return match;
@@ -147,6 +176,13 @@ extends StandardDAO
         List<Match> mergedMatches = getTemplate().query(MERGE_QUERY, params, getStdRowMapper());
 
         return DAOUtils.updateOriginals(matches, mergedMatches, Match.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()));
+    }
+
+    public int updateDuration(OffsetDateTime from)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("from", from);
+        return getTemplate().update(UPDATE_DURATION_QUERY, params);
     }
 
 }

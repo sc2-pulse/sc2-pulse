@@ -36,6 +36,8 @@ implements java.io.Serializable
     @NotNull
     private OffsetDateTime updated = OffsetDateTime.now();
 
+    private Integer duration;
+
     public Match(){}
 
     public Match(Long id, @NotNull OffsetDateTime date, @NotNull MatchType type, @NotNull Integer mapId, @NotNull Region region)
@@ -44,6 +46,23 @@ implements java.io.Serializable
         this.id = id;
         this.mapId = mapId;
         this.region = region;
+    }
+
+    public Match
+    (
+        Long id,
+        @NotNull OffsetDateTime date,
+        @NotNull MatchType type,
+        @NotNull Integer mapId,
+        @NotNull Region region,
+        Integer duration
+    )
+    {
+        super(date, type);
+        this.id = id;
+        this.mapId = mapId;
+        this.region = region;
+        this.duration = duration;
     }
 
     public static Match of(BlizzardMatch match, Integer mapId, Region region)
@@ -113,6 +132,16 @@ implements java.io.Serializable
     public void setUpdated(OffsetDateTime updated)
     {
         this.updated = updated;
+    }
+
+    public Integer getDuration()
+    {
+        return duration;
+    }
+
+    public void setDuration(Integer duration)
+    {
+        this.duration = duration;
     }
 
 }

@@ -640,4 +640,64 @@ public class MatchIT
         participants.stream().map(LadderMatchParticipant::getParticipant).forEach(p->assertEquals(match.getId(), p.getMatchId()));
     }
 
+    @Test
+    public void testDuration()
+    {
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        Account acc2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#2"));
+        Account acc3 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#3"));
+
+        PlayerCharacter charEu1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1", null));
+        PlayerCharacter charEu2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2", null));
+        PlayerCharacter charEu3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.EU, 3L, 3, "name#3", null));
+
+        SC2Map map1v1_1 = mapDAO.merge(new SC2Map(null, "map1v1_1"))[0];
+
+        OffsetDateTime now = OffsetDateTime.now();
+        Match match1v1_1 = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
+        Match match1v1_2 = new Match(null, match1v1_1.getDate().minusSeconds(300), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
+        Match match1v1_3 = new Match(null, match1v1_2.getDate().minusSeconds(400), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
+        //null duration, previous match is too old
+        Match match1v1_4 = new Match(null, match1v1_3.getDate().minusSeconds(1), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
+        //null duration, there is no previous match
+        Match match1v1_5 = new Match(null, match1v1_4.getDate().minusSeconds(MatchDAO.DURATION_MAX + 1), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
+
+        matchDAO.merge
+        (
+            match1v1_1,
+            match1v1_2,
+            match1v1_3,
+            match1v1_4,
+            match1v1_5
+        );
+
+        matchParticipantDAO.merge
+        (
+            new MatchParticipant(match1v1_1.getId(), charEu1.getId(), BaseMatch.Decision.WIN),
+            new MatchParticipant(match1v1_1.getId(), charEu2.getId(), BaseMatch.Decision.LOSS),
+
+            new MatchParticipant(match1v1_2.getId(), charEu3.getId(), BaseMatch.Decision.WIN),
+            new MatchParticipant(match1v1_2.getId(), charEu2.getId(), BaseMatch.Decision.LOSS),
+
+            new MatchParticipant(match1v1_3.getId(), charEu1.getId(), BaseMatch.Decision.WIN),
+            new MatchParticipant(match1v1_4.getId(), charEu2.getId(), BaseMatch.Decision.LOSS),
+
+            new MatchParticipant(match1v1_4.getId(), charEu1.getId(), BaseMatch.Decision.WIN),
+
+            new MatchParticipant(match1v1_5.getId(), charEu1.getId(), BaseMatch.Decision.WIN),
+            new MatchParticipant(match1v1_5.getId(), charEu2.getId(), BaseMatch.Decision.LOSS)
+        );
+
+        assertEquals(3, matchDAO.updateDuration(now.minusDays(1)));
+
+        List<LadderMatch> matches = ladderMatchDAO
+            .findMatchesByCharacterId(charEu1.getId(), now.plusSeconds(1), BaseMatch.MatchType._1V1, 0, 0, 1)
+            .getResult();
+
+        assertEquals(300, matches.get(0).getMatch().getDuration());
+        assertEquals(1, matches.get(1).getMatch().getDuration());
+        assertNull(matches.get(2).getMatch().getDuration());
+        assertNull(matches.get(3).getMatch().getDuration());
+    }
+
 }

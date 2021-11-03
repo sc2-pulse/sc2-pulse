@@ -444,6 +444,7 @@ CREATE TABLE "match"
     "map_id" INTEGER NOT NULL,
     "region" SMALLINT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "duration" SMALLINT,
 
     PRIMARY KEY ("id"),
 

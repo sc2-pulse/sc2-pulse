@@ -810,8 +810,7 @@ class CharacterUtil
             tr.prepend(typeCell);
             const lengthCell = document.createElement("td");
             lengthCell.setAttribute("rowspan", teams.length);
-            const matchLength = CharacterUtil.calculateMatchLengthSeconds(validMatches, i);
-            lengthCell.textContent = matchLength == -1 ? "" : Math.round(matchLength / 60) + "m";
+            lengthCell.textContent = match.match.duration ? Math.round(match.match.duration / 60) + "m" : "";
             tr.prepend(lengthCell);
             const dateCell = document.createElement("td");
             dateCell.setAttribute("rowspan", teams.length);
@@ -827,14 +826,6 @@ class CharacterUtil
         }
 
         return Promise.resolve();
-    }
-
-    static calculateMatchLengthSeconds(matches, i)
-    {
-        if(i == matches.length - 1) return -1;
-        const length = (new Date(matches[i].match.date).getTime() - new Date(matches[i + 1].match.date).getTime()) / 1000;
-        if(length > CharacterUtil.MATCH_DURATION_MAX_SECONDS) return -1;
-        return length;
     }
 
     static prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId)
