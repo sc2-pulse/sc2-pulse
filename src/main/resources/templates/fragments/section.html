@@ -32,6 +32,10 @@
          th:fragment="stats-race-league-region (region)"
          th:replace="~{fragments/section :: stats-league-region(${region}, 'Games played by race', 'games-played-race-league')}">
 </section>
+<section class="col-lg-6 mb-3"
+         th:fragment="stats-match-up (region)"
+         th:replace="~{fragments/section :: stats-league-region(${region}, 'Match-up stats', 'stats-match-up')}">
+</section>
 <section th:id="${id}" class="col-lg-6 mb-3" th:fragment="stats (id, title, titleY, type)">
     <h4 th:replace="${title}"></h4>
     <table

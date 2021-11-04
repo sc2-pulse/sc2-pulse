@@ -41,11 +41,13 @@ public class Cron
     public static final Duration MAINTENANCE_INFREQUENT_FRAME = Duration.ofDays(10);
     public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(300);
     public static final Duration MIN_UPDATE_FRAME_ALTERNATIVE = Duration.ofSeconds(360);
+    public static final Duration MAP_STATS_DEFAULT_UPDATE_FRAME = Duration.ofMinutes(60);
 
     private InstantVar heavyStatsInstant;
     private InstantVar maintenanceFrequentInstant;
     private InstantVar maintenanceInfrequentInstant;
     private InstantVar matchInstant;
+    private InstantVar mapStatsInstant;
     private UpdateContext matchUpdateContext;
 
     @Autowired
@@ -79,6 +81,9 @@ public class Cron
     private QueueStatsDAO queueStatsDAO;
 
     @Autowired
+    private MapStatsDAO mapStatsDAO;
+
+    @Autowired
     private PlayerCharacterReportService characterReportService;
 
     @Autowired
@@ -99,6 +104,7 @@ public class Cron
             maintenanceFrequentInstant = new InstantVar(varDAO, "maintenance.frequent");
             maintenanceInfrequentInstant = new InstantVar(varDAO, "maintenance.infrequent");
             matchInstant = new InstantVar(varDAO, "match.updated");
+            mapStatsInstant = new InstantVar(varDAO, "ladder.stats.map.timestamp");
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -151,6 +157,7 @@ public class Cron
             updateService.updated(begin);
             if(!Objects.equals(lastMatchInstant, matchInstant.getValue())) matchUpdateContext =
                 updateService.getUpdateContext(null);
+            updateMapStats();
             commenceMaintenance();
             LOG.info("Update cycle completed. Duration: {} seconds", (System.currentTimeMillis() - begin.toEpochMilli()) / 1000);
         }
@@ -177,6 +184,25 @@ public class Cron
             return true;
         }
         return false;
+    }
+
+    private void updateMapStats()
+    {
+        if(matchUpdateContext == null) return;
+        OffsetDateTime to = OffsetDateTime.ofInstant(matchUpdateContext.getExternalUpdate(), ZoneOffset.systemDefault())
+            .minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES);
+        Instant defaultInstant = mapStatsInstant.getValue() != null
+            ? mapStatsInstant.getValue()
+            : Instant.now().minusSeconds(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 60 + MAP_STATS_DEFAULT_UPDATE_FRAME.toSeconds());
+        OffsetDateTime from = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
+        if(from.isAfter(to)) return;
+
+        /*
+            Map stats are incremental stats, preemptively update the var to prevent double calculation in exceptional
+            cases. Some stats may be lost this way, but this guarantees that existing stats are 100% valid.
+         */
+        mapStatsInstant.setValueAndSave(to.toInstant());
+        mapStatsDAO.add(from, to);
     }
 
     private boolean doUpdateSeasons(Region... regions)

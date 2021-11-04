@@ -51,6 +51,7 @@ class SC2Restful
                 CharacterUtil.enhanceLoadAllCharacterReportsButton();
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
+                StatsUtil.enhanceMatchUpControls();
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");
                 BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
                 Session.enhanceThemeInputs();

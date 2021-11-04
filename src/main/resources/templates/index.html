@@ -175,6 +175,20 @@
                 </li>
                 <li class="nav-item">
                     <a
+                            id="stats-match-up-tab"
+                            class="nav-link"
+                            data-toggle="pill"
+                            data-target="#stats-match-up"
+                            href="#stats-match-up"
+                            role="tab"
+                            aria-controls="stats-match-up"
+                            aria-selected="false"
+                    >
+                        Match-up
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
                         id="stats-league-tab"
                         class="nav-link"
                         data-toggle="pill"
@@ -347,6 +361,37 @@
                     <section th:replace="~{fragments/section :: stats-race-league-region('eu')}"></section>
                     <section th:replace="~{fragments/section :: stats-race-league-region('kr')}"></section>
                     <section th:replace="~{fragments/section :: stats-race-league-region('cn')}"></section>
+                </div>
+            </section>
+            <section id="stats-match-up" class="tab-pane fade c-height-linked" data-view-title="Match-up statistics">
+                <h3>Match-up stats</h3>
+                <form class="form-inline justify-content-center">
+                    <div class="form-group mb-3">
+                        <label for="stats-match-up-type">Y axis</label>
+                        <select id="stats-match-up-type" class="form-control serializable mx-sm-3">
+                            <option value="win-rate" selected="selected">Win rate (%)</option>
+                            <option value="duration-avg">Avg match duration (seconds)</option>
+                            <option value="games">Games played</option>
+                        </select>
+                    </div>
+                    <div class="form-group mb-3">
+                        <label for="stats-match-up-map">Map</label>
+                        <select id="stats-match-up-map" class="form-control mx-sm-3">
+                            <option value="all" selected="selected">All</option>
+                        </select>
+                    </div>
+                </form>
+                <div class="row no-gutters ml-3">
+                    <section id="stats-match-up-total-c" class="col-lg-6 mb-3"
+                             th:replace="~{fragments/section :: stats('stats-match-up-total', ~{::#stats-match-up-total-c/h4}, '%', 'bar')}"
+                    >
+                        <h4>Match-up stats (<span class="season-current"></span>)</h4>
+                    </section>
+                    <section th:replace="~{fragments/section :: stats-match-up('global')}"></section>
+                    <section th:replace="~{fragments/section :: stats-match-up('us')}"></section>
+                    <section th:replace="~{fragments/section :: stats-match-up('eu')}"></section>
+                    <section th:replace="~{fragments/section :: stats-match-up('kr')}"></section>
+                    <section th:replace="~{fragments/section :: stats-match-up('cn')}"></section>
                 </div>
             </section>
             <section id="stats-league" class="tab-pane fade c-height-linked" data-view-title="League distribution">

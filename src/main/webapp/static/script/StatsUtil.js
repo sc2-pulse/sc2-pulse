@@ -100,8 +100,13 @@ class StatsUtil
     {
 
         const urlParams = new URLSearchParams("?" + formParams);
-        return Promise.all([StatsUtil.updateLadderStatsGlobalModel(formParams), StatsUtil.updateLadderStatsSeasonModel(urlParams)])
-            .then(jsons=>Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LADDER_STATS, {all: jsons[0], current: jsons[1]}));
+        return Promise.all
+        ([
+            StatsUtil.updateLadderStatsGlobalModel(formParams),
+            StatsUtil.updateLadderStatsSeasonModel(urlParams),
+            StatsUtil.updateMapStatsSeasonModel(urlParams)
+         ])
+        .then(jsons=>Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LADDER_STATS, {all: jsons[0], current: jsons[1], map: jsons[2], urlParams: urlParams}));
     }
 
     static updateLadderStatsGlobalModel(formParams)
@@ -130,6 +135,7 @@ class StatsUtil
     static updateLadderStatsView()
     {
         StatsUtil.updateLadderStatsCurrentView();
+        StatsUtil.updateMapStatsSeasonView();
         const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).all;
         const globalResult = {gamesPlayed: {}, teamCount: {}};
         const percentageResult = {};
@@ -214,7 +220,7 @@ class StatsUtil
 
     static updateLadderStatsCurrentRaceView(stats)
     {
-        document.querySelectorAll(".table-race-league-region").forEach(t=>t.closest("section").classList.add("d-none"));
+        document.querySelectorAll("#stats-race .table-race-league-region").forEach(t=>t.closest("section").classList.add("d-none"));
         const formattedLeagueStats = {};
         const formattedStatsPercentage = {};
         for(const [region, regionStats] of stats)
@@ -422,6 +428,174 @@ class StatsUtil
         }
         return dailyStats;
     }
+
+    static updateMapStatsSeasonModel(urlParams, map)
+    {
+        const regions = [];
+        for(const region of Object.values(REGION)) if(urlParams.has(region.name)) regions.push(region.name.toUpperCase());
+        const leagues = [];
+        for(const league of Object.values(LEAGUE)) if(urlParams.has(league.shortName)) leagues.push(league.name.toUpperCase());
+        map = map ? "/" + map : "";
+
+        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/map/${urlParams.get('season')}/${urlParams.get('queue')}/${urlParams.get('team-type')}/${regions.join(',')}/${leagues.join(',')}${map}`;
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
+            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(json => json);
+    }
+
+    static updateMapStatsSeasonView()
+    {
+        document.querySelectorAll("#stats-match-up .table-race-league-region").forEach(t=>t.closest("section").classList.add("d-none"));
+        const stats = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).map;
+        StatsUtil.updateMatchUpMaps(stats);
+        const statsRegion = Util.groupBy(stats.stats, s=>stats.seasons[stats.leagues[s.leagueId].seasonId].region);
+        const statsLeague = {};
+        for(const [region, rStats] of statsRegion) statsLeague[region] = Util.groupBy(rStats, s=>stats.leagues[s.leagueId].type);
+        const formattedStats = {};
+        for(const [region, leagueMap] of Object.entries(statsLeague)
+            .sort((a, b)=>EnumUtil.enumOfName(a[0], REGION).order - EnumUtil.enumOfName(b[0], REGION).order))
+        {
+            formattedStats[region] = {};
+            for(const [league, lStats] of Array.from(leagueMap.entries())
+                .sort((a, b)=>EnumUtil.enumOfId(a[0], LEAGUE).order - EnumUtil.enumOfId(b[0], LEAGUE).order))
+            {
+                const formattedMatchUpStats = formattedStats[region][EnumUtil.enumOfId(league, LEAGUE).name] = {};
+                for(const cStats of lStats)
+                {
+                    const matchUp = cStats.race.substring(0, 1) + "v" + cStats.versusRace.substring(0, 1);
+                    formattedMatchUpStats[matchUp] = cStats;
+                }
+
+            }
+        }
+
+        const sumCalculator = (a, b)=>{a.wins += b.wins; a.gamesTotal += b.gamesTotal; a.duration += b.duration;}
+        const activeCalculator = StatsUtil.getMatchUpCalculator();
+        const formattedGlobal = {};
+        for(const [region, leagueArray] of Object.entries(formattedStats))
+            StatsUtil.calculateLeagueMapStats(leagueArray, Util.cloneObject, sumCalculator, formattedGlobal);
+        const formattedGlobalCalculated = {};
+        StatsUtil.calculateLeagueMapStats(formattedGlobal, activeCalculator, null, formattedGlobalCalculated);
+        const formattedMatchUp = {all: {}};
+        StatsUtil.calculateLeagueMapStats(formattedGlobal, Util.cloneObject, sumCalculator, formattedMatchUp.all, false);
+        const formattedMatchUpCalculated = {all: {}};
+        Object.entries(formattedMatchUp.all).forEach((e)=>formattedMatchUpCalculated.all[e[0]] = activeCalculator(e[1]));
+        const formattedRegionalCalculated = {};
+        for(const [region, leagueArray] of Object.entries(formattedStats))
+        {
+            formattedRegionalCalculated[region] = {};
+            StatsUtil.calculateLeagueMapStats(leagueArray, activeCalculator, null, formattedRegionalCalculated[region]);
+        }
+
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("stats-match-up-total-table"), formattedMatchUpCalculated,
+            Util.matchUpComparator,
+            null,
+            null
+        );
+        TableUtil.updateColRowTable
+        (
+            document.getElementById("stats-match-up-global-table"), formattedGlobalCalculated,
+            Util.matchUpComparator,
+            null,
+            (league)=>EnumUtil.enumOfName(league, LEAGUE).name
+        );
+        for(const [region, rStats] of Object.entries(formattedRegionalCalculated))
+        {
+            const table = document.getElementById("stats-match-up-" + region.toLowerCase() + "-table");
+            table.closest("section").classList.remove("d-none");
+            TableUtil.updateColRowTable
+            (
+                table, rStats,
+                Util.matchUpComparator,
+                null,
+                (league)=>EnumUtil.enumOfName(league, LEAGUE).name
+            );
+        }
+        const seasons = Object.values(Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).map.seasons);
+        if(seasons.length > 0)
+        {
+            const season = seasons[0].battlenetId;
+            document.querySelectorAll("#stats-match-up .season-current").forEach(s=>s.textContent = "s" + season)
+        }
+    }
+
+    static calculateLeagueMapStats(formattedStats, calculator, sumCalculator, dest, includeLeague = true)
+    {
+        for(const [league, matchUpArray] of Object.entries(formattedStats))
+        {
+            if(includeLeague && !dest[league]) dest[league] = {};
+            for(const [matchUp, stats] of Object.entries(matchUpArray))
+            {
+                const destTarget = includeLeague ? dest[league] : dest;
+                if(!destTarget[matchUp])
+                {
+                    destTarget[matchUp] = calculator(stats);
+                }
+                else
+                {
+                    sumCalculator(destTarget[matchUp], stats);
+                }
+            }
+        }
+        return dest;
+    }
+
+    static getMatchUpCalculator()
+    {
+        switch(localStorage.getItem("stats-match-up-type"))
+        {
+            case "duration-avg":
+                return (s)=>s.duration / s.gamesTotal;
+                break;
+            case "games":
+                return (s)=>s.gamesTotal;
+                break;
+            default :
+                return (s)=>(s.wins / s.gamesTotal) * 100;
+        };
+    }
+
+    static enhanceMatchUpControls()
+    {
+        const durationCtl = document.querySelector("#stats-match-up-type");
+        if(durationCtl) durationCtl.addEventListener("change", e=>window.setTimeout(StatsUtil.updateMapStatsSeasonView, 1));
+        const mapCtl = document.querySelector("#stats-match-up-map");
+        if(mapCtl) mapCtl.addEventListener("change", StatsUtil.onMapChange);
+    }
+
+    static updateMatchUpMaps(stats)
+    {
+        const options = document.querySelectorAll("#stats-match-up-map option");
+        if(options.length > 1) return; //already updated
+
+        const mapSelect = document.querySelector("#stats-match-up-map");
+        stats.maps.map(m=>
+        {
+            const option = document.createElement("option");
+            option.value = m.id;
+            option.textContent = m.name;
+            return option;
+        }).forEach(o=>mapSelect.appendChild(o));
+    }
+
+    static onMapChange(e)
+    {
+        const map = e.target.value == "all" ? null : e.target.value;
+        const urlParams = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).urlParams;
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        return StatsUtil.updateMapStatsSeasonModel(urlParams, map)
+            .then(json=>new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).map = json
+                StatsUtil.updateMapStatsSeasonView();
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+                res();
+            }))
+            .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message, e));
+    }
+
 
 
 }

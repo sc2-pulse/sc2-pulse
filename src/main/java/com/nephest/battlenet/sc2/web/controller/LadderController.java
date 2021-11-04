@@ -9,10 +9,8 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderLeagueStats;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
-import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
-import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,6 +35,9 @@ public class LadderController
 
     @Autowired
     private LadderStatsDAO ladderStatsDAO;
+
+    @Autowired
+    private LadderMapStatsDAO ladderMapStatsDAO;
 
     @GetMapping("/a/{ratingAnchor}/{idAnchor}/{count}")
     public PagedSearchResult<List<LadderTeam>> getLadderAnchored
@@ -160,6 +161,24 @@ public class LadderController
     )
     {
         return ladderStatsDAO.findLeagueStats(season, List.of(regions), List.of(leagues), queue, teamType);
+    }
+
+    @GetMapping
+    ({
+        "/stats/map/{season}/{queueType}/{teamType}/{regions}/{leagues}",
+        "/stats/map/{season}/{queueType}/{teamType}/{regions}/{leagues}/{mapId}"
+    })
+    public LadderMapStats getLadderMapStats
+    (
+        @PathVariable("season") Integer season,
+        @PathVariable("queueType") QueueType queue,
+        @PathVariable("teamType") TeamType teamType,
+        @PathVariable("regions") Region[] regions,
+        @PathVariable("leagues") LeagueType[] leagues,
+        @PathVariable(name = "mapId", required = false) Integer mapId
+    )
+    {
+        return ladderMapStatsDAO.find(season, List.of(regions), List.of(leagues), queue, teamType, mapId);
     }
 
     @GetMapping("/league/bounds")

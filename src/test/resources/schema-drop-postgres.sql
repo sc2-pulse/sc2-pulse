@@ -1,5 +1,6 @@
 DROP TYPE IF EXISTS "player_character_summary" CASCADE;
 DROP FUNCTION IF EXISTS "get_player_character_summary" CASCADE;
+DROP FUNCTION IF EXISTS "get_top_percentage_league_lotv" CASCADE;
 DROP TABLE IF EXISTS "persistent_logins" CASCADE;
 DROP TABLE IF EXISTS "evidence_vote" CASCADE;
 DROP TABLE IF EXISTS "evidence" CASCADE;
@@ -7,6 +8,7 @@ DROP TABLE IF EXISTS "player_character_report" CASCADE;
 DROP TABLE IF EXISTS "var" CASCADE;
 DROP TABLE IF EXISTS "match_participant" CASCADE;
 DROP TABLE IF EXISTS "match" CASCADE;
+DROP TABLE IF EXISTS "map_stats" CASCADE;
 DROP TABLE IF EXISTS "map" CASCADE;
 DROP TABLE IF EXISTS "pro_team_member" CASCADE;
 DROP TABLE IF EXISTS "pro_team" CASCADE;
