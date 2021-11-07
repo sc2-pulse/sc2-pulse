@@ -107,6 +107,12 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     background-color: #22272a;
 }
 
+#sponsor-desktop-right h2
+{
+    font-size: 1.2rem;
+    margin-top: 0.5rem;
+}
+
 #dd-desktop-left-container,
 .sponsor-desktop-side-container
 {
