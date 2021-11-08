@@ -18,6 +18,8 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public class LeagueDAO
 {
@@ -56,6 +58,11 @@ public class LeagueDAO
         + "SELECT id from selected "
         + "UNION "
         + "SELECT id FROM inserted";
+
+    private static final String FIND_BY_IDS_QUERY =
+        "SELECT " + STD_SELECT
+        + "FROM league "
+        + "WHERE id IN(:ids)";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -106,6 +113,12 @@ public class LeagueDAO
         MapSqlParameterSource params = createParameterSource(league);
         league.setId(template.query(MERGE_QUERY, params, DAOUtils.INT_EXTRACTOR));
         return league;
+    }
+
+    public List<League> find(List<Integer> ids)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", ids);
+        return template.query(FIND_BY_IDS_QUERY, params, STD_ROW_MAPPER);
     }
 
     private MapSqlParameterSource createParameterSource(League league)

@@ -79,6 +79,11 @@ public class SeasonDAO
         + "UNION "
         + "SELECT id FROM inserted";
 
+    private static final String FIND_LIST_BY_IDS = "SELECT "
+        + STD_SELECT
+        + "FROM season "
+        + "WHERE id IN(:ids)";
+
     private static final String FIND_LIST_BY_REGION = "SELECT "
         + STD_SELECT
         + "FROM season "
@@ -157,6 +162,12 @@ public class SeasonDAO
             .addValue("number", season.getNumber())
             .addValue("start", season.getStart())
             .addValue("end", season.getEnd());
+    }
+
+    public List<Season> findListByIds(List<Integer> ids)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", ids);
+        return template.query(FIND_LIST_BY_IDS, params, STD_ROW_MAPPER);
     }
 
     public List<Season> findListByRegion(Region region)
