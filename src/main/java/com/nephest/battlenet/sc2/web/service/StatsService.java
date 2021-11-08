@@ -53,8 +53,10 @@ public class StatsService
     @Autowired
     private StatsService statsService;
 
+    private final Set<Region> alternativeRegions = new HashSet<>();
+
     @Value("${com.nephest.battlenet.sc2.ladder.alternative.regions:#{''}}")
-    private Set<Region> alternativeRegions;
+    private Set<Region> forcedAlternativeRegions;
 
     @Value("${com.nephest.battlenet.sc2.ladder.forceUpdate:#{'false'}}")
     private boolean forceUpdate;
@@ -140,6 +142,7 @@ public class StatsService
         //catch exceptions to allow service autowiring for tests
         try {
             loadAlternativeRegions();
+            loadForcedAlternativeRegions();
             for(Region region : Region.values())
                 forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced"));
         }
@@ -156,6 +159,11 @@ public class StatsService
     public Set<Region> getAlternativeRegions()
     {
         return alternativeRegions;
+    }
+
+    public Set<Region> getForcedAlternativeRegions()
+    {
+        return Collections.unmodifiableSet(forcedAlternativeRegions);
     }
 
     @CacheEvict
@@ -326,9 +334,9 @@ public class StatsService
         }
     }
 
-    private boolean isAlternativeUpdate(Region region, boolean currentSeason)
+    public boolean isAlternativeUpdate(Region region, boolean currentSeason)
     {
-        return alternativeRegions.contains(region) && currentSeason;
+        return currentSeason && (forcedAlternativeRegions.contains(region) || alternativeRegions.contains(region));
     }
 
     private void updateLeagues
@@ -661,6 +669,42 @@ public class StatsService
             .map(String::valueOf)
             .collect(Collectors.joining(","));
         varDAO.merge("region.alternative", var);
+    }
+
+    public void addForcedAlternativeRegion(Region region)
+    {
+        forcedAlternativeRegions.add(region);
+        saveForcedAlternativeRegions();
+    }
+
+    public void removeForcedAlternativeRegion(Region region)
+    {
+        forcedAlternativeRegions.remove(region);
+        saveForcedAlternativeRegions();
+    }
+
+    private void loadForcedAlternativeRegions()
+    {
+        String var = varDAO.find("region.alternative.forced").orElse(null);
+        if(var == null || var.isEmpty()) {
+            forcedAlternativeRegions.clear();
+            return;
+        }
+
+        Arrays.stream(var.split(","))
+            .map(Integer::valueOf)
+            .map(i->conversionService.convert(i, Region.class))
+            .forEach(forcedAlternativeRegions::add);
+        if(!forcedAlternativeRegions.isEmpty()) LOG.warn("Forced alternative regions loaded: {}", forcedAlternativeRegions);
+    }
+
+    public void saveForcedAlternativeRegions()
+    {
+        String var = forcedAlternativeRegions.stream()
+            .map(r->conversionService.convert(r, Integer.class))
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+        varDAO.merge("region.alternative.forced", var);
     }
 
     private UpdateContext getLadderUpdateContext(Region region, UpdateContext def)

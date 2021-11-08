@@ -33,6 +33,12 @@ public class StatusController
         return statsService.getAlternativeRegions();
     }
 
+    @GetMapping("/stale/forced")
+    public Set<Region> getForcedStaleStatus()
+    {
+        return statsService.getForcedAlternativeRegions();
+    }
+
     @GetMapping("/updated")
     public UpdateContext updated()
     {

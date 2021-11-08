@@ -210,7 +210,7 @@ public class Cron
     private void doUpdateSeasons()
     {
         List<Future<?>> tasks = new ArrayList<>();
-        if(statsService.getAlternativeRegions().size() > 1)
+        if(statsService.getAlternativeRegions().size() + statsService.getForcedAlternativeRegions().size() > 1)
         {
             tasks.add(webExecutorService.submit(()->doUpdateSeasons(Region.US, Region.CN)));
             tasks.add(webExecutorService.submit(()->doUpdateSeasons(Region.KR, Region.EU)));
@@ -285,9 +285,9 @@ public class Cron
 
     public Duration getMinUpdateFrame()
     {
-        return statsService.getAlternativeRegions().contains(Region.EU)
-            || statsService.getAlternativeRegions().contains(Region.US)
-            || statsService.getAlternativeRegions().contains(Region.CN)
+        return statsService.isAlternativeUpdate(Region.EU, true)
+            || statsService.isAlternativeUpdate(Region.US, true)
+            || statsService.isAlternativeUpdate(Region.CN, true)
                 ? MIN_UPDATE_FRAME_ALTERNATIVE
                 : MIN_UPDATE_FRAME;
     }

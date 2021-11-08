@@ -68,6 +68,7 @@ extends WebSecurityConfigurerAdapter
                 )
             .and().authorizeRequests()
                 .antMatchers("/actuator/**").hasRole(SC2PulseAuthority.ADMIN.getName())
+                .antMatchers("/admin/**").hasRole(SC2PulseAuthority.ADMIN.getName())
                 .antMatchers("/api/character/report/vote/**").hasRole(SC2PulseAuthority.MODERATOR.getName())
                 .antMatchers("/api/my/**").authenticated()
             .and().logout()

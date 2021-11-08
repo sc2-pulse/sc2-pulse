@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.Startup;
 import com.nephest.battlenet.sc2.config.openapi.SpringDocConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
+import com.nephest.battlenet.sc2.web.controller.AdminController;
 import com.nephest.battlenet.sc2.web.controller.StatusController;
 import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
@@ -33,6 +34,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AlternativeLadderService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = MatchService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatusController.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AdminController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class)
     }
