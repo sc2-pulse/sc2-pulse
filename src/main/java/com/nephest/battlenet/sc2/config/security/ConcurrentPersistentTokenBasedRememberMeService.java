@@ -61,7 +61,7 @@ implements RememberMeServices
                 return authentication.getT1();
 
             Authentication newAuth = persistentTokenBasedRememberMeServices.autoLogin(request, response);
-            AUTH_CACHE.put(cookie, Tuples.of(newAuth, Instant.now()));
+            if(newAuth != null) AUTH_CACHE.put(cookie, Tuples.of(newAuth, Instant.now()));
             return newAuth;
         }
     }
