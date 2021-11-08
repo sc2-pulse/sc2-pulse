@@ -9,6 +9,7 @@ import org.springframework.jdbc.core.RowMapper;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -44,6 +45,13 @@ public final class DAOUtils
     {
         if(!rs.next()) return null;
         return rs.getString(1);
+    };
+
+    public static final ResultSetExtractor<OffsetDateTime> OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR =
+    (rs)->
+    {
+        if(!rs.next()) return null;
+        return rs.getObject(1, OffsetDateTime.class);
     };
 
     public static final RowMapper<Long> LONG_MAPPER =
