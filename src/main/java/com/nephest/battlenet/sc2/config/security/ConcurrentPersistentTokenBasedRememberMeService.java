@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.config.security;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.web.authentication.RememberMeServices;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
@@ -23,7 +24,7 @@ import java.util.Map;
  */
 
 public class ConcurrentPersistentTokenBasedRememberMeService
-implements RememberMeServices
+implements RememberMeServices, LogoutHandler
 {
 
     public static final int AUTH_CACHE_TTL_SECONDS = 60;
@@ -77,6 +78,13 @@ implements RememberMeServices
     (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication)
     {
         persistentTokenBasedRememberMeServices.loginSuccess(httpServletRequest, httpServletResponse, authentication);
+    }
+
+    @Override
+    public void logout
+    (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication)
+    {
+        persistentTokenBasedRememberMeServices.logout(httpServletRequest, httpServletResponse, authentication);
     }
 
     public boolean isAutoClean()
