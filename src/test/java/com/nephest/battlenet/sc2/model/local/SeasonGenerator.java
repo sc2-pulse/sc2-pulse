@@ -69,7 +69,8 @@ public class SeasonGenerator
         List<QueueType> queueTypes,
         TeamType teamType,
         LeagueTier.LeagueTierType tierType,
-        int teamsPerLeague
+        int teamsPerLeague,
+        boolean spreadRaces
     )
     {
         List<Season> seasons = new ArrayList<>();
@@ -81,7 +82,39 @@ public class SeasonGenerator
                 DEFAULT_SEASON_START, DEFAULT_SEASON_END
             )));
         }
-        generateSeason(seasons, leagues, queueTypes, teamType, tierType, teamsPerLeague);
+        generateSeason(seasons, leagues, queueTypes, teamType, tierType, teamsPerLeague, spreadRaces);
+    }
+
+    @Transactional
+    public void generateDefaultSeason
+    (
+        List<Region> regions,
+        List<League.LeagueType> leagues,
+        List<QueueType> queueTypes,
+        TeamType teamType,
+        LeagueTier.LeagueTierType tierType,
+        int teamsPerLeague
+    )
+    {
+        generateDefaultSeason(regions, leagues, queueTypes, teamType, tierType, teamsPerLeague, false);
+    }
+
+    @Transactional
+    public void generateSeason
+    (
+        List<Season> seasons,
+        List<League.LeagueType> leagues,
+        List<QueueType> queueTypes,
+        TeamType teamType,
+        LeagueTier.LeagueTierType tierType,
+        int teamsPerLeague,
+        boolean spreadRaces
+    )
+    {
+        Map<Integer, List<Season>> seasonsGrouped = seasons.stream().collect(Collectors.groupingBy(Season::getBattlenetId));
+        int teamCount = 0;
+        for(Integer id : seasonsGrouped.keySet().stream().sorted().collect(Collectors.toList()))
+            teamCount += generateGroupedSeasons(seasonsGrouped.get(id), leagues, queueTypes, teamType, tierType, teamsPerLeague, teamCount, spreadRaces);
     }
 
     @Transactional
@@ -95,10 +128,7 @@ public class SeasonGenerator
         int teamsPerLeague
     )
     {
-        Map<Integer, List<Season>> seasonsGrouped = seasons.stream().collect(Collectors.groupingBy(Season::getBattlenetId));
-        int teamCount = 0;
-        for(Integer id : seasonsGrouped.keySet().stream().sorted().collect(Collectors.toList()))
-            teamCount += generateGroupedSeasons(seasonsGrouped.get(id), leagues, queueTypes, teamType, tierType,teamsPerLeague, teamCount);
+        generateSeason(seasons, leagues, queueTypes, teamType, tierType, teamsPerLeague, false);
     }
 
     private int generateGroupedSeasons
@@ -109,7 +139,8 @@ public class SeasonGenerator
         TeamType teamType,
         LeagueTier.LeagueTierType tierType,
         int teamsPerLeague,
-        int teamCount
+        int teamCount,
+        boolean spreadRaces
     )
     {
         for(Season season : seasons) seasonDAO.merge(season);
@@ -120,7 +151,7 @@ public class SeasonGenerator
             {
                 for (Season season : seasons)
                 {
-                    generateLeague(season, type, queueType, teamType, tierType, teamsPerLeague, teamCount);
+                    generateLeague(season, type, queueType, teamType, tierType, teamsPerLeague, teamCount, spreadRaces);
                     teamCount += teamsPerLeague;
                 }
             }
@@ -136,7 +167,8 @@ public class SeasonGenerator
         TeamType teamType,
         LeagueTier.LeagueTierType tierType,
         int teamsPerLeague,
-        int teamCount
+        int teamCount,
+        boolean spreadRaces
     )
     {
         OffsetDateTime seasonStart = season.getStart().atStartOfDay(ZoneId.of("UTC")).toOffsetDateTime();
@@ -150,8 +182,10 @@ public class SeasonGenerator
         LeagueTier tier = leagueTierDAO.create(newTier);
         Division division = divisionDAO.create(new Division(null, tier.getId(),
             Long.valueOf((teamsPerLeague > 0 ? teamCount / teamsPerLeague : 0) + "" + season.getRegion().ordinal() + "" + type.ordinal())));
+        Race[] races = Race.values();
         for(int teamIx = 0; teamIx < teamsPerLeague; teamIx++)
         {
+            Race race = races[teamIx % races.length];
             Team newTeam = new Team
            (
                null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
@@ -170,7 +204,18 @@ public class SeasonGenerator
                     Partition.of(season.getRegion()), "battletag#" + (long) accId));
                 PlayerCharacter character = playerCharacterDAO
                     .create(new PlayerCharacter(null, account.getId(),season.getRegion(), (long) accId, DEFAULT_REALM, "character#" + (long) accId));
-                teamMemberDAO.create(new TeamMember(team.getId(), character.getId(), 1, 2, 3, 4));
+                TeamMember teamMember = spreadRaces
+                    ? new TeamMember
+                        (
+                            team.getId(),
+                            character.getId(),
+                            race == Race.TERRAN ? 1 : null,
+                            race == Race.PROTOSS ? 1 : null,
+                            race == Race.ZERG ? 1 : null,
+                            race == Race.RANDOM ? 1 : null
+                        )
+                    : new TeamMember(team.getId(), character.getId(), 1, 2, 3, 4);
+                teamMemberDAO.create(teamMember);
             }
             teamCount++;
         }
