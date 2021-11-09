@@ -52,7 +52,7 @@ public class AlternativeLadderService
 
     public static final long FIRST_DIVISION_ID = 33080L;
     public static final int LADDER_BATCH_SIZE = StatsService.LADDER_BATCH_SIZE;
-    public static final Duration DISCOVERY_TIME_FRAME = Duration.ofMinutes(30);
+    public static final Duration DISCOVERY_TIME_FRAME = Duration.ofMinutes(60);
 
     private final Map<Region, InstantVar> discoveryInstants = new HashMap<>();
 
