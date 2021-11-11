@@ -8,25 +8,29 @@
     <title>Pulse</title>
 </head>
 <body>
-<section th:id="|games-played-race-league-${region}|" class="col-lg-6 mb-3" th:fragment="stats-race-league-region (region)">
-    <h4>Games played by race, distribution by league,
+<section th:id="|${idPrefix}-${region}|" class="col-lg-6 mb-3" th:fragment="stats-league-region (region, title, idPrefix)">
+    <h4><span th:text="${title}"></span>, distribution by league,
         <span th:switch="${region}">
             <span th:case="global">Global</span>
             <img th:case="*" th:src="@{'/static/icon/flag/' + ${region} + '.svg'}" th:alt="${region}" th:title=${region} class="table-image-long"/> (<span class="season-current"></span>)
         </span>
     </h4>
     <table
-            th:id="|games-played-race-league-${region}-table|"
+            th:id="|${idPrefix}-${region}-table|"
             th:class="|chartable ${region == 'global' ? '' : 'table-race-league-region'}|"
             data-chart-type="bar"
             data-chart-tooltip-percentage="false"
-            th:data-chart-id="|games-played-race-league-${region}-chart|"
+            th:data-chart-id="|${idPrefix}-${region}-chart|"
             data-chart-x-title="League" data-chart-y-title="%"
     >
         <thead><tr></tr></thead>
         <tbody><tr></tr></tbody>
     </table>
-    <div class="container-chart"><canvas th:id="|games-played-race-league-${region}-chart|" class="c-chart"></canvas></div>
+    <div class="container-chart"><canvas th:id="|${idPrefix}-${region}-chart|" class="c-chart"></canvas></div>
+</section>
+<section class="col-lg-6 mb-3"
+         th:fragment="stats-race-league-region (region)"
+         th:replace="~{fragments/section :: stats-league-region(${region}, 'Games played by race', 'games-played-race-league')}">
 </section>
 <section th:id="${id}" class="col-lg-6 mb-3" th:fragment="stats (id, title, titleY, type)">
     <h4 th:replace="${title}"></h4>
