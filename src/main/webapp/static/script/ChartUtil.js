@@ -423,7 +423,11 @@ class ChartUtil
             bodyLines.forEach((body, i)=>{
                 const row = tbody.insertRow();
                 const legendColor = row.insertCell();
-                legendColor.innerHTML ='<div class="legend-color" style="background-color: ' + tooltipModel.labelColors[i].backgroundColor + ';"></div>';
+                const colorObj = tooltipModel.labelColors[i];
+                const color = colorObj.borderColor
+                    ? colorObj.borderColor
+                    : colorObj.backgroundColor;
+                legendColor.innerHTML ='<div class="legend-color" style="background-color: ' + color + ';"></div>';
                 const image = SC2Restful.IMAGES.get(body[0]);
                 if(image) {
                     const cell = row.insertCell();
@@ -504,7 +508,22 @@ class ChartUtil
     {
         for (let i = 0; i < data.datasets.length; i++)
         {
-            const color = SC2Restful.getPredefinedOrRandomColor(data.customColors[i], i);
+            const multiColor = SC2Restful.MULTI_COLORS.get(data.customColors[i].toLowerCase());
+            const color = multiColor
+                ? multiColor
+                : SC2Restful.getPredefinedOrRandomColor(data.customColors[i], i);
+            let primaryColor;
+            let secondaryColor;
+            if(color instanceof Array)
+            {
+                primaryColor = color[0];
+                secondaryColor = color[1];
+            }
+            else
+            {
+                primaryColor = color;
+                secondaryColor = color;
+            }
             if (config.type === "lineVCursor" || config.type === "line")
             {
                 data.datasets[i]["borderWidth"] = 2;
@@ -513,8 +532,8 @@ class ChartUtil
                     : (config.pointRadius != null ? parseFloat(config.pointRadius) : 0.01);
                 data.datasets[i]["hoverPointRadius"] = 2;
 
-                data.datasets[i]["borderColor"] = color;
-                data.datasets[i]["pointBackgroundColor"] = color;
+                data.datasets[i]["borderColor"] = primaryColor;
+                data.datasets[i]["pointBackgroundColor"] = secondaryColor;
                 //data.datasets[i]["pointBorderColor"] = SC2Restful.COLORS.get(data.customColors[i]);
                 data.datasets[i]["backgroundColor"] = "rgba(0, 0, 0, 0)";
             }
@@ -525,7 +544,7 @@ class ChartUtil
                 for(let dataValIx = 0; dataValIx < data.datasets[i].data.length; dataValIx++)
                 {
                     const color = SC2Restful.getPredefinedOrRandomColor(data.customColors[dataValIx], dataValIx);
-                    dataColors.push(color);
+                    dataColors.push(primaryColor);
                     dataEmptyColors.push("rgba(0, 0, 0, 0)");
                 }
                 data.datasets[i]["backgroundColor"] = dataColors;
@@ -533,10 +552,48 @@ class ChartUtil
             }
             else
             {
-                data.datasets[i]["backgroundColor"] = color;
-                data.datasets[i]["borderColor"] = "rgba(0, 0, 0, 0)";
+                if(secondaryColor != primaryColor)
+                {
+                    const primaryAlphaColor = Util.changeFullRgbaAlpha(primaryColor, "0.7");
+                    const secondaryAlphaColor = Util.changeFullRgbaAlpha(secondaryColor, "0.7");
+                    data.datasets[i]["backgroundColor"] = ChartUtil.createPattern(100, 65, 55,  10, primaryAlphaColor, secondaryAlphaColor);
+                    data.datasets[i]["borderColor"] = primaryColor;
+                }
+                else
+                {
+                    data.datasets[i]["backgroundColor"] = Util.changeFullRgbaAlpha(primaryColor, "0.7");
+                    data.datasets[i]["borderColor"] = secondaryColor;
+                    data.datasets[i]["borderWidth"] = 1;
+                }
             }
         }
+    }
+
+    static createPattern(width, height, primaryLength, secondaryLength, primaryColor, secondaryColor)
+    {
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        const widthPart = width / 2;
+
+        let prevY = 0;
+        let primary = true;
+
+        while(prevY < height)
+        {
+            const newY = prevY + (primary ? primaryLength : secondaryLength);
+            ctx.beginPath();
+            ctx.moveTo(widthPart, prevY);
+            ctx.lineTo(widthPart, newY);
+            ctx.lineWidth = width;
+            ctx.strokeStyle = primary ? primaryColor : secondaryColor;
+            ctx.stroke();
+            primary = !primary;
+            prevY = newY;
+        }
+
+        return ctx.createPattern(canvas, "repeat");
     }
 
     static drawOnlyImagePoints(context, options)

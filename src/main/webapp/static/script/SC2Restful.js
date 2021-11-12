@@ -102,21 +102,36 @@ SC2Restful.COLORS = new Map
     ["low", "#28a745"],
     ["medium", "#ffc107"],
     ["high", "#dc3545"],
-    ["terran", "#295a91"],
-    ["protoss", "#dec93e"],
-    ["zerg", "#882991"],
-    ["random", "#646464"],
-    ["us", "#17a2b8"],
-    ["eu", "#ffc107"],
-    ["kr", "#6c757d"],
-    ["cn", "#dc3545"],
-    ["bronze", "#b9712d"],
-    ["silver", "#737373"],
-    ["gold", "#ffd700"],
-    ["platinum", "#a5a4a3"],
-    ["diamond", "#0d4594"],
-    ["master", "#00b1fb"],
-    ["grandmaster", "#ef3e00"]
+    ["terran", "rgba(1, 90, 145, 1)"],
+    ["protoss", "rgba(222, 201, 62, 1)"],
+    ["zerg", "rgba(136, 41, 145, 1)"],
+    ["random", "rgba(150, 150, 150, 1)"],
+    ["us", "rgba(23, 162, 184, 1)"],
+    ["eu", "rgba(255, 193, 7, 1)"],
+    ["kr", "rgba(108, 117, 125, 1)"],
+    ["cn", "rgba(220, 53, 69, 1)"],
+    ["bronze", "rgba(185, 113, 45, 1)"],
+    ["silver", "rgba(115, 115, 115, 1)"],
+    ["gold", "rgba(255, 215, 0, 1)"],
+    ["platinum", "rgba(165, 164, 163, 1)"],
+    ["diamond", "rgba(13, 69, 148, 1)"],
+    ["master", "rgba(0, 177, 251, 1)"],
+    ["grandmaster", "rgba(239, 62, 0, 1)"]
+]);
+SC2Restful.MULTI_COLORS = new Map
+([
+    ["tvp", [SC2Restful.COLORS.get("terran"), SC2Restful.COLORS.get("protoss")]],
+    ["tvz", [SC2Restful.COLORS.get("terran"), SC2Restful.COLORS.get("zerg")]],
+    ["tvr", [SC2Restful.COLORS.get("terran"), SC2Restful.COLORS.get("random")]],
+    ["pvt", [SC2Restful.COLORS.get("protoss"), SC2Restful.COLORS.get("terran")]],
+    ["pvz", [SC2Restful.COLORS.get("protoss"), SC2Restful.COLORS.get("zerg")]],
+    ["pvr", [SC2Restful.COLORS.get("protoss"), SC2Restful.COLORS.get("random")]],
+    ["zvt", [SC2Restful.COLORS.get("zerg"), SC2Restful.COLORS.get("terran")]],
+    ["zvp", [SC2Restful.COLORS.get("zerg"), SC2Restful.COLORS.get("protoss")]],
+    ["zvr", [SC2Restful.COLORS.get("zerg"), SC2Restful.COLORS.get("random")]],
+    ["rvt", [SC2Restful.COLORS.get("random"), SC2Restful.COLORS.get("terran")]],
+    ["rvp", [SC2Restful.COLORS.get("random"), SC2Restful.COLORS.get("protoss")]],
+    ["rvz", [SC2Restful.COLORS.get("random"), SC2Restful.COLORS.get("zerg")]]
 ]);
 
 SC2Restful.UNIQUE_COLORS = [...new Set(SC2Restful.COLORS.values())];
