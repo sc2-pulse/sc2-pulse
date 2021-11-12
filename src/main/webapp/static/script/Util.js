@@ -265,6 +265,19 @@ class Util
         form.querySelector(':scope [name="_csrf"]').value = Util.getCookie("XSRF-TOKEN");
     }
 
+    static matchUpComparator(a, b)
+    {
+        const aRace = a.split("v");
+        aRace[0] = EnumUtil.enumOfNamePrefix(aRace[0], RACE);
+        aRace[1] = EnumUtil.enumOfNamePrefix(aRace[1], RACE);
+        const bRace = b.split("v");
+        bRace[0] = EnumUtil.enumOfNamePrefix(bRace[0], RACE);
+        bRace[1] = EnumUtil.enumOfNamePrefix(bRace[1], RACE);
+        const compareRace = aRace[0].order - bRace[0].order;
+        if(compareRace != 0) return compareRace;
+        return aRace[1].order - bRace[1].order;
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
