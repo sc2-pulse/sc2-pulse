@@ -248,6 +248,11 @@ class Util
         });
     }
 
+    static changeFullRgbaAlpha(color, alpha)
+    {
+        return color.startsWith("rgba") ? color.replace("1)", alpha + ")") : color;
+    }
+
     static addCsrfHeader(options)
     {
         if(!options.headers) options.headers = {};
