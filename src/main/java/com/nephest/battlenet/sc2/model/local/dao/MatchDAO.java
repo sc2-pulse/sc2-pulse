@@ -89,6 +89,7 @@ extends StandardDAO
                 + "ORDER BY mb.date DESC "
                 + "LIMIT 1 "
             + ") match_duration ON true "
+            + "WHERE match.date >= :from"
         + ") "
         + "UPDATE match "
         + "SET duration = match_duration.duration "
