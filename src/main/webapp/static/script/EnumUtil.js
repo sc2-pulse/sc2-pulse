@@ -24,6 +24,13 @@ class EnumUtil
         throw new Error("Invalid full name");
     }
 
+    static enumOfNamePrefix(prefix, enumObj)
+    {
+        prefix = prefix.toLowerCase();
+        for(const curEnum of Object.values(enumObj)) if(curEnum.name.toLowerCase().startsWith(prefix)) return curEnum;
+        throw new Error("Invalid name");
+    }
+
     static getMemberCount(teamFormat, teamType)
     {
         if(teamType === TEAM_TYPE.RANDOM) return 1;
