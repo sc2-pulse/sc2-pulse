@@ -278,6 +278,12 @@ class Util
         return aRace[1].order - bRace[1].order;
     }
 
+    static cloneObject(src)
+    {
+        const dest = {};
+        return Object.assign(dest, src);
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
