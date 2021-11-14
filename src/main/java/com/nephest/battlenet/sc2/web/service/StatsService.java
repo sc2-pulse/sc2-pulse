@@ -302,6 +302,7 @@ public class StatsService
             UpdateContext regionalContext = getLadderUpdateContext(region, updateContext);
             BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
             Season season = seasonDao.merge(Season.of(bSeason, region));
+            createLeagues(season);
             updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, regionalContext);
             seasons.add(season.getBattlenetId());
             if(regionalContext.getInternalUpdate() == null) forcedUpdateInstants.get(region).setValueAndSave(Instant.now());
@@ -709,6 +710,26 @@ public class StatsService
             || System.currentTimeMillis() - instant.toEpochMilli() >= FORCED_LADDER_SCAN_FRAME.toMillis()
             ? new UpdateContext(null, null)
             : def;
+    }
+
+    /*
+        Many things rely on league existence, but some leagues could be absent on the ladder for various reasons.
+        Precreate leagues for such occasions
+     */
+    private void createLeagues(Season season)
+    {
+        for(QueueType queueType : QueueType.values())
+        {
+            for(TeamType teamType : TeamType.values())
+            {
+                for(BaseLeague.LeagueType leagueType : BaseLeague.LeagueType.values())
+                {
+                    if(!BlizzardSC2API.isValidCombination(leagueType, queueType, teamType)) continue;
+
+                    leagueDao.merge(new League(null, season.getId(), leagueType, queueType, teamType));
+                }
+            }
+        }
     }
 
 }
