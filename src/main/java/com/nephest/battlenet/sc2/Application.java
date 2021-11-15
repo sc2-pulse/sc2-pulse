@@ -41,7 +41,9 @@ public class Application
 extends SpringBootServletInitializer
 {
 
-    public static final String VERSION = Application.class.getPackage().getImplementationVersion();
+    public static final String VERSION = Application.class.getPackage().getImplementationVersion() != null
+        ? Application.class.getPackage().getImplementationVersion()
+        : "unknown";
     public static final int DB_THREADS = Runtime.getRuntime().availableProcessors();
     public static final int WEB_THREADS = Region.values().length;
 
