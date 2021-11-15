@@ -11,11 +11,11 @@ class FollowUtil
         const id = profile.getAttribute("data-account-id");
         return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "POST"})))
+            .then(Session.verifyResponse)
             .then
             (
                 resp =>
                 {
-                    if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
                     document.querySelector("#follow-button").classList.add("d-none");
                     document.querySelector("#unfollow-button").classList.remove("d-none");
                     return FollowUtil.getMyFollowing();
@@ -32,11 +32,11 @@ class FollowUtil
         const id = profile.getAttribute("data-account-id");
         return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/" + id, Util.addCsrfHeader({method: "DELETE"})))
+            .then(Session.verifyResponse)
             .then
             (
                 resp =>
                 {
-                    if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
                     document.querySelector("#follow-button").classList.remove("d-none");
                     document.querySelector("#unfollow-button").classList.add("d-none");
                     const updatedFollowing = Model.DATA.get(VIEW.FOLLOWING_CHARACTERS).get(VIEW_DATA.SEARCH)
@@ -55,7 +55,7 @@ class FollowUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following"))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{Session.currentFollowing = json; Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
             .catch(error => Session.onPersonalException(error));
     }

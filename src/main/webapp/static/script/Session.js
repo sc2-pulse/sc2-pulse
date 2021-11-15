@@ -17,6 +17,10 @@ class Session
 
     static onPersonalException(error)
     {
+        if(error.message.startsWith(Session.INVALID_API_VERSION_CODE)) {
+            Session.updateApplicationVersion();
+            return;
+        }
         Util.setGeneratingStatus(STATUS.ERROR, error.message, error);
     }
 
@@ -24,6 +28,27 @@ class Session
     {
         return Promise.resolve();
     }
+
+    static verifyResponse(resp)
+    {
+        if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
+        const versionHeader = resp.headers.get("X-Application-Version");
+        if(versionHeader && versionHeader != Session.APPLICATION_VERSION) throw new Error(Session.INVALID_API_VERSION_CODE + " API version has changed");
+        return Promise.resolve(resp);
+    }
+
+    static verifyJsonResponse(resp)
+    {
+        return Session.verifyResponse(resp)
+            .then(resp=>resp.json());
+    }
+
+    static updateApplicationVersion()
+    {
+        Util.setGeneratingStatus(STATUS.SUCCESS);
+        $("#application-version-update").modal();
+    }
+
 
     static renewBlizzardRegistration()
     {
@@ -305,6 +330,7 @@ Session.themeLinks = new Map();
 Session.deviceThemeCallback=function(e){Session.setTheme(window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches
     ? THEME.DARK : THEME.LIGHT)};
 Session.sessionStartTimestamp = null;
+Session.INVALID_API_VERSION_CODE = 112233;
 
 Session.sectionParams = new Map();
 
@@ -316,7 +342,7 @@ class PersonalUtil
         const request = ROOT_CONTEXT_PATH + "api/my/common";
         return Session.beforeRequest()
             .then(e=>fetch(request))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json.characters);
                 Model.DATA.get(VIEW.FOLLOWING_CHARACTERS).set(VIEW_DATA.SEARCH, json.followingCharacters);

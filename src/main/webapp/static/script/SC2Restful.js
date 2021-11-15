@@ -8,6 +8,7 @@ class SC2Restful
     {
         Session.initThemes();
         Session.updateStyleOverride();
+        Session.APPLICATION_VERSION = APPLICATION_VERSION;
     }
 
     static start(mode = START_MODE.FULL)
@@ -124,6 +125,7 @@ SC2Restful.SITE_NAME = "SC2 Pulse";
 SC2Restful.UNDEFINED_RANK = 2147483647;
 SC2Restful.MMR_HISTORY_START_DATE = new Date("2021-01-19T00:00:00");
 SC2Restful.MMR_HISTORY_DAYS_MAX = 90;
+SC2Restful.REDIRECT_PAGE_TIMEOUT_MILLIS = 3500;
 
 SC2Restful.REM = parseInt(getComputedStyle(document.documentElement).fontSize);
 

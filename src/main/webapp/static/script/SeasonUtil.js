@@ -17,7 +17,7 @@ class SeasonUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/seasons"))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{SeasonUtil.updateSeasons(json); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
             .catch(error => Session.onPersonalException(error));
     }
@@ -112,7 +112,7 @@ class SeasonUtil
         const request = `${ROOT_CONTEXT_PATH}api/season/state/${searchParams.get("to")}/${searchParams.get("period")}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.ONLINE).set(VIEW_DATA.SEARCH, json); res(json);}));
     }
 

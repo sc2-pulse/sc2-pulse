@@ -166,6 +166,7 @@
         const SESSION_TIMEOUT_SECONDS = parseInt(/*[[${!#strings.isEmpty(@environment.getProperty('server.servlet.session.timeout'))
             ? @environment.getProperty('server.servlet.session.timeout')
             : 1800}]]*/ 1800);
+        const APPLICATION_VERSION = /*[[${T(com.nephest.battlenet.sc2.Application).VERSION}]]*/ '';
     </script>
     <th:block  id="script-additional" th:switch="${#arrays.contains(@environment.getActiveProfiles(), 'dev')}">
         <th:block th:case="true">

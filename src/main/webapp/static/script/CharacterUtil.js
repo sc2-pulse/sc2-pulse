@@ -31,7 +31,7 @@ class CharacterUtil
     {
         const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common";
         const characterPromise = Session.beforeRequest()
-            .then(n=>fetch(request).then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();}));
+            .then(n=>fetch(request).then(Session.verifyJsonResponse));
         return Promise.all([characterPromise, StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
                 const searchStd = jsons[0];
@@ -47,7 +47,7 @@ class CharacterUtil
     {
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)}`))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.CHARACTER).set("reports", json);
                 res();
@@ -58,7 +58,7 @@ class CharacterUtil
     {
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list`))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.CHARACTER_REPORTS).set("reports", json);
                 res();
@@ -903,7 +903,7 @@ class CharacterUtil
         const request = ROOT_CONTEXT_PATH + "api/characters?name=" + encodeURIComponent(name);
         return Session.beforeRequest()
             .then(n=>fetch(request))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.SEARCH, json);
                 Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.VAR, name);
@@ -972,7 +972,7 @@ class CharacterUtil
     {
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${id}/matches/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1`))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
                 commonCharacter.matches = commonCharacter.matches.concat(json.result);
@@ -1002,7 +1002,7 @@ class CharacterUtil
     {
         return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/characters"))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json();})
+            .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json);
                 res(json);
@@ -1237,7 +1237,7 @@ class CharacterUtil
     {
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/vote/${id}/${vote}`, Util.addCsrfHeader({method: "POST"})))
-            .then(resp => {if (!resp.ok) throw new Error(resp.status + " " + resp.statusText); return resp.json()})
+            .then(Session.verifyJsonResponse)
     }
 
     static onEvidenceVote(evt)
@@ -1342,7 +1342,7 @@ class CharacterUtil
                     }
                     throw new Error(resp.status + " " + resp.statusText + " " + desc);
                 }
-                return resp.json();
+                return Session.verifyJsonResponse(resp);
             })
             .then(e=>CharacterUtil.updateCharacterReportsModel())
             .then(json=>BootstrapUtil.showTab("player-stats-player-tab"))
