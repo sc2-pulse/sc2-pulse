@@ -500,7 +500,8 @@ class StatsUtil
             document.getElementById("stats-match-up-global-table"), formattedGlobalCalculated,
             Util.matchUpComparator,
             null,
-            (league)=>EnumUtil.enumOfName(league, LEAGUE).name
+            (league)=>EnumUtil.enumOfName(league, LEAGUE).name,
+            (a, b)=>EnumUtil.enumOfName(a, LEAGUE).order - EnumUtil.enumOfName(b, LEAGUE).order
         );
         for(const [region, rStats] of Object.entries(formattedRegionalCalculated))
         {
