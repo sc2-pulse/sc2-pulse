@@ -39,7 +39,7 @@ class TableUtil
         return th;
     }
 
-    static updateColRowTable(table, data, sorter = null, headTranslator = null, rowTranslator = null)
+    static updateColRowTable(table, data, sorter = null, headTranslator = null, rowTranslator = null, rowSorter = null)
     {
         const headRow = table.querySelector(":scope thead tr");
         ElementUtil.removeChildren(headRow);
@@ -60,7 +60,9 @@ class TableUtil
             headCell.textContent = headerTranslated;
             headRow.appendChild(headCell);
         }
-        for(const[rowHeader, rowData] of Object.entries(data))
+        const entries = Object.entries(data);
+        if(rowSorter) entries.sort((a, b)=>rowSorter(a[0], b[0]));
+        for(const[rowHeader, rowData] of entries)
         {
             const bodyRow = document.createElement("tr");
             const rowHeadCell = document.createElement("th");
