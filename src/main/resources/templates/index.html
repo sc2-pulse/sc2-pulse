@@ -381,9 +381,10 @@
                         </select>
                     </div>
                 </form>
+                <div id="match-up-legend"></div>
                 <div class="row no-gutters ml-3">
                     <section id="stats-match-up-total-c" class="col-lg-6 mb-3"
-                             th:replace="~{fragments/section :: stats('stats-match-up-total', ~{::#stats-match-up-total-c/h4}, '%', 'bar')}"
+                             th:replace="~{fragments/section :: statsFull('stats-match-up-total', ~{::#stats-match-up-total-c/h4}, '%', 'bar', 'false')}"
                     >
                         <h4>Match-up stats (<span class="season-current"></span>)</h4>
                     </section>

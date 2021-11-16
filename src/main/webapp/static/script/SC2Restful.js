@@ -52,6 +52,7 @@ class SC2Restful
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
                 StatsUtil.enhanceMatchUpControls();
+                StatsUtil.addMatchUpLegend();
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");
                 BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
                 Session.enhanceThemeInputs();

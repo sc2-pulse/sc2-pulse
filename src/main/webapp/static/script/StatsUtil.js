@@ -597,6 +597,26 @@ class StatsUtil
             .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message, e));
     }
 
+    static addMatchUpLegend()
+    {
+        const legend = document.querySelector("#match-up-legend");
+        if(!legend) return;
+        Object.values(RACE)
+            .map(r=>{
+                const name = document.createElement("span");
+                name.textContent = r.name;
+                const color = document.createElement("span");
+                color.style = `background-color: ${SC2Restful.COLORS.get(r.name)}; border-radius: 1em; height: 1em; width: 1em`;
+                color.classList.add("d-inline-block", "align-middle", "mr-1");
+                const container = document.createElement("span");
+                container.classList.add("d-inline-block", "text-nowrap", "mr-3", "mb-3");
+                container.appendChild(color);
+                container.appendChild(name);
+                return container;
+            })
+            .forEach(l=>legend.appendChild(l));
+    }
+
 
 
 }
