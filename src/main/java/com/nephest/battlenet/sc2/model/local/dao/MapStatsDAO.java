@@ -37,54 +37,48 @@ public class MapStatsDAO
         + "map_stats.losses AS \"map_stats.losses\", "
         + "map_stats.ties AS \"map_stats.ties\", "
         + "map_stats.duration AS \"map_stats.duration\" ";
-    
-    private static final String UPDATE_STATS_TEMPLATE =
-        "WITH "
-        + "match_filter AS "
-        + "( "
-            + "SELECT DISTINCT(match.id) "
-            + "FROM match "
-            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
-            + "LEFT JOIN team_state ON match_participant.team_id = team_state.team_id "
-                + "AND match_participant.team_state_timestamp = team_state.timestamp "
-            + "WHERE date >= :from AND date < :to "
-            + "AND type = %7$s "
-            + "AND team_state.region_rank IS NOT NULL "
-            + "GROUP BY match.id "
-            + "HAVING COUNT(*) = 2 "
-            + "AND COUNT(team_state.region_rank) = 2 "
-            + "AND SUM(decision) = %8$s"
-        + "), "
-        + "versus_race_filter AS "
-        + "( "
-            + "SELECT DISTINCT(match.id) "
-            + "FROM match_filter "
-            + "INNER JOIN match USING(id) "
-            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
-            + "INNER JOIN team ON match_participant.team_id = team.id "
-            + "INNER JOIN team_member ON team.id = team_member.team_id "
-            + "WHERE team_member.%3$s_games_played > 0 "
-        + "), "
-        + "matchup_league_filter AS "
-        + "( "
-            + "SELECT match.id, "
-            + "match_participant.player_character_id, "
-            + "get_top_percentage_league_lotv"
-            + "("
-                + "team_state.region_rank, "
-                + "team_state.region_team_count::DOUBLE PRECISION, "
-                + "true"
-            + ") AS league_type "
-            + "FROM versus_race_filter "
-            + "INNER JOIN match USING(id) "
-            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
-            + "INNER JOIN team ON match_participant.team_id = team.id "
-            + "INNER JOIN team_member ON team.id = team_member.team_id "
-            + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id "
-                + "AND match_participant.team_state_timestamp = team_state.timestamp "
-            + "WHERE team_member.%1$s_games_played > 0 "
-        + "), "
-        + "matchup_filter AS "
+
+    private static final String UPDATE_STATS_MATCH_FILTER =
+        "SELECT DISTINCT(match.id) "
+        + "FROM match "
+        + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+        + "LEFT JOIN team_state ON match_participant.team_id = team_state.team_id "
+            + "AND match_participant.team_state_timestamp = team_state.timestamp "
+        + "WHERE date >= :from AND date < :to "
+        + "AND type = %7$s "
+        + "AND team_state.region_rank IS NOT NULL "
+        + "GROUP BY match.id "
+        + "HAVING COUNT(*) = 2 "
+        + "AND COUNT(team_state.region_rank) = 2 "
+        + "AND SUM(decision) = %8$s";
+
+    private static final String UPDATE_STATS_VERSUS_FILTER =
+        "SELECT DISTINCT(match.id) "
+        + "FROM match_filter "
+        + "INNER JOIN match USING(id) "
+        + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+        + "INNER JOIN team ON match_participant.team_id = team.id "
+        + "INNER JOIN team_member ON team.id = team_member.team_id ";
+
+    private static final String UPDATE_STATS_MATCH_UP_LEAGUE_FILTER =
+        "SELECT match.id, "
+        + "match_participant.player_character_id, "
+        + "get_top_percentage_league_lotv"
+        + "("
+            + "team_state.region_rank, "
+            + "team_state.region_team_count::DOUBLE PRECISION, "
+            + "true"
+        + ") AS league_type "
+        + "FROM versus_race_filter "
+        + "INNER JOIN match USING(id) "
+        + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+        + "INNER JOIN team ON match_participant.team_id = team.id "
+        + "INNER JOIN team_member ON team.id = team_member.team_id "
+        + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id "
+        + "AND match_participant.team_state_timestamp = team_state.timestamp ";
+
+    private static final String UPDATE_STATS_TEMPLATE_END =
+        "matchup_filter AS "
         + "( "
             + "SELECT map_id, "
             + "league.id AS league_id, "
@@ -204,6 +198,32 @@ public class MapStatsDAO
         + "UNION "
         + "SELECT COUNT(*) FROM inserted";
 
+    private static final String UPDATE_VERSUS_STATS_TEMPLATE =
+        "WITH match_filter AS(" + UPDATE_STATS_MATCH_FILTER + "), "
+        + "versus_race_filter AS "
+        + "( "
+            + UPDATE_STATS_VERSUS_FILTER
+            + "WHERE team_member.%3$s_games_played > 0 "
+        + "), "
+        + "matchup_league_filter AS "
+        + "( "
+            + UPDATE_STATS_MATCH_UP_LEAGUE_FILTER
+            + "WHERE team_member.%1$s_games_played > 0 "
+        + "), "
+        + UPDATE_STATS_TEMPLATE_END;
+
+    private static final String UPDATE_MIRROR_STATS_TEMPLATE =
+        "WITH match_filter AS(" + UPDATE_STATS_MATCH_FILTER + "), "
+        + "versus_race_filter AS "
+        + "( "
+            + UPDATE_STATS_VERSUS_FILTER
+            + "WHERE team_member.%3$s_games_played > 0 "
+            + "GROUP BY match.id "
+            + "HAVING COUNT(*) = 2"
+        + "), "
+        + "matchup_league_filter AS( " + UPDATE_STATS_MATCH_UP_LEAGUE_FILTER + "), "
+        + UPDATE_STATS_TEMPLATE_END;
+
     private static final String FIND_BY_IDS_QUERY =
         "SELECT " + STD_SELECT
         + "FROM map_stats "
@@ -261,12 +281,20 @@ public class MapStatsDAO
         {
             for(Race versusRace : Race.values())
             {
-                if(race == versusRace) continue;
-
-                queries.add(String.format(UPDATE_STATS_TEMPLATE,
-                    race.getName().toLowerCase(), conversionService.convert(race, Integer.class),
-                    versusRace.getName().toLowerCase(), conversionService.convert(versusRace, Integer.class),
-                    win, tie, type, winPlusLoss));
+                if(race == versusRace)
+                {
+                    queries.add(String.format(UPDATE_MIRROR_STATS_TEMPLATE,
+                        race.getName().toLowerCase(), conversionService.convert(race, Integer.class),
+                        versusRace.getName().toLowerCase(), conversionService.convert(versusRace, Integer.class),
+                        win, tie, type, winPlusLoss));
+                }
+                else
+                {
+                    queries.add(String.format(UPDATE_VERSUS_STATS_TEMPLATE,
+                        race.getName().toLowerCase(), conversionService.convert(race, Integer.class),
+                        versusRace.getName().toLowerCase(), conversionService.convert(versusRace, Integer.class),
+                        win, tie, type, winPlusLoss));
+                }
             }
         }
         return queries;

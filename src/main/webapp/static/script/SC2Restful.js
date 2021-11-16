@@ -121,18 +121,22 @@ SC2Restful.COLORS = new Map
 ]);
 SC2Restful.MULTI_COLORS = new Map
 ([
+    ["tvt", [SC2Restful.COLORS.get("terran"), SC2Restful.COLORS.get("terran")]],
     ["tvp", [SC2Restful.COLORS.get("terran"), SC2Restful.COLORS.get("protoss")]],
     ["tvz", [SC2Restful.COLORS.get("terran"), SC2Restful.COLORS.get("zerg")]],
     ["tvr", [SC2Restful.COLORS.get("terran"), SC2Restful.COLORS.get("random")]],
     ["pvt", [SC2Restful.COLORS.get("protoss"), SC2Restful.COLORS.get("terran")]],
+    ["pvp", [SC2Restful.COLORS.get("protoss"), SC2Restful.COLORS.get("protoss")]],
     ["pvz", [SC2Restful.COLORS.get("protoss"), SC2Restful.COLORS.get("zerg")]],
     ["pvr", [SC2Restful.COLORS.get("protoss"), SC2Restful.COLORS.get("random")]],
     ["zvt", [SC2Restful.COLORS.get("zerg"), SC2Restful.COLORS.get("terran")]],
     ["zvp", [SC2Restful.COLORS.get("zerg"), SC2Restful.COLORS.get("protoss")]],
+    ["zvz", [SC2Restful.COLORS.get("zerg"), SC2Restful.COLORS.get("zerg")]],
     ["zvr", [SC2Restful.COLORS.get("zerg"), SC2Restful.COLORS.get("random")]],
     ["rvt", [SC2Restful.COLORS.get("random"), SC2Restful.COLORS.get("terran")]],
     ["rvp", [SC2Restful.COLORS.get("random"), SC2Restful.COLORS.get("protoss")]],
-    ["rvz", [SC2Restful.COLORS.get("random"), SC2Restful.COLORS.get("zerg")]]
+    ["rvz", [SC2Restful.COLORS.get("random"), SC2Restful.COLORS.get("zerg")]],
+    ["rvr", [SC2Restful.COLORS.get("random"), SC2Restful.COLORS.get("random")]]
 ]);
 
 SC2Restful.UNIQUE_COLORS = [...new Set(SC2Restful.COLORS.values())];
