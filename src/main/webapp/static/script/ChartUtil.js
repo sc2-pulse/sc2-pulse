@@ -829,7 +829,6 @@ class ChartUtil
     {
         for(const chart of ChartUtil.CHARTS.values()) {
             chart.config.options.aspectRatio = ChartUtil.ASPECT_RATIO;
-            chart.aspectRatio = ChartUtil.ASPECT_RATIO;
             chart.update();
         }
     }
