@@ -16,6 +16,7 @@ class ChartUtil
         config["xTitle"] = chartable.getAttribute("data-chart-x-title");
         config["yTitle"] = chartable.getAttribute("data-chart-y-title");
         config["yReversed"] = chartable.getAttribute("data-chart-y-reversed");
+        config["legendDisplay"] = chartable.getAttribute("data-chart-legend-display");
         config["yMin"] = chartable.getAttribute("data-chart-y-min");
         config["yMax"] = chartable.getAttribute("data-chart-y-max");
         config["tooltipPercentage"] = chartable.getAttribute("data-chart-tooltip-percentage");
@@ -176,7 +177,8 @@ class ChartUtil
                         },
                         legend:
                         {
-                            onClick:ChartUtil.onLegendClick
+                            onClick:ChartUtil.onLegendClick,
+                            display: config.legendDisplay == "false" ? false : true
                         },
                         title:
                         {
