@@ -552,7 +552,7 @@ class ChartUtil
             }
             else
             {
-                if(secondaryColor != primaryColor)
+                if(multiColor)
                 {
                     const primaryAlphaColor = Util.changeFullRgbaAlpha(primaryColor, "0.7");
                     const secondaryAlphaColor = Util.changeFullRgbaAlpha(secondaryColor, "0.7");
