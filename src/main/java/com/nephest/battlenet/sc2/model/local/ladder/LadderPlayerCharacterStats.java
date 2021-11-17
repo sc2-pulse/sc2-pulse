@@ -13,14 +13,18 @@ public class LadderPlayerCharacterStats
     @NotNull
     private final PlayerCharacterStats stats;
 
-    private final Integer ratingCurrent;
-    private final Integer gamesPlayedCurrent;
+    @NotNull
+    private final LadderPlayerSearchStats previousStats;
 
-    public LadderPlayerCharacterStats(PlayerCharacterStats stats, Integer ratingCurrent, Integer gamesPlayedCurrent)
+    @NotNull
+    private final LadderPlayerSearchStats currentStats;
+
+    public LadderPlayerCharacterStats
+    (PlayerCharacterStats stats, LadderPlayerSearchStats previousStats, LadderPlayerSearchStats currentStats)
     {
         this.stats = stats;
-        this.ratingCurrent = ratingCurrent;
-        this.gamesPlayedCurrent = gamesPlayedCurrent;
+        this.previousStats = previousStats;
+        this.currentStats = currentStats;
     }
 
     public PlayerCharacterStats getStats()
@@ -28,14 +32,14 @@ public class LadderPlayerCharacterStats
         return stats;
     }
 
-    public Integer getRatingCurrent()
+    public LadderPlayerSearchStats getPreviousStats()
     {
-        return ratingCurrent;
+        return previousStats;
     }
 
-    public Integer getGamesPlayedCurrent()
+    public LadderPlayerSearchStats getCurrentStats()
     {
-        return gamesPlayedCurrent;
+        return currentStats;
     }
 
 }

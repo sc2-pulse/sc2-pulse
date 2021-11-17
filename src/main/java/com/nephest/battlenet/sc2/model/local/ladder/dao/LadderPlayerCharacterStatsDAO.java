@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
@@ -62,61 +63,82 @@ public class LadderPlayerCharacterStatsDAO
         {
             sb.append(String.format("%1$s_filter AS "
             + "( "
-            + "SELECT queue_type, team_type, "
+            + "SELECT season, queue_type, team_type, "
             + conversionService.convert(race, Integer.class) + " AS race, "
             + "MAX(rating) FILTER "
             + "( "
             + "WHERE %1$s_games_played > 0 "
             + PlayerCharacterStatsDAO.getRaceTeamFilter(race)
-            + ") AS rating_current, "
+            + ") AS rating, "
             + "SUM(%1$s_games_played) FILTER "
             + "( "
             + "WHERE %1$s_games_played > 0 "
             + PlayerCharacterStatsDAO.getRaceTeamFilter(race)
-            + ") AS games_current "
+            + ") AS games "
             + "FROM team_member "
             + "INNER JOIN team ON team_member.team_id = team.id "
             + "WHERE player_character_id = :playerCharacterId "
-            + "AND team.season = :season "
-            + "GROUP BY team.queue_type, team.team_type "
+            + "AND team.season IN(:season, :season - 1) "
+            + "GROUP BY team.season, team.queue_type, team.team_type "
             + "), ", race.getName().toLowerCase()));
         }
         sb.append
         (
             "norace_filter AS  "
             + "(  "
-            + "SELECT queue_type, team_type, null AS race,  "
-            + "MAX(rating) AS rating_current,  "
+                + "SELECT season, queue_type, team_type, NULL::integer AS race,  "
+                + "MAX(rating) AS rating,  "
+                + "("
+                    + "COALESCE(SUM(terran_games_played), 0) "
+                    + "+ COALESCE(SUM(protoss_games_played), 0) "
+                    + "+ COALESCE(SUM(zerg_games_played), 0) "
+                    + "+ COALESCE(SUM(random_games_played), 0)"
+                + ") AS games "
+                + "FROM team_member  "
+                + "INNER JOIN team ON team_member.team_id = team.id  "
+                + "WHERE player_character_id = :playerCharacterId "
+                + "AND team.season IN(:season, :season - 1) "
+                + "GROUP BY team.season, team.queue_type, team.team_type  "
+            + "), "
+            + "all_filter AS "
             + "("
-            + "COALESCE(SUM(terran_games_played), 0) "
-            + "+ COALESCE(SUM(protoss_games_played), 0) "
-            + "+ COALESCE(SUM(zerg_games_played), 0) "
-            + "+ COALESCE(SUM(random_games_played), 0)"
-            + ") AS games_current "
-            + "FROM team_member  "
-            + "INNER JOIN team ON team_member.team_id = team.id  "
-            + "WHERE player_character_id = :playerCharacterId "
-            + "AND team.season = :season "
-            + "GROUP BY team.queue_type, team.team_type  "
+                + "SELECT * FROM norace_filter "
+                + "UNION "
+                + "SELECT * FROM terran_filter "
+                + "UNION "
+                + "SELECT * FROM protoss_filter "
+                + "UNION "
+                + "SELECT * FROM zerg_filter "
+                + "UNION "
+                + "SELECT * FROM random_filter "
+            + "), "
+            + "prev_stats AS "
+            + "("
+                + "SELECT * FROM all_filter "
+                + "WHERE season = :season - 1"
+            + "), "
+            + "cur_stats AS "
+            + "("
+                + "SELECT * FROM all_filter "
+                + "WHERE season = :season"
             + ") "
-            + "SELECT id,"
-            + " player_character_stats.queue_type, "
+            + "SELECT id, "
+            + "player_character_stats.queue_type, "
             + "player_character_stats.team_type, "
             + "player_character_id, "
             + "player_character_stats.race, "
             + "rating_max, league_max, games_played, "
-            + "COALESCE(terran_filter.rating_current,  protoss_filter.rating_current,  zerg_filter.rating_current, "
-            + "random_filter.rating_current, norace_filter.rating_current) AS rating_current, "
-            + "COALESCE(terran_filter.games_current,  protoss_filter.games_current,  zerg_filter.games_current, "
-            + "random_filter.games_current, norace_filter.games_current) AS games_current "
+            + "prev_stats.rating AS rating_prev, "
+            + "prev_stats.games AS games_prev, "
+            + "cur_stats.rating AS rating_cur, "
+            + "cur_stats.games AS games_cur "
             + "FROM player_character_stats "
-            + "LEFT JOIN terran_filter USING(queue_type, team_type, race) "
-            + "LEFT JOIN protoss_filter USING(queue_type, team_type, race) "
-            + "LEFT JOIN zerg_filter USING(queue_type, team_type, race) "
-            + "LEFT JOIN random_filter USING(queue_type, team_type, race) "
-            + "LEFT JOIN norace_filter ON player_character_stats.queue_type = norace_filter.queue_type "
-            + "    AND player_character_stats.team_type = norace_filter.team_type "
-            + "    AND player_character_stats.race IS NULL "
+            + "LEFT JOIN prev_stats ON player_character_stats.queue_type = prev_stats.queue_type "
+                + "AND player_character_stats.team_type = prev_stats.team_type "
+                + "AND COALESCE(player_character_stats.race, -32768) = COALESCE(prev_stats.race, -32768) "
+            + "LEFT JOIN cur_stats ON player_character_stats.queue_type = cur_stats.queue_type "
+                + "AND player_character_stats.team_type = cur_stats.team_type "
+                + "AND COALESCE(player_character_stats.race, -32768) = COALESCE(cur_stats.race, -32768) "
             + "WHERE player_character_id = :playerCharacterId"
         );
         return sb.toString();
@@ -127,8 +149,18 @@ public class LadderPlayerCharacterStatsDAO
         if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num) -> new LadderPlayerCharacterStats
         (
             PlayerCharacterStatsDAO.getStdRowMapper().mapRow(rs, num),
-            DAOUtils.getInteger(rs, "rating_current"),
-            DAOUtils.getInteger(rs, "games_current")
+            new LadderPlayerSearchStats
+            (
+                DAOUtils.getInteger(rs, "rating_prev"),
+                DAOUtils.getInteger(rs, "games_prev"),
+                null
+            ),
+            new LadderPlayerSearchStats
+            (
+                DAOUtils.getInteger(rs, "rating_cur"),
+                DAOUtils.getInteger(rs, "games_cur"),
+                null
+            )
         );
     }
 

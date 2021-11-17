@@ -150,16 +150,16 @@ public class PlayerCharacterStatsDAOIT
         assertNull(stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.RANDOM));
 
         LadderPlayerCharacterStats terranStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.TERRAN);
-        verifyStats(terranStats, character, Race.TERRAN, BaseLeague.LeagueType.BRONZE, 2L, 97, null, null);
+        verifyStats(terranStats, character, Race.TERRAN, BaseLeague.LeagueType.BRONZE, 2L, 97, 1, 97, null, null);
 
         LadderPlayerCharacterStats protossStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.PROTOSS);
-        verifyStats(protossStats, character, Race.PROTOSS, BaseLeague.LeagueType.BRONZE, 2L, 97, null, null);
+        verifyStats(protossStats, character, Race.PROTOSS, BaseLeague.LeagueType.BRONZE, 2L, 97, 1, 97, null, null);
 
         LadderPlayerCharacterStats zergStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(Race.ZERG);
-        verifyStats(zergStats, character, Race.ZERG, BaseLeague.LeagueType.DIAMOND, 4L, 291, 2, 97);
+        verifyStats(zergStats, character, Race.ZERG, BaseLeague.LeagueType.DIAMOND, 4L, 291, 3, 194, 2, 97);
 
         LadderPlayerCharacterStats globalStats = stats.get(QUEUE_TYPE).get(TEAM_TYPE).get(null);
-        verifyStats(globalStats, character, null, BaseLeague.LeagueType.DIAMOND, 4L, 595, 2, 199);
+        verifyStats(globalStats, character, null, BaseLeague.LeagueType.DIAMOND, 4L, 595, 3, 396, 2, 199);
     }
 
     private void createTeam
@@ -226,6 +226,8 @@ public class PlayerCharacterStatsDAOIT
         BaseLeague.LeagueType leagueMax,
         long ratingMax,
         int gamesPlayed,
+        Integer ratingPrev,
+        Integer gamesPrev,
         Integer ratingCur,
         Integer gamesPlayedCur
     )
@@ -235,8 +237,10 @@ public class PlayerCharacterStatsDAOIT
         assertEquals(leagueMax, stats.getStats().getLeagueMax());
         assertEquals(ratingMax, (long) stats.getStats().getRatingMax());
         assertEquals(gamesPlayed, (long) stats.getStats().getGamesPlayed());
-        assertEquals(ratingCur, stats.getRatingCurrent());
-        assertEquals(gamesPlayedCur, stats.getGamesPlayedCurrent());
+        assertEquals(ratingPrev, stats.getPreviousStats().getRating());
+        assertEquals(gamesPrev, stats.getPreviousStats().getGamesPlayed());
+        assertEquals(ratingCur, stats.getCurrentStats().getRating());
+        assertEquals(gamesPlayedCur, stats.getCurrentStats().getGamesPlayed());
     }
 
 }
