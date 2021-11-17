@@ -270,9 +270,12 @@ public class LadderSearchIndependentIT
         assertEquals(BaseLeague.LeagueType.BRONZE, char1.getLeagueMax());
         assertEquals(100, char1.getRatingMax());
         assertEquals(199, char1.getTotalGamesPlayed());
-        assertEquals(98, char1.getRatingCurrent());
-        assertEquals(149, char1.getGamesPlayedCurrent());
-        assertEquals(2147483647, char1.getRankCurrent());
+        assertEquals(98, char1.getCurrentStats().getRating());
+        assertEquals(149, char1.getCurrentStats().getGamesPlayed());
+        assertEquals(2147483647, char1.getCurrentStats().getRank());
+        assertEquals(100, char1.getPreviousStats().getRating());
+        assertEquals(100, char1.getPreviousStats().getGamesPlayed());
+        assertEquals(2147483647, char1.getPreviousStats().getRank());
 
         List<LadderDistinctCharacter> byAccount = ladderCharacterDAO.findDistinctCharactersByAccountId(acc.getId());
         verifyCharacterAccountStats(byAccount);
@@ -293,9 +296,12 @@ public class LadderSearchIndependentIT
         assertEquals(BaseLeague.LeagueType.BRONZE, byProfileLink.getLeagueMax());
         assertEquals(100, byProfileLink.getRatingMax());
         assertEquals(199, byProfileLink.getTotalGamesPlayed());
-        assertEquals(98, byProfileLink.getRatingCurrent());
-        assertEquals(149, byProfileLink.getGamesPlayedCurrent());
-        assertEquals(2147483647, byProfileLink.getRankCurrent());
+        assertEquals(98, byProfileLink.getCurrentStats().getRating());
+        assertEquals(149, byProfileLink.getCurrentStats().getGamesPlayed());
+        assertEquals(2147483647, byProfileLink.getCurrentStats().getRank());
+        assertEquals(100, byProfileLink.getPreviousStats().getRating());
+        assertEquals(100, byProfileLink.getPreviousStats().getGamesPlayed());
+        assertEquals(2147483647, byProfileLink.getPreviousStats().getRank());
 
         mvc.perform
         (
@@ -367,7 +373,7 @@ public class LadderSearchIndependentIT
     {
         assertEquals(2, byAccount.size());
         //sorted by rating cur, rating max
-        LadderDistinctCharacter char11 = byAccount.get(0);
+        LadderDistinctCharacter char11 = byAccount.get(1);
         assertEquals("refaccount#123", char11.getMembers().getAccount().getBattleTag());
         assertEquals("refchar1#123", char11.getMembers().getCharacter().getName());
         assertNotNull(char11.getMembers().getClan());
@@ -377,11 +383,14 @@ public class LadderSearchIndependentIT
         assertEquals(BaseLeague.LeagueType.BRONZE, char11.getLeagueMax());
         assertEquals(100, char11.getRatingMax());
         assertEquals(199, char11.getTotalGamesPlayed());
-        assertEquals(98, char11.getRatingCurrent());
-        assertEquals(149, char11.getGamesPlayedCurrent());
-        assertEquals(2147483647, char11.getRankCurrent());
+        assertEquals(98, char11.getCurrentStats().getRating());
+        assertEquals(149, char11.getCurrentStats().getGamesPlayed());
+        assertEquals(2147483647, char11.getCurrentStats().getRank());
+        assertEquals(100, char11.getPreviousStats().getRating());
+        assertEquals(100, char11.getPreviousStats().getGamesPlayed());
+        assertEquals(2147483647, char11.getPreviousStats().getRank());
 
-        LadderDistinctCharacter char12 = byAccount.get(1);
+        LadderDistinctCharacter char12 = byAccount.get(0);
         assertEquals("refaccount#123", char12.getMembers().getAccount().getBattleTag());
         assertEquals("refchar2#123", char12.getMembers().getCharacter().getName());
         assertNotNull(char12.getMembers().getClan());
@@ -391,9 +400,12 @@ public class LadderSearchIndependentIT
         assertEquals(BaseLeague.LeagueType.BRONZE, char12.getLeagueMax());
         assertEquals(101, char12.getRatingMax());
         assertEquals(100, char12.getTotalGamesPlayed());
-        assertNull(char12.getRatingCurrent());
-        assertNull(char12.getGamesPlayedCurrent());
-        assertNull(char12.getRankCurrent());
+        assertNull(char12.getCurrentStats().getRating());
+        assertNull(char12.getCurrentStats().getGamesPlayed());
+        assertNull(char12.getCurrentStats().getRank());
+        assertEquals(101, char12.getPreviousStats().getRating());
+        assertEquals(100, char12.getPreviousStats().getGamesPlayed());
+        assertEquals(2147483647, char12.getPreviousStats().getRank());
     }
 
     private void verifyProCharacterAccountStats(List<LadderDistinctCharacter> byAccount)
@@ -407,9 +419,12 @@ public class LadderSearchIndependentIT
         assertEquals(BaseLeague.LeagueType.BRONZE, char13.getLeagueMax());
         assertEquals(102, char13.getRatingMax());
         assertEquals(200, char13.getTotalGamesPlayed());
-        assertEquals(102, char13.getRatingCurrent());
-        assertEquals(100, char13.getGamesPlayedCurrent());
-        assertEquals(2147483647, char13.getRankCurrent());
+        assertEquals(102, char13.getCurrentStats().getRating());
+        assertEquals(100, char13.getCurrentStats().getGamesPlayed());
+        assertEquals(2147483647, char13.getCurrentStats().getRank());
+        assertEquals(102, char13.getPreviousStats().getRating());
+        assertEquals(100, char13.getPreviousStats().getGamesPlayed());
+        assertEquals(2147483647, char13.getPreviousStats().getRank());
 
         verifyCharacterAccountStats(List.of(byAccount.get(1), byAccount.get(2)));
     }

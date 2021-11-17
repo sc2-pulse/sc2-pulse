@@ -916,16 +916,27 @@ class CharacterUtil
         const tbody = table.getElementsByTagName("tbody")[0];
         ElementUtil.removeChildren(tbody);
 
+        const includePrevious = localStorage.getItem("player-search-stats-include-previous") != "false";
+        const grayOutPrevious = localStorage.getItem("player-search-stats-gray-out-previous") != "false";
+        if(!includePrevious) searchResult.sort((a, b)=>{
+            const ratingDiff = b.currentStats.rating - a.currentStats.rating;
+            if(ratingDiff != 0) return ratingDiff;
+            return b.ratingMax - a.ratingMax;
+        })
         for(let i = 0; i < searchResult.length; i++)
         {
             const character = searchResult[i];
+            const hasCurrentStats = character.currentStats.rating;
+            const stats = includePrevious
+                ? (hasCurrentStats ? character.currentStats : character.previousStats)
+                : character.currentStats;
             const row = tbody.insertRow();
             row.insertCell().appendChild(ElementUtil.createImage("flag/", character.members.character.region.toLowerCase(), "table-image-long"));
             row.insertCell().appendChild(ElementUtil.createImage("league/", EnumUtil.enumOfId(character.leagueMax, LEAGUE).name, "table-image table-image-square mr-1"));
             row.insertCell().textContent = character.ratingMax;
             row.insertCell().textContent = character.totalGamesPlayed;
-            row.insertCell().textContent = character.ratingCurrent ? character.ratingCurrent : "";
-            row.insertCell().textContent = character.gamesPlayedCurrent ? character.gamesPlayedCurrent : "";
+            CharacterUtil.insertSearchStats(row, stats, "rating", hasCurrentStats, grayOutPrevious);
+            CharacterUtil.insertSearchStats(row, stats, "gamesPlayed", hasCurrentStats, grayOutPrevious);
             const membersCell = row.insertCell();
             membersCell.classList.add("complex", "cell-main");
             const mRow = document.createElement("span");
@@ -941,6 +952,13 @@ class CharacterUtil
             membersCell.appendChild(mRow);
             tbody.appendChild(row);
         }
+    }
+
+    static insertSearchStats(row, stats, key,  hasCurrentStats, grayOutPreviousSeason)
+    {
+        const cell = row.insertCell();
+        if(grayOutPreviousSeason && !hasCurrentStats) cell.classList.add("text-secondary");
+        cell.textContent = stats[key];
     }
 
     static loadNextMatches(evt)

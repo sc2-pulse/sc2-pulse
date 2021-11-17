@@ -22,9 +22,11 @@ public class LadderDistinctCharacter
     @NotNull
     private final Integer totalGamesPlayed;
 
-    private final Integer ratingCurrent;
-    private final Integer gamesPlayedCurrent;
-    private final Integer rankCurrent;
+    @NotNull
+    private final LadderPlayerSearchStats previousStats;
+
+    @NotNull
+    private final LadderPlayerSearchStats currentStats;
 
     @NotNull
     private final LadderTeamMember members;
@@ -33,7 +35,6 @@ public class LadderDistinctCharacter
     (
         BaseLeague.LeagueType leagueMax,
         Integer ratingMax,
-        Integer ratingCurrent,
         Account account,
         PlayerCharacter character,
         Clan clan,
@@ -45,16 +46,13 @@ public class LadderDistinctCharacter
         Integer zergGamesPlayed,
         Integer randomGamesPlayed,
         Integer totalGamesPlayed,
-        Integer gamesPlayedCurrent,
-        Integer rankCurrent
+        LadderPlayerSearchStats previousStats,
+        LadderPlayerSearchStats currentStats
     )
     {
         this.leagueMax = leagueMax;
         this.ratingMax = ratingMax;
-        this.ratingCurrent = ratingCurrent;
         this.totalGamesPlayed = totalGamesPlayed;
-        this.gamesPlayedCurrent = gamesPlayedCurrent;
-        this.rankCurrent = rankCurrent;
         this.members = new LadderTeamMember
         (
             account,
@@ -68,6 +66,8 @@ public class LadderDistinctCharacter
             zergGamesPlayed,
             randomGamesPlayed
         );
+        this.previousStats = previousStats;
+        this.currentStats = currentStats;
     }
 
     public BaseLeague.LeagueType getLeagueMax()
@@ -85,24 +85,20 @@ public class LadderDistinctCharacter
         return totalGamesPlayed;
     }
 
-    public Integer getRatingCurrent()
-    {
-        return ratingCurrent;
-    }
-
-    public Integer getGamesPlayedCurrent()
-    {
-        return gamesPlayedCurrent;
-    }
-
-    public Integer getRankCurrent()
-    {
-        return rankCurrent;
-    }
-
     public LadderTeamMember getMembers()
     {
         return members;
     }
+
+    public LadderPlayerSearchStats getPreviousStats()
+    {
+        return previousStats;
+    }
+
+    public LadderPlayerSearchStats getCurrentStats()
+    {
+        return currentStats;
+    }
+
 
 }

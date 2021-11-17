@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -26,6 +27,19 @@ import java.util.Optional;
 @Repository
 public class LadderCharacterDAO
 {
+
+    private static final String SEARCH_STATS_TEMPLATE =
+        "SELECT DISTINCT ON(player_character_filtered.id) "
+        + "player_character_filtered.id AS player_character_id, "
+        + "MAX(rating) AS rating, "
+        + "SUM(wins + losses + ties) AS games_played, "
+        + "MAX(global_rank) AS global_rank "
+        + "FROM player_character_filtered "
+        + "INNER JOIN team_member ON player_character_filtered.id = team_member.player_character_id "
+        + "INNER JOIN team ON team_member.team_id = team.id "
+        + "WHERE team.season = :season %1$s "
+        + "AND queue_type = :queueType "
+        + "GROUP BY player_character_filtered.id";
 
     private static final String FIND_DISTINCT_CHARACTER_FORMAT =
     "WITH RECURSIVE %2$s "
@@ -46,19 +60,13 @@ public class LadderCharacterDAO
         + "player_character_stats.games_played DESC, player_character_stats.league_max DESC, "
         + "player_character_stats.queue_type, player_character_stats.team_type "
     + "), "
+    + "player_character_stats_previous AS "
+    + "( "
+        + String.format(SEARCH_STATS_TEMPLATE, "-1")
+    + "), "
     + "player_character_stats_current AS "
     + "( "
-        + "SELECT DISTINCT ON(player_character_filtered.id) "
-        + "player_character_filtered.id AS player_character_id, "
-        + "MAX(rating) AS rating, "
-        + "SUM(wins + losses + ties) AS games_played, "
-        + "MAX(global_rank) AS global_rank "
-        + "FROM player_character_filtered "
-        + "INNER JOIN team_member ON player_character_filtered.id = team_member.player_character_id "
-        + "INNER JOIN team ON team_member.team_id = team.id "
-        + "WHERE team.season = :season "
-        + "AND queue_type = :queueType "
-        + "GROUP BY player_character_filtered.id"
+        + String.format(SEARCH_STATS_TEMPLATE, "")
     + ") "
 
     + "SELECT "
@@ -72,6 +80,9 @@ public class LadderCharacterDAO
     + "player_character_stats.league_max AS \"league_max\", "
     + "player_character_stats.rating_max AS \"rating_max\", "
     + "player_character_stats.games_played AS \"games_played\", "
+    + "player_character_stats_previous.rating as \"rating_prev\", "
+    + "player_character_stats_previous.games_played as \"games_played_prev\", "
+    + "player_character_stats_previous.global_rank as \"rank_prev\", "
     + "player_character_stats_current.rating as \"rating_cur\", "
     + "player_character_stats_current.games_played as \"games_played_cur\", "
     + "player_character_stats_current.global_rank as \"rank_cur\" "
@@ -90,8 +101,10 @@ public class LadderCharacterDAO
         + "AND confirmed_cheater_report.type = :cheaterReportType "
         + "AND confirmed_cheater_report.status = true "
     + "LEFT JOIN player_character_stats_current ON player_character_stats_current.player_character_id = player_character_stats_filtered.player_character_id "
+    + "LEFT JOIN player_character_stats_previous ON player_character_stats_previous.player_character_id = player_character_stats_filtered.player_character_id "
 
-    + "ORDER BY rating_cur DESC NULLS LAST, rating_max DESC";
+    + "ORDER BY COALESCE(player_character_stats_current.rating, player_character_stats_previous.rating) DESC NULLS LAST, "
+        + "rating_max DESC";
 
     private static final String FIND_DISTINCT_CHARACTER_BY_NAME_OR_BATTLE_TAG_OR_PRO_NICKNAME_QUERY = String.format
     (
@@ -238,7 +251,6 @@ public class LadderCharacterDAO
             (
                 conversionService.convert(rs.getInt("league_max"), League.LeagueType.class),
                 rs.getInt("rating_max"),
-                DAOUtils.getInteger(rs, "rating_cur"),
                 AccountDAO.getStdRowMapper().mapRow(rs, num),
                 PlayerCharacterDAO.getStdRowMapper().mapRow(rs, num),
                 clan,
@@ -250,8 +262,18 @@ public class LadderCharacterDAO
                 race == Race.ZERG ? gamesPlayed : null,
                 race == Race.RANDOM ? gamesPlayed : null,
                 gamesPlayed,
-                DAOUtils.getInteger(rs, "games_played_cur"),
-                DAOUtils.getInteger(rs, "rank_cur")
+                new LadderPlayerSearchStats
+                (
+                    DAOUtils.getInteger(rs, "rating_prev"),
+                    DAOUtils.getInteger(rs, "games_played_prev"),
+                    DAOUtils.getInteger(rs, "rank_prev")
+                ),
+                new LadderPlayerSearchStats
+                (
+                    DAOUtils.getInteger(rs, "rating_cur"),
+                    DAOUtils.getInteger(rs, "games_played_cur"),
+                    DAOUtils.getInteger(rs, "rank_cur")
+                )
             );
         };
         DISTINCT_CHARACTER_EXTRACTOR = (rs)->{
