@@ -12,6 +12,7 @@ class ChartUtil
         const config = {};
         config["type"] = chartable.getAttribute("data-chart-type");
         config["stacked"] = chartable.getAttribute("data-chart-stacked");
+        config["maintainAspectRatio"] = chartable.getAttribute("data-chart-maintain-aspect-ratio");
         config["title"] = chartable.getAttribute("data-chart-title");
         config["xTitle"] = chartable.getAttribute("data-chart-x-title");
         config["yTitle"] = chartable.getAttribute("data-chart-y-title");
@@ -49,6 +50,7 @@ class ChartUtil
                     normalized: true,
                     parsing: {xAxisKey: false, yAxisKey: false},
                     aspectRatio: ChartUtil.ASPECT_RATIO,
+                    maintainAspectRatio: config.maintainAspectRatio === "false" ? false : true,
                     scales:
                     {
                         x:
@@ -809,10 +811,16 @@ class ChartUtil
 
     static enhanceHeightControls()
     {
-        const handler = e=>window.setTimeout(ChartUtil.updateAspectRatioFromLocalStorage, 1);
+        const handler = e=>window.setTimeout(ChartUtil.updateHeightFromLocalStorage, 1);
         document.querySelector("#chart-height-high").addEventListener("click", handler);
         document.querySelector("#chart-height-medium").addEventListener("click", handler);
         document.querySelector("#chart-height-low").addEventListener("click", handler);
+    }
+
+    static updateHeightFromLocalStorage()
+    {
+        ChartUtil.updateAspectRatioFromLocalStorage();
+        ChartUtil.updateFixedHeightFromLocalStorage();
     }
 
     static updateAspectRatioFromLocalStorage()
@@ -833,6 +841,21 @@ class ChartUtil
             chart.config.options.aspectRatio = ChartUtil.ASPECT_RATIO;
             chart.update();
         }
+    }
+
+    static updateFixedHeightFromLocalStorage()
+    {
+        let height;
+        if(localStorage.getItem("chart-height-high") == "true") {
+            height = ChartUtil.HIGH_HEIGHT_REM;
+        } else if(localStorage.getItem("chart-height-low") == "true") {
+            height = ChartUtil.LOW_HEIGHT_REM;
+        } else {
+            height = ChartUtil.MEDIUM_HEIGHT_REM;
+        }
+        const sheet = Session.getStyleOverride().sheet;
+        for(let i = 0; i < sheet.cssRules.length; i++) if(sheet.cssRules[i].cssText.startsWith(".container-chart-fixed-height")) sheet.deleteRule(i);
+        sheet.insertRule(".container-chart-fixed-height {height: " + height + "rem;}", 0);
     }
 
     static setTopPercentYAxis(chartable)
@@ -914,6 +937,9 @@ ChartUtil.CHART_OBSERVER_CONFIG =
 ChartUtil.CHARTABLE_OBSERVER = new MutationObserver(ChartUtil.onChartableMutation);
 ChartUtil.CHART_OBSERVER = new MutationObserver(ChartUtil.onChartMutation);
 ChartUtil.ASPECT_RATIO = 2.5;
+ChartUtil.LOW_HEIGHT_REM = 8.5;
+ChartUtil.MEDIUM_HEIGHT_REM = 13.8;
+ChartUtil.HIGH_HEIGHT_REM = 17.1;
 
 class ChartLineVCursor extends Chart.LineController
 {

@@ -8,7 +8,7 @@
     <title>Pulse</title>
 </head>
 <body>
-<section th:id="|${idPrefix}-${region}|" class="col-lg-6 mb-3" th:fragment="stats-league-region (region, title, idPrefix, legendDisplay)">
+<section th:id="|${idPrefix}-${region}|" th:class="|col-lg-${autoHeight == 'true' ? '6' : '12'} mb-3|" th:fragment="stats-league-region (region, title, idPrefix, legendDisplay, autoHeight)">
     <h4><span th:text="${title}"></span>, distribution by league,
         <span th:switch="${region}">
             <span th:case="global">Global</span>
@@ -23,21 +23,22 @@
             th:data-chart-id="|${idPrefix}-${region}-chart|"
             data-chart-x-title="League" data-chart-y-title="%"
             th:data-chart-legend-display="${legendDisplay}"
+            th:data-chart-maintain-aspect-ratio="${autoHeight}"
     >
         <thead><tr></tr></thead>
         <tbody><tr></tr></tbody>
     </table>
-    <div class="container-chart"><canvas th:id="|${idPrefix}-${region}-chart|" class="c-chart"></canvas></div>
+    <div th:class="|container-chart ${!autoHeight ? 'container-chart-fixed-height' : ''}|"><canvas th:id="|${idPrefix}-${region}-chart|" class="c-chart"></canvas></div>
 </section>
 <section class="col-lg-6 mb-3"
          th:fragment="stats-race-league-region (region)"
-         th:replace="~{fragments/section :: stats-league-region(${region}, 'Games played by race', 'games-played-race-league', 'true')}">
+         th:replace="~{fragments/section :: stats-league-region(${region}, 'Games played by race', 'games-played-race-league', 'true', 'true')}">
 </section>
 <section class="col-lg-6 mb-3"
          th:fragment="stats-match-up (region)"
-         th:replace="~{fragments/section :: stats-league-region(${region}, 'Match-up stats', 'stats-match-up', 'false')}">
+         th:replace="~{fragments/section :: stats-league-region(${region}, 'Match-up stats', 'stats-match-up', 'false', 'false')}">
 </section>
-<section th:id="${id}" class="col-lg-6 mb-3" th:fragment="statsFull (id, title, titleY, type, legendDisplay)">
+<section th:id="${id}" th:class="|col-lg-${autoHeight == 'true' ? '6' : '12'} mb-3|" th:fragment="statsFull (id, title, titleY, type, legendDisplay, autoHeight)">
     <h4 th:replace="${title}"></h4>
     <table
             th:id="|${id}-table|"
@@ -46,14 +47,15 @@
             th:data-chart-id="|${id}-chart|"
             data-chart-x-title="Date" th:data-chart-y-title="${titleY}"
             th:data-chart-legend-display="${legendDisplay}"
+            th:data-chart-maintain-aspect-ratio="${autoHeight}"
     >
         <thead><tr></tr></thead>
         <tbody><tr></tr></tbody>
     </table>
-    <div class="container-chart"><canvas th:id="|${id}-chart|" class="c-chart"></canvas></div>
+    <div th:class="|container-chart ${!autoHeight ? 'container-chart-fixed-height' : ''}|"><canvas th:id="|${id}-chart|" class="c-chart"></canvas></div>
 </section>
 <section th:id="${id}" class="col-lg-6 mb-3" th:fragment="stats (id, title, titleY, type)"
-         th:replace="~{fragments/section :: statsFull(${id}, ${title}, ${titleY}, ${type}, 'true')}">>
+         th:replace="~{fragments/section :: statsFull(${id}, ${title}, ${titleY}, ${type}, 'true', 'true')}">>
 </section>
 </body>
 </html>

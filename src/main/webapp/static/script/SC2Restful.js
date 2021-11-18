@@ -76,7 +76,7 @@ class SC2Restful
                 ElementUtil.enhanceFullscreenToggles();
                 Session.enhanceSerializable();
                 ChartUtil.enhanceZoomToggles();
-                ChartUtil.updateAspectRatioFromLocalStorage();
+                ChartUtil.updateHeightFromLocalStorage();
                 Session.refreshTheme();
         }
     }
