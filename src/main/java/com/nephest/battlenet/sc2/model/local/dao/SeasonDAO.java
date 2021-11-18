@@ -19,6 +19,7 @@ import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class SeasonDAO
@@ -96,6 +97,12 @@ public class SeasonDAO
         + STD_SELECT
         + "FROM season "
         + "ORDER BY battlenet_id DESC, region DESC";
+
+    private static final String FIND_LAST =
+        "SELECT " + STD_SELECT
+        + "FROM season "
+        + "ORDER BY battlenet_id DESC, region DESC "
+        + "LIMIT 1";
 
     private static final String FIND_MAX_BATTLENET_ID_QUERY =
         "SELECT MAX(battlenet_id) FROM season";
@@ -191,6 +198,11 @@ public class SeasonDAO
     public List<Season> findListByFirstBattlenetId()
     {
         return template.query(FIND_LIST_BY_FIRST_BATTELENET_ID, STD_ROW_MAPPER);
+    }
+
+    public Optional<Season> findLast()
+    {
+        return Optional.ofNullable(template.query(FIND_LAST, STD_EXTRACTOR));
     }
 
     @Cacheable(cacheNames="search-season-last")
