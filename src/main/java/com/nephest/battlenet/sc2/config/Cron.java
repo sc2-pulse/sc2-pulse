@@ -42,6 +42,7 @@ public class Cron
     public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(300);
     public static final Duration MIN_UPDATE_FRAME_ALTERNATIVE = Duration.ofSeconds(360);
     public static final Duration MAP_STATS_DEFAULT_UPDATE_FRAME = Duration.ofMinutes(60);
+    public static final Duration MAP_STATS_SKIP_NEW_SEASON_FRAME = Duration.ofDays(8);
 
     private InstantVar heavyStatsInstant;
     private InstantVar maintenanceFrequentInstant;
@@ -191,6 +192,13 @@ public class Cron
         if(matchUpdateContext == null) return;
         OffsetDateTime to = OffsetDateTime.ofInstant(matchUpdateContext.getExternalUpdate(), ZoneOffset.systemDefault())
             .minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES);
+        //skipping because the ladder is very volatile(top% leagues) at the beginning of the new season
+        if(seasonDAO.findLast().orElseThrow().getStart().plusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays()).isAfter(LocalDate.now()))
+        {
+            mapStatsInstant.setValueAndSave(to.toInstant());
+            return;
+        }
+
         Instant defaultInstant = mapStatsInstant.getValue() != null
             ? mapStatsInstant.getValue()
             : Instant.now().minusSeconds(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 60 + MAP_STATS_DEFAULT_UPDATE_FRAME.toSeconds());
