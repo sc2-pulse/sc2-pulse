@@ -549,7 +549,7 @@ class StatsUtil
         switch(localStorage.getItem("stats-match-up-type"))
         {
             case "duration-avg":
-                return (s)=>s.duration / s.gamesTotal;
+                return (s)=>s.duration / s.gamesTotal / 60;
                 break;
             case "games":
                 return (s)=>s.gamesTotal;
