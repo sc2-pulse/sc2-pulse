@@ -393,6 +393,38 @@
                     <section th:replace="~{fragments/section :: stats-match-up('eu')}"></section>
                     <section th:replace="~{fragments/section :: stats-match-up('kr')}"></section>
                     <section th:replace="~{fragments/section :: stats-match-up('cn')}"></section>
+                    <aside>
+                        <p>
+                            These stats are calculated using the following rules:
+                            <dl>
+                                <dt>Top% based leagues are used</dt>
+                                <dd>
+                                    There are no demotions(excluding GM) in SC2, and league borders are often broken,
+                                    so I use real top% leagues to mitigate these issues.
+                                </dd>
+
+                                <dt>Cross-league match results are included in the corresponding stats section</dt>
+                                <dd>
+                                    If there is a game between diamond and master players and the diamond player wins, then
+                                the win will be counted in the diamond stats, and the loss will be counted in the masters stats. This is
+                                the reason why league distribution is not mirrored, but "all" section is
+                                </dd>
+
+                                <dt>Only valid matches are used</dt>
+                                <dd>
+                                    Match history reconstruction is not an easy process, some matches may be missing or
+                                contain invalid data. Only valid data is used, so the game numbers will be much lower than the
+                                actual global game count, but the data set should be large enough to derive the stats from it.
+                                </dd>
+
+                                <dt>First week of the season is skipped</dt>
+                                <dd>
+                                    The ladder is very volatile at the beginning of new season and it is hard to determine
+                                    players' leagues.
+                                </dd>
+                            </dl>
+                        </p>
+                    </aside>
                 </div>
             </section>
             <section id="stats-league" class="tab-pane fade c-height-linked" data-view-title="League distribution">
