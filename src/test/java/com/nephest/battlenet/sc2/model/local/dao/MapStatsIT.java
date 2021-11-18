@@ -158,6 +158,7 @@ public class MapStatsIT
         verifyStats(allStats1, seasons, leagues, regions, statsMaps,
             //only 2/3 of matches has duration
             (g)->(g/3) * 2 * 3600,
+            (g)->(g/3) * 2,
             150, 150, 150, 150,
             //a part of platinum range is inactive due to gm cutoff, so the match-up numbers are shifted
             111, 111, 114, 114,
@@ -177,6 +178,7 @@ public class MapStatsIT
         //(players / 2)(matches) / 2(regions)
         verifyStats(map3Stats1, seasons, leagues, regions, statsMaps,
             (g)->g * 3600,
+            (g)->g,
             50, 50, 50, 50,
             //a part of platinum range is inactive due to gm cutoff, so the match-up numbers are shifted
             37, 37, 38, 38,
@@ -200,6 +202,7 @@ public class MapStatsIT
         verifyStats(allStats2, seasons, leagues, regions, statsMaps,
             //only 2/3 of matches has duration
             (g)->(g/3) * 2 * 3600,
+            (g)->(g/3) * 2,
             300, 300, 300, 300,
             //a part of platinum range is inactive due to gm cutoff, so the match-up numbers are shifted
             222, 222, 228, 228,
@@ -219,6 +222,7 @@ public class MapStatsIT
         //(players / 2)(matches) / 2(regions)
         verifyStats(map3Stats2, seasons, leagues, regions, statsMaps,
             (g)->g * 3600,
+            (g)->g,
             100, 100, 100, 100,
             //a part of platinum range is inactive due to gm cutoff, so the match-up numbers are shifted
             74, 74, 76, 76,
@@ -307,6 +311,7 @@ public class MapStatsIT
         List<Region> regions,
         List<SC2Map> maps,
         Function<Integer, Integer> durationCalc,
+        Function<Integer, Integer> gamesWithDurationCalc,
         Integer... games
     )
     {
@@ -324,7 +329,8 @@ public class MapStatsIT
             //using top% based leagues, ignoring real leagues
 
             //gm is top 200
-            verifyLeagueStats(stats, season, BaseLeague.LeagueType.GRANDMASTER, durationCalc, games[0], games[1], games[2], games[3]);
+            verifyLeagueStats(stats, season, BaseLeague.LeagueType.GRANDMASTER, durationCalc, gamesWithDurationCalc,
+                games[0], games[1], games[2], games[3]);
 
             //masters and diamond are absent because top 200 are gm, and the next team is top 28%, which makes it a
             // platinum team
@@ -332,10 +338,14 @@ public class MapStatsIT
             assertTrue(getStats(stats, season, BaseLeague.LeagueType.DIAMOND).isEmpty());
 
             //a part of platinum range is inactive due to gm cutoff, so the match-up numbers are shifted
-            verifyLeagueStats(stats, season, BaseLeague.LeagueType.PLATINUM, durationCalc, games[4], games[5], games[6], games[7]);
-            verifyLeagueStats(stats, season, BaseLeague.LeagueType.GOLD, durationCalc, games[8], games[9], games[10], games[11]);
-            verifyLeagueStats(stats, season, BaseLeague.LeagueType.SILVER, durationCalc, games[12], games[13], games[14], games[15]);
-            verifyLeagueStats(stats, season, BaseLeague.LeagueType.BRONZE, durationCalc, games[16], games[17], games[18], games[19]);
+            verifyLeagueStats(stats, season, BaseLeague.LeagueType.PLATINUM, durationCalc, gamesWithDurationCalc,
+                games[4], games[5], games[6], games[7]);
+            verifyLeagueStats(stats, season, BaseLeague.LeagueType.GOLD, durationCalc, gamesWithDurationCalc,
+                games[8], games[9], games[10], games[11]);
+            verifyLeagueStats(stats, season, BaseLeague.LeagueType.SILVER, durationCalc, gamesWithDurationCalc,
+                games[12], games[13], games[14], games[15]);
+            verifyLeagueStats(stats, season, BaseLeague.LeagueType.BRONZE, durationCalc, gamesWithDurationCalc,
+                games[16], games[17], games[18], games[19]);
         }
     }
 
@@ -345,13 +355,16 @@ public class MapStatsIT
         Season season,
         BaseLeague.LeagueType leagueType,
         Function<Integer, Integer> durationCalc,
+        Function<Integer, Integer> gamesWithDurationCalc,
         int games1, int games2, int games3, int games4
     )
     {
         List<MapStats> leagueStats = getStats(stats, season, leagueType);
         assertEquals(4, leagueStats.size());
-        checkMatchUpPair(leagueStats.get(0), leagueStats.get(1), Race.TERRAN, Race.PROTOSS, durationCalc, games1, games2);
-        checkMatchUpPair(leagueStats.get(2), leagueStats.get(3), Race.ZERG, Race.RANDOM, durationCalc, games3, games4);
+        checkMatchUpPair(leagueStats.get(0), leagueStats.get(1), Race.TERRAN, Race.PROTOSS, durationCalc,
+            gamesWithDurationCalc, games1, games2);
+        checkMatchUpPair(leagueStats.get(2), leagueStats.get(3), Race.ZERG, Race.RANDOM, durationCalc,
+            gamesWithDurationCalc, games3, games4);
     }
 
     private List<MapStats> getStats(LadderMapStats stats, Season season, BaseLeague.LeagueType leagueType)
@@ -367,11 +380,17 @@ public class MapStatsIT
     }
 
     private void checkMatchUpPair
-    (MapStats stats1, MapStats stats2, Race race1, Race race2, Function<Integer, Integer> durationCalc, int games1, int games2)
+    (
+        MapStats stats1, MapStats stats2,
+        Race race1, Race race2,
+        Function<Integer, Integer> durationCalc, Function<Integer, Integer> gamesWithDurationCalc,
+        int games1, int games2
+    )
     {
         assertEquals(race1, stats1.getRace());
         assertEquals(race2, stats1.getVersusRace());
         assertEquals(games1, stats1.getGamesTotal());
+        assertEquals(gamesWithDurationCalc.apply(games1), stats1.getGamesWithDuration());
         assertEquals(games1, stats1.getWins());
         assertEquals(0, stats1.getLosses());
         assertEquals(0, stats1.getTies());
@@ -380,6 +399,7 @@ public class MapStatsIT
         assertEquals(race2, stats2.getRace());
         assertEquals(race1, stats2.getVersusRace());
         assertEquals(games2, stats2.getGamesTotal());
+        assertEquals(gamesWithDurationCalc.apply(games2), stats2.getGamesWithDuration());
         assertEquals(0, stats2.getWins());
         assertEquals(games2, stats2.getLosses());
         assertEquals(0, stats2.getTies());

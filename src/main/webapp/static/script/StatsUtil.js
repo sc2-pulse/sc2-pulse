@@ -470,7 +470,13 @@ class StatsUtil
             }
         }
 
-        const sumCalculator = (a, b)=>{a.wins += b.wins; a.gamesTotal += b.gamesTotal; a.duration += b.duration;}
+        const sumCalculator = (a, b)=>
+        {
+            a.wins += b.wins;
+            a.gamesTotal += b.gamesTotal;
+            a.gamesWithDuration += b.gamesWithDuration;
+            a.duration += b.duration;
+        }
         const activeCalculator = StatsUtil.getMatchUpCalculator();
         const formattedGlobal = {};
         for(const [region, leagueArray] of Object.entries(formattedStats))
@@ -549,7 +555,7 @@ class StatsUtil
         switch(localStorage.getItem("stats-match-up-type"))
         {
             case "duration-avg":
-                return (s)=>s.duration / s.gamesTotal / 60;
+                return (s)=>s.duration / s.gamesWithDuration / 60;
                 break;
             case "games":
                 return (s)=>s.gamesTotal;

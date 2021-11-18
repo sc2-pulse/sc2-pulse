@@ -69,6 +69,7 @@ CREATE TABLE "map_stats"
     "race" SMALLINT NOT NULL,
     "versus_race" SMALLINT NOT NULL,
     "games" SMALLINT NOT NULL,
+    "games_with_duration" SMALLINT NOT NULL,
     "wins" SMALLINT NOT NULL,
     "losses" SMALLINT NOT NULL,
     "ties" SMALLINT NOT NULL,

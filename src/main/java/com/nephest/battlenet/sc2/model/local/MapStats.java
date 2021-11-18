@@ -31,6 +31,9 @@ implements java.io.Serializable
     private Integer gamesTotal;
 
     @NotNull
+    private Integer gamesWithDuration;
+
+    @NotNull
     private Integer wins;
 
     @NotNull
@@ -52,6 +55,7 @@ implements java.io.Serializable
         Race race,
         Race versusRace,
         Integer gamesTotal,
+        Integer gamesWithDuration,
         Integer wins,
         Integer losses,
         Integer ties,
@@ -64,6 +68,7 @@ implements java.io.Serializable
         this.race = race;
         this.versusRace = versusRace;
         this.gamesTotal = gamesTotal;
+        this.gamesWithDuration = gamesWithDuration;
         this.wins = wins;
         this.losses = losses;
         this.ties = ties;
@@ -161,6 +166,16 @@ implements java.io.Serializable
     public void setGamesTotal(Integer gamesTotal)
     {
         this.gamesTotal = gamesTotal;
+    }
+
+    public Integer getGamesWithDuration()
+    {
+        return gamesWithDuration;
+    }
+
+    public void setGamesWithDuration(Integer gamesWithDuration)
+    {
+        this.gamesWithDuration = gamesWithDuration;
     }
 
     public Integer getWins()

@@ -13,14 +13,14 @@ public class MapStatsTest
     @Test
     public void testUniqueness()
     {
-        MapStats stats = new MapStats(null, 0, 0, Race.TERRAN, Race.PROTOSS, 0, 0, 0, 0, 0);
-        MapStats equalStats = new MapStats(1, 0, 0, Race.TERRAN, Race.PROTOSS, 1, 1, 1, 1, 1);
+        MapStats stats = new MapStats(null, 0, 0, Race.TERRAN, Race.PROTOSS, 0, 0, 0, 0, 0, 0);
+        MapStats equalStats = new MapStats(1, 0, 0, Race.TERRAN, Race.PROTOSS, 1, 1, 1, 1, 1, 1);
         MapStats[] notEqualStats = new MapStats[]
         {
-            new MapStats(null, 1, 0, Race.TERRAN, Race.PROTOSS, 0, 0, 0, 0, 0),
-            new MapStats(null, 0, 1, Race.TERRAN, Race.PROTOSS, 0, 0, 0, 0, 0),
-            new MapStats(null, 0, 0, Race.ZERG, Race.PROTOSS, 0, 0, 0, 0, 0),
-            new MapStats(null, 0, 0, Race.TERRAN, Race.ZERG, 0, 0, 0, 0, 0),
+            new MapStats(null, 1, 0, Race.TERRAN, Race.PROTOSS, 0, 0, 0, 0, 0, 0),
+            new MapStats(null, 0, 1, Race.TERRAN, Race.PROTOSS, 0, 0, 0, 0, 0, 0),
+            new MapStats(null, 0, 0, Race.ZERG, Race.PROTOSS, 0, 0, 0, 0, 0, 0),
+            new MapStats(null, 0, 0, Race.TERRAN, Race.ZERG, 0, 0, 0, 0, 0, 0),
         };
         TestUtil.testUniqueness(stats, equalStats, notEqualStats);
     }

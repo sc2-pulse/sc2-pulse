@@ -33,6 +33,7 @@ public class MapStatsDAO
         + "map_stats.race AS \"map_stats.race\", "
         + "map_stats.versus_race AS \"map_stats.versus_race\", "
         + "map_stats.games AS \"map_stats.games\", "
+        + "map_stats.games_with_duration AS \"map_stats.games_with_duration\", "
         + "map_stats.wins AS \"map_stats.wins\", "
         + "map_stats.losses AS \"map_stats.losses\", "
         + "map_stats.ties AS \"map_stats.ties\", "
@@ -84,6 +85,7 @@ public class MapStatsDAO
             + "league.id AS league_id, "
             + "match_participant.decision, "
             + "COUNT(*) AS games, "
+            + "COUNT(match.duration) AS games_with_duration, "
             + "SUM(duration) AS duration "
             + "FROM matchup_league_filter "
             + "INNER JOIN match USING(id) "
@@ -100,7 +102,11 @@ public class MapStatsDAO
         + "), "
         + "all_filter AS "
         + "( "
-            + "SELECT map_id, league_id, SUM(games) AS games, SUM(duration) AS duration "
+            + "SELECT map_id, "
+            + "league_id, "
+            + "SUM(games) AS games, "
+            + "SUM(games_with_duration) AS games_with_duration, "
+            + "SUM(duration) AS duration "
             + "FROM matchup_filter "
             + "GROUP BY map_id, league_id "
         + "), "
@@ -131,6 +137,7 @@ public class MapStatsDAO
             + "%2$s AS race, "
             + "%4$s AS versus_race, "
             + "all_filter.games, "
+            + "all_filter.games_with_duration, "
             + "COALESCE(win_filter.games, 0) AS wins, "
             + "COALESCE(tie_filter.games, 0) AS ties, "
             + "COALESCE(loss_filter.games, 0) AS losses, "
@@ -148,6 +155,7 @@ public class MapStatsDAO
             + "%2$s AS race, "
             + "%4$s AS versus_race, "
             + "SUM(all_filter.games) AS games, "
+            + "SUM(all_filter.games_with_duration) AS games_with_duration, "
             + "SUM(COALESCE(win_filter.games, 0)) AS wins, "
             + "SUM(COALESCE(tie_filter.games, 0)) AS ties, "
             + "SUM(COALESCE(loss_filter.games, 0)) AS losses, "
@@ -162,6 +170,7 @@ public class MapStatsDAO
         + "("
             + "UPDATE map_stats "
             + "SET games = map_stats.games + vals.games, "
+            + "games_with_duration = map_stats.games_with_duration + vals.games_with_duration, "
             + "wins = map_stats.wins + vals.wins, "
             + "ties = map_stats.ties + vals.ties, "
             + "losses = map_stats.losses + vals.losses, "
@@ -175,13 +184,14 @@ public class MapStatsDAO
         + "), "
         + "inserted AS "
         + "("
-            + "INSERT INTO map_stats(league_id, map_id, race, versus_race, games, wins, losses, ties, duration) "
+            + "INSERT INTO map_stats(league_id, map_id, race, versus_race, games, games_with_duration, wins, losses, ties, duration) "
             + "SELECT "
             + "vals.league_id, "
             + "vals.map_id, "
             + "vals.race, "
             + "vals.versus_race, "
             + "vals.games, "
+            + "vals.games_with_duration, "
             + "vals.wins, "
             + "vals.losses, "
             + "vals.ties, "
@@ -261,6 +271,7 @@ public class MapStatsDAO
             conversionService.convert(rs.getInt("map_stats.race"), Race.class),
             conversionService.convert(rs.getInt("map_stats.versus_race"), Race.class),
             rs.getInt("map_stats.games"),
+            rs.getInt("map_stats.games_with_duration"),
             rs.getInt("map_stats.wins"),
             rs.getInt("map_stats.losses"),
             rs.getInt("map_stats.ties"),
