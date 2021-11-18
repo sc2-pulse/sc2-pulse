@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -103,7 +104,7 @@ public class SeasonDAO
     private final ConversionService conversionService;
 
     private static RowMapper<Season> STD_ROW_MAPPER;
-
+    private static ResultSetExtractor<Season> STD_EXTRACTOR;
 
     @Autowired
     public SeasonDAO
@@ -130,11 +131,21 @@ public class SeasonDAO
             rs.getObject("season.start", LocalDate.class),
             rs.getObject("season.end", LocalDate.class)
         );
+        if(STD_EXTRACTOR == null) STD_EXTRACTOR = rs->
+        {
+            if(!rs.next()) return null;
+            return getStdRowMapper().mapRow(rs, 0);
+        };
     }
 
     public static RowMapper<Season> getStdRowMapper()
     {
         return STD_ROW_MAPPER;
+    }
+
+    public static ResultSetExtractor<Season> getStdExtractor()
+    {
+        return STD_EXTRACTOR;
     }
 
     public Season create(Season season)
