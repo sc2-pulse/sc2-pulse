@@ -15,6 +15,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
@@ -316,6 +317,7 @@ public class MapStatsDAO
         return STD_ROW_MAPPER;
     }
 
+    @Transactional
     public void add(OffsetDateTime from, OffsetDateTime to)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
