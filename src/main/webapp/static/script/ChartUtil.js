@@ -22,6 +22,7 @@ class ChartUtil
         config["yMax"] = chartable.getAttribute("data-chart-y-max");
         config["tooltipPercentage"] = chartable.getAttribute("data-chart-tooltip-percentage");
         config["tooltipSort"] = chartable.getAttribute("data-chart-tooltip-sort");
+        config["tooltipTableCount"] = chartable.getAttribute("data-chart-tooltip-table-count");
         config["performance"] = chartable.getAttribute("data-chart-performance");
         config["pointRadius"] = chartable.getAttribute("data-chart-point-radius");
         config["xType"] = chartable.getAttribute("data-chart-x-type");
@@ -393,7 +394,14 @@ class ChartUtil
             tooltipEl = document.createElement('div');
             tooltipEl.id = 'chartjs-tooltip-' + chart.customConfig.chartable;
             tooltipEl.classList.add("chartjs-tooltip");
-            tooltipEl.innerHTML = '<h2></h2><table class="table table-sm"><thead></thead><tbody></tbody></table>';
+            let content = ['<h2></h2><div class="d-flex">'];
+            const tableCount = chart.customConfig.tooltipTableCount ? chart.customConfig.tooltipTableCount : 1;
+            for(let i = 0; i < tableCount; i++)
+            {
+                content.push(`<div class="d-inline-block flex-grow-1 ${i != 0 ? 'ml-2' : ''}"><table class="table table-sm tooltip-table-${i}"><thead></thead><tbody></tbody></table></div>`);
+            }
+            content.push("</div>");
+            tooltipEl.innerHTML = content.join('');
             tooltipEl.style.position = 'absolute';
             tooltipEl.style.pointerEvents = 'none';
             chart.canvas.closest(".container-chart").appendChild(tooltipEl);
@@ -403,20 +411,23 @@ class ChartUtil
 
     static injectTooltipTableHeaders(tooltipEl, tooltipModel)
     {
-        const thead = tooltipEl.querySelector(":scope table thead");
-        ElementUtil.removeChildren(thead);
-        if(tooltipModel.beforeBody && tooltipModel.beforeBody.length > 0)
+        const theads = tooltipEl.querySelectorAll(":scope table thead");
+        for(const thead of theads)
         {
-            const thr = thead.insertRow();
-            TableUtil.createRowTh(thr).textContent = "L";
-            for(const header of tooltipModel.beforeBody) TableUtil.createRowTh(thr).textContent = header;
+            ElementUtil.removeChildren(thead);
+            if(tooltipModel.beforeBody && tooltipModel.beforeBody.length > 0)
+            {
+                const thr = thead.insertRow();
+                TableUtil.createRowTh(thr).textContent = "L";
+                for(const header of tooltipModel.beforeBody) TableUtil.createRowTh(thr).textContent = header;
+            }
         }
     }
 
     static injectTooltipTableData(tooltipEl, tooltipModel)
     {
-        const tbody = tooltipEl.querySelector(":scope table tbody");
-        ElementUtil.removeChildren(tbody);
+        const tbodies = tooltipEl.querySelectorAll(":scope table tbody");
+        tbodies.forEach(tbody=>ElementUtil.removeChildren(tbody));
         if (tooltipModel.body)
         {
             const titleLines = tooltipModel.title || [];
@@ -424,7 +435,9 @@ class ChartUtil
 
             titleLines.forEach(title=>tooltipEl.querySelector(":scope h2").textContent = title);
 
+            const linesPerTable = bodyLines.length / tbodies.length;
             bodyLines.forEach((body, i)=>{
+                const tbody = tbodies[Math.floor(i / linesPerTable)];
                 const row = tbody.insertRow();
                 const legendColor = row.insertCell();
                 const colorObj = tooltipModel.labelColors[i];
