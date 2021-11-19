@@ -658,6 +658,7 @@ class ChartUtil
     static updateChart(chart, data)
     {
         if (data === null) return;
+        chart.setActiveElements([]);
 
         chart.data.labels = [];
         chart.data.datasets = [];
