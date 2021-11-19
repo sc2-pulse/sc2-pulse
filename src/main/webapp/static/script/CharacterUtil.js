@@ -373,9 +373,9 @@ class CharacterUtil
         mmrHistory.forEach(h=>h.teamState.dateTime = Util.parseIsoDateTime(h.teamState.dateTime));
         mmrHistory.sort((a, b)=>a.teamState.dateTime.getTime() - b.teamState.dateTime.getTime());
         if(queue !== TEAM_FORMAT._1V1) mmrHistory.forEach(h=>h.race = "ALL");
+        if(depth) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() >= depthStartTimestamp);
         const historyByRace = Util.groupBy(mmrHistory, h=>h.race);
         if(bestRaceOnly === true) mmrHistory = CharacterUtil.filterMmrHistoryBestRace(historyByRace);
-        if(depth) mmrHistory = mmrHistory.filter(h=>h.teamState.dateTime.getTime() >= depthStartTimestamp);
         mmrHistory = CharacterUtil.filterMmrHistory(mmrHistory, queueFilter, teamTypeFilter, excludeStart, excludeEnd);
         const mmrHistoryGroped = Util.groupBy(mmrHistory, h=>h.teamState.dateTime.getTime());
         const headers = Array.from(historyByRace.keys()).sort((a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order);
