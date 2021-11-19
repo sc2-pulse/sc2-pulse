@@ -18,6 +18,7 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * League, region, race distribution
     * Daily activity
     * Steam-like online stats
+    * Match-up win rates, average game duration, games played
 * Tier MMR ranges
 * Pro player info, [sc2revealed](http://sc2revealed.com/) and [aligulac](http://aligulac.com/) integration
     * Barcode unmasking
