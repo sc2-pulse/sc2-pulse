@@ -272,11 +272,11 @@ public class MapStatsIT
             m.getT2()[1].setMatchId(m.getT1().getId());
         });
         matchParticipantDAO.merge(matches.stream().flatMap(m->Arrays.stream(m.getT2())).toArray(MatchParticipant[]::new));
-        matchDAO.updateDuration(odt.minusSeconds(1));
+        matchDAO.updateDuration(odt);
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
-        teamStateDAO.updateRanks(odt.minusSeconds(1), Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
-        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, odt.minusSeconds(1));
+        teamStateDAO.updateRanks(odt, Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
+        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, odt);
     }
 
     private LadderMapStats getStats

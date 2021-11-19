@@ -50,7 +50,7 @@ public class TeamStateDAO
         + "( "
             + "SELECT DISTINCT(team_state.team_id) "
             + "FROM team_state "
-            + "WHERE timestamp > :from "
+            + "WHERE timestamp >= :from "
         + "), "
         + "min_max_filter AS "
         + "( "
@@ -72,7 +72,7 @@ public class TeamStateDAO
         + "SET archived = true "
         + "FROM all_filter "
         + "WHERE team_state.team_id = all_filter.team_id "
-        + "AND team_state.timestamp > :from "
+        + "AND team_state.timestamp >= :from "
         + "AND (team_state.rating > COALESCE(all_filter.rating_max, -1) "
             + "OR team_state.rating < all_filter.rating_min)";
 
@@ -82,7 +82,7 @@ public class TeamStateDAO
         + "( "
             + "SELECT DISTINCT(team_state.team_id) "
             + "FROM team_state "
-            + "WHERE timestamp > :from "
+            + "WHERE timestamp >= :from "
         + "), "
         + "min_filter AS "
         + "( "
@@ -163,7 +163,7 @@ public class TeamStateDAO
             + "AND team.queue_type = global_team_count.queue_type "
             + "AND team.team_type = global_team_count.team_type "
         + "WHERE team_state.team_id = team.id "
-        + "AND team_state.timestamp > :from "
+        + "AND team_state.timestamp >= :from "
         + "AND team_state.global_rank IS NULL "
         + "AND team_state.team_id NOT IN (SELECT team_id FROM cheaters)";
 
