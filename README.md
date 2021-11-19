@@ -123,7 +123,7 @@ Alternative update limitations:
 
 The missing info can be fetched from the main endpoint when it's back up(it happens automatically).
 
-Original idea by Keiras
+Original idea by [Keiras](http://keiras.cz/)
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
 ## Contributing
