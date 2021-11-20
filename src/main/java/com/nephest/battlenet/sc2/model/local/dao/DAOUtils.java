@@ -91,10 +91,10 @@ public final class DAOUtils
                 merged = mergedList.get(mergedIx);
                 if(!merged.equals(original))
                 {
-                    //for nullables, if it's not a clone, than it's a null entity, skip it, +2 to offset the --
+                    //for nullables, if it's not a clone, than it's a null entity, skip it, ++ to offset the --
                     if(originalNullifier != null)
                     {
-                        mergedIx +=2;
+                        mergedIx++;
                         continue;
                     }
                     //this can happen only if db query is invalid

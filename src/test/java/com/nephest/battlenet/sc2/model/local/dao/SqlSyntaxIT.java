@@ -196,8 +196,17 @@ public class SqlSyntaxIT
             BigInteger.valueOf(-1), division2.getId(),
             4L, 3, 3, 0, 3
         );
+        Team mergeTestTeam6 = createGenericTeam(season, league2, tier2, division2, -4);
+        Team mergeTestTeam5 = createGenericTeam(season, league2, tier2, division2, -5);
+        Team mergeTestTeam4 = createGenericTeam(season, league2, tier2, division2, -6);
+        Team mergeTestTeam3 = createGenericTeam(season, league2, tier2, division2, -7);
+        Team mergeTestTeam2 = createGenericTeam(season, league2, tier2, division2, -8);
+        Team mergeTestTeam1 = createGenericTeam(season, league2, tier2, division2, -9);
+
         teamDAO.create(newTeam);
         teamDAO.create(zergTeam);
+        teamDAO.create(mergeTestTeam2);
+        teamDAO.create(mergeTestTeam3);
         //zergTeamClone is existing, merged is updated, same is a clone, newTeam is inserted
         Team[] teams = teamDAO.merge(zergTeamClone, mergedTeam, newTeam2, sameTeam);
         //existing team is excluded
@@ -211,6 +220,16 @@ public class SqlSyntaxIT
         assertNotNull(newTeam2.getId());
         assertEquals(mergedTeam.getId(), sameTeam.getId());
         assertNotEquals(mergedTeam.getId(), newTeam2.getId());
+
+        //test correct id setting for nullable entities
+        Team[] mergeTestTeams = teamDAO.merge(mergeTestTeam1, mergeTestTeam2, mergeTestTeam3, mergeTestTeam4,
+            mergeTestTeam5, mergeTestTeam6);
+        assertEquals(4, mergeTestTeams.length);
+        assertEquals(mergeTestTeams[0], mergeTestTeam1);
+        assertEquals(mergeTestTeams[1], mergeTestTeam4);
+        assertEquals(mergeTestTeams[2], mergeTestTeam5);
+        assertEquals(mergeTestTeams[3], mergeTestTeam6);
+
         Team team = teams[0];
         assertNotNull(team.getId());
         assertEquals(2, team.getRating());
@@ -360,5 +379,16 @@ public class SqlSyntaxIT
         varDAO.merge(key, "val ue]1");
         assertEquals("val ue]1", varDAO.find(key).get());
     }
+
+    private static Team createGenericTeam(Season season, League league2, LeagueTier tier, Division division, long id)
+    {
+        return new Team
+        (
+            null, season.getBattlenetId(), season.getRegion(), league2, tier.getType(),
+            BigInteger.valueOf(id), division.getId(),
+            4L, 3, 3, 0, 3
+        );
+    }
+
 
 }
