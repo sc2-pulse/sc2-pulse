@@ -345,10 +345,10 @@ class CharacterUtil
         const seasonLastOnly = document.getElementById("mmr-season-last").checked;
         const yAxis = document.getElementById("mmr-y-axis").value;
 
-        const seasonStartDates = CharacterUtil.getSeasonStartDates(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
+        const lastSeasonTeamSnapshotDates = CharacterUtil.getLastSeasonTeamSnapshotDates(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         const teams = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams
             .filter(t=>t.queueType == queueFilter && t.teamType == teamTypeFilter)
-            .map(t=>CharacterUtil.convertTeamToTeamSnapshot(t, seasonStartDates, seasonLastOnly));
+            .map(t=>CharacterUtil.convertTeamToTeamSnapshot(t, lastSeasonTeamSnapshotDates, seasonLastOnly));
         let mmrHistory = teams;
         if(!seasonLastOnly) mmrHistory = mmrHistory
             .concat(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
@@ -409,27 +409,29 @@ class CharacterUtil
         }
     }
 
-    static getSeasonStartDates(states)
+    static getLastSeasonTeamSnapshotDates(states)
     {
         const result = new Map();
-        let season = 0;
-        for(let state of states)
-            if(state.season > season) {
+        let season = 999;
+        for(let i = states.length - 1; i > -1; i--)
+        {
+            const state = states[i];
+            if(state.season < season) {
                 season = state.season;
                 result.set(season, Util.parseIsoDateTime(state.teamState.dateTime));
             }
+        }
         return result;
     }
 
-    static convertTeamToTeamSnapshot(t, seasonStartDates, seasonLastOnly)
+    static convertTeamToTeamSnapshot(t, lastSeasonTeamSnapshotDates, seasonLastOnly)
     {
         if(seasonLastOnly) return CharacterUtil.createTeamSnapshot(t, Session.currentSeasonsMap.get(t.season)[0].end);
 
-        const nextSeasonDate = seasonStartDates.get(t.season + 1)
-            || Session.currentSeasonsMap.get(t.season)[0].end;
-        const date = nextSeasonDate.getTime() < Session.currentSeasonsMap.get(t.season)[0].end.getTime()
-            ? new Date(nextSeasonDate.getTime() - 1000)
-            : Session.currentSeasonsMap.get(t.season)[0].end;
+        const date = (lastSeasonTeamSnapshotDates.get(t.season + 1) || Session.currentSeasonsMap.get(t.season + 1))
+            ? ((lastSeasonTeamSnapshotDates.get(t.season) ? new Date(lastSeasonTeamSnapshotDates.get(t.season).getTime() + 1000)  : null)
+                || new Date(Session.currentSeasonsMap.get(t.season)[0].end.getTime() - CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS))
+            : new Date();
         return CharacterUtil.createTeamSnapshot(t, date);
     }
 
@@ -1382,3 +1384,4 @@ class CharacterUtil
 }
 
 CharacterUtil.MATCH_DURATION_MAX_SECONDS = 5400;
+CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS = 2 * 24 * 60 * 60 * 1000;
