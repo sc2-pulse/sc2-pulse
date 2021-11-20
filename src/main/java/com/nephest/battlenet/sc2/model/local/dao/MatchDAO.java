@@ -62,12 +62,8 @@ extends StandardDAO
         + "("
             + "INSERT INTO match (date, type, map, region) "
             + "SELECT * FROM missing "
-            /*
-                2 matched matches(2 parts from different players) can be absent in the db
-                do nothing to verify that this is the case, because it will fail otherwise as there will be no second
-                 match in filtering phase
-             */
-            + "ON CONFLICT(date, type, map, region) DO NOTHING "
+            + "ON CONFLICT(date, type, map, region) DO UPDATE "
+            + "SET updated = excluded.updated "
             + "RETURNING id AS \"match.id\", "
             + "date AS \"match.date\", "
             + "type AS \"match.type\", "
@@ -142,6 +138,7 @@ extends StandardDAO
         if(matches.length == 0) return new Match[0];
 
         List<Object[]> matchUids = Arrays.stream(matches)
+            .distinct()
             .map(match->new Object[]{
                 match.getDate(),
                 conversionService.convert(match.getType(), Integer.class),

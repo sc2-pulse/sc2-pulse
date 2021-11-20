@@ -60,10 +60,9 @@ public class MatchParticipantDAO
         + "inserted AS "
         + "("
             + "INSERT INTO match_participant(match_id, player_character_id, decision) "
-            // API data can have multiple participants for the same match. Ignore such conflicts.
-            + "SELECT DISTINCT ON(match_id, player_character_id) * "
+            + "SELECT * "
             + "FROM missing "
-            + "ORDER BY match_id, player_character_id, decision "
+            + "ON CONFLICT(match_id, player_character_id) DO NOTHING "
             + "RETURNING 1"
         + ") "
         + "SELECT COUNT(*) FROM updated, inserted";
@@ -212,6 +211,7 @@ public class MatchParticipantDAO
         if(participants.length == 0) return;
 
         List<Object[]> participantsData = Arrays.stream(participants)
+            .distinct()
             .map(participant->new Object[]{
                 participant.getMatchId(),
                 participant.getPlayerCharacterId(),
