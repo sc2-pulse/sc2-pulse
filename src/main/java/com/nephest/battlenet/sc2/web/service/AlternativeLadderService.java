@@ -279,7 +279,7 @@ public class AlternativeLadderService
             .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, existingCharacterClans, members, states));
         StatsService.saveClans(clanDAO, clans);
         saveExistingCharacterClans(existingCharacterClans, characters);
-        saveNewCharacterData(newTeams, members, states);
+        saveNewCharacterData(newTeams, members);
         savePlayerCharacters(characters);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
         teamStateDAO.saveState(states.toArray(TeamState[]::new));
@@ -299,6 +299,7 @@ public class AlternativeLadderService
         Set<TeamState> states
     )
     {
+        states.add(TeamState.of(team));
         for(BlizzardProfileTeamMember bMember : bTeam.getTeamMembers())
         {
             PlayerCharacter playerCharacter = playerCharacterDao.find(season.getRegion(), bMember.getRealm(), bMember.getId())
@@ -307,7 +308,7 @@ public class AlternativeLadderService
             if(playerCharacter == null) {
                 addNewAlternativeCharacter(season, team, bMember, newTeams, clans);
             } else {
-                addExistingAlternativeCharacter(team, bTeam, playerCharacter, bMember, characters, members, states, existingCharacterClans);
+                addExistingAlternativeCharacter(team, bTeam, playerCharacter, bMember, characters, members, existingCharacterClans);
             }
         }
     }
@@ -343,7 +344,6 @@ public class AlternativeLadderService
         BlizzardProfileTeamMember bMember,
         List<PlayerCharacter> characters,
         Set<TeamMember> members,
-        Set<TeamState> states,
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans
     )
     {
@@ -363,7 +363,6 @@ public class AlternativeLadderService
         TeamMember member = new TeamMember(team.getId(), playerCharacter.getId(), null, null, null, null);
         member.setGamesPlayed(bMember.getFavoriteRace(), bTeam.getWins() + bTeam.getLosses());
         members.add(member);
-        states.add(TeamState.of(team));
     }
 
     private void saveExistingCharacterClans(List<Tuple2<PlayerCharacter, Clan>> clans, List<PlayerCharacter> characters)
@@ -383,7 +382,7 @@ public class AlternativeLadderService
 
     //this ensures the consistent order for concurrent entities(accounts and players)
     private void saveNewCharacterData
-    (List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams, Set<TeamMember> teamMembers, Set<TeamState> states)
+    (List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams, Set<TeamMember> teamMembers)
     {
         if(newTeams.size() == 0) return;
 
@@ -402,7 +401,6 @@ public class AlternativeLadderService
             TeamMember teamMember = new TeamMember(team.getId(), character.getId(), null, null, null, null);
             teamMember.setGamesPlayed(curNewTeam.getT4(), team.getWins() + team.getLosses() + team.getTies());
             teamMembers.add(teamMember);
-            states.add(TeamState.of(team));
         }
     }
 
