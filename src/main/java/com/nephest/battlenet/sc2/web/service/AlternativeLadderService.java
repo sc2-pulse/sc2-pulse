@@ -247,7 +247,7 @@ public class AlternativeLadderService
         Division division = getOrCreateDivision(season, ladder.getLeague(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladderMemberCount, 1.0F);
         Set<TeamState> states = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
-        List<PlayerCharacter> characters = new ArrayList<>();
+        Set<PlayerCharacter> characters = new HashSet<>();
         List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans = new ArrayList<>();
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams = new ArrayList<>();
@@ -292,7 +292,7 @@ public class AlternativeLadderService
         Team team,
         BlizzardProfileTeam bTeam,
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams,
-        List<PlayerCharacter> characters,
+        Set<PlayerCharacter> characters,
         List<Tuple2<PlayerCharacter, Clan>> clans,
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans,
         Set<TeamMember> members,
@@ -342,7 +342,7 @@ public class AlternativeLadderService
         BlizzardProfileTeam bTeam,
         PlayerCharacter playerCharacter,
         BlizzardProfileTeamMember bMember,
-        List<PlayerCharacter> characters,
+        Set<PlayerCharacter> characters,
         Set<TeamMember> members,
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans
     )
@@ -365,7 +365,7 @@ public class AlternativeLadderService
         members.add(member);
     }
 
-    private void saveExistingCharacterClans(List<Tuple2<PlayerCharacter, Clan>> clans, List<PlayerCharacter> characters)
+    private void saveExistingCharacterClans(List<Tuple2<PlayerCharacter, Clan>> clans, Set<PlayerCharacter> characters)
     {
         if(clans.isEmpty()) return;
 
@@ -405,12 +405,11 @@ public class AlternativeLadderService
     }
 
     //this ensures the consistent order for concurrent entities
-    private void savePlayerCharacters(List<PlayerCharacter> characters)
+    private void savePlayerCharacters(Set<PlayerCharacter> characters)
     {
         if(characters.isEmpty()) return;
 
-        characters.sort(PlayerCharacter.NATURAL_ID_COMPARATOR);
-        for(PlayerCharacter c : characters) playerCharacterDao.merge(c);
+        characters.stream().sorted(PlayerCharacter.NATURAL_ID_COMPARATOR).forEach(playerCharacterDao::merge);
     }
 
     public Division getOrCreateDivision
