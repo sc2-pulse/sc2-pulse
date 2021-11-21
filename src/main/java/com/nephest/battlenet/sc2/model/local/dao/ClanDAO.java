@@ -66,7 +66,7 @@ public class ClanDAO
             + "name AS \"clan.name\" "
         + ") "
         + "SELECT * FROM existing "
-        + "UNION ALL "
+        + "UNION "
         + "SELECT * FROM inserted";
 
     private static RowMapper<Clan> STD_ROW_MAPPER;

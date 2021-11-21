@@ -46,9 +46,8 @@ public class AccountDAO
             + "RETURNING id"
         + ") "
         + "SELECT id FROM selected "
-        + "UNION ALL "
-        + "SELECT id FROM inserted "
-        + "LIMIT 1";
+        + "UNION "
+        + "SELECT id FROM inserted";
 
     private static final String FIND_BY_PARTITION_AND_BATTLE_TAG =
         "SELECT " + STD_SELECT

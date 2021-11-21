@@ -50,9 +50,8 @@ public class PlayerCharacterReportDAO
             + "RETURNING id"
         + ") "
         + "SELECT id FROM existing "
-        + "UNION ALL "
-        + "SELECT id FROM inserted "
-        + "LIMIT 1";
+        + "UNION "
+        + "SELECT id FROM inserted";
 
     private static final String GET_ALL_QUERY =
         "SELECT " + STD_SELECT + " FROM player_character_report";

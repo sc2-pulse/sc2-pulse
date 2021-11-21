@@ -72,7 +72,7 @@ extends StandardDAO
             + "updated AS \"match.updated\""
         + ") "
         + "SELECT * FROM updated "
-        + "UNION ALL "
+        + "UNION "
         + "SELECT * FROM inserted";
 
     private static final String REMOVE_EXPIRED_QUERY = "DELETE FROM match WHERE date < :toDate OR updated < :toUpdated";
