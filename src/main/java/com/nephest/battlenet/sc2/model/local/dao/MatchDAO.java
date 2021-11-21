@@ -64,12 +64,7 @@ extends StandardDAO
             + "SELECT * FROM missing "
             + "ON CONFLICT(date, type, map, region) DO UPDATE "
             + "SET updated = excluded.updated "
-            + "RETURNING id AS \"match.id\", "
-            + "date AS \"match.date\", "
-            + "type AS \"match.type\", "
-            + "map AS \"match.map\", "
-            + "region AS \"match.region\", "
-            + "updated AS \"match.updated\""
+            + "RETURNING " + STD_SELECT
         + ") "
         + "SELECT * FROM updated "
         + "UNION "
