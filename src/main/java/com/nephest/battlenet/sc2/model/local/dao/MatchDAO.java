@@ -63,7 +63,7 @@ extends StandardDAO
             + "INSERT INTO match (date, type, map, region) "
             + "SELECT * FROM missing "
             + "ON CONFLICT(date, type, map, region) DO UPDATE "
-            + "SET updated = excluded.updated "
+            + "SET updated = NOW() "
             + "RETURNING " + STD_SELECT
         + ") "
         + "SELECT * FROM updated "
