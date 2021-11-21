@@ -20,8 +20,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
@@ -34,6 +32,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -82,9 +81,9 @@ public class StatsService
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private VarDAO varDAO;
     private PostgreSQLUtils postgreSQLUtils;
-    private Validator validator;
     private ConversionService conversionService;
     private ExecutorService dbExecutorService;
+    private Predicate<BlizzardTeam> teamValidationPredicate;
 
     public StatsService(){}
 
@@ -131,8 +130,8 @@ public class StatsService
         this.varDAO = varDAO;
         this.postgreSQLUtils = postgreSQLUtils;
         this.conversionService = conversionService;
-        this.validator = validator;
         this.dbExecutorService = dbExecutorService;
+        this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         for(Region r : Region.values()) failedLadders.put(r, new HashSet<>());
     }
 
@@ -440,11 +439,7 @@ public class StatsService
         List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
         Integer curSeason = seasonDao.getMaxBattlenetId() == null ? 0 : seasonDao.getMaxBattlenetId();
         List<Tuple2<Team, BlizzardTeam>> validTeams = Arrays.stream(bTeams)
-            .filter(bTeam->{
-                Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
-                validator.validate(bTeam, errors);
-                return !errors.hasErrors() && isValidTeam(bTeam, memberCount);
-            })
+            .filter(teamValidationPredicate.and(t->isValidTeam(t, memberCount)))
             .map(bTeam->Tuples.of(Team.of(season, league, tier, division, bTeam, teamDao), bTeam))
             .collect(Collectors.toList());
         if(validTeams.isEmpty()) return;

@@ -9,10 +9,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
-import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import org.slf4j.Logger;
@@ -22,6 +19,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
@@ -39,6 +37,8 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -57,6 +57,7 @@ public class MatchService
     private final SeasonDAO seasonDAO;
     private final PostgreSQLUtils postgreSQLUtils;
     private final ExecutorService dbExecutorService;
+    private final Predicate<BlizzardMatch> validationPredicate;
     private final ConcurrentLinkedQueue<Set<PlayerCharacter>> failedCharacters = new ConcurrentLinkedQueue<>();
 
     @Autowired @Lazy
@@ -71,7 +72,8 @@ public class MatchService
         MatchParticipantDAO matchParticipantDAO,
         SeasonDAO seasonDAO,
         PostgreSQLUtils postgreSQLUtils,
-        @Qualifier("dbExecutorService") ExecutorService dbExecutorService
+        @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
+        Validator validator
     )
     {
         this.api = api;
@@ -81,6 +83,7 @@ public class MatchService
         this.seasonDAO = seasonDAO;
         this.postgreSQLUtils = postgreSQLUtils;
         this.dbExecutorService = dbExecutorService;
+        validationPredicate = DAOUtils.beanValidationPredicate(validator);
     }
 
     public void update(UpdateContext updateContext, Region... regions)
@@ -142,6 +145,9 @@ public class MatchService
     @Transactional
     protected void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacter>> matches)
     {
+        matches = matches.stream()
+            .filter(t->validationPredicate.test(t.getT1()))
+            .collect(Collectors.toList());
         Match[] matchBatch = new Match[matches.size()];
         MatchParticipant[] participantBatch = new MatchParticipant[matches.size()];
         List<Tuple3<Match, BaseMatch.Decision, PlayerCharacter>> meta = new ArrayList<>();

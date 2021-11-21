@@ -21,8 +21,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
@@ -36,6 +34,7 @@ import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 @Service
@@ -72,8 +71,8 @@ public class AlternativeLadderService
     private final BlizzardDAO blizzardDAO;
     private final VarDAO varDAO;
     private final ConversionService conversionService;
-    private final Validator validator;
     private final ExecutorService dbExecutorService;
+    private final Predicate<BlizzardProfileTeam> teamValidationPredicate;
 
     @Autowired
     public AlternativeLadderService
@@ -108,7 +107,7 @@ public class AlternativeLadderService
         this.blizzardDAO = blizzardDAO;
         this.varDAO = varDAO;
         this.conversionService = conversionService;
-        this.validator = validator;
+        this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         this.dbExecutorService = dbExecutorService;
     }
 
@@ -252,11 +251,7 @@ public class AlternativeLadderService
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans = new ArrayList<>();
         List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams = new ArrayList<>();
         List<Tuple2<Team, BlizzardProfileTeam>> validTeams = Arrays.stream(ladder.getLadderTeams())
-            .filter(bTeam->{
-                Errors errors = new BeanPropertyBindingResult(bTeam, bTeam.toString());
-                validator.validate(bTeam, errors);
-                return !errors.hasErrors() && isValidTeam(bTeam, teamMemberCount);
-            })
+            .filter(teamValidationPredicate.and(t->isValidTeam(t, teamMemberCount)))
             .map
             (
                 bTeam->Tuples.of
