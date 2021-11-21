@@ -3,9 +3,14 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -15,9 +20,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Predicate;
 
 public final class DAOUtils
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(DAOUtils.class);
 
     public static final String REMOVE_OUTDATED_TEMPLATE = "DELETE FROM %1$s WHERE %2$s < NOW() - INTERVAL '%3$s'";
     public static final int[] EMPTY_INT_ARRAY = new int[0];
@@ -112,6 +120,17 @@ public final class DAOUtils
     (T[] originalArray, List<T> mergedList, Comparator<T> comparator, BiConsumer<T, T> originalUpdater)
     {
         return updateOriginals(originalArray, mergedList, comparator, originalUpdater, null);
+    }
+
+    public static <T> Predicate<T> beanValidationPredicate(Validator validator){
+        return o->
+        {
+            Errors errors = new BeanPropertyBindingResult(o, o.toString());
+            validator.validate(o, errors);
+            boolean result = !errors.hasErrors();
+            if(!result) LOG.debug("{}", errors);
+            return result;
+        };
     }
 
     public static Integer getInteger(ResultSet rs, String param)
