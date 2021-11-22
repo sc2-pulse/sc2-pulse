@@ -38,30 +38,37 @@ ALTER TABLE "match"
 ALTER TABLE "match"
     ADD COLUMN "duration" SMALLINT;
 
-WITH
+WITH 
+match_filter AS
+(
+    SELECT player_character_id, date
+    FROM match
+    INNER JOIN match_participant ON match.id = match_participant.match_id
+    WHERE match.date >= NOW() - INTERVAL '450 minutes'
+),
 match_duration AS
 (
-    SELECT id, EXTRACT(EPOCH FROM (match.date - match_duration.date)) AS duration
+    SELECT id, EXTRACT(EPOCH FROM (match.date - MAX(match_duration.date))) AS duration
     FROM match
+    INNER JOIN match_participant ON match.id = match_participant.match_id
     JOIN LATERAL
     (
-        SELECT mb.date
-        FROM match_participant
-        INNER JOIN match_participant mpb USING(player_character_id)
-        INNER JOIN match mb ON mpb.match_id = mb.id
-        WHERE match_participant.match_id = match.id
-        AND mb.date < match.date
-        ORDER BY mb.date DESC
+        SELECT match_filter.date
+        FROM match_filter
+        WHERE match_filter.player_character_id = match_participant.player_character_id
+        AND match_filter.date < match.date
+        ORDER BY match_filter.date DESC
         LIMIT 1
     ) match_duration ON true
-    WHERE match.date >= NOW() - INTERVAL '12 hours'
+    WHERE match.date >= NOW() - INTERVAL '360 minutes'
+    GROUP BY match.id
 )
 UPDATE match
 SET duration = match_duration.duration
 FROM match_duration
 WHERE match.id = match_duration.id
-AND match.date >= NOW() - INTERVAL '12 hours'
-AND match_duration.duration BETWEEN 1 AND 5400;
+AND match_duration.duration BETWEEN 1 AND 5400
+AND (match.duration IS NULL OR match.duration > match_duration.duration);
 
 CREATE TABLE "map_stats"
 (

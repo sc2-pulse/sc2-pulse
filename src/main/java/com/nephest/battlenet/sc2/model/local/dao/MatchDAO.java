@@ -27,6 +27,10 @@ extends StandardDAO
     public static final int UPDATED_TTL_DAYS = 30;
     public static final int TTL_DAYS = 90;
     public static final int DURATION_MAX = 5400;
+    public static final List<BaseMatch.MatchType> DEFAULT_DURATION_MATCH_TYPES = List.of
+    (
+        BaseMatch.MatchType._1V1
+    );
 
     public static final String STD_SELECT =
         "match.id AS \"match.id\", "
@@ -73,30 +77,47 @@ extends StandardDAO
         + "SELECT * FROM inserted";
 
     private static final String UPDATE_DURATION_QUERY =
-        "WITH  "
+        "WITH "
+        + "character_filter AS "
+        + "("
+            + "SELECT DISTINCT(player_character_id) "
+            + "FROM match "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+            + "WHERE match.date >= :fromHistory "
+            + "AND type IN (:types) "
+        + "), "
+        + "match_filter AS "
+        + "( "
+            + "SELECT player_character_id, date "
+            + "FROM match "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+            + "INNER JOIN character_filter USING(player_character_id) "
+            + "WHERE match.date >= :fromHistory "
+        + "), "
         + "match_duration AS "
         + "( "
-            + "SELECT id, EXTRACT(EPOCH FROM (match.date - match_duration.date)) AS duration "
+            + "SELECT id, EXTRACT(EPOCH FROM (match.date - MAX(match_duration.date))) AS duration "
             + "FROM match "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "JOIN LATERAL "
             + "( "
-                + "SELECT mb.date "
-                + "FROM match_participant  "
-                + "INNER JOIN match_participant mpb USING(player_character_id) "
-                + "INNER JOIN match mb ON mpb.match_id = mb.id "
-                + "WHERE match_participant.match_id = match.id  "
-                + "AND mb.date < match.date "
-                + "ORDER BY mb.date DESC "
+                + "SELECT match_filter.date "
+                + "FROM match_filter "
+                + "WHERE match_filter.player_character_id = match_participant.player_character_id "
+                + "AND match_filter.date >= match.date - INTERVAL '" + DURATION_MAX + " seconds' "
+                + "AND match_filter.date < match.date "
+                + "ORDER BY match_filter.date DESC "
                 + "LIMIT 1 "
             + ") match_duration ON true "
-            + "WHERE match.date >= :from"
+            + "WHERE match.date >= :from "
+            + "AND match.type IN(:types) "
+            + "GROUP BY match.id "
         + ") "
         + "UPDATE match "
         + "SET duration = match_duration.duration "
         + "FROM match_duration "
         + "WHERE match.id = match_duration.id "
-        + "AND match.date >= :from "
-        + "AND match_duration.duration BETWEEN 1 AND " + DURATION_MAX + " "
+        + "AND match_duration.duration > 0 "
         + "AND (match.duration IS NULL OR match.duration > match_duration.duration)";
 
     private static final String REMOVE_EXPIRED_QUERY = "DELETE FROM match WHERE date < :toDate OR updated < :toUpdated";
@@ -179,11 +200,21 @@ extends StandardDAO
         return DAOUtils.updateOriginals(matches, mergedMatches, Match.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()));
     }
 
-    public int updateDuration(OffsetDateTime from)
+    public int updateDuration(OffsetDateTime from, List<BaseMatch.MatchType> types)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", from);
+            .addValue("from", from)
+            .addValue("fromHistory", from.minusSeconds(DURATION_MAX))
+            .addValue("types", types.stream()
+                .map(t->conversionService.convert(t, Integer.class))
+                .collect(Collectors.toList()));
+
         return getTemplate().update(UPDATE_DURATION_QUERY, params);
+    }
+
+    public int updateDuration(OffsetDateTime from)
+    {
+        return updateDuration(from, DEFAULT_DURATION_MATCH_TYPES);
     }
 
 }
