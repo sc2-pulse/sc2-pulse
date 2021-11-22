@@ -54,11 +54,13 @@ match_duration AS
         ORDER BY mb.date DESC
         LIMIT 1
     ) match_duration ON true
+    WHERE match.date >= NOW() - INTERVAL '12 hours'
 )
 UPDATE match
 SET duration = match_duration.duration
 FROM match_duration
 WHERE match.id = match_duration.id
+AND match.date >= NOW() - INTERVAL '12 hours'
 AND match_duration.duration BETWEEN 1 AND 5400;
 
 CREATE TABLE "map_stats"
