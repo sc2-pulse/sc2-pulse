@@ -127,6 +127,8 @@ The missing info can be fetched from the main endpoint when it's back up(it happ
 Original idea by [Keiras](http://keiras.cz/)
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
+## Discord bot
+You can add `discord.token = {token}` application property to run the optional discord bot.
 ## Contributing
 Want to make a bug report/feature request? Any contributions are welcome, see [CONTRIBUTING](CONTRIBUTING.md) for 
 more information.
