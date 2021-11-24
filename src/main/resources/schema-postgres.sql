@@ -626,7 +626,8 @@ CREATE TYPE player_character_summary AS
     race SMALLINT,
     games SMALLINT,
     rating_avg SMALLINT,
-    rating_max SMALLINT
+    rating_max SMALLINT,
+    rating_cur SMALLINT
 );
 
 CREATE OR REPLACE FUNCTION get_player_character_summary(character_ids BIGINT[], from_timestamp TIMESTAMP WITH TIME ZONE)
@@ -701,7 +702,8 @@ LOOP
             substring(cur_legacy_id_text, char_length(cur_legacy_id_text))::smallint,
             cur_games,
             (SELECT AVG(x) FROM unnest(cur_mmr) x),
-            (SELECT MAX(x) FROM unnest(cur_mmr) x)
+            (SELECT MAX(x) FROM unnest(cur_mmr) x),
+            cur_mmr[array_upper(cur_mmr, 1)]
         )::player_character_summary);
         cur_games = -1;
         cur_mmr = array[]::SMALLINT[];
@@ -730,7 +732,8 @@ IF cur_games <> -1 THEN
         substring(cur_legacy_id_text, char_length(cur_legacy_id_text))::smallint,
         cur_games,
         (SELECT AVG(x) FROM unnest(cur_mmr) x),
-        (SELECT MAX(x) FROM unnest(cur_mmr) x)
+        (SELECT MAX(x) FROM unnest(cur_mmr) x),
+        cur_mmr[array_upper(cur_mmr, 1)]
     )::player_character_summary);
 END IF;
 

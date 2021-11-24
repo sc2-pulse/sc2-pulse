@@ -25,7 +25,8 @@ public class PlayerCharacterSummaryDAO
         + "player_character_summary.race AS \"player_character_summary.race\", "
         + "player_character_summary.games AS \"player_character_summary.games\", "
         + "player_character_summary.rating_avg AS \"player_character_summary.rating_avg\", "
-        + "player_character_summary.rating_max AS \"player_character_summary.rating_max\" ";
+        + "player_character_summary.rating_max AS \"player_character_summary.rating_max\", "
+        + "player_character_summary.rating_cur AS \"player_character_summary.rating_cur\" ";
 
     private static final String FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP =
         "SELECT " + STD_SELECT + " FROM get_player_character_summary(:ids, :from) player_character_summary";
@@ -55,7 +56,8 @@ public class PlayerCharacterSummaryDAO
             conversionService.convert(rs.getInt("player_character_summary.race"), Race.class),
             rs.getInt("player_character_summary.games"),
             rs.getInt("player_character_summary.rating_avg"),
-            rs.getInt("player_character_summary.rating_max")
+            rs.getInt("player_character_summary.rating_max"),
+            rs.getInt("player_character_summary.rating_cur")
         );
     }
 

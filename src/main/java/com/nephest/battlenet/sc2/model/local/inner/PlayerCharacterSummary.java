@@ -25,15 +25,20 @@ public class PlayerCharacterSummary
     @NotNull
     private Integer ratingMax;
 
+    @NotNull
+    private Integer ratingCur;
+
     public PlayerCharacterSummary(){}
 
-    public PlayerCharacterSummary(Long playerCharacterId, Race race, Integer games, Integer ratingAvg, Integer ratingMax)
+    public PlayerCharacterSummary
+    (Long playerCharacterId, Race race, Integer games, Integer ratingAvg, Integer ratingMax, Integer ratingCur)
     {
         this.playerCharacterId = playerCharacterId;
         this.race = race;
         this.games = games;
         this.ratingAvg = ratingAvg;
         this.ratingMax = ratingMax;
+        this.ratingCur = ratingCur;
     }
 
     public Long getPlayerCharacterId()
@@ -84,6 +89,16 @@ public class PlayerCharacterSummary
     public void setRatingMax(Integer ratingMax)
     {
         this.ratingMax = ratingMax;
+    }
+
+    public Integer getRatingCur()
+    {
+        return ratingCur;
+    }
+
+    public void setRatingCur(Integer ratingCur)
+    {
+        this.ratingCur = ratingCur;
     }
 
 }

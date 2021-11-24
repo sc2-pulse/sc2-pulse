@@ -227,6 +227,7 @@ public class PlayerCharacterSummaryIT
         assertEquals(1, c2z.getGames());
         assertEquals(10, c2z.getRatingMax());
         assertEquals(10, c2z.getRatingAvg());
+        assertEquals(10, c2z.getRatingCur());
 
         PlayerCharacterSummary c1z = Arrays.stream(summary)
             .filter(s-> s.getPlayerCharacterId().equals(charEu1.getId()) && s.getRace() == Race.ZERG)
@@ -234,6 +235,7 @@ public class PlayerCharacterSummaryIT
         assertEquals(1, c1z.getGames());
         assertEquals(10, c1z.getRatingMax());
         assertEquals(10, c1z.getRatingAvg());
+        assertEquals(10, c1z.getRatingCur());
 
         PlayerCharacterSummary c1p = Arrays.stream(summary)
             .filter(s-> s.getPlayerCharacterId().equals(charEu1.getId()) && s.getRace() == Race.PROTOSS)
@@ -241,6 +243,7 @@ public class PlayerCharacterSummaryIT
         assertEquals(2, c1p.getGames());
         assertEquals(10, c1p.getRatingMax());
         assertEquals(9, c1p.getRatingAvg());
+        assertEquals(10, c1p.getRatingCur());
 
         PlayerCharacterSummary c1t = Arrays.stream(summary)
             .filter(s-> s.getPlayerCharacterId().equals(charEu1.getId()) && s.getRace() == Race.TERRAN)
@@ -248,6 +251,7 @@ public class PlayerCharacterSummaryIT
         assertEquals(20, c1t.getGames());
         assertEquals(10, c1t.getRatingMax());
         assertEquals(6, c1t.getRatingAvg());
+        assertEquals(10, c1t.getRatingCur());
     }
 
     @Test
