@@ -654,7 +654,7 @@ WITH team_filter AS
     team_member.player_character_id,
     team.wins + team.losses + team.ties AS games,
     team.rating,
-    season.end::timestamp AS "timestamp"
+    (season.end + INTERVAL ''7 days'')::timestamp AS "timestamp"
     FROM team
     INNER JOIN team_member ON team.id = team_member.team_id
     INNER JOIN season ON team.region = season.region AND team.season = season.battlenet_id
