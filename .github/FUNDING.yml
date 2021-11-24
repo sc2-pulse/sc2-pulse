@@ -9,4 +9,4 @@ community_bridge: # Replace with a single Community Bridge project-name e.g., cl
 liberapay: # Replace with a single Liberapay username
 issuehunt: # Replace with a single IssueHunt username
 otechie: # Replace with a single Otechie username
-custom: ['https://destream.net/live/nephest0x/donate', 'https://sobe.ru/na/sc2pulse', 'https://www.nephest.com/sc2/donate']
+custom: ['https://www.nephest.com/sc2/donate']
