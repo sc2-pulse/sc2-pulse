@@ -203,7 +203,8 @@ LOOP
             substring(cur_legacy_id_text, char_length(cur_legacy_id_text))::smallint,
             cur_games,
             (SELECT AVG(x) FROM unnest(cur_mmr) x),
-            (SELECT MAX(x) FROM unnest(cur_mmr) x)
+            (SELECT MAX(x) FROM unnest(cur_mmr) x),
+            cur_mmr[array_upper(cur_mmr, 1)]
         )::player_character_summary);
         cur_games = -1;
         cur_mmr = array[]::SMALLINT[];
