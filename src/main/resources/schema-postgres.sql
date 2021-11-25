@@ -627,7 +627,9 @@ CREATE TYPE player_character_summary AS
     games SMALLINT,
     rating_avg SMALLINT,
     rating_max SMALLINT,
-    rating_last SMALLINT
+    rating_last SMALLINT,
+    league_type_last SMALLINT,
+    global_rank_last SMALLINT
 );
 
 CREATE OR REPLACE FUNCTION get_player_character_summary(character_ids BIGINT[], from_timestamp TIMESTAMP WITH TIME ZONE)
@@ -636,6 +638,7 @@ AS
 '
 DECLARE
     table_record RECORD;
+    prev_table_record RECORD;
     result player_character_summary[];
     cur_season INTEGER;
     cur_player_character_id BIGINT;
@@ -650,6 +653,8 @@ WITH team_filter AS
 (
     SELECT
     team.season,
+    team.league_type,
+    team.global_rank,
     team.legacy_id,
     team_member.player_character_id,
     team.wins + team.losses + team.ties AS games,
@@ -666,6 +671,8 @@ team_state_filter AS
 (
     SELECT
     team.season,
+    null::INTEGER AS league_type,
+    null::INTEGER AS global_rank,
     team.legacy_id,
     team_member.player_character_id,
     team_state.games,
@@ -703,7 +710,9 @@ LOOP
             cur_games,
             (SELECT AVG(x) FROM unnest(cur_mmr) x),
             (SELECT MAX(x) FROM unnest(cur_mmr) x),
-            cur_mmr[array_upper(cur_mmr, 1)]
+            cur_mmr[array_upper(cur_mmr, 1)],
+            prev_table_record.league_type,
+            prev_table_record.global_rank
         )::player_character_summary);
         cur_games = -1;
         cur_mmr = array[]::SMALLINT[];
@@ -722,6 +731,7 @@ LOOP
     IF table_record.season <> cur_season THEN cur_season = table_record.season; END IF;
     prev_games = table_record.games;
     cur_mmr = array_append(cur_mmr, table_record.rating);
+    prev_table_record = table_record;
 END LOOP;
 
 IF cur_games <> -1 THEN
@@ -733,7 +743,9 @@ IF cur_games <> -1 THEN
         cur_games,
         (SELECT AVG(x) FROM unnest(cur_mmr) x),
         (SELECT MAX(x) FROM unnest(cur_mmr) x),
-        cur_mmr[array_upper(cur_mmr, 1)]
+        cur_mmr[array_upper(cur_mmr, 1)],
+        table_record.league_type,
+        table_record.global_rank
     )::player_character_summary);
 END IF;
 

@@ -138,7 +138,7 @@ public class PlayerCharacterSummaryIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.PROTOSS),
-            division1v1_2.getId(), 10L, 3, 3, 3, 1
+            division1v1_2.getId(), 9L, 3, 3, 3, 1
         ))[0];
 
         Team team1v1_z_s3 = teamDAO.merge(new Team(
@@ -173,7 +173,7 @@ public class PlayerCharacterSummaryIT
 
         Team team1v1_t_s3 = teamDAO.merge(new Team(
             null, 3, Region.EU,
-            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
@@ -210,6 +210,9 @@ public class PlayerCharacterSummaryIT
             new TeamState(team1v1_t_s2.getId(), OffsetDateTime.now().minusDays(38), team1v1_t_s2.getDivisionId(), 3, 5),
             new TeamState(team1v1_t_s3.getId(), OffsetDateTime.now().minusDays(31), team1v1_t_s3.getDivisionId(), 3, 5)
         );
+        teamDAO.updateRanks(1);
+        teamDAO.updateRanks(2);
+        teamDAO.updateRanks(3);
 
         PlayerCharacterSummary[] summary = objectMapper.readValue(mvc.perform
         (
@@ -228,6 +231,8 @@ public class PlayerCharacterSummaryIT
         assertEquals(10, c2z.getRatingMax());
         assertEquals(10, c2z.getRatingAvg());
         assertEquals(10, c2z.getRatingLast());
+        assertEquals(BaseLeague.LeagueType.BRONZE, c2z.getLeagueTypeLast());
+        assertEquals(1, c2z.getGlobalRankLast());
 
         PlayerCharacterSummary c1z = Arrays.stream(summary)
             .filter(s-> s.getPlayerCharacterId().equals(charEu1.getId()) && s.getRace() == Race.ZERG)
@@ -236,14 +241,18 @@ public class PlayerCharacterSummaryIT
         assertEquals(10, c1z.getRatingMax());
         assertEquals(10, c1z.getRatingAvg());
         assertEquals(10, c1z.getRatingLast());
+        assertEquals(BaseLeague.LeagueType.BRONZE, c1z.getLeagueTypeLast());
+        assertEquals(1, c1z.getGlobalRankLast());
 
         PlayerCharacterSummary c1p = Arrays.stream(summary)
             .filter(s-> s.getPlayerCharacterId().equals(charEu1.getId()) && s.getRace() == Race.PROTOSS)
             .findAny().orElseThrow();
         assertEquals(2, c1p.getGames());
-        assertEquals(10, c1p.getRatingMax());
-        assertEquals(9, c1p.getRatingAvg());
-        assertEquals(10, c1p.getRatingLast());
+        assertEquals(9, c1p.getRatingMax());
+        assertEquals(8, c1p.getRatingAvg());
+        assertEquals(9, c1p.getRatingLast());
+        assertEquals(BaseLeague.LeagueType.BRONZE, c1p.getLeagueTypeLast());
+        assertEquals(2, c1p.getGlobalRankLast());
 
         PlayerCharacterSummary c1t = Arrays.stream(summary)
             .filter(s-> s.getPlayerCharacterId().equals(charEu1.getId()) && s.getRace() == Race.TERRAN)
@@ -252,6 +261,8 @@ public class PlayerCharacterSummaryIT
         assertEquals(10, c1t.getRatingMax());
         assertEquals(6, c1t.getRatingAvg());
         assertEquals(10, c1t.getRatingLast());
+        assertEquals(BaseLeague.LeagueType.SILVER, c1t.getLeagueTypeLast());
+        assertEquals(1, c1t.getGlobalRankLast());
     }
 
     @Test

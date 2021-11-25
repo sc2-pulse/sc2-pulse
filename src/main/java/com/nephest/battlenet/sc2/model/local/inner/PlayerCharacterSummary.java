@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.inner;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Race;
 
 import javax.validation.constraints.NotNull;
@@ -28,10 +29,24 @@ public class PlayerCharacterSummary
     @NotNull
     private Integer ratingLast;
 
+    @NotNull
+    private BaseLeague.LeagueType leagueTypeLast;
+
+    private Integer globalRankLast;
+
     public PlayerCharacterSummary(){}
 
     public PlayerCharacterSummary
-    (Long playerCharacterId, Race race, Integer games, Integer ratingAvg, Integer ratingMax, Integer ratingLast)
+    (
+        Long playerCharacterId,
+        Race race,
+        Integer games,
+        Integer ratingAvg,
+        Integer ratingMax,
+        Integer ratingLast,
+        BaseLeague.LeagueType leagueTypeLast,
+        Integer globalRankLast
+    )
     {
         this.playerCharacterId = playerCharacterId;
         this.race = race;
@@ -39,6 +54,8 @@ public class PlayerCharacterSummary
         this.ratingAvg = ratingAvg;
         this.ratingMax = ratingMax;
         this.ratingLast = ratingLast;
+        this.leagueTypeLast = leagueTypeLast;
+        this.globalRankLast = globalRankLast;
     }
 
     public Long getPlayerCharacterId()
@@ -99,6 +116,26 @@ public class PlayerCharacterSummary
     public void setRatingLast(Integer ratingLast)
     {
         this.ratingLast = ratingLast;
+    }
+
+    public BaseLeague.LeagueType getLeagueTypeLast()
+    {
+        return leagueTypeLast;
+    }
+
+    public void setLeagueTypeLast(BaseLeague.LeagueType leagueTypeLast)
+    {
+        this.leagueTypeLast = leagueTypeLast;
+    }
+
+    public Integer getGlobalRankLast()
+    {
+        return globalRankLast;
+    }
+
+    public void setGlobalRankLast(Integer globalRankLast)
+    {
+        this.globalRankLast = globalRankLast;
     }
 
 }
