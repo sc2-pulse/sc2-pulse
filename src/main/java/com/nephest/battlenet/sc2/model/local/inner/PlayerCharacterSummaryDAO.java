@@ -26,7 +26,7 @@ public class PlayerCharacterSummaryDAO
         + "player_character_summary.games AS \"player_character_summary.games\", "
         + "player_character_summary.rating_avg AS \"player_character_summary.rating_avg\", "
         + "player_character_summary.rating_max AS \"player_character_summary.rating_max\", "
-        + "player_character_summary.rating_cur AS \"player_character_summary.rating_cur\" ";
+        + "player_character_summary.rating_last AS \"player_character_summary.rating_last\" ";
 
     private static final String FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP =
         "SELECT " + STD_SELECT + " FROM get_player_character_summary(:ids, :from) player_character_summary";
@@ -57,7 +57,7 @@ public class PlayerCharacterSummaryDAO
             rs.getInt("player_character_summary.games"),
             rs.getInt("player_character_summary.rating_avg"),
             rs.getInt("player_character_summary.rating_max"),
-            rs.getInt("player_character_summary.rating_cur")
+            rs.getInt("player_character_summary.rating_last")
         );
     }
 

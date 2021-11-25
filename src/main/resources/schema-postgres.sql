@@ -627,7 +627,7 @@ CREATE TYPE player_character_summary AS
     games SMALLINT,
     rating_avg SMALLINT,
     rating_max SMALLINT,
-    rating_cur SMALLINT
+    rating_last SMALLINT
 );
 
 CREATE OR REPLACE FUNCTION get_player_character_summary(character_ids BIGINT[], from_timestamp TIMESTAMP WITH TIME ZONE)
