@@ -206,7 +206,7 @@ extends StandardDAO
 
         List<Match> mergedMatches = getTemplate().query(MERGE_QUERY, params, getStdRowMapper());
 
-        return DAOUtils.updateOriginals(matches, mergedMatches, Match.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()));
+        return DAOUtils.updateOriginals(matches, mergedMatches, (o, m)->o.setId(m.getId()));
     }
 
     @Transactional

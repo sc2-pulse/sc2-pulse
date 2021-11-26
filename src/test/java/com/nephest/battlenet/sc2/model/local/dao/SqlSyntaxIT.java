@@ -22,6 +22,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -214,6 +215,7 @@ public class SqlSyntaxIT
         teamDAO.create(mergeTestTeam3);
         //zergTeamClone is existing, merged is updated, same is a clone, newTeam is inserted
         Team[] teams = teamDAO.merge(zergTeamClone, mergedTeam, newTeam2, sameTeam);
+        Arrays.sort(teams, Team.NATURAL_ID_COMPARATOR);
         //existing team is excluded
         assertEquals(3, teams.length);
         assertEquals(teams[0], mergedTeam);
@@ -293,6 +295,7 @@ public class SqlSyntaxIT
             new Clan(null, "clanTag1", Region.EU, "clanName1")//duplicate
         };
         Clan[] mergedClans = clanDAO.merge(clans);
+        Arrays.sort(mergedClans, Clan.NATURAL_ID_COMPARATOR);
         assertEquals(3, mergedClans.length);
         for(Clan clan : mergedClans) assertNotNull(clan.getId());
         for(Clan clan : clans) assertNotNull(clan.getId());
@@ -303,6 +306,7 @@ public class SqlSyntaxIT
             new Clan(null, "clanTag2", Region.EU, "clanAnotherName2"), //update
             new Clan(null, "clanTag3", Region.EU, "clanName3") //insert
         );
+        Arrays.sort(mergedClans2, Clan.NATURAL_ID_COMPARATOR);
         assertEquals(clans[0].getId(), mergedClans2[0].getId());
         assertEquals(clans[2].getId(), mergedClans2[1].getId());
 
@@ -314,6 +318,7 @@ public class SqlSyntaxIT
             new SC2Map(null, "map1v1_2"), //insert
             new SC2Map(null, "map2v2") //existing
         );
+        Arrays.sort(maps, SC2Map.NATURAL_ID_COMPARATOR);
         assertEquals(4, maps.length);
         assertEquals(maps[0].getId(), maps[1].getId());
         assertNotNull(maps[2].getId());

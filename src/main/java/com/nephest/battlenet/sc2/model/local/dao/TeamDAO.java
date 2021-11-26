@@ -373,7 +373,7 @@ public class TeamDAO
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("teams", data);
         List<Team> mergedTeams = template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, STD_ROW_MAPPER);
 
-        return Arrays.stream(DAOUtils.updateOriginals(teams, mergedTeams, Team.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()), o->o.setId(null)))
+        return Arrays.stream(DAOUtils.updateOriginals(teams, mergedTeams, (o, m)->o.setId(m.getId()), o->o.setId(null)))
             .filter(t->t.getId() != null)
             .toArray(Team[]::new);
     }

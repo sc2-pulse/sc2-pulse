@@ -18,9 +18,12 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 public final class DAOUtils
 {
@@ -73,53 +76,34 @@ public final class DAOUtils
     (
         T[] originalArray,
         List<T> mergedList,
-        Comparator<T> comparator, BiConsumer<T, T> originalUpdater,
+        BiConsumer<T, T> originalUpdater,
         Consumer<T> originalNullifier
     )
     {
         if(originalNullifier != null) for(T t : originalArray) originalNullifier.accept(t);
         if(mergedList.isEmpty()) return originalArray;
 
-        Arrays.sort(originalArray, comparator);
-        mergedList.sort(comparator);
-        for(int originalIx = 0, mergedIx = 0; originalIx < originalArray.length; originalIx++)
+        Map<T, T> mergedMap = mergedList.stream()
+            .collect(Collectors.toMap(Function.identity(), Function.identity()));
+        for(T original : originalArray)
         {
-            //merged list can be smaller than original arrays due to original clones, reuse the max ix
-            if(mergedIx >= mergedList.size()) mergedIx = mergedList.size() - 1;
-            T original = originalArray[originalIx];
-            T merged = mergedList.get(mergedIx);
-
-            //if there are multiple clones in the original array
-            if(!merged.equals(original))
+            T merged = mergedMap.get(original);
+            if(merged == null)
             {
-                //for nullables, if it's not a clone, than it's a null entity, skip it
-                if(originalNullifier != null && mergedIx == 0) continue;
-                //the merged list contains one entity for multiple original clones, use it repeatedly
-                mergedIx--;
-                merged = mergedList.get(mergedIx);
-                if(!merged.equals(original))
-                {
-                    //for nullables, if it's not a clone, than it's a null entity, skip it, ++ to offset the --
-                    if(originalNullifier != null)
-                    {
-                        mergedIx++;
-                        continue;
-                    }
-                    //this can happen only if db query is invalid
-                    throw new IllegalStateException("Pair didn't match");
-                }
+                if(originalNullifier == null) throw new IllegalStateException("Pair didn't match");
             }
-            originalUpdater.accept(original, merged);
-            mergedIx++;
+            else
+            {
+                originalUpdater.accept(original, merged);
+            }
         }
-
         return originalArray;
     }
 
     public static <T>  T[] updateOriginals
-    (T[] originalArray, List<T> mergedList, Comparator<T> comparator, BiConsumer<T, T> originalUpdater)
+    (T[] originalArray, List<T> mergedList, BiConsumer<T, T> originalUpdater)
     {
-        return updateOriginals(originalArray, mergedList, comparator, originalUpdater, null);
+        return updateOriginals(originalArray, mergedList, originalUpdater, null);
     }
 
     public static <T, K>  T[] updateOriginalIds

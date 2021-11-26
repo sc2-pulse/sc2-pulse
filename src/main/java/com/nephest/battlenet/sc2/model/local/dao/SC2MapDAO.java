@@ -112,7 +112,7 @@ public class SC2MapDAO
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("maps", data);
         List<SC2Map> merged = template.query(MERGE, params, STD_ROW_MAPPER);
 
-        return DAOUtils.updateOriginals(maps, merged, SC2Map.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()));
+        return DAOUtils.updateOriginals(maps, merged, (o, m)->o.setId(m.getId()));
     }
 
     public List<SC2Map> find(List<Integer> ids)

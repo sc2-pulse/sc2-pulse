@@ -127,7 +127,7 @@ public class ClanDAO
 
         List<Clan> mergedClans = template.query(MERGE_QUERY, params, STD_ROW_MAPPER);
 
-        return DAOUtils.updateOriginals(clans, mergedClans, Clan.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()));
+        return DAOUtils.updateOriginals(clans, mergedClans, (o, m)->o.setId(m.getId()));
     }
 
 }

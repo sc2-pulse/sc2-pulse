@@ -23,6 +23,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -344,6 +345,7 @@ public class MatchIT
             new Match(null, now, BaseMatch.MatchType._4V4, map4v4.getId(), Region.EU), //identical, insert without errors
             new Match(null, now, BaseMatch.MatchType._2V2, map2v2.getId(), Region.US) //insert
         );
+        Arrays.sort(matches1, Match.NATURAL_ID_COMPARATOR);
         assertEquals(3, matches1.length);
         assertEquals(matches1[1].getId(), matches1[2].getId()); //clone object is updated, ASC order
         Match match4v4 = new Match(null, now, BaseMatch.MatchType._4V4, map4v4.getId(), Region.EU);
