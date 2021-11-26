@@ -13,6 +13,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -75,9 +76,16 @@ extends StandardDAO
         + "SELECT * FROM updated "
         + "UNION "
         + "SELECT * FROM inserted";
+    
+    private static final String CREATE_DURATION_DATASET_QUERY =
+        "CREATE TEMPORARY TABLE tmp_match_participant_date "
+        + "( "
+            + "player_character_id BIGINT NOT NULL, "
+            + "date TIMESTAMP WITH TIME ZONE NOT NULL "
+        + ") ON COMMIT DROP; "
+        + "CREATE INDEX ix_tmp_match_participant_date_player_character_id_date ON tmp_match_participant_date(player_character_id, date); "
 
-    private static final String UPDATE_DURATION_QUERY =
-        "WITH "
+        + "WITH "
         + "character_filter AS "
         + "("
             + "SELECT DISTINCT(player_character_id) "
@@ -85,30 +93,31 @@ extends StandardDAO
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "WHERE match.date >= :fromHistory "
             + "AND type IN (:types) "
-        + "), "
-        + "match_filter AS "
-        + "( "
-            + "SELECT player_character_id, date "
-            + "FROM match "
-            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
-            + "INNER JOIN character_filter USING(player_character_id) "
-            + "WHERE match.date >= :fromHistory "
-        + "), "
+        + ") "
+        + "INSERT INTO tmp_match_participant_date(player_character_id, date) "
+        + "SELECT player_character_id, date "
+        + "FROM match "
+        + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+        + "INNER JOIN character_filter USING(player_character_id) "
+        + "WHERE match.date >= :fromHistory;";
+
+    private static final String UPDATE_DURATION_QUERY =
+        "WITH "
         + "match_duration AS "
         + "( "
-            + "SELECT id, EXTRACT(EPOCH FROM (match.date - MAX(match_duration.date))) AS duration "
+            + "SELECT id, EXTRACT(EPOCH FROM (match.date - MAX(prev_match.date))) AS duration "
             + "FROM match "
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "JOIN LATERAL "
             + "( "
-                + "SELECT match_filter.date "
-                + "FROM match_filter "
-                + "WHERE match_filter.player_character_id = match_participant.player_character_id "
-                + "AND match_filter.date >= match.date - INTERVAL '" + DURATION_MAX + " seconds' "
-                + "AND match_filter.date < match.date "
-                + "ORDER BY match_filter.date DESC "
+                + "SELECT tmp_match_participant_date.date "
+                + "FROM tmp_match_participant_date "
+                + "WHERE tmp_match_participant_date.player_character_id = match_participant.player_character_id "
+                + "AND tmp_match_participant_date.date >= match.date - INTERVAL '" + DURATION_MAX + " seconds' "
+                + "AND tmp_match_participant_date.date < match.date "
+                + "ORDER BY tmp_match_participant_date.date DESC "
                 + "LIMIT 1 "
-            + ") match_duration ON true "
+            + ") prev_match ON true "
             + "WHERE match.date >= :from "
             + "AND match.type IN(:types) "
             + "GROUP BY match.id "
@@ -200,6 +209,7 @@ extends StandardDAO
         return DAOUtils.updateOriginals(matches, mergedMatches, Match.NATURAL_ID_COMPARATOR, (o, m)->o.setId(m.getId()));
     }
 
+    @Transactional
     public int updateDuration(OffsetDateTime from, List<BaseMatch.MatchType> types)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -209,9 +219,11 @@ extends StandardDAO
                 .map(t->conversionService.convert(t, Integer.class))
                 .collect(Collectors.toList()));
 
+        getTemplate().update(CREATE_DURATION_DATASET_QUERY, params);
         return getTemplate().update(UPDATE_DURATION_QUERY, params);
     }
 
+    @Transactional
     public int updateDuration(OffsetDateTime from)
     {
         return updateDuration(from, DEFAULT_DURATION_MATCH_TYPES);
