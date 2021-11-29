@@ -219,6 +219,20 @@ public class LadderCharacterDAO
         "WHERE account.id = :accountId"
     );
 
+    public enum SearchType
+    {
+
+        GENERAL, BATTLE_TAG, CLAN_TAG;
+
+        public static SearchType from(String term)
+        {
+            if(term.startsWith("[")) return CLAN_TAG;
+            if(term.contains("#")) return BATTLE_TAG;
+            return GENERAL;
+        }
+
+    }
+
     public static final QueueType CURRENT_STATS_QUEUE_TYPE = QueueType.LOTV_1V1;
 
     private final NamedParameterJdbcTemplate template;
