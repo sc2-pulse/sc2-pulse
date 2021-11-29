@@ -28,6 +28,14 @@ extends StandardDAO
     public static final int UPDATED_TTL_DAYS = 30;
     public static final int TTL_DAYS = 90;
     public static final int DURATION_MAX = 5400;
+    public static final int DURATION_OFFSET =
+        15 //search
+        + 5 //ready + countdown
+        + 10 //loading
+        + 3 //countdown
+        + 5 //loading end screen
+        + 5 //looking at stats
+        ;
     public static final List<BaseMatch.MatchType> DEFAULT_DURATION_MATCH_TYPES = List.of
     (
         BaseMatch.MatchType._1V1
@@ -105,7 +113,7 @@ extends StandardDAO
         "WITH "
         + "match_duration AS "
         + "( "
-            + "SELECT id, EXTRACT(EPOCH FROM (match.date - MAX(prev_match.date))) AS duration "
+            + "SELECT id, EXTRACT(EPOCH FROM (match.date - MAX(prev_match.date))) - " + DURATION_OFFSET + " AS duration "
             + "FROM match "
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "JOIN LATERAL "

@@ -660,7 +660,7 @@ public class MatchIT
         Match match1v1_2 = new Match(null, match1v1_1.getDate().minusSeconds(300), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
         Match match1v1_3 = new Match(null, match1v1_2.getDate().minusSeconds(400), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
         //null duration, previous match is too old
-        Match match1v1_4 = new Match(null, match1v1_3.getDate().minusSeconds(1), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
+        Match match1v1_4 = new Match(null, match1v1_3.getDate().minusSeconds(MatchDAO.DURATION_OFFSET + 1), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
         //null duration, there is no previous match
         Match match1v1_5 = new Match(null, match1v1_4.getDate().minusSeconds(MatchDAO.DURATION_MAX + 1), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
 
@@ -696,7 +696,7 @@ public class MatchIT
             .findMatchesByCharacterId(charEu1.getId(), now.plusSeconds(1), BaseMatch.MatchType._1V1, 0, 0, 1)
             .getResult();
 
-        assertEquals(300, matches.get(0).getMatch().getDuration());
+        assertEquals(300 - MatchDAO.DURATION_OFFSET, matches.get(0).getMatch().getDuration());
         assertEquals(1, matches.get(1).getMatch().getDuration());
         assertNull(matches.get(2).getMatch().getDuration());
         assertNull(matches.get(3).getMatch().getDuration());

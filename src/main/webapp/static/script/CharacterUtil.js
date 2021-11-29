@@ -865,8 +865,9 @@ class CharacterUtil
     static calculateMatchLengthSeconds(matches, i)
     {
         if(i == matches.length - 1) return -1;
-        const length = (new Date(matches[i].match.date).getTime() - new Date(matches[i + 1].match.date).getTime()) / 1000;
-        if(length > CharacterUtil.MATCH_DURATION_MAX_SECONDS) return -1;
+        const length = (new Date(matches[i].match.date).getTime() - new Date(matches[i + 1].match.date).getTime()) / 1000
+            - MATCH_DURATION_OFFSET;
+        if(length < 0 || length > CharacterUtil.MATCH_DURATION_MAX_SECONDS) return -1;
         return length;
     }
 

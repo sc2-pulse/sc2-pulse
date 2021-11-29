@@ -162,6 +162,7 @@
             .replace(/ /g, '')
             .split(",");
         const MATCH_BATCH_SIZE = /*[[${@ladderMatchDAO.getResultsPerPage()}]]*/ '';
+        const MATCH_DURATION_OFFSET = /*[[${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).DURATION_OFFSET}]]*/ '';
         const AUTHENTICATED = /*[[${#authentication?.name}]]*/ '';
         const SESSION_TIMEOUT_SECONDS = parseInt(/*[[${!#strings.isEmpty(@environment.getProperty('server.servlet.session.timeout'))
             ? @environment.getProperty('server.servlet.session.timeout')
