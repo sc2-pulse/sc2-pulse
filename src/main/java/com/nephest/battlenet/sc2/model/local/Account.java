@@ -42,6 +42,11 @@ implements java.io.Serializable
         return new Account(null, Partition.of(region), bAccount.getBattleTag());
     }
 
+    public static boolean isFakeBattleTag(String battleTag)
+    {
+        return battleTag.startsWith("f#");
+    }
+
     @Override
     public int hashCode()
     {
