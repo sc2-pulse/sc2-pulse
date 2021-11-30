@@ -157,7 +157,7 @@ public class MapStatsIT
         //(players / 2)(matches) * 3(maps) / 2(regions)
         verifyStats(allStats1, seasons, leagues, regions, statsMaps,
             //only 2/3 of matches has duration
-            (g)->(g/3) * 2 * 3600,
+            (g)->(g/3) * 2 * 3600 - (g/3) * 2 * MatchDAO.DURATION_OFFSET,
             (g)->(g/3) * 2,
             150, 150, 150, 150,
             //a part of platinum range is inactive due to gm cutoff, so the match-up numbers are shifted
@@ -177,7 +177,7 @@ public class MapStatsIT
         assertEquals(maps.get(2), map3Stats1.getMap());
         //(players / 2)(matches) / 2(regions)
         verifyStats(map3Stats1, seasons, leagues, regions, statsMaps,
-            (g)->g * 3600,
+            (g)->g * 3600 - g * MatchDAO.DURATION_OFFSET,
             (g)->g,
             50, 50, 50, 50,
             //a part of platinum range is inactive due to gm cutoff, so the match-up numbers are shifted
@@ -201,7 +201,7 @@ public class MapStatsIT
         //(players / 2)(matches) * 3(maps) / 2(regions)
         verifyStats(allStats2, seasons, leagues, regions, statsMaps,
             //only 2/3 of matches has duration
-            (g)->(g/3) * 2 * 3600,
+            (g)->(g/3) * 2 * 3600 - (g/3) * 2 * MatchDAO.DURATION_OFFSET,
             (g)->(g/3) * 2,
             300, 300, 300, 300,
             //a part of platinum range is inactive due to gm cutoff, so the match-up numbers are shifted
@@ -221,7 +221,7 @@ public class MapStatsIT
         assertEquals(maps.get(2), map3Stats2.getMap());
         //(players / 2)(matches) / 2(regions)
         verifyStats(map3Stats2, seasons, leagues, regions, statsMaps,
-            (g)->g * 3600,
+            (g)->g * 3600 - g * MatchDAO.DURATION_OFFSET,
             (g)->g,
             100, 100, 100, 100,
             //a part of platinum range is inactive due to gm cutoff, so the match-up numbers are shifted
