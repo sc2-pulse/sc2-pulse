@@ -918,8 +918,9 @@ class ChartUtil
 
     static updateBeginAtZero()
     {
+        const beginAtZero = localStorage.getItem("chart-begin-at-zero") == "true";
         for(const [id, chart] of ChartUtil.CHARTS.entries())
-            ChartUtil.changeZoomState(document.getElementById(id));
+            ChartUtil.changeZoomState(document.getElementById(id), !beginAtZero);
     }
 
     static enhanceBeginAtZeroControls()
