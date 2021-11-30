@@ -916,10 +916,11 @@ class ChartUtil
         }
     }
 
-    static updateBeginAtZero()
+    static updateBeginAtZero(charts, beginAtZero)
     {
-        const beginAtZero = localStorage.getItem("chart-begin-at-zero") == "true";
-        for(const [id, chart] of ChartUtil.CHARTS.entries())
+        if(!charts) charts = ChartUtil.CHARTS.entries();
+        if(beginAtZero === undefined) beginAtZero = localStorage.getItem("chart-begin-at-zero") == "true";
+        for(const [id, chart] of charts)
             ChartUtil.changeZoomState(document.getElementById(id), !beginAtZero);
     }
 
