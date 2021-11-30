@@ -527,6 +527,10 @@ class StatsUtil
             const season = seasons[0].battlenetId;
             document.querySelectorAll("#stats-match-up .season-current").forEach(s=>s.textContent = "s" + season)
         }
+        const type = localStorage.getItem("stats-match-up-type") || "win-rate";
+        const beginAtZero = type != "win-rate";
+        ChartUtil.updateBeginAtZero(Array.from(document.querySelectorAll("#stats-match-up .chartable"))
+            .map(c=>[c.id, ChartUtil.CHARTS.get(c.id)]), beginAtZero);
     }
 
     static calculateLeagueMapStats(formattedStats, calculator, sumCalculator, dest, includeLeague = true)
