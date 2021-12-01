@@ -129,7 +129,7 @@ implements SlashCommand
 
         Map<Long, LadderTeamMember> characters = ladderCharacterDAO.findDistinctCharacters(name).stream()
             .filter(generateCharacterFilter(searchType, region))
-            .limit(CHARACTER_LIMIT)
+            .limit(race == null ? maxLines : CHARACTER_LIMIT)
             .collect(Collectors.toMap(c->c.getMembers().getCharacter().getId(), LadderDistinctCharacter::getMembers));
         if(characters.isEmpty()) return DiscordBootstrap.notFoundFollowup(evt);
 
