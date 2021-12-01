@@ -24,6 +24,7 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
     * Barcode unmasking
     * Pro player stats
     * Social media links
+* [Discord bot](https://discord.com/api/oauth2/authorize?client_id=908047161994915901&permissions=264192&scope=bot%20applications.commands)
 ## Disclaimer
 I use this project for learning, it is not production-ready.
 
