@@ -44,6 +44,7 @@ public class DiscordBootstrap
 
     public static final boolean DEFAULT_EPHEMERAL = false;
     public static final int DEFAULT_LINES = 5;
+    public static final String SC2_REVEALED_TAG = "revealed";
     public static final String CHARACTER_URL_TEMPLATE =
         "https://www.nephest.com/sc2/?type=character&id=%1$s&m=1#player-stats-mmr";
     public static final String THUMBNAIL = "https://www.nephest.com/sc2/static/icon/misc/favicon-32.png";
@@ -303,7 +304,7 @@ public class DiscordBootstrap
         if(!additionalName.isBlank()) sb.append(" | ").append(additionalName);
         if(!Account.isFakeBattleTag(member.getAccount().getBattleTag()))
             sb.append(" | ").append(member.getAccount().getBattleTag());
-        if(member.getProNickname() != null) sb.append(" | pro");
+        if(member.getProNickname() != null) sb.append(" | " + SC2_REVEALED_TAG);
         return sb.toString();
     }
 

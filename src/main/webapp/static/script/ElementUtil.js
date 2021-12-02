@@ -395,8 +395,8 @@ class ElementUtil
     {
         const flag = document.createElement("span");
         flag.classList.add("player-flag", "player-flag-pro");
-        flag.textContent = "PRO";
-        flag.title="This player is identified by sc2revealed.com as a pro player. See 'Player' tab for more info";
+        flag.textContent = "revealed";
+        flag.title="This player has been identified by sc2revealed.com. See 'Player' tab for more information";
         return flag;
     }
 

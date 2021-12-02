@@ -92,7 +92,8 @@ public class Summary1v1SlashCommandTest
         sb.append("*term, 100 days, Top 5, EU, Terran*\nGames | last/avg/max MMR\n\n");
         for(int i = 3; i > -1; i--)
         {
-            sb.append(String.format("[**[proTeam%1$s]proName%1$s** | [clan%1$s]name | tag#%1$s | pro]" //unmasked name
+            sb.append(String.format(
+                "[**[proTeam%1$s]proName%1$s** | [clan%1$s]name | tag#%1$s | " + DiscordBootstrap.SC2_REVEALED_TAG + "]" //unmasked name
                 + "(https://www.nephest.com/sc2/?type=character&id=%1$s&m=1#player-stats-mmr)\n" //web link
                 + DiscordBootstrap.REGION_EMOJIS.get(Region.EU) + " diamond terran" //region, league, race
                 + " | **%1$s** | " //games
