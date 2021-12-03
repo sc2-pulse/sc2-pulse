@@ -59,7 +59,7 @@ class ChartUtil
                             title: {display: false, text: config.xTitle},
                             grid: {display: false},
                             //this fixes axis jitter when panning via zoom plugin
-                            ...(config.zoom) && {beforeFit: ChartUtil.trimTicks},
+                            ...(config.zoom && config.xType == "time") && {beforeFit: ChartUtil.trimTicks},
                             ticks:
                             {
                                 callback: function(value, valIx, vals)
@@ -73,7 +73,7 @@ class ChartUtil
                                     return val.substring(indexOfStart + 1, indexOfEnd);
                                 },
                                 //this fixes axis jitter when panning via zoom plugin
-                                ...(config.zoom) && {align: "start"},
+                                ...(config.zoom && config.xType == "time") && {align: "start"},
                                 minRotation: 0,
                                 maxRotation: 0,
                                 autoSkipPadding: config.type === "bar" && config.xType !== "time"
