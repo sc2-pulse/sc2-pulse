@@ -202,13 +202,18 @@ class BootstrapUtil
         const active = localStorage.getItem("embed-backdrop-close") == "true";
         document.querySelectorAll(".section-side").forEach(s=>{
             if(active) {
-                s.addEventListener("click", e=>BootstrapUtil.hideActiveModal());
+                s.addEventListener("click", BootstrapUtil.onModalBackdropClose)
                 s.classList.add("backdrop");
             } else {
-                s.removeEventListener("click", e=>BootstrapUtil.hideActiveModal());
+                s.removeEventListener("click", BootstrapUtil.onModalBackdropClose);
                 s.classList.remove("backdrop");
             }
         });
+    }
+
+    static onModalBackdropClose(evt)
+    {
+        BootstrapUtil.hideActiveModal();
     }
 
     static enhanceModals()
