@@ -55,6 +55,7 @@ class SC2Restful
                 StatsUtil.addMatchUpLegend();
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");
                 BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
+                BootstrapUtil.enhanceEmbedBackdropCloseControls();
                 Session.enhanceThemeInputs();
                 Session.enhanceCheaterVisibilityInput();
                 Session.enhanceCsrfForms();

@@ -190,6 +190,21 @@ class BootstrapUtil
         });
     }
 
+    static enhanceEmbedBackdropCloseControls()
+    {
+        const ctl = document.querySelector("#embed-backdrop-close");
+        if(!ctl) return;
+        ctl.addEventListener("click", e=>window.setTimeout(BootstrapUtil.updateEmbedBackdropClose, 1));
+    }
+
+    static updateEmbedBackdropClose()
+    {
+        const active = localStorage.getItem("embed-backdrop-close") == "true";
+        document.querySelectorAll(".section-side").forEach(s=>active
+            ? s.addEventListener("click", e=>BootstrapUtil.hideActiveModal())
+            : s.removeEventListener("click", e=>BootstrapUtil.hideActiveModal()));
+    }
+
     static enhanceModals()
     {
         document.querySelectorAll(".modal.no-popup").forEach(m=>{
@@ -197,7 +212,7 @@ class BootstrapUtil
             m.classList.remove("fade");
             m.setAttribute("data-backdrop", "false");
         });
-        document.querySelectorAll(".section-side").forEach(s=>s.addEventListener("click", e=>BootstrapUtil.hideActiveModal()));
+        BootstrapUtil.updateEmbedBackdropClose();
         $(".modal")
             .on("hidden.bs.modal", e=>{
                 ElementUtil.resolveElementPromise(e.target.id);
