@@ -656,6 +656,23 @@ body .nav-pills .nav-link.active:focus
     color: white;
 }
 
+.backdrop
+{
+    transition-property: background-color;
+    transition-duration: 500ms;
+}
+
+.backdrop-active
+{
+    background-color: rgba(0, 0, 0, 0.02);
+    cursor: pointer;
+}
+
+body.theme-dark .backdrop-active
+{
+    background-color: rgba(0, 0, 0, 0.07);
+}
+
 body.theme-light .modal:not(.no-popup) .modal-footer
 {
     background-color: #fcfcfc;

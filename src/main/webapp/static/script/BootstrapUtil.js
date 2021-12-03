@@ -200,9 +200,15 @@ class BootstrapUtil
     static updateEmbedBackdropClose()
     {
         const active = localStorage.getItem("embed-backdrop-close") == "true";
-        document.querySelectorAll(".section-side").forEach(s=>active
-            ? s.addEventListener("click", e=>BootstrapUtil.hideActiveModal())
-            : s.removeEventListener("click", e=>BootstrapUtil.hideActiveModal()));
+        document.querySelectorAll(".section-side").forEach(s=>{
+            if(active) {
+                s.addEventListener("click", e=>BootstrapUtil.hideActiveModal());
+                s.classList.add("backdrop");
+            } else {
+                s.removeEventListener("click", e=>BootstrapUtil.hideActiveModal());
+                s.classList.remove("backdrop");
+            }
+        });
     }
 
     static enhanceModals()
@@ -228,6 +234,7 @@ class BootstrapUtil
                 if(e.target.classList.contains("no-popup")) {
                     document.querySelectorAll(".no-popup-hide").forEach(e=>e.classList.remove("d-none"));
                     document.body.classList.remove("modal-open-no-popup");
+                    document.querySelectorAll(".backdrop").forEach(b=>b.classList.remove("backdrop-active"));
                     e.target.classList.add("d-none");
                     window.scrollBy(0, Session.lastNonModalScroll);
                 }
@@ -250,7 +257,11 @@ class BootstrapUtil
                 HistoryUtil.pushState({}, modal.getAttribute("data-view-title"), "?type=modal&id=" + modal.id + "&m=1");
             if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
             if(modal.classList.contains("no-popup"))
+            {
                 document.querySelectorAll("#main-tabs .nav-link.active").forEach(l=>l.classList.remove("active"));
+                if(localStorage.getItem("embed-backdrop-close") == "true")
+                    document.querySelectorAll(".backdrop").forEach(b=>b.classList.add("backdrop-active"));
+            }
             const prev = HistoryUtil.previousTitleAndUrl();
             if(!prev[1].includes("m=1"))
             {
