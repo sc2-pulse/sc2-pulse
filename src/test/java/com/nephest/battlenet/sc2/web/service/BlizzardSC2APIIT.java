@@ -74,7 +74,7 @@ public class BlizzardSC2APIIT
         WebServiceTestUtil.revertFastTimers(api, originalClient);
     }
 
-    @Test @Order(1)
+    @Test @Order(1) @Disabled("Blizzard API fails too often now, ignore this test until it becomes more stable")
     public void testFetch()
     {
         BlizzardSeason season = api.getCurrentSeason(Region.EU).block();
