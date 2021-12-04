@@ -20,6 +20,7 @@ import discord4j.core.object.entity.Message;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.discordjson.json.*;
 import discord4j.rest.RestClient;
+import discord4j.rest.http.client.ClientException;
 import discord4j.rest.service.ApplicationService;
 import discord4j.rest.util.Color;
 import org.slf4j.Logger;
@@ -45,6 +46,8 @@ public class DiscordBootstrap
     public static final String CHARACTER_URL_TEMPLATE =
         "https://www.nephest.com/sc2/?type=character&id=%1$s&m=1#player-stats-mmr";
     public static final String THUMBNAIL = "https://www.nephest.com/sc2/static/icon/misc/favicon-32.png";
+    public static final String UNEXPECTED_ERROR_MESSAGE = "Unexpected error occurred. Please report the bug here "
+        + "https://github.com/nephest/sc2-pulse or contact me directly on discord nephest#5286";
     public static final Color DEFAULT_COLOR = Color.of(0, 123, 255);
     public static final Map<Region, String> REGION_EMOJIS = Map.of
     (
@@ -120,7 +123,17 @@ public class DiscordBootstrap
             .onErrorResume((t)->true, (t)->
             {
                 LOG.error(t.getMessage(), t);
-                return evt.createFollowup("Unexpected error occurred");
+                /*
+                    A client exception could happen because of the following reasons:
+                        * discord is broken
+                        * connection to discord is broken
+                        * the discord lib is broken
+                        * there is a duplicate bot online(when doing a seamless update for example)
+                    All the reasons imply that you can't or shouldn't(seamless update) send a response.
+                 */
+                return t instanceof ClientException
+                    ? Mono.empty()
+                    : evt.createFollowup(UNEXPECTED_ERROR_MESSAGE);
             });
     }
 
