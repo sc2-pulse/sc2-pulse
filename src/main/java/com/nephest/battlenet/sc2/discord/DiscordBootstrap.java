@@ -47,8 +47,8 @@ public class DiscordBootstrap
     public static final String CHARACTER_URL_TEMPLATE =
         "https://www.nephest.com/sc2/?type=character&id=%1$s&m=1#player-stats-mmr";
     public static final String THUMBNAIL = "https://www.nephest.com/sc2/static/icon/misc/favicon-32.png";
-    public static final String UNEXPECTED_ERROR_MESSAGE = "Unexpected error occurred. Please report the bug here "
-        + "https://github.com/nephest/sc2-pulse or contact me directly on discord nephest#5286";
+    public static final String UNEXPECTED_ERROR_MESSAGE =
+        "Unexpected error occurred. Please report this bug, links are in the bot profile";
     public static final Color DEFAULT_COLOR = Color.of(0, 123, 255);
     public static final Map<Region, String> REGION_EMOJIS = Map.of
     (
