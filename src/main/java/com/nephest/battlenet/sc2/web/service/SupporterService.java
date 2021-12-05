@@ -64,6 +64,12 @@ public class SupporterService
         return patrons.get(rng.nextInt(patrons.size()));
     }
 
+    public String getRandomSupporter()
+    {
+        return supporters.get(rng.nextInt(supporters.size()));
+    }
+
+
     public List<String> getSupporters()
     {
         return supporters;
