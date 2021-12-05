@@ -23,6 +23,7 @@ import discord4j.rest.RestClient;
 import discord4j.rest.http.client.ClientException;
 import discord4j.rest.service.ApplicationService;
 import discord4j.rest.util.Color;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -131,7 +132,7 @@ public class DiscordBootstrap
                         * there is a duplicate bot online(when doing a seamless update for example)
                     All the reasons imply that you can't or shouldn't(seamless update) send a response.
                  */
-                return t instanceof ClientException
+                return t instanceof ClientException || ExceptionUtils.getRootCause(t) instanceof ClientException
                     ? Mono.empty()
                     : evt.createFollowup(UNEXPECTED_ERROR_MESSAGE);
             });
