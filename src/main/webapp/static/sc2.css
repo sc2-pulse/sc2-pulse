@@ -176,6 +176,11 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     opacity: 0;
 }
 
+#matches-type
+{
+    text-transform: capitalize;
+}
+
 #matches thead tr
 {
     font-size: 0.75em;

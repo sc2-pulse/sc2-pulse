@@ -18,7 +18,9 @@ import org.springframework.stereotype.Repository;
 
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 public class LadderMatchDAO
@@ -44,6 +46,7 @@ public class LadderMatchDAO
             + "INNER JOIN match USING(id) "
             + "INNER JOIN match_participant ON match_filter.id = match_participant.match_id "
             + "WHERE (date, type, map_id) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor) "
+            + "%3$s "
             + "GROUP BY date, type, map_id "
             + "ORDER BY (date, type, map_id) %2$s "
             + "LIMIT :limit"
@@ -94,9 +97,13 @@ public class LadderMatchDAO
             + "(match_participant.match_id, match_participant.player_character_id) %2$s ";
 
     public static String FIND_MATCHES_BY_CHARACTER_ID =
-        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, "<", "DESC");
+        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, "<", "DESC", "");
     public static String FIND_MATCHES_BY_CHARACTER_ID_REVERSED =
-        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC");
+        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC", "");
+    public static String FIND_MATCHES_BY_CHARACTER_ID_AND_MATCH_TYPE =
+        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, "<", "DESC", "AND match.type IN(:types)");
+    public static String FIND_MATCHES_BY_CHARACTER_ID_AND_MATCH_TYPE_REVERSED =
+        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC", "AND match.type IN(:types)");
 
     private static ResultSetExtractor<LadderMatchParticipant> PARTICIPANT_EXTRACTOR;
     private static ResultSetExtractor<List<LadderMatch>> MATCHES_EXTRACTOR;
@@ -195,7 +202,15 @@ public class LadderMatchDAO
     }
 
     public PagedSearchResult<List<LadderMatch>> findMatchesByCharacterId
-    (long characterId, OffsetDateTime dateAnchor, BaseMatch.MatchType typeAnchor, int mapAnchor, int page, int pageDiff)
+    (
+        long characterId,
+        OffsetDateTime dateAnchor,
+        BaseMatch.MatchType typeAnchor,
+        int mapAnchor,
+        int page,
+        int pageDiff,
+        BaseMatch.MatchType... types
+    )
     {
         if(Math.abs(pageDiff) != 1) throw new IllegalArgumentException("Invalid page diff");
         boolean forward = pageDiff > -1;
@@ -209,7 +224,12 @@ public class LadderMatchDAO
             .addValue("limit", getResultsPerPage())
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
+            if(types.length > 0) params.addValue("types", Arrays.stream(types)
+                .map(t->conversionService.convert(t, Integer.class))
+                .collect(Collectors.toList()));
+        String q = forward
+            ? (types.length == 0 ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_AND_MATCH_TYPE)
+            : (types.length == 0 ? FIND_MATCHES_BY_CHARACTER_ID_REVERSED : FIND_MATCHES_BY_CHARACTER_ID_AND_MATCH_TYPE_REVERSED);
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
     }

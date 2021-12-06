@@ -461,6 +461,11 @@ public class MatchIT
             Set.of(charEu1, charEu2, charEu3, charEu4), match4v4);
         verifyMatch(losers1, 4, 4, team4v4Loss, Set.of(state4v4Loss, state4v4Loss2), BaseLeague.LeagueType.SILVER,
             Set.of(charEu5, charEu6, charEu7, charEu8), match4v4);
+        assertIterableEquals(matches4v4.stream().map(LadderMatch::getMatch).collect(Collectors.toList()),
+            ladderMatchDAO.findMatchesByCharacterId(charEu1.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, BaseMatch.MatchType._4V4).getResult()
+                .stream().map(LadderMatch::getMatch).collect(Collectors.toList()));
+        assertTrue(ladderMatchDAO.findMatchesByCharacterId(charEu1.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, BaseMatch.MatchType._1V1)
+            .getResult().isEmpty());
 
         List<LadderMatch> matches2v2 = ladderMatchDAO.findMatchesByCharacterId(charUs3.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
         assertEquals(1, matches2v2.size());

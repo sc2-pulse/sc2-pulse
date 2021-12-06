@@ -60,12 +60,18 @@ public class CharacterController
     @Autowired
     private PlayerCharacterReportService reportService;
 
-    @GetMapping("/{id}/common")
+    @GetMapping
+    ({
+        "/{id}/common",
+        "/{id}/common/{types}"
+    })
     public CommonCharacter getCommonCharacter
     (
-        @PathVariable("id") long id
+        @PathVariable("id") long id,
+        @PathVariable(name = "types", required = false) BaseMatch.MatchType[] types
     )
     {
+        if(types == null) types = new BaseMatch.MatchType[0];
         return new CommonCharacter
         (
             ladderSearch.findCharacterTeams(id),
@@ -73,13 +79,17 @@ public class CharacterController
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
             ladderMatchDAO.findMatchesByCharacterId(
-                id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1).getResult(),
+                id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
             ladderTeamStateDAO.find(id),
             reportService.findReportsByCharacterId(id)
         );
     }
 
-    @GetMapping("/{id}/matches/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}")
+    @GetMapping
+    ({
+        "/{id}/matches/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}",
+        "/{id}/matches/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}/{types}"
+    })
     public PagedSearchResult<List<LadderMatch>> getCharacterMatches
     (
         @PathVariable("id") long id,
@@ -87,10 +97,12 @@ public class CharacterController
         @PathVariable("typeAnchor") BaseMatch.MatchType typeAnchor,
         @PathVariable("mapAnchor") int mapAnchor,
         @PathVariable("page") int page,
-        @PathVariable("pageDiff") int pageDiff
+        @PathVariable("pageDiff") int pageDiff,
+        @PathVariable(name = "types", required = false) BaseMatch.MatchType[] types
     )
     {
         if(Math.abs(pageDiff) > 1) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Page count is too big");
+        if(types == null) types = new BaseMatch.MatchType[0];
 
         return ladderMatchDAO.findMatchesByCharacterId
         (
@@ -99,7 +111,8 @@ public class CharacterController
             typeAnchor,
             mapAnchor,
             page,
-            pageDiff
+            pageDiff,
+            types
         );
     }
 

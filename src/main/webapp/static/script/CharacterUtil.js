@@ -29,7 +29,7 @@ class CharacterUtil
 
     static updateCharacterModel(id)
     {
-        const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common";
+        const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common" + CharacterUtil.getMatchTypePath();
         const characterPromise = Session.beforeRequest()
             .then(n=>fetch(request).then(Session.verifyJsonResponse));
         return Promise.all([characterPromise, StatsUtil.updateBundleModel()])
@@ -41,6 +41,13 @@ class CharacterUtil
                 Model.DATA.get(VIEW.CHARACTER).set("reports", jsons[0].reports)
                 res(jsons);
              }));
+    }
+
+    static getMatchTypePath()
+    {
+        const type = localStorage.getItem("matches-type");
+        if(type == null || type == "all") return "";
+        return "/" + type;
     }
 
     static updateCharacterReportsModel()
@@ -1025,7 +1032,7 @@ class CharacterUtil
     static loadNextMatchesModel(id, dateAnchor, typeAnchor, mapAnchor)
     {
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${id}/matches/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${id}/matches/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1${CharacterUtil.getMatchTypePath()}`))
             .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
@@ -1130,6 +1137,17 @@ class CharacterUtil
         const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
         if(prev != null)  window.clearTimeout(prev);
         ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT));
+    }
+
+    static enhanceMatchTypeInput()
+    {
+        const ctl = document.querySelector("#matches-type");
+        if(!ctl) return;
+        ctl.addEventListener("change", e=>window.setTimeout(e=>{
+            const data = Model.DATA.get(VIEW.CHARACTER);
+            if(!data || !data.get(VIEW_DATA.VAR)) return;
+            CharacterUtil.updateCharacter(data.get(VIEW_DATA.VAR));
+        }, 1));
     }
 
     static enhanceLoadMoreMatchesInput()

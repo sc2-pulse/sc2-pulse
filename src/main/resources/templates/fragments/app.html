@@ -421,11 +421,21 @@
                                         data-toggle="tooltip"
                                 />
                             </h3>
-                            <form>
-                                <div class="form-check form-check-inline mb-2">
+                            <form class="form-inline justify-content-center">
+                                <div class="form-group mb-2">
+                                    <label for="matches-type">Type</label>
+                                    <select id="matches-type" name="matches-type" class="form-control serializable mx-sm-3">
+                                        <option value="all" selected="selected">all</option>
+                                        <option th:each="type : ${T(com.nephest.battlenet.sc2.model.BaseMatch.MatchType).values()}"
+                                                th:value="${type}"
+                                                th:text="${type.getName().isEmpty() ? type : type.getName()}">
+                                        </option>
+                                    </select>
+                                </div>
+                                <div class="form-check mb-2">
                                     <input id="matches-historical-mmr" class="form-check-input serializable" type="checkbox" />
                                     <label for="matches-historical-mmr" class="text-nowrap form-check-label">
-                                        Historical league and MMR(approx)
+                                        <span class="mr-1">Historical league and MMR(approx)</span>
                                         <img
                                                 th:src="@{/static/icon/misc/info.svg}"
                                                 alt="Do NOT use it if you expect to see 100% valid data, this is an approximate data."

@@ -70,6 +70,7 @@ class SC2Restful
                 CharacterUtil.updateReportForm();
                 CharacterUtil.enhanceMatchesHistoricalMmrInput();
                 CharacterUtil.enhanceLoadMoreMatchesInput();
+                CharacterUtil.enhanceMatchTypeInput();
                 FollowUtil.enhanceFollowButtons();
                 BootstrapUtil.enhanceTabs();
                 TeamUtil.enhanceTeamBuffer();
