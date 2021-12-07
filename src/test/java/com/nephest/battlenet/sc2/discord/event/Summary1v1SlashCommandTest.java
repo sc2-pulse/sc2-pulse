@@ -79,7 +79,7 @@ public class Summary1v1SlashCommandTest
             new Summary1v1SlashCommand(conversionService, ladderCharacterDAO, summaryDAO, discordBootstrap);
         cmd.handle(evt);
 
-        verify(summaryDAO).find(any(), depthCaptor.capture());
+        verify(summaryDAO).find(any(), depthCaptor.capture(), any());
         //verify correct depth, 10 seconds to run the test just in case
         assertTrue(OffsetDateTime.now().minusDays(100).toEpochSecond() - depthCaptor.getValue().toEpochSecond() < 10);
 
@@ -152,12 +152,7 @@ public class Summary1v1SlashCommandTest
         for(int i = 0; i < 4; i++) summaries.add(new PlayerCharacterSummary(
             (long) i, Race.TERRAN, i, i * 2, i * 3, i, BaseLeague.LeagueType.DIAMOND, i
         ));
-
-        //excluded by race filter
-        summaries.add(new PlayerCharacterSummary(
-            4L, Race.ZERG, 4, 4, 4, 4, BaseLeague.LeagueType.DIAMOND, 4
-        ));
-        when(summaryDAO.find(eq(new Long[]{0L, 1L, 2L, 3L, 4L}), any())).thenReturn(summaries);
+        when(summaryDAO.find(eq(new Long[]{0L, 1L, 2L, 3L, 4L}), any(), eq(Race.TERRAN))).thenReturn(summaries);
         when(discordBootstrap.embedBuilder()).thenReturn(EmbedCreateSpec.builder());
         when(discordBootstrap.getLeagueEmojiOrName(BaseLeague.LeagueType.DIAMOND)).thenReturn("diamond");
         when(discordBootstrap.getRaceEmojiOrName(Race.TERRAN)).thenReturn("terran");

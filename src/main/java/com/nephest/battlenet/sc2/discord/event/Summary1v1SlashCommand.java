@@ -134,8 +134,12 @@ implements SlashCommand
         if(characters.isEmpty()) return DiscordBootstrap.notFoundFollowup(evt);
 
         List<PlayerCharacterSummary> summaries = summaryDAO
-            .find(characters.keySet().toArray(Long[]::new), OffsetDateTime.now().minusDays(depth)).stream()
-            .filter(s->race == null || s.getRace() == race)
+            .find
+            (
+                characters.keySet().toArray(Long[]::new),
+                OffsetDateTime.now().minusDays(depth),
+                race == null ? Race.EMPTY_RACE_ARRAY : new Race[]{race}
+            ).stream()
             .sorted(DEFAULT_COMPARATOR)
             .limit(maxLines)
             .collect(Collectors.toList());
