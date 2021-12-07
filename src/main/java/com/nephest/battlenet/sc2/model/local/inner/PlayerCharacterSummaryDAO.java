@@ -16,6 +16,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.Types;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
 
 @Repository
@@ -33,7 +34,9 @@ public class PlayerCharacterSummaryDAO
         + "player_character_summary.global_rank_last AS \"player_character_summary.global_rank_last\" ";
 
     private static final String FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP =
-        "SELECT " + STD_SELECT + " FROM get_player_character_summary(:ids, :from) player_character_summary";
+        "SELECT " + STD_SELECT + " FROM get_player_character_summary(:ids, :from, :races::smallint[]) player_character_summary";
+
+    private final Integer[] DEFAULT_RACES;
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -50,6 +53,9 @@ public class PlayerCharacterSummaryDAO
         this.template = template;
         this.conversionService = conversionService;
         initMappers(conversionService);
+        DEFAULT_RACES = Arrays.stream(Race.values())
+            .map(r->conversionService.convert(r, Integer.class))
+            .toArray(Integer[]::new);
     }
 
     private static void initMappers(ConversionService conversionService)
@@ -72,11 +78,17 @@ public class PlayerCharacterSummaryDAO
         return STD_ROW_MAPPER;
     }
 
-    public List<PlayerCharacterSummary> find(Long[] ids, OffsetDateTime from)
+    public List<PlayerCharacterSummary> find(Long[] ids, OffsetDateTime from, Race... races)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("ids", ids, Types.ARRAY)
             .addValue("from", from);
+        Integer[] raceInts = races.length == 0
+            ? DEFAULT_RACES
+            : Arrays.stream(races)
+                .map(r->conversionService.convert(r, Integer.class))
+                .toArray(Integer[]::new);
+        params.addValue("races", raceInts, Types.ARRAY);
         return template.query(FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP, params, STD_ROW_MAPPER);
     }
 

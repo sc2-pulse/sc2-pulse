@@ -224,25 +224,7 @@ public class PlayerCharacterSummaryIT
 
         assertEquals(4, summary.length);
 
-        PlayerCharacterSummary c2z = Arrays.stream(summary)
-            .filter(s-> s.getPlayerCharacterId().equals(charEu2.getId()) && s.getRace() == Race.ZERG)
-            .findAny().orElseThrow();
-        assertEquals(1, c2z.getGames());
-        assertEquals(10, c2z.getRatingMax());
-        assertEquals(10, c2z.getRatingAvg());
-        assertEquals(10, c2z.getRatingLast());
-        assertEquals(BaseLeague.LeagueType.BRONZE, c2z.getLeagueTypeLast());
-        assertEquals(1, c2z.getGlobalRankLast());
-
-        PlayerCharacterSummary c1z = Arrays.stream(summary)
-            .filter(s-> s.getPlayerCharacterId().equals(charEu1.getId()) && s.getRace() == Race.ZERG)
-            .findAny().orElseThrow();
-        assertEquals(1, c1z.getGames());
-        assertEquals(10, c1z.getRatingMax());
-        assertEquals(10, c1z.getRatingAvg());
-        assertEquals(10, c1z.getRatingLast());
-        assertEquals(BaseLeague.LeagueType.BRONZE, c1z.getLeagueTypeLast());
-        assertEquals(1, c1z.getGlobalRankLast());
+        verifyZergs(summary, charEu1.getId(), charEu2.getId());
 
         PlayerCharacterSummary c1p = Arrays.stream(summary)
             .filter(s-> s.getPlayerCharacterId().equals(charEu1.getId()) && s.getRace() == Race.PROTOSS)
@@ -263,6 +245,45 @@ public class PlayerCharacterSummaryIT
         assertEquals(10, c1t.getRatingLast());
         assertEquals(BaseLeague.LeagueType.SILVER, c1t.getLeagueTypeLast());
         assertEquals(1, c1t.getGlobalRankLast());
+
+        PlayerCharacterSummary[] zergSummary = objectMapper.readValue(mvc.perform
+        (
+            get
+            (
+                "/api/character/{ids}/summary/1v1/50/{races}",
+                charEu1.getId() + "," + charEu2.getId() + "," + charEu2.getId(),
+                Race.ZERG
+            )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString(), PlayerCharacterSummary[].class);
+
+        assertEquals(2, zergSummary.length);
+        verifyZergs(zergSummary, charEu1.getId(), charEu2.getId());
+    }
+
+    private void verifyZergs(PlayerCharacterSummary[] summary, long eu1Id, long eu2Id)
+    {
+        PlayerCharacterSummary c2z = Arrays.stream(summary)
+            .filter(s-> s.getPlayerCharacterId().equals(eu2Id) && s.getRace() == Race.ZERG)
+            .findAny().orElseThrow();
+        assertEquals(1, c2z.getGames());
+        assertEquals(10, c2z.getRatingMax());
+        assertEquals(10, c2z.getRatingAvg());
+        assertEquals(10, c2z.getRatingLast());
+        assertEquals(BaseLeague.LeagueType.BRONZE, c2z.getLeagueTypeLast());
+        assertEquals(1, c2z.getGlobalRankLast());
+
+        PlayerCharacterSummary c1z = Arrays.stream(summary)
+            .filter(s-> s.getPlayerCharacterId().equals(eu1Id) && s.getRace() == Race.ZERG)
+            .findAny().orElseThrow();
+        assertEquals(1, c1z.getGames());
+        assertEquals(10, c1z.getRatingMax());
+        assertEquals(10, c1z.getRatingAvg());
+        assertEquals(10, c1z.getRatingLast());
+        assertEquals(BaseLeague.LeagueType.BRONZE, c1z.getLeagueTypeLast());
+        assertEquals(1, c1z.getGlobalRankLast());
     }
 
     @Test

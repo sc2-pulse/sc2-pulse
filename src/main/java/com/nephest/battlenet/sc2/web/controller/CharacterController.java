@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
@@ -134,19 +135,25 @@ public class CharacterController
         return playerCharacterStatsDAO.findGlobalList(id);
     }
 
-    @GetMapping("/{ids}/summary/1v1/{depthDays}")
+    @GetMapping
+    ({
+        "/{ids}/summary/1v1/{depthDays}",
+        "/{ids}/summary/1v1/{depthDays}/{races}"
+    })
     public List<PlayerCharacterSummary> getCharacterSummary
     (
         @PathVariable("ids") Long[] ids,
-        @PathVariable("depthDays") int depth
+        @PathVariable("depthDays") int depth,
+        @PathVariable(name = "races", required = false) Race[] races
     )
     {
         if(ids.length > SUMMARY_IDS_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id list is too long, max: " + SUMMARY_IDS_MAX);
         if(depth > SUMMARY_DEPTH_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Depth is too big, max: " + SUMMARY_DEPTH_MAX);
+        if(races == null) races = Race.EMPTY_RACE_ARRAY;
 
-        return playerCharacterSummaryDAO.find(ids, OffsetDateTime.now().minusDays(depth));
+        return playerCharacterSummaryDAO.find(ids, OffsetDateTime.now().minusDays(depth), races);
     }
 
 }

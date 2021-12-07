@@ -632,7 +632,8 @@ CREATE TYPE player_character_summary AS
     global_rank_last SMALLINT
 );
 
-CREATE OR REPLACE FUNCTION get_player_character_summary(character_ids BIGINT[], from_timestamp TIMESTAMP WITH TIME ZONE)
+CREATE OR REPLACE FUNCTION get_player_character_summary
+(character_ids BIGINT[], from_timestamp TIMESTAMP WITH TIME ZONE, races SMALLINT[])
 RETURNS SETOF player_character_summary
 AS
 '
@@ -665,6 +666,7 @@ WITH team_filter AS
     INNER JOIN season ON team.region = season.region AND team.season = season.battlenet_id
     WHERE player_character_id = ANY(character_ids)
     AND team.queue_type = 201
+    AND substring(team.legacy_id::text, char_length(team.legacy_id::text))::smallint = ANY(races)
     AND season.end >= from_timestamp
 ),
 team_state_filter AS
@@ -683,6 +685,7 @@ team_state_filter AS
     INNER JOIN team_member ON team.id = team_member.team_id
     WHERE player_character_id = ANY(character_ids)
     AND team.queue_type = 201
+    AND substring(team.legacy_id::text, char_length(team.legacy_id::text))::smallint = ANY(races)
     AND team_state.timestamp >= from_timestamp
 )
 SELECT *
