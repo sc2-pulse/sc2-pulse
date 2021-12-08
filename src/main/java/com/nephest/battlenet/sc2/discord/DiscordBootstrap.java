@@ -253,26 +253,7 @@ public class DiscordBootstrap
         if (discordCommandDefaultPermission != commandDefaultPermission) return true;
 
         //Check and return if options have changed.
-        List<ApplicationCommandOptionData> cmdOptions = command.options().toOptional().orElseGet(ArrayList::new);
-        List<ApplicationCommandOptionData> discordCmdOptions = discordCommand.options().toOptional().orElseGet(ArrayList::new);
-        if(cmdOptions.size() != discordCmdOptions.size()) return true;
-        for(int i = 0; i < cmdOptions.size(); i++)
-            if(!equals(cmdOptions.get(i), discordCmdOptions.get(i))) return true;
-        return false;
-    }
-
-    public static boolean equals(ApplicationCommandOptionData a, ApplicationCommandOptionData b)
-    {
-        return a.required().toOptional().orElse(false).equals(b.required().toOptional().orElse(false))
-            && a.description().equals(b.description())
-            && a.name().equals(b.name())
-            && a.type() == b.type()
-            && a.autocomplete().equals(b.autocomplete())
-            && a.channelTypes().equals(b.channelTypes())
-            && a.choices().equals(b.choices())
-            && a.maxValue().equals(b.maxValue())
-            && a.minValue().equals(b.minValue())
-            && a.options().equals(b.options());
+        return !discordCommand.options().equals(command.options());
     }
 
     public static <T> List<ApplicationCommandOptionChoiceData> generateChoices
