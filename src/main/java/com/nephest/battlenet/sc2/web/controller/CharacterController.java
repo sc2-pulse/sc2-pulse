@@ -9,7 +9,6 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -18,7 +17,10 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.*;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.time.OffsetDateTime;
@@ -58,12 +60,6 @@ public class CharacterController
 
     @Autowired
     private PlayerCharacterReportService reportService;
-
-    @GetMapping("/characters")
-    public List<LadderDistinctCharacter> getCharacterTeams(@RequestParam("name") String name)
-    {
-        return ladderCharacterDAO.findDistinctCharacters(name);
-    }
 
     @GetMapping
     ({
