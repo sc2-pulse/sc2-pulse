@@ -90,21 +90,18 @@ implements SlashCommand
                 .description("Region filter")
                 .type(ApplicationCommandOption.Type.STRING.getValue())
                 .addAllChoices(DiscordBootstrap.generateChoices(conversionService, Region::getName, Region.values()))
-                .required(false)
                 .build())
             .addOption(ApplicationCommandOptionData.builder()
                 .name("race")
                 .description("Race filter")
                 .type(ApplicationCommandOption.Type.STRING.getValue())
                 .addAllChoices(DiscordBootstrap.generateChoices(conversionService, Race::getName, Race.values()))
-                .required(false)
                 .build())
             .addOption(ApplicationCommandOptionData.builder()
                 .name("depth")
                 .description("Depth in days. Default and max is 120 days. Unlimited for BattleTags.")
                 .type(ApplicationCommandOption.Type.INTEGER.getValue())
                 .minValue(1.0)
-                .required(false)
                 .build());
     }
 

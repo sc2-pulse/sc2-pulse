@@ -354,7 +354,6 @@ public class DiscordBootstrap
                 .name("ephemeral")
                 .description("Response is visible only to you")
                 .type(ApplicationCommandOption.Type.BOOLEAN.getValue())
-                .required(false)
                 .build());
     }
 
