@@ -50,7 +50,7 @@ extends BaseAPI
     public static final int CONCURRENCY = SAFE_REQUESTS_PER_SECOND_CAP / Runtime.getRuntime().availableProcessors();
     public static final int SAFE_REQUESTS_PER_HOUR_CAP = (int) Math.round(REQUESTS_PER_HOUR_CAP * REQUEST_RATE_COEFF);
     public static final int FIRST_SEASON = 28;
-    public static final int PROFILE_LADDER_RETRY_COUNT = 4;
+    public static final int PROFILE_LADDER_RETRY_COUNT = 3;
 
     private String regionUri;
     private final ObjectMapper objectMapper;
