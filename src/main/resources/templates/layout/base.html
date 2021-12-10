@@ -7,6 +7,7 @@
       th:fragment="layout (title, description, content, script, showAds)" lang="en"
       th:with="uiTheme=${#strings.equals(T(org.springframework.web.util.WebUtils).getCookie(#request, 'theme')?.getValue(), 'dark')} ? 'dark' : 'light'">
 <head>
+    <script>window.addEventListener("error", e=>{document.body.classList.add('js-error-detected');});</script>
     <th:block th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')}">
     <!-- Global site tag (gtag.js) - Google Analytics -->
         <th:block th:if="${@environment.getProperty('com.nephest.battlenet.sc2.google.analytics.url') != null}">

@@ -39,6 +39,7 @@ class Util
                 Session.currentRequests--;
                 if(status === STATUS.ERROR)
                 {
+                    document.body.classList.add("js-error-detected");
                     if(DEBUG == true) console.log(error);
                     document.getElementById("error-generation-text").textContent = errorText;
                     if(!Session.isSilent) $("#error-generation").modal();
