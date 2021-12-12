@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.util.LogUtil;
+import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,10 +23,9 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.ParallelFlux;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.function.*;
 
+import java.time.Duration;
 import java.util.*;
 import java.util.stream.LongStream;
 
@@ -55,12 +55,15 @@ extends BaseAPI
     private String regionUri;
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
+    private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
 
     @Autowired
     public BlizzardSC2API(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
     {
         initWebClient(objectMapper, auth2AuthorizedClientManager);
         this.objectMapper = objectMapper;
+        for(Region r : Region.values()) rateLimiters.put(r, new ReactorRateLimiter());
+        Flux.interval(Duration.ofSeconds(0), Duration.ofSeconds(1)).doOnNext(i->refreshReactorSlots()).subscribe();
     }
 
     public static boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
@@ -108,6 +111,11 @@ extends BaseAPI
         this.regionUri = uri;
     }
 
+    private void refreshReactorSlots()
+    {
+        rateLimiters.values().forEach(l->l.refreshSlots(SAFE_REQUESTS_PER_SECOND_CAP));
+    }
+
     public Mono<BlizzardSeason> getSeason(Region region, Integer id)
     {
         return getWebClient(region)
@@ -116,7 +124,8 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardDataSeason.class).cast(BlizzardSeason.class)
-            .retryWhen(getRetry(WebServiceUtil.RETRY));
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .delaySubscription(rateLimiters.get(region).requestSlot());
     }
 
     public Mono<BlizzardSeason> getCurrentSeason(Region region)
@@ -127,7 +136,8 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
-            .retryWhen(getRetry(WebServiceUtil.RETRY));
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .delaySubscription(rateLimiters.get(region).requestSlot());
     }
 
     public Mono<BlizzardSeason> getLastSeason(Region region, int startFrom)
@@ -174,7 +184,8 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
-            .retryWhen(getRetry(WebServiceUtil.RETRY));
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .delaySubscription(rateLimiters.get(region).requestSlot());
 
         /*
            After a new season has started there is a period of time when this endpoint could return a 404
@@ -209,16 +220,13 @@ extends BaseAPI
         return getLeague(region, season, leagueType, queueType, teamType, false);
     }
 
-    public ParallelFlux<Tuple2<BlizzardLeague, Region>> getLeagues
+    public Flux<Tuple2<BlizzardLeague, Region>> getLeagues
     (Iterable<? extends Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> ids, boolean cur)
     {
         return Flux.fromIterable(ids)
-            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
-            .runOn(Schedulers.boundedElastic())
-            .flatMap(id->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(
+            .flatMap(id->WebServiceUtil.getOnErrorLogAndSkipMono(
                 getLeague(id.getT1(), id.getT2(), id.getT3(), id.getT4(), id.getT5(), cur)
-                    .zipWith(Mono.just(id.getT1())), DELAY),
-                true, 1);
+                    .zipWith(Mono.just(id.getT1()))));
     }
 
     public Mono<BlizzardLadder> getLadder
@@ -233,7 +241,8 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
-            .retryWhen(getRetry(WebServiceUtil.RETRY));
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .delaySubscription(rateLimiters.get(region).requestSlot());
     }
 
     public Mono<BlizzardLadder> getFilteredLadder
@@ -250,7 +259,8 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(String.class)
             .map(s->extractNewTeams(s, startingFromEpochSeconds))
-            .retryWhen(getRetry(WebServiceUtil.RETRY));
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .delaySubscription(rateLimiters.get(region).requestSlot());
     }
 
     private BlizzardLadder extractNewTeams(String s, long startingFromEpochSeconds)
@@ -276,20 +286,17 @@ extends BaseAPI
         }
     }
 
-    public ParallelFlux<Tuple2<BlizzardLadder, Long>> getLadders
+    public Flux<Tuple2<BlizzardLadder, Long>> getLadders
     (
         Region region,
         Long[] divisions
     )
     {
         return Flux.fromArray(divisions)
-            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
-            .runOn(Schedulers.boundedElastic())
-            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getLadder(region, d).zipWith(Mono.just(d)), DELAY),
-                true, 1);
+            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipMono(getLadder(region, d).zipWith(Mono.just(d))));
     }
 
-    public ParallelFlux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>> getLadders
+    public Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>> getLadders
     (
         Iterable<? extends Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds,
         long startingFromEpochSeconds,
@@ -297,17 +304,13 @@ extends BaseAPI
     )
     {
         return Flux.fromIterable(ladderIds)
-            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
-            .runOn(Schedulers.boundedElastic())
-            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono
+            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipMono
             (
                 startingFromEpochSeconds < 1
                     ? getLadder(d.getT2(), d.getT4()).zipWith(Mono.just(d))
                     : getFilteredLadder(d.getT2(), d.getT4().getLadderId(), startingFromEpochSeconds).zipWith(Mono.just(d)),
-                t->errors.get(d.getT2()).add(d.getT4().getLadderId()),
-                DELAY
-            ),
-                true, 1);
+                t->errors.get(d.getT2()).add(d.getT4().getLadderId())
+            ));
     }
 
     public Mono<BlizzardLadder> getLadder
@@ -319,17 +322,14 @@ extends BaseAPI
         return getLadder(region, division.getLadderId());
     }
 
-    public ParallelFlux<Tuple2<BlizzardLadder, BlizzardTierDivision>> getLadders
+    public Flux<Tuple2<BlizzardLadder, BlizzardTierDivision>> getLadders
     (
         Region region,
         BlizzardTierDivision[] divisions
     )
     {
         return Flux.fromArray(divisions)
-            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
-            .runOn(Schedulers.boundedElastic())
-            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getLadder(region, d).zipWith(Mono.just(d)), DELAY),
-                true, 1);
+            .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipMono(getLadder(region, d).zipWith(Mono.just(d))));
     }
 
     public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region region, long ladderId)
@@ -369,35 +369,30 @@ extends BaseAPI
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND));
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
+            .delaySubscription(rateLimiters.get(region).requestSlot());
     }
 
-    public ParallelFlux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
+    public Flux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
     (Region region, long from, long toExcluded)
     {
         return Flux.fromStream(LongStream.range(from, toExcluded).boxed())
-            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
-            .runOn(Schedulers.boundedElastic())
-            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(
-                getProfileLadderId(region, l), DELAY,
+            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipLogLevelMono(
+                getProfileLadderId(region, l),
                 (t)->ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound
                     ? LogUtil.LogLevel.DEBUG
-                    : LogUtil.LogLevel.WARNING),
-                true, 1);
+                    : LogUtil.LogLevel.WARNING));
     }
 
-    public ParallelFlux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
+    public Flux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
     (Region region, Iterable<? extends Long> ids)
     {
         return Flux.fromIterable(ids)
-            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
-            .runOn(Schedulers.boundedElastic())
-            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(
-                getProfileLadderId(region, l), DELAY,
+            .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipLogLevelMono(
+                getProfileLadderId(region, l),
                 (t)->ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound
                     ? LogUtil.LogLevel.DEBUG
-                    : LogUtil.LogLevel.WARNING),
-                true, 1);
+                    : LogUtil.LogLevel.WARNING));
     }
 
     public Mono<BlizzardProfileLadder> getProfileLadder
@@ -455,7 +450,8 @@ extends BaseAPI
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND));
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
+            .delaySubscription(rateLimiters.get(region).requestSlot());
     }
 
     private Mono<BlizzardProfileLadder> extractProfileLadder(String s, long ladderId, Set<QueueType> queues)
@@ -489,26 +485,17 @@ extends BaseAPI
         return Mono.just(ladder);
     }
 
-    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfileLadders
-    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, Set<QueueType> queueTypes, int rps)
+    public Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfileLadders
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, Set<QueueType> queueTypes)
     {
         return Flux.fromIterable(ids)
-            .parallel(rps)
-            .runOn(Schedulers.boundedElastic())
             .flatMap(id->WebServiceUtil
-                .getOnErrorLogAndSkipRateDelayedMono(
-                    getProfileLadder(id, queueTypes), DELAY,
+                .getOnErrorLogAndSkipLogLevelMono(
+                    getProfileLadder(id, queueTypes),
                     (t)->t.getMessage().startsWith("Invalid game mode")
                         ? LogUtil.LogLevel.DEBUG
                         : LogUtil.LogLevel.WARNING)
-                .zipWith(Mono.just(id)),
-                true, 1);
-    }
-
-    public ParallelFlux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfileLadders
-    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, Set<QueueType> queueTypes)
-    {
-        return getProfileLadders(ids, queueTypes, SAFE_REQUESTS_PER_SECOND_CAP);
+                .zipWith(Mono.just(id)));
     }
 
     public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)
@@ -528,17 +515,15 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(getRetry(WebServiceUtil.RETRY));
+            .retryWhen(rateLimiters.get(playerCharacter.getRegion()).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .delaySubscription(rateLimiters.get(playerCharacter.getRegion()).requestSlot());
     }
 
-    public ParallelFlux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches
+    public Flux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches
     (Iterable<? extends PlayerCharacter> playerCharacters, Set<PlayerCharacter> errors)
     {
         return Flux.fromIterable(playerCharacters)
-            .parallel(SAFE_REQUESTS_PER_SECOND_CAP)
-            .runOn(Schedulers.boundedElastic())
-            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipRateDelayedMono(getMatches(p), t->errors.add(p), DELAY),
-                true, 1);
+            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getMatches(p), t->errors.add(p)));
     }
 
 }

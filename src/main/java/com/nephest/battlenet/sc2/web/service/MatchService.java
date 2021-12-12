@@ -133,7 +133,6 @@ public class MatchService
         api.getMatches(characters, errors)
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
-            .sequential()
             .buffer(BATCH_SIZE)
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream()

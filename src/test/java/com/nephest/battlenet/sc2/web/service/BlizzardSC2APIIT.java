@@ -157,7 +157,6 @@ public class BlizzardSC2APIIT
     {
         Set<PlayerCharacter> failedCharacters = new HashSet<>();
         api.getMatches(Set.of(SERRAL, HEROMARINE, MARU), failedCharacters)
-            .sequential()
             .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
             .forEach((m)->
             {

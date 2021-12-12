@@ -200,7 +200,6 @@ public class AlternativeLadderService
     {
         List<Future<?>> dbTasks = new ArrayList<>();
         api.getProfileLadders(ladders, queueTypes)
-            .sequential()
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
             .forEach((r)->dbTasks.add(dbExecutorService.submit(()->alternativeLadderService.saveProfileLadders(season, r))));
@@ -216,7 +215,6 @@ public class AlternativeLadderService
         {
             discovered.set(0);
             api.getProfileLadderIds(season.getRegion(), lastDivision,lastDivision + LEGACY_LADDER_BATCH_SIZE)
-                .sequential()
                 .toStream()
                 .forEach((id)->{
                     profileLadderIds.add(id);

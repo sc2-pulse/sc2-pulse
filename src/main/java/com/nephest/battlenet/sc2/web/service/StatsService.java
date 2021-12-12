@@ -221,7 +221,6 @@ public class StatsService
     {
         Season season = seasonDao.merge(Season.of(api.getSeason(region, seasonId).block(), region));
         api.getLadders(region, ids)
-            .sequential()
             .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
             .forEach(l->statsService.saveLadder(season, l.getT1(), l.getT2(), alternativeLadderService));
 
@@ -361,7 +360,6 @@ public class StatsService
     {
         List<Future<?>> dbTasks = new ArrayList<>();
         api.getLadders(ladderIds, lastUpdated != null ? lastUpdated.toEpochMilli() / 1000 : -1, failedLadders)
-            .sequential()
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
             .forEach(l->dbTasks.add(dbExecutorService.submit(()->statsService.saveLadders(season, l, lastUpdated))));
@@ -564,7 +562,6 @@ public class StatsService
                 Arrays.stream(l.getT1().getTiers())
                     .flatMap(t-> Arrays.stream(t.getDivisions())
                         .map(d->Tuples.of(l.getT1(), l.getT2(), t, d)))))
-            .sequential()
             .toStream()
             .forEach(ladderIds::add);
         return ladderIds;
@@ -583,7 +580,6 @@ public class StatsService
                     .max().orElse(-1L);
                 max.getAndUpdate(c->Math.max(c, maxId));
             })
-            .sequential()
             .blockLast();
         return max.get();
     }
