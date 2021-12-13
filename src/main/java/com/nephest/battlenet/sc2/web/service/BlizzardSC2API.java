@@ -27,6 +27,7 @@ import reactor.util.function.*;
 
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.LongStream;
 
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
@@ -51,11 +52,15 @@ extends BaseAPI
     public static final int SAFE_REQUESTS_PER_HOUR_CAP = (int) Math.round(REQUESTS_PER_HOUR_CAP * REQUEST_RATE_COEFF);
     public static final int FIRST_SEASON = 28;
     public static final int PROFILE_LADDER_RETRY_COUNT = 3;
+    public static final Duration ERROR_RATE_FRAME = Duration.ofMinutes(60);
 
     private String regionUri;
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
+    private final Map<Region, AtomicLong> requests = new EnumMap<>(Region.class);
+    private final Map<Region, AtomicLong> errors = new EnumMap<>(Region.class);
+    private final Map<Region, Double> errorRates = new EnumMap<>(Region.class);
 
     @Autowired
     public BlizzardSC2API(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
@@ -64,6 +69,15 @@ extends BaseAPI
         this.objectMapper = objectMapper;
         for(Region r : Region.values()) rateLimiters.put(r, new ReactorRateLimiter());
         Flux.interval(Duration.ofSeconds(0), Duration.ofSeconds(1)).doOnNext(i->refreshReactorSlots()).subscribe();
+        initErrorRates();
+    }
+
+    private void initErrorRates()
+    {
+        for(Region r : Region.values()) requests.put(r, new AtomicLong(0));
+        for(Region r : Region.values()) errors.put(r, new AtomicLong(0));
+        for(Region r : Region.values()) errorRates.put(r, 0.0);
+        Flux.interval(ERROR_RATE_FRAME, ERROR_RATE_FRAME).doOnNext(i->calculateErrorRates()).subscribe();
     }
 
     public static boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
@@ -116,6 +130,19 @@ extends BaseAPI
         rateLimiters.values().forEach(l->l.refreshSlots(SAFE_REQUESTS_PER_SECOND_CAP));
     }
 
+    private void calculateErrorRates()
+    {
+        requests.keySet().forEach(r->
+        {
+            long requestCount = requests.get(r).getAndSet(0);
+            double errorRate = requestCount == 0
+                ? 0.0
+                : (errors.get(r).getAndSet(0) / (double) requestCount) * 100;
+            errorRates.put(r, errorRate);
+            LOG.debug("{} error rate: {}%", r, errorRate);
+        });
+    }
+
     public Mono<BlizzardSeason> getSeason(Region region, Integer id)
     {
         return getWebClient(region)
@@ -125,7 +152,9 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardDataSeason.class).cast(BlizzardSeason.class)
             .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiters.get(region).requestSlot());
+            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .doOnRequest(s->requests.get(region).incrementAndGet())
+            .doOnError(t->errors.get(region).incrementAndGet());
     }
 
     public Mono<BlizzardSeason> getCurrentSeason(Region region)
@@ -137,7 +166,9 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
             .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiters.get(region).requestSlot());
+            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .doOnRequest(s->requests.get(region).incrementAndGet())
+            .doOnError(t->errors.get(region).incrementAndGet());
     }
 
     public Mono<BlizzardSeason> getLastSeason(Region region, int startFrom)
@@ -185,7 +216,9 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
             .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiters.get(region).requestSlot());
+            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .doOnRequest(s->requests.get(region).incrementAndGet())
+            .doOnError(t->errors.get(region).incrementAndGet());
 
         /*
            After a new season has started there is a period of time when this endpoint could return a 404
@@ -242,7 +275,9 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
             .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiters.get(region).requestSlot());
+            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .doOnRequest(s->requests.get(region).incrementAndGet())
+            .doOnError(t->errors.get(region).incrementAndGet());
     }
 
     public Mono<BlizzardLadder> getFilteredLadder
@@ -260,7 +295,9 @@ extends BaseAPI
             .bodyToMono(String.class)
             .map(s->extractNewTeams(s, startingFromEpochSeconds))
             .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiters.get(region).requestSlot());
+            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .doOnRequest(s->requests.get(region).incrementAndGet())
+            .doOnError(t->errors.get(region).incrementAndGet());
     }
 
     private BlizzardLadder extractNewTeams(String s, long startingFromEpochSeconds)
@@ -370,7 +407,9 @@ extends BaseAPI
                 }
             })
             .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
-            .delaySubscription(rateLimiters.get(region).requestSlot());
+            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .doOnRequest(s->requests.get(region).incrementAndGet())
+            .doOnError(t->errors.get(region).incrementAndGet());
     }
 
     public Flux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
@@ -451,7 +490,9 @@ extends BaseAPI
                 }
             })
             .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
-            .delaySubscription(rateLimiters.get(region).requestSlot());
+            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .doOnRequest(s->requests.get(region).incrementAndGet())
+            .doOnError(t->errors.get(region).incrementAndGet());
     }
 
     private Mono<BlizzardProfileLadder> extractProfileLadder(String s, long ladderId, Set<QueueType> queues)
@@ -516,7 +557,9 @@ extends BaseAPI
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
             .retryWhen(rateLimiters.get(playerCharacter.getRegion()).retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiters.get(playerCharacter.getRegion()).requestSlot());
+            .delaySubscription(rateLimiters.get(playerCharacter.getRegion()).requestSlot())
+            .doOnRequest(s->requests.get(playerCharacter.getRegion()).incrementAndGet())
+            .doOnError(t->errors.get(playerCharacter.getRegion()).incrementAndGet());
     }
 
     public Flux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches
