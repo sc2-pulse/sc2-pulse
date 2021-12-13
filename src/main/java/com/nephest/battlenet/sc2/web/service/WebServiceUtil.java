@@ -51,6 +51,7 @@ public class WebServiceUtil
         .filter(t->!(ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound)
             && !(ExceptionUtils.getRootCause(t) instanceof NoRetryException))
         .transientErrors(true);
+    public static final RetrySpec RETRY_NEVER = RetrySpec.max(0);
     public static final ConnectionProvider CONNECTION_PROVIDER = ConnectionProvider.builder("sc2-connection-provider")
         .maxConnections(800)
         .maxIdleTime(Duration.ofSeconds(30))
