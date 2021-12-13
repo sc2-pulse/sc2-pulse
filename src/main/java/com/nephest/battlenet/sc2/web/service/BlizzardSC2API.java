@@ -24,6 +24,7 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.*;
+import reactor.util.retry.RetrySpec;
 
 import java.time.Duration;
 import java.util.*;
@@ -53,6 +54,7 @@ extends BaseAPI
     public static final int FIRST_SEASON = 28;
     public static final int PROFILE_LADDER_RETRY_COUNT = 3;
     public static final Duration ERROR_RATE_FRAME = Duration.ofMinutes(60);
+    public static final double RETRY_ERROR_RATE_THRESHOLD = 40.0;
 
     private String regionUri;
     private final ObjectMapper objectMapper;
@@ -142,6 +144,13 @@ extends BaseAPI
             LOG.debug("{} error rate: {}%", r, errorRate);
         });
     }
+    
+    private RetrySpec getRetry(Region region, RetrySpec wanted)
+    {
+        return errorRates.get(region) > RETRY_ERROR_RATE_THRESHOLD 
+            ? WebServiceUtil.RETRY_NEVER 
+            : getRetry(wanted);
+    }
 
     public Mono<BlizzardSeason> getSeason(Region region, Integer id)
     {
@@ -151,7 +160,7 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardDataSeason.class).cast(BlizzardSeason.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->requests.get(region).incrementAndGet())
             .doOnError(t->errors.get(region).incrementAndGet());
@@ -165,7 +174,7 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->requests.get(region).incrementAndGet())
             .doOnError(t->errors.get(region).incrementAndGet());
@@ -215,7 +224,7 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->requests.get(region).incrementAndGet())
             .doOnError(t->errors.get(region).incrementAndGet());
@@ -274,7 +283,7 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->requests.get(region).incrementAndGet())
             .doOnError(t->errors.get(region).incrementAndGet());
@@ -294,7 +303,7 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(String.class)
             .map(s->extractNewTeams(s, startingFromEpochSeconds))
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->requests.get(region).incrementAndGet())
             .doOnError(t->errors.get(region).incrementAndGet());
@@ -406,7 +415,7 @@ extends BaseAPI
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->requests.get(region).incrementAndGet())
             .doOnError(t->errors.get(region).incrementAndGet());
@@ -489,7 +498,7 @@ extends BaseAPI
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->requests.get(region).incrementAndGet())
             .doOnError(t->errors.get(region).incrementAndGet());
@@ -556,7 +565,7 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(rateLimiters.get(playerCharacter.getRegion()).retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(playerCharacter.getRegion()).retryWhen(getRetry(playerCharacter.getRegion(), WebServiceUtil.RETRY)))
             .delaySubscription(rateLimiters.get(playerCharacter.getRegion()).requestSlot())
             .doOnRequest(s->requests.get(playerCharacter.getRegion()).incrementAndGet())
             .doOnError(t->errors.get(playerCharacter.getRegion()).incrementAndGet());
