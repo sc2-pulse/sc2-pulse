@@ -87,7 +87,6 @@ public class ProPlayerService
             if(revealedProPlayer.getFirstName() == null || revealedProPlayer.getFirstName().isEmpty()) continue;
 
             ProPlayer proPlayer = ProPlayer.of(revealedProPlayer);
-            ProTeam proTeam = ProTeam.of(revealedProPlayer);
             SocialMediaLink[] links = SocialMediaLink.of(proPlayer, revealedProPlayer);
             /*
                 sc2revealed data treats multi-region players as distinct entities. Using aligulac id as revealed id
@@ -102,11 +101,6 @@ public class ProPlayerService
             }
 
             proPlayerDAO.merge(proPlayer);
-            if(proTeam != null)
-            {
-                proTeamDAO.merge(proTeam);
-                proTeamMemberDAO.merge(new ProTeamMember(proTeam.getId(), proPlayer.getId()));
-            }
             for(SocialMediaLink link : links) link.setProPlayerId(proPlayer.getId());
             socialMediaLinkDAO.merge(links);
             proPlayerAccountDAO.link(proPlayer.getId(), revealedProPlayer.getBnetTags());

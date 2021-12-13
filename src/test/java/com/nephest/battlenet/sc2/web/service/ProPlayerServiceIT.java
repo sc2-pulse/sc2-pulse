@@ -132,7 +132,7 @@ public class ProPlayerServiceIT
 
         LadderTeamMember member1 = ladderCharacterDAO.findDistinctCharacters("battletag#10").get(0).getMembers();
         assertEquals("Aligulac nickname1", member1.getProNickname());
-        assertEquals("currentTeam1", member1.getProTeam());
+        assertNull(member1.getProTeam());
         LadderTeamMember nullMember =ladderCharacterDAO.findDistinctCharacters("battletag#20").get(0).getMembers();
         assertNull(nullMember.getProNickname());
         assertNull(nullMember.getProTeam());
