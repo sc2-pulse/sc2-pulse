@@ -221,7 +221,7 @@ public class StatsService
     {
         Season season = seasonDao.merge(Season.of(api.getSeason(region, seasonId).block(), region));
         api.getLadders(region, ids)
-            .toStream(BlizzardSC2API.SAFE_REQUESTS_PER_SECOND_CAP * 2)
+            .toStream(BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2)
             .forEach(l->statsService.saveLadder(season, l.getT1(), l.getT2(), alternativeLadderService));
 
     }

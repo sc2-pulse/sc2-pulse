@@ -45,12 +45,10 @@ extends BaseAPI
 
     public static final int REQUESTS_PER_SECOND_CAP = 100;
     public static final int REQUESTS_PER_HOUR_CAP = 36000;
-    public static final double REQUEST_RATE_COEFF = 0.9;
-    public static final int SAFE_REQUESTS_PER_SECOND_CAP =
-        (int) Math.round(REQUESTS_PER_SECOND_CAP * REQUEST_RATE_COEFF);
+    public static final double REQUEST_RATE_MARGIN = 0.1;
+    public static final Duration REQUEST_SLOT_REFRESH_TIME =
+        Duration.ofMillis((long) (1000 * (1.0 + REQUEST_RATE_MARGIN)));
     public static final int DELAY = 1000;
-    public static final int CONCURRENCY = SAFE_REQUESTS_PER_SECOND_CAP / Runtime.getRuntime().availableProcessors();
-    public static final int SAFE_REQUESTS_PER_HOUR_CAP = (int) Math.round(REQUESTS_PER_HOUR_CAP * REQUEST_RATE_COEFF);
     public static final int FIRST_SEASON = 28;
     public static final int PROFILE_LADDER_RETRY_COUNT = 3;
     public static final Duration ERROR_RATE_FRAME = Duration.ofMinutes(60);
@@ -70,7 +68,7 @@ extends BaseAPI
         initWebClient(objectMapper, auth2AuthorizedClientManager);
         this.objectMapper = objectMapper;
         for(Region r : Region.values()) rateLimiters.put(r, new ReactorRateLimiter());
-        Flux.interval(Duration.ofSeconds(0), Duration.ofSeconds(1)).doOnNext(i->refreshReactorSlots()).subscribe();
+        Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME).doOnNext(i->refreshReactorSlots()).subscribe();
         initErrorRates();
     }
 
@@ -129,7 +127,7 @@ extends BaseAPI
 
     private void refreshReactorSlots()
     {
-        rateLimiters.values().forEach(l->l.refreshSlots(SAFE_REQUESTS_PER_SECOND_CAP));
+        rateLimiters.values().forEach(l->l.refreshSlots(REQUESTS_PER_SECOND_CAP));
     }
 
     private void calculateErrorRates()
