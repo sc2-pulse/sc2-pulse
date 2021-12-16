@@ -244,15 +244,7 @@ public class Cron
     private void doUpdateSeasons()
     {
         List<Future<?>> tasks = new ArrayList<>();
-        if(statsService.getAlternativeRegions().size() + statsService.getForcedAlternativeRegions().size() > 1)
-        {
-            tasks.add(webExecutorService.submit(()->doUpdateSeasons(Region.US, Region.CN)));
-            tasks.add(webExecutorService.submit(()->doUpdateSeasons(Region.KR, Region.EU)));
-        }
-        else
-        {
-            for(Region region : Region.values()) tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
-        }
+        for(Region region : Region.values()) tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
 
         MiscUtil.awaitAndThrowException(tasks, true, true);
 
