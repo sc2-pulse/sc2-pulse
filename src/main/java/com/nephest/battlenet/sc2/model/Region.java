@@ -7,20 +7,22 @@ public enum Region
 implements Identifiable
 {
 
-    US(1, "NA", "https://us.api.blizzard.com/"),
-    EU(2, "EU", "https://eu.api.blizzard.com/"),
-    KR(3, "KR", "https://kr.api.blizzard.com/"),
-    CN(5, "CN", "https://gateway.battlenet.com.cn/");
+    US(1, "NA", "https://us.api.blizzard.com/", "https://starcraft2.com/en-us/api/"),
+    EU(2, "EU", "https://eu.api.blizzard.com/", "https://starcraft2.com/en-gb/api/"),
+    KR(3, "KR", "https://kr.api.blizzard.com/", "https://starcraft2.com/ko-kr/api/"),
+    CN(5, "CN", "https://gateway.battlenet.com.cn/", null);
 
     private final int id;
     private final String name;
     private final String baseUrl;
+    private final String baseWebUrl;
 
-    Region(int id, String name, String baseUrl)
+    Region(int id, String name, String baseUrl, String baseWebUrl)
     {
         this.id = id;
         this.name = name;
         this.baseUrl = baseUrl;
+        this.baseWebUrl = baseWebUrl;
     }
 
     public static Region from(int id)
@@ -47,6 +49,11 @@ implements Identifiable
     public String getBaseUrl()
     {
         return baseUrl;
+    }
+
+    public String getBaseWebUrl()
+    {
+        return baseWebUrl;
     }
 
 }
