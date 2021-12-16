@@ -52,6 +52,7 @@ public class AlternativeLadderService
     public static final long FIRST_DIVISION_ID = 33080L;
     public static final int LADDER_BATCH_SIZE = StatsService.LADDER_BATCH_SIZE;
     public static final Duration DISCOVERY_TIME_FRAME = Duration.ofMinutes(60);
+    public static final double WEB_API_ERROR_RATE_THRESHOLD = 50;
 
     private final Map<Region, InstantVar> discoveryInstants = new HashMap<>();
 
@@ -59,6 +60,7 @@ public class AlternativeLadderService
     private AlternativeLadderService alternativeLadderService;
 
     private final BlizzardSC2API api;
+    private final BlizzardSC2WebAPI webAPI;
     private final LeagueDAO leagueDao;
     private final LeagueTierDAO leagueTierDao;
     private final DivisionDAO divisionDao;
@@ -78,6 +80,7 @@ public class AlternativeLadderService
     public AlternativeLadderService
     (
         BlizzardSC2API api,
+        BlizzardSC2WebAPI webAPI,
         LeagueDAO leagueDao,
         LeagueTierDAO leagueTierDao,
         DivisionDAO divisionDao,
@@ -95,6 +98,7 @@ public class AlternativeLadderService
     )
     {
         this.api = api;
+        this.webAPI = webAPI;
         this.leagueDao = leagueDao;
         this.leagueTierDao = leagueTierDao;
         this.divisionDao = divisionDao;
@@ -135,7 +139,7 @@ public class AlternativeLadderService
         if(discoveryInstant == null
             || System.currentTimeMillis() - discoveryInstant.toEpochMilli() >= DISCOVERY_TIME_FRAME.toMillis())
         {
-            discoverSeason(season);
+            discoverSeason(season, api.getErrorRate(season.getRegion()) > WEB_API_ERROR_RATE_THRESHOLD);
             return;
         }
 
@@ -147,7 +151,7 @@ public class AlternativeLadderService
             leagues,
             BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT
         );
-        updateLadders(season, Set.of(queueTypes), profileLadderIds);
+        updateLadders(season, Set.of(queueTypes), profileLadderIds, false);
     }
 
     public void updateThenSmartDiscoverSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
@@ -163,11 +167,11 @@ public class AlternativeLadderService
         }
     }
 
-    public void discoverSeason(Season season)
+    public void discoverSeason(Season season, boolean web)
     {
         long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion())
             .orElse(FIRST_DIVISION_ID) + 1;
-        discoverSeason(season, lastDivision);
+        discoverSeason(season, lastDivision, web);
     }
 
     public void updateThenContinueDiscoverSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
@@ -178,16 +182,16 @@ public class AlternativeLadderService
             .orElseGet(()->divisionDao
                 .findLastDivision(season.getBattlenetId() - 1, season.getRegion())
                 .orElse(FIRST_DIVISION_ID)) + 1;
-        discoverSeason(season, lastDivision);
+        discoverSeason(season, lastDivision, false);
     }
 
-    private void discoverSeason(Season season, long lastDivision)
+    private void discoverSeason(Season season, long lastDivision, boolean web)
     {
         LOG.info("Discovering {} ladders", season);
 
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds = getProfileLadderIds(season, lastDivision);
         LOG.info("{} {} ladders found", profileIds.size(), season);
-        updateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds);
+        updateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds, web);
         discoveryInstants.get(season.getRegion()).setValueAndSave(Instant.now());
     }
 
@@ -195,11 +199,13 @@ public class AlternativeLadderService
     (
         Season season,
         Set<QueueType> queueTypes,
-        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladders
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladders,
+        boolean web
     )
     {
+        if(web) LOG.warn("Using web API");
         List<Future<?>> dbTasks = new ArrayList<>();
-        api.getProfileLadders(ladders, queueTypes)
+        (web ? webAPI.getProfileLadders(ladders, queueTypes) : api.getProfileLadders(ladders, queueTypes))
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
             .forEach((r)->dbTasks.add(dbExecutorService.submit(()->alternativeLadderService.saveProfileLadders(season, r))));

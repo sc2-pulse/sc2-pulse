@@ -39,6 +39,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 @Service
 public class BlizzardSC2API
 extends BaseAPI
+implements ProfileLadderGetter
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(BlizzardSC2API.class);
@@ -449,11 +450,17 @@ extends BaseAPI
     public Mono<BlizzardProfileLadder> getProfileLadder
     (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, Set<QueueType> queueTypes)
     {
-        return chainProfileLadderMono(id, 0, queueTypes);
+        return getProfileLadder(id, queueTypes, this);
+    }
+
+    public Mono<BlizzardProfileLadder> getProfileLadder
+    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, Set<QueueType> queueTypes, ProfileLadderGetter getter)
+    {
+        return chainProfileLadderMono(id, 0, queueTypes, getter);
     }
 
     private Mono<BlizzardProfileLadder> chainProfileLadderMono
-    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, int ix, Set<QueueType> queueTypes)
+    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, int ix, Set<QueueType> queueTypes, ProfileLadderGetter getter)
     {
         int prevIx = ix - 1;
         if(ix > 0) LOG.debug("Profile ladder not found {} times: {}/{}/{}",
@@ -462,11 +469,11 @@ extends BaseAPI
         {
             if(ix < id.getT2().length)
             {
-                return getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3(), queueTypes)
+                return getter.getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3(), queueTypes)
                     .onErrorResume((t)->{
                         if(t.getMessage().startsWith("Invalid game mode")) return Mono.error(t);
                         LOG.debug(t.getMessage(), t);
-                        return chainProfileLadderMono(id, ix + 1, queueTypes);
+                        return chainProfileLadderMono(id, ix + 1, queueTypes, getter);
                     });
             }
             return Mono.error(new NoRetryException(
@@ -477,7 +484,8 @@ extends BaseAPI
         });
     }
 
-    protected Mono<BlizzardProfileLadder> getProfileLadderMono
+    @Override
+    public Mono<BlizzardProfileLadder> getProfileLadderMono
     (Region region, BlizzardPlayerCharacter character, long id, Set<QueueType> queueTypes)
     {
         return getWebClient(region)
@@ -507,7 +515,7 @@ extends BaseAPI
             .doOnError(t->errors.get(region).incrementAndGet());
     }
 
-    private Mono<BlizzardProfileLadder> extractProfileLadder(String s, long ladderId, Set<QueueType> queues)
+    protected Mono<BlizzardProfileLadder> extractProfileLadder(String s, long ladderId, Set<QueueType> queues)
     throws JsonProcessingException
     {
         JsonNode root = objectMapper.readTree(s);
