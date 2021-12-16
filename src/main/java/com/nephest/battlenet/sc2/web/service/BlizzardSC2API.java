@@ -80,6 +80,11 @@ extends BaseAPI
         Flux.interval(ERROR_RATE_FRAME, ERROR_RATE_FRAME).doOnNext(i->calculateErrorRates()).subscribe();
     }
 
+    public double getErrorRate(Region region)
+    {
+        return errorRates.get(region);
+    }
+
     public static boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
     {
         if
