@@ -29,13 +29,18 @@ public class Var<T>
     @NotNull
     private final Function<T, String> serializer;
 
-    public Var(VarDAO varDAO, String key, Function<T, String> serializer, Function<String, T> deserializer)
+    public Var(VarDAO varDAO, String key, Function<T, String> serializer, Function<String, T> deserializer, boolean load)
     {
         this.varDAO = varDAO;
         this.key = key;
         this.deserializer = deserializer;
         this.serializer = serializer;
-        load();
+        if(load) load();
+    }
+
+    public Var(VarDAO varDAO, String key, Function<T, String> serializer, Function<String, T> deserializer)
+    {
+        this(varDAO, key, serializer, deserializer, true);
     }
 
     public T load()
