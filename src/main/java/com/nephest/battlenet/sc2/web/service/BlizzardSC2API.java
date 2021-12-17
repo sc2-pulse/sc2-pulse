@@ -10,6 +10,8 @@ import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Var;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -56,18 +58,23 @@ implements ProfileLadderGetter
     public static final double RETRY_ERROR_RATE_THRESHOLD = 40.0;
 
     private String regionUri;
+    private final Map<Region, Var<Region>> forceRegions = new EnumMap<>(Region.class);
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
     private final Map<Region, AtomicLong> requests = new EnumMap<>(Region.class);
     private final Map<Region, AtomicLong> errors = new EnumMap<>(Region.class);
     private final Map<Region, Double> errorRates = new EnumMap<>(Region.class);
+    private final VarDAO varDAO;
 
     @Autowired
-    public BlizzardSC2API(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
+    public BlizzardSC2API
+    (ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager, VarDAO varDAO)
     {
         initWebClient(objectMapper, auth2AuthorizedClientManager);
         this.objectMapper = objectMapper;
+        this.varDAO = varDAO;
+        init();
         for(Region r : Region.values()) rateLimiters.put(r, new ReactorRateLimiter());
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME).doOnNext(i->refreshReactorSlots()).subscribe();
         initErrorRates();
@@ -79,6 +86,40 @@ implements ProfileLadderGetter
         for(Region r : Region.values()) errors.put(r, new AtomicLong(0));
         for(Region r : Region.values()) errorRates.put(r, 0.0);
         Flux.interval(ERROR_RATE_FRAME, ERROR_RATE_FRAME).doOnNext(i->calculateErrorRates()).subscribe();
+    }
+
+    private void init()
+    {
+        initForceRegion();
+    }
+
+    private void initForceRegion()
+    {
+        //catch exceptions to allow service autowiring for tests
+        try
+        {
+            for(Region region : Region.values())
+            {
+                forceRegions.put(region, new Var<>
+                    (
+                        varDAO,
+                        region.getId() + ".blizzard.api.region.force",
+                        r->r == null ? null : String.valueOf(r.getId()),
+                        s->s == null || s.isEmpty() ? null : Region.from(Integer.parseInt(s)),
+                        false
+                    )
+                );
+            }
+            for(Map.Entry<Region, Var<Region>> e : forceRegions.entrySet())
+            {
+                Region force = e.getValue().load();
+                if(force != null) LOG.warn("Force region loaded: {}->{}", e.getKey(), force);
+            }
+        }
+        catch(RuntimeException ex)
+        {
+            LOG.warn(ex.getMessage(), ex);
+        }
     }
 
     public double getErrorRate(Region region)
@@ -130,6 +171,22 @@ implements ProfileLadderGetter
     {
         this.regionUri = uri;
     }
+    
+    public void setForceRegion(Region target, Region force)
+    {
+        forceRegions.get(target).setValueAndSave(force);
+    }
+    
+    protected Region getRegion(Region targetRegion)
+    {
+        Region forceRegion = forceRegions.get(targetRegion).getValue();
+        return forceRegion != null ? forceRegion : targetRegion;
+    }
+
+    public Region getForceRegion(Region region)
+    {
+        return forceRegions.get(region).getValue();
+    }
 
     private void refreshReactorSlots()
     {
@@ -170,11 +227,12 @@ implements ProfileLadderGetter
             .doOnError(t->errors.get(region).incrementAndGet());
     }
 
-    public Mono<BlizzardSeason> getCurrentSeason(Region region)
+    public Mono<BlizzardSeason> getCurrentSeason(Region originalRegion)
     {
+        Region region = getRegion(originalRegion);
         return getWebClient(region)
             .get()
-            .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/ladder/season/{0}"), region.getId())
+            .uri(regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/ladder/season/{0}"), originalRegion.getId())
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
@@ -382,14 +440,15 @@ implements ProfileLadderGetter
             .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipMono(getLadder(region, d).zipWith(Mono.just(d))));
     }
 
-    public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region region, long ladderId)
+    public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region originalRegion, long ladderId)
     {
+        Region region = getRegion(originalRegion);
         return getWebClient(region)
             .get()
             .uri
             (
                 regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/legacy/ladder/{0}/{1}"),
-                region.getId(), ladderId
+                originalRegion.getId(), ladderId
             )
             .accept(APPLICATION_JSON)
             .retrieve()
@@ -412,7 +471,7 @@ implements ProfileLadderGetter
                             characters[i] = objectMapper
                                 .treeToValue(members.get(offset * i).get("character"), BlizzardPlayerCharacter.class);
                     }
-                    return Tuples.of(region, characters, ladderId);
+                    return Tuples.of(originalRegion, characters, ladderId);
                 }
                 catch (JsonProcessingException e)
                 {
@@ -486,14 +545,15 @@ implements ProfileLadderGetter
 
     @Override
     public Mono<BlizzardProfileLadder> getProfileLadderMono
-    (Region region, BlizzardPlayerCharacter character, long id, Set<QueueType> queueTypes)
+    (Region originalRegion, BlizzardPlayerCharacter character, long id, Set<QueueType> queueTypes)
     {
+        Region region = getRegion(originalRegion);
         return getWebClient(region)
             .get()
             .uri
                 (
                     regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/profile/{0}/{1}/{2}/ladder/{1}"),
-                    region.getId(), character.getRealm(), character.getId(), id
+                    originalRegion.getId(), character.getRealm(), character.getId(), id
                 )
             .accept(APPLICATION_JSON)
             .retrieve()
@@ -561,13 +621,14 @@ implements ProfileLadderGetter
 
     public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)
     {
-        return getWebClient(playerCharacter.getRegion())
+        Region region = getRegion(playerCharacter.getRegion());
+        return getWebClient(region)
             .get()
             .uri
             (
                 regionUri != null
                     ? regionUri
-                    : (playerCharacter.getRegion().getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}/matches"),
+                    : (region.getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}/matches"),
                 playerCharacter.getRegion().getId(),
                 playerCharacter.getRealm(),
                 playerCharacter.getBattlenetId()
@@ -576,10 +637,10 @@ implements ProfileLadderGetter
             .retrieve()
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(rateLimiters.get(playerCharacter.getRegion()).retryWhen(getRetry(playerCharacter.getRegion(), WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiters.get(playerCharacter.getRegion()).requestSlot())
-            .doOnRequest(s->requests.get(playerCharacter.getRegion()).incrementAndGet())
-            .doOnError(t->errors.get(playerCharacter.getRegion()).incrementAndGet());
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
+            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .doOnRequest(s->requests.get(region).incrementAndGet())
+            .doOnError(t->errors.get(region).incrementAndGet());
     }
 
     public Flux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches

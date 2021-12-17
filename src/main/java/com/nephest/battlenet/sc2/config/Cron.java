@@ -43,6 +43,7 @@ public class Cron
     public static final Duration MIN_UPDATE_FRAME_ALTERNATIVE = Duration.ofSeconds(360);
     public static final Duration MAP_STATS_DEFAULT_UPDATE_FRAME = Duration.ofMinutes(60);
     public static final Duration MAP_STATS_SKIP_NEW_SEASON_FRAME = Duration.ofDays(8);
+    public static final long FORCE_REGION_FRAME_MULTIPLIER = 2;
 
     private InstantVar heavyStatsInstant;
     private InstantVar maintenanceFrequentInstant;
@@ -50,6 +51,9 @@ public class Cron
     private InstantVar matchInstant;
     private InstantVar mapStatsInstant;
     private UpdateContext matchUpdateContext;
+
+    @Autowired
+    private BlizzardSC2API sc2API;
 
     @Autowired
     private StatsService statsService;
@@ -311,11 +315,14 @@ public class Cron
 
     public Duration getMinUpdateFrame()
     {
-        return statsService.isAlternativeUpdate(Region.EU, true)
+        Duration duration = statsService.isAlternativeUpdate(Region.EU, true)
             || statsService.isAlternativeUpdate(Region.US, true)
             || statsService.isAlternativeUpdate(Region.CN, true)
                 ? MIN_UPDATE_FRAME_ALTERNATIVE
                 : MIN_UPDATE_FRAME;
+        if(sc2API.getForceRegion(Region.US) == Region.EU || sc2API.getForceRegion(Region.EU) == Region.US)
+            duration = duration.multipliedBy(FORCE_REGION_FRAME_MULTIPLIER);
+        return duration;
     }
 
 }
