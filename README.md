@@ -132,6 +132,30 @@ Alternative update limitations:
 The missing info can be fetched from the main endpoint when it's back up(it happens automatically).
 
 Original idea by [Keiras](http://keiras.cz/)
+
+### Web API
+The blizzard web API is used as a last resort when everything else breaks. Even though the API is not forbidden via robots.txt, the 
+[Blizzard Developer API Terms Of Use](https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use) 
+clause directly forbids it
+```
+You May Not Data Mine Blizzard Products Or Services. Except as permitted through authorized use of the 
+Blizzard Developer APIs, You will not perform any data-mining, scraping, crawling, or use any processes that sends 
+automated queries to Blizzard or any Blizzard game, service, or website, or use any other similar methods or tools 
+to gather or extract data other information from Blizzard or any Blizzard game or service.
+```
+To ensure that the potential violation is a minor one, the following rules are applied:
+* it is called once an hour
+* a very low request rate is used
+* only public data if pulled(leaderboards)
+* no retries, fetching as it is in one go
+* only the required endpoints are called
+
+It is used only when everything else breaks, this way we show the motivation behind it: we don't want to datamine/disrupt
+the services or violate the terms, we'll happily use the proper endpoints if they are available. 
+
+The community likes the stats, and amateur tournaments rely on it, so I feel like such a minor violation is not a big 
+deal, but it's up to Blizzard to decide what is allowed and what is not. I will remove it if Blizzard doesn't like it.
+
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
 ## Discord bot
