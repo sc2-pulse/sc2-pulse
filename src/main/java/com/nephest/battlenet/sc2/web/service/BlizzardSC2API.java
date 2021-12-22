@@ -64,7 +64,7 @@ implements ProfileLadderGetter
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
     private final Map<Region, AtomicLong> requests = new EnumMap<>(Region.class);
     private final Map<Region, AtomicLong> errors = new EnumMap<>(Region.class);
-    private final Map<Region, Double> errorRates = new EnumMap<>(Region.class);
+    private final Map<Region, Var<Double>> errorRates = new EnumMap<>(Region.class);
     private final VarDAO varDAO;
 
     @Autowired
@@ -77,14 +77,27 @@ implements ProfileLadderGetter
         init();
         for(Region r : Region.values()) rateLimiters.put(r, new ReactorRateLimiter());
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME).doOnNext(i->refreshReactorSlots()).subscribe();
-        initErrorRates();
+        initErrorRates(varDAO);
     }
 
-    private void initErrorRates()
+    private void initErrorRates(VarDAO varDAO)
     {
         for(Region r : Region.values()) requests.put(r, new AtomicLong(0));
         for(Region r : Region.values()) errors.put(r, new AtomicLong(0));
-        for(Region r : Region.values()) errorRates.put(r, 0.0);
+        for(Region r : Region.values())
+            errorRates.put(r, new Var<>(varDAO, r.getId() + ".blizzard.api.error.rate",
+                d->d == null ? null : String.valueOf(d),
+                s->s == null || s.isEmpty() ? null : Double.parseDouble(s),
+                false));
+        try
+        {
+            for(Var<Double> v : errorRates.values()) v.load();
+        }
+        catch(Exception ex)
+        {
+            LOG.error(ex.getMessage(), ex);
+        }
+
         Flux.interval(ERROR_RATE_FRAME, ERROR_RATE_FRAME).doOnNext(i->calculateErrorRates()).subscribe();
     }
 
@@ -124,7 +137,8 @@ implements ProfileLadderGetter
 
     public double getErrorRate(Region region)
     {
-        return errorRates.get(region);
+        Double d = errorRates.get(region).getValue();
+        return d == null ? 0 : d;
     }
 
     public static boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
@@ -201,14 +215,14 @@ implements ProfileLadderGetter
             double errorRate = requestCount == 0
                 ? 0.0
                 : (errors.get(r).getAndSet(0) / (double) requestCount) * 100;
-            errorRates.put(r, errorRate);
+            errorRates.get(r).setValueAndSave(errorRate);
             LOG.debug("{} error rate: {}%", r, errorRate);
         });
     }
     
     private RetrySpec getRetry(Region region, RetrySpec wanted)
     {
-        return errorRates.get(region) > RETRY_ERROR_RATE_THRESHOLD 
+        return getErrorRate(region) > RETRY_ERROR_RATE_THRESHOLD
             ? WebServiceUtil.RETRY_NEVER 
             : getRetry(wanted);
     }
