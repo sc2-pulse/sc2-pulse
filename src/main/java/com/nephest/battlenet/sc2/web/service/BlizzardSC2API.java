@@ -139,7 +139,7 @@ implements ProfileLadderGetter
 
     public double getErrorRate(Region region)
     {
-        Double d = errorRates.get(region).getValue();
+        Double d = errorRates.get(getRegion(region)).getValue();
         return d == null ? 0 : d;
     }
 
