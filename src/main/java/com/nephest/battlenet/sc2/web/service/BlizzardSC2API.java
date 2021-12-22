@@ -459,6 +459,12 @@ implements ProfileLadderGetter
     public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region originalRegion, long ladderId)
     {
         Region region = getRegion(originalRegion);
+        RetrySpec retry = getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND);
+        /*
+            profile id discovery is a very important task, add retry spec if there is a chance of getting
+            the correct data
+         */
+        if(retry == WebServiceUtil.RETRY_NEVER && getErrorRate(region) < 100) retry = WebServiceUtil.RETRY;
         return getWebClient(region)
             .get()
             .uri
@@ -494,7 +500,7 @@ implements ProfileLadderGetter
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
+            .retryWhen(rateLimiters.get(region).retryWhen(retry))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->requests.get(region).incrementAndGet())
             .doOnError(t->errors.get(region).incrementAndGet());
