@@ -255,7 +255,7 @@ public class AlternativeLadderService
         boolean web
     )
     {
-        if(web) LOG.warn("Using web API");
+        if(web) LOG.warn("Using web API for {}", season);
         List<Future<?>> dbTasks = new ArrayList<>();
         (web ? webAPI.getProfileLadders(ladders, queueTypes) : api.getProfileLadders(ladders, queueTypes))
             .buffer(LADDER_BATCH_SIZE)
