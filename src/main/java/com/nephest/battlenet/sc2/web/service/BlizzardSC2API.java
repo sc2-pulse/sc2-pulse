@@ -82,13 +82,15 @@ implements ProfileLadderGetter
 
     private void initErrorRates(VarDAO varDAO)
     {
-        for(Region r : Region.values()) requests.put(r, new AtomicLong(0));
-        for(Region r : Region.values()) errors.put(r, new AtomicLong(0));
         for(Region r : Region.values())
+        {
+            requests.put(r, new AtomicLong(0));
+            errors.put(r, new AtomicLong(0));
             errorRates.put(r, new Var<>(varDAO, r.getId() + ".blizzard.api.error.rate",
                 d->d == null ? null : String.valueOf(d),
                 s->s == null || s.isEmpty() ? null : Double.parseDouble(s),
                 false));
+        }
         try
         {
             for(Var<Double> v : errorRates.values()) v.load();
