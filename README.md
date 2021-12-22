@@ -144,7 +144,7 @@ automated queries to Blizzard or any Blizzard game, service, or website, or use 
 to gather or extract data other information from Blizzard or any Blizzard game or service.
 ```
 To ensure that the potential violation is a minor one, the following rules are applied:
-* it is called once an hour
+* it is called twice per hour: 1 full ladder scan + 1 small scan(1v1 platinum-gm)
 * a very low request rate is used
 * only public data if pulled(leaderboards)
 * no retries, fetching as it is in one go
