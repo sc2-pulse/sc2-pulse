@@ -133,6 +133,10 @@ The missing info can be fetched from the main endpoint when it's back up(it happ
 
 Original idea by [Keiras](http://keiras.cz/)
 
+### Forced API host
+You can manually remap some endpoints to use another API host. This is useful when one region is broken but others are not.
+See `addForceAPIRegion` method of the [AdminController](src/main/java/com/nephest/battlenet/sc2/web/controller/AdminController.java).
+
 ### Web API
 The blizzard web API is used as a last resort when everything else breaks. Even though the API is not forbidden via robots.txt, the 
 [Blizzard Developer API Terms Of Use](https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use) 
