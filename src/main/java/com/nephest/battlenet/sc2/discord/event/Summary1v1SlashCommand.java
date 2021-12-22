@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -133,7 +134,7 @@ implements SlashCommand
         List<PlayerCharacterSummary> summaries = summaryDAO
             .find
             (
-                characters.keySet().toArray(Long[]::new),
+                new ArrayList<>(characters.keySet()),
                 OffsetDateTime.now().minusDays(depth),
                 race == null ? Race.EMPTY_RACE_ARRAY : new Race[]{race}
             ).stream()

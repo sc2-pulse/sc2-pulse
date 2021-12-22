@@ -142,12 +142,12 @@ public class CharacterController
     })
     public List<PlayerCharacterSummary> getCharacterSummary
     (
-        @PathVariable("ids") Long[] ids,
+        @PathVariable("ids") List<Long> ids,
         @PathVariable("depthDays") int depth,
         @PathVariable(name = "races", required = false) Race[] races
     )
     {
-        if(ids.length > SUMMARY_IDS_MAX)
+        if(ids.size() > SUMMARY_IDS_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id list is too long, max: " + SUMMARY_IDS_MAX);
         if(depth > SUMMARY_DEPTH_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Depth is too big, max: " + SUMMARY_DEPTH_MAX);
