@@ -11,6 +11,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 import java.util.Arrays;
@@ -68,6 +69,13 @@ public class ClanDAO
         + "SELECT * FROM existing "
         + "UNION "
         + "SELECT * FROM inserted";
+
+    private static final String FIND_IDS_BY_ID_CURSOR =
+        "SELECT id "
+        + "FROM clan "
+        + "WHERE id > :cursor "
+        + "ORDER BY id ASC "
+        + "LIMIT :limit";
 
     private static RowMapper<Clan> STD_ROW_MAPPER;
 
@@ -128,6 +136,14 @@ public class ClanDAO
         List<Clan> mergedClans = template.query(MERGE_QUERY, params, STD_ROW_MAPPER);
 
         return DAOUtils.updateOriginals(clans, mergedClans, (o, m)->o.setId(m.getId()));
+    }
+
+    public List<Integer> findIds(Integer cursor, int count)
+    {
+        SqlParameterSource params = new MapSqlParameterSource()
+            .addValue("cursor", cursor)
+            .addValue("limit", count);
+        return template.query(FIND_IDS_BY_ID_CURSOR, params, DAOUtils.INT_MAPPER);
     }
 
 }
