@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -77,6 +77,8 @@ public class ClanDAO
         + "ORDER BY id ASC "
         + "LIMIT :limit";
 
+    private static final String FIND_BY_IDS = "SELECT " + STD_SELECT + "FROM clan WHERE id IN(:ids)";
+
     private static RowMapper<Clan> STD_ROW_MAPPER;
 
     private final NamedParameterJdbcTemplate template;
@@ -144,6 +146,12 @@ public class ClanDAO
             .addValue("cursor", cursor)
             .addValue("limit", count);
         return template.query(FIND_IDS_BY_ID_CURSOR, params, DAOUtils.INT_MAPPER);
+    }
+
+    public List<Clan> findByIds(Integer... ids)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", List.of(ids));
+        return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
 }
