@@ -72,6 +72,13 @@ public final class DAOUtils
         return rs.wasNull() ? null : val;
     };
 
+    public static final RowMapper<Integer> INT_MAPPER =
+    (rs, ix)->
+    {
+        Integer val = rs.getInt(1);
+        return rs.wasNull() ? null : val;
+    };
+
     public static <T>  T[] updateOriginals
     (
         T[] originalArray,
