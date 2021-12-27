@@ -79,6 +79,11 @@
                 </div>
                 <div class="modal-body">
                     <div id="report-character-menu">
+                        <div>
+                            The reports are public, <strong class="text-danger">your BattleTag and description will be visible to all users</strong>.
+                            Moderators will review the report the vote on it, the majority wins. Moderators:
+                            <span th:text="${@userController.getModTags().stream().collect(T(java.util.stream.Collectors).joining(', '))}"></span>
+                        </div>
                         <form id="report-character-form" class="px-4 py-3" method="post">
                             <div class="form-group">
                                 <label for="report-character-type">Report for</label>
@@ -98,7 +103,7 @@
                                     Upload a replay to <a class="character-link-follow-only" href="https://drop.sc/" target="_blank" rel="nofollow noopener">drop.sc</a>
                                     and link it here.
                                     You can also refer to current match and mmr history(on this website) as evidence.
-                                    <strong>Reports without direct evidence will be removed.</strong>
+                                    <strong class="text-warning">Reports without direct evidence will be removed.</strong>
                                 </label>
                                 <textarea
                                         id="report-character-evidence"
