@@ -9,8 +9,11 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -19,6 +22,8 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 
 import java.time.Duration;
+import java.util.EnumMap;
+import java.util.Map;
 import java.util.Set;
 
 import static org.springframework.http.MediaType.APPLICATION_JSON;
@@ -37,19 +42,37 @@ extends BaseAPI
 implements ProfileLadderGetter
 {
 
+    private static final Logger LOG = LoggerFactory.getLogger(BlizzardSC2WebAPI.class);
+
     public static final int REQUESTS_PER_SECOND_CAP = 5;
 
     private String regionUri;
     private final BlizzardSC2API sc2API;
     private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
+    private final Map<Region, APIHealthMonitor> healthMonitors = new EnumMap<>(Region.class);
 
     @Autowired
-    public BlizzardSC2WebAPI(ObjectMapper objectMapper, BlizzardSC2API sc2API)
+    public BlizzardSC2WebAPI(ObjectMapper objectMapper, BlizzardSC2API sc2API, VarDAO varDAO)
     {
         this.sc2API = sc2API;
         setWebClient(WebServiceUtil.getWebClientBuilder(objectMapper, 500 * 1024).build());
         Flux.interval(Duration.ofSeconds(0), BlizzardSC2API.REQUEST_SLOT_REFRESH_TIME)
             .doOnNext(i->rateLimiter.refreshSlots(REQUESTS_PER_SECOND_CAP)).subscribe();
+        initErrorRates(varDAO);
+    }
+
+    private void initErrorRates(VarDAO varDAO)
+    {
+        for(Region r : Region.values())
+            healthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api.web"));
+
+        Flux.interval(BlizzardSC2API.ERROR_RATE_FRAME, BlizzardSC2API.ERROR_RATE_FRAME)
+            .doOnNext(i->calculateErrorRates()).subscribe();
+    }
+
+    private void calculateErrorRates()
+    {
+        healthMonitors.forEach((region, monitor)->LOG.debug("{} error rate: {}%", region, monitor.update()));
     }
 
     protected void setRegionUri(String uri)
@@ -88,7 +111,9 @@ implements ProfileLadderGetter
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(rateLimiter.requestSlot())
+            .doOnRequest(s->healthMonitors.get(region).addRequest())
+            .doOnError(t->healthMonitors.get(region).addError());
     }
 
     public Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfileLadders
