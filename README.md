@@ -151,7 +151,6 @@ To ensure that the potential violation is a minor one, the following rules are a
 * it is called twice per hour: 1 full ladder scan + 1 small scan(1v1 platinum-gm)
 * a very low request rate is used
 * only public data if pulled(leaderboards)
-* no retries, fetching as it is in one go
 * only the required endpoints are called
 
 It is used only when everything else breaks, this way we show the motivation behind it: we don't want to datamine/disrupt

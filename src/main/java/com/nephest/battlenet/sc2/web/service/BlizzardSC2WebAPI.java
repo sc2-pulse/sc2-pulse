@@ -20,6 +20,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
+import reactor.util.retry.RetrySpec;
 
 import java.time.Duration;
 import java.util.EnumMap;
@@ -80,6 +81,13 @@ implements ProfileLadderGetter
         this.regionUri = uri;
     }
 
+    private RetrySpec getRetry(Region region, RetrySpec wanted)
+    {
+        return healthMonitors.get(region).getErrorRate() > BlizzardSC2API.RETRY_ERROR_RATE_THRESHOLD
+            ? WebServiceUtil.RETRY_NEVER
+            : getRetry(wanted);
+    }
+
     public Mono<BlizzardProfileLadder> getProfileLadder
     (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, Set<QueueType> queueTypes)
     {
@@ -111,6 +119,7 @@ implements ProfileLadderGetter
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
+            .retryWhen(rateLimiter.retryWhen(getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
             .delaySubscription(rateLimiter.requestSlot())
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
