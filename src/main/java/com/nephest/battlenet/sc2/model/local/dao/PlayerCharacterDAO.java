@@ -24,6 +24,7 @@ import org.springframework.stereotype.Repository;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -126,6 +127,30 @@ public class PlayerCharacterDAO
         + "INNER JOIN team_member USING(team_id) "
         + "INNER JOIN player_character ON team_member.player_character_id = player_character.id "
         + "WHERE player_character.region IN (:regions)";
+
+    private static final String FIND_TOP_RECENTLY_ACTIVE_CHARACTERS =
+        "WITH team_filter AS "
+        + "( "
+            + "SELECT DISTINCT team.id "
+            + "FROM team_state "
+            + "INNER JOIN team ON team_state.team_id = team.id "
+            + "WHERE \"timestamp\" >= :point "
+            + "AND team.region IN(:regions) "
+        + "), "
+        + "top_team_filter AS "
+        + "("
+            + "SELECT id "
+            + "FROM team_filter "
+            + "INNER JOIN team USING(id) "
+            + "ORDER BY rating DESC "
+            + "LIMIT :teamLimit"
+        + ") "
+        + "SELECT DISTINCT ON(player_character.id) "
+        + STD_SELECT
+        + "FROM top_team_filter "
+        + "INNER JOIN team_member ON top_team_filter.id = team_member.team_id "
+        + "INNER JOIN player_character ON team_member.player_character_id = player_character.id "
+        + "LIMIT :limit";
 
     private static final String FIND_BY_REGION_AND_REALM_AND_BATTLENET_ID = "SELECT " + STD_SELECT
         + "FROM player_character "
@@ -254,6 +279,28 @@ public class PlayerCharacterDAO
             .addValue("regions", regionInts)
             .addValue("point", from);
         return template.query(FIND_RECENTLY_ACTIVE_CHARACTERS, params, getStdRowMapper());
+    }
+
+    public List<PlayerCharacter> findTopRecentlyActiveCharacters(
+        OffsetDateTime from,
+        QueueType queueType,
+        TeamType teamType,
+        Collection<? extends Region> regions,
+        int count
+    )
+    {
+        if(regions.isEmpty() || count < 1) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("teamType", conversionService.convert(teamType, Integer.class))
+            .addValue("regions", regions.stream()
+                .map(r->conversionService.convert(r, Integer.class))
+                .collect(Collectors.toList()))
+            .addValue("point", from)
+            .addValue("teamLimit", count / queueType.getTeamFormat().getMemberCount(teamType))
+            .addValue("limit", count);
+        return template.query(FIND_TOP_RECENTLY_ACTIVE_CHARACTERS, params, getStdRowMapper());
     }
 
     public Optional<PlayerCharacter> find(Region region, int realm, long battlenetId)

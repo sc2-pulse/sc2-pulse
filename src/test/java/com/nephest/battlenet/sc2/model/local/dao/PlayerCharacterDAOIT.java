@@ -133,6 +133,13 @@ public class PlayerCharacterDAOIT
         assertEquals(char1, search2.get(0));
         assertEquals(char2, search2.get(1));
         assertEquals(char3, search2.get(2));
+
+        List<PlayerCharacter> search3 = playerCharacterDAO
+            .findTopRecentlyActiveCharacters(now.minusHours(2), QueueType.LOTV_2V2, TeamType.ARRANGED, List.of(Region.EU), 2);
+        assertEquals(2, search3.size());
+        search3.sort(Comparator.comparing(PlayerCharacter::getId));
+        assertEquals(char1, search3.get(0));
+        assertEquals(char3, search3.get(1));
     }
 
 }
