@@ -70,7 +70,6 @@ public class AlternativeLadderService
     private AlternativeLadderService alternativeLadderService;
 
     private final BlizzardSC2API api;
-    private final BlizzardSC2WebAPI webAPI;
     private final LeagueDAO leagueDao;
     private final LeagueTierDAO leagueTierDao;
     private final DivisionDAO divisionDao;
@@ -90,7 +89,6 @@ public class AlternativeLadderService
     public AlternativeLadderService
     (
         BlizzardSC2API api,
-        BlizzardSC2WebAPI webAPI,
         LeagueDAO leagueDao,
         LeagueTierDAO leagueTierDao,
         DivisionDAO divisionDao,
@@ -108,7 +106,6 @@ public class AlternativeLadderService
     )
     {
         this.api = api;
-        this.webAPI = webAPI;
         this.leagueDao = leagueDao;
         this.leagueTierDao = leagueTierDao;
         this.divisionDao = divisionDao;
@@ -161,7 +158,7 @@ public class AlternativeLadderService
 
     private boolean isWeb(Region region)
     {
-        return api.getErrorRate(region) > WEB_API_ERROR_RATE_THRESHOLD;
+        return api.getErrorRate(region, false) > WEB_API_ERROR_RATE_THRESHOLD;
     }
 
     private boolean isAdditionalWebUpdate(Region region)
@@ -257,7 +254,7 @@ public class AlternativeLadderService
     {
         if(web) LOG.warn("Using web API for {}", season);
         List<Future<?>> dbTasks = new ArrayList<>();
-        (web ? webAPI.getProfileLadders(ladders, queueTypes) : api.getProfileLadders(ladders, queueTypes))
+        (web ? api.getProfileLadders(ladders, queueTypes, true) : api.getProfileLadders(ladders, queueTypes))
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
             .forEach((r)->dbTasks.add(dbExecutorService.submit(()->alternativeLadderService.saveProfileLadders(season, r))));

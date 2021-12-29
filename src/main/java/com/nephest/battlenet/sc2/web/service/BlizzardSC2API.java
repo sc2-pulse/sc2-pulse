@@ -40,13 +40,13 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 @Service
 public class BlizzardSC2API
 extends BaseAPI
-implements ProfileLadderGetter
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(BlizzardSC2API.class);
 
     public static final int REQUESTS_PER_SECOND_CAP = 100;
     public static final int REQUESTS_PER_HOUR_CAP = 36000;
+    public static final int REQUESTS_PER_SECOND_CAP_WEB = 5;
     public static final double REQUEST_RATE_MARGIN = 0.1;
     public static final Duration REQUEST_SLOT_REFRESH_TIME =
         Duration.ofMillis((long) (1000 * (1.0 + REQUEST_RATE_MARGIN)));
@@ -62,6 +62,8 @@ implements ProfileLadderGetter
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
     private final Map<Region, APIHealthMonitor> healthMonitors = new EnumMap<>(Region.class);
+    private final ReactorRateLimiter webRateLimiter = new ReactorRateLimiter();
+    private final Map<Region, APIHealthMonitor> webHealthMonitors = new EnumMap<>(Region.class);
     private final VarDAO varDAO;
 
     @Autowired
@@ -80,7 +82,10 @@ implements ProfileLadderGetter
     private void initErrorRates(VarDAO varDAO)
     {
         for(Region r : Region.values())
+        {
             healthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api"));
+            webHealthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api.web"));
+        }
 
         Flux.interval(ERROR_RATE_FRAME, ERROR_RATE_FRAME).doOnNext(i->calculateErrorRates()).subscribe();
     }
@@ -119,9 +124,11 @@ implements ProfileLadderGetter
         }
     }
 
-    public double getErrorRate(Region region)
+    public double getErrorRate(Region region, boolean web)
     {
-        return healthMonitors.get(getRegion(region)).getErrorRate();
+        return web
+            ? webHealthMonitors.get(getRegion(region)).getErrorRate()
+            : healthMonitors.get(getRegion(region)).getErrorRate();
     }
 
     public static boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
@@ -188,18 +195,30 @@ implements ProfileLadderGetter
     private void refreshReactorSlots()
     {
         rateLimiters.values().forEach(l->l.refreshSlots(REQUESTS_PER_SECOND_CAP));
+        webRateLimiter.refreshSlots(REQUESTS_PER_SECOND_CAP_WEB);
     }
 
     private void calculateErrorRates()
     {
         healthMonitors.forEach((region, monitor)->LOG.debug("{} error rate: {}%", region, monitor.update()));
+        webHealthMonitors.forEach((region, monitor)->LOG.debug("{} web error rate: {}%", region, monitor.update()));
     }
     
-    private RetrySpec getRetry(Region region, RetrySpec wanted)
+    private RetrySpec getRetry(Region region, RetrySpec wanted, boolean web)
     {
-        return getErrorRate(region) > RETRY_ERROR_RATE_THRESHOLD
+        return getErrorRate(region, web) > RETRY_ERROR_RATE_THRESHOLD
             ? WebServiceUtil.RETRY_NEVER 
             : getRetry(wanted);
+    }
+
+    public ApiContext getContext(Region region, boolean web)
+    {
+        return new ApiContext
+        (
+            web ? webRateLimiter : rateLimiters.get(region),
+            web ? webHealthMonitors.get(region) : healthMonitors.get(region),
+            web ? region.getBaseWebUrl() : region.getBaseUrl()
+        );
     }
 
     public Mono<BlizzardSeason> getSeason(Region region, Integer id)
@@ -210,7 +229,7 @@ implements ProfileLadderGetter
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardDataSeason.class).cast(BlizzardSeason.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
@@ -225,7 +244,7 @@ implements ProfileLadderGetter
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
@@ -275,7 +294,7 @@ implements ProfileLadderGetter
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
@@ -334,7 +353,7 @@ implements ProfileLadderGetter
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
@@ -354,7 +373,7 @@ implements ProfileLadderGetter
             .retrieve()
             .bodyToMono(String.class)
             .map(s->extractNewTeams(s, startingFromEpochSeconds))
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
@@ -432,12 +451,12 @@ implements ProfileLadderGetter
     public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region originalRegion, long ladderId)
     {
         Region region = getRegion(originalRegion);
-        RetrySpec retry = getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND);
+        RetrySpec retry = getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND, false);
         /*
             profile id discovery is a very important task, add retry spec if there is a chance of getting
             the correct data
          */
-        if(retry == WebServiceUtil.RETRY_NEVER && getErrorRate(region) < 100) retry = WebServiceUtil.RETRY;
+        if(retry == WebServiceUtil.RETRY_NEVER && getErrorRate(region, false) < 100) retry = WebServiceUtil.RETRY;
         return getWebClient(region)
             .get()
             .uri
@@ -504,17 +523,17 @@ implements ProfileLadderGetter
     public Mono<BlizzardProfileLadder> getProfileLadder
     (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, Set<QueueType> queueTypes)
     {
-        return getProfileLadder(id, queueTypes, this);
+        return getProfileLadder(id, queueTypes, false);
     }
 
     public Mono<BlizzardProfileLadder> getProfileLadder
-    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, Set<QueueType> queueTypes, ProfileLadderGetter getter)
+    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, Set<QueueType> queueTypes, boolean web)
     {
-        return chainProfileLadderMono(id, 0, queueTypes, getter);
+        return chainProfileLadderMono(id, 0, queueTypes, web);
     }
 
     private Mono<BlizzardProfileLadder> chainProfileLadderMono
-    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, int ix, Set<QueueType> queueTypes, ProfileLadderGetter getter)
+    (Tuple3<Region, BlizzardPlayerCharacter[], Long> id, int ix, Set<QueueType> queueTypes, boolean web)
     {
         int prevIx = ix - 1;
         if(ix > 0) LOG.debug("Profile ladder not found {} times: {}/{}/{}",
@@ -523,11 +542,11 @@ implements ProfileLadderGetter
         {
             if(ix < id.getT2().length)
             {
-                return getter.getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3(), queueTypes)
+                return getProfileLadderMono(id.getT1(), id.getT2()[ix],id.getT3(), queueTypes, web)
                     .onErrorResume((t)->{
                         if(t.getMessage().startsWith("Invalid game mode")) return Mono.error(t);
                         LOG.debug(t.getMessage(), t);
-                        return chainProfileLadderMono(id, ix + 1, queueTypes, getter);
+                        return chainProfileLadderMono(id, ix + 1, queueTypes, web);
                     });
             }
             return Mono.error(new NoRetryException(
@@ -538,16 +557,16 @@ implements ProfileLadderGetter
         });
     }
 
-    @Override
     public Mono<BlizzardProfileLadder> getProfileLadderMono
-    (Region originalRegion, BlizzardPlayerCharacter character, long id, Set<QueueType> queueTypes)
+    (Region originalRegion, BlizzardPlayerCharacter character, long id, Set<QueueType> queueTypes, boolean web)
     {
         Region region = getRegion(originalRegion);
+        ApiContext context = getContext(region, web);
         return getWebClient(region)
             .get()
             .uri
                 (
-                    regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/profile/{0}/{1}/{2}/ladder/{1}"),
+                    regionUri != null ? regionUri : context.getBaseUrl() + "sc2/profile/{0}/{1}/{2}/ladder/{3}",
                     originalRegion.getId(), character.getRealm(), character.getId(), id
                 )
             .accept(APPLICATION_JSON)
@@ -564,10 +583,10 @@ implements ProfileLadderGetter
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND)))
-            .delaySubscription(rateLimiters.get(region).requestSlot())
-            .doOnRequest(s->healthMonitors.get(region).addRequest())
-            .doOnError(t->healthMonitors.get(region).addError());
+            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND, web)))
+            .delaySubscription(context.getRateLimiter().requestSlot())
+            .doOnRequest(s->context.getHealthMonitor().addRequest())
+            .doOnError(t->context.getHealthMonitor().addError());
     }
 
     protected Mono<BlizzardProfileLadder> extractProfileLadder(String s, long ladderId, Set<QueueType> queues)
@@ -602,16 +621,22 @@ implements ProfileLadderGetter
     }
 
     public Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfileLadders
-    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, Set<QueueType> queueTypes)
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, Set<QueueType> queueTypes, boolean web)
     {
         return Flux.fromIterable(ids)
             .flatMap(id->WebServiceUtil
                 .getOnErrorLogAndSkipLogLevelMono(
-                    getProfileLadder(id, queueTypes),
+                    getProfileLadder(id, queueTypes, web),
                     (t)->t.getMessage().startsWith("Invalid game mode")
                         ? LogUtil.LogLevel.DEBUG
                         : LogUtil.LogLevel.WARNING)
                 .zipWith(Mono.just(id)));
+    }
+
+    public Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> getProfileLadders
+    (Iterable<? extends Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids, Set<QueueType> queueTypes)
+    {
+        return getProfileLadders(ids, queueTypes, false);
     }
 
     public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)
@@ -632,7 +657,7 @@ implements ProfileLadderGetter
             .retrieve()
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY)))
+            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
             .delaySubscription(rateLimiters.get(region).requestSlot())
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
