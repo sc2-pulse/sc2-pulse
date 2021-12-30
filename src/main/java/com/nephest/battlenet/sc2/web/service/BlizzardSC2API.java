@@ -35,6 +35,7 @@ import java.util.stream.LongStream;
 import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
 import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
 import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
+import static org.springframework.http.MediaType.ALL;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Service
@@ -654,7 +655,7 @@ extends BaseAPI
                 playerCharacter.getRealm(),
                 playerCharacter.getBattlenetId()
             )
-            .accept(APPLICATION_JSON)
+            .accept(web ? ALL : APPLICATION_JSON) //web API has invalid content type headers
             .retrieve()
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
