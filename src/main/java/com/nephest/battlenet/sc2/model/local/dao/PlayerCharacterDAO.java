@@ -136,6 +136,8 @@ public class PlayerCharacterDAO
             + "INNER JOIN team ON team_state.team_id = team.id "
             + "WHERE \"timestamp\" >= :point "
             + "AND team.region IN(:regions) "
+            + "AND team.queue_type = :queueType "
+            + "AND team.team_type = :teamType "
         + "), "
         + "top_team_filter AS "
         + "("
