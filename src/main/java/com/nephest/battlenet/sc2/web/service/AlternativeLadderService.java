@@ -158,7 +158,8 @@ public class AlternativeLadderService
 
     private boolean isWeb(Region region)
     {
-        return api.getErrorRate(region, false) > WEB_API_ERROR_RATE_THRESHOLD;
+        return api.getErrorRate(region, false) > WEB_API_ERROR_RATE_THRESHOLD
+            && api.getErrorRate(region, true) <= WEB_API_ERROR_RATE_THRESHOLD;
     }
 
     private boolean isAdditionalWebUpdate(Region region)
