@@ -101,6 +101,7 @@ public class MatchService
         try
         {
             webRegions.load();
+            if(!webRegions.getValue().isEmpty()) LOG.warn("Loaded web regions for match history: {}", webRegions.getValue());
         }
         catch (Exception ex)
         {
