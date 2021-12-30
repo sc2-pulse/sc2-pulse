@@ -23,8 +23,8 @@ extends Var<Set<T>>
         (
             varDAO,
             key,
-            s->s == null ? null : s.stream().map(serializer).collect(Collectors.joining(DELIMITER)),
-            s->s == null
+            s->s == null || s.isEmpty() ? null : s.stream().map(serializer).collect(Collectors.joining(DELIMITER)),
+            s->s == null || s.isEmpty()
                 ? new HashSet<>()
                 : Arrays.stream(s.split(DELIMITER)).map(deserializer).collect(Collectors.toSet()),
             load
