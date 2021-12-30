@@ -167,7 +167,8 @@ extends BaseAPI
             ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
             oauth2Client.setDefaultClientRegistrationId("sc2-sys-" + region.name().toLowerCase());
-            clients.put(region, WebServiceUtil.getWebClientBuilder(objectMapper, 500 * 1024)
+            //some endpoints return invalid content type headers, ignore the headers and handle all types
+            clients.put(region, WebServiceUtil.getWebClientBuilder(objectMapper, 500 * 1024, ALL)
                 .apply(oauth2Client.oauth2Configuration()).build());
         }
     }
