@@ -29,6 +29,7 @@ extends Var<Set<T>>
                 : Arrays.stream(s.split(DELIMITER)).map(deserializer).collect(Collectors.toSet()),
             load
         );
+        if(!load) setValue(new HashSet<>());
     }
 
     public SetVar(VarDAO varDAO, String key, Function<T, String> serializer, Function<String, T> deserializer)
