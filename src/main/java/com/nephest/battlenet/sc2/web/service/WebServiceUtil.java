@@ -11,6 +11,7 @@ import io.netty.handler.timeout.WriteTimeoutHandler;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
@@ -73,14 +74,15 @@ public class WebServiceUtil
     }
 
     public static WebClient.Builder getWebClientBuilder
-    (ObjectMapper objectMapper, int inMemorySize)
+    (ObjectMapper objectMapper, int inMemorySize, MediaType... codecTypes)
     {
+        MediaType[] finalTypes = codecTypes.length == 0 ? new MediaType[]{MediaType.APPLICATION_JSON} : codecTypes;
         return WebClient.builder()
             .clientConnector(new ReactorClientHttpConnector(getHttpClient(CONNECT_TIMEOUT, IO_TIMEOUT)))
             .exchangeStrategies(ExchangeStrategies.builder().codecs(conf->
             {
-                conf.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper));
-                conf.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper));
+                conf.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper, finalTypes));
+                conf.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper, finalTypes));
                 if(inMemorySize > 0) conf.defaultCodecs().maxInMemorySize(inMemorySize);
             }).build());
     }
