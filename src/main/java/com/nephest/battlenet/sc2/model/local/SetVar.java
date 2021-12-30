@@ -17,7 +17,7 @@ extends Var<Set<T>>
 
     public static final String DELIMITER = ",";
 
-    public SetVar(VarDAO varDAO, String key, Function<T, String> serializer, Function<String, T> deserializer)
+    public SetVar(VarDAO varDAO, String key, Function<T, String> serializer, Function<String, T> deserializer, boolean load)
     {
         super
         (
@@ -26,8 +26,14 @@ extends Var<Set<T>>
             s->s == null ? null : s.stream().map(serializer).collect(Collectors.joining(DELIMITER)),
             s->s == null
                 ? new HashSet<>()
-                : Arrays.stream(s.split(DELIMITER)).map(deserializer).collect(Collectors.toSet())
+                : Arrays.stream(s.split(DELIMITER)).map(deserializer).collect(Collectors.toSet()),
+            load
         );
+    }
+
+    public SetVar(VarDAO varDAO, String key, Function<T, String> serializer, Function<String, T> deserializer)
+    {
+        this(varDAO, key, serializer, deserializer, true);
     }
 
 }
