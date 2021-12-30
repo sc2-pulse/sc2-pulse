@@ -152,7 +152,7 @@ public class MatchService
             : playerCharacterDAO
                 .findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()), regions);
         if(web) LOG.warn("Using web API for {} matches, top {} players of {} {}",
-                regions, WEB_CHARACTER_COUNT, WEB_QUEUE_TYPE, WEB_TEAM_TYPE);
+                regions, characters.size(), WEB_QUEUE_TYPE, WEB_TEAM_TYPE);
         return r1 + saveMatches(characters, true, web);
     }
 
