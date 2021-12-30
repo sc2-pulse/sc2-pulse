@@ -4,12 +4,11 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
-import com.nephest.battlenet.sc2.model.local.Match;
-import com.nephest.battlenet.sc2.model.local.MatchParticipant;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.SC2Map;
+import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
@@ -47,6 +46,9 @@ public class MatchService
     private static final Logger LOG = LoggerFactory.getLogger(MatchService.class);
     public static final int BATCH_SIZE = 1000;
     public static final int FAILED_MATCHES_MAX = 100;
+    public static final QueueType WEB_QUEUE_TYPE = QueueType.LOTV_1V1;
+    public static final TeamType WEB_TEAM_TYPE = TeamType.ARRANGED;
+    public static final int WEB_CHARACTER_COUNT = 500;
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
@@ -58,6 +60,7 @@ public class MatchService
     private final ExecutorService dbExecutorService;
     private final Predicate<BlizzardMatch> validationPredicate;
     private final ConcurrentLinkedQueue<Set<PlayerCharacter>> failedCharacters = new ConcurrentLinkedQueue<>();
+    private SetVar<Long> webRegions;
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -71,6 +74,7 @@ public class MatchService
         MatchParticipantDAO matchParticipantDAO,
         SeasonDAO seasonDAO,
         SC2MapDAO mapDAO,
+        VarDAO varDAO,
         PostgreSQLUtils postgreSQLUtils,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         Validator validator
@@ -84,7 +88,37 @@ public class MatchService
         this.mapDAO = mapDAO;
         this.postgreSQLUtils = postgreSQLUtils;
         this.dbExecutorService = dbExecutorService;
+        initVars(varDAO);
         validationPredicate = DAOUtils.beanValidationPredicate(validator);
+    }
+
+    private void initVars(VarDAO varDAO)
+    {
+        webRegions = new SetVar<>(varDAO, "match.web.regions", LongVar.SERIALIZER, LongVar.DESERIALIZER, false);
+        //catch errors to allow autowiring in tests
+        try
+        {
+            webRegions.load();
+        }
+        catch (Exception ex)
+        {
+            LOG.error(ex.getMessage(), ex);
+        }
+    }
+
+    public void addWebRegion(Region region)
+    {
+        if(webRegions.getValue().add((long) region.getId())) webRegions.save();
+    }
+
+    public void removeWebRegion(Region region)
+    {
+        if(webRegions.getValue().remove((long) region.getId())) webRegions.save();
+    }
+
+    public Set<Long> getWebRegions()
+    {
+        return Collections.unmodifiableSet(webRegions.getValue());
     }
 
     public void update(UpdateContext updateContext, Region... regions)
@@ -102,8 +136,21 @@ public class MatchService
         int r1 = saveFailedMatches();
         LOG.debug("Saved {} previously failed matches", r1);
         //clear here to avoid unbound retries of the same characters
-        return r1 + saveMatches(playerCharacterDAO
-            .findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()), regions), true);
+        boolean web = !Collections.disjoint(webRegions.getValue(), List.of(regions));
+        List<PlayerCharacter> characters = web
+            ? playerCharacterDAO.findTopRecentlyActiveCharacters
+                (
+                    OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()),
+                    WEB_QUEUE_TYPE,
+                    WEB_TEAM_TYPE,
+                    List.of(regions),
+                    WEB_CHARACTER_COUNT
+                )
+            : playerCharacterDAO
+                .findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()), regions);
+        if(web) LOG.warn("Using web API for {} matches, top {} players of {} {}",
+                regions, WEB_CHARACTER_COUNT, WEB_QUEUE_TYPE, WEB_TEAM_TYPE);
+        return r1 + saveMatches(characters, true, web);
     }
 
     private int saveFailedMatches()
@@ -119,18 +166,18 @@ public class MatchService
             else
             {
                 LOG.debug("Retrying {} previously failed matches", chars.size());
-                i += saveMatches(chars, false);
+                i += saveMatches(chars, false, false);
             }
         }
         return i;
     }
 
-    private int saveMatches(Iterable<? extends PlayerCharacter> characters, boolean saveFailedCharacters)
+    private int saveMatches(Iterable<? extends PlayerCharacter> characters, boolean saveFailedCharacters, boolean web)
     {
         List<Future<?>> dbTasks = new ArrayList<>();
         AtomicInteger count = new AtomicInteger(0);
         Set<PlayerCharacter> errors = new HashSet<>();
-        api.getMatches(characters, errors)
+        api.getMatches(characters, errors, web)
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
             .buffer(BATCH_SIZE)

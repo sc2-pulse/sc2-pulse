@@ -181,7 +181,7 @@ public class BlizzardSC2APIIT
     public void testFetchMatches()
     {
         Set<PlayerCharacter> failedCharacters = new HashSet<>();
-        api.getMatches(Set.of(SERRAL, HEROMARINE, MARU), failedCharacters)
+        api.getMatches(Set.of(SERRAL, HEROMARINE, MARU), failedCharacters, false)
             .toStream(BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2)
             .forEach((m)->
             {
@@ -222,7 +222,7 @@ public class BlizzardSC2APIIT
         );
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, mock(BlizzardTierDivision.class)), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, 1L), VALID_LADDER, server, RETRY_COUNT);
-        WebServiceTestUtil.testRetrying(api.getMatches(SERRAL), VALID_MATCHES, server, RETRY_COUNT);
+        WebServiceTestUtil.testRetrying(api.getMatches(SERRAL, false), VALID_MATCHES, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderId(Region.US, 292783), VALID_LEGACY_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderMono(Region.US, BLIZZARD_CHARACTER, 292783L, queueTypes, false),
             VALID_PROFILE_LADDER, server, RETRY_COUNT);

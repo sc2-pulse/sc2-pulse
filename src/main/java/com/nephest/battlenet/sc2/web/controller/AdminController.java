@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
+import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,9 @@ public class AdminController
 
     @Autowired
     private BlizzardSC2API sc2API;
+
+    @Autowired
+    private MatchService matchService;
 
     @PostMapping("/alternative/forced/{region}")
     public void addForcedAlternativeRegion(@PathVariable("region") Region region)
@@ -44,6 +48,18 @@ public class AdminController
     public void removeForceAPIRegion(@PathVariable("region") Region region)
     {
         sc2API.setForceRegion(region, null);
+    }
+
+    @PostMapping("/blizzard/api/match/web/region/{region}")
+    public void addMatchWebRegion(@PathVariable("region") Region region)
+    {
+        matchService.addWebRegion(region);
+    }
+
+    @DeleteMapping("/blizzard/api/match/web/region/{region}")
+    public void removeMatchWebRegion(@PathVariable("region") Region region)
+    {
+        matchService.removeWebRegion(region);
     }
 
 }

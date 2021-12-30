@@ -639,16 +639,17 @@ extends BaseAPI
         return getProfileLadders(ids, queueTypes, false);
     }
 
-    public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter)
+    public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter, boolean web)
     {
         Region region = getRegion(playerCharacter.getRegion());
+        ApiContext context = getContext(region, web);
         return getWebClient(region)
             .get()
             .uri
             (
                 regionUri != null
                     ? regionUri
-                    : (region.getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}/matches"),
+                    : (context.getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}/matches"),
                 playerCharacter.getRegion().getId(),
                 playerCharacter.getRealm(),
                 playerCharacter.getBattlenetId()
@@ -657,17 +658,17 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
-            .delaySubscription(rateLimiters.get(region).requestSlot())
-            .doOnRequest(s->healthMonitors.get(region).addRequest())
-            .doOnError(t->healthMonitors.get(region).addError());
+            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY, web)))
+            .delaySubscription(context.getRateLimiter().requestSlot())
+            .doOnRequest(s->context.getHealthMonitor().addRequest())
+            .doOnError(t->context.getHealthMonitor().addError());
     }
 
     public Flux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches
-    (Iterable<? extends PlayerCharacter> playerCharacters, Set<PlayerCharacter> errors)
+    (Iterable<? extends PlayerCharacter> playerCharacters, Set<PlayerCharacter> errors, boolean web)
     {
         return Flux.fromIterable(playerCharacters)
-            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getMatches(p), t->errors.add(p)));
+            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getMatches(p, web), t->errors.add(p)));
     }
 
 }
