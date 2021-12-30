@@ -84,7 +84,7 @@ public class MatchServiceIT
             .andExpect(status().isOk())
             .andReturn();
 
-        assertEquals(Set.of((long) Region.EU.getId()), matchService.getWebRegions());
+        assertEquals(Set.of(Region.EU), matchService.getWebRegions());
 
         mvc.perform
         (
@@ -95,7 +95,7 @@ public class MatchServiceIT
             .andExpect(status().isOk())
             .andReturn();
 
-        assertEquals(Set.of((long) Region.EU.getId(), (long) Region.KR.getId()), matchService.getWebRegions());
+        assertEquals(Set.of(Region.EU, Region.KR), matchService.getWebRegions());
 
         mvc.perform
         (
@@ -106,7 +106,7 @@ public class MatchServiceIT
             .andExpect(status().isOk())
             .andReturn();
 
-        assertEquals(Set.of((long) Region.EU.getId()), matchService.getWebRegions());
+        assertEquals(Set.of(Region.EU), matchService.getWebRegions());
     }
 
 }

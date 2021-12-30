@@ -60,7 +60,7 @@ public class MatchService
     private final ExecutorService dbExecutorService;
     private final Predicate<BlizzardMatch> validationPredicate;
     private final ConcurrentLinkedQueue<Set<PlayerCharacter>> failedCharacters = new ConcurrentLinkedQueue<>();
-    private SetVar<Long> webRegions;
+    private SetVar<Region> webRegions;
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -94,7 +94,9 @@ public class MatchService
 
     private void initVars(VarDAO varDAO)
     {
-        webRegions = new SetVar<>(varDAO, "match.web.regions", LongVar.SERIALIZER, LongVar.DESERIALIZER, false);
+        webRegions = new SetVar<>(varDAO, "match.web.regions",
+            r->r == null ? null : String.valueOf(r.getId()),
+            s->s == null || s.isEmpty() ? null : Region.from(Integer.parseInt(s)), false);
         //catch errors to allow autowiring in tests
         try
         {
@@ -108,15 +110,15 @@ public class MatchService
 
     public void addWebRegion(Region region)
     {
-        if(webRegions.getValue().add((long) region.getId())) webRegions.save();
+        if(webRegions.getValue().add(region)) webRegions.save();
     }
 
     public void removeWebRegion(Region region)
     {
-        if(webRegions.getValue().remove((long) region.getId())) webRegions.save();
+        if(webRegions.getValue().remove(region)) webRegions.save();
     }
 
-    public Set<Long> getWebRegions()
+    public Set<Region> getWebRegions()
     {
         return Collections.unmodifiableSet(webRegions.getValue());
     }
