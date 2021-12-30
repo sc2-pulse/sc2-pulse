@@ -110,6 +110,9 @@ public class Cron
             maintenanceInfrequentInstant = new InstantVar(varDAO, "maintenance.infrequent");
             matchInstant = new InstantVar(varDAO, "match.updated");
             mapStatsInstant = new InstantVar(varDAO, "ladder.stats.map.timestamp");
+            if(matchInstant.getValue() != null) matchUpdateContext = new UpdateContext(
+                matchInstant.getValue().minusSeconds(MIN_UPDATE_FRAME.toSeconds()),
+                matchInstant.getValue());
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
