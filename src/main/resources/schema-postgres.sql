@@ -8,6 +8,11 @@ CREATE TABLE "clan"
     "tag" TEXT NOT NULL,
     "region" SMALLINT NOT NULL,
     "name" TEXT,
+    "members" SMALLINT,
+    "active_members" SMALLINT,
+    "avg_rating" SMALLINT,
+    "avg_league_type" SMALLINT,
+    "games" INTEGER,
 
     PRIMARY KEY("id"),
 

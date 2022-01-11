@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.BaseClan;
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardClan;
 
@@ -16,7 +17,7 @@ extends BaseClan
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     public static final Comparator<Clan> NATURAL_ID_COMPARATOR =
         Comparator.comparing(Clan::getTag)
@@ -29,6 +30,12 @@ implements java.io.Serializable
 
     private String name;
 
+    private Integer members;
+    private Integer activeMembers;
+    private Integer avgRating;
+    private BaseLeague.LeagueType avgLeagueType;
+    private Integer games;
+
     public Clan(){}
 
     public Clan(Integer id, @NotNull String tag, @NotNull Region region, String name)
@@ -37,6 +44,27 @@ implements java.io.Serializable
         this.id = id;
         this.region = region;
         this.name = name;
+    }
+
+    public Clan
+    (
+        Integer id,
+        @NotNull String tag,
+        @NotNull Region region,
+        String name,
+        Integer members,
+        Integer activeMembers,
+        Integer avgRating,
+        BaseLeague.LeagueType avgLeagueType,
+        Integer games
+    )
+    {
+        this(id, tag, region, name);
+        this.members = members;
+        this.activeMembers = activeMembers;
+        this.avgRating = avgRating;
+        this.avgLeagueType = avgLeagueType;
+        this.games = games;
     }
 
     public static Clan of(BlizzardClan bClan, Region region)
@@ -107,6 +135,56 @@ implements java.io.Serializable
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    public Integer getMembers()
+    {
+        return members;
+    }
+
+    public void setMembers(Integer members)
+    {
+        this.members = members;
+    }
+
+    public Integer getActiveMembers()
+    {
+        return activeMembers;
+    }
+
+    public void setActiveMembers(Integer activeMembers)
+    {
+        this.activeMembers = activeMembers;
+    }
+
+    public Integer getAvgRating()
+    {
+        return avgRating;
+    }
+
+    public void setAvgRating(Integer avgRating)
+    {
+        this.avgRating = avgRating;
+    }
+
+    public BaseLeague.LeagueType getAvgLeagueType()
+    {
+        return avgLeagueType;
+    }
+
+    public void setAvgLeagueType(BaseLeague.LeagueType avgLeagueType)
+    {
+        this.avgLeagueType = avgLeagueType;
+    }
+
+    public Integer getGames()
+    {
+        return games;
+    }
+
+    public void setGames(Integer games)
+    {
+        this.games = games;
     }
 
 }

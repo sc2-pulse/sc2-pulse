@@ -3,8 +3,13 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -13,7 +18,9 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -22,18 +29,34 @@ import java.util.stream.Collectors;
 public class ClanDAO
 {
 
-    public static final String STD_SELECT =
+    private static final Logger LOG = LoggerFactory.getLogger(ClanDAO.class);
+
+    public static final String STD_SELECT_SHORT =
         "clan.id AS \"clan.id\", "
         + "clan.tag AS \"clan.tag\", "
         + "clan.region AS \"clan.region\", "
         + "clan.name AS \"clan.name\" ";
+    public static final String STD_SELECT_SHORT_NULL =
+        STD_SELECT_SHORT + ", "
+        + "null::smallint AS \"clan.members\", "
+        + "null::smallint AS \"clan.active_members\", "
+        + "null::smallint AS \"clan.avg_rating\", "
+        + "null::smallint AS \"clan.avg_league_type\", "
+        + "null::integer AS \"clan.games\" ";
+    public static final String STD_SELECT =
+        STD_SELECT_SHORT + ", "
+        + "clan.members AS \"clan.members\", "
+        + "clan.active_members AS \"clan.active_members\", "
+        + "clan.avg_rating AS \"clan.avg_rating\", "
+        + "clan.avg_league_type AS \"clan.avg_league_type\", "
+        + "clan.games AS \"clan.games\" ";
 
     private static final String MERGE_QUERY =
         "WITH "
         + "vals AS (VALUES :clans), "
         + "existing AS "
         + "("
-            + "SELECT " + STD_SELECT
+            + "SELECT " + STD_SELECT_SHORT_NULL
             + "FROM vals v(tag, region, name) "
             + "INNER JOIN clan USING(tag, region)"
         + "), "
@@ -60,11 +83,7 @@ public class ClanDAO
             + "SELECT * FROM missing "
             + "ON CONFLICT(tag, region) DO UPDATE "
             + "SET name = COALESCE(excluded.name, clan.name) "
-            + "RETURNING "
-            + "id AS \"clan.id\", "
-            + "tag AS \"clan.tag\", "
-            + "region AS \"clan.region\", "
-            + "name AS \"clan.name\" "
+            + "RETURNING " + STD_SELECT_SHORT_NULL
         + ") "
         + "SELECT * FROM existing "
         + "UNION "
@@ -85,7 +104,49 @@ public class ClanDAO
 
     private static final String FIND_BY_IDS = "SELECT " + STD_SELECT + "FROM clan WHERE id IN(:ids)";
 
+    private static final String UPDATE_STATS = "WITH "
+        + "character_filter AS (SELECT id FROM player_character WHERE clan_id IN (:clans)), "
+        + PlayerCharacterSummaryDAO.FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP + ", "
+        + "clan_stats AS "
+        + "("
+            + "SELECT clan_id, "
+            + "COUNT(DISTINCT(player_character_id)) AS active_members, "
+            + "AVG(all_unwrap.rating)::smallint AS avg_rating, "
+            + "AVG(last_value.league_type)::smallint AS avg_league_type, "
+            + "SUM(all_unwrap.games_diff) AS games "
+            + "FROM all_unwrap "
+            + "INNER JOIN last_value USING(player_character_id, legacy_id) "
+            + "INNER JOIN player_character ON all_unwrap.player_character_id = player_character.id "
+            + "GROUP BY clan_id"
+        + "), "
+        + "members AS "
+        + "("
+            + "SELECT clan_id, COUNT(*) as count "
+            + "FROM player_character "
+            + "WHERE clan_id IN (:clans) "
+            + "GROUP BY clan_id"
+        + ") "
+        + "UPDATE clan "
+        + "SET members = members.count, "
+        + "active_members = clan_stats.active_members, "
+        + "avg_rating = clan_stats.avg_rating, "
+        + "avg_league_type = clan_stats.avg_league_type, "
+        + "games = clan_stats.games "
+        + "FROM members "
+        + "LEFT JOIN clan_stats USING(clan_id) "
+        + "WHERE clan.id = members.clan_id "
+        + "AND clan.members IS DISTINCT FROM members.count "
+        + "AND clan.active_members IS DISTINCT FROM clan_stats.active_members "
+        + "AND clan.avg_rating IS DISTINCT FROM clan_stats.avg_rating "
+        + "AND clan.avg_league_type IS DISTINCT FROM clan_stats.avg_league_type "
+        + "AND clan.games IS DISTINCT FROM clan_stats.games";
+
     private static RowMapper<Clan> STD_ROW_MAPPER;
+
+    //the clan stats calculation is memory intensive operation, modify these values with extreme care.
+    public static final int CLAN_STATS_BATCH_SIZE = 5;
+    public static final int CLAN_STATS_DEPTH_DAYS = 60;
+    public static final int CLAN_STATS_MIN_MEMBERS = 4;
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -110,7 +171,12 @@ public class ClanDAO
                 rs.getInt("clan.id"),
                 rs.getString("clan.tag"),
                 conversionService.convert(rs.getInt("clan.region"), Region.class),
-                rs.getString("clan.name")
+                rs.getString("clan.name"),
+                DAOUtils.getInteger(rs, "clan.members"),
+                DAOUtils.getInteger(rs, "clan.active_members"),
+                DAOUtils.getInteger(rs, "clan.avg_rating"),
+                DAOUtils.getConvertedObjectFromInteger(rs, "clan.avg_league_type", conversionService, BaseLeague.LeagueType.class),
+                DAOUtils.getInteger(rs, "clan.games")
             );
     }
 
@@ -165,6 +231,31 @@ public class ClanDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", List.of(ids));
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
+    }
+
+    @Transactional
+    public int updateStats()
+    {
+        int batchIx = 0;
+        int count = 0;
+        List<Integer> validClans = findIdsByMinMemberCount(CLAN_STATS_MIN_MEMBERS);
+        List<Integer> races = Arrays.stream(Race.values())
+            .map(r->conversionService.convert(r, Integer.class))
+            .collect(Collectors.toList());
+        OffsetDateTime from = OffsetDateTime.now().minusDays(CLAN_STATS_DEPTH_DAYS);
+        while(batchIx < validClans.size())
+        {
+            List<Integer> batch = validClans.subList(batchIx, Math.min(batchIx + CLAN_STATS_BATCH_SIZE, validClans.size()));
+            MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("clans", batch)
+                .addValue("races", races)
+                .addValue("from", from);
+            count += template.update(UPDATE_STATS, params);
+            batchIx += batch.size();
+            LOG.trace("Clan stats progress: {}/{} ", batchIx, validClans.size());
+        }
+        LOG.info("Updates stats of {} clans", count);
+        return count;
     }
 
 }

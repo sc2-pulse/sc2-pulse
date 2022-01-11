@@ -90,6 +90,9 @@ public class Cron
     private MapStatsDAO mapStatsDAO;
 
     @Autowired
+    private ClanDAO clanDAO;
+
+    @Autowired
     private PlayerCharacterReportService characterReportService;
 
     @Autowired
@@ -191,6 +194,7 @@ public class Cron
             OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
             proPlayerService.update();
             queueStatsDAO.mergeCalculateForSeason(seasonDAO.getMaxBattlenetId());
+            clanDAO.updateStats();
             teamStateDAO.archive(defaultOdt);
             teamStateDAO.cleanArchive(defaultOdt);
             teamStateDAO.removeExpired();

@@ -4,3 +4,10 @@
 
 DROP FUNCTION get_player_character_summary;
 DROP TYPE player_character_summary;
+
+ALTER TABLE "clan"
+    ADD COLUMN "members" SMALLINT,
+    ADD COLUMN "active_members" SMALLINT,
+    ADD COLUMN "avg_rating" SMALLINT,
+    ADD COLUMN "avg_league_type" SMALLINT,
+    ADD COLUMN "games" INTEGER;
