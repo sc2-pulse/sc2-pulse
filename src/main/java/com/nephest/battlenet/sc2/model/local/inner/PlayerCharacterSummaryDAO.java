@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.inner;
@@ -33,8 +33,8 @@ public class PlayerCharacterSummaryDAO
         + "player_character_summary.league_type_last AS \"player_character_summary.league_type_last\", "
         + "player_character_summary.global_rank_last AS \"player_character_summary.global_rank_last\" ";
 
-    private static final String FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP =
-        "WITH team_filter AS "
+    public static final String FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP =
+        "team_filter AS "
         + "( "
             + "SELECT "
             + "team.season, "
@@ -48,8 +48,8 @@ public class PlayerCharacterSummaryDAO
             + "FROM team "
             + "INNER JOIN team_member ON team.id = team_member.team_id "
             + "INNER JOIN season ON team.region = season.region AND team.season = season.battlenet_id "
-            + "WHERE player_character_id IN(:characters) "
-            + "AND team.queue_type = 201 "
+            + "INNER JOIN character_filter cf(id) ON team_member.player_character_id = cf.id "
+            + "WHERE team.queue_type = 201 "
             + "AND substring(team.legacy_id::text, char_length(team.legacy_id::text))::smallint IN(:races) "
             + "AND season.end >= :from "
         + "), "
@@ -67,8 +67,8 @@ public class PlayerCharacterSummaryDAO
             + "FROM team_state "
             + "INNER JOIN team ON team_state.team_id = team.id "
             + "INNER JOIN team_member ON team.id = team_member.team_id "
-            + "WHERE player_character_id IN(:characters) "
-            + "AND team.queue_type = 201 "
+            + "INNER JOIN character_filter cf(id) ON team_member.player_character_id = cf.id "
+            + "WHERE team.queue_type = 201 "
             + "AND substring(team.legacy_id::text, char_length(team.legacy_id::text))::smallint IN(:races) "
             + "AND team_state.timestamp >= :from "
         + "), "
@@ -105,7 +105,11 @@ public class PlayerCharacterSummaryDAO
             + "player_character_id, legacy_id, rating, league_type, global_rank "
             + "FROM all_unwrap "
             + "ORDER BY player_character_id DESC, legacy_id DESC, season DESC, timestamp DESC "
-        + ") "
+        + ") ";
+
+    private static final String FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP_QUERY =
+         "WITH character_filter AS (VALUES :characters), "
+        + FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP
         + "SELECT player_character_id AS \"player_character_summary.player_character_id\", "
         + "substring(legacy_id::text, char_length(legacy_id::text))::smallint AS \"player_character_summary.race\", "
         + "SUM(all_unwrap.games_diff)::smallint AS \"player_character_summary.games\", "
@@ -170,7 +174,7 @@ public class PlayerCharacterSummaryDAO
                 .map(r->conversionService.convert(r, Integer.class))
                 .collect(Collectors.toList());
         params.addValue("races", raceInts);
-        return template.query(FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP, params, STD_ROW_MAPPER);
+        return template.query(FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP_QUERY, params, STD_ROW_MAPPER);
     }
 
 }
