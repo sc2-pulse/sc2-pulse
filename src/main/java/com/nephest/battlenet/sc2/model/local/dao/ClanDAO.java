@@ -77,6 +77,12 @@ public class ClanDAO
         + "ORDER BY id ASC "
         + "LIMIT :limit";
 
+    private static final String FIND_BY_MIN_MEMBER_COUNT =
+        "SELECT clan_id "
+        + "FROM player_character "
+        + "GROUP BY clan_id "
+        + "HAVING COUNT(*) >= :minMemberCount";
+
     private static final String FIND_BY_IDS = "SELECT " + STD_SELECT + "FROM clan WHERE id IN(:ids)";
 
     private static RowMapper<Clan> STD_ROW_MAPPER;
@@ -146,6 +152,13 @@ public class ClanDAO
             .addValue("cursor", cursor)
             .addValue("limit", count);
         return template.query(FIND_IDS_BY_ID_CURSOR, params, DAOUtils.INT_MAPPER);
+    }
+
+    public List<Integer> findIdsByMinMemberCount(int minMemberCount)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("minMemberCount", minMemberCount);
+        return template.query(FIND_BY_MIN_MEMBER_COUNT, params, DAOUtils.INT_MAPPER);
     }
 
     public List<Clan> findByIds(Integer... ids)
