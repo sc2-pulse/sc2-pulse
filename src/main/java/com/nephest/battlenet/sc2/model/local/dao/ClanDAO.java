@@ -7,7 +7,6 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,16 +147,19 @@ public class ClanDAO
 
     private static final String UPDATE_STATS = "WITH "
         + "character_filter AS (SELECT id FROM player_character WHERE clan_id IN (:clans)), "
-        + PlayerCharacterSummaryDAO.FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP + ", "
+        + "all_unwrap AS "
+        + "("
+            + "SELECT * FROM get_player_character_summary"
+            + "(ARRAY(SELECT * FROM character_filter), :from, :races::smallint[]) player_character_summary"
+        + "), "
         + "clan_stats AS "
         + "("
             + "SELECT clan_id, "
             + "COUNT(DISTINCT(player_character_id)) AS active_members, "
-            + "AVG(all_unwrap.rating)::smallint AS avg_rating, "
-            + "AVG(last_value.league_type)::smallint AS avg_league_type, "
-            + "SUM(all_unwrap.games_diff) AS games "
+            + "AVG(all_unwrap.rating_avg)::smallint AS avg_rating, "
+            + "AVG(all_unwrap.league_type_last)::smallint AS avg_league_type, "
+            + "SUM(all_unwrap.games) AS games "
             + "FROM all_unwrap "
-            + "INNER JOIN last_value USING(player_character_id, legacy_id) "
             + "INNER JOIN player_character ON all_unwrap.player_character_id = player_character.id "
             + "GROUP BY clan_id"
         + "), "
@@ -186,8 +188,7 @@ public class ClanDAO
     private static RowMapper<Clan> STD_ROW_MAPPER;
     private static ResultSetExtractor<Clan> STD_EXTRACTOR;
 
-    //the clan stats calculation is memory intensive operation, modify these values with extreme care.
-    public static final int CLAN_STATS_BATCH_SIZE = 5;
+    public static final int CLAN_STATS_BATCH_SIZE = 12;
     public static final int CLAN_STATS_DEPTH_DAYS = 60;
     public static final int CLAN_STATS_MIN_MEMBERS = 4;
 
@@ -397,9 +398,9 @@ public class ClanDAO
         int batchIx = 0;
         int count = 0;
         List<Integer> validClans = findIdsByMinMemberCount(CLAN_STATS_MIN_MEMBERS);
-        List<Integer> races = Arrays.stream(Race.values())
+        Integer[] races = Arrays.stream(Race.values())
             .map(r->conversionService.convert(r, Integer.class))
-            .collect(Collectors.toList());
+            .toArray(Integer[]::new);
         OffsetDateTime from = OffsetDateTime.now().minusDays(CLAN_STATS_DEPTH_DAYS);
         while(batchIx < validClans.size())
         {

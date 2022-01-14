@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -142,12 +142,12 @@ public class CharacterController
     })
     public List<PlayerCharacterSummary> getCharacterSummary
     (
-        @PathVariable("ids") List<Long> ids,
+        @PathVariable("ids") Long[] ids,
         @PathVariable("depthDays") int depth,
         @PathVariable(name = "races", required = false) Race[] races
     )
     {
-        if(ids.size() > SUMMARY_IDS_MAX)
+        if(ids.length > SUMMARY_IDS_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id list is too long, max: " + SUMMARY_IDS_MAX);
         if(depth > SUMMARY_DEPTH_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Depth is too big, max: " + SUMMARY_DEPTH_MAX);

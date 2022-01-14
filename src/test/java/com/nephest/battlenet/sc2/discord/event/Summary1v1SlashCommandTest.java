@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -152,7 +152,7 @@ public class Summary1v1SlashCommandTest
         for(int i = 0; i < 4; i++) summaries.add(new PlayerCharacterSummary(
             (long) i, Race.TERRAN, i, i * 2, i * 3, i, BaseLeague.LeagueType.DIAMOND, i
         ));
-        when(summaryDAO.find(eq(List.of(0L, 1L, 2L, 3L, 4L)), any(), eq(Race.TERRAN))).thenReturn(summaries);
+        when(summaryDAO.find(eq(new Long[]{0L, 1L, 2L, 3L, 4L}), any(), eq(Race.TERRAN))).thenReturn(summaries);
         when(discordBootstrap.embedBuilder()).thenReturn(EmbedCreateSpec.builder());
         when(discordBootstrap.getLeagueEmojiOrName(BaseLeague.LeagueType.DIAMOND)).thenReturn("diamond");
         when(discordBootstrap.getRaceEmojiOrName(Race.TERRAN)).thenReturn("terran");

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -26,7 +26,6 @@ import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -134,7 +133,7 @@ implements SlashCommand
         List<PlayerCharacterSummary> summaries = summaryDAO
             .find
             (
-                new ArrayList<>(characters.keySet()),
+                characters.keySet().toArray(Long[]::new),
                 OffsetDateTime.now().minusDays(depth),
                 race == null ? Race.EMPTY_RACE_ARRAY : new Race[]{race}
             ).stream()
