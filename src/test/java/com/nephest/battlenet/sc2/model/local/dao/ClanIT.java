@@ -32,8 +32,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -136,7 +135,7 @@ public class ClanIT
     }
 
     @Test
-    public void testCursorSearch(@Autowired WebApplicationContext webApplicationContext)
+    public void testSearch(@Autowired WebApplicationContext webApplicationContext)
     throws Exception
     {
         int clanCount = ClanDAO.PAGE_SIZE * 2;
@@ -159,8 +158,27 @@ public class ClanIT
             .alwaysDo(print())
             .build();
 
+        testTagSearch(mvc);
         testCursorSearch(mvc, ClanDAO.Cursor.ACTIVE_MEMBERS, clanCount, 1, clanCount);
         testCursorSearch(mvc, ClanDAO.Cursor.AVG_RATING, clanCount + 1, 2, clanCount);
+    }
+
+    private void testTagSearch(MockMvc mvc)
+    throws Exception
+    {
+        Clan[] clans = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/tag/clan1")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertEquals(1, clans.length);
+        Clan clan = clans[0];
+        assertNotNull(clan);
+        assertEquals(2, clan.getId());
+        assertEquals("clan1", clan.getTag());
+        assertEquals("clan1Name", clan.getName());
     }
 
     private void testCursorSearch(MockMvc mvc, ClanDAO.Cursor cursor, int max, int min, int clanCount)

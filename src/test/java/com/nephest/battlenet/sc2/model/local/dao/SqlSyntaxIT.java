@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -309,6 +309,7 @@ public class SqlSyntaxIT
         Arrays.sort(mergedClans2, Clan.NATURAL_ID_COMPARATOR);
         assertEquals(clans[0].getId(), mergedClans2[0].getId());
         assertEquals(clans[2].getId(), mergedClans2[1].getId());
+        assertEquals(clans[0], clanDAO.findByTag(clans[0].getTag()).get(0));
 
         SC2Map map2 = mapDAO.merge(new SC2Map(null, "map2v2"))[0];
         SC2Map[] maps = mapDAO.merge

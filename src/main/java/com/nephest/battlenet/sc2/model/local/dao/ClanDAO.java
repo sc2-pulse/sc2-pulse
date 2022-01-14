@@ -107,6 +107,7 @@ public class ClanDAO
         + "HAVING COUNT(*) >= :minMemberCount";
 
     private static final String FIND_BY_IDS = "SELECT " + STD_SELECT + "FROM clan WHERE id IN(:ids)";
+    private static final String FIND_BY_TAG = "SELECT " + STD_SELECT + "FROM clan WHERE tag = :tag";
 
     private static final String FIND_BY_CURSOR_TEMPLATE =
         "SELECT " + STD_SELECT
@@ -341,6 +342,12 @@ public class ClanDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", List.of(ids));
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
+    }
+
+    public List<Clan> findByTag(String tag)
+    {
+        SqlParameterSource params = new MapSqlParameterSource().addValue("tag", tag);
+        return template.query(FIND_BY_TAG, params, STD_ROW_MAPPER);
     }
 
     public PagedSearchResult<List<Clan>> findByCursor

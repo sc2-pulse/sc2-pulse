@@ -48,4 +48,10 @@ public class ClanController
         );
     }
 
+    @GetMapping("/tag/{tag}")
+    public List<Clan> findByTag(@PathVariable("tag") String tag)
+    {
+        return clanDAO.findByTag(tag);
+    }
+
 }
