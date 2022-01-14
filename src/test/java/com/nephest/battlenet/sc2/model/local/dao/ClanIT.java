@@ -3,19 +3,27 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.context.WebApplicationContext;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -26,8 +34,12 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@SpringBootTest(classes = DatabaseTestConfig.class)
+@SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class ClanIT
@@ -41,6 +53,12 @@ public class ClanIT
 
     @Autowired
     private SeasonGenerator seasonGenerator;
+
+    @Autowired
+    private JdbcTemplate template;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     @BeforeEach
     public void beforeEach(@Autowired DataSource dataSource)
@@ -115,6 +133,113 @@ public class ClanIT
         assertNull(clan2WithStats.getAvgRating());
         assertNull(clan2WithStats.getAvgLeagueType());
         assertNull(clan2WithStats.getGames());
+    }
+
+    @Test
+    public void testCursorSearch(@Autowired WebApplicationContext webApplicationContext)
+    throws Exception
+    {
+        int clanCount = ClanDAO.PAGE_SIZE * 2;
+
+        Clan[] clans = new Clan[clanCount];
+        for(int i = 0; i < clanCount; i++)
+            clans[i] = new Clan(null, "clan" + i, Region.EU, "clan" + i + "Name");
+        clanDAO.merge(clans);
+        template.execute
+        (
+            "UPDATE clan "
+            + "SET active_members = id, "
+            + "avg_rating = id + 1, "
+            + "games = id * 2"
+        );
+
+        MockMvc mvc = MockMvcBuilders
+            .webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
+            .alwaysDo(print())
+            .build();
+
+        testCursorSearch(mvc, ClanDAO.Cursor.ACTIVE_MEMBERS, clanCount, 1, clanCount);
+        testCursorSearch(mvc, ClanDAO.Cursor.AVG_RATING, clanCount + 1, 2, clanCount);
+    }
+
+    private void testCursorSearch(MockMvc mvc, ClanDAO.Cursor cursor, int max, int min, int clanCount)
+    throws Exception
+    {
+        //normal, first page
+        PagedSearchResult<List<Clan>> result = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1", cursor, max + 1, max + 1)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        assertEquals(ClanDAO.PAGE_SIZE, result.getResult().size());
+        for(int i = 0; i < ClanDAO.PAGE_SIZE; i++)
+            assertEquals(clanCount - i, result.getResult().get(i).getId());
+
+        //reversed, last page
+        PagedSearchResult<List<Clan>> reversedResult = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/cursor/{cursor}/{minCursor}/{minCursor}/2/-1", cursor, min - 1, min - 1)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        assertEquals(ClanDAO.PAGE_SIZE, reversedResult.getResult().size());
+        for(int i = 0; i < ClanDAO.PAGE_SIZE; i++)
+            assertEquals(ClanDAO.PAGE_SIZE - i, reversedResult.getResult().get(i).getId());
+
+        //filtered by active member count
+        PagedSearchResult<List<Clan>> filteredByActiveMembersResult = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
+                + "?minActiveMembers={min}&maxActiveMembers={max}",
+                cursor, max, max, 10, 19
+            )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        assertEquals(10, filteredByActiveMembersResult.getResult().size());
+        for(int i = 0; i < filteredByActiveMembersResult.getResult().size(); i++)
+            assertEquals(19 - i, filteredByActiveMembersResult.getResult().get(i).getId());
+
+        //filtered by active avg rating
+        PagedSearchResult<List<Clan>> filteredByAvgRatingResult = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
+                + "?minAvgRating={min}&maxAvgRating={max}",
+                cursor, max, max, 10, 19
+            )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        assertEquals(10, filteredByAvgRatingResult.getResult().size());
+        for(int i = 0; i < filteredByAvgRatingResult.getResult().size(); i++)
+            assertEquals(18 - i, filteredByAvgRatingResult.getResult().get(i).getId());
+
+        //filtered by all
+        PagedSearchResult<List<Clan>> filteredByAllResult = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
+                + "?minActiveMembers={min}&maxActiveMembers={max}"
+                + "&minAvgRating={min}&maxAvgRating={max}",
+                cursor, max, max, 10, 19, 10, 19
+            )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        assertEquals(9, filteredByAllResult.getResult().size());
+        for(int i = 0; i < filteredByAllResult.getResult().size(); i++)
+            assertEquals(18 - i, filteredByAllResult.getResult().get(i).getId());
     }
 
 }

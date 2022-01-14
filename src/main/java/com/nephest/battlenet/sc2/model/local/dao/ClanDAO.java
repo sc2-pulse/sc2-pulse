@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +23,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Repository
@@ -104,6 +107,43 @@ public class ClanDAO
 
     private static final String FIND_BY_IDS = "SELECT " + STD_SELECT + "FROM clan WHERE id IN(:ids)";
 
+    private static final String FIND_BY_CURSOR_TEMPLATE =
+        "SELECT " + STD_SELECT
+        + "FROM clan "
+        + "WHERE %1$s "
+        + "AND active_members BETWEEN :minActiveMembers AND :maxActiveMembers "
+        + "AND games / active_members BETWEEN :minGamesPerActiveMember AND :maxGamesPerActiveMember "
+        + "AND avg_rating BETWEEN :minAvgRating AND :maxAvgRating "
+        + "ORDER BY %2$s "
+        + "LIMIT :limit OFFSET :offset";
+
+    private static final String FIND_BY_ACTIVE_MEMBERS_CURSOR_TEMPLATE =
+        String.format(FIND_BY_CURSOR_TEMPLATE,
+            "(active_members, id) %2$s (:cursor, :idCursor)",
+            "active_members %1$s, id %1$s");
+    private static final String FIND_BY_ACTIVE_MEMBERS_CURSOR =
+        String.format(FIND_BY_ACTIVE_MEMBERS_CURSOR_TEMPLATE, "DESC", "<");
+    private static final String FIND_BY_ACTIVE_MEMBERS_CURSOR_REVERSED =
+        String.format(FIND_BY_ACTIVE_MEMBERS_CURSOR_TEMPLATE, "ASC", ">");
+
+    private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR_TEMPLATE =
+        String.format(FIND_BY_CURSOR_TEMPLATE,
+            "(games / active_members, id) %2$s (:cursor, :idCursor)",
+            "games / active_members %1$s, id %1$s");
+    private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR =
+        String.format(FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR_TEMPLATE, "DESC", "<");
+    private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_REVERSED =
+        String.format(FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR_TEMPLATE, "ASC", ">");
+
+    private static final String FIND_BY_AVG_RATING_CURSOR_TEMPLATE =
+        String.format(FIND_BY_CURSOR_TEMPLATE,
+            "(avg_rating, id) %2$s (:cursor, :idCursor)",
+            "avg_rating %1$s, id %1$s");
+    private static final String FIND_BY_AVG_RATING_CURSOR =
+        String.format(FIND_BY_AVG_RATING_CURSOR_TEMPLATE, "DESC", "<");
+    private static final String FIND_BY_AVG_RATING_CURSOR_REVERSED =
+        String.format(FIND_BY_AVG_RATING_CURSOR_TEMPLATE, "ASC", ">");
+
     private static final String UPDATE_STATS = "WITH "
         + "character_filter AS (SELECT id FROM player_character WHERE clan_id IN (:clans)), "
         + PlayerCharacterSummaryDAO.FIND_PLAYER_CHARACTER_SUMMARY_BY_IDS_AND_TIMESTAMP + ", "
@@ -147,6 +187,68 @@ public class ClanDAO
     public static final int CLAN_STATS_BATCH_SIZE = 5;
     public static final int CLAN_STATS_DEPTH_DAYS = 60;
     public static final int CLAN_STATS_MIN_MEMBERS = 4;
+
+    public static final int PAGE_SIZE = 50;
+    public static final int MAX_PAGE_DIFF = 2;
+
+    public enum Cursor
+    {
+        ACTIVE_MEMBERS
+        (
+            "Active members",
+            true,
+            FIND_BY_ACTIVE_MEMBERS_CURSOR,
+            FIND_BY_ACTIVE_MEMBERS_CURSOR_REVERSED
+        ),
+        GAMES_PER_ACTIVE_MEMBER
+        (
+            "Games per active member",
+            false,
+            FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR,
+            FIND_BY_GAMES_PER_ACTIVE_MEMBER_REVERSED
+        ),
+        AVG_RATING
+        (
+            "Average rating",
+            false,
+            FIND_BY_AVG_RATING_CURSOR,
+            FIND_BY_AVG_RATING_CURSOR_REVERSED
+        );
+
+        private final String name;
+        private final boolean defaultt;
+        private final String query;
+        private final String reversedQuery;
+
+        Cursor(String name, boolean defaultt, String query, String reversedQuery)
+        {
+            this.name = name;
+            this.defaultt = defaultt;
+            this.query = query;
+            this.reversedQuery = reversedQuery;
+        }
+
+        public String getName()
+        {
+            return name;
+        }
+
+        public boolean isDefault()
+        {
+            return defaultt;
+        }
+
+        public String getQuery()
+        {
+            return query;
+        }
+
+        public String getReversedQuery()
+        {
+            return reversedQuery;
+        }
+
+    }
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -231,6 +333,47 @@ public class ClanDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", List.of(ids));
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
+    }
+
+    public PagedSearchResult<List<Clan>> findByCursor
+    (
+        Cursor cursor, int cursorVal, int idCursor,
+        int minActiveMembers, int maxActiveMembers,
+        int minGamesPerActiveMember, int maxGamesPerActiveMember,
+        int minAvgRating, int maxAvgRating,
+        int page, int pageDiff
+    )
+    {
+        if
+        (
+            minActiveMembers > maxActiveMembers
+            || minGamesPerActiveMember > maxGamesPerActiveMember
+            || minAvgRating > maxAvgRating
+        ) throw new IllegalArgumentException("Invalid search range. Min values should be less than max values");
+        int pageDiffAbs = Math.abs(pageDiff);
+        if(pageDiffAbs > MAX_PAGE_DIFF) throw new IllegalArgumentException("Page diff is too big");
+        if(page < 0) throw new IllegalArgumentException("Page is negative");
+        Objects.requireNonNull(cursor);
+
+        boolean forward = pageDiff > -1;
+        long finalPage = page + pageDiff;
+        long offset = (long) (pageDiffAbs - 1) * PAGE_SIZE;
+
+        SqlParameterSource params = new MapSqlParameterSource()
+            .addValue("cursor", cursorVal)
+            .addValue("idCursor", idCursor)
+            .addValue("minActiveMembers", minActiveMembers)
+            .addValue("maxActiveMembers", maxActiveMembers)
+            .addValue("minGamesPerActiveMember", minGamesPerActiveMember)
+            .addValue("maxGamesPerActiveMember", maxGamesPerActiveMember)
+            .addValue("minAvgRating", minAvgRating)
+            .addValue("maxAvgRating", maxAvgRating)
+            .addValue("limit", PAGE_SIZE)
+            .addValue("offset", offset);
+
+        List<Clan> clans = template.query(forward ? cursor.getQuery() : cursor.getReversedQuery(), params, STD_ROW_MAPPER);
+        if(!forward) Collections.reverse(clans);
+        return new PagedSearchResult<>(null, (long) PAGE_SIZE, finalPage, clans);
     }
 
     @Transactional
