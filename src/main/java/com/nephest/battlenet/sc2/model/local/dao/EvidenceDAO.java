@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -52,10 +52,7 @@ public class EvidenceDAO
         rs.getObject("evidence.created", OffsetDateTime.class)
     );
 
-    public static final ResultSetExtractor<Evidence> STD_EXTRACTOR = (rs)->{
-        if(!rs.next()) return null;
-        return STD_ROW_MAPPER.mapRow(rs, 0);
-    };
+    public static final ResultSetExtractor<Evidence> STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
 
     private static final String VISIBLE_AND =
         "("

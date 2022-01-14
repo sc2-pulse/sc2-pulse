@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -34,6 +34,15 @@ public final class DAOUtils
     public static final int[] EMPTY_INT_ARRAY = new int[0];
 
     private DAOUtils(){}
+
+    public static <T> ResultSetExtractor<T> getResultSetExtractor(RowMapper<T> rowMapper)
+    {
+        return (rs)->
+        {
+            if(!rs.next()) return null;
+            return rowMapper.mapRow(rs, 1);
+        };
+    }
 
     public static final ResultSetExtractor<Long> LONG_EXTRACTOR =
     (rs)->

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -145,11 +145,7 @@ public class DivisionDAO
         rs.getLong("division.battlenet_id")
     );
 
-    public static final ResultSetExtractor<Division> STD_EXTRACTOR = (rs)->
-    {
-        if(!rs.next()) return null;
-        return STD_ROW_MAPPER.mapRow(rs, 0);
-    };
+    public static final ResultSetExtractor<Division> STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
 
     public static final ResultSetExtractor<Map<Division, PlayerCharacter>> PROFILE_IDS_EXTRACTOR = (rs)->
     {

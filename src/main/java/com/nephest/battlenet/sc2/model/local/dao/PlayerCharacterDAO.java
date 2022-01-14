@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -192,11 +192,7 @@ public class PlayerCharacterDAO
             DAOUtils.getInteger(rs, "player_character.clan_id")
         );
 
-        if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
-        {
-            if(!rs.next()) return null;
-            return getStdRowMapper().mapRow(rs, 0);
-        };
+        if(STD_EXTRACTOR == null) STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
 
         if(BOOKMARKED_STD_ROW_EXTRACTOR == null) BOOKMARKED_STD_ROW_EXTRACTOR
             = new SimpleBookmarkedResultSetExtractor<>(STD_ROW_MAPPER, "team.rating", "team.id");

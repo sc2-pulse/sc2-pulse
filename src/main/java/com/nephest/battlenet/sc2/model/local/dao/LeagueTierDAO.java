@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -110,11 +110,7 @@ public class LeagueTierDAO
             rs.getInt("league_tier.min_rating"),
             rs.getInt("league_tier.max_rating")
         );
-        if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->
-        {
-            if(!rs.next()) return null;
-            return getStdRowMapper().mapRow(rs, 0);
-        };
+        if(STD_EXTRACTOR == null) STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
     }
 
     public static RowMapper<LeagueTier> getStdRowMapper()
