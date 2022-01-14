@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -182,6 +183,7 @@ public class ClanDAO
         + "AND clan.games IS DISTINCT FROM clan_stats.games";
 
     private static RowMapper<Clan> STD_ROW_MAPPER;
+    private static ResultSetExtractor<Clan> STD_EXTRACTOR;
 
     //the clan stats calculation is memory intensive operation, modify these values with extreme care.
     public static final int CLAN_STATS_BATCH_SIZE = 5;
@@ -280,11 +282,17 @@ public class ClanDAO
                 DAOUtils.getConvertedObjectFromInteger(rs, "clan.avg_league_type", conversionService, BaseLeague.LeagueType.class),
                 DAOUtils.getInteger(rs, "clan.games")
             );
+        if(STD_EXTRACTOR == null) STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
     }
 
     public static RowMapper<Clan> getStdRowMapper()
     {
         return STD_ROW_MAPPER;
+    }
+
+    public static ResultSetExtractor<Clan> getStdExtractor()
+    {
+        return STD_EXTRACTOR;
     }
 
     private MapSqlParameterSource createParameterSource(Clan clan)
