@@ -341,6 +341,8 @@ public class ClanDAO
 
     public List<Clan> findByIds(Integer... ids)
     {
+        if(ids.length == 0) return List.of();
+
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", List.of(ids));
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
