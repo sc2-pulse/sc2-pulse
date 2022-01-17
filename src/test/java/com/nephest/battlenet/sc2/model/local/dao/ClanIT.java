@@ -29,6 +29,7 @@ import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
@@ -158,9 +159,28 @@ public class ClanIT
             .alwaysDo(print())
             .build();
 
+        testIdsSearch(mvc);
         testTagSearch(mvc);
         testCursorSearch(mvc, ClanDAO.Cursor.ACTIVE_MEMBERS, clanCount, 1, clanCount);
         testCursorSearch(mvc, ClanDAO.Cursor.AVG_RATING, clanCount + 1, 2, clanCount);
+    }
+
+    private void testIdsSearch(MockMvc mvc)
+    throws Exception
+    {
+        Clan[] clans = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/id/1,5,7")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        assertEquals(3, clans.length);
+        Arrays.sort(clans, Comparator.comparing(Clan::getId));
+        assertEquals(1, clans[0].getId());
+        assertEquals(5, clans[1].getId());
+        assertEquals(7, clans[2].getId());
     }
 
     private void testTagSearch(MockMvc mvc)
