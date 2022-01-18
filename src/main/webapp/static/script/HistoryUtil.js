@@ -256,6 +256,16 @@ class HistoryUtil
                 lazyPromises.push(e=>FormUtil.setFormState(document.querySelector("#form-online"), params));
                 promises.push(SeasonUtil.updateSeasonState(params));
                 break;
+            case "clan-search":
+                scrollTo = "search-result-clan-all";
+                lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
+                lazyPromises.push(e=>FormUtil.setFormState(document.querySelector("#form-search-clan"), params));
+                promises.push(HistoryUtil.callWithArguments(
+                    (p, reqParams)=>ClanUtil.updateClanSearch(p, reqParams[0], reqParams[1], reqParams[2], reqParams[3], reqParams[4]),
+                    params,
+                    ClanUtil.REQUIRED_CURSOR_PARAMETERS
+                ));
+                break;
             case "following-ladder":
                 LadderUtil.restoreLadderFormState(document.getElementById("form-following-ladder"), params);
                 scrollTo = "following-ladder";

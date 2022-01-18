@@ -81,7 +81,8 @@ const VIEW = Object.freeze
     TEAM_BUFFER: {name: "team-buffer", order: 8},
     TEAM_MMR:{name: "team-mmr", order: 9},
     CHARACTER_REPORTS: {name:"all-character-reports", order: 10},
-    FOLLOWING_CHARACTERS: {name: "following-characters", order: 11}
+    FOLLOWING_CHARACTERS: {name: "following-characters", order: 11},
+    CLAN_SEARCH: {name: "clan-search", order: 12}
 });
 
 const VIEW_DATA = Object.freeze
@@ -135,4 +136,35 @@ const TIER_RANGE = Object.freeze
     16: {bottomThreshold: 97.333, league: LEAGUE.BRONZE, tierType: 0, order: 16},
     17: {bottomThreshold: 98.666, league: LEAGUE.BRONZE, tierType: 1, order: 17},
     18: {bottomThreshold: 100, league: LEAGUE.BRONZE, tierType: 2, order: 18}
+});
+
+const CLAN_CURSOR = Object.freeze
+({
+    ACTIVE_MEMBERS:
+    {
+        name: "active-members",
+        fullName: "ACTIVE_MEMBERS",
+        getter: (c)=>c.activeMembers,
+        minParamName: "minActiveMembers",
+        maxParamName: "maxActiveMembers",
+        order: 1
+    },
+    AVG_RATING:
+    {
+        name: "average-rating",
+        fullName: "AVG_RATING",
+        getter: (c)=>c.avgRating,
+        minParamName: "minAverageRating",
+        maxParamName: "maxAverageRating",
+        order: 2
+    },
+    GAMES_PER_ACTIVE_MEMBER:
+    {
+        name: "games-per-active-member",
+        fullName: "GAMES_PER_ACTIVE_MEMBER",
+        getter: (c)=>Math.round(c.games / c.activeMembers),
+        minParamName: "minGamesPerActiveMember",
+        maxParamName: "maxGamesPerActiveMember",
+        order: 3
+    }
 });

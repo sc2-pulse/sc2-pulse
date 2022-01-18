@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -165,6 +165,8 @@
             .split(",");
         const MATCH_BATCH_SIZE = /*[[${@ladderMatchDAO.getResultsPerPage()}]]*/ '';
         const MATCH_DURATION_OFFSET = /*[[${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).DURATION_OFFSET}]]*/ '';
+        const CLAN_STATS_DEPTH_DAYS = /*[[${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_DEPTH_DAYS}]]*/ '';
+        const CLAN_MAX_ADDITIONAL_CURSOR_FILTER = /*[[${T(com.nephest.battlenet.sc2.web.controller.ClanController).MAX_ADDITIONAL_CURSOR_FILTER}]]*/ '';
         const AUTHENTICATED = /*[[${#authentication?.name}]]*/ '';
         const SESSION_TIMEOUT_SECONDS = parseInt(/*[[${!#strings.isEmpty(@environment.getProperty('server.servlet.session.timeout'))
             ? @environment.getProperty('server.servlet.session.timeout')
@@ -194,6 +196,7 @@
             <script th:src="@{/static/script/Util.js}"></script>
             <script th:src="@{/static/script/ViewUtil.js}"></script>
             <script th:src="@{/static/script/FormUtil.js}"></script>
+            <script th:src="@{/static/script/ClanUtil.js}"></script>
         </th:block>
         <th:block th:case="false">
             <script th:src="@{/static/script/sc2-restful.min.js(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"></script>

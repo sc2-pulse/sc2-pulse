@@ -47,6 +47,7 @@ class SC2Restful
             case START_MODE.FULL:
                 LadderUtil.enhanceLadderForm();
                 CharacterUtil.enhanceSearchForm();
+                ClanUtil.enhanceClanSearchForm();
                 CharacterUtil.enhanceAutoClanSearch();
                 CharacterUtil.enhanceLoadAllCharacterReportsButton();
                 LadderUtil.enhanceMyLadderForm();

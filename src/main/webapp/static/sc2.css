@@ -205,6 +205,11 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     word-break: break-word;
 }
 
+#form-search-clan input[type="number"]
+{
+    max-width: 6em !important;
+}
+
 .table
 {
     font-size: 0.875rem;

@@ -1,0 +1,153 @@
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+    <title>Settings</title>
+</head>
+<html>
+<body>
+<section id="search-all" class="tab-pane fade" th:fragment="search">
+    <ul id="search-tabs" class="nav nav-fill nav-pills nav-pills-main mb-3 justify-content-center" role="tablist">
+        <li class="nav-item">
+            <a
+                    id="search-tab"
+                    class="nav-link active"
+                    data-toggle="pill"
+                    data-target="#search"
+                    href="#search"
+                    role="tab"
+                    aria-controls="search"
+                    aria-selected="true"
+            >
+                Player
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
+                    id="search-clan-tab"
+                    class="nav-link"
+                    data-toggle="pill"
+                    data-target="#search-clan"
+                    href="#search-clan"
+                    role="tab"
+                    aria-controls="search-clan"
+                    aria-selected="false"
+            >
+                Clan
+            </a>
+        </li>
+    </ul>
+    <div class="tab-content">
+    <section id="search" class="tab-pane fade show active"
+             data-view-name="character-search"
+             data-view-title="Player search"
+             data-view-description="Find a StarCraft2 player by name, professional nickname, BattleTag, or profile link. Info includes: full profile, best race, best MMR, games played, BattleTag."
+    >
+        <header>
+            <h2>Find players by name, BattleTag, clan tag, or profile link</h2>
+            <form id="form-search" class="form-inline justify-content-center">
+                <label class="sr-only" for="search-player-name">name, btag#123, [cLaN], link</label>
+                <input type="text" class="form-control mb-3 c-autofocus" id="search-player-name" name="name" placeholder="name, btag#123, [cLaN], link" required="required"/>
+                <button class="btn btn-primary mb-3" type="submit">
+                    <span>Find</span>
+                </button>
+            </form>
+        </header>
+        <p>
+            Clan tag search is case sensitive.
+        </p>
+        <div id="search-result-all" class="d-none">
+            <div th:replace="~{fragments/table :: player-search('search-table', 'Players', '')}"></div>
+        </div>
+    </section>
+    <section id="search-clan" class="tab-pane fade"
+             data-view-name="clan-search"
+             data-view-title="Clan search"
+             data-view-description="Find StarCraft2 clan by tag, average MMR, games played, or member count. Info includes: member count, active member count, avg MMR, games played, avg league."
+    >
+        <header>
+            <h2>Clan search</h2>
+            <p th:text="|Only clans that have ${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_MIN_MEMBERS} or more members are listed.
+            All stats except member count are based on ranked 1v1 data.
+             Active member count, average MMR, and games per active member are based on data for the last ${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_DEPTH_DAYS} days.
+             Clan names are not always available. Stats are updated once a day.|"></p>
+            <form id="form-search-clan">
+                <div class="d-inline-block">
+                <div th:replace="~{fragments/search :: clan-search-filter('Active members', 'active-members', 'ActiveMembers')}"></div>
+                <div th:replace="~{fragments/search :: clan-search-filter('Average MMR', 'avg-mmr', 'AvgRating')}"></div>
+                <div th:replace="~{fragments/search :: clan-search-filter('Games per active member', 'games-per-active-member', 'GamesPerActiveMember')}"></div>
+                </div>
+                <div class="form-group d-inline-block mr-2">
+                    <label for="clan-search-sort-by">Order by</label>
+                    <select id="clan-search-sort-by" class="form-control serializable" name="sortBy" required="required">
+                        <option th:each="type : ${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO.Cursor).values()}"
+                                th:value="${type}"
+                                th:text="${type.getName()}"
+                                th:attrappend="selected=${type.isDefault()} ? selected"
+                        >
+                        </option>
+                    </select>
+                </div>
+                <div class="form-group d-inline-block mr-2">
+                    <label for="clan-search-tag-name"><strong>OR</strong> tag/name</label>
+                    <input id="clan-search-tag-name" class="form-control" name="tagOrName" data-group="2"/>
+                </div>
+                <div class="error-out text-danger font-weight-bold mb-3 d-none"></div>
+                <button class="btn btn-primary mb-3 align-bottom" type="submit">
+                    <span>Find</span>
+                </button>
+            </form>
+        </header>
+        <div id="search-result-clan-all" class="d-none">
+            <nav class="pagination-container" aria-label="Clan search navigation top">
+                <ul class="pagination pagination-clan-search justify-content-center flex-wrap" data-pagination-side-button-count="1"></ul>
+            </nav>
+            <div id="search-result-clan-table-container" class="table-responsive">
+                <table id="search-result-clan" class="table table-sm table-hover">
+                    <thead>
+                        <tr>
+                            <th>Avg league</th>
+                            <th>Region</th>
+                            <th>Tag</th>
+                            <th>Active members</th>
+                            <th>Members</th>
+                            <th>Avg MMR</th>
+                            <th>Games per active member(per day)</th>
+                            <th>Name</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <nav class="pagination-container" aria-label="Clan search navigation bottom">
+                <ul class="pagination pagination-clan-search justify-content-center flex-wrap"  data-pagination-side-button-count="1"></ul>
+            </nav>
+        </div>
+    </section>
+    </div>
+</section>
+<div th:fragment="clan-search-filter(name, idRoot, nameSuffix)" class="d-inline-block mr-2">
+    <div th:text="${name}"></div>
+    <div class="form-group d-inline-block">
+        <label th:for="|clan-search-${idRoot}-min|">Min</label>
+        <input type="number"
+               th:min="${T(com.nephest.battlenet.sc2.web.controller.ClanController).MIN_ADDITIONAL_CURSOR_FILTER}"
+               th:max="${T(com.nephest.battlenet.sc2.web.controller.ClanController).MAX_ADDITIONAL_CURSOR_FILTER}"
+               th:data-name="|${name} Min|"
+               class="form-control serializable" th:id="|clan-search-${idRoot}-min|" th:name="|min${nameSuffix}|" value="1">
+    </div>
+    <div class="form-group d-inline-block">
+        <label th:for="|clan-search-${idRoot}-max|">Max</label>
+        <input type="number"
+               th:min="${T(com.nephest.battlenet.sc2.web.controller.ClanController).MIN_ADDITIONAL_CURSOR_FILTER}"
+               th:max="${T(com.nephest.battlenet.sc2.web.controller.ClanController).MAX_ADDITIONAL_CURSOR_FILTER}"
+               th:data-name="|${name} Max|"
+               th:data-greater-than="|#clan-search-${idRoot}-min|"
+               th:data-greater-than-inclusive="true"
+               class="form-control serializable" th:id="|clan-search-${idRoot}-max|" th:name="|max${nameSuffix}|" value="9999">
+    </div>
+</div>
+</body>
+</html>

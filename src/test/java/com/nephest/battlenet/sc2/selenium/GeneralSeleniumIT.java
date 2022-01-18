@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.selenium;
@@ -9,15 +9,14 @@ package com.nephest.battlenet.sc2.selenium;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.By;
-import org.openqa.selenium.WebDriver;
-import org.openqa.selenium.WebElement;
+import org.openqa.selenium.*;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +24,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
@@ -61,6 +61,9 @@ public class GeneralSeleniumIT
     private TeamDAO teamDAO;
 
     @Autowired
+    private ClanDAO clanDAO;
+
+    @Autowired
     private LeagueStatsDAO leagueStatsDAO;
 
     @Autowired
@@ -72,7 +75,11 @@ public class GeneralSeleniumIT
     @Autowired
     private SeasonStateDAO seasonStateDAO;
 
+    @Autowired
+    private JdbcTemplate template;
+
     private static WebDriver driver;
+    private static JavascriptExecutor js;
 
     private static boolean failed = false;
 
@@ -90,6 +97,7 @@ public class GeneralSeleniumIT
                 .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
                 .getDeclaredConstructor()
                 .newInstance();
+        js = (JavascriptExecutor) driver;
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
@@ -166,9 +174,33 @@ public class GeneralSeleniumIT
 
     private static void testSearch(WebDriver driver, WebDriverWait wait)
     {
+        clickAndWait(driver, wait, "#search-all-tab", "#search-all.show.active");
+
+        //player
         clickAndWait(driver, wait, "#search-tab", "#search.show.active");
         driver.findElement(By.cssSelector("#search-player-name")).sendKeys("character");
         clickAndWait(driver, wait, "#form-search button[type=\"submit\"]", "#search-result-all:not(.d-none)");
+
+        //clan
+        testClanCursorSearch(driver, wait);
+    }
+
+    private static void testClanCursorSearch(WebDriver driver, WebDriverWait wait)
+    {
+        clickAndWait(driver, wait, "#search-clan-tab", "#search-clan.show.active");
+        Select cursor = new Select(driver.findElement(By.cssSelector("#clan-search-sort-by")));
+        WebElement tagOrNameInput = driver.findElement(By.cssSelector("#clan-search-tag-name"));
+        for(int i = 0; i < cursor.getOptions().size(); i++)
+        {
+            cursor.selectByIndex(i);
+            js.executeScript("document.querySelector(\"#search-result-clan-all\").classList.add(\"d-none\");");
+            clickAndWait(driver, wait, "#form-search-clan button[type=\"submit\"]", "#search-result-clan-all:not(.d-none)");
+            tagOrNameInput.sendKeys("clan");
+            js.executeScript("document.querySelector(\"#search-result-clan-all\").classList.add(\"d-none\");");
+            clickAndWait(driver, wait, "#form-search-clan button[type=\"submit\"]", "#search-result-clan-all:not(.d-none)");
+            tagOrNameInput.sendKeys(Keys.HOME, Keys.chord(Keys.SHIFT, Keys.END), Keys.BACK_SPACE);
+        }
+        clickAndWait(driver, wait, "#search-result-clan .clan-auto-search", "#search-result-all:not(.d-none)");
     }
 
     private static void testSettings(WebDriver driver, WebDriverWait wait)
@@ -268,6 +300,9 @@ public class GeneralSeleniumIT
             BaseLeagueTier.LeagueTierType.FIRST,
             10
         );
+        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
+        template.execute("UPDATE player_character SET clan_id = " + clan.getId());
+        clanDAO.updateStats();
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         queueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
