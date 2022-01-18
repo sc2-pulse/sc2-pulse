@@ -16,12 +16,17 @@ class Util
         return s;
     }
 
-    static getFormParameters(page = 0, form)
+    static getFormData(page = 0, form)
     {
         if(!form) form = document.getElementById("form-ladder");
         const fd = new FormData(form);
         if (page >= 0) fd.set("page", page);
-        return Util.urlencodeFormData(fd);
+        return fd;
+    }
+
+    static getFormParameters(page = 0, form)
+    {
+        return Util.urlencodeFormData(Util.getFormData(page, form));
     }
 
     static setGeneratingStatus(status, errorText = "Error", error = null)
