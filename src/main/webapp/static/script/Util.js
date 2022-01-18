@@ -16,9 +16,10 @@ class Util
         return s;
     }
 
-    static getFormParameters(page = 0)
+    static getFormParameters(page = 0, form)
     {
-        const fd = new FormData(document.getElementById("form-ladder"));
+        if(!form) form = document.getElementById("form-ladder");
+        const fd = new FormData(form);
         if (page >= 0) fd.set("page", page);
         return Util.urlencodeFormData(fd);
     }
