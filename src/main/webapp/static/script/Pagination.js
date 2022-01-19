@@ -14,6 +14,10 @@ class Pagination
     update(data)
     {
         this.data = data;
+        if(data.empty) {
+            this.disableNext(data.meta.pageDiff);
+            return;
+        }
         if(data.result == null || data.result.length < 1) {
             for(const pagination of document.querySelectorAll(this.cssSelector)) pagination.classList.add("d-none");
             return;
@@ -27,6 +31,15 @@ class Pagination
         {
             PaginationUtil.updatePagination(pagination, params, data.meta.page, data.meta.isLastPage, this.onClick);
             pagination.classList.remove("d-none");
+        }
+    }
+
+    disableNext(minCount = 1)
+    {
+        for(const link of document.querySelectorAll(this.cssSelector + " [data-page-count]"))
+        {
+            if(link.getAttribute("data-page-count") >= minCount && link.getAttribute("data-page-number") != 0)
+                link.parentNode.classList.add("disabled");
         }
     }
 
