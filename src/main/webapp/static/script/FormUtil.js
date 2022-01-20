@@ -13,7 +13,21 @@ class FormUtil
 
             errors.push("You must select at least one " + cRow.getAttribute("data-name"));
         }
+        FormUtil.getGreaterThenErrors(form, errors);
         return errors.join(". ");
+    }
+
+    static getGreaterThenErrors(form, errors)
+    {
+        for(const greaterThan of form.querySelectorAll(":scope [data-greater-than]"))
+        {
+            const inclusive = greaterThan.getAttribute("data-greater-than-inclusive");
+            const lessThan = document.querySelector(greaterThan.getAttribute("data-greater-than"));
+            if(!greaterThan.value || !lessThan.value) continue;
+            const greaterThanValue = greaterThan.getAttribute("type") == "number" ? parseFloat(greaterThan.value) : greaterThan.value;
+            const valid = inclusive ? greaterThanValue >= lessThan.value : greaterThanValue > lessThan.value;
+            if(!valid) errors.push(`${greaterThan.getAttribute("data-name")} must be greater than ${inclusive === 'true' ? 'or equal to' : ''} ${lessThan.getAttribute("data-name")}`);
+        }
     }
 
     static verifyForm(form, out)
