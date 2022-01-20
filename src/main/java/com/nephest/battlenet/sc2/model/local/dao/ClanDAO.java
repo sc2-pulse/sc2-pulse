@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,6 +108,10 @@ public class ClanDAO
 
     private static final String FIND_BY_IDS = "SELECT " + STD_SELECT + "FROM clan WHERE id IN(:ids)";
     private static final String FIND_BY_TAG = "SELECT " + STD_SELECT + "FROM clan WHERE tag = :tag";
+    private static final String FIND_BY_TAG_OR_NAME = "SELECT " + STD_SELECT
+        + "FROM clan "
+        + "WHERE tag = :tag OR LOWER(name) LIKE LOWER(:nameLike) "
+        + "ORDER BY active_members DESC NULLS LAST";
 
     private static final String FIND_BY_CURSOR_TEMPLATE =
         "SELECT " + STD_SELECT
@@ -194,6 +199,8 @@ public class ClanDAO
 
     public static final int PAGE_SIZE = 50;
     public static final int MAX_PAGE_DIFF = 2;
+
+    public static final int NAME_LIKE_MIN_LENGTH = 3;
 
     public enum Cursor
     {
@@ -351,6 +358,16 @@ public class ClanDAO
     {
         SqlParameterSource params = new MapSqlParameterSource().addValue("tag", tag);
         return template.query(FIND_BY_TAG, params, STD_ROW_MAPPER);
+    }
+
+    public List<Clan> findByTagOrName(String search)
+    {
+        String escapedSearch = PostgreSQLUtils.escapeLikePattern(search);
+        String nameLike = search.length() >= NAME_LIKE_MIN_LENGTH ? escapedSearch + "%" : escapedSearch;
+        SqlParameterSource params = new MapSqlParameterSource()
+            .addValue("tag", search)
+            .addValue("nameLike", nameLike);
+        return template.query(FIND_BY_TAG_OR_NAME, params, STD_ROW_MAPPER);
     }
 
     public PagedSearchResult<List<Clan>> findByCursor

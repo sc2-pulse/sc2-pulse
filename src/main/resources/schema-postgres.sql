@@ -29,6 +29,7 @@ CREATE INDEX "ix_clan_search_avg_rating"
 CREATE INDEX "ix_clan_search_games"
     ON "clan"(("games" / "active_members"), "id", "active_members", "avg_rating")
     WHERE "active_members" IS NOT NULL;
+CREATE INDEX "ix_clan_name" ON "clan"(LOWER("name") text_pattern_ops) WHERE "name" IS NOT NULL;
 
 CREATE TABLE "account"
 (

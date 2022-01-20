@@ -134,6 +134,44 @@ public class ClanSearchIT
         assertEquals("clan1Name", clan.getName());
     }
 
+    @Test
+    public void testTagOrNameSearch()
+    throws Exception
+    {
+        Clan[] clansByTag = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/tag-or-name/clan" + (CLAN_COUNT - 1))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertEquals(1, clansByTag.length);
+        Clan clan = clansByTag[0];
+        assertNotNull(clan);
+        assertEquals(CLAN_COUNT, clan.getId());
+        assertEquals("clan" + (CLAN_COUNT - 1), clan.getTag());
+        assertEquals("clan" + (CLAN_COUNT - 1) + "Name", clan.getName());
+
+        Clan[] clansByName = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/tag-or-name/cLAn") //case-insensitive
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertEquals(CLAN_COUNT, clansByName.length);
+
+        //LIKE search must be used only for names that are at least 3 characters long.
+        Clan[] clansByShortName = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/tag-or-name/cl")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertEquals(0, clansByShortName.length);
+    }
+
     @CsvSource
     ({
         "ACTIVE_MEMBERS, " + CLAN_COUNT + ", 1, " + CLAN_COUNT,

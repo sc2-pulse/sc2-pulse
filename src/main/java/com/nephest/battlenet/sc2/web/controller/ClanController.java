@@ -54,6 +54,12 @@ public class ClanController
         return clanDAO.findByTag(tag);
     }
 
+    @GetMapping("/tag-or-name/{term}")
+    public List<Clan> findByTagOrName(@PathVariable("term") String term)
+    {
+        return clanDAO.findByTagOrName(term);
+    }
+
     @GetMapping("/id/{ids}")
     public List<Clan> findByIds(@PathVariable("ids") Integer[] ids)
     {
