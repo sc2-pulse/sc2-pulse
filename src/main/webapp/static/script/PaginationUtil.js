@@ -125,6 +125,24 @@ class PaginationUtil
         return li;
     }
 
+    static resultToPagedResult(result)
+    {
+        const r =
+        {
+            meta:
+            {
+                totalCount: result.length,
+                perPage: result.length,
+                pageCount: 1,
+                page: 1,
+                pageDiff: 0
+            },
+            result: result,
+            empty: result.length == 0 ? false : true
+        };
+        return r;
+    }
+
 }
 
 PaginationUtil.PAGINATION_SIDE_BUTTON_COUNT = 4;
