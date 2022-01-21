@@ -61,4 +61,29 @@ class FormUtil
         input.select();
     }
 
+    static setInputStatsExcludingGroup(form, group, state)
+    {
+        if(form.getAttribute("data-active-group") == group && form.getAttribute("data-active-state") == state) return;
+
+        for(const input of form.querySelectorAll(":scope input")) if(input.getAttribute("data-group") != group) input.disabled = state;
+        for(const select of form.querySelectorAll(":scope select")) if(select.getAttribute("data-group") != group) select.disabled = state;
+        form.setAttribute("data-active-group", group);
+        form.setAttribute("data-active-state", state);
+    }
+
+    static onInputGroupInput(evt)
+    {
+        const group = evt.target.getAttribute("data-group");
+        const state = (evt.target.value && evt.target.value.length > 0) || evt.target.checked;
+        FormUtil.setInputStatsExcludingGroup(evt.target.closest("form"), group, state);
+    }
+
+    static enhanceFormGroups()
+    {
+        for(const input of document.querySelectorAll("input[data-group]")) {
+            input.addEventListener("input", FormUtil.onInputGroupInput);
+            input.addEventListener("change", FormUtil.onInputGroupInput);
+        }
+    }
+
 }
