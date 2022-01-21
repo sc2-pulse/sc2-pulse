@@ -284,4 +284,15 @@ class HistoryUtil
         }));
     }
 
+    static callWithArguments(f, params, requiredParamNames)
+    {
+        const requiredParamVals = [];
+        for(const paramName of requiredParamNames)
+        {
+            requiredParamVals.push(params.get(paramName));
+            params.delete(paramName);
+        }
+        return f(params.toString(), requiredParamVals);
+    }
+
 }
