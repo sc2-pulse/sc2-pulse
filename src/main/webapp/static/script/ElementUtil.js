@@ -400,6 +400,16 @@ class ElementUtil
         return flag;
     }
 
+    static createElement(tag, id, clazz, textContent = null, attributes = [])
+    {
+        const elem = document.createElement(tag);
+        if(id) elem.id = id;
+        elem.setAttribute("class", clazz);
+        if(textContent) elem.textContent = textContent;
+        for(const [name, val] of attributes) elem.setAttribute(name, val);
+        return elem;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
