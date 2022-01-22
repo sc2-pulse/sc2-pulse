@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 @Profile({"!maintenance & !dev"})
 @Component
@@ -100,6 +101,8 @@ public class Cron
     @Autowired
     private UpdateService updateService;
 
+    private final AtomicBoolean updatingLadders = new AtomicBoolean(false);
+
     @PostConstruct
     public void init()
     {
@@ -129,7 +132,10 @@ public class Cron
     @Scheduled(initialDelay = 30_000, fixedDelay = 10_000)
     public void updateAll()
     {
+        if(!updatingLadders.compareAndSet(false, true)) return;
+
         nonStopUpdate();
+        updatingLadders.set(false);
     }
 
     @Scheduled(cron="0 0 5 * * *")
