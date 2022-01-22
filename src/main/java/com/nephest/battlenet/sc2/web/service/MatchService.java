@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -94,19 +94,7 @@ public class MatchService
 
     private void initVars(VarDAO varDAO)
     {
-        webRegions = new SetVar<>(varDAO, "match.web.regions",
-            r->r == null ? null : String.valueOf(r.getId()),
-            s->s == null || s.isEmpty() ? null : Region.from(Integer.parseInt(s)), false);
-        //catch errors to allow autowiring in tests
-        try
-        {
-            webRegions.load();
-            if(!webRegions.getValue().isEmpty()) LOG.warn("Loaded web regions for match history: {}", webRegions.getValue());
-        }
-        catch (Exception ex)
-        {
-            LOG.error(ex.getMessage(), ex);
-        }
+        webRegions = WebServiceUtil.loadRegionSetVar(varDAO, "match.web.regions", "Loaded web regions for match history: {}");
     }
 
     public void addWebRegion(Region region)

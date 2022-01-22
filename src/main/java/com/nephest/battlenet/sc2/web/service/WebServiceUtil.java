@@ -1,9 +1,12 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.SetVar;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
@@ -178,6 +181,24 @@ public class WebServiceUtil
         {
             LogUtil.log(LOG, logLevelFunction.apply(wcre), ExceptionUtils.getRootCauseMessage(wcre));
         }
+    }
+
+    public static SetVar<Region> loadRegionSetVar(VarDAO varDAO, String key, String error)
+    {
+        SetVar<Region> setVar = new SetVar<>(varDAO, key,
+            r->r == null ? null : String.valueOf(r.getId()),
+            s->s == null || s.isEmpty() ? null : Region.from(Integer.parseInt(s)), false);
+        //catch errors to allow autowiring in tests
+        try
+        {
+            setVar.load();
+            if(!setVar.getValue().isEmpty()) LOG.warn(error, setVar.getValue());
+        }
+        catch (Exception ex)
+        {
+            LOG.error(ex.getMessage(), ex);
+        }
+        return setVar;
     }
 
 }
