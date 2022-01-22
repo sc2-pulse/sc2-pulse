@@ -65,6 +65,7 @@ public class AlternativeLadderService
 
     private final Map<Region, InstantVar> discoveryInstants = new HashMap<>();
     private final Map<Region, InstantVar> additionalWebScanInstants = new EnumMap<>(Region.class);
+    private SetVar<Region> profileLadderWebRegions;
     private SetVar<Region> discoveryWebRegions;
 
     @Autowired
@@ -143,8 +144,25 @@ public class AlternativeLadderService
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
         }
+        profileLadderWebRegions = WebServiceUtil.loadRegionSetVar(varDAO, "ladder.alternative.profile.web.regions",
+            "Loaded web regions for alternative profile ladders: {}");
         discoveryWebRegions = WebServiceUtil.loadRegionSetVar(varDAO, "ladder.alternative.discovery.web.regions",
             "Loaded web regions for alternative ladder discovery: {}");
+    }
+
+    private boolean isProfileLadderWebRegion(Region region)
+    {
+        return profileLadderWebRegions.getValue().contains(region);
+    }
+
+    public void addProfileLadderWebRegion(Region region)
+    {
+        if(profileLadderWebRegions.getValue().add(region)) profileLadderWebRegions.save();
+    }
+
+    public void removeProfileLadderWebRegion(Region region)
+    {
+        if(profileLadderWebRegions.getValue().remove(region)) profileLadderWebRegions.save();
     }
 
     public boolean isDiscoveryWebRegion(Region region)
@@ -169,24 +187,18 @@ public class AlternativeLadderService
         if(discoveryInstant == null
             || System.currentTimeMillis() - discoveryInstant.toEpochMilli() >= DISCOVERY_TIME_FRAME.toMillis())
         {
-            discoverSeason(season, isWeb(season.getRegion()));
+            discoverSeason(season, isProfileLadderWebRegion(season.getRegion()));
             return;
         }
 
         updateOrAdditionalWebUpdate(season, queueTypes, leagues);
     }
 
-    private boolean isWeb(Region region)
-    {
-        return api.getErrorRate(region, false) > WEB_API_ERROR_RATE_THRESHOLD
-            && api.getErrorRate(region, true) <= WEB_API_ERROR_RATE_THRESHOLD;
-    }
-
     private boolean isAdditionalWebUpdate(Region region)
     {
         Instant discoveryInstant = discoveryInstants.get(region).getValue();
         Instant additionalScanInstant = additionalWebScanInstants.get(region).getValue();
-        return isWeb(region)
+        return isProfileLadderWebRegion(region)
             && (discoveryInstant != null
                 && System.currentTimeMillis() - discoveryInstant.toEpochMilli()
                     >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis())

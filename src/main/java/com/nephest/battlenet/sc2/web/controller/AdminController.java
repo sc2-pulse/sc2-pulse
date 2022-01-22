@@ -42,6 +42,18 @@ public class AdminController
         statsService.removeForcedAlternativeRegion(region);
     }
 
+    @PostMapping("/alternative/profile/ladder/web/region/{region}")
+    public void addAlternativeProfileLadderWebRegion(@PathVariable("region") Region region)
+    {
+        alternativeLadderService.addProfileLadderWebRegion(region);
+    }
+
+    @DeleteMapping("/alternative/profile/ladder/web/region/{region}")
+    public void removeAlternativeProfileLadderWebRegion(@PathVariable("region") Region region)
+    {
+        alternativeLadderService.removeProfileLadderWebRegion(region);
+    }
+
     @PostMapping("/alternative/discovery/web/region/{region}")
     public void addAlternativeWebRegion(@PathVariable("region") Region region)
     {
