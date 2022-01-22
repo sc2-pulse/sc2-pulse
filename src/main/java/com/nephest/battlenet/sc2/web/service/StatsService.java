@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -299,7 +299,7 @@ public class StatsService
         for(Region region : regions)
         {
             UpdateContext regionalContext = getLadderUpdateContext(region, updateContext);
-            BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
+            BlizzardSeason bSeason = getCurrentOrLastOrExistingSeason(region, maxSeason);
             Season season = seasonDao.merge(Season.of(bSeason, region));
             createLeagues(season);
             updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, regionalContext);
@@ -608,7 +608,7 @@ public class StatsService
         int maxSeason = seasonDao.getMaxBattlenetId();
         for(Region region : regions)
         {
-            BlizzardSeason bSeason = api.getCurrentOrLastSeason(region, maxSeason).block();
+            BlizzardSeason bSeason = getCurrentOrLastOrExistingSeason(region, maxSeason);
             long maxId = getMaxLadderId(bSeason, region);
             if(maxId < 0) {
                 if(alternativeRegions.add(region))
