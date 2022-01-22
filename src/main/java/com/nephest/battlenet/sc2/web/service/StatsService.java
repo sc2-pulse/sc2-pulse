@@ -46,7 +46,7 @@ public class StatsService
     public static final int STALE_LADDER_DEPTH = 10;
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 2;
     public static final int LADDER_BATCH_SIZE = 100;
-    public static final int EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD = 10;
+    public static final int EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD = 3;
     public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(2);
 
     @Autowired
