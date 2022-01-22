@@ -119,6 +119,7 @@ mvn spring-boot:run
 The default config expects you to use different API clients/keys for each region. You **must** reduce the 
 `BlizzardSC2API.REQUESTS_PER_SECOND_CAP` to 25 if you want to use one API client for all regions. 
 ## Alternative update
+### Legacy and profile ladders
 The Blizzard API can sometimes break and return stale data. The app checks the API state before every update and will
 switch the endpoint route if any problems are found. This happens automatically and individually for each region,
 so you can have a situation when KR region uses the alternative route, while other regions use the usual route.
