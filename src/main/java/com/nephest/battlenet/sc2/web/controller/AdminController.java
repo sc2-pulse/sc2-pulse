@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
@@ -21,6 +22,9 @@ public class AdminController
     private StatsService statsService;
 
     @Autowired
+    private AlternativeLadderService alternativeLadderService;
+
+    @Autowired
     private BlizzardSC2API sc2API;
 
     @Autowired
@@ -36,6 +40,18 @@ public class AdminController
     public void removeForcedAlternativeRegion(@PathVariable("region") Region region)
     {
         statsService.removeForcedAlternativeRegion(region);
+    }
+
+    @PostMapping("/alternative/discovery/web/region/{region}")
+    public void addAlternativeWebRegion(@PathVariable("region") Region region)
+    {
+        alternativeLadderService.addDiscoveryWebRegion(region);
+    }
+
+    @DeleteMapping("/alternative/discovery/web/region/{region}")
+    public void removeAlternativeWebRegion(@PathVariable("region") Region region)
+    {
+        alternativeLadderService.removeDiscoveryWebRegion(region);
     }
 
     @PostMapping("/blizzard/api/region/{region}/force/{force}")

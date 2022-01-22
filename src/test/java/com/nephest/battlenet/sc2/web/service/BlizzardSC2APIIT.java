@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -154,7 +154,7 @@ public class BlizzardSC2APIIT
         long ladderLongId = api.getLeague(region, bSeason, leagueType, queueType,teamType, true)
             .block()
             .getTiers()[0].getDivisions()[0].getLadderId();
-        Tuple3<Region, BlizzardPlayerCharacter[], Long> ladderId = api.getProfileLadderId(region, ladderLongId).block();
+        Tuple3<Region, BlizzardPlayerCharacter[], Long> ladderId = api.getProfileLadderId(region, ladderLongId, false).block();
         assertEquals(region, ladderId.getT1());
         assertEquals(ladderLongId, ladderId.getT3());
         assertNotNull(ladderId.getT2());
@@ -223,7 +223,7 @@ public class BlizzardSC2APIIT
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, mock(BlizzardTierDivision.class)), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, 1L), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getMatches(SERRAL, false), VALID_MATCHES, server, RETRY_COUNT);
-        WebServiceTestUtil.testRetrying(api.getProfileLadderId(Region.US, 292783), VALID_LEGACY_LADDER, server, RETRY_COUNT);
+        WebServiceTestUtil.testRetrying(api.getProfileLadderId(Region.US, 292783, false), VALID_LEGACY_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderMono(Region.US, BLIZZARD_CHARACTER, 292783L, queueTypes, false),
             VALID_PROFILE_LADDER, server, RETRY_COUNT);
         server.shutdown();

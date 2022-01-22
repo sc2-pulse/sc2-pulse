@@ -624,7 +624,7 @@ public class StatsService
     private Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> chainStaleDataCheck(Region region, long ladderId, int count)
     {
         return Mono.defer(()->
-            api.getProfileLadderId(region, ladderId)
+            api.getProfileLadderId(region, ladderId, alternativeLadderService.isDiscoveryWebRegion(region))
                 .doOnNext(l->{
                     if(alternativeRegions.add(region))
                         LOG.warn("Stale data detected for {}, added this region to alternative update", region);

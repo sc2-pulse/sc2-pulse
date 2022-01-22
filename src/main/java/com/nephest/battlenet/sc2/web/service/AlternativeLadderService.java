@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -65,6 +65,7 @@ public class AlternativeLadderService
 
     private final Map<Region, InstantVar> discoveryInstants = new HashMap<>();
     private final Map<Region, InstantVar> additionalWebScanInstants = new EnumMap<>(Region.class);
+    private SetVar<Region> discoveryWebRegions;
 
     @Autowired
     private AlternativeLadderService alternativeLadderService;
@@ -124,6 +125,8 @@ public class AlternativeLadderService
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 100;
     public static final int LEGACY_LADDER_BATCH_SIZE = 500;
+    public static final int ALTERNATIVE_LADDER_WEB_ERROR_THRESHOLD = 50;
+    public static final int LEGACY_LADDER_WEB_BATCH_SIZE = 200;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
     @PostConstruct
@@ -140,6 +143,23 @@ public class AlternativeLadderService
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
         }
+        discoveryWebRegions = WebServiceUtil.loadRegionSetVar(varDAO, "ladder.alternative.discovery.web.regions",
+            "Loaded web regions for alternative ladder discovery: {}");
+    }
+
+    public boolean isDiscoveryWebRegion(Region region)
+    {
+        return discoveryWebRegions.getValue().contains(region);
+    }
+
+    public void addDiscoveryWebRegion(Region region)
+    {
+        if(discoveryWebRegions.getValue().add(region)) discoveryWebRegions.save();
+    }
+
+    public void removeDiscoveryWebRegion(Region region)
+    {
+        if(discoveryWebRegions.getValue().remove(region)) discoveryWebRegions.save();
     }
 
     public void updateSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
@@ -265,20 +285,30 @@ public class AlternativeLadderService
     private List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
     (Season season, long lastDivision)
     {
+        boolean webDiscovery = isDiscoveryWebRegion(season.getRegion());
+        if(webDiscovery) LOG.warn("Using web API for ladder discovery for {}", season);
+        int errorThreshold = webDiscovery ? ALTERNATIVE_LADDER_WEB_ERROR_THRESHOLD : ALTERNATIVE_LADDER_ERROR_THRESHOLD;
+        int batchSize = webDiscovery ? LEGACY_LADDER_WEB_BATCH_SIZE : LEGACY_LADDER_BATCH_SIZE;
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds = new ArrayList<>();
         AtomicInteger discovered = new AtomicInteger(1);
         while(discovered.get() > 0)
         {
             discovered.set(0);
-            api.getProfileLadderIds(season.getRegion(), lastDivision,lastDivision + LEGACY_LADDER_BATCH_SIZE)
+            api.getProfileLadderIds
+            (
+                season.getRegion(),
+                lastDivision,
+                lastDivision + batchSize,
+                webDiscovery
+            )
                 .toStream()
                 .forEach((id)->{
                     profileLadderIds.add(id);
                     discovered.getAndIncrement();
                     LOG.debug("Ladder discovered: {} {}", id.getT1(), id.getT3());
                 });
-            if(LEGACY_LADDER_BATCH_SIZE - discovered.get() > ALTERNATIVE_LADDER_ERROR_THRESHOLD) break;
-            lastDivision+=LEGACY_LADDER_BATCH_SIZE;
+            if(batchSize - discovered.get() > errorThreshold) break;
+            lastDivision+=batchSize;
         }
         return profileLadderIds;
     }

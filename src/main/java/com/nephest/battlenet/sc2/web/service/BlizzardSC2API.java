@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -450,20 +450,22 @@ extends BaseAPI
             .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipMono(getLadder(region, d).zipWith(Mono.just(d))));
     }
 
-    public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId(Region originalRegion, long ladderId)
+    public Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderId
+    (Region originalRegion, long ladderId, boolean web)
     {
         Region region = getRegion(originalRegion);
-        RetrySpec retry = getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND, false);
+        ApiContext context = getContext(region, web);
+        RetrySpec retry = getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND, web);
         /*
             profile id discovery is a very important task, add retry spec if there is a chance of getting
             the correct data
          */
-        if(retry == WebServiceUtil.RETRY_NEVER && getErrorRate(region, false) < 100) retry = WebServiceUtil.RETRY;
+        if(retry == WebServiceUtil.RETRY_NEVER && getErrorRate(region, web) < 100) retry = WebServiceUtil.RETRY;
         return getWebClient(region)
             .get()
             .uri
             (
-                regionUri != null ? regionUri : (region.getBaseUrl() + "sc2/legacy/ladder/{0}/{1}"),
+                regionUri != null ? regionUri : (context.getBaseUrl() + "sc2/legacy/ladder/{0}/{1}"),
                 originalRegion.getId(), ladderId
             )
             .accept(APPLICATION_JSON)
@@ -494,29 +496,29 @@ extends BaseAPI
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(rateLimiters.get(region).retryWhen(retry))
-            .delaySubscription(rateLimiters.get(region).requestSlot())
-            .doOnRequest(s->healthMonitors.get(region).addRequest())
-            .doOnError(t->healthMonitors.get(region).addError());
+            .retryWhen(context.getRateLimiter().retryWhen(retry))
+            .delaySubscription(context.getRateLimiter().requestSlot())
+            .doOnRequest(s->context.getHealthMonitor().addRequest())
+            .doOnError(t->context.getHealthMonitor().addError());
     }
 
     public Flux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
-    (Region region, long from, long toExcluded)
+    (Region region, long from, long toExcluded, boolean web)
     {
         return Flux.fromStream(LongStream.range(from, toExcluded).boxed())
             .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipLogLevelMono(
-                getProfileLadderId(region, l),
+                getProfileLadderId(region, l, web),
                 (t)->ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound
                     ? LogUtil.LogLevel.DEBUG
                     : LogUtil.LogLevel.WARNING));
     }
 
     public Flux<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
-    (Region region, Iterable<? extends Long> ids)
+    (Region region, Iterable<? extends Long> ids, boolean web)
     {
         return Flux.fromIterable(ids)
             .flatMap(l->WebServiceUtil.getOnErrorLogAndSkipLogLevelMono(
-                getProfileLadderId(region, l),
+                getProfileLadderId(region, l, web),
                 (t)->ExceptionUtils.getRootCause(t) instanceof WebClientResponseException.NotFound
                     ? LogUtil.LogLevel.DEBUG
                     : LogUtil.LogLevel.WARNING));
