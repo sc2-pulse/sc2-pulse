@@ -138,7 +138,11 @@ You can manually remap some endpoints to use another API host. This is useful wh
 See `addForceAPIRegion` method of the [AdminController](src/main/java/com/nephest/battlenet/sc2/web/controller/AdminController.java).
 
 ### Web API
-The blizzard web API is used as a last resort when everything else breaks. Even though the API is not forbidden via robots.txt, the 
+The Blizzard web API can be used as a last resort when everything else breaks. It is disabled by default. Some
+endpoints can be manually redirected to web API via AdminController. 
+
+#### Blizzard ToS compatibility
+Even though the API is not forbidden via robots.txt, the 
 [Blizzard Developer API Terms Of Use](https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use) 
 clause directly forbids it
 ```
@@ -155,14 +159,7 @@ To ensure that the potential violation is a minor one, the following rules are a
 * a very low request rate is used
 * the data is considered as if it came from the regular dev API and the relevant ToS and Privacy Policy are applied.
 
-It is used only when everything else breaks, this way we show the motivation behind it: we don't want to datamine/disrupt
-the services or violate the terms, we'll happily use the proper endpoints if they are available. 
-
-The community likes the stats, and amateur tournaments rely on it, so I feel like such a minor violation is not a big 
-deal, but it's up to Blizzard to decide what is allowed and what is not. I will remove it if Blizzard doesn't like it.
-
-#### Manual web API
-Some endpoints can be manually redirected to web API via AdminController.
+**Use it at your own risk.**
 
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
