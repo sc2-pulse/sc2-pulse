@@ -26,7 +26,6 @@ import org.springframework.web.reactive.function.client.WebClientResponseExcepti
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
-import reactor.netty.resources.LoopResources;
 import reactor.util.retry.RetrySpec;
 
 import java.time.Duration;
@@ -64,8 +63,6 @@ public class WebServiceUtil
         .evictInBackground(Duration.ofSeconds(30))
         .lifo()
         .build();
-    public static final LoopResources LOOP_RESOURCES =
-        LoopResources.create("sc2-http", Math.max(Runtime.getRuntime().availableProcessors(), 7), true);
     public static Function<? super Throwable,? extends Mono<?>> LOG_ROOT_MESSAGE_AND_RETURN_EMPTY = t->{
         LOG.error(ExceptionUtils.getRootCauseMessage(t));
         return Mono.empty();
@@ -99,7 +96,6 @@ public class WebServiceUtil
                     c-> c.addHandlerLast(new ReadTimeoutHandler((int) ioTimeout.toSeconds()))
                         .addHandlerLast(new WriteTimeoutHandler((int) ioTimeout.toSeconds()))
                 )
-            .runOn(LOOP_RESOURCES)
             .compress(true);
     }
 
