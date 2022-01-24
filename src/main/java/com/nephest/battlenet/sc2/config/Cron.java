@@ -166,6 +166,8 @@ public class Cron
             Instant lastMatchInstant = matchInstant.getValue();
 
             doUpdateSeasons();
+            //There is a long pause here due to stats calculations in the DB, a good place to do a GC run, make a hint.
+            System.gc();
             statsService.afterCurrentSeasonUpdate(updateService.getUpdateContext(null), false);
             calculateHeavyStats();
             updateService.updated(begin);
