@@ -149,15 +149,15 @@ ALTER TABLE "clan"
     ADD COLUMN "games" INTEGER;
 
 CREATE INDEX "ix_clan_search_members"
-    ON "clan"("members", "id", "active_members", "avg_rating", ("games" / "active_members"))
+    ON "clan"("members", "id", "active_members", "avg_rating", ("games" / "active_members"), "region")
     WHERE "active_members" IS NOT NULL;
 CREATE INDEX "ix_clan_search_active_members"
-    ON "clan"("active_members", "id", ("games" / "active_members"), "avg_rating")
+    ON "clan"("active_members", "id", ("games" / "active_members"), "avg_rating", "region")
     WHERE "active_members" IS NOT NULL;
 CREATE INDEX "ix_clan_search_avg_rating"
-    ON "clan"("avg_rating", "id", ("games" / "active_members"), "active_members")
+    ON "clan"("avg_rating", "id", ("games" / "active_members"), "active_members", "region")
     WHERE "active_members" IS NOT NULL;
 CREATE INDEX "ix_clan_search_games"
-    ON "clan"(("games" / "active_members"), "id", "active_members", "avg_rating")
+    ON "clan"(("games" / "active_members"), "id", "active_members", "avg_rating", "region")
     WHERE "active_members" IS NOT NULL;
 CREATE INDEX "ix_clan_name" ON "clan"(LOWER("name") text_pattern_ops) WHERE "name" IS NOT NULL;

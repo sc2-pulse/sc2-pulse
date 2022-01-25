@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -35,7 +36,8 @@ public class ClanController
         @RequestParam(name="minGamesPerActiveMember", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER) int minGamesPerActiveMember,
         @RequestParam(name="maxGamesPerActiveMember", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER) int maxGamesPerActiveMember,
         @RequestParam(name="minAvgRating", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER) int minAvgRating,
-        @RequestParam(name="maxAvgRating", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER) int maxAvgRating
+        @RequestParam(name="maxAvgRating", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER) int maxAvgRating,
+        @RequestParam(name="region", required = false) Region region
     )
     {
         return clanDAO.findByCursor
@@ -44,6 +46,7 @@ public class ClanController
             minActiveMembers, maxActiveMembers,
             minGamesPerActiveMember, maxGamesPerActiveMember,
             minAvgRating, maxAvgRating,
+            region,
             page, pageDiff
         );
     }

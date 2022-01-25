@@ -67,8 +67,9 @@ public class ClanSearchIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
 
             Clan[] clans = new Clan[CLAN_COUNT];
+            Region[] regions = Region.values();
             for(int i = 0; i < CLAN_COUNT; i++)
-                clans[i] = new Clan(null, "clan" + i, Region.EU, "clan" + i + "Name");
+                clans[i] = new Clan(null, "clan" + i, regions[i % regions.length], "clan" + i + "Name");
             clanDAO.merge(clans);
             template.execute
             (
@@ -241,12 +242,32 @@ public class ClanSearchIT
         for(int i = 0; i < filteredByAvgRatingResult.getResult().size(); i++)
             assertEquals(18 - i, filteredByAvgRatingResult.getResult().get(i).getId());
 
+        //filtered by region
+        Region[] regions = Region.values();
+        PagedSearchResult<List<Clan>> filteredByRegion = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1?region=EU",
+                cursor, max, max
+            )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        assertEquals(CLAN_COUNT / regions.length, filteredByRegion.getResult().size());
+
+        int euIx = Arrays.binarySearch(regions, Region.EU);
+        int firstId = CLAN_COUNT - (regions.length - euIx) + 1;
+        for(int i = 0; i < filteredByRegion.getResult().size(); i++)
+            assertEquals(firstId - i * regions.length, filteredByRegion.getResult().get(i).getId());
+
         //filtered by all
         PagedSearchResult<List<Clan>> filteredByAllResult = objectMapper.readValue(mvc.perform
         (
             get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
                     + "?minActiveMembers={min}&maxActiveMembers={max}"
-                    + "&minAvgRating={min}&maxAvgRating={max}",
+                    + "&minAvgRating={min}&maxAvgRating={max}"
+                    + "&region=EU",
                 cursor, max, max, 10, 19, 10, 19
             )
                 .contentType(MediaType.APPLICATION_JSON)
@@ -254,9 +275,10 @@ public class ClanSearchIT
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
 
-        assertEquals(9, filteredByAllResult.getResult().size());
+        assertEquals(3, filteredByAllResult.getResult().size());
+        int firstAllId = 18;
         for(int i = 0; i < filteredByAllResult.getResult().size(); i++)
-            assertEquals(18 - i, filteredByAllResult.getResult().get(i).getId());
+            assertEquals(firstAllId - i * regions.length, filteredByAllResult.getResult().get(i).getId());
     }
 
 }

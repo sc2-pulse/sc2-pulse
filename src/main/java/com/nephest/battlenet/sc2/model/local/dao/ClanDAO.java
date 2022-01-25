@@ -120,6 +120,7 @@ public class ClanDAO
         + "AND active_members BETWEEN :minActiveMembers AND :maxActiveMembers "
         + "AND games / active_members BETWEEN :minGamesPerActiveMember AND :maxGamesPerActiveMember "
         + "AND avg_rating BETWEEN :minAvgRating AND :maxAvgRating "
+        + "AND (:region::integer IS NULL OR region = :region) "
         + "ORDER BY %2$s "
         + "LIMIT :limit OFFSET :offset";
 
@@ -392,6 +393,7 @@ public class ClanDAO
         int minActiveMembers, int maxActiveMembers,
         int minGamesPerActiveMember, int maxGamesPerActiveMember,
         int minAvgRating, int maxAvgRating,
+        Region region,
         int page, int pageDiff
     )
     {
@@ -419,6 +421,7 @@ public class ClanDAO
             .addValue("maxGamesPerActiveMember", maxGamesPerActiveMember)
             .addValue("minAvgRating", minAvgRating)
             .addValue("maxAvgRating", maxAvgRating)
+            .addValue("region", conversionService.convert(region, Integer.class))
             .addValue("limit", PAGE_SIZE)
             .addValue("offset", offset);
 
