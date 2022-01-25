@@ -166,5 +166,14 @@ const CLAN_CURSOR = Object.freeze
         minParamName: "minGamesPerActiveMember",
         maxParamName: "maxGamesPerActiveMember",
         order: 3
+    },
+    MEMBERS:
+    {
+        name: "members",
+        fullName: "MEMBERS",
+        getter: (c)=>c.members,
+        minParamName: "minMembers",
+        maxParamName: "maxMembers",
+        order: 4
     }
 });

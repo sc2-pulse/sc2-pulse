@@ -75,6 +75,7 @@ public class ClanSearchIT
                 "UPDATE clan "
                     + "SET active_members = id, "
                     + "avg_rating = id + 1, "
+                    + "members = id + 3, "
                     + "games = id * 2"
             );
 
@@ -175,7 +176,8 @@ public class ClanSearchIT
     @CsvSource
     ({
         "ACTIVE_MEMBERS, " + CLAN_COUNT + ", 1, " + CLAN_COUNT,
-        "AVG_RATING, " + CLAN_COUNT + 1 + ", 2, " + CLAN_COUNT
+        "AVG_RATING, " + CLAN_COUNT + 1 + ", 2, " + CLAN_COUNT,
+        "MEMBERS, " + CLAN_COUNT + 2 + ", 3, " + CLAN_COUNT
     })
     @ParameterizedTest
     public void testCursorSearch(ClanDAO.Cursor cursor, int max, int min, int clanCount)

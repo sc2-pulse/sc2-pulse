@@ -150,6 +150,15 @@ public class ClanDAO
     private static final String FIND_BY_AVG_RATING_CURSOR_REVERSED =
         String.format(FIND_BY_AVG_RATING_CURSOR_TEMPLATE, "ASC", ">");
 
+    private static final String FIND_BY_MEMBERS_TEMPLATE =
+        String.format(FIND_BY_CURSOR_TEMPLATE,
+            "(members, id) %2$s (:cursor, :idCursor)",
+            "members %1$s, id %1$s");
+    private static final String FIND_BY_MEMBERS_CURSOR =
+        String.format(FIND_BY_MEMBERS_TEMPLATE, "DESC", "<");
+    private static final String FIND_BY_MEMBERS_CURSOR_REVERSED =
+        String.format(FIND_BY_MEMBERS_TEMPLATE, "ASC", ">");
+
     private static final String UPDATE_STATS = "WITH "
         + "character_filter AS (SELECT id FROM player_character WHERE clan_id IN (:clans)), "
         + "all_unwrap AS "
@@ -204,6 +213,13 @@ public class ClanDAO
 
     public enum Cursor
     {
+        MEMBERS
+        (
+            "Total members",
+            false,
+            FIND_BY_MEMBERS_CURSOR,
+            FIND_BY_MEMBERS_CURSOR_REVERSED
+        ),
         ACTIVE_MEMBERS
         (
             "Active members",

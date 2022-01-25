@@ -7,7 +7,8 @@ class ClanUtil
     static updateClanSearchModel(formParams, cursor, cursorValue, idCursor = 0, page = 0, pageDiff = 1)
     {
         const searchParams = new URLSearchParams("?" + formParams);
-        if(!cursorValue) cursorValue = searchParams.get(pageDiff < 0 ? cursor.minParamName : cursor.maxParamName);
+        if(!cursorValue) cursorValue = searchParams.get(pageDiff < 0 ? cursor.minParamName : cursor.maxParamName)
+            || pageDiff < 0 ? CLAN_MIN_ADDITIONAL_CURSOR_FILTER : CLAN_MAX_ADDITIONAL_CURSOR_FILTER;
 
         const previousData = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
         const params =

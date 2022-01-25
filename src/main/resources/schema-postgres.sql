@@ -20,6 +20,9 @@ CREATE TABLE "clan"
         UNIQUE ("tag", "region")
 );
 
+CREATE INDEX "ix_clan_search_members"
+    ON "clan"("members", "id", "active_members", "avg_rating", ("games" / "active_members"))
+    WHERE "active_members" IS NOT NULL;
 CREATE INDEX "ix_clan_search_active_members"
     ON "clan"("active_members", "id", ("games" / "active_members"), "avg_rating")
     WHERE "active_members" IS NOT NULL;
