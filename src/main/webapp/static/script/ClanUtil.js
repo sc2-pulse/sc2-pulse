@@ -47,7 +47,7 @@ class ClanUtil
             } else {
                 const empty = json.result.length == 0;
                 if(empty) {
-                    if(params.page == 0) {
+                    if(params.page == 0 || !Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH)) {
                         Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: json, params: params});
                     } else {
                         const data = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
