@@ -235,11 +235,11 @@
             <section id="ladder-top" class="tab-pane fade show active" data-view-title="MMR Ladder">
                 <h3>MMR Ladder</h3>
                 <nav class="pagination-container" aria-label="Ladder navigation top">
-                    <ul class="pagination pagination-ladder justify-content-center flex-wrap"></ul>
+                    <ul class="pagination pagination-ladder justify-content-center flex-wrap" data-pagination-anchor="#generated-info-all"></ul>
                 </nav>
                 <div th:replace="~{fragments/table :: team('ladder-table-container', 'ladder', '', _)}"></div>
                 <nav class="pagination-container" aria-label="Ladder navigation bottom">
-                    <ul class="pagination pagination-ladder justify-content-center flex-wrap"></ul>
+                    <ul class="pagination pagination-ladder justify-content-center flex-wrap" data-pagination-anchor="#generated-info-all"></ul>
                 </nav>
             </section>
             <section id="stats-global" class="tab-pane fade c-height-linked" data-view-title="Global statistics">

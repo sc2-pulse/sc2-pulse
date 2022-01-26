@@ -89,7 +89,8 @@ class PaginationUtil
         for(const container of document.getElementsByClassName("pagination"))
         {
             const sideButtonCount = container.getAttribute("data-pagination-side-button-count");
-            PaginationUtil.createPagination(container, sideButtonCount || PaginationUtil.PAGINATION_SIDE_BUTTON_COUNT);
+            const anchor = container.getAttribute("data-pagination-anchor");
+            PaginationUtil.createPagination(container, sideButtonCount || PaginationUtil.PAGINATION_SIDE_BUTTON_COUNT, anchor);
         }
         PaginationUtil.PAGINATIONS.set("ladder",
             new Pagination(
@@ -102,22 +103,22 @@ class PaginationUtil
         );
     }
 
-    static createPagination(container, sidePageCount)
+    static createPagination(container, sidePageCount, anchor)
     {
         let i;
         const pageCount = sidePageCount * 2 + 1 + 2 + 2;
         for (i = 0; i < pageCount; i++)
         {
-            container.appendChild(PaginationUtil.createPaginationPage(1, ""));
+            container.appendChild(PaginationUtil.createPaginationPage(1, "", anchor));
         }
     }
 
-    static createPaginationPage(pageNum, label)
+    static createPaginationPage(pageNum, label, anchor)
     {
         const li = document.createElement("li");
         li.classList.add("page-item");
         const page = document.createElement("a");
-        page.setAttribute("href", "#generated-info-all");
+        page.setAttribute("href", anchor);
         page.classList.add("page-link");
         page.textContent = label;
         page.setAttribute("data-page-number", pageNum);
