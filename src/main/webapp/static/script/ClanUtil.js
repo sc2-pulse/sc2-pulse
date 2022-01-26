@@ -118,13 +118,14 @@ class ClanUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return ClanUtil.updateClanSearchModel(formParams, cursor, cursorValue, idCursor, page, pageDiff)
             .then(e => new Promise((res, rej)=>{
-                const searchParams = new URLSearchParams(formParams);
+                const executedParams = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH).params;
+                const searchParams = new URLSearchParams(executedParams.formParams);
                 searchParams.append("type", "clan-search");
-                searchParams.append("sortBy", cursor.fullName);
-                searchParams.append("cursorValue", cursorValue);
-                searchParams.append("idCursor", idCursor);
-                searchParams.append("page", page);
-                searchParams.append("pageDiff", pageDiff);
+                searchParams.append("sortBy", executedParams.cursor.fullName);
+                searchParams.append("cursorValue", executedParams.cursorValue);
+                searchParams.append("idCursor", executedParams.idCursor);
+                searchParams.append("page", executedParams.page);
+                searchParams.append("pageDiff", executedParams.pageDiff);
                 const stringParams = searchParams.toString();
 
                 ClanUtil.updateClanSearchView();
