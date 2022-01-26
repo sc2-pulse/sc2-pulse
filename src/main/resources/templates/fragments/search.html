@@ -71,13 +71,13 @@
             <h2>Clan search</h2>
             <p th:text="|Only clans that have ${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_MIN_MEMBERS} or more members are listed.
             All stats except member count are based on ranked 1v1 data.
-             Active member count, average MMR, and games per active member are based on data for the last ${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_DEPTH_DAYS} days.
+             Active member count, average MMR, and games per active member per day are based on data for the last ${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_DEPTH_DAYS} days.
              Clan names are not always available. Stats are updated once a day.|"></p>
             <form id="form-search-clan">
                 <div class="d-inline-block">
-                <div th:replace="~{fragments/search :: clan-search-filter('Active members', 'active-members', 'ActiveMembers')}"></div>
-                <div th:replace="~{fragments/search :: clan-search-filter('Average MMR', 'avg-mmr', 'AvgRating')}"></div>
-                <div th:replace="~{fragments/search :: clan-search-filter('Games per active member', 'games-per-active-member', 'GamesPerActiveMember')}"></div>
+                <div th:replace="~{fragments/search :: clan-search-filter('Active members', 'active-members', 'ActiveMembers', 1)}"></div>
+                <div th:replace="~{fragments/search :: clan-search-filter('Average MMR', 'avg-mmr', 'AvgRating', 1)}"></div>
+                <div th:replace="~{fragments/search :: clan-search-filter('Games per active member<br/> per day', 'games-per-active-member-per-day', 'GamesPerActiveMemberPerDay', 0.1)}"></div>
                 </div>
                 <div class="form-group d-inline-block mr-2">
                     <label for="clan-search-region">Region</label>
@@ -125,7 +125,7 @@
                             <th>Active members</th>
                             <th>Members</th>
                             <th>Avg MMR</th>
-                            <th>Games per active member(per day)</th>
+                            <th>Games per active member per day</th>
                             <th>Name</th>
                         </tr>
                     </thead>
@@ -139,13 +139,14 @@
     </section>
     </div>
 </section>
-<div th:fragment="clan-search-filter(name, idRoot, nameSuffix)" class="d-inline-block mr-2">
-    <div th:text="${name}"></div>
+<div th:fragment="clan-search-filter(name, idRoot, nameSuffix, step)" class="d-inline-block mr-2">
+    <div th:utext="${name}"></div>
     <div class="form-group d-inline-block">
         <label th:for="|clan-search-${idRoot}-min|">Min</label>
         <input type="number"
                th:min="${T(com.nephest.battlenet.sc2.web.controller.ClanController).MIN_ADDITIONAL_CURSOR_FILTER}"
                th:max="${T(com.nephest.battlenet.sc2.web.controller.ClanController).MAX_ADDITIONAL_CURSOR_FILTER}"
+               th:step="${step}"
                th:data-name="|${name} Min|"
                class="form-control serializable" th:id="|clan-search-${idRoot}-min|" th:name="|min${nameSuffix}|" value="1">
     </div>
@@ -154,6 +155,7 @@
         <input type="number"
                th:min="${T(com.nephest.battlenet.sc2.web.controller.ClanController).MIN_ADDITIONAL_CURSOR_FILTER}"
                th:max="${T(com.nephest.battlenet.sc2.web.controller.ClanController).MAX_ADDITIONAL_CURSOR_FILTER}"
+               th:step="${step}"
                th:data-name="|${name} Max|"
                th:data-greater-than="|#clan-search-${idRoot}-min|"
                th:data-greater-than-inclusive="true"

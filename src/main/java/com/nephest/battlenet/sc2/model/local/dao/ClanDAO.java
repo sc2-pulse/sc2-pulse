@@ -35,6 +35,15 @@ public class ClanDAO
 
     private static final Logger LOG = LoggerFactory.getLogger(ClanDAO.class);
 
+    public static final int CLAN_STATS_BATCH_SIZE = 12;
+    public static final int CLAN_STATS_DEPTH_DAYS = 60;
+    public static final int CLAN_STATS_MIN_MEMBERS = 4;
+
+    public static final int PAGE_SIZE = 50;
+    public static final int MAX_PAGE_DIFF = 2;
+
+    public static final int NAME_LIKE_MIN_LENGTH = 3;
+
     public static final String STD_SELECT_SHORT =
         "clan.id AS \"clan.id\", "
         + "clan.tag AS \"clan.tag\", "
@@ -118,7 +127,8 @@ public class ClanDAO
         + "FROM clan "
         + "WHERE %1$s "
         + "AND active_members BETWEEN :minActiveMembers AND :maxActiveMembers "
-        + "AND games / active_members BETWEEN :minGamesPerActiveMember AND :maxGamesPerActiveMember "
+        + "AND games::double precision / active_members / " + CLAN_STATS_DEPTH_DAYS + " "
+            + "BETWEEN :minGamesPerActiveMemberPerDay AND :maxGamesPerActiveMemberPerDay "
         + "AND avg_rating BETWEEN :minAvgRating AND :maxAvgRating "
         + "AND (:region::integer IS NULL OR region = :region) "
         + "ORDER BY %2$s "
@@ -133,14 +143,14 @@ public class ClanDAO
     private static final String FIND_BY_ACTIVE_MEMBERS_CURSOR_REVERSED =
         String.format(FIND_BY_ACTIVE_MEMBERS_CURSOR_TEMPLATE, "ASC", ">");
 
-    private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR_TEMPLATE =
+    private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_TEMPLATE =
         String.format(FIND_BY_CURSOR_TEMPLATE,
-            "(games / active_members, id) %2$s (:cursor, :idCursor)",
-            "games / active_members %1$s, id %1$s");
-    private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR =
-        String.format(FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR_TEMPLATE, "DESC", "<");
-    private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_REVERSED =
-        String.format(FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR_TEMPLATE, "ASC", ">");
+            "(games::double precision / active_members / %3$s, id) %2$s (:cursor, :idCursor)",
+            "games::double precision / active_members / %3$s %1$s, id %1$s");
+    private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR =
+        String.format(FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_TEMPLATE, "DESC", "<", CLAN_STATS_DEPTH_DAYS);
+    private static final String FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_REVERSED =
+        String.format(FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_TEMPLATE, "ASC", ">", CLAN_STATS_DEPTH_DAYS);
 
     private static final String FIND_BY_AVG_RATING_CURSOR_TEMPLATE =
         String.format(FIND_BY_CURSOR_TEMPLATE,
@@ -203,15 +213,6 @@ public class ClanDAO
     private static RowMapper<Clan> STD_ROW_MAPPER;
     private static ResultSetExtractor<Clan> STD_EXTRACTOR;
 
-    public static final int CLAN_STATS_BATCH_SIZE = 12;
-    public static final int CLAN_STATS_DEPTH_DAYS = 60;
-    public static final int CLAN_STATS_MIN_MEMBERS = 4;
-
-    public static final int PAGE_SIZE = 50;
-    public static final int MAX_PAGE_DIFF = 2;
-
-    public static final int NAME_LIKE_MIN_LENGTH = 3;
-
     public enum Cursor
     {
         MEMBERS
@@ -228,12 +229,12 @@ public class ClanDAO
             FIND_BY_ACTIVE_MEMBERS_CURSOR,
             FIND_BY_ACTIVE_MEMBERS_CURSOR_REVERSED
         ),
-        GAMES_PER_ACTIVE_MEMBER
+        GAMES_PER_ACTIVE_MEMBER_PER_DAY
         (
-            "Games per active member",
+            "Games per active member per day",
             false,
-            FIND_BY_GAMES_PER_ACTIVE_MEMBER_CURSOR,
-            FIND_BY_GAMES_PER_ACTIVE_MEMBER_REVERSED
+            FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR,
+            FIND_BY_GAMES_PER_ACTIVE_MEMBER_PER_DAY_CURSOR_REVERSED
         ),
         AVG_RATING
         (
@@ -389,9 +390,9 @@ public class ClanDAO
 
     public PagedSearchResult<List<Clan>> findByCursor
     (
-        Cursor cursor, int cursorVal, int idCursor,
+        Cursor cursor, double cursorVal, int idCursor,
         int minActiveMembers, int maxActiveMembers,
-        int minGamesPerActiveMember, int maxGamesPerActiveMember,
+        double minGamesPerActiveMemberPerDay, double maxGamesPerActiveMemberPerDay,
         int minAvgRating, int maxAvgRating,
         Region region,
         int page, int pageDiff
@@ -400,7 +401,7 @@ public class ClanDAO
         if
         (
             minActiveMembers > maxActiveMembers
-            || minGamesPerActiveMember > maxGamesPerActiveMember
+            || minGamesPerActiveMemberPerDay > maxGamesPerActiveMemberPerDay
             || minAvgRating > maxAvgRating
         ) throw new IllegalArgumentException("Invalid search range. Min values should be less than max values");
         int pageDiffAbs = Math.abs(pageDiff);
@@ -417,8 +418,8 @@ public class ClanDAO
             .addValue("idCursor", idCursor)
             .addValue("minActiveMembers", minActiveMembers)
             .addValue("maxActiveMembers", maxActiveMembers)
-            .addValue("minGamesPerActiveMember", minGamesPerActiveMember)
-            .addValue("maxGamesPerActiveMember", maxGamesPerActiveMember)
+            .addValue("minGamesPerActiveMemberPerDay", minGamesPerActiveMemberPerDay)
+            .addValue("maxGamesPerActiveMemberPerDay", maxGamesPerActiveMemberPerDay)
             .addValue("minAvgRating", minAvgRating)
             .addValue("maxAvgRating", maxAvgRating)
             .addValue("region", conversionService.convert(region, Integer.class))

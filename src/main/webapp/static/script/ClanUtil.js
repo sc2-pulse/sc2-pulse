@@ -105,8 +105,7 @@ class ClanUtil
             tr.insertCell().textContent = clan.activeMembers;
             tr.insertCell().textContent = clan.members;
             tr.insertCell().textContent = clan.avgRating;
-            const gamesPerActiveMember = Math.floor(clan.games / clan.activeMembers);
-            tr.insertCell().textContent = `${gamesPerActiveMember} (${Util.DECIMAL_FORMAT.format(gamesPerActiveMember / CLAN_STATS_DEPTH_DAYS)})`;
+            tr.insertCell().textContent = Util.DECIMAL_FORMAT.format(clan.games / clan.activeMembers / CLAN_STATS_DEPTH_DAYS);
             const nameCell = tr.insertCell();
             nameCell.classList.add("cell-main", "complex");
             nameCell.textContent = clan.name;

@@ -158,13 +158,13 @@ const CLAN_CURSOR = Object.freeze
         maxParamName: "maxAverageRating",
         order: 2
     },
-    GAMES_PER_ACTIVE_MEMBER:
+    GAMES_PER_ACTIVE_MEMBER_PER_DAY:
     {
-        name: "games-per-active-member",
-        fullName: "GAMES_PER_ACTIVE_MEMBER",
-        getter: (c)=>Math.round(c.games / c.activeMembers),
-        minParamName: "minGamesPerActiveMember",
-        maxParamName: "maxGamesPerActiveMember",
+        name: "games-per-active-member-per-day",
+        fullName: "GAMES_PER_ACTIVE_MEMBER_PER_DAY",
+        getter: (c)=>c.games / c.activeMembers / CLAN_STATS_DEPTH_DAYS,
+        minParamName: "minGamesPerActiveMemberPerDay",
+        maxParamName: "maxGamesPerActiveMemberPerDay",
         order: 3
     },
     MEMBERS:

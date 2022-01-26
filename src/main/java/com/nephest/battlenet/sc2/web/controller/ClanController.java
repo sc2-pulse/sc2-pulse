@@ -17,7 +17,7 @@ import java.util.List;
 public class ClanController
 {
 
-    public static final String MIN_ADDITIONAL_CURSOR_FILTER = "1";
+    public static final String MIN_ADDITIONAL_CURSOR_FILTER = "0";
     public static final String MAX_ADDITIONAL_CURSOR_FILTER = "9999";
 
     @Autowired
@@ -27,14 +27,14 @@ public class ClanController
     public PagedSearchResult<List<Clan>> findByCursor
     (
         @PathVariable("cursor") ClanDAO.Cursor cursor,
-        @PathVariable("cursorValue") int cursorValue,
+        @PathVariable("cursorValue") double cursorValue,
         @PathVariable("idCursor") int idCursor,
         @PathVariable("page") int page,
         @PathVariable("pageDiff") int pageDiff,
         @RequestParam(name="minActiveMembers", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER) int minActiveMembers,
         @RequestParam(name="maxActiveMembers", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER) int maxActiveMembers,
-        @RequestParam(name="minGamesPerActiveMember", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER) int minGamesPerActiveMember,
-        @RequestParam(name="maxGamesPerActiveMember", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER) int maxGamesPerActiveMember,
+        @RequestParam(name="minGamesPerActiveMemberPerDay", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER) double minGamesPerActiveMemberPerDay,
+        @RequestParam(name="maxGamesPerActiveMemberPerDay", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER) double maxGamesPerActiveMemberPerDay,
         @RequestParam(name="minAvgRating", defaultValue = MIN_ADDITIONAL_CURSOR_FILTER) int minAvgRating,
         @RequestParam(name="maxAvgRating", defaultValue = MAX_ADDITIONAL_CURSOR_FILTER) int maxAvgRating,
         @RequestParam(name="region", required = false) Region region
@@ -44,7 +44,7 @@ public class ClanController
         (
             cursor, cursorValue, idCursor,
             minActiveMembers, maxActiveMembers,
-            minGamesPerActiveMember, maxGamesPerActiveMember,
+            minGamesPerActiveMemberPerDay, maxGamesPerActiveMemberPerDay,
             minAvgRating, maxAvgRating,
             region,
             page, pageDiff
