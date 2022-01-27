@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -88,10 +88,10 @@ public class TeamStateDAOIT
     {
         int targetLengthMain = 1000;
         int targetLengthSecondary = 500;
-        int originalLengthMain = TeamStateDAO.getMaxDepthDaysMain();
-        int originalLengthSecondary = TeamStateDAO.getMaxDepthDaysSecondary();
-        TeamStateDAO.setMaxDepthDaysMain(targetLengthMain);
-        TeamStateDAO.setMaxDepthDaysSecondary(targetLengthSecondary);
+        int originalLengthMain = teamStateDAO.getMaxDepthDaysMain();
+        int originalLengthSecondary = teamStateDAO.getMaxDepthDaysSecondary();
+        teamStateDAO.setMaxDepthDaysMain(targetLengthMain);
+        teamStateDAO.setMaxDepthDaysSecondary(targetLengthSecondary);
 
         seasonGenerator.generateSeason
         (
@@ -148,8 +148,8 @@ public class TeamStateDAOIT
         assertTrue(states2.stream().map(LadderTeamState::getTeamState).anyMatch(s->s.equals(state2Secondary)));
         assertFalse(states2.stream().map(LadderTeamState::getTeamState).anyMatch(s->s.equals(state2Main)));
 
-        TeamStateDAO.setMaxDepthDaysMain(originalLengthMain);
-        TeamStateDAO.setMaxDepthDaysSecondary(originalLengthSecondary);
+        teamStateDAO.setMaxDepthDaysMain(originalLengthMain);
+        teamStateDAO.setMaxDepthDaysSecondary(originalLengthSecondary);
     }
 
 }

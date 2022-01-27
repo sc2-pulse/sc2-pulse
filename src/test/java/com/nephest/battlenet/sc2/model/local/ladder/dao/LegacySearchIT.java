@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -59,7 +59,7 @@ public class LegacySearchIT
     public static final BigInteger LEGACY_ID_1 = new BigInteger("99999");
     public static final BigInteger LEGACY_ID_2 = new BigInteger("999999");
     public static final BigInteger LEGACY_ID_3 = new BigInteger("9999999");
-    public static final OffsetDateTime ODT = OffsetDateTime.now().minusDays(TeamStateDAO.getMaxDepthDaysMain() + 1);
+    public static OffsetDateTime ODT;
 
     @BeforeAll
     public static void beforeAll
@@ -77,6 +77,7 @@ public class LegacySearchIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+            ODT = OffsetDateTime.now().minusDays(teamStateDAO.getMaxDepthDaysMain() + 1);
             seasonGenerator.generateSeason
             (
                 List.of

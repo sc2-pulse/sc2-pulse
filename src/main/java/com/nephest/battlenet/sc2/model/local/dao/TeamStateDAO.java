@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -24,8 +25,11 @@ public class TeamStateDAO
 
     private static final Logger LOG = LoggerFactory.getLogger(TeamStateDAO.class);
 
-    private static int MAX_DEPTH_DAYS_MAIN = 270;
-    private static int MAX_DEPTH_DAYS_SECONDARY = 180;
+    @Value("${com.nephest.battlenet.sc2.mmr.history.main.length:#{'180'}}")
+    private int MAX_DEPTH_DAYS_MAIN = 180;
+
+    @Value("${com.nephest.battlenet.sc2.mmr.history.secondary.length:#{'180'}}")
+    private int MAX_DEPTH_DAYS_SECONDARY = 180;
 
     public static final String STD_SELECT =
         "team_state.team_id AS \"team_state.team_id\", "
@@ -207,22 +211,22 @@ public class TeamStateDAO
         this.conversionService = conversionService;
     }
 
-    public static int getMaxDepthDaysMain()
+    public int getMaxDepthDaysMain()
     {
         return MAX_DEPTH_DAYS_MAIN;
     }
 
-    public static int getMaxDepthDaysSecondary()
+    public int getMaxDepthDaysSecondary()
     {
         return MAX_DEPTH_DAYS_SECONDARY;
     }
 
-    protected static void setMaxDepthDaysMain(int days)
+    protected void setMaxDepthDaysMain(int days)
     {
         MAX_DEPTH_DAYS_MAIN = days;
     }
 
-    protected  static void setMaxDepthDaysSecondary(int days)
+    protected void setMaxDepthDaysSecondary(int days)
     {
         MAX_DEPTH_DAYS_SECONDARY = days;
     }
