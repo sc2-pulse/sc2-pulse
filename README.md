@@ -140,7 +140,8 @@ See `addForceAPIRegion` method of the [AdminController](src/main/java/com/nephes
 
 ### Web API
 The Blizzard web API can be used as a last resort when everything else breaks. It is disabled by default. Some
-endpoints can be manually redirected to web API via AdminController. 
+endpoints can be manually redirected to web API via AdminController. You can enable auto web API by setting the 
+`com.nephest.battlenet.sc2.ladder.alternative.web.auto` application property to `true`.
 
 #### Blizzard ToS compatibility
 Even though the API is not forbidden via robots.txt, the 

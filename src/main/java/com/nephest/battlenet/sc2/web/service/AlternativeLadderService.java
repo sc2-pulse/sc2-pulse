@@ -16,6 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
@@ -87,6 +88,9 @@ public class AlternativeLadderService
     private final ExecutorService dbExecutorService;
     private final Predicate<BlizzardProfileTeam> teamValidationPredicate;
 
+    @Value("${com.nephest.battlenet.sc2.ladder.alternative.web.auto:#{'false'}}")
+    private boolean autoWeb;
+
     @Autowired
     public AlternativeLadderService
     (
@@ -133,6 +137,7 @@ public class AlternativeLadderService
     @PostConstruct
     public void init()
     {
+        if(autoWeb) LOG.warn("Auto web API is active");
         //catch exceptions to allow service autowiring for tests
         try {
             for(Region region : Region.values())
@@ -150,9 +155,16 @@ public class AlternativeLadderService
             "Loaded web regions for alternative ladder discovery: {}");
     }
 
+    public boolean isAutoWeb(Region region)
+    {
+        return autoWeb
+            && api.getErrorRate(region, false) > WEB_API_ERROR_RATE_THRESHOLD
+            && api.getErrorRate(region, true) <= WEB_API_ERROR_RATE_THRESHOLD;
+    }
+
     private boolean isProfileLadderWebRegion(Region region)
     {
-        return profileLadderWebRegions.getValue().contains(region);
+        return isAutoWeb(region) || profileLadderWebRegions.getValue().contains(region);
     }
 
     public void addProfileLadderWebRegion(Region region)
@@ -167,7 +179,7 @@ public class AlternativeLadderService
 
     public boolean isDiscoveryWebRegion(Region region)
     {
-        return discoveryWebRegions.getValue().contains(region);
+        return isAutoWeb(region) || discoveryWebRegions.getValue().contains(region);
     }
 
     public void addDiscoveryWebRegion(Region region)

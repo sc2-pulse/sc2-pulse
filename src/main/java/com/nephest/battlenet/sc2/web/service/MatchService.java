@@ -56,6 +56,7 @@ public class MatchService
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SeasonDAO seasonDAO;
     private final SC2MapDAO mapDAO;
+    private final AlternativeLadderService alternativeLadderService;
     private final PostgreSQLUtils postgreSQLUtils;
     private final ExecutorService dbExecutorService;
     private final Predicate<BlizzardMatch> validationPredicate;
@@ -75,6 +76,7 @@ public class MatchService
         SeasonDAO seasonDAO,
         SC2MapDAO mapDAO,
         VarDAO varDAO,
+        AlternativeLadderService alternativeLadderService,
         PostgreSQLUtils postgreSQLUtils,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         Validator validator
@@ -86,6 +88,7 @@ public class MatchService
         this.matchParticipantDAO = matchParticipantDAO;
         this.seasonDAO = seasonDAO;
         this.mapDAO = mapDAO;
+        this.alternativeLadderService = alternativeLadderService;
         this.postgreSQLUtils = postgreSQLUtils;
         this.dbExecutorService = dbExecutorService;
         initVars(varDAO);
@@ -95,6 +98,20 @@ public class MatchService
     private void initVars(VarDAO varDAO)
     {
         webRegions = WebServiceUtil.loadRegionSetVar(varDAO, "match.web.regions", "Loaded web regions for match history: {}");
+    }
+
+    public boolean isWeb(Region... regions)
+    {
+        boolean autoWeb = false;
+        for(Region region : regions)
+        {
+            if(alternativeLadderService.isAutoWeb(region))
+            {
+                autoWeb = true;
+                break;
+            }
+        }
+        return autoWeb || !Collections.disjoint(webRegions.getValue(), List.of(regions));
     }
 
     public void addWebRegion(Region region)
@@ -127,7 +144,7 @@ public class MatchService
         int r1 = saveFailedMatches();
         LOG.debug("Saved {} previously failed matches", r1);
         //clear here to avoid unbound retries of the same characters
-        boolean web = !Collections.disjoint(webRegions.getValue(), List.of(regions));
+        boolean web = isWeb(regions);
         List<PlayerCharacter> characters = web
             ? playerCharacterDAO.findTopRecentlyActiveCharacters
                 (
