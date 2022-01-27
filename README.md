@@ -168,6 +168,9 @@ To ensure that the potential violation is a minor one, the following rules are a
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
 ## Discord bot
 You can add `discord.token = {token}` application property to run the optional discord bot.
+## Application properties
+* `com.nephest.battlenet.sc2.mmr.history.main.length` 1v1 mmr history length in days, 180 by default.
+* `com.nephest.battlenet.sc2.mmr.history.secondary.length` team mmr history length in days, 180 by default.
 ## Contributing
 Want to make a bug report/feature request? Any contributions are welcome, see [CONTRIBUTING](CONTRIBUTING.md) for 
 more information.
