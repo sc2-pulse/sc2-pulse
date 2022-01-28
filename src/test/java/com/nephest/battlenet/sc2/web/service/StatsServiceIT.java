@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -50,7 +50,7 @@ public class StatsServiceIT
     {
         teamDAO = mock(TeamDAO.class);
         statsService = new StatsService(null, null, mock(SeasonDAO.class), null, null, null, teamDAO, null, null,
-            null, null, null, null, null, null, null, null, null, validator, dbExecutorService);
+            null, null, null, null, null, null, null, null, null, null, validator, dbExecutorService);
         StatsService nss = mock(StatsService.class);
         statsService.setNestedService(nss);
     }

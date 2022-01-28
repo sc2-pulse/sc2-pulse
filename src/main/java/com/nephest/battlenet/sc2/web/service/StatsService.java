@@ -9,7 +9,6 @@ import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +20,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
-import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.*;
 
 import javax.annotation.PostConstruct;
-import java.time.*;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -46,7 +47,6 @@ public class StatsService
     public static final int STALE_LADDER_DEPTH = 10;
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 2;
     public static final int LADDER_BATCH_SIZE = 100;
-    public static final int EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD = 3;
     public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(2);
 
     @Autowired
@@ -80,6 +80,7 @@ public class StatsService
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private VarDAO varDAO;
+    private SC2WebServiceUtil sc2WebServiceUtil;
     private PostgreSQLUtils postgreSQLUtils;
     private ConversionService conversionService;
     private ExecutorService dbExecutorService;
@@ -106,6 +107,7 @@ public class StatsService
         LeagueStatsDAO leagueStatsDao,
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
         VarDAO varDAO,
+        SC2WebServiceUtil sc2WebServiceUtil,
         PostgreSQLUtils postgreSQLUtils,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
@@ -128,6 +130,7 @@ public class StatsService
         this.leagueStatsDao = leagueStatsDao;
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.varDAO = varDAO;
+        this.sc2WebServiceUtil = sc2WebServiceUtil;
         this.postgreSQLUtils = postgreSQLUtils;
         this.conversionService = conversionService;
         this.dbExecutorService = dbExecutorService;
@@ -299,7 +302,7 @@ public class StatsService
         for(Region region : regions)
         {
             UpdateContext regionalContext = getLadderUpdateContext(region, updateContext);
-            BlizzardSeason bSeason = getCurrentOrLastOrExistingSeason(region, maxSeason);
+            BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
             Season season = seasonDao.merge(Season.of(bSeason, region));
             createLeagues(season);
             updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, regionalContext);
@@ -584,31 +587,12 @@ public class StatsService
         return max.get();
     }
 
-    public BlizzardSeason getCurrentOrLastOrExistingSeason(Region region, int maxSeason)
-    {
-        try
-        {
-            return api.getCurrentOrLastSeason(region, maxSeason).block();
-        }
-        catch(RuntimeException ex)
-        {
-            if(!(ExceptionUtils.getRootCause(ex) instanceof WebClientResponseException)) throw ex;
-            LOG.warn(ExceptionUtils.getRootCauseMessage(ex));
-        }
-        Season s = seasonDao.findListByRegion(region).stream()
-            .filter(ss->ss.getBattlenetId().equals(maxSeason))
-            .findAny().orElseThrow();
-        if(!LocalDate.now().isBefore(s.getEnd().minusDays(EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD)))
-            throw new IllegalStateException("Could not find any season for " + region.name());
-        return new BlizzardSeason(s.getBattlenetId(), s.getYear(), s.getNumber(), s.getStart(), s.getEnd());
-    }
-
     public void checkStaleData(Region[] regions)
     {
         int maxSeason = seasonDao.getMaxBattlenetId();
         for(Region region : regions)
         {
-            BlizzardSeason bSeason = getCurrentOrLastOrExistingSeason(region, maxSeason);
+            BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
             long maxId = getMaxLadderId(bSeason, region);
             if(maxId < 0) {
                 if(alternativeRegions.add(region))
