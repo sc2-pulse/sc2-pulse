@@ -55,6 +55,7 @@ public class AlternativeLadderService
     public static final Duration DISCOVERY_TIME_FRAME = Duration.ofMinutes(50);
     public static final Duration ADDITIONAL_WEB_SCAN_TIME_FRAME = DISCOVERY_TIME_FRAME.dividedBy(2);
     public static final double WEB_API_ERROR_RATE_THRESHOLD = 50;
+    public static final double WEB_API_FORCE_REGION_ERROR_RATE_THRESHOLD = 25;
     private static final QueueType[] ADDITIONAL_WEB_UPDATE_QUEUE_TYPES = new QueueType[]{QueueType.LOTV_1V1};
     private static final BaseLeague.LeagueType[] ADDITIONAL_WEB_UPDATE_LEAGUE_TYPES = new BaseLeague.LeagueType[]
     {
@@ -158,6 +159,8 @@ public class AlternativeLadderService
     public boolean isAutoWeb(Region region)
     {
         return autoWeb
+            && (api.getForceRegion(region) == null
+                || api.getErrorRate(api.getForceRegion(region), false) > WEB_API_FORCE_REGION_ERROR_RATE_THRESHOLD)
             && api.getErrorRate(region, false) > WEB_API_ERROR_RATE_THRESHOLD
             && api.getErrorRate(region, true) <= WEB_API_ERROR_RATE_THRESHOLD;
     }

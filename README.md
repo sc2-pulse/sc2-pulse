@@ -137,6 +137,7 @@ Original idea by [Keiras](http://keiras.cz/)
 ### Forced API host
 You can manually remap some endpoints to use another API host. This is useful when one region is broken but others are not.
 See `addForceAPIRegion` method of the [AdminController](src/main/java/com/nephest/battlenet/sc2/web/controller/AdminController.java).
+Set application property `com.nephest.battlenet.sc2.api.force.region.auto` to `true` to enable auto remap algorithm.
 
 ### Web API
 The Blizzard web API can be used as a last resort when everything else breaks. It is disabled by default. Some

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.*;
+import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Var;
@@ -18,6 +19,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
@@ -28,7 +30,9 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.*;
 import reactor.util.retry.RetrySpec;
 
+import javax.annotation.PostConstruct;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.*;
 import java.util.stream.LongStream;
 
@@ -56,9 +60,12 @@ extends BaseAPI
     public static final int PROFILE_LADDER_RETRY_COUNT = 3;
     public static final Duration ERROR_RATE_FRAME = Duration.ofMinutes(60);
     public static final double RETRY_ERROR_RATE_THRESHOLD = 40.0;
+    public static final double FORCE_REGION_ERROR_RATE_THRESHOLD = 40.0;
+    public static final Duration AUTO_FORCE_REGION_MAX_DURATION = Duration.ofDays(7);
 
     private String regionUri;
     private final Map<Region, Var<Region>> forceRegions = new EnumMap<>(Region.class);
+    private final Map<Region, InstantVar> forceRegionInstants = new EnumMap<>(Region.class);
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
@@ -66,6 +73,9 @@ extends BaseAPI
     private final ReactorRateLimiter webRateLimiter = new ReactorRateLimiter();
     private final Map<Region, APIHealthMonitor> webHealthMonitors = new EnumMap<>(Region.class);
     private final VarDAO varDAO;
+
+    @Value("${com.nephest.battlenet.sc2.api.force.region.auto:#{'false'}}")
+    private boolean autoForceRegion = false;
 
     @Autowired
     public BlizzardSC2API
@@ -78,6 +88,20 @@ extends BaseAPI
         for(Region r : Region.values()) rateLimiters.put(r, new ReactorRateLimiter());
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME).doOnNext(i->refreshReactorSlots()).subscribe();
         initErrorRates(varDAO);
+        Flux.interval(ERROR_RATE_FRAME, ERROR_RATE_FRAME).doOnNext(i->{
+            calculateErrorRates();
+            if(autoForceRegion) autoForceRegion();
+        }).subscribe();
+    }
+
+    @PostConstruct
+    public void postConstruct()
+    {
+        if(isAutoForceRegion())
+        {
+            LOG.warn("Auto force region is enabled");
+            autoForceRegion();
+        }
     }
 
     private void initErrorRates(VarDAO varDAO)
@@ -87,8 +111,6 @@ extends BaseAPI
             healthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api"));
             webHealthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api.web"));
         }
-
-        Flux.interval(ERROR_RATE_FRAME, ERROR_RATE_FRAME).doOnNext(i->calculateErrorRates()).subscribe();
     }
 
     private void init()
@@ -112,17 +134,53 @@ extends BaseAPI
                         false
                     )
                 );
+                forceRegionInstants.put(region,
+                    new InstantVar(varDAO, region.getId() + ".blizzard.api.region.force.timestamp", false));
             }
             for(Map.Entry<Region, Var<Region>> e : forceRegions.entrySet())
             {
                 Region force = e.getValue().load();
                 if(force != null) LOG.warn("Force region loaded: {}->{}", e.getKey(), force);
             }
+            for(Map.Entry<Region, InstantVar> e : forceRegionInstants.entrySet())
+            {
+                Instant timestamp = e.getValue().load();
+                if(timestamp != null) LOG.debug("Force region timestamp loaded: {} {}", e.getKey(), timestamp);
+            }
         }
         catch(RuntimeException ex)
         {
             LOG.warn(ex.getMessage(), ex);
         }
+    }
+
+    protected void autoForceRegion()
+    {
+        if(!isAutoForceRegion()) return;
+        for(Region region : Region.values())
+        {
+            if(forceRegions.get(region).getValue() != null)
+            {
+                Instant ts = forceRegionInstants.get(region).getValue();
+                if(ts == null
+                    || Instant.now().getEpochSecond() - ts.getEpochSecond() > AUTO_FORCE_REGION_MAX_DURATION.toSeconds()
+                    || healthMonitors.get(region).getErrorRate() <= FORCE_REGION_ERROR_RATE_THRESHOLD)
+                setForceRegion(region, null);
+            }
+            else
+            {
+                if(healthMonitors.get(region).getErrorRate() <= FORCE_REGION_ERROR_RATE_THRESHOLD) continue;
+                Region redirectTo = region == Region.US || region == Region.EU ? Region.KR : Region.CN;
+                setForceRegion(region, redirectTo);
+            }
+        }
+    }
+
+    protected APIHealthMonitor getHealthMonitor(Region region, boolean web)
+    {
+        return web
+            ? webHealthMonitors.get(getRegion(region))
+            : healthMonitors.get(getRegion(region));
     }
 
     public double getErrorRate(Region region, boolean web)
@@ -177,10 +235,22 @@ extends BaseAPI
     {
         this.regionUri = uri;
     }
-    
+
+    public boolean isAutoForceRegion()
+    {
+        return autoForceRegion;
+    }
+
+    public void setAutoForceRegion(boolean autoForceRegion)
+    {
+        this.autoForceRegion = autoForceRegion;
+    }
+
     public void setForceRegion(Region target, Region force)
     {
         forceRegions.get(target).setValueAndSave(force);
+        forceRegionInstants.get(target).setValueAndSave(force == null ? null : Instant.now());
+        LOG.warn("Redirecting API host: {}->{}", target, force);
     }
     
     protected Region getRegion(Region targetRegion)

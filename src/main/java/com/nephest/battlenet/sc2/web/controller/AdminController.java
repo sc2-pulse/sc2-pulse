@@ -72,6 +72,12 @@ public class AdminController
         sc2API.setForceRegion(region, force);
     }
 
+    @PostMapping("/blizzard/api/force/region/auto/{auto}")
+    public void setAutoForceRegion(@PathVariable("auto") boolean auto)
+    {
+        sc2API.setAutoForceRegion(auto);
+    }
+
     @DeleteMapping("/blizzard/api/region/{region}/force")
     public void removeForceAPIRegion(@PathVariable("region") Region region)
     {

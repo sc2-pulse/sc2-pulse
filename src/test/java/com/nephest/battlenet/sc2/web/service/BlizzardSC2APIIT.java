@@ -268,5 +268,29 @@ public class BlizzardSC2APIIT
         assertEquals(Region.US, api.getRegion(Region.US));
     }
 
+    @Test
+    public void testAutoForceRegion()
+    {
+        api.setAutoForceRegion(true);
+
+        assertEquals(Region.US, api.getRegion(Region.US)); //no redirect
+
+        APIHealthMonitor monitor = api.getHealthMonitor(Region.US, false);
+        monitor.addRequest();
+        monitor.addError();
+        monitor.update(); //error rate is 100
+        api.autoForceRegion();
+
+        assertEquals(Region.KR, api.getRegion(Region.US)); //redirect to KR
+
+        monitor.update(); //error rate is 0
+        api.autoForceRegion();
+
+        //no redirect
+        assertEquals(Region.US, api.getRegion(Region.US));
+
+        api.setAutoForceRegion(false);
+    }
+
 
 }
