@@ -85,6 +85,7 @@ public class AlternativeLadderService
     private final TeamMemberDAO teamMemberDao;
     private final BlizzardDAO blizzardDAO;
     private final VarDAO varDAO;
+    private final SC2WebServiceUtil sc2WebServiceUtil;
     private final ConversionService conversionService;
     private final ExecutorService dbExecutorService;
     private final Predicate<BlizzardProfileTeam> teamValidationPredicate;
@@ -107,6 +108,7 @@ public class AlternativeLadderService
         TeamMemberDAO teamMemberDao,
         BlizzardDAO blizzardDAO,
         VarDAO varDAO,
+        SC2WebServiceUtil sc2WebServiceUtil,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService
@@ -124,6 +126,7 @@ public class AlternativeLadderService
         this.teamMemberDao = teamMemberDao;
         this.blizzardDAO = blizzardDAO;
         this.varDAO = varDAO;
+        this.sc2WebServiceUtil = sc2WebServiceUtil;
         this.conversionService = conversionService;
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         this.dbExecutorService = dbExecutorService;
@@ -337,6 +340,9 @@ public class AlternativeLadderService
             if(batchSize - discovered.get() > errorThreshold) break;
             lastDivision+=batchSize;
         }
+        Season seasonAfterScan = Season.of(sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(season.getRegion()), season.getRegion());
+        if(!Objects.equals(season.getBattlenetId(), seasonAfterScan.getBattlenetId()))
+            throw new IllegalStateException("Season changed when ladder discovery was in progress");
         return profileLadderIds;
     }
 
