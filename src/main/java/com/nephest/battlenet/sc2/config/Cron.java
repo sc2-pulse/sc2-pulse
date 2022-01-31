@@ -328,7 +328,7 @@ public class Cron
         this.maintenanceInfrequentInstant.setValueAndSave(Instant.now());
     }
 
-    public Duration getMinUpdateFrame()
+    public static Duration getMinUpdateFrame(StatsService statsService, BlizzardSC2API sc2API)
     {
         Duration duration = statsService.isAlternativeUpdate(Region.EU, true)
             || statsService.isAlternativeUpdate(Region.US, true)
@@ -338,6 +338,11 @@ public class Cron
         if(sc2API.getForceRegion(Region.US) == Region.EU || sc2API.getForceRegion(Region.EU) == Region.US)
             duration = duration.multipliedBy(FORCE_REGION_FRAME_MULTIPLIER);
         return duration;
+    }
+
+    public Duration getMinUpdateFrame()
+    {
+        return getMinUpdateFrame(statsService, sc2API);
     }
 
 }
