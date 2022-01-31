@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.mvc;
@@ -16,6 +16,7 @@ implements WebMvcConfigurer
     public void addViewControllers(ViewControllerRegistry registry) {
         registry.addViewController("/privacy-policy").setViewName("privacy-policy");
         registry.addViewController("/about").setViewName("about");
+        registry.addViewController("/status").setViewName("status");
         registry.addViewController("/donate").setViewName("donate");
         registry.addViewController("/team/history").setViewName("team-history");
     }

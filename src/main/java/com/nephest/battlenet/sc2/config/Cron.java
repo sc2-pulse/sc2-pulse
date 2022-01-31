@@ -104,6 +104,9 @@ public class Cron
     @Autowired
     private UpdateService updateService;
 
+    @Autowired
+    private StatusService statusService;
+
     private final AtomicBoolean updatingLadders = new AtomicBoolean(false);
 
     @PostConstruct
@@ -168,6 +171,7 @@ public class Cron
             Instant begin = Instant.now();
             Instant lastMatchInstant = matchInstant.getValue();
 
+            statusService.update();
             doUpdateSeasons();
             //There is a long pause here due to stats calculations in the DB, a good place to do a GC run, make a hint.
             System.gc();
