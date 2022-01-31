@@ -33,6 +33,12 @@ table, ul, dl
     text-align: initial;
 }
 
+.inline-table
+{
+    width: initial;
+    display: inline-table;
+}
+
 h1
 {
     font-size: 1.5rem;
