@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -17,6 +17,8 @@ import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.command.ApplicationCommandOption;
 import discord4j.core.object.entity.Message;
+import discord4j.core.object.presence.ClientActivity;
+import discord4j.core.object.presence.ClientPresence;
 import discord4j.core.spec.EmbedCreateSpec;
 import discord4j.discordjson.json.*;
 import discord4j.rest.RestClient;
@@ -44,6 +46,7 @@ public class DiscordBootstrap
 
     public static final boolean DEFAULT_EPHEMERAL = false;
     public static final int DEFAULT_LINES = 5;
+    public static final String SC2_GAME_NAME = "StarCraft II";
     public static final String SC2_REVEALED_TAG = "revealed";
     public static final String CHARACTER_URL_TEMPLATE =
         "https://www.nephest.com/sc2/?type=character&id=%1$s&m=1#player-stats-mmr";
@@ -102,6 +105,7 @@ public class DiscordBootstrap
         Map<String, SlashCommand> handlerMap = handlers.stream()
             .collect(Collectors.toMap(SlashCommand::getCommandName, Function.identity()));
         client.on(ChatInputInteractionEvent.class, evt->handle(handlerMap, evt)).subscribe();
+        client.updatePresence(ClientPresence.online(ClientActivity.watching(SC2_GAME_NAME))).block();
 
         return client;
     }
