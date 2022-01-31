@@ -168,7 +168,7 @@ public class AlternativeLadderService
             && api.getErrorRate(region, true) <= WEB_API_ERROR_RATE_THRESHOLD;
     }
 
-    private boolean isProfileLadderWebRegion(Region region)
+    public boolean isProfileLadderWebRegion(Region region)
     {
         return isAutoWeb(region) || profileLadderWebRegions.getValue().contains(region);
     }
