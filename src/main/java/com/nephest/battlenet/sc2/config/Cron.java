@@ -339,8 +339,17 @@ public class Cron
             || statsService.isAlternativeUpdate(Region.CN, true)
                 ? MIN_UPDATE_FRAME_ALTERNATIVE
                 : MIN_UPDATE_FRAME;
-        if(sc2API.getForceRegion(Region.US) == Region.EU || sc2API.getForceRegion(Region.EU) == Region.US)
+
+        Region forcedUsRegion = sc2API.getForceRegion(Region.US);
+        Region forcedEuRegion = sc2API.getForceRegion(Region.EU);
+        if
+        (
+            forcedUsRegion == Region.EU
+            || forcedEuRegion == Region.US
+            || (forcedUsRegion != null && forcedEuRegion != null)
+        )
             duration = duration.multipliedBy(FORCE_REGION_FRAME_MULTIPLIER);
+
         return duration;
     }
 
