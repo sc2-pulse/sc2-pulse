@@ -148,8 +148,9 @@ public class GeneralSeleniumIT
 
     private static void testLadderUI(WebDriver driver, WebDriverWait wait)
     {
-        //pagination
         clickAndWait(driver, wait, "#form-ladder button[type=\"submit\"]", "tr[data-team-id]");
+
+        //pagination
         clickAndWait(driver, wait,
             "#ladder-top li.page-item:not(.disabled) a[data-page-count=\"1\"]",
             "#ladder-top li.page-item.disabled a[data-page-count=\"0\"][data-page-number=\"2\"]");
