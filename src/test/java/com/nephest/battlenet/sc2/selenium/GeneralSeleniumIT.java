@@ -133,18 +133,17 @@ public class GeneralSeleniumIT
     {
         int port = webServerAppCtxt.getWebServer().getPort();
         WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_MILLIS / 1000);
-        driver.get("http://localhost:" + port + "/");
-        wait.until(presenceOfElementLocated(By.cssSelector("#form-ladder-season-picker option")));
+        String root = "http://localhost:" + port;
+        getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
         testLadderUI(driver, wait);
         testOnline(driver, wait);
         testSearch(driver, wait);
         testSettings(driver, wait);
         testMmrHistory(driver, wait);
-        if(driver.findElement(By.cssSelector("body")).getAttribute("class").contains("js-error-detected"))
-        {
-            failed = true;
-            fail("JavaScript errors detected");
-        }
+        checkJsErrors();
+        getAndWaitAndCheckJsErrors(driver, wait, root + "/about", "#about");
+        getAndWaitAndCheckJsErrors(driver, wait, root + "/privacy-policy", "#privacy");
+        getAndWaitAndCheckJsErrors(driver, wait, root + "/status", "#status");
     }
 
     private static void testLadderUI(WebDriver driver, WebDriverWait wait)
@@ -243,6 +242,27 @@ public class GeneralSeleniumIT
     {
         driver.findElement(By.cssSelector(clickSelector)).click();
         wait.until(presenceOfElementLocated(By.cssSelector(waitSelector)));
+    }
+
+    public static void getAndWait(WebDriver driver, WebDriverWait wait, String url, String waitSelector)
+    {
+        driver.get(url);
+        wait.until(presenceOfElementLocated(By.cssSelector(waitSelector)));
+    }
+
+    private void checkJsErrors()
+    {
+        if(driver.findElement(By.cssSelector("body")).getAttribute("class").contains("js-error-detected"))
+        {
+            failed = true;
+            fail("JavaScript errors detected");
+        }
+    }
+
+    public void getAndWaitAndCheckJsErrors(WebDriver driver, WebDriverWait wait, String url, String waitSelector)
+    {
+        getAndWait(driver, wait, url, waitSelector);
+        checkJsErrors();
     }
 
     public static void toggleInput(WebDriver driver, String selector, String value)
