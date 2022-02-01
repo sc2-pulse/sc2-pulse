@@ -392,6 +392,7 @@ public class SqlSyntaxIT
         postgreSQLUtils.vacuum();
         postgreSQLUtils.analyze();
         postgreSQLUtils.vacuumAnalyze();
+        assertNotNull(postgreSQLUtils.getApproximateCount("team"));
     }
 
     @Test

@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.util;
 
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -13,6 +14,9 @@ import org.springframework.transaction.annotation.Transactional;
 @Repository
 public class PostgreSQLUtils
 {
+
+    private static final String GET_APPROXIMATE_COUNT_QUERY =
+        "SELECT reltuples::bigint FROM pg_class WHERE relname = ?";
 
     private final JdbcTemplate template;
 
@@ -47,6 +51,11 @@ public class PostgreSQLUtils
     public void reindex(String... indexes)
     {
         for(String ix : indexes) template.execute("REINDEX INDEX " + ix);
+    }
+
+    public Long getApproximateCount(String table)
+    {
+        return template.query(GET_APPROXIMATE_COUNT_QUERY, DAOUtils.LONG_EXTRACTOR, table);
     }
 
 }
