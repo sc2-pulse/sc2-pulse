@@ -36,6 +36,7 @@ import java.time.ZoneOffset;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated;
 import static org.openqa.selenium.support.ui.ExpectedConditions.presenceOfElementLocated;
 
 @SpringBootTest
@@ -149,6 +150,9 @@ public class GeneralSeleniumIT
     private static void testLadderUI(WebDriver driver, WebDriverWait wait)
     {
         clickAndWait(driver, wait, "#form-ladder button[type=\"submit\"]", "tr[data-team-id]");
+
+        //popovers
+        togglePopovers(driver, wait, driver.findElement(By.cssSelector("#ladder-tab")), "#ladder tbody tr:nth-child(10n)");
 
         //pagination
         clickAndWait(driver, wait,
@@ -308,6 +312,18 @@ public class GeneralSeleniumIT
     public static void clickCanvases(WebDriver driver, String containerSelector)
     {
         driver.findElements(By.cssSelector(containerSelector + " section:not(.d-none) canvas")).forEach(WebElement::click);
+    }
+
+    public static void togglePopovers
+    (WebDriver driver, WebDriverWait wait, WebElement nonPopoverElement, String containerSelector)
+    {
+        for(WebElement elem : driver.findElements(By.cssSelector(containerSelector + " [data-toggle=\"popover\"]")))
+        {
+            elem.click();
+            wait.until(presenceOfElementLocated(By.cssSelector(".popover.show")));
+            nonPopoverElement.click();
+            wait.until(invisibilityOfElementLocated(By.cssSelector(".popover.show")));
+        }
     }
 
     private void setupData()
