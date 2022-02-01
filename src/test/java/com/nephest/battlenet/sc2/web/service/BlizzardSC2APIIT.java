@@ -276,6 +276,7 @@ public class BlizzardSC2APIIT
         assertEquals(Region.US, api.getRegion(Region.US)); //no redirect
 
         APIHealthMonitor monitor = api.getHealthMonitor(Region.US, false);
+        monitor.update();
         monitor.addRequest();
         monitor.addError();
         monitor.update(); //error rate is 100
