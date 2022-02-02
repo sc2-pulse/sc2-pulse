@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -76,6 +76,7 @@ extends WebSecurityConfigurerAdapter
             .and().oauth2Login()
                 .loginPage("/?#personal")
                 .defaultSuccessUrl("/?#personal-characters")
+                .failureUrl("/?oauthError=1#personal")
                 .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, accountRoleDAO))
             .and().and().rememberMe()
                 .rememberMeServices(concurrentPersistentTokenBasedRememberMeService)
