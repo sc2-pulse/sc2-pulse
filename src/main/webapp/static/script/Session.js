@@ -357,6 +357,8 @@ class PersonalUtil
         Session.currentAccount = data.account;
         const btagElem = document.querySelector("#login-battletag");
         if(btagElem) btagElem.textContent = Session.currentAccount.battleTag;
+        const myTab = document.querySelector("#personal-tab");
+        if(myTab) myTab.querySelector(":scope .tab-name").textContent = Session.currentAccount.battleTag;
 
         const rolesElem = document.querySelector("#login-roles");
         if(rolesElem) rolesElem.textContent = data.roles.sort((a, b)=>a.localeCompare(b)).join(", ");
