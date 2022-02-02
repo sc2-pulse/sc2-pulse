@@ -285,6 +285,15 @@ th.hoverable span
     transition-duration: 0.1s;
 }
 
+@supports (-moz-appearance:none)
+{
+    .chartjs-tooltip
+    {
+        transition-property: none;
+        transition-duration: 0s;
+    }
+}
+
 .chartjs-tooltip *
 {
     font-size: 0.75rem;
