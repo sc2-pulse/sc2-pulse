@@ -115,6 +115,9 @@ To run the local server execute the following command in a terminal
 ```
 mvn spring-boot:run
 ```
+
+Scheduled tasks are disabled in the dev mode. You can remove the `@Profile` annotation from the Cron class if you want 
+to run the tasks(like ladder scans) in the dev mode.
 ## Blizzard API clients
 The default config expects you to use different API clients/keys for each region. You **must** reduce the 
 `BlizzardSC2API.REQUESTS_PER_SECOND_CAP` to 25 if you want to use one API client for all regions. 
