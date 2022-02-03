@@ -62,6 +62,18 @@ extends BaseAPI
     public static final double RETRY_ERROR_RATE_THRESHOLD = 40.0;
     public static final double FORCE_REGION_ERROR_RATE_THRESHOLD = 40.0;
     public static final Duration AUTO_FORCE_REGION_MAX_DURATION = Duration.ofDays(7);
+    /*
+        This data is mainly used in ladder discovery process when starting with an empty DB. The values should be
+        manually updated when a new season begins.
+        Season 49
+     */
+    public static final Map<Region, Long> LAST_LADDER_IDS = Map.of
+    (
+        Region.US, 305098L,
+        Region.EU, 242907L,
+        Region.KR, 77349L,
+        Region.CN, 65915L
+    );
 
     private String regionUri;
     private final Map<Region, Var<Region>> forceRegions = new EnumMap<>(Region.class);

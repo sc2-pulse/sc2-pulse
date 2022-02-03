@@ -50,7 +50,6 @@ public class AlternativeLadderService
         Region.CN, 100
     ));
 
-    public static final long FIRST_DIVISION_ID = 33080L;
     public static final int LADDER_BATCH_SIZE = StatsService.LADDER_BATCH_SIZE;
     public static final Duration DISCOVERY_TIME_FRAME = Duration.ofMinutes(50);
     public static final Duration ADDITIONAL_WEB_SCAN_TIME_FRAME = DISCOVERY_TIME_FRAME.dividedBy(2);
@@ -270,7 +269,7 @@ public class AlternativeLadderService
     public void discoverSeason(Season season, boolean web)
     {
         long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion())
-            .orElse(FIRST_DIVISION_ID) + 1;
+            .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion())) + 1;
         discoverSeason(season, lastDivision, web);
     }
 
@@ -281,7 +280,7 @@ public class AlternativeLadderService
             .findLastDivision(season.getBattlenetId(), season.getRegion())
             .orElseGet(()->divisionDao
                 .findLastDivision(season.getBattlenetId() - 1, season.getRegion())
-                .orElse(FIRST_DIVISION_ID)) + 1;
+                .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion()))) + 1;
         discoverSeason(season, lastDivision, false);
     }
 
