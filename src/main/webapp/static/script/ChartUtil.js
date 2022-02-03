@@ -929,6 +929,12 @@ class ChartUtil
         document.querySelector("#chart-begin-at-zero").addEventListener("click", e=>window.setTimeout(ChartUtil.updateBeginAtZero, 1));
     }
 
+    static init()
+    {
+        if(Util.isMobile() && !localStorage.getItem("chart-tooltip-position"))
+            localStorage.setItem("chart-tooltip-position", "average");
+    }
+
 }
 
 ChartUtil.CHARTS = new Map();

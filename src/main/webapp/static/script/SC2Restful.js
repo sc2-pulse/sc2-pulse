@@ -37,6 +37,7 @@ class SC2Restful
     static initAll()
     {
         Model.init();
+        ChartUtil.init();
         Util.formatDateTimes();
     }
 
