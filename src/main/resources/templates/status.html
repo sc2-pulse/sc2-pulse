@@ -53,11 +53,11 @@
     </section>
     <section>
         <h2>Misc</h2>
-        <p th:text="|High definition MMR history length; 1v1: ${@teamStateDAO.getMaxDepthDaysMain()} days, teams: ${@teamStateDAO.getMaxDepthDaysSecondary()} days|"></p>
-        <p th:text="|Approximate stats;
-            Players: ${#numbers.formatInteger(@statusService.getPlayers(), 1, 'DEFAULT')},
-            team snapshots: ${#numbers.formatInteger(@statusService.getTeamSnapshots(), 1, 'DEFAULT')},
-            recent matches: ${#numbers.formatInteger(@statusService.getMatches(), 1, 'DEFAULT')}"></p>
+        <p th:text="|High definition MMR history limits; 1v1: ${@teamStateDAO.getMaxDepthDaysMain()} days, teams: ${@teamStateDAO.getMaxDepthDaysSecondary()} days|"></p>
+        <p th:text="|Approximate stats:
+            ${#numbers.formatInteger(@statusService.getPlayers(), 1, 'DEFAULT')} players,
+            ${#numbers.formatInteger(@statusService.getTeamSnapshots(), 1, 'DEFAULT')} team snapshots,
+            ${#numbers.formatInteger(@statusService.getMatches(), 1, 'DEFAULT')} recent(~${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).UPDATED_TTL_DAYS} days) matches|"></p>
         <p th:text="${T(com.nephest.battlenet.sc2.Application).VERSION}"></p>
     </section>
 </div>
