@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -60,6 +61,12 @@ public class CharacterController
 
     @Autowired
     private PlayerCharacterReportService reportService;
+
+    @GetMapping("/search/{term}")
+    public List<LadderDistinctCharacter> getCharacterTeams(@PathVariable("term") String term)
+    {
+        return ladderCharacterDAO.findDistinctCharacters(term);
+    }
 
     @GetMapping
     ({
