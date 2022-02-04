@@ -414,7 +414,7 @@ class CharacterUtil
             + (depth ? ", starting from " + Util.DATE_FORMAT.format(new Date(depthStartTimestamp)) : "")
             + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
-        document.getElementById("mmr-history-games-avg-mmr").textContent = CharacterUtil.getGamesAndAverageMmrString(mmrHistory);
+        CharacterUtil.updateGamesAndAverageMmrTable(document.querySelector("#mmr-summary-table"), mmrHistory);
     }
 
     static getMmrYValue(history, mode)
@@ -487,6 +487,30 @@ class CharacterUtil
             }
         }
         tableData.pointStyles = pointStyles;
+    }
+
+    static updateGamesAndAverageMmrTable(table, mmrHistory)
+    {
+        const tbody = table.querySelector(":scope tbody");
+        const gamesMmr = CharacterUtil.getGamesAndAverageMmr(mmrHistory);
+        ElementUtil.removeChildren(tbody);
+        const entries = Object.entries(gamesMmr);
+        entries.sort((a, b)=>b[1].maximumMmr - a[1].maximumMmr);
+        for(const [race, stats] of entries)
+        {
+            const tr = tbody.insertRow();
+            const raceImage = SC2Restful.IMAGES.get(race.toLowerCase());
+            const raceCell = tr.insertCell();
+            if(raceImage) {
+                raceCell.appendChild(raceImage.cloneNode());
+            } else {
+                raceCell.textContent = race;
+            }
+            tr.insertCell().textContent = stats.games;
+            tr.insertCell().textContent = stats.lastMmr;
+            tr.insertCell().textContent = stats.averageMmr;
+            tr.insertCell().textContent = stats.maximumMmr;
+        }
     }
     
     static getGamesAndAverageMmrString(mmrHistory)

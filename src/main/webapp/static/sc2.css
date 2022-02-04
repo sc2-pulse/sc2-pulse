@@ -230,6 +230,17 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     max-width: 6em !important;
 }
 
+#mmr-history-info-panel
+{
+    margin-bottom: 1em;
+    border-bottom: solid 2px;
+}
+
+#mmr-summary-table
+{
+    font-size: 0.8rem;
+}
+
 .table
 {
     font-size: 0.875rem;

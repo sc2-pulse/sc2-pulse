@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -266,6 +266,9 @@
                             <section id="character-mmr-section">
                                 <h3>Solo MMR history
                                     <span class="fullscreen-toggle align-middle" data-target="player-stats-mmr"></span></h3>
+
+                                <div id="mmr-history-info-panel" class="flex-col-adaptive adaptive-border-color-splitter">
+                                <div class="border-splitter-right adaptive-border-color-splitter">
                                 <div><div id="mmr-history-filters"></div><div id="mmr-history-games-avg-mmr"></div></div>
                                 <form>
                                     <div class="form-row">
@@ -310,20 +313,36 @@
                                             <option value="7000">
                                         </datalist>
                                     </div>
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check form-check-inline mb-3">
                                         <input id="mmr-best-race" class="form-check-input serializable" type="checkbox" checked="checked" />
                                         <label for="mmr-best-race" class="text-nowrap form-check-label">Best race</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check form-check-inline mb-3">
                                         <input id="mmr-season-last" class="form-check-input serializable" type="checkbox" />
                                         <label for="mmr-season-last" class="text-nowrap form-check-label">End of season</label>
                                     </div>
-                                    <div class="form-check form-check-inline">
+                                    <div class="form-check form-check-inline mb-3">
                                         <input id="mmr-zoom" class="form-check-input serializable chart-zoom-toggle" type="checkbox"
                                                data-chartable="player-stats-mmr-table"/>
                                         <label for="mmr-zoom" class="text-nowrap form-check-label">Zoom</label>
                                     </div>
                                 </form>
+                                </div>
+                                <div class="table-responsive">
+                                    <table id="mmr-summary-table" class="table inline-table table-sm table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col">Race</th>
+                                            <th scope="col">Games</th>
+                                            <th scope="col">Last MMR</th>
+                                            <th scope="col">Avg MMR</th>
+                                            <th scope="col">Max MMR</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                                </div>
                                 <table
                                         id="player-stats-mmr-table"
                                         class="chartable"
