@@ -157,6 +157,20 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     height: 100px;
 }
 
+.border-splitter-left
+{
+    padding-left: 1em;
+    margin-left: 1em;
+    border-left: solid 2px;
+}
+
+.border-splitter-right
+{
+    padding-right: 1em;
+    margin-right: 1em;
+    border-right: solid 2px;
+}
+
 #status-generating-fullscreen
 {
     left: 0;
