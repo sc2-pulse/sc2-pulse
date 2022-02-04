@@ -795,6 +795,7 @@ body.theme-dark :fullscreen, body.theme-dark #team-buffer
     display: block;
     overflow: hidden;
     padding-left: 0 !important;
+    padding-right: 0 !important;
 }
 
 .modal.no-popup .modal-dialog
