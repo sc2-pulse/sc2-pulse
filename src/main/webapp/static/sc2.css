@@ -513,6 +513,16 @@ body.theme-light .social-media
   color: black;
 }
 
+body.theme-light .adaptive-border-color-splitter
+{
+    border-color: #f0f0f0 !important;
+}
+
+.adaptive-border-color-splitter
+{
+    border-color: #343a40 !important;
+}
+
 .text-decoration-underline
 {
     text-decoration: underline;
