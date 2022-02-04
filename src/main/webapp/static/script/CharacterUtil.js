@@ -523,10 +523,11 @@ class CharacterUtil
                 return acc + cGames;
             }, 1);
             const mmr = originalHistories.map(h=>h.teamState.rating);
+            const last = mmr[mmr.length - 1];
             const sum = mmr.reduce((a, b) => a + b, 0);
             const avg = (sum / mmr.length) || 0;
             const max = mmr.reduce((a, b) => Math.max(a, b));
-            result[race] = {games : games, averageMmr: Math.round(avg), maximumMmr: max};
+            result[race] = {games : games, lastMmr: last, averageMmr: Math.round(avg), maximumMmr: max};
         }
         return result;
     }
