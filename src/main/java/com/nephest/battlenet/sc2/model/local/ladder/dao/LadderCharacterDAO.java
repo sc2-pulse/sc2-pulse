@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -67,6 +67,18 @@ public class LadderCharacterDAO
     + "player_character_stats_current AS "
     + "( "
         + String.format(SEARCH_STATS_TEMPLATE, "")
+    + "), "
+    + "player_character_recent_race AS "
+    + "("
+        + "SELECT DISTINCT ON(player_character_filtered.id) "
+        + "player_character_filtered.id AS player_character_id, "
+        + "get_favorite_race(team_member.terran_games_played, team_member.protoss_games_played, "
+            + "team_member.zerg_games_played, team_member.random_games_played) AS race "
+        + "FROM player_character_filtered "
+        + "INNER JOIN team_member ON player_character_filtered.id = team_member.player_character_id "
+        + "INNER JOIN team ON team_member.team_id = team.id "
+        + "WHERE team.season >= :season - 1 "
+        + "ORDER BY player_character_filtered.id DESC, team.season DESC, team.rating DESC "
     + ") "
 
     + "SELECT "
@@ -76,7 +88,7 @@ public class LadderCharacterDAO
     + AccountDAO.STD_SELECT + ", "
     + PlayerCharacterDAO.STD_SELECT + ", "
     + ClanDAO.STD_SELECT + ", "
-    + "player_character_stats.race AS \"race\", "
+    + "COALESCE(player_character_recent_race.race, player_character_stats.race) AS \"race\", "
     + "player_character_stats.league_max AS \"league_max\", "
     + "player_character_stats.rating_max AS \"rating_max\", "
     + "player_character_stats.games_played AS \"games_played\", "
@@ -91,6 +103,7 @@ public class LadderCharacterDAO
     + "INNER JOIN player_character ON player_character.id = player_character_stats_filtered.player_character_id "
     + "INNER JOIN account ON player_character.account_id = account.id "
     + "INNER JOIN player_character_stats ON player_character_stats_filtered.id = player_character_stats.id "
+    + "LEFT JOIN player_character_recent_race ON player_character.id = player_character_recent_race.player_character_id "
     + "LEFT JOIN clan ON player_character.clan_id = clan.id "
     + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
     + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "

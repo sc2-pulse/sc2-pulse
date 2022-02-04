@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -496,6 +496,74 @@ public class LadderSearchIndependentIT
         assertEquals(team1.getId(), teams.get(3).getId());
         for(PlayerCharacter character : characters)
             assertTrue(teams.get(3).getMembers().stream().anyMatch(m->m.getCharacter().equals(character)));
+    }
+
+    @Test
+    public void testRaceIdentification()
+    {
+        Region region = Region.EU;
+        Season season1 = new Season(null, 1, region, 2020, 1,
+            LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));
+        Season season2 = new Season(null, 2, region, 2020, 2,
+            LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1));
+        Season season3 = new Season(null, 3, region, 2020, 3,
+            LocalDate.of(2020, 3, 1), LocalDate.of(2020, 4, 1));
+
+        seasonGenerator.generateSeason
+        (
+            List.of(season1, season2, season3),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1, QueueType.LOTV_4V4),
+            TEAM_TYPE,
+            TIER_TYPE,
+            0
+        );
+
+        Division d1 = divisionDAO.findListByLadder(season1.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE, TIER_TYPE).get(0);
+        Division d2 = divisionDAO.findListByLadder(season2.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE, TIER_TYPE).get(0);
+        Division d3 = divisionDAO.findListByLadder(season3.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE, TIER_TYPE).get(0);
+
+        Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "btag#1"));
+        PlayerCharacter character = playerCharacterDAO.merge(
+            new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#1"));
+        PlayerCharacter[] characters = new PlayerCharacter[]{character};
+
+        //top mmr, but old season
+        Team team1 = new Team
+        (
+            null, season1.getBattlenetId(), region,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
+            BigInteger.valueOf(10001L), d1.getId(),
+            3L, 100, 0, 0, 0
+        );
+        //2nd mmr, but prev season
+        Team team2 = new Team
+        (
+            null, season2.getBattlenetId(), region,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
+            BigInteger.valueOf(10002L), d2.getId(),
+            2L, 100, 0, 0, 0
+        );
+        //3rd mmr, picked because it's the latest team
+        Team team3 = new Team
+        (
+            null, season3.getBattlenetId(), region,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE,
+            BigInteger.valueOf(10003L), d3.getId(),
+            1L, 100, 0, 0, 0
+        );
+        teamDAO.merge(team1, team2, team3);
+        teamMemberDAO.merge
+        (
+            new TeamMember(team1.getId(), character.getId(), 100, 0, 0, 0),
+            new TeamMember(team2.getId(), character.getId(), 0, 100, 0, 0),
+            new TeamMember(team3.getId(), character.getId(), 20, 30, 40, 10)
+        );
+
+        playerCharacterStatsDAO.mergeCalculate();
+
+        LadderDistinctCharacter foundCharacter = ladderCharacterDAO.findDistinctCharacters("name").get(0);
+        assertEquals(Race.ZERG, foundCharacter.getMembers().getFavoriteRace());
     }
 
 }
