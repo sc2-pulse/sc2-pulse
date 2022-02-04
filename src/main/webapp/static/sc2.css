@@ -854,6 +854,18 @@ body.modal-open.modal-open-no-popup
     z-index: 9999;
 }
 
+.flex-col-adaptive
+{
+    display: flex;
+    flex-direction: row;
+}
+
+.flex-col-adaptive .table-responsive
+{
+    overflow-x: initial;
+    width: initial;
+}
+
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;
@@ -927,6 +939,33 @@ body.modal-open.modal-open-no-popup
         max-width: initial;
         margin-left: 0.5rem;
         margin-right: 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .flex-col-adaptive
+    {
+        flex-direction: column;
+    }
+
+    .flex-col-adaptive .table-responsive
+    {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .flex-col-adaptive > .border-splitter-left
+    {
+        padding-left: 0;
+        margin-left: 0;
+        border-left: none;
+    }
+
+    .flex-col-adaptive > .border-splitter-right
+    {
+        padding-right: 0;
+        margin-right: 0;
+        border-right: none;
     }
 }
 
