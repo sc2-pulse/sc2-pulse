@@ -161,3 +161,22 @@ CREATE INDEX "ix_clan_search_games"
     ON "clan"(("games"::double precision / "active_members" / 60), "id", "active_members", "avg_rating", "region")
     WHERE "active_members" IS NOT NULL;
 CREATE INDEX "ix_clan_name" ON "clan"(LOWER("name") text_pattern_ops) WHERE "name" IS NOT NULL;
+
+CREATE OR REPLACE FUNCTION get_favorite_race
+(terranGames SMALLINT, protossGames SMALLINT, zergGames SMALLINT, randomGames SMALLINT)
+RETURNS SMALLINT
+AS
+'
+    DECLARE
+        maxGames SMALLINT;
+    BEGIN
+        SELECT MAX(x)::smallint INTO maxGames FROM unnest(ARRAY[terranGames, protossGames, zergGames, randomGames]) x;
+        return CASE
+            WHEN terranGames = maxGames THEN 1
+            WHEN protossGames = maxGames THEN 2
+            WHEN zergGames = maxGames THEN 3
+            ELSE 4
+        END;
+    END
+'
+LANGUAGE plpgsql;

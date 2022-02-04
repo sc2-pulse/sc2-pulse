@@ -796,3 +796,23 @@ END;
 END
 '
 LANGUAGE plpgsql;
+
+-- This function exists because races are not normalized properly. Remove it when it is no longer the case.
+CREATE OR REPLACE FUNCTION get_favorite_race
+(terranGames SMALLINT, protossGames SMALLINT, zergGames SMALLINT, randomGames SMALLINT)
+RETURNS SMALLINT
+AS
+'
+    DECLARE
+        maxGames SMALLINT;
+    BEGIN
+        SELECT MAX(x)::smallint INTO maxGames FROM unnest(ARRAY[terranGames, protossGames, zergGames, randomGames]) x;
+        return CASE
+            WHEN terranGames = maxGames THEN 1
+            WHEN protossGames = maxGames THEN 2
+            WHEN zergGames = maxGames THEN 3
+            ELSE 4
+        END;
+    END
+'
+LANGUAGE plpgsql;

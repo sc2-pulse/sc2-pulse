@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.dao;
@@ -10,12 +10,18 @@ import com.nephest.battlenet.sc2.model.blizzard.dao.BlizzardDAO;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
@@ -48,6 +54,12 @@ public class StandardDataReadonlyIT
 
     @Autowired
     private BlizzardDAO blizzardDAO;
+
+    @Autowired
+    private JdbcTemplate template;
+
+    @Autowired @Qualifier("sc2StatsConversionService")
+    private ConversionService conversionService;
 
     @BeforeAll
     public static void init
@@ -178,6 +190,22 @@ public class StandardDataReadonlyIT
                 assertEquals(Long.valueOf(teamPosition + (i * Region.values().length * TEAMS_PER_LEAGUE) + charIx + "0"), id.getT2()[charIx].getId());
         }
 
+    }
+
+    @CsvSource
+    ({
+        "4, 3, 2, 1, TERRAN",
+        "1, 4, 3, 2, PROTOSS",
+        "1, 2, 4, 3, ZERG",
+        "1, 2, 3, 4, RANDOM",
+
+    })
+    @ParameterizedTest
+    public void testFavoriteRace(int terranGames, int protossGames, int zergGames, int randomGames, Race expectedRace)
+    {
+        Integer fr = template.query("SELECT * FROM get_favorite_race(?::smallint, ?::smallint, ?::smallint, ?::smallint)", DAOUtils.INT_EXTRACTOR,
+            terranGames, protossGames, zergGames, randomGames);
+        assertEquals(expectedRace, conversionService.convert(fr, Race.class));
     }
 
 }
