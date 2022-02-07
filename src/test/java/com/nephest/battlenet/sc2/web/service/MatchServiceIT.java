@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -24,6 +24,7 @@ import org.springframework.web.context.WebApplicationContext;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -42,6 +43,9 @@ public class MatchServiceIT
 
     @Autowired
     private MatchService matchService;
+
+    @Autowired
+    private BlizzardSC2API api;
 
     @BeforeAll
     public static void beforeAll(@Autowired BlizzardSC2API api, @Autowired DataSource dataSource)
@@ -62,6 +66,19 @@ public class MatchServiceIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
         }
+    }
+
+    @Test
+    public void testAutoRegionRedirect()
+    {
+        api.setAutoForceRegion(true);
+
+        //no matches found
+        matchService.update(new UpdateContext(Instant.now().minusSeconds(3600), Instant.now()), Region.EU);
+        assertEquals(Region.KR, api.getForceRegion(Region.EU));
+
+        api.setForceRegion(Region.EU, null);
+        api.setAutoForceRegion(false);
     }
 
     @Test

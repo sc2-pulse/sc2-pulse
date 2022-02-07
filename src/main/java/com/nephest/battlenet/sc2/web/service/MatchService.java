@@ -137,6 +137,11 @@ public class MatchService
         int matchCount = saveMatches(updateContext.getInternalUpdate(), regions);
         matchDAO.removeExpired();
         LOG.info("Saved {} matches for {}", matchCount, regions);
+        if(api.isAutoForceRegion() && matchCount < 1)
+        {
+            LOG.warn("No matches found in {} regions", regions);
+            for(Region region : regions) api.setForceRegion(region);
+        }
     }
 
     private int saveMatches(Instant lastUpdated, Region... regions)
