@@ -182,10 +182,14 @@ extends BaseAPI
             else
             {
                 if(healthMonitors.get(region).getErrorRate() <= FORCE_REGION_ERROR_RATE_THRESHOLD) continue;
-                Region redirectTo = region == Region.US || region == Region.EU ? Region.KR : Region.CN;
-                setForceRegion(region, redirectTo);
+                setForceRegion(region);
             }
         }
+    }
+
+    public static Region getDefaultForceRegion(Region region)
+    {
+        return region == Region.US || region == Region.EU ? Region.KR : Region.CN;
     }
 
     protected APIHealthMonitor getHealthMonitor(Region region, boolean web)
@@ -256,6 +260,11 @@ extends BaseAPI
     public void setAutoForceRegion(boolean autoForceRegion)
     {
         this.autoForceRegion = autoForceRegion;
+    }
+
+    public void setForceRegion(Region target)
+    {
+        setForceRegion(target, getDefaultForceRegion(target));
     }
 
     public void setForceRegion(Region target, Region force)
