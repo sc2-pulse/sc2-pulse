@@ -20,7 +20,7 @@ class ClanUtil
             page: page,
             pageDiff: pageDiff
         }
-        if(!previousData || (page == 0 && pageDiff == 1));
+        if(!previousData || (page == 0 && pageDiff == 1))
             ClanUtil.updateClanSearchPaginationConfig
             (
                 searchParams.get(params.cursor.minParamName),
