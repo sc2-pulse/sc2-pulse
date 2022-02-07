@@ -175,8 +175,7 @@ extends BaseAPI
             {
                 Instant ts = forceRegionInstants.get(region).getValue();
                 if(ts == null
-                    || Instant.now().getEpochSecond() - ts.getEpochSecond() > AUTO_FORCE_REGION_MAX_DURATION.toSeconds()
-                    || healthMonitors.get(region).getErrorRate() <= FORCE_REGION_ERROR_RATE_THRESHOLD)
+                    || Instant.now().getEpochSecond() - ts.getEpochSecond() > AUTO_FORCE_REGION_MAX_DURATION.toSeconds())
                 setForceRegion(region, null);
             }
             else
@@ -272,6 +271,11 @@ extends BaseAPI
         forceRegions.get(target).setValueAndSave(force);
         forceRegionInstants.get(target).setValueAndSave(force == null ? null : Instant.now());
         LOG.warn("Redirecting API host: {}->{}", target, force);
+    }
+
+    protected void setForceRegionInstant(Region region, Instant instant)
+    {
+        forceRegionInstants.get(region).setValueAndSave(instant);
     }
     
     protected Region getRegion(Region targetRegion)

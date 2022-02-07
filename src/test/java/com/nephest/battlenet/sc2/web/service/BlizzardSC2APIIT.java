@@ -31,6 +31,7 @@ import reactor.util.function.Tuples;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -285,6 +286,12 @@ public class BlizzardSC2APIIT
         assertEquals(Region.KR, api.getRegion(Region.US)); //redirect to KR
 
         monitor.update(); //error rate is 0
+        api.autoForceRegion();
+
+        assertEquals(Region.KR, api.getRegion(Region.US)); //redirect to KR
+
+        //the force region duration has ended
+        api.setForceRegionInstant(Region.US, Instant.now().minusSeconds(BlizzardSC2API.AUTO_FORCE_REGION_MAX_DURATION.toSeconds() + 1));
         api.autoForceRegion();
 
         //no redirect
