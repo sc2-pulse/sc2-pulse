@@ -67,7 +67,7 @@ public class LadderCharacterDAO
         + "MAX(league_max) AS league_max "
         + "FROM player_character_filtered "
         + "INNER JOIN player_character_stats ON player_character_stats.player_character_id = player_character_filtered.id "
-        + "WHERE race IS NULL "
+        + "WHERE COALESCE(race, -32768) = -32768 "
         + "GROUP BY player_character_stats.player_character_id"
     + "), "
     + "player_character_stats_previous AS "
