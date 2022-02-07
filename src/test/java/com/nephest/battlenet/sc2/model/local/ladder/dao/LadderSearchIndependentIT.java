@@ -179,7 +179,7 @@ public class LadderSearchIndependentIT
         Team team1 = new Team
         (
             null, season1.getBattlenetId(), region,
-            new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
+            new BaseLeague(BaseLeague.LeagueType.SILVER, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11111L), bronze1.getId(),
             100L, 100, 0, 0, 0
         );
@@ -267,9 +267,9 @@ public class LadderSearchIndependentIT
         assertEquals(1, byName.size());
         LadderDistinctCharacter char1 = byName.get(0);
         assertEquals("refchar1#123", char1.getMembers().getCharacter().getName());
-        assertEquals(BaseLeague.LeagueType.BRONZE, char1.getLeagueMax());
+        assertEquals(BaseLeague.LeagueType.SILVER, char1.getLeagueMax());
         assertEquals(100, char1.getRatingMax());
-        assertEquals(199, char1.getTotalGamesPlayed());
+        assertEquals(249, char1.getTotalGamesPlayed());
         assertEquals(98, char1.getCurrentStats().getRating());
         assertEquals(149, char1.getCurrentStats().getGamesPlayed());
         assertEquals(2147483647, char1.getCurrentStats().getRank());
@@ -293,9 +293,9 @@ public class LadderSearchIndependentIT
         assertNotNull(byProfileLink);
         assertEquals("refaccount#123", byProfileLink.getMembers().getAccount().getBattleTag());
         assertEquals("refchar1#123", byProfileLink.getMembers().getCharacter().getName());
-        assertEquals(BaseLeague.LeagueType.BRONZE, byProfileLink.getLeagueMax());
+        assertEquals(BaseLeague.LeagueType.SILVER, byProfileLink.getLeagueMax());
         assertEquals(100, byProfileLink.getRatingMax());
-        assertEquals(199, byProfileLink.getTotalGamesPlayed());
+        assertEquals(249, byProfileLink.getTotalGamesPlayed());
         assertEquals(98, byProfileLink.getCurrentStats().getRating());
         assertEquals(149, byProfileLink.getCurrentStats().getGamesPlayed());
         assertEquals(2147483647, byProfileLink.getCurrentStats().getRank());
@@ -380,9 +380,9 @@ public class LadderSearchIndependentIT
         assertEquals("clanTag", char11.getMembers().getClan().getTag());
         assertEquals(Region.EU, char11.getMembers().getClan().getRegion());
         assertEquals("clanName", char11.getMembers().getClan().getName());
-        assertEquals(BaseLeague.LeagueType.BRONZE, char11.getLeagueMax());
+        assertEquals(BaseLeague.LeagueType.SILVER, char11.getLeagueMax());
         assertEquals(100, char11.getRatingMax());
-        assertEquals(199, char11.getTotalGamesPlayed());
+        assertEquals(249, char11.getTotalGamesPlayed());
         assertEquals(98, char11.getCurrentStats().getRating());
         assertEquals(149, char11.getCurrentStats().getGamesPlayed());
         assertEquals(2147483647, char11.getCurrentStats().getRank());
