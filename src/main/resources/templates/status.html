@@ -27,7 +27,7 @@
                     <th:block th:each="statusEntry : ${@statusService.getStatusMap().entrySet()}">
                         <tr>
                             <th scope="row" th:text="${statusEntry.getKey().getName()}"></th>
-                            <th:block th:with="health=${100 - @blizzardSC2API.getErrorRate(statusEntry.getKey(), true)}">
+                            <th:block th:with="health=${100 - @blizzardSC2API.getErrorRate(statusEntry.getKey(), false)}">
                                 <td
                                     th:class="${health > 90 ? 'text-success' : health > 50 ? 'text-warning' : 'text-danger'}"
                                     th:text="|${#numbers.formatDecimal(health, 1, 'DEFAULT', 2, 'DEFAULT')}%|">
