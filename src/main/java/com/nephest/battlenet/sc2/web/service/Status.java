@@ -17,7 +17,7 @@ public class Status
 
         OPERATIONAL("operational", "Fully operational.", Level.SUCCESS),
         PARTIAL("partial", "No BattleTags, league tiers, and clan names. Simplified races in team formats.", Level.WARNING),
-        REDIRECTED("redirected", "May be slower in some cases.", Level.WARNING),
+        REDIRECTED("redirected", "May be slower in some cases. Arbitrary data may be missing.", Level.WARNING),
         WEB
         (
             "web",
