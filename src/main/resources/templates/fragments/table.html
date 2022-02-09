@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -16,12 +16,6 @@
         <caption th:if="${caption}">
             <h3>
             <th:block th:text="${caption}"></th:block>
-            <img
-                    th:src="@{/static/icon/misc/info.svg}"
-                    alt="The stats are selected from player's best bracket/race for all seasons"
-                    title="The stats are selected from player's best bracket/race for all seasons"
-                    data-toggle="tooltip"
-            />
             </h3>
         </caption>
         <thead>
