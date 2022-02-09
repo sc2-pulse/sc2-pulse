@@ -203,12 +203,7 @@ public class ClanDAO
         + "games = clan_stats.games "
         + "FROM members "
         + "LEFT JOIN clan_stats USING(clan_id) "
-        + "WHERE clan.id = members.clan_id "
-        + "AND clan.members IS DISTINCT FROM members.count "
-        + "AND clan.active_members IS DISTINCT FROM clan_stats.active_members "
-        + "AND clan.avg_rating IS DISTINCT FROM clan_stats.avg_rating "
-        + "AND clan.avg_league_type IS DISTINCT FROM clan_stats.avg_league_type "
-        + "AND clan.games IS DISTINCT FROM clan_stats.games";
+        + "WHERE clan.id = members.clan_id";
 
     private static RowMapper<Clan> STD_ROW_MAPPER;
     private static ResultSetExtractor<Clan> STD_EXTRACTOR;
