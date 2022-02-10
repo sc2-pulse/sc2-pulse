@@ -216,7 +216,11 @@ class ChartUtil
                             limits: {x: {}, y: {}}
                         }}
                     },
-                    elements: {line: {tension: config.performance === "fast" ? false : 0.4}}
+                    elements: {line: {tension: config.performance === "fast" ? false : 0.4}},
+                    datasets:
+                    {
+                        bar: {inflateAmount: 0.33}
+                    }
                 }
             }
         );
