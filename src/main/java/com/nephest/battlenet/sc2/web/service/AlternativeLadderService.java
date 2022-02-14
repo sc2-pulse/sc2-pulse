@@ -224,24 +224,19 @@ public class AlternativeLadderService
                     >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis());
     }
 
-    private void updateOrAdditionalWebUpdate(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
+    public List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getExistingLadderIds
+    (Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
-        if(isAdditionalWebUpdate(season.getRegion()))
-        {
-            List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds = blizzardDAO.findLegacyLadderIds
+        return isAdditionalWebUpdate(season.getRegion())
+            ? blizzardDAO.findLegacyLadderIds
             (
                 season.getBattlenetId(),
                 new Region[]{season.getRegion()},
                 ADDITIONAL_WEB_UPDATE_QUEUE_TYPES,
                 ADDITIONAL_WEB_UPDATE_LEAGUE_TYPES,
                 BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT
-            );
-            updateLadders(season, Set.of(ADDITIONAL_WEB_UPDATE_QUEUE_TYPES), profileLadderIds, true);
-            additionalWebScanInstants.get(season.getRegion()).setValueAndSave(Instant.now());
-        }
-        else
-        {
-            List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds = blizzardDAO.findLegacyLadderIds
+            )
+            : blizzardDAO.findLegacyLadderIds
             (
                 season.getBattlenetId(),
                 new Region[]{season.getRegion()},
@@ -249,6 +244,19 @@ public class AlternativeLadderService
                 leagues,
                 BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT
             );
+    }
+
+    private void updateOrAdditionalWebUpdate(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
+    {
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
+            getExistingLadderIds(season, queueTypes, leagues);
+        if(isAdditionalWebUpdate(season.getRegion()))
+        {
+            updateLadders(season, Set.of(ADDITIONAL_WEB_UPDATE_QUEUE_TYPES), profileLadderIds, true);
+            additionalWebScanInstants.get(season.getRegion()).setValueAndSave(Instant.now());
+        }
+        else
+        {
             updateLadders(season, Set.of(queueTypes), profileLadderIds, false);
         }
     }
