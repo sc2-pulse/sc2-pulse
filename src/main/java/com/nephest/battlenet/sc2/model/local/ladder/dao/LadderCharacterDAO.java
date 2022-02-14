@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
+import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.local.Clan;
@@ -331,7 +332,7 @@ public class LadderCharacterDAO
             LadderDistinctCharacter c = findDistinctCharacterByProfileLink(term).orElse(null);
             return c == null ? List.of() : List.of(c);
         }
-        if(term.equalsIgnoreCase("f")) return List.of(); //forbid fake battletags/names
+        if(term.equalsIgnoreCase(BasePlayerCharacter.DEFAULT_FAKE_NAME)) return List.of(); //forbid fake battletags/names
         return findDistinctCharactersByNameOrBattletagOrProNickname(term);
     }
 

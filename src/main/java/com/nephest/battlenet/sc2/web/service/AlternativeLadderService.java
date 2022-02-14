@@ -444,7 +444,7 @@ public class AlternativeLadderService
         List<Tuple2<PlayerCharacter, Clan>> clans
     )
     {
-        String fakeBtag = "f#"
+        String fakeBtag = BasePlayerCharacter.DEFAULT_FAKE_NAME + "#"
             + conversionService.convert(season.getRegion(), Integer.class)
             + bMember.getRealm()
             + bMember.getId();

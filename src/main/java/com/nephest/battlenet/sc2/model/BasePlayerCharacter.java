@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
@@ -8,7 +8,9 @@ import javax.validation.constraints.NotNull;
 public class BasePlayerCharacter
 {
 
+    public static final String DEFAULT_FAKE_NAME = "f";
     public static final String DEFAULT_HASH_SUFFIX = "#1";
+    public static final String DEFAULT_FAKE_FULL_NAME = DEFAULT_FAKE_NAME + DEFAULT_HASH_SUFFIX;
 
     @NotNull
     private Integer realm;
@@ -38,7 +40,7 @@ public class BasePlayerCharacter
     {
         //Some characters can have an empty name. Use a fake name for them.
         if(name == null) {
-            this.name = "f" + DEFAULT_HASH_SUFFIX;
+            this.name = DEFAULT_FAKE_FULL_NAME;
         } else
         {
             name = name.contains("#") ? name : name + DEFAULT_HASH_SUFFIX;
