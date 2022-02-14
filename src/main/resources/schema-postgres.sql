@@ -40,6 +40,7 @@ CREATE TABLE "account"
     "id" BIGSERIAL,
     "partition" SMALLINT NOT NULL,
     "battle_tag" TEXT NOT NULL,
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
 
@@ -49,6 +50,7 @@ CREATE TABLE "account"
 );
 
 CREATE INDEX "ix_account_battle_tag" ON "account"(LOWER("battle_tag") text_pattern_ops);
+CREATE INDEX "ix_account_updated" ON "account"("updated");
 
 CREATE TABLE "account_role"
 (
@@ -68,6 +70,7 @@ CREATE TABLE "player_character"
     "realm" SMALLINT NOT NULL,
     "name" TEXT NOT NULL,
     "clan_id" INTEGER,
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
 
@@ -89,6 +92,7 @@ CREATE INDEX "ix_player_character_account_id" ON "player_character"("account_id"
 CREATE INDEX "ix_player_character_battlenet_id" ON "player_character"("battlenet_id");
 CREATE INDEX "ix_player_character_name" ON "player_character"(LOWER("name") text_pattern_ops);
 CREATE INDEX "ix_player_character_clan_id" ON "player_character"("clan_id") WHERE "clan_id" IS NOT NULL;
+CREATE INDEX "ix_player_character_updated" ON "player_character"("updated");
 
 CREATE TABLE "season"
 (

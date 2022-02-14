@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -6,14 +6,18 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 import javax.sql.DataSource;
 import java.math.BigInteger;
@@ -52,6 +56,9 @@ public class PlayerCharacterDAOIT
 
     @Autowired
     private SeasonGenerator seasonGenerator;
+
+    @Autowired
+    private JdbcTemplate template;
 
     @BeforeEach
     public void beforeEach(@Autowired DataSource dataSource)
@@ -140,6 +147,112 @@ public class PlayerCharacterDAOIT
         search3.sort(Comparator.comparing(PlayerCharacter::getId));
         assertEquals(char1, search3.get(0));
         assertEquals(char3, search3.get(1));
+    }
+
+    @Test
+    public void updateCharacters()
+    {
+        Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123"));
+        PlayerCharacter char2 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123"));
+        PlayerCharacter char3 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name3#123"));
+
+        PlayerCharacter[] updatedCharacters = new PlayerCharacter[]
+        {
+            new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name2#123"),
+            new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name2#123"),
+            new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name4#123")
+        };
+
+        OffsetDateTime minTimeAllowed = OffsetDateTime.now();
+        assertEquals(2, playerCharacterDAO.updateCharacters(updatedCharacters));
+
+        verifyUpdatedCharacters(minTimeAllowed);
+    }
+
+    private void verifyUpdatedCharacters(OffsetDateTime minTimeAllowed)
+    {
+        OffsetDateTime minTime = template.query("SELECT MIN(updated) FROM player_character", DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
+        assertTrue(minTime.isAfter(minTimeAllowed));
+
+        assertEquals("name2#123", playerCharacterDAO.find(Region.EU, 1, 1L).orElseThrow().getName());
+        assertEquals("name4#123", playerCharacterDAO.find(Region.EU, 1, 2L).orElseThrow().getName());
+
+        template.execute
+        (
+            "UPDATE player_character "
+            + "SET updated = NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' "
+            + "WHERE id = 1"
+        );
+        playerCharacterDAO.anonymizeExpiredCharacters();
+
+        assertEquals(BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME, playerCharacterDAO.find(Region.EU, 1, 1L).orElseThrow().getName());
+    }
+
+    @Test
+    public void updateAccountsAndCharacters()
+    {
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
+        Account acc2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag2#123"));
+        Account acc3 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag10#123"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123"));
+        PlayerCharacter char2 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123"));
+        PlayerCharacter char3 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name3#123"));
+        PlayerCharacter char4 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name10#123"));
+
+        List<Tuple2<Account, PlayerCharacter>> updatedAccsAndChars = List.of
+        (
+            Tuples.of
+            (
+                new Account(null, Partition.GLOBAL, "tag3#123"),
+                new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123")
+            ),
+            Tuples.of
+            (
+                new Account(null, Partition.GLOBAL, "tag3#123"),
+                new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123")
+            ),
+            Tuples.of
+            (
+                new Account(null, Partition.GLOBAL, "tag4#123"),
+                new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123")
+            ),
+            Tuples.of
+            (
+                new Account(null, Partition.GLOBAL, "tag10#123"),
+                new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name11#123")
+            )
+        );
+
+        OffsetDateTime minTimeAllowed = OffsetDateTime.now();
+        assertEquals(3, playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars));
+
+        verifyUpdatedCharacters(minTimeAllowed);
+        OffsetDateTime minAccTime =
+            template.query("SELECT MIN(updated) FROM account", DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
+        assertTrue(minAccTime.isAfter(minTimeAllowed));
+
+        assertEquals("tag3#123", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
+        assertEquals("tag4#123", accountDAO.findByIds(acc2.getId()).get(0).getBattleTag());
+        //character is rebound to another account
+        assertEquals(acc3.getId(), playerCharacterDAO.find(Region.EU, 1, 3L).orElseThrow().getAccountId());
+
+        template.execute
+        (
+            "UPDATE account "
+            + "SET updated = NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' "
+            + "WHERE id = " + acc1.getId()
+        );
+        accountDAO.anonymizeExpiredAccounts();
+
+        assertEquals(BasePlayerCharacter.DEFAULT_FAKE_NAME + "#211", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
     }
 
 }

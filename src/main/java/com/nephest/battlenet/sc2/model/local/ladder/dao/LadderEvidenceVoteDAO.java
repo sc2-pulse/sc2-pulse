@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -26,7 +26,7 @@ public class LadderEvidenceVoteDAO
         + AccountDAO.STD_SELECT
         + "FROM evidence_vote "
         + "INNER JOIN account ON evidence_vote.voter_account_id = account.id "
-        + "ORDER BY updated DESC";
+        + "ORDER BY evidence_vote.updated DESC";
 
     private static final String FIND_BY_EVIDENCE_IDS =
         "SELECT "
@@ -35,7 +35,7 @@ public class LadderEvidenceVoteDAO
         + "FROM evidence_vote "
         + "INNER JOIN account ON evidence_vote.voter_account_id = account.id "
         + "WHERE evidence_id IN (:evidenceIds) "
-        + "ORDER BY updated DESC";
+        + "ORDER BY evidence_vote.updated DESC";
 
     public static final RowMapper<LadderEvidenceVote> STD_ROW_MAPPER = (rs, i)->new LadderEvidenceVote
     (

@@ -3,12 +3,15 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.util.BookmarkedResult;
 import com.nephest.battlenet.sc2.model.util.SimpleBookmarkedResultSetExtractor;
+import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,9 +20,11 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import reactor.util.function.Tuple2;
 
 import java.sql.Types;
 import java.time.OffsetDateTime;
@@ -87,6 +92,49 @@ public class PlayerCharacterDAO
         + "SELECT id FROM selected "
         + "UNION "
         + "SELECT id FROM inserted";
+
+    private static final String UPDATE_CHARACTERS =
+        "WITH "
+        + "vals AS (VALUES :characters) "
+        + "UPDATE player_character "
+        + "SET updated = NOW(), "
+        + "name = v.name "
+        + "FROM vals v(region, realm, battlenet_id, name) "
+        + "WHERE player_character.region = v.region "
+        + "AND player_character.battlenet_id = v.battlenet_id "
+        + "AND player_character.realm = v.realm";
+
+    private static final String UPDATE_ACCOUNTS_AND_CHARACTERS =
+        "WITH "
+        + "vals AS (VALUES :characters),"
+        + "updated_character AS "
+        + "( "
+            + "UPDATE player_character "
+            + "SET updated = NOW(), "
+            /*
+                There can be a situation when a BattleTag already exists in one region, but characters were not
+                yet rebound to it in another region due to API issues. Rebind it now.
+             */
+            + "account_id = COALESCE(account.id, account_id), "
+            + "name = v.name "
+            + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name) "
+            + "LEFT JOIN account ON v.partition = account.partition "
+                + "AND v.battle_tag = account.battle_tag "
+            + "WHERE player_character.region = v.region "
+            + "AND player_character.battlenet_id = v.battlenet_id "
+            + "AND player_character.realm = v.realm "
+            + "RETURNING player_character.account_id, v.battle_tag "
+        + ") "
+        + "UPDATE account "
+        + "SET updated = NOW(), "
+        + "battle_tag = updated_character.battle_tag "
+        + "FROM updated_character "
+        + "WHERE account.id = updated_character.account_id";
+
+    private static final String ANONYMIZE_EXPIRED_CHARACTERS =
+        "UPDATE player_character "
+        + "SET name = '" + BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME + "' " 
+        + "WHERE updated < NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days'";
 
     private static final String FIND_PRO_PLAYER_CHARACTER_IDS =
         "SELECT player_character.id FROM player_character "
@@ -222,6 +270,51 @@ public class PlayerCharacterDAO
         MapSqlParameterSource params = createParameterSource(character);
         character.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return character;
+    }
+
+    /*
+        updateCharacters and updateAccountsAndCharacters methods are primarily used to update historical BattleTags,
+        names, and timestamps. This ensures full compliance with the Blizzard ToS.
+     */
+    public int updateCharacters(PlayerCharacter... characters)
+    {
+        if(characters.length == 0) return 0;
+
+        List<Object[]> data = Arrays.stream(characters)
+            .map(c->new Object[]
+            {
+                conversionService.convert(c.getRegion(), Integer.class),
+                c.getRealm(),
+                c.getBattlenetId(),
+                c.getName()
+            })
+            .collect(Collectors.toList());
+        SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
+        return template.update(UPDATE_CHARACTERS, params);
+    }
+
+    public int updateAccountsAndCharacters(List<Tuple2<Account, PlayerCharacter>> accountsAndCharacters)
+    {
+        if(accountsAndCharacters.isEmpty()) return 0;
+
+        List<Object[]> data = accountsAndCharacters.stream()
+            .map(c->new Object[]
+            {
+                conversionService.convert(c.getT1().getPartition(), Integer.class),
+                c.getT1().getBattleTag(),
+                conversionService.convert(c.getT2().getRegion(), Integer.class),
+                c.getT2().getRealm(),
+                c.getT2().getBattlenetId(),
+                c.getT2().getName()
+            })
+            .collect(Collectors.toList());
+        SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
+        return template.update(UPDATE_ACCOUNTS_AND_CHARACTERS, params);
+    }
+
+    public int anonymizeExpiredCharacters()
+    {
+        return template.update(ANONYMIZE_EXPIRED_CHARACTERS, new MapSqlParameterSource());
     }
 
     private MapSqlParameterSource createParameterSource(PlayerCharacter character)

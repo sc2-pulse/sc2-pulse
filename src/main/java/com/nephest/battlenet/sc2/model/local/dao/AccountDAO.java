@@ -4,8 +4,10 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
+import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -48,6 +50,14 @@ public class AccountDAO
         + "SELECT id FROM selected "
         + "UNION "
         + "SELECT id FROM inserted";
+
+    private static final String ANONYMIZE_EXPIRED_ACCOUNTS =
+        "UPDATE account "
+        + "SET battle_tag = '" + BasePlayerCharacter.DEFAULT_FAKE_NAME + "#' "
+        + "|| player_character.region::text || player_character.realm::text || player_character.battlenet_id::text "
+        + "FROM player_character "
+        + "WHERE account.updated < NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' "
+        + "AND account.id = player_character.account_id";
 
     private static final String FIND_BY_PARTITION_AND_BATTLE_TAG =
         "SELECT " + STD_SELECT
@@ -121,6 +131,11 @@ public class AccountDAO
         MapSqlParameterSource params = createParameterSource(account);
         account.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return account;
+    }
+
+    public int anonymizeExpiredAccounts()
+    {
+        return template.update(ANONYMIZE_EXPIRED_ACCOUNTS, new MapSqlParameterSource());
     }
 
     public Optional<Account> find(Partition partition, String battleTag)

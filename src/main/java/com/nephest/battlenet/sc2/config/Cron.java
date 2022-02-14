@@ -107,6 +107,9 @@ public class Cron
     @Autowired
     private StatusService statusService;
 
+    @Autowired
+    private BlizzardPrivacyService blizzardPrivacyService;
+
     private final AtomicBoolean updatingLadders = new AtomicBoolean(false);
 
     @PostConstruct
@@ -177,6 +180,7 @@ public class Cron
             System.gc();
             statsService.afterCurrentSeasonUpdate(updateService.getUpdateContext(null), false);
             calculateHeavyStats();
+            blizzardPrivacyService.update();
             updateService.updated(begin);
             if(!Objects.equals(lastMatchInstant, matchInstant.getValue())) matchUpdateContext =
                 updateService.getUpdateContext(null);
