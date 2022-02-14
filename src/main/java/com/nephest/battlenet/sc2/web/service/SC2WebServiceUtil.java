@@ -58,4 +58,21 @@ public class SC2WebServiceUtil
         return getCurrentOrLastOrExistingSeason(region, seasonDAO.getMaxBattlenetId());
     }
 
+    public BlizzardSeason getExternalOrExistingSeason(Region region, int season)
+    {
+        try
+        {
+            return api.getSeason(region, season).block();
+        }
+        catch(RuntimeException ex)
+        {
+            if(!(ExceptionUtils.getRootCause(ex) instanceof WebClientResponseException)) throw ex;
+            LOG.warn(ExceptionUtils.getRootCauseMessage(ex));
+        }
+        Season s = seasonDAO.findListByRegion(region).stream()
+            .filter(ss->ss.getBattlenetId().equals(season))
+            .findAny().orElseThrow();
+        return new BlizzardSeason(s.getBattlenetId(), s.getYear(), s.getNumber(), s.getStart(), s.getEnd());
+    }
+
 }
