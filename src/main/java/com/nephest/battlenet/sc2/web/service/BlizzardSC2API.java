@@ -59,6 +59,7 @@ extends BaseAPI
     public static final int FIRST_SEASON = 28;
     public static final int PROFILE_LADDER_RETRY_COUNT = 3;
     public static final Duration ERROR_RATE_FRAME = Duration.ofMinutes(60);
+    public static final Duration HEALTH_SAVE_FRAME = Duration.ofMinutes(3);
     public static final double RETRY_ERROR_RATE_THRESHOLD = 40.0;
     public static final double FORCE_REGION_ERROR_RATE_THRESHOLD = 40.0;
     public static final Duration AUTO_FORCE_REGION_MAX_DURATION = Duration.ofDays(7);
@@ -104,6 +105,7 @@ extends BaseAPI
             calculateErrorRates();
             if(autoForceRegion) autoForceRegion();
         }).subscribe();
+        Flux.interval(HEALTH_SAVE_FRAME).doOnNext(i->saveHealth()).subscribe();
     }
 
     @PostConstruct
@@ -299,6 +301,12 @@ extends BaseAPI
     {
         healthMonitors.forEach((region, monitor)->LOG.debug("{} error rate: {}%", region, monitor.update()));
         webHealthMonitors.forEach((region, monitor)->LOG.debug("{} web error rate: {}%", region, monitor.update()));
+    }
+
+    private void saveHealth()
+    {
+        healthMonitors.values().forEach(APIHealthMonitor::save);
+        webHealthMonitors.values().forEach(APIHealthMonitor::save);
     }
     
     private RetrySpec getRetry(Region region, RetrySpec wanted, boolean web)
