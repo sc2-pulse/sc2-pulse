@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
+import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import reactor.util.retry.RetrySpec;
 import javax.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.LongStream;
 
@@ -101,7 +103,7 @@ extends BaseAPI
         for(Region r : Region.values()) rateLimiters.put(r, new ReactorRateLimiter());
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME).doOnNext(i->refreshReactorSlots()).subscribe();
         initErrorRates(varDAO);
-        Flux.interval(ERROR_RATE_FRAME, ERROR_RATE_FRAME).doOnNext(i->{
+        Flux.interval(MiscUtil.untilNextHour(LocalDateTime.now()), ERROR_RATE_FRAME).doOnNext(i->{
             calculateErrorRates();
             if(autoForceRegion) autoForceRegion();
         }).subscribe();
@@ -206,6 +208,20 @@ extends BaseAPI
             ? webHealthMonitors.get(getRegion(region)).getErrorRate()
             : healthMonitors.get(getRegion(region)).getErrorRate();
     }
+
+    public double getRequestCapProgress()
+    {
+        return healthMonitors.values().stream()
+            .mapToDouble(m->(m.getRequests() / (double) REQUESTS_PER_HOUR_CAP))
+            .max()
+            .orElse(0);
+    }
+
+    public boolean requestCapNotReached()
+    {
+        return getRequestCapProgress() < MiscUtil.getHourProgress(LocalDateTime.now());
+    }
+
 
     public static boolean isValidCombination(League.LeagueType leagueType, QueueType queueType, TeamType teamType)
     {
