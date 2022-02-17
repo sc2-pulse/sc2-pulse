@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.util;
@@ -6,6 +6,9 @@ package com.nephest.battlenet.sc2.util;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.time.Duration;
+import java.time.temporal.ChronoField;
+import java.time.temporal.Temporal;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -54,5 +57,26 @@ public final class MiscUtil
         if(clear) tasks.clear();
     }
 
+    public static Duration sinceHourStart(Temporal temporal)
+    {
+        return Duration.between
+        (
+            temporal
+                .with(ChronoField.MINUTE_OF_HOUR, 0)
+                .with(ChronoField.SECOND_OF_MINUTE, 0)
+                .with(ChronoField.NANO_OF_SECOND, 0),
+            temporal
+        );
+    }
+
+    public static Duration untilNextHour(Temporal temporal)
+    {
+        return Duration.ofHours(1).minus(sinceHourStart(temporal));
+    }
+
+    public static double getHourProgress(Temporal temporal)
+    {
+        return (sinceHourStart(temporal).toSeconds() / 3600.0);
+    }
 
 }
