@@ -13,6 +13,8 @@
 <div th:replace="~{fragments/generic :: content(~{::section})}">
     <section id="status">
         <h2>Status</h2>
+        <p th:text="|The estimated refresh time is a pessimistic estimate, some data may be updated faster. Match history is always
+        updated once per ${T(com.nephest.battlenet.sc2.config.Cron).MATCH_UPDATE_FRAME.toMinutes()} minutes|"></p>
         <div class="table-responsive">
             <table class="table table-sm table-hover inline-table">
                 <thead>
