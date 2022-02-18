@@ -3,7 +3,6 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import com.nephest.battlenet.sc2.config.Cron;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,20 +107,9 @@ public class StatusService
 
     private void updateDuration(Region region, Status status)
     {
-        UpdateContext ctx = updateService.getUpdateContext(region);
         Duration refreshDuration = status.getFlags().contains(Status.Flag.WEB)
             ? AlternativeLadderService.DISCOVERY_TIME_FRAME
-            : Cron.getMinUpdateFrame(statsService, api);
-        refreshDuration = Duration.ofSeconds
-        (
-            Math.max
-            (
-                refreshDuration.toSeconds(),
-                ctx == null || ctx.getInternalUpdate() == null
-                    ? 0
-                    : ctx.getInternalUpdate().getEpochSecond() - ctx.getExternalUpdate().getEpochSecond()
-            )
-        );
+            : updateService.calculateUpdateDuration(null);
         status.setRefreshDuration(refreshDuration);
     }
 

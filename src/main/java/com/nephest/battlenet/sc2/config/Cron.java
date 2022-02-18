@@ -41,10 +41,8 @@ public class Cron
     public static final Duration MAINTENANCE_FREQUENT_FRAME = Duration.ofDays(2);
     public static final Duration MAINTENANCE_INFREQUENT_FRAME = Duration.ofDays(10);
     public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(300);
-    public static final Duration MIN_UPDATE_FRAME_ALTERNATIVE = Duration.ofSeconds(360);
     public static final Duration MAP_STATS_DEFAULT_UPDATE_FRAME = Duration.ofMinutes(60);
     public static final Duration MAP_STATS_SKIP_NEW_SEASON_FRAME = Duration.ofDays(8);
-    public static final long FORCE_REGION_FRAME_MULTIPLIER = 2;
 
     private InstantVar heavyStatsInstant;
     private InstantVar maintenanceFrequentInstant;
@@ -302,9 +300,7 @@ public class Cron
 
     private boolean shouldUpdate()
     {
-        return updateService.getUpdateContext(null).getExternalUpdate() == null
-            || System.currentTimeMillis() - updateService.getUpdateContext(null).getExternalUpdate().toEpochMilli()
-                >= getMinUpdateFrame().toMillis();
+        return sc2API.requestCapNotReached();
     }
 
     private void commenceMaintenance()
@@ -334,32 +330,6 @@ public class Cron
         postgreSQLUtils.reindex("ix_team_state_team_id_archived", "ix_team_state_timestamp");
         persistentLoginDAO.removeExpired();
         this.maintenanceInfrequentInstant.setValueAndSave(Instant.now());
-    }
-
-    public static Duration getMinUpdateFrame(StatsService statsService, BlizzardSC2API sc2API)
-    {
-        Duration duration = statsService.isAlternativeUpdate(Region.EU, true)
-            || statsService.isAlternativeUpdate(Region.US, true)
-            || statsService.isAlternativeUpdate(Region.CN, true)
-                ? MIN_UPDATE_FRAME_ALTERNATIVE
-                : MIN_UPDATE_FRAME;
-
-        Region forcedUsRegion = sc2API.getForceRegion(Region.US);
-        Region forcedEuRegion = sc2API.getForceRegion(Region.EU);
-        if
-        (
-            forcedUsRegion == Region.EU
-            || forcedEuRegion == Region.US
-            || (forcedUsRegion != null && forcedEuRegion != null)
-        )
-            duration = duration.multipliedBy(FORCE_REGION_FRAME_MULTIPLIER);
-
-        return duration;
-    }
-
-    public Duration getMinUpdateFrame()
-    {
-        return getMinUpdateFrame(statsService, sc2API);
     }
 
 }
