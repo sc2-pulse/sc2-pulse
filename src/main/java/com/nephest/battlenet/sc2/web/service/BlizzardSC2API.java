@@ -209,6 +209,11 @@ extends BaseAPI
             : healthMonitors.get(getRegion(region)).getErrorRate();
     }
 
+    public double getRequestCapProgress(Region region)
+    {
+        return healthMonitors.get(region).getRequests() / (double) REQUESTS_PER_HOUR_CAP;
+    }
+
     public double getRequestCapProgress()
     {
         return healthMonitors.values().stream()

@@ -19,6 +19,7 @@
                     <tr>
                         <th scope="col">Region</th>
                         <th scope="col">Health</th>
+                        <th scope="col">Request cap</th>
                         <th scope="col">Flags</th>
                         <th scope="col">Estimated refresh time (minutes)</th>
                     </tr>
@@ -31,6 +32,12 @@
                                 <td
                                     th:class="${health > 90 ? 'text-success' : health > 50 ? 'text-warning' : 'text-danger'}"
                                     th:text="|${#numbers.formatDecimal(health, 1, 'DEFAULT', 2, 'DEFAULT')}%|">
+                                </td>
+                            </th:block>
+                            <th:block th:with="requestCap=${@blizzardSC2API.getRequestCapProgress(statusEntry.getKey()) * 100}">
+                                <td
+                                    th:class="${requestCap < 110 ? 'text-success' : requestCap < 150 ? 'text-warning' : 'text-danger'}"
+                                    th:text="|${#numbers.formatDecimal(requestCap, 1, 'DEFAULT', 2, 'DEFAULT')}%|">
                                 </td>
                             </th:block>
                             <td>
