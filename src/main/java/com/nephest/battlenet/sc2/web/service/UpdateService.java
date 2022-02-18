@@ -26,6 +26,7 @@ public class UpdateService
 
     private final Map<Region, UpdateContext> regionalContexts = new EnumMap<>(Region.class);
     private UpdateContext globalContext;
+    private UpdateContext previousGlobalContext;
 
     @Autowired
     public UpdateService(VarDAO varDAO)
@@ -65,6 +66,7 @@ public class UpdateService
         try
         {
             globalContext = new UpdateContext(loadLastExternalUpdate(null), loadLastInternalUpdate(null));
+            previousGlobalContext = new UpdateContext(globalContext.getExternalUpdate(), globalContext.getInternalUpdate());
             LOG.debug
             (
                 "Loaded last update context: {} {}",
@@ -99,6 +101,7 @@ public class UpdateService
         Instant internalUpdate = Instant.now();
         varDAO.merge("global.updated", String.valueOf(externalUpdate.toEpochMilli()));
         varDAO.merge("global.updated.internal", String.valueOf(internalUpdate.toEpochMilli()));
+        previousGlobalContext = globalContext;
         globalContext = new UpdateContext(externalUpdate, internalUpdate);
     }
 
@@ -118,9 +121,9 @@ public class UpdateService
     public Duration calculateUpdateDuration(Region region)
     {
         UpdateContext context = getUpdateContext(region);
-        return context == null
-            ? Duration.ofSeconds(0)
-            : Duration.between(globalContext.getExternalUpdate(), globalContext.getInternalUpdate());
+        return context == null || (region == null && previousGlobalContext == null)
+            ? Duration.ZERO
+            : Duration.between(previousGlobalContext.getExternalUpdate(), globalContext.getExternalUpdate());
     }
 
 }
