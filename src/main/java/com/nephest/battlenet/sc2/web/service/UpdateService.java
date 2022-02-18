@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.Map;
@@ -112,6 +113,14 @@ public class UpdateService
     public UpdateContext getUpdateContext(Region region)
     {
         return region == null ? globalContext : regionalContexts.get(region);
+    }
+
+    public Duration calculateUpdateDuration(Region region)
+    {
+        UpdateContext context = getUpdateContext(region);
+        return context == null
+            ? Duration.ofSeconds(0)
+            : Duration.between(globalContext.getExternalUpdate(), globalContext.getInternalUpdate());
     }
 
 }
