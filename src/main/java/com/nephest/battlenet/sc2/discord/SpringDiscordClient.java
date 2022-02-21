@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
 
 import com.nephest.battlenet.sc2.discord.event.SlashCommand;
+import com.nephest.battlenet.sc2.discord.event.UserCommand;
 import discord4j.core.GatewayDiscordClient;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -25,11 +26,12 @@ public class SpringDiscordClient
     public SpringDiscordClient
     (
         List<SlashCommand> handlers,
+        List<UserCommand> userInteractionHandlers,
         @Value("${discord.token:}") String token,
         @Value("${discord.guild:}") Long guild
     )
     {
-        this.client = DiscordBootstrap.load(handlers, token, guild);
+        this.client = DiscordBootstrap.load(handlers, userInteractionHandlers, token, guild);
     }
 
     @PreDestroy

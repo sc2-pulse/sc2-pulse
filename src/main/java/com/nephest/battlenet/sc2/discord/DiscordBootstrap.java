@@ -3,7 +3,9 @@
 
 package com.nephest.battlenet.sc2.discord;
 
+import com.nephest.battlenet.sc2.discord.event.DiscordApplicationCommand;
 import com.nephest.battlenet.sc2.discord.event.SlashCommand;
+import com.nephest.battlenet.sc2.discord.event.UserCommand;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
@@ -12,7 +14,10 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
+import discord4j.core.event.domain.interaction.UserInteractionEvent;
+import discord4j.core.object.command.ApplicationCommand;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.command.ApplicationCommandOption;
@@ -32,6 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
@@ -90,30 +96,48 @@ public class DiscordBootstrap
         return leagueEmojis.getOrDefault(league, league.getName());
     }
 
-    public static GatewayDiscordClient load(List<SlashCommand> handlers, String token, Long guild)
+    public static GatewayDiscordClient load
+    (List<SlashCommand> handlers, List<UserCommand> userInteractionHandlers, String token, Long guild)
     {
         GatewayDiscordClient client = DiscordClientBuilder.create(token)
             .build()
             .login()
             .block();
 
-        List<ApplicationCommandRequest> reqs = handlers.stream()
-            .map(c->appendMetaOptions(c.generateCommandRequest()).build())
-            .collect(Collectors.toList());
-        registerCommands(client.getRestClient(), reqs, guild);
-
-        Map<String, SlashCommand> handlerMap = handlers.stream()
-            .collect(Collectors.toMap(SlashCommand::getCommandName, Function.identity()));
-        client.on(ChatInputInteractionEvent.class, evt->handle(handlerMap, evt)).subscribe();
+        registerCommands(handlers, ChatInputInteractionEvent.class, ApplicationCommand.Type.CHAT_INPUT, client, guild, true);
+        registerCommands(userInteractionHandlers, UserInteractionEvent.class, ApplicationCommand.Type.USER, client, guild, false);
         client.updatePresence(ClientPresence.online(ClientActivity.watching(SC2_GAME_NAME))).block();
 
         return client;
     }
 
-    private static Mono<Message> handle(Map<String, SlashCommand> handlerMap, ChatInputInteractionEvent evt)
+    private static <T extends ApplicationCommandInteractionEvent> void registerCommands
+    (
+        List<? extends DiscordApplicationCommand<T>> handlers,
+        Class<T> clazz,
+        discord4j.core.object.command.ApplicationCommand.Type type,
+        GatewayDiscordClient client,
+        Long guild,
+        boolean metaOptions
+    )
     {
-        boolean ephemeral = getEphemeral(evt);
-        SlashCommand handler = handlerMap.get(evt.getCommandName());
+        List<ApplicationCommandRequest> reqs = handlers.stream()
+            .map(c->metaOptions ? appendMetaOptions(c.generateCommandRequest()).build() : c.generateCommandRequest().build())
+            .collect(Collectors.toList());
+        registerCommands(client.getRestClient(), reqs, guild, type);
+
+        Map<String, DiscordApplicationCommand<T>> handlerMap = handlers.stream()
+            .collect(Collectors.toMap(DiscordApplicationCommand::getCommandName, Function.identity()));
+        client.on(clazz, evt->handle(handlerMap, evt)).subscribe();
+    }
+
+
+
+    private static <T extends ApplicationCommandInteractionEvent> Mono<Message> handle
+    (Map<String, DiscordApplicationCommand<T>> handlerMap, T evt)
+    {
+        DiscordApplicationCommand<T> handler = handlerMap.get(evt.getCommandName());
+        boolean ephemeral = getEphemeral(evt, handler);
         if(handler == null)
         {
             String msg = "Unsupported command: " + evt.getCommandName();
@@ -143,7 +167,8 @@ public class DiscordBootstrap
             });
     }
 
-    public static void registerCommands(RestClient client, Collection<ApplicationCommandRequest> cmds, Long guild)
+    public static void registerCommands
+    (RestClient client, Collection<ApplicationCommandRequest> cmds, Long guild, ApplicationCommand.Type type)
     {
         Map<String, ApplicationCommandRequest> commands = cmds.stream()
             .collect(Collectors.toMap(ApplicationCommandRequest::name, Function.identity()));
@@ -151,7 +176,8 @@ public class DiscordBootstrap
         final long applicationId = client.getApplicationId().block();
 
         //These are commands already registered with discord from previous runs of the bot.
-        Map<String, ApplicationCommandData> discordCommands = getDiscordCommands(applicationService, applicationId, guild);
+        Map<String, ApplicationCommandData> discordCommands =
+            getDiscordCommands(applicationService, applicationId, guild, type);
 
         for(ApplicationCommandRequest request : commands.values()){
             if (!discordCommands.containsKey(request.name()))
@@ -178,22 +204,15 @@ public class DiscordBootstrap
     }
 
     private static Map<String, ApplicationCommandData> getDiscordCommands
-    (ApplicationService applicationService, long appId, Long guild)
+    (ApplicationService applicationService, long appId, Long guild, ApplicationCommand.Type type)
     {
-        Map<String, ApplicationCommandData> discordCommands;
-        if(guild == null)
-        {
-            discordCommands = applicationService
-                .getGlobalApplicationCommands(appId).collectMap(ApplicationCommandData::name)
-                .block();
-        }
-        else
-        {
-            discordCommands = applicationService
-                .getGuildApplicationCommands(appId, guild).collectMap(ApplicationCommandData::name)
-                .block();
-        }
-        return discordCommands;
+        Flux<ApplicationCommandData> datas = guild == null
+            ? applicationService.getGlobalApplicationCommands(appId)
+            : applicationService.getGuildApplicationCommands(appId, guild);
+        return datas
+            .filter(c->c.type().toOptional().orElse(ApplicationCommand.Type.UNKNOWN.getValue()).equals(type.getValue()))
+            .collectMap(ApplicationCommandData::name)
+            .block();
     }
 
 
@@ -285,9 +304,17 @@ public class DiscordBootstrap
             .orElse(def);
     }
 
-    public static boolean getEphemeral(ChatInputInteractionEvent evt)
+    public static boolean getEphemeral(ApplicationCommandInteractionEvent evt, DiscordApplicationCommand<?> cmd)
     {
-        return getArgument(evt, "ephemeral", ApplicationCommandInteractionOptionValue::asBoolean, DiscordBootstrap.DEFAULT_EPHEMERAL);
+        if(evt instanceof ChatInputInteractionEvent)
+        {
+            return getArgument((ChatInputInteractionEvent) evt, "ephemeral",
+                ApplicationCommandInteractionOptionValue::asBoolean, DiscordBootstrap.DEFAULT_EPHEMERAL);
+        }
+        else
+        {
+            return cmd.isEphemeral();
+        }
     }
 
     public static String generateCharacterURL(LadderTeamMember member)
@@ -339,7 +366,7 @@ public class DiscordBootstrap
         return sb.toString();
     }
 
-    public static Mono<Message> notFoundFollowup(ChatInputInteractionEvent evt)
+    public static Mono<Message> notFoundFollowup(ApplicationCommandInteractionEvent evt)
     {
         return evt.createFollowup("Not found. Try different filter combinations");
     }

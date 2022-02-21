@@ -3,16 +3,16 @@
 
 package com.nephest.battlenet.sc2.discord.event;
 
-import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
+import discord4j.core.event.domain.interaction.UserInteractionEvent;
 
-public interface SlashCommand
-extends DiscordApplicationCommand<ChatInputInteractionEvent>
+public interface UserCommand
+extends DiscordApplicationCommand<UserInteractionEvent>
 {
 
     @Override
     default boolean isEphemeral()
     {
-        return false;
+        return true;
     }
 
 }
