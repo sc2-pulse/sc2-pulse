@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
+import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
@@ -21,6 +22,7 @@ import discord4j.core.object.command.ApplicationCommand;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.command.ApplicationCommandOption;
+import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.presence.ClientActivity;
 import discord4j.core.object.presence.ClientPresence;
@@ -315,6 +317,14 @@ public class DiscordBootstrap
         {
             return cmd.isEphemeral();
         }
+    }
+
+    public static Mono<String> getTargetDisplayNameOrName(UserInteractionEvent evt)
+    {
+        Snowflake guildId = evt.getInteraction().getGuildId().orElse(null);
+        return guildId != null
+            ? evt.getResolvedUser().asMember(guildId).map(Member::getDisplayName)
+            : Mono.just(evt.getResolvedUser().getUsername());
     }
 
     public static String generateCharacterURL(LadderTeamMember member)
