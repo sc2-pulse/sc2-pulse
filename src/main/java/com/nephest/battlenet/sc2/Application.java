@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2;
@@ -23,6 +23,7 @@ import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
@@ -34,6 +35,7 @@ import java.util.concurrent.Executors;
 
 @SpringBootApplication
 @EnableCaching
+@EnableRetry
 @EnableScheduling
 @EnableTransactionManagement
 @PropertySource("classpath:application-private.properties")

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
@@ -10,10 +10,12 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @EnableCaching
 @EnableTransactionManagement
+@EnableRetry
 @EnableAutoConfiguration
 @ComponentScan
 (

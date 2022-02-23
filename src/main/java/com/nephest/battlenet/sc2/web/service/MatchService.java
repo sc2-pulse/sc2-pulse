@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
@@ -202,7 +203,8 @@ public class MatchService
         return count.get();
     }
 
-    @Transactional
+    //This method fails in a rare occasion due to unknown reason. Retry for now, should be properly fixed later.
+    @Transactional @Retryable
     protected void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacter>> matches)
     {
         matches = matches.stream()
