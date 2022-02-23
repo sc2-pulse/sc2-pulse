@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -706,7 +706,7 @@ public class PlayerCharacterReportIT
         assertEquals(account.getId(), evidence1_1.getEvidence().getReporterAccountId());
         assertArrayEquals
         (
-            InetAddress.getByName("127.0.0.1").getAddress(),
+            null,
             evidence1_1.getEvidence().getReporterIp()
         );
         assertEquals("evidence text 2", evidence1_1.getEvidence().getDescription());
@@ -717,7 +717,7 @@ public class PlayerCharacterReportIT
         assertEquals(account.getId(), evidence1_2.getEvidence().getReporterAccountId());
         assertArrayEquals
         (
-            InetAddress.getByName("127.0.0.1").getAddress(),
+            null,
             evidence1_2.getEvidence().getReporterIp()
         );
         assertEquals("evidence text", evidence1_2.getEvidence().getDescription());
@@ -735,7 +735,7 @@ public class PlayerCharacterReportIT
         assertEquals(account.getId(), evidence2_1.getEvidence().getReporterAccountId());
         assertArrayEquals
         (
-            InetAddress.getByName("127.0.0.1").getAddress(),
+            null,
             evidence2_1.getEvidence().getReporterIp()
         );
         assertEquals("evidence text link 2", evidence2_1.getEvidence().getDescription());
@@ -753,7 +753,7 @@ public class PlayerCharacterReportIT
         assertEquals(account.getId(), evidence3_1.getEvidence().getReporterAccountId());
         assertArrayEquals
         (
-            InetAddress.getByName("127.0.0.1").getAddress(),
+            null,
             evidence3_1.getEvidence().getReporterIp()
         );
         assertEquals("evidence text link", evidence3_1.getEvidence().getDescription());
@@ -814,7 +814,7 @@ public class PlayerCharacterReportIT
         LadderPlayerCharacterReport[] reports = getReports();
         Arrays.stream(reports)
             .flatMap(r->r.getEvidence().stream())
-            .forEach(e->assertArrayEquals(EvidenceDAO.REPORTER_IP_PRIVATE_REPLACEMENT, e.getEvidence().getReporterIp()));
+            .forEach(e->assertArrayEquals(null, e.getEvidence().getReporterIp()));
     }
 
 }

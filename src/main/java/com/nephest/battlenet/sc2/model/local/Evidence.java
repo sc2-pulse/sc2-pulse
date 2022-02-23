@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -21,7 +21,6 @@ implements java.io.Serializable
 
     private Long reporterAccountId;
 
-    @NotNull
     private byte[] reporterIp;
 
     @NotNull @Size(max=MAX_LENGTH)
@@ -42,7 +41,7 @@ implements java.io.Serializable
         Integer id,
         Integer playerCharacterReportId,
         Long reporterAccountId,
-        @NotNull byte[] reporterIp,
+        byte[] reporterIp,
         String description,
         Boolean status,
         OffsetDateTime statusChangeDateTime,

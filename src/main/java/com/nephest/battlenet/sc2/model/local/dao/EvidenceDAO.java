@@ -27,7 +27,6 @@ public class EvidenceDAO
     public static final int ACTIVE_MOD_THRESHOLD_DAYS = 14;
     public static final int HIDE_DENIED_EVIDENCE_DAYS = 30;
     public static final int DENIED_EVIDENCE_TTL_DAYS = 180;
-    public static final byte[] REPORTER_IP_PRIVATE_REPLACEMENT = new byte[]{127, 0, 0, 1};
 
     public static final String STD_SELECT =
         "evidence.id AS \"evidence.id\", "
@@ -44,8 +43,8 @@ public class EvidenceDAO
         rs.getInt("evidence.id"),
         rs.getInt("evidence.player_character_report_id"),
         DAOUtils.getLong(rs, "evidence.reporter_account_id"),
-        //return generic localhost instead of real IP in accordance with privacy policy
-        REPORTER_IP_PRIVATE_REPLACEMENT,
+        //return null instead of real IP in accordance with privacy policy
+        null,
         rs.getString("evidence.description"),
         DAOUtils.getBoolean(rs, "evidence.status"),
         rs.getObject("evidence.status_change_timestamp", OffsetDateTime.class),

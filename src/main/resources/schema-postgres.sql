@@ -586,7 +586,7 @@ CREATE TABLE "evidence"
     "id" SERIAL,
     "player_character_report_id" INTEGER NOT NULL,
     "reporter_account_id" BIGINT,
-    "reporter_ip" bytea NOT NULL,
+    "reporter_ip" bytea,
     "description" VARCHAR(400) NOT NULL,
     "status" BOOLEAN,
     "status_change_timestamp" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
