@@ -46,6 +46,12 @@ extends SpringBootServletInitializer
     public static final String VERSION = Application.class.getPackage().getImplementationVersion() != null
         ? Application.class.getPackage().getImplementationVersion()
         : "unknown";
+    /*
+        Don't change the DB thread count. The DB code doesn't handle concurrent transactions, so deadlocks can happen.
+        There is no need to have more than 1 thread here because most of the CPU work is done on the DB side, so
+        there is no need to properly handle concurrency because it will waste CPU resources without any performance
+        boost whatsoever. Concurrency/CPU intensive work is done by web threads.
+     */
     public static final int DB_THREADS = 1;
     public static final int WEB_THREADS = Region.values().length;
 
