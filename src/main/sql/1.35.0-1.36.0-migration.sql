@@ -12,4 +12,5 @@ CREATE INDEX "ix_account_updated" ON "account"("updated");
 
 ALTER TABLE "evidence"
     ALTER COLUMN "reporter_ip" DROP NOT NULL;
+UPDATE "evidence" SET "reporter_ip" = null;
 

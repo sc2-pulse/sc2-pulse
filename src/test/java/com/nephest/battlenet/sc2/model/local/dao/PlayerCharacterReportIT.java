@@ -22,6 +22,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -109,6 +110,9 @@ public class PlayerCharacterReportIT
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private JdbcTemplate template;
 
     public static final String BATTLETAG = "refaccount#123";
 
@@ -815,6 +819,14 @@ public class PlayerCharacterReportIT
         Arrays.stream(reports)
             .flatMap(r->r.getEvidence().stream())
             .forEach(e->assertArrayEquals(null, e.getEvidence().getReporterIp()));
+
+        Integer nonNullIpCount =
+            template.query("SELECT COUNT(*) FROM evidence WHERE reporter_ip IS NOT NULL", DAOUtils.INT_EXTRACTOR);
+        assertTrue(nonNullIpCount > 0);
+        evidenceDAO.nullifyReporterIps(OffsetDateTime.MIN);
+        nonNullIpCount =
+            template.query("SELECT COUNT(*) FROM evidence WHERE reporter_ip IS NOT NULL", DAOUtils.INT_EXTRACTOR);
+        assertEquals(0, nonNullIpCount);
     }
 
 }

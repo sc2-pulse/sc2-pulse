@@ -94,6 +94,9 @@ public class Cron
     private PlayerCharacterReportService characterReportService;
 
     @Autowired
+    private EvidenceDAO evidenceDAO;
+
+    @Autowired
     private VarDAO varDAO;
 
     @Autowired
@@ -204,6 +207,7 @@ public class Cron
             teamStateDAO.archive(defaultOdt);
             teamStateDAO.cleanArchive(defaultOdt);
             teamStateDAO.removeExpired();
+            evidenceDAO.nullifyReporterIps(defaultOdt);
             postgreSQLUtils.vacuum();
             postgreSQLUtils.analyze();
             heavyStatsInstant.setValueAndSave(Instant.ofEpochMilli(System.currentTimeMillis()));

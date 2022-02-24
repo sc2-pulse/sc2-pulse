@@ -4,6 +4,8 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.Evidence;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.CacheEvict;
@@ -12,6 +14,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
@@ -23,6 +26,8 @@ import java.util.Optional;
 @Repository
 public class EvidenceDAO
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(EvidenceDAO.class);
 
     public static final int ACTIVE_MOD_THRESHOLD_DAYS = 14;
     public static final int HIDE_DENIED_EVIDENCE_DAYS = 30;
@@ -152,6 +157,11 @@ public class EvidenceDAO
         + "WHERE status = false "
         + "AND status_change_timestamp < :from";
 
+    private static final String NULLIFY_REPORTER_IPS_QUERY =
+        "UPDATE evidence "
+        + "SET reporter_ip = null "
+        + "WHERE created >= :from";
+
     private final NamedParameterJdbcTemplate template;
 
     @Autowired
@@ -244,6 +254,14 @@ public class EvidenceDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("from", OffsetDateTime.now().minusDays(DENIED_EVIDENCE_TTL_DAYS));
         return template.update(REMOVE_EXPIRED_QUERY, params);
+    }
+
+    public int nullifyReporterIps(OffsetDateTime from)
+    {
+        SqlParameterSource params = new MapSqlParameterSource("from", from);
+        int count = template.update(NULLIFY_REPORTER_IPS_QUERY, params);
+        if(count > 0) LOG.info("Nullified {} reporter ips ", count);
+        return count;
     }
 
     private MapSqlParameterSource createParams(Evidence evidence)
