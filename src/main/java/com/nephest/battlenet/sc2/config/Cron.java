@@ -331,7 +331,13 @@ public class Cron
 
     private void commenceInfrequentMaintenance()
     {
-        postgreSQLUtils.reindex("ix_team_state_team_id_archived", "ix_team_state_timestamp");
+        postgreSQLUtils.reindex
+        (
+            "ix_team_state_team_id_archived",
+            "ix_team_state_timestamp",
+            "ix_account_updated",
+            "ix_player_character_updated"
+        );
         persistentLoginDAO.removeExpired();
         this.maintenanceInfrequentInstant.setValueAndSave(Instant.now());
     }
