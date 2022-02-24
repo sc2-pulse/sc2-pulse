@@ -180,6 +180,11 @@ more information.
 ## Licenses
 * [Main license](LICENSE.txt)
 * [3rd party licenses](3rd-party-licenses.txt)
+## Blizzard ToS
+SC2 Pulse is fully compliant with the Blizzard ToS.
+* burst requests per second cap is guaranteed
+* the app will try to spread the updates evenly, but no guarantees are made since it's a soft cap
+* BattleTags, player names, and matches are removed after 30 days from the moment they were deleted from the API
 ## Trademarks
 Battle.net, Blizzard Entertainment and StarCraft are trademarks or registered trademarks of Blizzard Entertainment,
  Inc. in the U.S. and/or other countries. 
