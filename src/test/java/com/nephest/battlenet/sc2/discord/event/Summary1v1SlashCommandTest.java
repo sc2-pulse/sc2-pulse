@@ -44,7 +44,7 @@ public class Summary1v1SlashCommandTest
 
         Summary1v1SlashCommand cmd = new Summary1v1SlashCommand(cmdd, conversionService);
         cmd.handle(evt);
-        verify(cmdd).handle(evt, "term", Region.EU, Race.TERRAN, 100);
+        verify(cmdd).handle(evt, Region.EU, Race.TERRAN, 100, "term");
     }
 
     private void stub()

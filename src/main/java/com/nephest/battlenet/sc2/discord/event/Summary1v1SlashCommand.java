@@ -90,7 +90,7 @@ implements SlashCommand
         LadderCharacterDAO.SearchType searchType = LadderCharacterDAO.SearchType.from(name);
         long depth = getDepth(evt, searchType);
 
-        return summary1v1Command.handle(evt, name, region, race, depth);
+        return summary1v1Command.handle(evt, region, race, depth, name);
     }
 
     private long getDepth(ChatInputInteractionEvent evt, LadderCharacterDAO.SearchType searchType)

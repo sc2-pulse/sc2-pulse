@@ -62,7 +62,21 @@ public class Summary1v1Command
         this.discordBootstrap = discordBootstrap;
     }
 
-    public Mono<Message> handle
+    public Mono<Message> handle(ApplicationCommandInteractionEvent evt, Region region, Race race, long depth, String... names)
+    {
+        if(names.length == 0) return DiscordBootstrap.notFoundFollowup(evt);
+
+        for(String name : names)
+        {
+            if(name == null || name.isBlank()) continue;
+            Mono<Message> msg = handle(evt, name, region, race, depth);
+            if(msg != null) return msg;
+        }
+
+        return DiscordBootstrap.notFoundFollowup(evt);
+    }
+
+    private Mono<Message> handle
     (ApplicationCommandInteractionEvent evt, String name, Region region, Race race, long depth)
     {
         LadderCharacterDAO.SearchType searchType = LadderCharacterDAO.SearchType.from(name);
@@ -72,7 +86,7 @@ public class Summary1v1Command
             .filter(generateCharacterFilter(searchType, region))
             .limit(race == null ? maxLines : CHARACTER_LIMIT)
             .collect(Collectors.toMap(c->c.getMembers().getCharacter().getId(), LadderDistinctCharacter::getMembers));
-        if(characters.isEmpty()) return DiscordBootstrap.notFoundFollowup(evt);
+        if(characters.isEmpty()) return null;
 
         List<PlayerCharacterSummary> summaries = summaryDAO
             .find
@@ -84,7 +98,7 @@ public class Summary1v1Command
             .sorted(DEFAULT_COMPARATOR)
             .limit(maxLines)
             .collect(Collectors.toList());
-        if(summaries.isEmpty()) return DiscordBootstrap.notFoundFollowup(evt);
+        if(summaries.isEmpty()) return null;
 
         StringBuilder description = new StringBuilder();
         description.append(generateDescription(name, depth, maxLines, region, race)).append("\n\n");

@@ -64,7 +64,7 @@ public class Summary1v1CommandTest
         stub();
 
         Summary1v1Command cmd = new Summary1v1Command(ladderCharacterDAO, summaryDAO, discordBootstrap);
-        cmd.handle(evt, "term", Region.EU, Race.TERRAN, 100);
+        cmd.handle(evt, Region.EU, Race.TERRAN, 100, "emptyTerm", "term");
 
         verify(summaryDAO).find(any(), depthCaptor.capture(), eq(Race.TERRAN));
         //verify correct depth, 10 seconds to run the test just in case
@@ -102,6 +102,7 @@ public class Summary1v1CommandTest
         characters.add(DiscordTestUtil.createSimpleCharacter(
             "tag#6", "name#6", "6", "clan6", "proTeam6", Region.US, 6, 6
         ));
+        when(ladderCharacterDAO.findDistinctCharacters("emptyTerm")).thenReturn(List.of());
         when(ladderCharacterDAO.findDistinctCharacters("term")).thenReturn(characters);
 
         List<PlayerCharacterSummary> summaries = new ArrayList<>();

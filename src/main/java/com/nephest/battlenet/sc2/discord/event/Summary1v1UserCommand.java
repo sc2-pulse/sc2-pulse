@@ -51,7 +51,7 @@ implements UserCommand
     public Mono<Message> handle(UserInteractionEvent evt)
     {
         String name = sanitizeName(DiscordBootstrap.getTargetDisplayNameOrName(evt).block());
-        return summary1v1Command.handle(evt, name, null, null, Summary1v1Command.DEFAULT_DEPTH);
+        return summary1v1Command.handle(evt, null, null, Summary1v1Command.DEFAULT_DEPTH, name);
     }
 
     public static String sanitizeName(String name)

@@ -38,7 +38,7 @@ public class Summary1v1UserCommandTest
         when(evt.getInteraction()).thenReturn(interaction);
 
         cmd.handle(evt);
-        verify(cmdd).handle(evt, "name123", null, null, Summary1v1Command.DEFAULT_DEPTH);
+        verify(cmdd).handle(evt, null, null, Summary1v1Command.DEFAULT_DEPTH, "name123");
     }
 
 
