@@ -50,8 +50,12 @@ implements UserCommand
     @Override
     public Mono<Message> handle(UserInteractionEvent evt)
     {
-        String name = sanitizeName(DiscordBootstrap.getTargetDisplayNameOrName(evt).block());
-        return summary1v1Command.handle(evt, null, null, Summary1v1Command.DEFAULT_DEPTH, name);
+        String displayName = sanitizeName(DiscordBootstrap.getTargetDisplayNameOrName(evt).block());
+        String name = sanitizeName(evt.getResolvedUser().getUsername());
+        String[] names = displayName.equals(name)
+            ? new String[]{displayName}
+            : new String[]{displayName, name};
+        return summary1v1Command.handle(evt, null, null, Summary1v1Command.DEFAULT_DEPTH, names);
     }
 
     public static String sanitizeName(String name)
