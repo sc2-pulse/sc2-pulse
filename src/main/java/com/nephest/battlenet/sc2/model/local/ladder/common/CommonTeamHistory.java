@@ -1,8 +1,10 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.common;
 
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.nephest.battlenet.sc2.config.convert.jackson.LadderTeamStateCollectionToArraySerializer;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 
@@ -16,6 +18,7 @@ public class CommonTeamHistory
     private final List<LadderTeam> teams;
 
     @NotNull
+    @JsonSerialize(using = LadderTeamStateCollectionToArraySerializer.class)
     private final List<LadderTeamState> states;
 
     public CommonTeamHistory(List<LadderTeam> teams, List<LadderTeamState> states)

@@ -34,6 +34,7 @@ class CharacterUtil
             .then(n=>fetch(request).then(Session.verifyJsonResponse));
         return Promise.all([characterPromise, StatsUtil.updateBundleModel()])
             .then(jsons => new Promise((res, rej)=>{
+                jsons[0].history = CharacterUtil.expandMmrHistory(jsons[0].history);
                 const searchStd = jsons[0];
                 searchStd.result = jsons[0].teams;
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, searchStd);
@@ -41,6 +42,39 @@ class CharacterUtil
                 Model.DATA.get(VIEW.CHARACTER).set("reports", jsons[0].reports)
                 res(jsons);
              }));
+    }
+
+    static expandMmrHistory(history)
+    {
+        if(!history || !history.season || history.season.length == 0) return [];
+        const expanded = new Array(history.season.length);
+        for(let i = 0; i < history.season.length; i++)
+        {
+            expanded[i] =
+            {
+                teamState:
+                {
+                    teamId: history.teamId[i],
+                    dateTime: history.dateTime[i],
+                    games: history.games[i],
+                    rating: history.rating[i],
+                    globalRank: history.globalRank[i],
+                    globalTeamCount: history.globalTeamCount[i],
+                    regionRank: history.regionRank[i],
+                    regionTeamCount: history.regionTeamCount[i]
+                },
+                league:
+                {
+                    type: history.leagueType[i],
+                    queueType: history.queueType[i],
+                    teamType: history.teamType[i]
+                },
+                season: history.season[i],
+                tier: history.tier[i],
+                race: history.race[i]
+            };
+        }
+        return expanded;
     }
 
     static getMatchTypePath()

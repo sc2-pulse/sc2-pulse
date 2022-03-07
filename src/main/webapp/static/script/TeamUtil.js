@@ -538,7 +538,10 @@ class TeamUtil
             .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 const teams = [];
-                for(const history of Object.values(json)) teams.push(history.teams[history.teams.length - 1]);
+                for(const history of Object.values(json)) {
+                    teams.push(history.teams[history.teams.length - 1]);
+                    history.states = CharacterUtil.expandMmrHistory(history.states);
+                }
                 teams.sort((a, b)=>b.rating - a.rating);
                 Model.DATA.get(VIEW.TEAM_MMR).set(VIEW_DATA.SEARCH, {result: teams});
                 Model.DATA.get(VIEW.TEAM_MMR).set(VIEW_DATA.VAR, json);
