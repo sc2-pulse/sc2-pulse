@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -27,6 +27,11 @@ public class LeagueDAO
         "league.id AS \"league.id\","
         + "league.season_id AS \"league.season_id\","
         + "league.type AS \"league.type\","
+        + "league.queue_type AS \"league.queue_type\","
+        + "league.team_type AS \"league.team_type\" ";
+
+    public static final String SHORT_SELECT =
+        "league.type AS \"league.type\","
         + "league.queue_type AS \"league.queue_type\","
         + "league.team_type AS \"league.team_type\" ";
 
@@ -68,6 +73,7 @@ public class LeagueDAO
     private final ConversionService conversionService;
 
     private static RowMapper<League> STD_ROW_MAPPER;
+    private static RowMapper<League> SHORT_ROW_MAPPER;
 
     @Autowired
     public LeagueDAO
@@ -91,11 +97,24 @@ public class LeagueDAO
             conversionService.convert(rs.getInt("league.queue_type"), QueueType.class),
             conversionService.convert(rs.getInt("league.team_type"), TeamType.class)
         );
+        if(SHORT_ROW_MAPPER == null) SHORT_ROW_MAPPER = (rs, num)-> new League
+        (
+            null,
+            null,
+            conversionService.convert(rs.getInt("league.type"), BaseLeague.LeagueType.class),
+            conversionService.convert(rs.getInt("league.queue_type"), QueueType.class),
+            conversionService.convert(rs.getInt("league.team_type"), TeamType.class)
+        );
     }
 
     public static RowMapper<League> getStdRowMapper()
     {
         return STD_ROW_MAPPER;
+    }
+
+    public static RowMapper<League> getShortRowMapper()
+    {
+        return SHORT_ROW_MAPPER;
     }
 
     public League create(League league)
