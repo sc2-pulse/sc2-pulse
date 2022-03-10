@@ -559,7 +559,7 @@ class ChartUtil
             }
             if (config.type === "lineVCursor" || config.type === "line")
             {
-                data.datasets[i]["borderWidth"] = 2;
+                data.datasets[i]["borderWidth"] = config.performance == "fast" ? 1.25 : 2;
                 data.datasets[i]["pointRadius"] = config.performance == "fast"
                     ? ChartUtil.drawOnlyImagePoints
                     : (config.pointRadius != null ? parseFloat(config.pointRadius) : 0.01);
