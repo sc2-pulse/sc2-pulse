@@ -401,6 +401,7 @@ class CharacterUtil
         const bestRaceOnly = document.getElementById("mmr-best-race").checked;
         const seasonLastOnly = document.getElementById("mmr-season-last").checked;
         const yAxis = document.getElementById("mmr-y-axis").value;
+        const xAxisType = document.getElementById("mmr-x-type").checked ? "time" : "category";
 
         const lastSeasonTeamSnapshotDates = CharacterUtil.getLastSeasonTeamSnapshotDates(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         const teams = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams
@@ -441,7 +442,7 @@ class CharacterUtil
                 ? (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order
                 : null,
             queue == TEAM_FORMAT._1V1 ? (name)=>EnumUtil.enumOfName(name, RACE).name : (name)=>name.toLowerCase(),
-            dateTime=>parseInt(dateTime)
+            xAxisType == "time" ? dt=>parseInt(dt) : dt=>Util.DATE_TIME_FORMAT.format(new Date(parseInt(dt)))
         );
         document.getElementById("mmr-history-filters").textContent =
             "(" + queue.name
@@ -1180,6 +1181,7 @@ class CharacterUtil
             CharacterUtil.setMmrYAxis(e.target.value, e.target.getAttribute("data-chartable"));
             CharacterUtil.updateCharacterMmrHistoryView();
         });
+        document.getElementById("mmr-x-type").addEventListener("change", e=>window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, 1));
     }
 
     static setMmrYAxis(mode, chartable)

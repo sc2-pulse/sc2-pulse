@@ -559,6 +559,7 @@ class TeamUtil
         const excludeStart = document.getElementById("team-mmr-exclude-start").value || 0;
         const excludeEnd = document.getElementById("team-mmr-exclude-end").value || 0;
         const yAxis = document.getElementById("team-mmr-y-axis").value;
+        const xAxisType = document.getElementById("team-mmr-x-type").checked ? "time" : "category";
         TeamUtil.updateTeamsTable(document.querySelector("#team-mmr-teams-table"), Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH));
         let transformedData = [];
         let curEntry = 0;
@@ -605,7 +606,7 @@ class TeamUtil
             }),
             null,
             null,
-            dateTime=>parseInt(dateTime)
+            xAxisType == "time" ? dt=>parseInt(dt) : dt=>Util.DATE_TIME_FORMAT.format(new Date(parseInt(dt)))
         );
         TeamUtil.updateTeamMmrFilters(transformedData, depthDate, excludeStart, excludeEnd);
     }
@@ -675,6 +676,7 @@ class TeamUtil
             CharacterUtil.setMmrYAxis(e.target.value, e.target.getAttribute("data-chartable"));
             TeamUtil.updateTeamMmrView()
         });
+        document.getElementById("team-mmr-x-type").addEventListener("change", e=>window.setTimeout(TeamUtil.updateTeamMmrView, 1));
     }
 
     static afterEnhance()

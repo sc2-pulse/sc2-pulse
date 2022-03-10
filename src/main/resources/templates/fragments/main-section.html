@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -353,6 +353,11 @@
                 <div class="form-check form-check-inline">
                     <input id="team-mmr-season-last" class="form-check-input serializable" type="checkbox" />
                     <label for="team-mmr-season-last" class="text-nowrap form-check-label">End of season</label>
+                </div>
+                <div class="form-check form-check-inline mb-3">
+                    <input id="team-mmr-x-type" class="form-check-input serializable chart-x-time-toggle" type="checkbox" checked="checked"
+                           data-chartable="team-mmr-table"/>
+                    <label for="team-mmr-x-type" class="text-nowrap form-check-label">Time axis</label>
                 </div>
                 <div class="form-check form-check-inline">
                     <input id="team-mmr-zoom" class="form-check-input serializable chart-zoom-toggle" type="checkbox"
