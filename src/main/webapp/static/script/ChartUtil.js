@@ -236,6 +236,18 @@ class ChartUtil
         return chart;
     }
 
+    static applyFixes(chart)
+    {
+        for(let scale of Object.values(chart.options.scales))
+        {
+            if(scale.type == "time" && chart.customConfig.zoom)
+            {
+                scale.beforeFit = ChartUtil.trimTicks;
+                scale.ticks.align = "start";
+            }
+        }
+    }
+
     static trimTicks(ctx)
     {
         if(ctx.ticks.length <= 1) return;
@@ -824,6 +836,40 @@ class ChartUtil
             chart.update();
             ChartUtil.resetZoom({target: document.querySelector("#chart-zoom-ctl-" + chartable.id)});
             ChartUtil.updateChartZoomLimits(chart);
+        }
+    }
+
+    static enhanceTimeAxisToggles()
+    {
+        document.querySelectorAll(".chart-x-time-toggle").forEach(t=>{
+            const chartable = document.getElementById(t.getAttribute("data-chartable"));
+            ChartUtil.changeAxisType(chartable, "x", t.checked ? "time" : "category");
+            t.addEventListener("change", e=>{
+                const chartable = document.getElementById(e.target.getAttribute("data-chartable"));
+                ChartUtil.changeAxisType(chartable, "x", t.checked ? "time" : "category");
+            });
+        });
+    }
+
+    static changeAxisType(chartable, axis, type)
+    {
+        const chart = ChartUtil.CHARTS.get(chartable.id);
+        if(chart) {
+            chart.options.scales[axis].type = type;
+            ChartUtil.applyFixes(chart);
+            /*
+                Changing axis type may lead to an exception being thrown due to incompatible data type/format. There is no
+                way to avoid this situation if the axis type code is decoupled from the data code.
+
+                Ignore the valid exception or throw a real exception otherwise.
+            */
+            try {
+                chart.update();
+            } catch (e) {
+                if(!e.message.includes("lastIndexOf")) throw e;
+            }
+        } else {
+            chartable.setAttribute("data-chart-x-type", type);
         }
     }
 
