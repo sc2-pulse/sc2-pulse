@@ -560,6 +560,7 @@ class TeamUtil
         const excludeEnd = document.getElementById("team-mmr-exclude-end").value || 0;
         const yAxis = document.getElementById("team-mmr-y-axis").value;
         const xAxisType = document.getElementById("team-mmr-x-type").checked ? "time" : "category";
+        const showLeagues = document.getElementById("team-mmr-leagues").checked;
         TeamUtil.updateTeamsTable(document.querySelector("#team-mmr-teams-table"), Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH));
         let transformedData = [];
         let curEntry = 0;
@@ -601,7 +602,7 @@ class TeamUtil
             document.getElementById("team-mmr-table"),
             data,
             (tableData=>{
-                CharacterUtil.injectLeagueImages(tableData, rawData, headers, (raw, header)=>raw.find(e=>e.group.name == header));
+                CharacterUtil.decorateMmrPoints(tableData, rawData, headers, (raw, header)=>raw.find(e=>e.group.name == header), showLeagues);
                 ChartUtil.CHART_RAW_DATA.get("team-mmr-table").data = tableData;
             }),
             null,
@@ -677,6 +678,7 @@ class TeamUtil
             TeamUtil.updateTeamMmrView()
         });
         document.getElementById("team-mmr-x-type").addEventListener("change", e=>window.setTimeout(TeamUtil.updateTeamMmrView, 1));
+        document.getElementById("team-mmr-leagues").addEventListener("change", e=>TeamUtil.updateTeamMmrView());
     }
 
     static afterEnhance()

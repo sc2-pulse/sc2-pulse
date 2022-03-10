@@ -402,6 +402,7 @@ class CharacterUtil
         const seasonLastOnly = document.getElementById("mmr-season-last").checked;
         const yAxis = document.getElementById("mmr-y-axis").value;
         const xAxisType = document.getElementById("mmr-x-type").checked ? "time" : "category";
+        const showLeagues = document.getElementById("mmr-leagues").checked;
 
         const lastSeasonTeamSnapshotDates = CharacterUtil.getLastSeasonTeamSnapshotDates(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).history);
         const teams = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams
@@ -435,7 +436,7 @@ class CharacterUtil
             document.getElementById("player-stats-mmr-table"),
             data,
             (tableData=>{
-                CharacterUtil.injectLeagueImages(tableData, rawData, headers, (raw, header)=>raw.find(e=>e.race == header));
+                CharacterUtil.decorateMmrPoints(tableData, rawData, headers, (raw, header)=>raw.find(e=>e.race == header), showLeagues);
                 ChartUtil.CHART_RAW_DATA.get("player-stats-mmr-table").data = tableData;
             }),
             queue == TEAM_FORMAT._1V1
@@ -500,7 +501,7 @@ class CharacterUtil
         h.teamState.regionTopPercent = (h.teamState.regionRank / h.teamState.regionTeamCount) * 100;
     }
 
-    static injectLeagueImages(tableData, rawData, headers, getter)
+    static decorateMmrPoints(tableData, rawData, headers, getter, injectLeague = true)
     {
         const pointStyles = [];
         for(const header of headers) {
@@ -513,7 +514,7 @@ class CharacterUtil
                     curStyles.push('');
                     continue;
                 }
-                if(snapshot.league.type != prevLeague) {
+                if(snapshot.league.type != prevLeague && injectLeague) {
                     curStyles.push(SC2Restful.IMAGES.get(EnumUtil.enumOfId(snapshot.league.type, LEAGUE).name.toLowerCase()));
                     prevLeague = snapshot.league.type;
                 } else {
@@ -1182,6 +1183,7 @@ class CharacterUtil
             CharacterUtil.updateCharacterMmrHistoryView();
         });
         document.getElementById("mmr-x-type").addEventListener("change", e=>window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, 1));
+        document.getElementById("mmr-leagues").addEventListener("change", e=>CharacterUtil.updateCharacterMmrHistoryView());
     }
 
     static setMmrYAxis(mode, chartable)
