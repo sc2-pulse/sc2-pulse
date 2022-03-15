@@ -120,23 +120,7 @@
                     data-pagination-anchor="#search-result-clan-all">
                 </ul>
             </nav>
-            <div id="search-result-clan-table-container" class="table-responsive">
-                <table id="search-result-clan" class="table table-sm table-hover">
-                    <thead>
-                        <tr>
-                            <th>Avg league</th>
-                            <th>Region</th>
-                            <th>Tag</th>
-                            <th>Active members</th>
-                            <th>Members</th>
-                            <th>Avg MMR</th>
-                            <th>Games per active member per day</th>
-                            <th>Name</th>
-                        </tr>
-                    </thead>
-                    <tbody></tbody>
-                </table>
-            </div>
+            <div th:replace="~{fragments/table :: clan ('search-result-clan-table-container', 'search-result-clan', '')}"></div>
             <nav class="pagination-container" aria-label="Clan search navigation bottom">
                 <ul class="pagination pagination-clan-search justify-content-center flex-wrap d-none"
                     data-pagination-side-button-count="1"

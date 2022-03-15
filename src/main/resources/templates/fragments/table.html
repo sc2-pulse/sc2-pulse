@@ -100,5 +100,22 @@
         <tbody></tbody>
     </table>
 </div>
+<div th:id="${containerId}" class="table-responsive" th:fragment="clan (containerId, id, class)">
+    <table th:id="${id}" th:class="${'table table-sm table-hover ' + class}">
+        <thead>
+        <tr>
+            <th>Avg league</th>
+            <th>Region</th>
+            <th>Tag</th>
+            <th>Active members</th>
+            <th>Members</th>
+            <th>Avg MMR</th>
+            <th>Games per active member per day</th>
+            <th>Name</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 </body>
 </html>
