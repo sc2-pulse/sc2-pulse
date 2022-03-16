@@ -4,12 +4,16 @@ class BufferUtil
     static clear()
     {
         BufferUtil.teamBuffer.clear();
+        BufferUtil.clanBuffer.clear();
     }
 
     static updateView()
     {
         const bufferElem = document.querySelector("#team-buffer");
-        if(BufferUtil.teamBuffer.buffer.size == 0) {
+        document.querySelector("#team-buffer-count").textContent = BufferUtil.teamBuffer.buffer.size;
+        document.querySelector("#team-buffer-clan-count").textContent = BufferUtil.clanBuffer.buffer.size;
+        const size = BufferUtil.teamBuffer.buffer.size + BufferUtil.clanBuffer.buffer.size;
+        if(size == 0) {
             bufferElem.classList.add("d-none");
         } else {
             bufferElem.classList.remove("d-none");
@@ -19,7 +23,15 @@ class BufferUtil
 
     static updateTeamMmrLink()
     {
-        document.querySelector("#team-buffer-mmr").setAttribute("href", TeamUtil.getTeamMmrHistoryHref(BufferUtil.teamBuffer.buffer.values()));
+        const elem = document.querySelector("#team-buffer-mmr");
+        if(BufferUtil.teamBuffer.buffer.size > 0) {
+            elem.setAttribute("href", TeamUtil.getTeamMmrHistoryHref(BufferUtil.teamBuffer.buffer.values()));
+            elem.classList.remove("d-none");
+            elem.classList.add("d-inline-block");
+        } else {
+            elem.classList.add("d-none");
+            elem.classList.remove("d-inline-block");
+        }
     }
 
     static enhance()
@@ -39,16 +51,30 @@ class BufferUtil
 
 BufferUtil.teamBuffer = new Buffer("team-buffer-toggle", "data-team-id",
     (t)=>TeamUtil.getTeamFromElement(t),
-    (buf)=>{Model.DATA.get(VIEW.TEAM_BUFFER).set(VIEW_DATA.SEARCH, {result:Array.from(buf.buffer.values())});},
+    (buf)=>{Model.DATA.get(VIEW.TEAM_BUFFER).set(VIEW_DATA.SEARCH, {result: Array.from(buf.buffer.values())});},
     (buf)=>{
         const bufferElem = document.querySelector("#team-buffer-teams");
-        document.querySelector("#team-buffer-count").textContent = buf.buffer.size;
         if(buf.buffer.size == 0) {
             bufferElem.classList.add("d-none");
         } else {
             bufferElem.classList.remove("d-none");
         }
         TeamUtil.updateTeamsTable(document.querySelector("#team-buffer-teams"), {result:Array.from(BufferUtil.teamBuffer.buffer.values())});
+        BufferUtil.updateView();
+    }
+);
+
+BufferUtil.clanBuffer = new Buffer("team-buffer-toggle", "data-clan-id",
+    (t)=>ClanUtil.getClanFromElement(t),
+    (buf)=>{Model.DATA.get(VIEW.CLAN_BUFFER).set(VIEW_DATA.SEARCH, {searchResult: {result: Array.from(buf.buffer.values())}});},
+    (buf)=>{
+        const bufferElem = document.querySelector("#team-buffer-clans");
+        if(buf.buffer.size == 0) {
+            bufferElem.classList.add("d-none");
+        } else {
+            bufferElem.classList.remove("d-none");
+        }
+        ClanUtil.updateClanTable(document.querySelector("#team-buffer-clans"), Array.from(buf.buffer.values()));
         BufferUtil.updateView();
     }
 );

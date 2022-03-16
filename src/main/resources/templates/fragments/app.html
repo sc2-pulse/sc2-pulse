@@ -526,14 +526,17 @@
             </span>
             <a id="team-buffer-collapse" class="c-dropdown c-dropup collapsed mr-3" href="#team-buffer-top-container"
                data-toggle="collapse" role="button" aria-expanded="false" aria-controls="team-buffer-top-container">
-                Team buffer(<span id="team-buffer-count"></span>)
+                Buffer(<span id="team-buffer-count"></span> teams, <span id="team-buffer-clan-count"></span> clans)
             </a>
             <a id="team-buffer-mmr" href="#" rel="noopener" target="_blank" class="table-image table-image-square background-cover chart-line-img d-inline-block float-right mr-3" role="button">
                 <span class="sr-only">MMR</span>
             </a>
         </h2>
         <div id="team-buffer-top-container" class="collapse">
-        <div th:replace="~{fragments/table :: team('team-buffer-container', 'team-buffer-teams', '', 'true')}"></div>
+            <div th:replace="~{fragments/table :: team('team-buffer-container', 'team-buffer-teams', 'd-none', 'true')}"></div>
+            <div data-view-name="clan-buffer">
+                <div th:replace="~{fragments/table :: clan ('team-buffer-clan-container', 'team-buffer-clans', 'd-none')}"></div>
+            </div>
         </div>
     </div>
 </th:block>
