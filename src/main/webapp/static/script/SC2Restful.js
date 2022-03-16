@@ -76,7 +76,7 @@ class SC2Restful
                 CharacterUtil.enhanceMatchTypeInput();
                 FollowUtil.enhanceFollowButtons();
                 BootstrapUtil.enhanceTabs();
-                TeamUtil.enhanceTeamBuffer();
+                BufferUtil.enhance();
                 BootstrapUtil.enhanceTooltips();
                 ElementUtil.enhanceFullscreenToggles();
                 Session.enhanceSerializable();

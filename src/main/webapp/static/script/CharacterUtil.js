@@ -1441,7 +1441,7 @@ class CharacterUtil
     {
         const select = document.querySelector("#report-character-additional");
         select.querySelectorAll("option").forEach(o=>o.remove());
-        for(const team of TeamUtil.teamBuffer.values()) {
+        for(const team of BufferUtil.teamBuffer.buffer.values()) {
             team.members.forEach(m=>
             {
                 if(m.character.id == Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)) return;

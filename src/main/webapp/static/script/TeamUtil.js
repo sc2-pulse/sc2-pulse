@@ -388,15 +388,12 @@ class TeamUtil
     {
         const bufCell = document.createElement("td");
         bufCell.classList.add("text-nowrap")
-        const remove = TeamUtil.teamBuffer.has(team.id);
-        const toggle = ElementUtil.createTagButton("div", "table-image table-image-square background-cover team-buffer-toggle d-inline-block " + (remove ? "remove" : "add"));
-        toggle.addEventListener("click", TeamUtil.toggleTeamBuffer);
         const historyLink = ElementUtil.createTagButton("a",  "table-image table-image-square background-cover mr-3 d-inline-block chart-line-img");
         historyLink.setAttribute("href", TeamUtil.getTeamMmrHistoryHref([team]));
         historyLink.setAttribute("target", "_blank");
         historyLink.setAttribute("rel", "noopener");
         bufCell.appendChild(historyLink);
-        bufCell.appendChild(toggle);
+        bufCell.appendChild(BufferUtil.createToggleElement(BufferUtil.teamBuffer, team));
         return bufCell;
     }
 
@@ -420,46 +417,6 @@ class TeamUtil
         return result;
     }
 
-    static addTeamToBuffer(team)
-    {
-        TeamUtil.teamBuffer.set(team.id, team);
-        TeamUtil.updateTeamBufferModel();
-        TeamUtil.updateTeamBufferView();
-    }
-
-    static removeTeamFromBuffer(team)
-    {
-        TeamUtil.teamBuffer.delete(team.id);
-        TeamUtil.updateTeamBufferModel();
-        TeamUtil.updateTeamBufferView();
-    }
-
-    static clearTeamBuffer()
-    {
-        TeamUtil.teamBuffer.clear();
-        document.querySelectorAll('.team-buffer-toggle.remove').forEach(e=>e.classList.replace("remove", "add"));
-        TeamUtil.updateTeamBufferModel();
-        TeamUtil.updateTeamBufferView();
-    }
-
-    static updateTeamBufferModel()
-    {
-        Model.DATA.get(VIEW.TEAM_BUFFER).set(VIEW_DATA.SEARCH, {result:Array.from(TeamUtil.teamBuffer.values())});
-    }
-
-    static updateTeamBufferView()
-    {
-        const bufferElem = document.querySelector("#team-buffer");
-        document.querySelector("#team-buffer-count").textContent = TeamUtil.teamBuffer.size;
-        if(TeamUtil.teamBuffer.size == 0) {
-            bufferElem.classList.add("d-none");
-        } else {
-            bufferElem.classList.remove("d-none");
-        }
-        TeamUtil.updateTeamMmrLink();
-        TeamUtil.updateTeamsTable(document.querySelector("#team-buffer-teams"), {result:Array.from(TeamUtil.teamBuffer.values())});
-    }
-
     static getTeamLegacyUid(team)
     {
         return team.queueType + "-" + EnumUtil.enumOfName(team.region, REGION).code + "-" + team.legacyId;
@@ -479,39 +436,9 @@ class TeamUtil
         return `${ROOT_CONTEXT_PATH}team/history?${TeamUtil.getTeamMmrHistoryParams(teams).toString()}`;
     }
 
-    static updateTeamMmrLink()
-    {
-        document.querySelector("#team-buffer-mmr").setAttribute("href", TeamUtil.getTeamMmrHistoryHref(TeamUtil.teamBuffer.values()));
-    }
-
-    static toggleTeamBuffer(evt)
-    {
-        const team = TeamUtil.getTeamFromElement(evt.target);
-        const remove = evt.target.classList.contains("remove");
-        if(remove) {
-            TeamUtil.removeTeamFromBuffer(team);
-            document.querySelectorAll('[data-team-id="' + team.id + '"] .team-buffer-toggle').forEach(e=>{
-                e.classList.remove("remove");
-                e.classList.add("add");
-            });
-
-        } else {
-            TeamUtil.addTeamToBuffer(team);
-            document.querySelectorAll('[data-team-id="' + team.id + '"] .team-buffer-toggle').forEach(e=>{
-                e.classList.add("remove");
-                e.classList.remove("add");
-            });
-        }
-    }
-
-    static enhanceTeamBuffer()
-    {
-        document.querySelector("#team-buffer-clear").addEventListener("click", TeamUtil.clearTeamBuffer);
-    }
-
     static updateTeamMmr(searchParams = null)
     {
-        if(searchParams == null) searchParams = TeamUtil.getTeamMmrHistoryParams(TeamUtil.teamBuffer.values());
+        if(searchParams == null) searchParams = TeamUtil.getTeamMmrHistoryParams(BufferUtil.teamBuffer.buffer.values());
         const stringParams = searchParams.toString();
         const params = {params: stringParams};
         Util.setGeneratingStatus(STATUS.BEGIN);
@@ -710,5 +637,3 @@ class TeamUtil
     }
 
 }
-
-TeamUtil.teamBuffer = new Map();
