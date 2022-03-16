@@ -94,6 +94,7 @@ class ClanUtil
         for(const clan of clans)
         {
             const tr = tBody.insertRow();
+            tr.setAttribute("data-clan-id", clan.id);
             if(clan.avgLeagueType) {
                 const league = EnumUtil.enumOfId(clan.avgLeagueType, LEAGUE);
                 tr.insertCell().appendChild(TeamUtil.createLeagueDivFromEnum(league, null));
@@ -174,6 +175,13 @@ class ClanUtil
         a.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=search&name=[${clan.tag}]#search`));
         a.addEventListener("click", CharacterUtil.autoClanSearch);
         return a;
+    }
+
+    static getClanFromElement(parent)
+    {
+        const id = parent.closest("tr").getAttribute("data-clan-id");
+        const viewData = Model.DATA.get(ViewUtil.getView(parent));
+        return viewData.get(VIEW_DATA.SEARCH).searchResult.result.find(t=>t.id==id);
     }
 
 }
