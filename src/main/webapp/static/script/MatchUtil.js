@@ -4,7 +4,7 @@
 class MatchUtil
 {
 
-    static updateMatchTable(table, matches, isMainParticipant, historical)
+    static updateMatchTable(table, matches, isMainParticipant, historical, versusLinkPrefix = null)
     {
         const tBody = table.querySelector(":scope tbody");
         ElementUtil.removeChildren(tBody);
@@ -38,7 +38,7 @@ class MatchUtil
 
             allTeams.push(...teams);
             TeamUtil.updateTeamsTable(table, {result: teams}, false);
-            MatchUtil.prependDecisions(participantsGrouped, teams, tBody, rowNum, isMainParticipant);
+            MatchUtil.decorateTeams(participantsGrouped, teams, tBody, rowNum, isMainParticipant, versusLinkPrefix);
 
             const tr = tBody.childNodes[rowNum];
             tr.classList.add("section-splitter");
@@ -63,8 +63,10 @@ class MatchUtil
         return {teams: allTeams, validMatches: validMatches};
     }
 
-    static prependDecisions(participantsGrouped, teams, tBody, rowNum, isMainParticipant)
+    static decorateTeams(participantsGrouped, teams, tBody, rowNum, isMainParticipant, versusLinkPrefix)
     {
+        const mainTeam = versusLinkPrefix ? null : MatchUtil.findMainTeam(teams, isMainParticipant);
+
         for(let ix = 0; ix < teams.length; ix++)
         {
             const tr = tBody.childNodes[rowNum];
@@ -83,15 +85,43 @@ class MatchUtil
                : "Loss";
 
             const team = teams.find(t=>t.id == teamId);
-            if(team.members.find(m=>isMainParticipant({team: team, member: m}))) {
-                decisionElem.classList.add("font-weight-bold", "text-white", decision == "Win" ? "bg-success" : "bg-danger")
+            if((mainTeam && teamId == mainTeam.id) || (versusLinkPrefix && team.members.find(m=>isMainParticipant({team: team, member: m})))) {
+                decisionElem.classList.add("font-weight-bold", "text-white", decision == "Win" ? "bg-success" : "bg-danger");
             } else {
+                MatchUtil.appendVersusLink(tr, mainTeam, team, versusLinkPrefix);
                 decisionElem.classList.add(decision == "Win" ? "text-success" : "text-danger");
             }
 
             decisionElem.textContent = decision;
             tr.prepend(decisionElem);
             rowNum++;
+        }
+    }
+
+    static findMainTeam(teams, isMainParticipant)
+    {
+        for(const team of teams.filter(t=>t.members))
+            if(team.members.find(m=>isMainParticipant({team: team, member: m})))
+                return team;
+        return null;
+    }
+
+    static appendVersusLink(tr, mainTeam, versusTeam, versusLinkPrefix)
+    {
+        let href;
+        if(versusLinkPrefix) {
+            href = versusLinkPrefix + "&team2=" + encodeURIComponent(TeamUtil.getTeamLegacyUid(versusTeam));
+        } else {
+            href = mainTeam && versusTeam
+                ? VersusUtil.getVersusUrl("matches-type")
+                    + "&team1=" + encodeURIComponent(TeamUtil.getTeamLegacyUid(mainTeam))
+                    + "&team2=" + encodeURIComponent(TeamUtil.getTeamLegacyUid(versusTeam))
+                : null;
+        }
+        if(href) {
+            const vsLink = VersusUtil.createEmptyVersusLink();
+            vsLink.setAttribute("href", href);
+            tr.querySelector(":scope .misc").prepend(vsLink);
         }
     }
 

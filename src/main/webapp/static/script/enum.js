@@ -83,7 +83,8 @@ const VIEW = Object.freeze
     CHARACTER_REPORTS: {name:"all-character-reports", order: 10},
     FOLLOWING_CHARACTERS: {name: "following-characters", order: 11},
     CLAN_SEARCH: {name: "clan-search", order: 12},
-    CLAN_BUFFER: {name: "clan-buffer", order: 13}
+    CLAN_BUFFER: {name: "clan-buffer", order: 13},
+    VERSUS: {name: "versus", order: 14}
 });
 
 const VIEW_DATA = Object.freeze

@@ -19,6 +19,7 @@ implements WebMvcConfigurer
         registry.addViewController("/status").setViewName("status");
         registry.addViewController("/donate").setViewName("donate");
         registry.addViewController("/team/history").setViewName("team-history");
+        registry.addViewController("/versus").setViewName("versus");
     }
 
 }

@@ -143,6 +143,7 @@ public class GeneralSeleniumIT
         int port = webServerAppCtxt.getWebServer().getPort();
         WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_MILLIS / 1000);
         String root = "http://localhost:" + port;
+        testVersus(driver, wait, root);
         getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
         testLadderUI(driver, wait);
         testOnline(driver, wait);
@@ -250,6 +251,28 @@ public class GeneralSeleniumIT
         switchTabsAndToggleInputs(driver, wait, "#team-mmr-tabs");
     }
 
+    private static void testVersus(WebDriver driver, WebDriverWait wait, String root)
+    {
+        getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
+        clickAndWait(driver, wait, "#search-all-tab", "#search-all.show.active");
+
+        clickAndWait(driver, wait, "#search-clan-tab", "#search-clan.show.active");
+        driver.findElement(By.cssSelector("#clan-search-tag-name")).sendKeys("clan");
+        clickAndWait(driver, wait, "#form-search-clan button[type=\"submit\"]", "#search-result-clan-all:not(.d-none)");
+        driver.findElements(By.cssSelector("#search-result-clan .team-buffer-toggle")).stream()
+            .limit(2)
+            .forEach(WebElement::click);
+        driver.findElement(By.cssSelector("#team-buffer-collapse")).click();
+        Select groupSelect = new Select(driver.findElement(By.cssSelector(".buffer-group")));
+        groupSelect.selectByIndex(1);
+        String versusUrl = driver.findElement(By.cssSelector("#team-buffer-versus")).getAttribute("href");
+        driver.findElement(By.cssSelector("#team-buffer-clear")).click();
+        driver.get(versusUrl);
+        wait.until(presenceOfElementLocated(By.cssSelector("tr[data-team-id]")));
+        clickAndWait(driver, wait, "#load-more-matches-versus", "#matches-versus tbody tr:nth-child(20)");
+        clickAndWait(driver, wait, "#load-more-matches-versus", "#matches-versus tbody tr:nth-child(25)");
+        toggleInputs(driver, "[data-view-name=\"versus\"]");
+    }
 
     public static void switchTabsAndToggleInputs(WebDriver driver, WebDriverWait wait, String tabContainerSelector)
     {

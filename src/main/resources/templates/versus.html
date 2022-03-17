@@ -1,0 +1,48 @@
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{fragments/no-tab :: no-tab('versus', 'Versus', ~{::title}, ~{::meta}, ~{::div}, ~{::#main-script-block}, true)}">
+<head>
+    <title>Versus - SC2 Pulse</title>
+    <meta name="description" content="Versus/head-to-head match history"/>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: content(~{::section})}">
+    <section data-view-name="versus" data-view-title="Versus" class="no-popup-hide">
+        <div th:replace="~{fragments/section :: matches-header('-versus')}"></div>
+        <section>
+            <h2>Summary</h2>
+            <div data-view-name="versusClans1">
+                <div th:replace="~{fragments/table :: clan('versus-clans1-container', 'versus-clans1', 'd-none')}"></div>
+            </div>
+            <div data-view-name="versusTeams1">
+                <div th:replace="~{fragments/table :: team('versus-teams1-container', 'versus-teams1', 'd-none', true)}"></div>
+            </div>
+
+            <div class="mb-4 font-large-2">
+                <strong>
+                    <span id="versus-result-1">0</span> - <span id="versus-result-2">0</span>
+                </strong>
+            </div>
+
+            <div data-view-name="versusClans2">
+                <div th:replace="~{fragments/table :: clan('versus-clans2-container', 'versus-clans2', 'd-none')}"></div>
+            </div>
+            <div data-view-name="versusTeams2">
+                <div th:replace="~{fragments/table :: team('versus-teams2-container', 'versus-teams2', 'd-none', true)}"></div>
+            </div>
+        </section>
+        <section>
+            <h2>Matches</h2>
+            <div th:replace="~{fragments/table :: match('matches-versus', '')}"></div>
+            <button id="load-more-matches-versus" type="button" class="btn btn-primary mb-3">More matches</button>
+        </section>
+    </section>
+</div>
+<section th:replace="~{fragments/app :: modal}"></section>
+<script id="main-script-block">SC2Restful.start(START_MODE.MINIMAL); VersusUtil.enhance();</script>
+</body>
+</html>

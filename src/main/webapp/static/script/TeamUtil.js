@@ -387,7 +387,7 @@ class TeamUtil
     static createMiscCell(team)
     {
         const bufCell = document.createElement("td");
-        bufCell.classList.add("text-nowrap")
+        bufCell.classList.add("text-nowrap", "misc", "text-right")
         const historyLink = ElementUtil.createTagButton("a",  "table-image table-image-square background-cover mr-3 d-inline-block chart-line-img");
         historyLink.setAttribute("href", TeamUtil.getTeamMmrHistoryHref([team]));
         historyLink.setAttribute("target", "_blank");

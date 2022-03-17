@@ -40,6 +40,7 @@ class BootstrapUtil
         ElementUtil.TITLE_CONSTRUCTORS.set("#team-mmr-history", TeamUtil.generateTeamMmrTitle);
         ElementUtil.DESCRIPTION_CONSTRUCTORS.set("#team-mmr-history", TeamUtil.generateTeamMmrDescription);
         ElementUtil.TITLE_CONSTRUCTORS.set("#team-mmr-teams", TeamUtil.generateTeamMmrTitle);
+        ElementUtil.TITLE_CONSTRUCTORS.set("#versus", VersusUtil.generateVersusTitle);
     }
 
     static renderTabContent(tab)

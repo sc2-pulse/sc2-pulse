@@ -7,6 +7,8 @@ import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
+import com.nephest.battlenet.sc2.model.local.inner.VersusSummary;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -20,37 +22,16 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Repository
 public class LadderMatchDAO
 {
 
-    private static final String FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE =
-        "WITH match_filter AS "
-        + "("
-            + "SELECT DISTINCT(match.id) "
-            + "FROM match "
-            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
-            + "INNER JOIN player_character ON match_participant.player_character_id = player_character.id "
-            + "WHERE player_character.id = :playerCharacterId "
-        + "), "
-        /*
-            We can't guarantee anything if there are unidentified members in the match. Exclude such matches.
-            Allow the clients to decide what to do with the data, don't force any opinions on the data except validity.
-         */
-        + "valid_match_filter AS "
-        + "( "
-            + "SELECT MAX(match_filter.id) AS id "
-            + "FROM match_filter "
-            + "INNER JOIN match USING(id) "
-            + "INNER JOIN match_participant ON match_filter.id = match_participant.match_id "
-            + "WHERE (date, type, map_id) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor) "
-            + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) "
-            + "GROUP BY date, type, map_id "
-            + "ORDER BY (date, type, map_id) %2$s "
-            + "LIMIT :limit"
-        + ") "
-        + "SELECT "
+    private static final String FIND_MATCHES_TEMPLATE =
+        "SELECT "
         + MatchDAO.STD_SELECT + ", "
         + SC2MapDAO.STD_SELECT + ", "
         + MatchParticipantDAO.STD_SELECT + ", "
@@ -69,8 +50,8 @@ public class LadderMatchDAO
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\", "
         + "confirmed_cheater_report.id AS \"confirmed_cheater_report.id\" "
 
-        + "FROM valid_match_filter "
-        + "INNER JOIN match ON valid_match_filter.id = match.id "
+        + "FROM match_filter "
+        + "INNER JOIN match ON match_filter.id = match.id "
         + "INNER JOIN map ON match.map_id = map.id "
         + "INNER JOIN match_participant ON match.id = match_participant.match_id "
         + "LEFT JOIN team ON match_participant.team_id = team.id "
@@ -95,10 +76,141 @@ public class LadderMatchDAO
         + "ORDER BY (match.date , match.type , match.map_id) %2$s, "
             + "(match_participant.match_id, match_participant.player_character_id) %2$s ";
 
+    private static final String FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE =
+        "WITH match_filter AS "
+        + "("
+            + "SELECT MAX(id) AS id "
+            + "FROM match "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+            + "WHERE (date, type, map_id) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor) "
+            + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) "
+            + "AND match_participant.player_character_id = :playerCharacterId "
+            + "GROUP BY date, type, map_id "
+            + "ORDER BY (date, type, map_id) %2$s "
+            + "LIMIT :limit"
+        + ") "
+        + FIND_MATCHES_TEMPLATE;
+
     public static String FIND_MATCHES_BY_CHARACTER_ID =
         String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, "<", "DESC");
     public static String FIND_MATCHES_BY_CHARACTER_ID_REVERSED =
         String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC");
+
+    private static final String VERSUS_FILTER_TEMPLATE =
+        "WITH "
+        + "vs_match_filter AS "
+        + "( "
+            + "SELECT DISTINCT(id) FROM "
+            + "( "
+                + "SELECT match.id, player_character_id "
+                + "FROM match "
+                + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+                + "INNER JOIN player_character ON match_participant.player_character_id = player_character.id "
+                + "WHERE "
+                + "player_character.clan_id = ANY (:clans) "
+                + "AND match_participant.decision IN (:validDecisions) "
+                + "%1$s "
+
+                + "UNION "
+
+                + "SELECT match.id, player_character_id "
+                + "FROM match "
+                + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+                + "INNER JOIN player_character ON match_participant.player_character_id = player_character.id "
+                + "LEFT JOIN team ON match_participant.team_id = team.id "
+                + "WHERE "
+                + "(team.queue_type, team.region, team.legacy_id) IN (:teams) "
+                + "AND match_participant.decision IN (:validDecisions) "
+                + "%1$s "
+            + ") c "
+            + "GROUP BY c.id "
+            + "HAVING COUNT(*) > 1 "
+        + "),"
+        + "match_filter_g1 AS "
+        + "("
+            + "SELECT id, MAX(decision) AS decision "
+            + "FROM "
+            + "("
+                + "SELECT vs_match_filter.id, MAX(match_participant.decision) AS decision "
+                + "FROM vs_match_filter "
+                + "INNER JOIN match_participant ON vs_match_filter.id = match_participant.match_id "
+                + "INNER JOIN player_character ON match_participant.player_character_id = player_character.id "
+                + "WHERE "
+                + "player_character.clan_id = ANY (:clans1) "
+                + "GROUP BY vs_match_filter.id "
+                + "HAVING MAX(match_participant.decision) = MIN(match_participant.decision) "
+
+                + "UNION "
+
+                + "SELECT vs_match_filter.id, MAX(match_participant.decision) AS decision "
+                + "FROM vs_match_filter "
+                + "INNER JOIN match_participant ON vs_match_filter.id = match_participant.match_id "
+                + "LEFT JOIN team ON match_participant.team_id = team.id "
+                + "WHERE "
+                + "(team.queue_type, team.region, team.legacy_id) IN (:teams1) "
+                + "GROUP BY vs_match_filter.id "
+                + "HAVING MAX(match_participant.decision) = MIN(match_participant.decision) "
+            + ") g1 "
+            + "GROUP BY id "
+            + "HAVING MAX(decision) = MIN(decision) "
+        + "), "
+        + "match_filter AS "
+        + "( "
+            + "SELECT MAX(match.id) AS id, MAX(match_participant.decision) AS decision "
+            + "FROM match_filter_g1 "
+            + "INNER JOIN match USING (id) "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+            + "INNER JOIN player_character ON match_participant.player_character_id = player_character.id "
+            + "LEFT JOIN team ON match_participant.team_id = team.id "
+            + "WHERE "
+            + "("
+                + "player_character.clan_id = ANY (:clans2) "
+                + "OR (team.queue_type, team.region, team.legacy_id) IN (:teams2) "
+            + ") "
+            + "GROUP BY date, type, map_id "
+            + "HAVING MAX(match_participant.decision) = MIN(match_participant.decision) "
+            + "AND MAX(match_participant.decision) != MAX(match_filter_g1.decision) "
+            + "ORDER BY (date, type, map_id) %2$s "
+            + "%3$s"
+        + ") ";
+
+    private static final String VERSUS_SUMMARY =
+        String.format
+        (
+            VERSUS_FILTER_TEMPLATE,
+            "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) ",
+            "DESC", ""
+        )
+        + ", wins AS (SELECT COUNT(DISTINCT(match_filter.id)) AS wins FROM match_filter WHERE decision = :loss) "
+        + "SELECT COUNT(DISTINCT(match_filter.id)) AS matches, "
+        + "MAX(wins.wins) AS wins "
+        + "FROM match_filter, wins";
+
+    private static final String FIND_VERSUS_MATCHES_TEMPLATE =
+        String.format
+        (
+            VERSUS_FILTER_TEMPLATE,
+            "AND (date, type, map_id) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor) "
+            + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) ",
+            "%2$s",
+            "LIMIT :limit"
+        )
+        + FIND_MATCHES_TEMPLATE;
+    private static final String FIND_VERSUS_MATCHES =
+        String.format(FIND_VERSUS_MATCHES_TEMPLATE, "<", "DESC");
+    private static final String FIND_VERSUS_MATCHES_REVERSED =
+        String.format(FIND_VERSUS_MATCHES_TEMPLATE, ">", "ASC");
+
+    private static List<Integer> DEFAULT_VERSUS_DECISIONS;
+
+    private static final ResultSetExtractor<VersusSummary> VERSUS_SUMMARY_EXTRACTOR = rs->
+    {
+        if(!rs.next()) return null;
+
+        int matches = rs.getInt("matches");
+        int wins = rs.getInt("wins");
+        return new VersusSummary(matches, wins, matches - wins);
+    };
 
     private static ResultSetExtractor<LadderMatchParticipant> PARTICIPANT_EXTRACTOR;
     private static ResultSetExtractor<List<LadderMatch>> MATCHES_EXTRACTOR;
@@ -118,6 +230,7 @@ public class LadderMatchDAO
         this.template = template;
         this.conversionService = conversionService;
         initMappers();
+        initMisc();
     }
 
     private void initMappers()
@@ -176,6 +289,15 @@ public class LadderMatchDAO
         };
     }
 
+    private void initMisc()
+    {
+        if(DEFAULT_VERSUS_DECISIONS != null) return;
+        DEFAULT_VERSUS_DECISIONS = Stream
+            .of(BaseMatch.Decision.WIN, BaseMatch.Decision.LOSS)
+            .map(d->conversionService.convert(d, Integer.class))
+            .collect(Collectors.toList());
+    }
+
     public ResultSetExtractor<LadderMatchParticipant> getParticipantExtractor()
     {
         return PARTICIPANT_EXTRACTOR;
@@ -191,7 +313,7 @@ public class LadderMatchDAO
         return resultsPerPage;
     }
 
-    protected void setResultsPerPage(int resultsPerPage)
+    public void setResultsPerPage(int resultsPerPage)
     {
         this.resultsPerPage = resultsPerPage;
     }
@@ -213,18 +335,122 @@ public class LadderMatchDAO
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterId", characterId)
+            .addValue("limit", getResultsPerPage());
+        addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, types, params);
+
+        String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
+        List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
+        return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
+    }
+
+    private MapSqlParameterSource addMatchCursorParams
+    (
+        OffsetDateTime dateAnchor,
+        BaseMatch.MatchType typeAnchor,
+        int mapAnchor,
+        BaseMatch.MatchType[] types,
+        MapSqlParameterSource params
+    )
+    {
+        return params
             .addValue("dateAnchor", dateAnchor)
             .addValue("typeAnchor", conversionService.convert(typeAnchor, Integer.class))
             .addValue("mapIdAnchor", mapAnchor)
-            .addValue("limit", getResultsPerPage())
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))
             .addValue("types", Arrays.stream(types)
                 .map(t->conversionService.convert(t, Integer.class))
                 .toArray(Integer[]::new));
-        String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
+    }
+
+    public VersusSummary getVersusSummary
+    (
+        Integer[] clans1,
+        Set<TeamLegacyUid> teams1,
+        Integer[] clans2,
+        Set<TeamLegacyUid> teams2,
+        BaseMatch.MatchType... types
+    )
+    {
+        if((clans1.length == 0 && teams1.isEmpty()) || (clans2.length == 0 && teams2.isEmpty()))
+            return new VersusSummary(0, 0, 0);
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("loss", conversionService.convert(BaseMatch.Decision.LOSS, Integer.class))
+            .addValue("types", Arrays.stream(types)
+                .map(t->conversionService.convert(t, Integer.class))
+                .toArray(Integer[]::new));
+        addVersusParams(clans1, teams1, clans2, teams2, params);
+        return template.query(VERSUS_SUMMARY, params, VERSUS_SUMMARY_EXTRACTOR);
+    }
+
+    public PagedSearchResult<List<LadderMatch>> findVersusMatches
+    (
+        Integer[] clans1,
+        Set<TeamLegacyUid> teams1,
+        Integer[] clans2,
+        Set<TeamLegacyUid> teams2,
+        OffsetDateTime dateAnchor,
+        BaseMatch.MatchType typeAnchor,
+        int mapAnchor,
+        int page,
+        int pageDiff,
+        BaseMatch.MatchType... types
+    )
+    {
+        if(Math.abs(pageDiff) != 1) throw new IllegalArgumentException("Invalid page diff");
+        if((clans1.length == 0 && teams1.isEmpty()) || (clans2.length == 0 && teams2.isEmpty()))
+            return new PagedSearchResult<>(0L, (long) getResultsPerPage(), 1L, List.of());
+
+        boolean forward = pageDiff > -1;
+        long finalPage = page + pageDiff;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("limit", getResultsPerPage());
+        addVersusParams(clans1, teams1, clans2, teams2, params);
+        addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, types, params);
+        String q = forward ? FIND_VERSUS_MATCHES : FIND_VERSUS_MATCHES_REVERSED;
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
+    }
+
+    private MapSqlParameterSource addVersusParams
+    (
+        Integer[] clans1,
+        Set<TeamLegacyUid> teams1,
+        Integer[] clans2,
+        Set<TeamLegacyUid> teams2,
+        MapSqlParameterSource params
+    )
+    {
+        List<Object[]> teamIds1 = teams1.stream()
+            .map(id->new Object[]{
+                conversionService.convert(id.getQueueType(), Integer.class),
+                conversionService.convert(id.getRegion(), Integer.class),
+                id.getId()
+            })
+            .collect(Collectors.toList());
+        List<Object[]> teamIds2 = teams2.stream()
+            .map(id->new Object[]{
+                conversionService.convert(id.getQueueType(), Integer.class),
+                conversionService.convert(id.getRegion(), Integer.class),
+                id.getId()
+            })
+            .collect(Collectors.toList());
+        Integer[] clanIds = Stream.of(clans1, clans2)
+            .flatMap(Stream::of)
+            .toArray(Integer[]::new);
+        List<Object[]> teamIds = Stream.of(teamIds1, teamIds2)
+            .flatMap(List::stream)
+            .collect(Collectors.toList());
+        return params
+            .addValue("clans", clanIds)
+            .addValue("teams", teamIds.isEmpty() ? null : teamIds)
+            .addValue("clans1", clans1)
+            .addValue("teams1", teamIds1.isEmpty() ? null : teamIds1)
+            .addValue("clans2", clans2)
+            .addValue("teams2", teamIds2.isEmpty() ? null : teamIds2)
+            .addValue("validDecisions", DEFAULT_VERSUS_DECISIONS);
     }
 
 }

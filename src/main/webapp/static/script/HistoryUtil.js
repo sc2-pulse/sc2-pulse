@@ -275,6 +275,10 @@ class HistoryUtil
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(LadderUtil.updateMyLadder(params.toString()));
                 break;
+            case "versus":
+                lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
+                promises.push(VersusUtil.updateFromParams(params));
+                break;
             case "modal":
                 const modalId = params.get("id"); params.delete("id");
                 promises.push(BootstrapUtil.hideActiveModal("error-generation"));

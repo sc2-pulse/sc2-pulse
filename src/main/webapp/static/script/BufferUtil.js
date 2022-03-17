@@ -19,6 +19,7 @@ class BufferUtil
             bufferElem.classList.remove("d-none");
         }
         BufferUtil.updateTeamMmrLink();
+        BufferUtil.updateVersusLink();
     }
 
     static updateTeamMmrLink()
@@ -31,6 +32,25 @@ class BufferUtil
         } else {
             elem.classList.add("d-none");
             elem.classList.remove("d-inline-block");
+        }
+    }
+
+    static updateVersusLink()
+    {
+        const params = new URLSearchParams();
+        for(const team of BufferUtil.teamBuffer.buffer.values()) params.append("team" + (team.bufferGroup ? team.bufferGroup : 1), TeamUtil.getTeamLegacyUid(team));
+        for(const clan of BufferUtil.clanBuffer.buffer.values()) params.append("clan" + (clan.bufferGroup ? clan.bufferGroup : 1), clan.id);
+        const matchType = localStorage.getItem("matches-type-versus");
+        if(matchType != null && matchType != "all") params.append("matchType", matchType);
+        const link = document.querySelector("#team-buffer-versus");
+        if(params.getAll("team1").length + params.getAll('clan1').length > 0
+            && params.getAll("team2").length + params.getAll('clan2').length > 0) {
+            link.setAttribute("href", `${ROOT_CONTEXT_PATH}versus?type=versus&${params.toString()}`);
+            link.classList.remove("d-none");
+            link.classList.add("d-inline-block");
+        } else {
+            link.classList.remove("d-inline-block");
+            link.classList.add("d-none");
         }
     }
 
@@ -47,6 +67,35 @@ class BufferUtil
         return toggle;
     }
 
+    static appendGroupElements(table)
+    {
+        for(const tr of table.querySelectorAll(":scope tbody tr")) {
+            const miscTd = tr.children[tr.children.length - 1];
+            miscTd.prepend(BufferUtil.createGroupSelect(BufferUtil.getTeamOrClanFromElement(tr)));
+        }
+    }
+
+    static createGroupSelect(item)
+    {
+        const select = BufferUtil.GROUP_SELECT_ELEMENT.cloneNode(true);
+        select.value = item.bufferGroup ? item.bufferGroup : 1;
+        select.addEventListener("change", e=>{
+            BufferUtil.getTeamOrClanFromElement(e.target).bufferGroup = e.target.value;
+            BufferUtil.updateVersusLink();
+        });
+        return select;
+    }
+
+    static getTeamOrClanFromElement(elem)
+    {
+        const tr = elem.closest("tr");
+        if(tr.getAttribute("data-team-id")) {
+            return TeamUtil.getTeamFromElement(elem);
+        } else {
+            return ClanUtil.getClanFromElement(elem);
+        }
+    }
+
 }
 
 BufferUtil.teamBuffer = new Buffer("team-buffer-toggle", "data-team-id",
@@ -59,7 +108,8 @@ BufferUtil.teamBuffer = new Buffer("team-buffer-toggle", "data-team-id",
         } else {
             bufferElem.classList.remove("d-none");
         }
-        TeamUtil.updateTeamsTable(document.querySelector("#team-buffer-teams"), {result:Array.from(BufferUtil.teamBuffer.buffer.values())});
+        TeamUtil.updateTeamsTable(bufferElem, {result:Array.from(BufferUtil.teamBuffer.buffer.values())});
+        BufferUtil.appendGroupElements(bufferElem);
         BufferUtil.updateView();
     }
 );
@@ -74,7 +124,14 @@ BufferUtil.clanBuffer = new Buffer("team-buffer-toggle", "data-clan-id",
         } else {
             bufferElem.classList.remove("d-none");
         }
-        ClanUtil.updateClanTable(document.querySelector("#team-buffer-clans"), Array.from(buf.buffer.values()));
+        ClanUtil.updateClanTable(bufferElem, Array.from(buf.buffer.values()));
+        BufferUtil.appendGroupElements(bufferElem);
         BufferUtil.updateView();
     }
 );
+
+BufferUtil.GROUP_SELECT_ELEMENT = document.createElement("select");
+BufferUtil.GROUP_SELECT_ELEMENT.classList.add("form-control", "width-initial", "d-inline-block", "mr-3", "buffer-group");
+BufferUtil.GROUP_SELECT_ELEMENT.innerHTML =
+    `<option value="1" selected="selected">G1</option>
+    <option value="2">G2</option>`;
