@@ -20,6 +20,8 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuples;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -258,6 +260,25 @@ public class TeamDAO
                 ? new Race[]{bTeam.getTeamMembers()[0].getFavoriteRace()}
                 : Race.EMPTY_RACE_ARRAY
         );
+    }
+
+    public Set<Tuple3<QueueType, Region, BigInteger>> parseLegacyUids(Collection<String> ids)
+    {
+        if(ids.isEmpty()) return Set.of();
+
+        return ids.stream()
+            .map(sId->{
+                String[] split = sId.split("-");
+                if(split.length != 3) throw new IllegalArgumentException("legacyUid must have 3 components");
+
+                return Tuples.of
+                (
+                    conversionService.convert(Integer.parseInt(split[0]), QueueType.class),
+                    conversionService.convert(Integer.parseInt(split[1]), Region.class),
+                    new BigInteger(split[2])
+                );
+            })
+            .collect(Collectors.toSet());
     }
 
     private static Race[] extractLegacyIdRaces(BaseLeague league, BlizzardTeam bTeam)

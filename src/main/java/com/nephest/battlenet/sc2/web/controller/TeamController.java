@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonTeamHistory;
@@ -21,7 +22,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 import reactor.util.function.Tuple3;
-import reactor.util.function.Tuples;
 
 import java.math.BigInteger;
 import java.util.HashMap;
@@ -41,6 +41,9 @@ public class TeamController
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
 
+    @Autowired
+    private TeamDAO teamDAO;
+
     @Autowired @Qualifier("sc2StatsConversionService")
     private ConversionService conversionService;
 
@@ -51,18 +54,7 @@ public class TeamController
         List<String> ids = params.get("legacyUid");
         if(ids == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "legacyUid parameter not found");
 
-        Set<Tuple3<QueueType, Region, BigInteger>> idSet = ids.stream()
-            .map(sId->{
-                String[] split = sId.split("-");
-                if(split.length != 3) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "legacyUid must have 3 components");
-
-                return Tuples.of(
-                    conversionService.convert(Integer.parseInt(split[0]), QueueType.class),
-                    conversionService.convert(Integer.parseInt(split[1]), Region.class),
-                    new BigInteger(split[2])
-                );
-            })
-            .collect(Collectors.toSet());
+        Set<Tuple3<QueueType, Region, BigInteger>> idSet = teamDAO.parseLegacyUids(ids);
         List<LadderTeamState> states = ladderTeamStateDAO.find(idSet);
         List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(idSet);
         return groupCommonHistory(ids, states, teams);
