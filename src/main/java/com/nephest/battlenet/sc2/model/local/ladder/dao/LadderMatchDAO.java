@@ -46,7 +46,7 @@ public class LadderMatchDAO
             + "INNER JOIN match USING(id) "
             + "INNER JOIN match_participant ON match_filter.id = match_participant.match_id "
             + "WHERE (date, type, map_id) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor) "
-            + "%3$s "
+            + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) "
             + "GROUP BY date, type, map_id "
             + "ORDER BY (date, type, map_id) %2$s "
             + "LIMIT :limit"
@@ -97,13 +97,9 @@ public class LadderMatchDAO
             + "(match_participant.match_id, match_participant.player_character_id) %2$s ";
 
     public static String FIND_MATCHES_BY_CHARACTER_ID =
-        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, "<", "DESC", "");
+        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, "<", "DESC");
     public static String FIND_MATCHES_BY_CHARACTER_ID_REVERSED =
-        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC", "");
-    public static String FIND_MATCHES_BY_CHARACTER_ID_AND_MATCH_TYPE =
-        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, "<", "DESC", "AND match.type IN(:types)");
-    public static String FIND_MATCHES_BY_CHARACTER_ID_AND_MATCH_TYPE_REVERSED =
-        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC", "AND match.type IN(:types)");
+        String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC");
 
     private static ResultSetExtractor<LadderMatchParticipant> PARTICIPANT_EXTRACTOR;
     private static ResultSetExtractor<List<LadderMatch>> MATCHES_EXTRACTOR;
@@ -223,13 +219,11 @@ public class LadderMatchDAO
             .addValue("mapIdAnchor", mapAnchor)
             .addValue("limit", getResultsPerPage())
             .addValue("cheaterReportType", conversionService
-                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-            if(types.length > 0) params.addValue("types", Arrays.stream(types)
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))
+            .addValue("types", Arrays.stream(types)
                 .map(t->conversionService.convert(t, Integer.class))
-                .collect(Collectors.toList()));
-        String q = forward
-            ? (types.length == 0 ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_AND_MATCH_TYPE)
-            : (types.length == 0 ? FIND_MATCHES_BY_CHARACTER_ID_REVERSED : FIND_MATCHES_BY_CHARACTER_ID_AND_MATCH_TYPE_REVERSED);
+                .toArray(Integer[]::new));
+        String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
     }
