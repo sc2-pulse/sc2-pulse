@@ -121,7 +121,7 @@ public class UpdateService
     public Duration calculateUpdateDuration(Region region)
     {
         UpdateContext context = getUpdateContext(region);
-        return context == null || (region == null && previousGlobalContext == null)
+        return context == null || (region == null && (previousGlobalContext == null || globalContext.getExternalUpdate() == null))
             ? Duration.ZERO
             : Duration.between(previousGlobalContext.getExternalUpdate(), globalContext.getExternalUpdate());
     }
