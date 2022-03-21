@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
@@ -112,6 +112,9 @@ public class BaseMatch
                     || (matchType.getAdditionalName() != null && matchType.getAdditionalName().equalsIgnoreCase(name)))
                         return matchType;
             }
+            //this is a fallback loop which is used in a very rare occasions, no reason to put the comparison into
+            //the main loop
+            for(MatchType matchType : MatchType.values()) if(matchType.name().equals(name)) return matchType;
             return UNKNOWN;
         }
 
