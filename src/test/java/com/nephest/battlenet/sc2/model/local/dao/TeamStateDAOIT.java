@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LegacySearchIT;
@@ -21,11 +22,8 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import reactor.util.function.Tuple3;
-import reactor.util.function.Tuples;
 
 import javax.sql.DataSource;
-import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -124,12 +122,12 @@ public class TeamStateDAOIT
         TeamState state2Main = TeamState.of(team2, OffsetDateTime.now().minusDays(targetLengthMain + 1));
         teamStateDAO.saveState(state1, state2Secondary, state2Main);
 
-        Set<Tuple3<QueueType, Region, BigInteger>> legacyIds1 = Set.of(
-            Tuples.of(QueueType.LOTV_4V4, Region.EU, LEGACY_ID_1)
+        Set<TeamLegacyUid> legacyIds1 = Set.of(
+            new TeamLegacyUid(QueueType.LOTV_4V4, Region.EU, LEGACY_ID_1)
         );
 
-        Set<Tuple3<QueueType, Region, BigInteger>> legacyIds2 = Set.of(
-            Tuples.of(QueueType.LOTV_1V1, Region.US, LEGACY_ID_2)
+        Set<TeamLegacyUid> legacyIds2 = Set.of(
+            new TeamLegacyUid(QueueType.LOTV_1V1, Region.US, LEGACY_ID_2)
         );
 
         assertEquals(3, ladderTeamStateDAO.find(legacyIds1).size());

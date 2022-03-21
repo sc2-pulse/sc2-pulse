@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -18,7 +19,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import reactor.util.function.Tuples;
 
 import javax.sql.DataSource;
 import java.math.BigInteger;
@@ -295,7 +295,7 @@ public class LadderSearchDAOIT
             assertEquals(teamId + 1, team.getLosses());
             assertEquals(teamId + 2, team.getTies());
             TeamState state = ladderTeamStateDAO
-                .find(Set.of(Tuples.of(team.getQueueType(), team.getRegion(), team.getLegacyId()))).stream()
+                .find(Set.of(TeamLegacyUid.of(team))).stream()
                 .map(LadderTeamState::getTeamState)
                 .findAny()
                 .orElseThrow();

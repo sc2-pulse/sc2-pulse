@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
@@ -22,10 +23,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import reactor.util.function.Tuple3;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -385,15 +384,15 @@ public class LadderSearchDAO
             .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAMS_EXTRACTOR);
     }
 
-    public List<LadderTeam> findLegacyTeams(Set<Tuple3<QueueType, Region, BigInteger>> ids)
+    public List<LadderTeam> findLegacyTeams(Set<TeamLegacyUid> ids)
     {
         if(ids.isEmpty()) return new ArrayList<>();
 
         List<Object[]> legacyUids = ids.stream()
             .map(id->new Object[]{
-                conversionService.convert(id.getT1(), Integer.class),
-                conversionService.convert(id.getT2(), Integer.class),
-                id.getT3()
+                conversionService.convert(id.getQueueType(), Integer.class),
+                conversionService.convert(id.getRegion(), Integer.class),
+                id.getId()
             })
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()

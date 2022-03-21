@@ -3,9 +3,8 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonTeamHistory;
@@ -15,15 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.HttpStatus;
-import org.springframework.util.MultiValueMap;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-import reactor.util.function.Tuple3;
 
-import java.math.BigInteger;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -47,35 +43,31 @@ public class TeamController
     @Autowired @Qualifier("sc2StatsConversionService")
     private ConversionService conversionService;
 
+    @Autowired @Qualifier("mvcConversionService")
+    private ConversionService mvcConversionService;
+
     @GetMapping("/history/common")
     public Map<String, CommonTeamHistory> getCommonHistory
-    (@RequestParam MultiValueMap<String, String> params)
+    (@RequestParam("legacyUid") Set<TeamLegacyUid> ids)
     {
-        List<String> ids = params.get("legacyUid");
         if(ids == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "legacyUid parameter not found");
 
-        Set<Tuple3<QueueType, Region, BigInteger>> idSet = teamDAO.parseLegacyUids(ids);
-        List<LadderTeamState> states = ladderTeamStateDAO.find(idSet);
-        List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(idSet);
+        List<LadderTeamState> states = ladderTeamStateDAO.find(ids);
+        List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(ids);
         return groupCommonHistory(ids, states, teams);
     }
 
     private Map<String, CommonTeamHistory> groupCommonHistory
-    (List<String> ids, List<LadderTeamState> states, List<LadderTeam> teams)
+    (Set<TeamLegacyUid> ids, List<LadderTeamState> states, List<LadderTeam> teams)
     {
         Map<String, CommonTeamHistory> result = new HashMap<>();
 
-        for(String strId : ids)
+        for(TeamLegacyUid id : ids)
         {
-            String[] split = strId.split("-");
-            if(split.length < 3) throw new IllegalArgumentException("Invalid legacyUid length: " + split.length);
-
-            QueueType queueType = conversionService.convert(Integer.valueOf(split[0]), QueueType.class);
-            Region region = conversionService.convert(Integer.valueOf(split[1]), Region.class);
-            BigInteger legacyId = new BigInteger(split[2]);
-
             List<LadderTeam> filteredTeams = teams.stream()
-                .filter(t->t.getQueueType() == queueType && t.getRegion() == region && t.getLegacyId().equals(legacyId))
+                .filter(t->t.getQueueType() == id.getQueueType()
+                    && t.getRegion() == id.getRegion()
+                    && t.getLegacyId().equals(id.getId()))
                 .collect(Collectors.toList());
             Set<Long> teamIds = filteredTeams.stream().map(LadderTeam::getId).collect(Collectors.toSet());
             List<LadderTeamState> filteredStates = states.stream()
@@ -85,7 +77,7 @@ public class TeamController
             teams.removeAll(filteredTeams);
             states.removeAll(filteredStates);
 
-            result.put(strId, new CommonTeamHistory(filteredTeams, filteredStates));
+            result.put(mvcConversionService.convert(id, String.class), new CommonTeamHistory(filteredTeams, filteredStates));
         }
 
         return result;

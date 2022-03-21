@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.web.service.StatsService;
@@ -23,8 +24,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import reactor.util.function.Tuple3;
-import reactor.util.function.Tuples;
 
 import javax.sql.DataSource;
 import java.math.BigInteger;
@@ -155,9 +154,10 @@ public class LegacySearchIT
     @Test
     public void testLegacyFinders()
     {
-        Set<Tuple3<QueueType, Region, BigInteger>> legacyIds = Set.of(
-            Tuples.of(QueueType.LOTV_4V4, Region.EU, LEGACY_ID_1),
-            Tuples.of(QueueType.LOTV_1V1, Region.US, LEGACY_ID_2)
+        Set<TeamLegacyUid> legacyIds = Set.of
+        (
+            new TeamLegacyUid(QueueType.LOTV_4V4, Region.EU, LEGACY_ID_1),
+            new TeamLegacyUid(QueueType.LOTV_1V1, Region.US, LEGACY_ID_2)
         );
         List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(legacyIds);
         assertEquals(4, teams.size());
@@ -240,8 +240,8 @@ public class LegacySearchIT
         teamStateDAO.archive(ODT.minusDays(1));
         teamStateDAO.cleanArchive(ODT.minusDays(1));
         teamStateDAO.removeExpired();
-        Set<Tuple3<QueueType, Region, BigInteger>> legacyIds3 = Set.of(
-            Tuples.of(QueueType.LOTV_1V1, Region.US, LEGACY_ID_3)
+        Set<TeamLegacyUid> legacyIds3 = Set.of(
+            new TeamLegacyUid(QueueType.LOTV_1V1, Region.US, LEGACY_ID_3)
         );
         List<LadderTeam> teams3 = ladderSearchDAO.findLegacyTeams(legacyIds3);
         assertEquals(1, teams3.size());

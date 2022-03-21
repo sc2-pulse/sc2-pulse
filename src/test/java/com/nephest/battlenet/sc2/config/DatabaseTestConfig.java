@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.config.openapi.SpringDocConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
 import com.nephest.battlenet.sc2.web.controller.AdminController;
 import com.nephest.battlenet.sc2.web.controller.StatusController;
+import com.nephest.battlenet.sc2.web.controller.TeamController;
 import com.nephest.battlenet.sc2.web.service.*;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
@@ -35,6 +36,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = MatchService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatusController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AdminController.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TeamController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class)
     }

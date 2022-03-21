@@ -4,12 +4,11 @@
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
-import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
-import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,9 +18,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-import reactor.util.function.Tuple3;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -135,15 +132,15 @@ public class LadderTeamStateDAO
         return template.query(FIND_QUERY, params, getStdExtractor());
     }
 
-    public List<LadderTeamState> find(Set<Tuple3<QueueType, Region, BigInteger>> ids)
+    public List<LadderTeamState> find(Set<TeamLegacyUid> ids)
     {
         if(ids.isEmpty()) return new ArrayList<>();
 
         List<Object[]> legacyUids = ids.stream()
             .map(id->new Object[]{
-                conversionService.convert(id.getT1(), Integer.class),
-                conversionService.convert(id.getT2(), Integer.class),
-                id.getT3()
+                conversionService.convert(id.getQueueType(), Integer.class),
+                conversionService.convert(id.getRegion(), Integer.class),
+                id.getId()
             })
            .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
