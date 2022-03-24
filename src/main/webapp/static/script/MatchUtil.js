@@ -4,7 +4,7 @@
 class MatchUtil
 {
 
-    static updateMatchTable(table, matches, characterId)
+    static updateMatchTable(table, matches, isMainParticipant)
     {
         const tBody = table.querySelector(":scope tbody");
         ElementUtil.removeChildren(tBody);
@@ -38,7 +38,7 @@ class MatchUtil
 
             allTeams.push(...teams);
             TeamUtil.updateTeamsTable(table, {result: teams}, false);
-            MatchUtil.prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId);
+            MatchUtil.prependDecisions(participantsGrouped, teams, tBody, rowNum, isMainParticipant);
 
             const tr = tBody.childNodes[rowNum];
             tr.classList.add("section-splitter");
@@ -63,7 +63,7 @@ class MatchUtil
         return {teams: allTeams, validMatches: validMatches};
     }
 
-    static prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId)
+    static prependDecisions(participantsGrouped, teams, tBody, rowNum, isMainParticipant)
     {
         for(let ix = 0; ix < teams.length; ix++)
         {
@@ -73,7 +73,7 @@ class MatchUtil
             decisionElem.classList.add("text-capitalize");
 
             if(!teamId) {
-                MatchUtil.appendUnknownMatchParticipant(tr, decisionElem, characterId);
+                MatchUtil.appendUnknownMatchParticipant(tr, decisionElem, isMainParticipant);
                 rowNum++;
                 continue;
             }
@@ -82,7 +82,8 @@ class MatchUtil
                (participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId) ? "Win" : "Loss")
                : "Loss";
 
-            if(teams.find(t=>t.id == teamId).members.find(m=>m.character.id == characterId)) {
+            const team = teams.find(t=>t.id == teamId);
+            if(team.members.find(m=>isMainParticipant({team: team, member: m}))) {
                 decisionElem.classList.add("font-weight-bold", "text-white", decision == "Win" ? "bg-success" : "bg-danger")
             } else {
                 decisionElem.classList.add(decision == "Win" ? "text-success" : "text-danger");
@@ -94,12 +95,12 @@ class MatchUtil
         }
     }
 
-    static appendUnknownMatchParticipant(tr, decisionElem, characterId)
+    static appendUnknownMatchParticipant(tr, decisionElem, isMainParticipant)
     {
         const split = tr.getAttribute("data-team-alternative-data").split(",");
         const charId = parseInt(split[0]);
         decisionElem.textContent = split[1].toLowerCase();
-        if(charId == characterId) {
+        if(isMainParticipant(charId)) {
             decisionElem.classList.add("font-weight-bold", "text-white", split[1] == "WIN" ? "bg-success" : "bg-danger");
         } else {
             decisionElem.classList.add(split[1] == "WIN" ? "text-success" : "text-danger");
