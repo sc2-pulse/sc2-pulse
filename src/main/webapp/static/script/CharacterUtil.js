@@ -847,62 +847,9 @@ class CharacterUtil
 
         tabNav.classList.remove("d-none");
         pane.classList.remove("d-none");
-        const table = document.querySelector("#matches");
-        const tBody = document.querySelector("#matches tbody");
-        ElementUtil.removeChildren(tBody);
-        const validMatches = matches;
-        const allTeams = [];
-        for(let i = 0; i < validMatches.length; i++)
-        {
-            const match = validMatches[i];
-            const participantsGrouped = Util.groupBy(match.participants, p=>p.participant.decision);
-
-            const rowNum = tBody.childNodes.length;
-            const teams = [];
-            const participantsSorted = match.participants.sort((a, b)=>b.participant.decision.localeCompare(a.participant.decision));
-            for(const p of participantsSorted) {
-                if(!p.team) {
-                    teams.push({id: -1, alternativeData: p.participant.playerCharacterId + "," + p.participant.decision})
-                } else if(teams.length == 0 || teams[teams.length - 1].id != p.team.id) {
-                    if(localStorage.getItem("matches-historical-mmr") == "true") {
-                        let teamClone = {};
-                        Object.assign(teamClone, p.team);
-                        teamClone.rating = p.teamState.teamState.rating;
-                        teamClone.league = p.teamState.league;
-                        teamClone.leagueType = p.teamState.league.type;
-                        teamClone.tierType = p.teamState.tier;
-                        teams.push(teamClone);
-                    } else {
-                        teams.push(p.team);
-                    }
-                }
-            }
-
-            allTeams.push(...teams);
-            TeamUtil.updateTeamsTable(table, {result: teams}, false);
-            CharacterUtil.prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId);
-
-            const tr = tBody.childNodes[rowNum];
-            tr.classList.add("section-splitter");
-            const mapCell = document.createElement("td");
-            mapCell.setAttribute("rowspan", teams.length);
-            mapCell.textContent = match.map.name;
-            tr.prepend(mapCell);
-            const typeCell = document.createElement("td");
-            typeCell.setAttribute("rowspan", teams.length);
-            typeCell.textContent = match.match.type.replace(/_/g, "");
-            tr.prepend(typeCell);
-            const lengthCell = document.createElement("td");
-            lengthCell.setAttribute("rowspan", teams.length);
-            lengthCell.textContent = CharacterUtil.generateMatchLengthString(matches, i)
-            tr.prepend(lengthCell);
-            const dateCell = document.createElement("td");
-            dateCell.setAttribute("rowspan", teams.length);
-            dateCell.textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(match.match.date));
-            tr.prepend(dateCell);
-        }
-        Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.TEAMS, {result: allTeams});
-        if(validMatches.length >= MATCH_BATCH_SIZE) {
+        const result = MatchUtil.updateMatchTable(document.querySelector("#matches"), matches, characterId);
+        Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.TEAMS, {result: result.teams});
+        if(result.validMatches.length >= MATCH_BATCH_SIZE) {
             document.querySelector("#load-more-matches").classList.remove("d-none");
         }
         else {
@@ -910,91 +857,6 @@ class CharacterUtil
         }
 
         return Promise.resolve();
-    }
-
-    static generateMatchLengthString(matches, i)
-    {
-        try
-        {
-            const match = matches[i];
-            const matchType = EnumUtil.enumOfName(match.match.type.replace(/_/g, ""), TEAM_FORMAT);
-            if(match.participants.length == matchType.memberCount * 2 && match.match.duration) {
-                return Math.round(match.match.duration / 60) + "m";
-            } else {
-                const matchLength = CharacterUtil.calculateMatchLengthSeconds(matches, i);
-                return matchLength == -1 ? "" : Math.round(matchLength / 60) + "m";
-            }
-        }
-        catch(e){}
-        const matchLength = CharacterUtil.calculateMatchLengthSeconds(matches, i);
-        return matchLength == -1 ? "" : Math.round(matchLength / 60) + "m";;
-    }
-
-    static calculateMatchLengthSeconds(matches, i)
-    {
-        if(i == matches.length - 1) return -1;
-        const length = (new Date(matches[i].match.date).getTime() - new Date(matches[i + 1].match.date).getTime()) / 1000
-            - MATCH_DURATION_OFFSET;
-        if(length < 0 || length > CharacterUtil.MATCH_DURATION_MAX_SECONDS) return -1;
-        return length;
-    }
-
-    static prependDecisions(participantsGrouped, teams, tBody, rowNum, characterId)
-    {
-        for(let ix = 0; ix < teams.length; ix++)
-        {
-            const tr = tBody.childNodes[rowNum];
-            const teamId = tr.getAttribute("data-team-id");
-            const decisionElem = document.createElement("td");
-            decisionElem.classList.add("text-capitalize");
-
-            if(!teamId) {
-                CharacterUtil.appendUnknownMatchParticipant(tr, decisionElem, characterId);
-                rowNum++;
-                continue;
-            }
-
-            const decision = participantsGrouped.get("WIN") ?
-               (participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId) ? "Win" : "Loss")
-               : "Loss";
-
-            if(teams.find(t=>t.id == teamId).members.find(m=>m.character.id == characterId)) {
-                decisionElem.classList.add("font-weight-bold", "text-white", decision == "Win" ? "bg-success" : "bg-danger")
-            } else {
-                decisionElem.classList.add(decision == "Win" ? "text-success" : "text-danger");
-            }
-
-            decisionElem.textContent = decision;
-            tr.prepend(decisionElem);
-            rowNum++;
-        }
-    }
-
-    static appendUnknownMatchParticipant(tr, decisionElem, characterId)
-    {
-        const split = tr.getAttribute("data-team-alternative-data").split(",");
-        const charId = parseInt(split[0]);
-        decisionElem.textContent = split[1].toLowerCase();
-        if(charId == characterId) {
-            decisionElem.classList.add("font-weight-bold", "text-white", split[1] == "WIN" ? "bg-success" : "bg-danger");
-        } else {
-            decisionElem.classList.add(split[1] == "WIN" ? "text-success" : "text-danger");
-        }
-        tr.prepend(decisionElem);
-        tr.insertCell(); tr.insertCell(); tr.insertCell(); tr.insertCell();
-        const teamCell = tr.insertCell();
-        teamCell.classList.add("text-left");
-        const rowSpan = document.createElement("span");
-        rowSpan.classList.add("row", "no-gutters");
-        const playerLink = document.createElement("a");
-        playerLink.setAttribute("data-character-id", charId);
-        playerLink.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=character&id=${charId}&m=1`);
-        playerLink.addEventListener("click", CharacterUtil.showCharacterInfo);
-        playerLink.classList.add("player-link", "col-md-12", "col-lg-12");
-        playerLink.textContent = charId;
-        rowSpan.appendChild(playerLink);
-        teamCell.appendChild(rowSpan);
-        tr.insertCell(); tr.insertCell(); tr.insertCell(); tr.insertCell();
     }
 
     static findCharactersByName()
@@ -1515,6 +1377,4 @@ class CharacterUtil
     }
 
 }
-
-CharacterUtil.MATCH_DURATION_MAX_SECONDS = 5400;
 CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS = 2 * 24 * 60 * 60 * 1000;
