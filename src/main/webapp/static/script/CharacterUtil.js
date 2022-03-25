@@ -847,8 +847,10 @@ class CharacterUtil
 
         tabNav.classList.remove("d-none");
         pane.classList.remove("d-none");
-        const result = MatchUtil.updateMatchTable(document.querySelector("#matches"), matches, (data)=>
-            Number.isInteger(data) ? data == characterId : data.member.character.id == characterId);
+        const result = MatchUtil.updateMatchTable(document.querySelector("#matches"), matches,
+            (data)=>Number.isInteger(data) ? data == characterId : data.member.character.id == characterId,
+            localStorage.getItem("matches-historical-mmr") == "true"
+        );
         Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.TEAMS, {result: result.teams});
         if(result.validMatches.length >= MATCH_BATCH_SIZE) {
             document.querySelector("#load-more-matches").classList.remove("d-none");

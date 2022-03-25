@@ -4,7 +4,7 @@
 class MatchUtil
 {
 
-    static updateMatchTable(table, matches, isMainParticipant)
+    static updateMatchTable(table, matches, isMainParticipant, historical)
     {
         const tBody = table.querySelector(":scope tbody");
         ElementUtil.removeChildren(tBody);
@@ -22,7 +22,7 @@ class MatchUtil
                 if(!p.team) {
                     teams.push({id: -1, alternativeData: p.participant.playerCharacterId + "," + p.participant.decision})
                 } else if(teams.length == 0 || teams[teams.length - 1].id != p.team.id) {
-                    if(localStorage.getItem("matches-historical-mmr") == "true") {
+                    if(historical) {
                         let teamClone = {};
                         Object.assign(teamClone, p.team);
                         teamClone.rating = p.teamState.teamState.rating;
