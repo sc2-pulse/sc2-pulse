@@ -261,7 +261,7 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     text-align: center;
 }
 
-.c-table-simple
+.c-table-simple, .width-initial
 {
     width: initial;
 }
