@@ -118,5 +118,39 @@
         <tbody></tbody>
     </table>
 </div>
+<div class="table-responsive" th:fragment="match (id, class)">
+    <table th:id="${id}" th:class="${'table table-sm table-hover ' + class}">
+        <thead>
+        <tr>
+            <th scope="col">Date</th>
+            <th scope="col">~Len</th>
+            <th scope="col">Type</th>
+            <th scope="col">Map</th>
+            <th scope="col">Decision</th>
+            <th scope="col"
+                class="hoverable"
+                title="Hover over this column values to get a more detailed view"
+                data-toggle="tooltip"
+            >
+                <span>Rank</span>
+            </th>
+            <th scope="col">MMR</th>
+            <th scope="col">League</th>
+            <th scope="col">Region</th>
+            <th scope="col">Team</th>
+            <th scope="col"
+                class="hoverable"
+                title="Hover over this column values to get a more detailed view"
+                data-toggle="tooltip"
+            >
+                <span>Games</span>
+            </th>
+            <th scope="col">Win%</th>
+            <th scope="col">Misc</th>
+        </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</div>
 </body>
 </html>

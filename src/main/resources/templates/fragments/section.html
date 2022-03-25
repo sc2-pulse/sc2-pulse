@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2021 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -65,5 +65,34 @@
 <section th:id="${id}" class="col-lg-6 mb-3" th:fragment="stats (id, title, titleY, type)"
          th:replace="~{fragments/section :: statsFull(${id}, ${title}, ${titleY}, ${type}, 'true', 'true', 1)}">>
 </section>
+<div th:fragment="matches(suffix)">
+    <h3>
+        Recent ladder matches
+    </h3>
+    <div th:replace="~{fragments/section :: matches-header(${suffix})}"></div>
+    <div th:replace="~{fragments/table :: match(${'matches' + suffix}, '')}"></div>
+    <button th:id="|load-more-matches${suffix}|" type="button" class="btn btn-primary mb-3">More matches</button>
+</div>
+<div th:fragment="matches-header (suffix)">
+    <p class="text-warning font-weight-bold">This feature is done on the best effort basis. Some matches may be missing/invalid.</p>
+    <form class="form-inline justify-content-center">
+        <div class="form-group mb-3">
+            <label th:for="|matches-type${suffix}|">Type</label>
+            <select th:id="|matches-type${suffix}|" name="matches-type" class="form-control serializable mx-sm-3">
+                <option value="all" selected="selected">all</option>
+                <option th:each="type : ${T(com.nephest.battlenet.sc2.model.BaseMatch.MatchType).values()}"
+                        th:value="${type}"
+                        th:text="${type.getName().isEmpty() ? type : type.getName()}">
+                </option>
+            </select>
+        </div>
+        <div class="form-check mb-3">
+            <input th:id="|matches-historical-mmr${suffix}|" class="form-check-input serializable" type="checkbox" />
+            <label th:for="|matches-historical-mmr${suffix}|" class="text-nowrap form-check-label">
+                Historical league and MMR(approx)
+            </label>
+        </div>
+    </form>
+</div>
 </body>
 </html>
