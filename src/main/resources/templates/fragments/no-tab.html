@@ -1,0 +1,40 @@
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:fragment="no-tab (tabId, tabName, title, description, embedContent, script, showAds)"
+      th:replace="~{layout/base :: layout(${title}, ${description}, ~{::#c-content}, ${script}, ${showAds})}">
+<head>
+    <title>SC2 Pulse</title>
+    <meta name="description" content="No tab page"/>
+</head>
+<body>
+<div id="c-content">
+    <nav class="no-popup-hide">
+        <ul class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+            <li class="nav-item">
+                <a
+                        th:id="|${tabId}-tab|"
+                        class="nav-link active"
+                        data-toggle="pill"
+                        th:data-target="|#${tabId}|"
+                        data-ignore-visibility="true"
+                        th:href="|#${tabId}|"
+                        role="tab"
+                        th:aria-controls="${tabId}"
+                        aria-selected="true"
+                        th:text="${tabName}"
+                >
+                    Global
+                </a>
+            </li>
+        </ul>
+    </nav>
+    <div th:id="${tabId}" class="tab-pane show active">
+        <div th:replace="${embedContent}"></div>
+    </div>
+</div>
+</body>
+</html>

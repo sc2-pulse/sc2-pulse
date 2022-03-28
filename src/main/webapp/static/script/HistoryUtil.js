@@ -126,8 +126,10 @@ class HistoryUtil
             Session.lastNonModalParams =  locationSearch;
             Session.lastNonModalTitle = document.title;
         }
+        const deepestTabId = HistoryUtil.getDeepestTabId(document);
+        if(!deepestTabId) return;
         HistoryUtil.replaceState({}, document.title,
-            HistoryUtil.formatSearchString(params.toString(), HistoryUtil.getDeepestTabId(document)));
+            HistoryUtil.formatSearchString(params.toString(), deepestTabId));
     }
 
     static updateActiveTabs()
@@ -135,6 +137,7 @@ class HistoryUtil
         const modal = document.querySelector(".modal.show");
         const modalOnly = modal != null;
         const deepestDocumentTab = HistoryUtil.getDeepestTabId(document);
+        if(!deepestDocumentTab) return;
         const hash = modalOnly
             ? HistoryUtil.getDeepestTabId(modal)
             : deepestDocumentTab;
