@@ -53,7 +53,7 @@ public class TeamController
         if(ids == null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "legacyUid parameter not found");
 
         List<LadderTeamState> states = ladderTeamStateDAO.find(ids);
-        List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(ids);
+        List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(ids, true);
         return groupCommonHistory(ids, states, teams);
     }
 

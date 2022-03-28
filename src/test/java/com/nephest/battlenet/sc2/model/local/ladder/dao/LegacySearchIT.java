@@ -159,7 +159,7 @@ public class LegacySearchIT
             new TeamLegacyUid(QueueType.LOTV_4V4, Region.EU, LEGACY_ID_1),
             new TeamLegacyUid(QueueType.LOTV_1V1, Region.US, LEGACY_ID_2)
         );
-        List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(legacyIds);
+        List<LadderTeam> teams = ladderSearchDAO.findLegacyTeams(legacyIds, true);
         assertEquals(4, teams.size());
 
         LadderTeam team1 = teams.get(0);
@@ -179,20 +179,9 @@ public class LegacySearchIT
         assertEquals(1, team2.getMembers().size());
 
         LadderTeam team3 = teams.get(2);
-        assertEquals(2, team3.getSeason());
-        assertEquals(QueueType.LOTV_4V4, team3.getQueueType());
-        assertEquals(Region.EU, team3.getRegion());
-        assertEquals(LEGACY_ID_1, team3.getLegacyId());
-        assertEquals(11, team3.getWins());
-        assertEquals(4, team3.getMembers().size());
-
         LadderTeam team4 = teams.get(3);
-        assertEquals(2, team4.getSeason());
-        assertEquals(QueueType.LOTV_1V1, team4.getQueueType());
-        assertEquals(Region.US, team4.getRegion());
-        assertEquals(LEGACY_ID_2, team4.getLegacyId());
-        assertEquals(11, team4.getWins());
-        assertEquals(1, team4.getMembers().size());
+        verifyFirstTeams(teams.subList(2, 4));
+        verifyFirstTeams(ladderSearchDAO.findLegacyTeams(legacyIds, false));
 
         List<LadderTeamState> states = ladderTeamStateDAO.find(legacyIds);
         assertEquals(8, states.size());
@@ -243,7 +232,7 @@ public class LegacySearchIT
         Set<TeamLegacyUid> legacyIds3 = Set.of(
             new TeamLegacyUid(QueueType.LOTV_1V1, Region.US, LEGACY_ID_3)
         );
-        List<LadderTeam> teams3 = ladderSearchDAO.findLegacyTeams(legacyIds3);
+        List<LadderTeam> teams3 = ladderSearchDAO.findLegacyTeams(legacyIds3, true);
         assertEquals(1, teams3.size());
 
         LadderTeam team3_1 = teams3.get(0);
@@ -281,6 +270,25 @@ public class LegacySearchIT
         assertEquals(1, state3_4.getTeamState().getRating());
         assertEquals(BaseLeague.LeagueType.BRONZE, state3_4.getLeague().getType());
 
+    }
+
+    private void verifyFirstTeams(List<LadderTeam> teams)
+    {
+        LadderTeam team3 = teams.get(0);
+        assertEquals(2, team3.getSeason());
+        assertEquals(QueueType.LOTV_4V4, team3.getQueueType());
+        assertEquals(Region.EU, team3.getRegion());
+        assertEquals(LEGACY_ID_1, team3.getLegacyId());
+        assertEquals(11, team3.getWins());
+        assertEquals(4, team3.getMembers().size());
+
+        LadderTeam team4 = teams.get(1);
+        assertEquals(2, team4.getSeason());
+        assertEquals(QueueType.LOTV_1V1, team4.getQueueType());
+        assertEquals(Region.US, team4.getRegion());
+        assertEquals(LEGACY_ID_2, team4.getLegacyId());
+        assertEquals(11, team4.getWins());
+        assertEquals(1, team4.getMembers().size());
     }
 
 }

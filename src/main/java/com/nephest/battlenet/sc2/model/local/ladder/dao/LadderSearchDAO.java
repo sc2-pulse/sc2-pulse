@@ -54,17 +54,18 @@ public class LadderSearchDAO
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id ";
 
-    private static final String LADDER_SEARCH_TEAM_FROM =
-        LADDER_SEARCH_TEAM_FROM_SHORT
-        + "LEFT JOIN clan ON player_character.clan_id = clan.id "
+    private static final String LADDER_SEARCH_TEAM_FROM_FULL_BODY =
+        "LEFT JOIN clan ON player_character.clan_id = clan.id "
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
         + "LEFT JOIN pro_team ON pro_team_member.pro_team_id=pro_team.id "
         + "LEFT JOIN player_character_report AS confirmed_cheater_report "
-            + "ON player_character.id = confirmed_cheater_report.player_character_id "
-            + "AND confirmed_cheater_report.type = :cheaterReportType "
-            + "AND confirmed_cheater_report.status = true ";
+        + "ON player_character.id = confirmed_cheater_report.player_character_id "
+        + "AND confirmed_cheater_report.type = :cheaterReportType "
+        + "AND confirmed_cheater_report.status = true ";
+
+    private static final String LADDER_SEARCH_TEAM_FROM = LADDER_SEARCH_TEAM_FROM_SHORT + LADDER_SEARCH_TEAM_FROM_FULL_BODY;
 
     private static final String LADDER_SEARCH_TEAM_WHERE =
         "WHERE "
@@ -159,6 +160,25 @@ public class LadderSearchDAO
         + LADDER_SEARCH_TEAM_FROM
         + "WHERE (team.queue_type, team.region, team.legacy_id) IN (:legacyUids) "
         + "ORDER BY team.season, team.id";
+
+    private static final String FIND_FIRST_LEGACY_TEAM_MEMBERS =
+        "WITH "
+        + "team_filter AS "
+        + "("
+            + "SELECT DISTINCT ON(team.queue_type, team.region, team.legacy_id) "
+            + "id "
+            + "FROM team "
+            + "WHERE (team.queue_type, team.region, team.legacy_id) IN (:legacyUids) "
+            + "ORDER BY team.queue_type DESC, team.region DESC, team.legacy_id DESC, team.season DESC"
+        + ") "
+        + "SELECT "
+        + FIND_TEAM_MEMBERS_BASE
+        + "FROM team_filter "
+        + "INNER JOIN team ON team_filter.id = team.id "
+        + "INNER JOIN team_member ON team_member.team_id = team.id "
+        + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
+        + "INNER JOIN account ON player_character.account_id=account.id "
+        + LADDER_SEARCH_TEAM_FROM_FULL_BODY;
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
@@ -387,7 +407,7 @@ public class LadderSearchDAO
             .query(FIND_FOLLOWING_TEAM_MEMBERS, params, LADDER_TEAMS_EXTRACTOR);
     }
 
-    public List<LadderTeam> findLegacyTeams(Set<TeamLegacyUid> ids)
+    public List<LadderTeam> findLegacyTeams(Set<TeamLegacyUid> ids, boolean all)
     {
         if(ids.isEmpty()) return new ArrayList<>();
 
@@ -402,7 +422,8 @@ public class LadderSearchDAO
             .addValue("legacyUids", legacyUids)
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template.query(FIND_LEGACY_TEAM_MEMBERS, params, LADDER_TEAMS_EXTRACTOR);
+        String query = all ? FIND_LEGACY_TEAM_MEMBERS : FIND_FIRST_LEGACY_TEAM_MEMBERS;
+        return template.query(query, params, LADDER_TEAMS_EXTRACTOR);
     }
 
 }
