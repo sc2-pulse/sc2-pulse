@@ -246,6 +246,21 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     font-size: 0.875rem;
 }
 
+.font-small-5
+{
+    font-size: 0.5em !important;
+}
+
+.font-small-6
+{
+    font-size: 0.6em !important;
+}
+
+.font-large-2
+{
+    font-size: 2em !important;
+}
+
 .table a
 {
     padding: 0.4em;
