@@ -38,8 +38,7 @@ public class LadderSearchDAO
 {
 
     private static final String FIND_TEAM_MEMBERS_BASE =
-        "SELECT "
-        + "team_member.terran_games_played, team_member.protoss_games_played, "
+        "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played, "
         + TeamDAO.STD_SELECT + ", "
         + PlayerCharacterDAO.STD_SELECT + ", "
@@ -86,6 +85,7 @@ public class LadderSearchDAO
             + LADDER_SEARCH_TEAM_WHERE
             + "AND account_following.account_id=:accountId "
         + ") "
+        + "SELECT "
         + FIND_TEAM_MEMBERS_BASE
         + "FROM following_team "
         + "INNER JOIN team ON following_team.id = team.id "
@@ -104,7 +104,8 @@ public class LadderSearchDAO
         + "ORDER BY team.rating DESC, team.id DESC";
 
     private static final String FIND_TEAM_MEMBERS_ANCHOR_FORMAT =
-        FIND_TEAM_MEMBERS_BASE
+        "SELECT "
+        + FIND_TEAM_MEMBERS_BASE
 
         + LADDER_SEARCH_TEAM_FROM_WHERE
         + "AND (team.rating, team.id) %2$s (:ratingAnchor, :idAnchor) "
@@ -128,7 +129,8 @@ public class LadderSearchDAO
             + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
             + "WHERE "
             + "player_character.id=:playerCharacterId "
-        + ")"
+        + ") "
+        + "SELECT "
         + FIND_TEAM_MEMBERS_BASE
 
         + "FROM team_filtered "
@@ -152,7 +154,8 @@ public class LadderSearchDAO
         + "player_character.id ASC ";
 
     private static final String FIND_LEGACY_TEAM_MEMBERS =
-        FIND_TEAM_MEMBERS_BASE
+        "SELECT "
+        + FIND_TEAM_MEMBERS_BASE
         + LADDER_SEARCH_TEAM_FROM
         + "WHERE (team.queue_type, team.region, team.legacy_id) IN (:legacyUids) "
         + "ORDER BY team.season, team.id";
