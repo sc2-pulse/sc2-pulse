@@ -362,24 +362,35 @@ class ElementUtil
 
     static changeInputValue(input, val)
     {
+        let changed = false;
         switch(input.getAttribute("type"))
         {
             case "date":
             {
                 const date = new Date(parseInt(val));
                 if(input.getAttribute("data-exclusive")) date.setDate(date.getDate() - 1);
-                input.valueAsNumber = date.getTime() - new Date().getTimezoneOffset() * 60 * 1000;
+                const dateVal = date.getTime() - new Date().getTimezoneOffset() * 60 * 1000;
+                if(input.valueAsNumber != dateVal) {
+                    input.valueAsNumber = dateVal;
+                    changed = true;
+                }
                 break;
             }
             case "checkbox":
             case "radio":
-                input.checked = val;
+                if(input.checked != val) {
+                    input.checked = val;
+                    changed = true;
+                }
                 break;
             default:
-                input.value = val;
+                if(input.value != val) {
+                    input.value = val;
+                    changed = true;
+                }
                 break;
         }
-        input.dispatchEvent(new Event("change"));
+        if(changed) input.dispatchEvent(new Event("change"));
     }
 
     static createCheaterFlag()
