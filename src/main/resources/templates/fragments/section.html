@@ -74,7 +74,9 @@
     <button th:id="|load-more-matches${suffix}|" type="button" class="btn btn-primary mb-3">More matches</button>
 </div>
 <div th:fragment="matches-header (suffix)">
-    <p class="text-warning font-weight-bold">This feature is done on the best effort basis. Some matches may be missing/invalid.</p>
+    <p class="text-warning font-weight-bold">This feature is done on the best effort basis. Some matches may be missing/invalid.
+    Match history length is ~<span th:text="${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).UPDATED_TTL_DAYS}"></span> days
+        (up to <span th:text="${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).TTL_DAYS}"></span> days in some cases)</p>
     <form th:id="|matches-form${suffix}|" class="form-inline justify-content-center">
         <div class="form-group mb-3">
             <label th:for="|matches-type${suffix}|">Type</label>
