@@ -8,7 +8,8 @@ class ViewUtil
     {
         const proxy = element.getAttribute("data-proxy");
         if(proxy) element = document.getElementById(proxy);
-        return EnumUtil.enumOfName(element.closest("[data-view-name]").getAttribute("data-view-name"), VIEW);
+        const viewName = element.closest("[data-view-name]").getAttribute("data-view-name");
+        return EnumUtil.enumOfName(viewName, VIEW, false) || viewName;
     }
 
 }
