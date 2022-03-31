@@ -10,11 +10,12 @@ class EnumUtil
         throw new Error("Invalid id");
     }
 
-    static enumOfName(name, enumObj)
+    static enumOfName(name, enumObj, throwError = true)
     {
         name = name.toLowerCase();
         for(const curEnum of Object.values(enumObj)) if(curEnum.name.toLowerCase() == name) return curEnum;
-        throw new Error("Invalid name");
+        if(throwError) throw new Error("Invalid name");
+        return null;
     }
 
     static enumOfFullName(fullName, enumObj)
