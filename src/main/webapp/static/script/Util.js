@@ -291,6 +291,12 @@ class Util
         return Object.assign(dest, src);
     }
 
+    static addParams(params, name, vals)
+    {
+        if(!vals) return;
+        for(const val of vals) params.append(name, val);
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
