@@ -38,6 +38,7 @@ public class BlizzardPrivacyService
     private static final Logger LOG = LoggerFactory.getLogger(BlizzardPrivacyService.class);
 
     public static final Duration DATA_TTL = Duration.ofDays(30);
+    public static final Duration ANONYMIZATION_DATA_TIME_FRAME = Duration.ofMinutes(60);
     public static final int CURRENT_SEASON_UPDATES_PER_PERIOD = 3;
     //postgresql param limit / max players in a single ladder / param count
     public static final int LADDER_BATCH_SIZE = 32767 / 400 / 6;
@@ -165,8 +166,16 @@ public class BlizzardPrivacyService
         LOG.info("Updated old names and BattleTags for season {}", season);
     }
 
+    private boolean shouldHandleExpiredData()
+    {
+        return lastAnonymizeInstant.getValue().plusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds())
+            .isBefore(Instant.now().minusSeconds(ANONYMIZATION_DATA_TIME_FRAME.toSeconds()));
+    }
+
     private void handleExpiredData()
     {
+        if(!shouldHandleExpiredData()) return;
+
         int removedAccounts = accountDAO.removeEmptyAccounts();
         if(removedAccounts > 0) LOG.info("Removed {} empty accounts", removedAccounts);
         anonymizeExpiredData();
