@@ -327,22 +327,15 @@ public class SqlSyntaxIT
 
         PlayerCharacter createdCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1");
         playerCharacterDAO.merge(createdCharacter);
-        //update on accountId change
-        PlayerCharacter mergedCharacter = new PlayerCharacter(null, account2.getId(), season.getRegion(), 1L, 1, "name#1");
-        playerCharacterDAO.merge(mergedCharacter);
-        assertEquals(mergedCharacter.getAccountId(),
-            playerCharacterDAO.find(createdCharacter.getRegion(),createdCharacter.getRealm(), createdCharacter.getBattlenetId())
-                .orElseThrow().getAccountId()
-        );
         //update on clanId change
-        mergedCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1", clans[0].getId());
+        PlayerCharacter mergedCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name" + "#1", clans[0].getId());
         playerCharacterDAO.merge(mergedCharacter);
         assertEquals(mergedCharacter.getClanId(),
             playerCharacterDAO.find(createdCharacter.getRegion(), createdCharacter.getRealm(), createdCharacter.getBattlenetId())
             .orElseThrow().getClanId()
         );
         //update on name change
-        mergedCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#2");
+        mergedCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#2", clans[0].getId());
         playerCharacterDAO.merge(mergedCharacter);
         PlayerCharacter foundCharacter = playerCharacterDAO
             .find(createdCharacter.getRegion(), createdCharacter.getRealm(), createdCharacter.getBattlenetId())
@@ -351,6 +344,13 @@ public class SqlSyntaxIT
         assertEquals(mergedCharacter.getAccountId(), foundCharacter.getAccountId());
         assertEquals(mergedCharacter.getClanId(), foundCharacter.getClanId());
         assertEquals(createdCharacter.getId(), mergedCharacter.getId());
+        //update on accountId change
+        mergedCharacter = new PlayerCharacter(null, account2.getId(), season.getRegion(), 1L, 1, "name#2", clans[0].getId());
+        playerCharacterDAO.merge(mergedCharacter);
+        assertEquals(mergedCharacter.getAccountId(),
+            playerCharacterDAO.find(createdCharacter.getRegion(),createdCharacter.getRealm(), createdCharacter.getBattlenetId())
+                .orElseThrow().getAccountId()
+        );
 
         PlayerCharacter character = playerCharacterDAO
             .merge(new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 2, "newname#2"));
