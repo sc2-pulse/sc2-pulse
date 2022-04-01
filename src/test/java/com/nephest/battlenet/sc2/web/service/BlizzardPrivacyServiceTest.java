@@ -15,6 +15,7 @@ import org.mockito.MockitoAnnotations;
 import org.springframework.validation.Validator;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 
@@ -102,8 +103,9 @@ public class BlizzardPrivacyServiceTest
         privacyService.update();
         assertNull(privacyService.getSeasonToUpdate());
 
-        verify(playerCharacterDAO).anonymizeExpiredCharacters();
-        verify(accountDAO).anonymizeExpiredAccounts();
+        OffsetDateTime anonymizeOffset = OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
+        verify(playerCharacterDAO).anonymizeExpiredCharacters(argThat(m->m.isEqual(anonymizeOffset)));
+        verify(accountDAO).anonymizeExpiredAccounts(argThat(m->m.isEqual(anonymizeOffset)));
 
         long updateTimeFrame = BlizzardPrivacyService.DATA_TTL
             .dividedBy(BlizzardPrivacyService.CURRENT_SEASON_UPDATES_PER_PERIOD + 2) //+ 2 existing seasons

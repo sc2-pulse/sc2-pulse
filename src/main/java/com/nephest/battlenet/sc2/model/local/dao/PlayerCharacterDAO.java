@@ -133,8 +133,9 @@ public class PlayerCharacterDAO
 
     private static final String ANONYMIZE_EXPIRED_CHARACTERS =
         "UPDATE player_character "
-        + "SET name = '" + BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME + "' " 
-        + "WHERE updated < NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days'";
+        + "SET name = '" + BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME + "' "
+        + "WHERE updated >= :from "
+        + "AND updated < NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' ";
 
     private static final String FIND_PRO_PLAYER_CHARACTER_IDS =
         "SELECT player_character.id FROM player_character "
@@ -312,9 +313,10 @@ public class PlayerCharacterDAO
         return template.update(UPDATE_ACCOUNTS_AND_CHARACTERS, params);
     }
 
-    public int anonymizeExpiredCharacters()
+    public int anonymizeExpiredCharacters(OffsetDateTime from)
     {
-        return template.update(ANONYMIZE_EXPIRED_CHARACTERS, new MapSqlParameterSource());
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("from", from);
+        return template.update(ANONYMIZE_EXPIRED_CHARACTERS, params);
     }
 
     private MapSqlParameterSource createParameterSource(PlayerCharacter character)

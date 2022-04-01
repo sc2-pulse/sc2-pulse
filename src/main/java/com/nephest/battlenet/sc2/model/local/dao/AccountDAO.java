@@ -19,6 +19,7 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -56,7 +57,8 @@ public class AccountDAO
         + "SET battle_tag = '" + BasePlayerCharacter.DEFAULT_FAKE_NAME + "#' "
         + "|| player_character.region::text || player_character.realm::text || player_character.battlenet_id::text "
         + "FROM player_character "
-        + "WHERE account.updated < NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' "
+        + "WHERE account.updated >= :from "
+        + "AND account.updated < NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' "
         + "AND account.id = player_character.account_id";
 
     private static final String FIND_BY_PARTITION_AND_BATTLE_TAG =
@@ -133,9 +135,10 @@ public class AccountDAO
         return account;
     }
 
-    public int anonymizeExpiredAccounts()
+    public int anonymizeExpiredAccounts(OffsetDateTime from)
     {
-        return template.update(ANONYMIZE_EXPIRED_ACCOUNTS, new MapSqlParameterSource());
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("from", from);
+        return template.update(ANONYMIZE_EXPIRED_ACCOUNTS, params);
     }
 
     public Optional<Account> find(Partition partition, String battleTag)

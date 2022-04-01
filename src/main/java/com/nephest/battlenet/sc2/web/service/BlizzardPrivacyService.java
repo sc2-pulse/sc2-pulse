@@ -23,6 +23,8 @@ import reactor.util.function.Tuples;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -40,6 +42,8 @@ public class BlizzardPrivacyService
     //postgresql param limit / max players in a single ladder / param count
     public static final int LADDER_BATCH_SIZE = 32767 / 400 / 6;
     public static final int ALTERNATIVE_LADDER_BATCH_SIZE = 32767 / 400 / 4;
+    public static final Instant DEFAULT_ANONYMIZE_START =
+        OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset()).toInstant();
     private static final QueueType[] QUEUE_TYPES = QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new);
     private static final BaseLeague.LeagueType[] LEAGUE_TYPES = BaseLeague.LeagueType.values();
 
@@ -57,6 +61,7 @@ public class BlizzardPrivacyService
     private LongVar lastUpdatedSeason;
     private InstantVar lastUpdatedSeasonInstant;
     private InstantVar lastUpdatedCurrentSeasonInstant;
+    private InstantVar lastAnonymizeInstant;
 
     @Autowired
     public BlizzardPrivacyService
@@ -93,6 +98,7 @@ public class BlizzardPrivacyService
         lastUpdatedSeason = new LongVar(varDAO, "blizzard.privacy.season.last", false);
         lastUpdatedSeasonInstant = new InstantVar(varDAO, "blizzard.privacy.season.last.updated", false);
         lastUpdatedCurrentSeasonInstant = new InstantVar(varDAO, "blizzard.privacy.season.current.updated", false);
+        lastAnonymizeInstant = new InstantVar(varDAO, "blizzard.privacy.anonymized", false);
         try
         {
             lastUpdatedSeason.load();
@@ -104,6 +110,9 @@ public class BlizzardPrivacyService
             lastUpdatedCurrentSeasonInstant.load();
             if(lastUpdatedCurrentSeasonInstant.getValue() == null)
                 lastUpdatedCurrentSeasonInstant.setValueAndSave(Instant.now().minusSeconds(DATA_TTL.toSeconds()));
+            lastAnonymizeInstant.load();
+            if(lastAnonymizeInstant.getValue() == null)
+                lastAnonymizeInstant.setValueAndSave(DEFAULT_ANONYMIZE_START);
         }
         catch (Exception ex)
         {
@@ -158,8 +167,11 @@ public class BlizzardPrivacyService
 
     public void anonymizeExpiredData()
     {
-        int accounts = accountDAO.anonymizeExpiredAccounts();
-        int characters = playerCharacterDAO.anonymizeExpiredCharacters();
+        Instant anonymizeInstant = OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).toInstant();
+        OffsetDateTime from = OffsetDateTime.ofInstant(lastAnonymizeInstant.getValue(), ZoneId.systemDefault());
+        int accounts = accountDAO.anonymizeExpiredAccounts(from);
+        int characters = playerCharacterDAO.anonymizeExpiredCharacters(from);
+        lastAnonymizeInstant.setValueAndSave(anonymizeInstant);
         if(accounts > 0 || characters > 0) LOG.info("Anonymized {} accounts and {} characters", accounts, characters);
     }
 

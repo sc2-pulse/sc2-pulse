@@ -184,11 +184,14 @@ public class PlayerCharacterDAOIT
         template.execute
         (
             "UPDATE player_character "
-            + "SET updated = NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' "
+            + "SET updated = NOW() - INTERVAL '" + (BlizzardPrivacyService.DATA_TTL.toDays() + 2) +  " days' "
             + "WHERE id = 1"
         );
-        playerCharacterDAO.anonymizeExpiredCharacters();
+        playerCharacterDAO.anonymizeExpiredCharacters(OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
+        //character is excluded due to "from' param
+        assertEquals("name2#123", playerCharacterDAO.find(Region.EU, 1, 1L).orElseThrow().getName());
 
+        playerCharacterDAO.anonymizeExpiredCharacters(OffsetDateTime.MIN);
         assertEquals(BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME, playerCharacterDAO.find(Region.EU, 1, 1L).orElseThrow().getName());
     }
 
@@ -247,11 +250,14 @@ public class PlayerCharacterDAOIT
         template.execute
         (
             "UPDATE account "
-            + "SET updated = NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' "
+            + "SET updated = NOW() - INTERVAL '" + (BlizzardPrivacyService.DATA_TTL.toDays() + 2) + " days' "
             + "WHERE id = " + acc1.getId()
         );
-        accountDAO.anonymizeExpiredAccounts();
+        accountDAO.anonymizeExpiredAccounts(OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
+        //the account is excluded due to "from" param
+        assertEquals("tag3#123", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
 
+        accountDAO.anonymizeExpiredAccounts(OffsetDateTime.MIN);
         assertEquals(BasePlayerCharacter.DEFAULT_FAKE_NAME + "#211", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
     }
 
