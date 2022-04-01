@@ -61,6 +61,24 @@ public class AccountDAO
         + "AND account.updated < NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' "
         + "AND account.id = player_character.account_id";
 
+    private static final String REMOVE_EMPTY_ACCOUNTS =
+        "DELETE FROM account a "
+        + "USING account b "
+        + "LEFT JOIN player_character ON b.id = player_character.account_id  "
+        + "LEFT JOIN account_following ON b.id = account_following.account_id  "
+        + "LEFT JOIN evidence ON b.id = evidence.reporter_account_id "
+        + "LEFT JOIN evidence_vote ON b.id = evidence_vote.voter_account_id "
+        + "LEFT JOIN account_role ON b.id = account_role.account_id "
+        + "LEFT JOIN pro_player_account ON b.id = pro_player_account.account_id "
+        + "WHERE "
+        + "a.id = b.id "
+        + "AND player_character.id IS NULL  "
+        + "AND account_following.following_account_id IS NULL "
+        + "AND evidence.id IS NULL "
+        + "AND evidence_vote.vote IS NULL "
+        + "AND account_role.role IS NULL "
+        + "AND pro_player_account.pro_player_id IS NULL";
+
     private static final String FIND_BY_PARTITION_AND_BATTLE_TAG =
         "SELECT " + STD_SELECT
         + "FROM account "
@@ -133,6 +151,11 @@ public class AccountDAO
         MapSqlParameterSource params = createParameterSource(account);
         account.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return account;
+    }
+
+    public int removeEmptyAccounts()
+    {
+        return template.update(REMOVE_EMPTY_ACCOUNTS, new MapSqlParameterSource());
     }
 
     public int anonymizeExpiredAccounts(OffsetDateTime from)

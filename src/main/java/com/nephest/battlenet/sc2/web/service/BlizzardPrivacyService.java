@@ -132,7 +132,7 @@ public class BlizzardPrivacyService
 
     public void update()
     {
-        anonymizeExpiredData();
+        handleExpiredData();
         Integer season = getSeasonToUpdate();
         if(season == null) return;
 
@@ -165,7 +165,14 @@ public class BlizzardPrivacyService
         LOG.info("Updated old names and BattleTags for season {}", season);
     }
 
-    public void anonymizeExpiredData()
+    private void handleExpiredData()
+    {
+        int removedAccounts = accountDAO.removeEmptyAccounts();
+        if(removedAccounts > 0) LOG.info("Removed {} empty accounts", removedAccounts);
+        anonymizeExpiredData();
+    }
+
+    private void anonymizeExpiredData()
     {
         Instant anonymizeInstant = OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).toInstant();
         OffsetDateTime from = OffsetDateTime.ofInstant(lastAnonymizeInstant.getValue(), ZoneId.systemDefault());

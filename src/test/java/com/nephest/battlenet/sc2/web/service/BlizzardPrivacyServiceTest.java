@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.validation.Validator;
@@ -104,8 +105,10 @@ public class BlizzardPrivacyServiceTest
         assertNull(privacyService.getSeasonToUpdate());
 
         OffsetDateTime anonymizeOffset = OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
-        verify(playerCharacterDAO).anonymizeExpiredCharacters(argThat(m->m.isEqual(anonymizeOffset)));
-        verify(accountDAO).anonymizeExpiredAccounts(argThat(m->m.isEqual(anonymizeOffset)));
+        InOrder order = inOrder(accountDAO, playerCharacterDAO);
+        order.verify(accountDAO).removeEmptyAccounts();
+        order.verify(accountDAO).anonymizeExpiredAccounts(argThat(m->m.isEqual(anonymizeOffset)));
+        order.verify(playerCharacterDAO).anonymizeExpiredCharacters(argThat(m->m.isEqual(anonymizeOffset)));
 
         long updateTimeFrame = BlizzardPrivacyService.DATA_TTL
             .dividedBy(BlizzardPrivacyService.CURRENT_SEASON_UPDATES_PER_PERIOD + 2) //+ 2 existing seasons

@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
@@ -91,6 +92,9 @@ public class SqlSyntaxIT
 
     @Autowired
     private PostgreSQLUtils postgreSQLUtils;
+
+    @Autowired
+    private JdbcTemplate template;
 
     @BeforeAll
     public static void beforeAll(@Autowired DataSource dataSource)
@@ -393,6 +397,13 @@ public class SqlSyntaxIT
         postgreSQLUtils.analyze();
         postgreSQLUtils.vacuumAnalyze();
         assertNotNull(postgreSQLUtils.getApproximateCount("team"));
+
+        Account account3 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123111"));
+        assertEquals(1, accountDAO.removeEmptyAccounts());
+        assertEquals(2, template.query("SELECT COUNT(*) FROM account", DAOUtils.INT_EXTRACTOR));
+        List<Account> accs = template.query("SELECT " + AccountDAO.STD_SELECT + " FROM account ORDER BY id", AccountDAO.getStdRowMapper());
+        assertEquals(account, accs.get(0));
+        assertEquals(account2, accs.get(1));
     }
 
     @Test
