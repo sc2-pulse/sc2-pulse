@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -57,6 +57,15 @@ public class SeasonGenerator
 
     @Autowired
     private TeamMemberDAO teamMemberDAO;
+
+    @Autowired
+    private MatchDAO matchDAO;
+
+    @Autowired
+    private SC2MapDAO mapDAO;
+
+    @Autowired
+    private MatchParticipantDAO matchParticipantDAO;
 
     @Autowired
     private NamedParameterJdbcTemplate template;
@@ -257,6 +266,30 @@ public class SeasonGenerator
         Team team = teamDAO.create(newTeam);
         for(PlayerCharacter member : members) teamMemberDAO.create(new TeamMember(team.getId(), member.getId(), 1, 2, 3, 4));
         return team;
+    }
+
+    @Transactional
+    public void create1v1Matches
+    (long id1, long id2, OffsetDateTime date, Region region, Integer duration, Integer division, int count)
+    {
+        for(int i = 0; i < count; i++) create1v1Match(id1, id2, date.minusSeconds(i), region, duration + i, division);
+    }
+
+    @Transactional
+    public void create1v1Match(long id1, long id2, OffsetDateTime date, Region region, Integer duration, Integer division)
+    {
+        teamStateDAO.saveState
+        (
+            new TeamState(id1, date, division, 1, 1),
+            new TeamState(id2, date, division, 1, 1)
+        );
+        SC2Map map = mapDAO.merge(new SC2Map(null, "map"))[0];
+        Match match = matchDAO.merge(new Match(null, date, BaseMatch.MatchType._1V1, map.getId(), region, duration))[0];
+        matchParticipantDAO.merge
+        (
+            new MatchParticipant(match.getId(), id1, BaseMatch.Decision.WIN),
+            new MatchParticipant(match.getId(), id2, BaseMatch.Decision.LOSS)
+        );
     }
 
     public void cleanAll()
