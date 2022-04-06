@@ -85,11 +85,14 @@ class MatchUtil
                : "Loss";
 
             const team = teams.find(t=>t.id == teamId);
+            const teamElem = tr.querySelector(":scope .team");
+            const decisionClass = decision == "Win" ? "bg-success-fade-1" : "bg-danger-fade-1";
+            teamElem.classList.add(decisionClass);
             if((mainTeam && teamId == mainTeam.id) || (versusLinkPrefix && team.members.find(m=>isMainParticipant({team: team, member: m})))) {
-                decisionElem.classList.add("font-weight-bold", "text-white", decision == "Win" ? "bg-success" : "bg-danger");
+                teamElem.classList.add("font-weight-bold");
+                decisionElem.classList.add("font-weight-bold", decisionClass);
             } else {
                 MatchUtil.appendVersusLink(tr, mainTeam, team, versusLinkPrefix);
-                decisionElem.classList.add(decision == "Win" ? "text-success" : "text-danger");
             }
 
             decisionElem.textContent = decision;
@@ -130,15 +133,16 @@ class MatchUtil
         const split = tr.getAttribute("data-team-alternative-data").split(",");
         const charId = parseInt(split[0]);
         decisionElem.textContent = split[1].toLowerCase();
-        if(isMainParticipant(charId)) {
-            decisionElem.classList.add("font-weight-bold", "text-white", split[1] == "WIN" ? "bg-success" : "bg-danger");
-        } else {
-            decisionElem.classList.add(split[1] == "WIN" ? "text-success" : "text-danger");
-        }
+        const mainParticipant = isMainParticipant(charId);
+        const decisionClass = split[1] == "WIN" ? "bg-success-fade-1" : "bg-danger-fade-1";
         tr.prepend(decisionElem);
         tr.insertCell(); tr.insertCell(); tr.insertCell(); tr.insertCell();
         const teamCell = tr.insertCell();
-        teamCell.classList.add("text-left");
+        teamCell.classList.add("text-left", decisionClass);
+        if(mainParticipant) {
+            decisionElem.classList.add(decisionClass, "font-weight-bold");
+            teamCell.classList.add("font-weight-bold");
+        }
         const rowSpan = document.createElement("span");
         rowSpan.classList.add("row", "no-gutters");
         const playerLink = document.createElement("a");
