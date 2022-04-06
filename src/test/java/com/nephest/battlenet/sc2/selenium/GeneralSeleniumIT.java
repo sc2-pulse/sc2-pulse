@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -32,6 +33,7 @@ import org.springframework.test.context.TestPropertySource;
 import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 
@@ -75,6 +77,12 @@ public class GeneralSeleniumIT
 
     @Autowired
     private SeasonStateDAO seasonStateDAO;
+
+    @Autowired
+    private LadderMatchDAO ladderMatchDAO;
+
+    @Autowired
+    private MatchParticipantDAO matchParticipantDAO;
 
     @Autowired
     private JdbcTemplate template;
@@ -158,14 +166,26 @@ public class GeneralSeleniumIT
         clickAndWait(driver, wait,
             "#ladder-top li.page-item:not(.disabled) a[data-page-count=\"1\"]",
             "#ladder-top li.page-item.disabled a[data-page-count=\"0\"][data-page-number=\"2\"]");
+        //back
+        clickAndWait(driver, wait,
+            "#ladder-top li.page-item:not(.disabled) a[data-page-count=\"-1\"]",
+            "#ladder-top li.page-item.disabled a[data-page-count=\"0\"][data-page-number=\"1\"]");
 
         //character
         clickAndWait(driver, wait, "#ladder a.player-link", "#player-info.modal.show");
+        testCharacterMatches(driver, wait);
         switchTabsAndToggleInputs(driver, wait, "#player-stats-tabs");
         clickAndWait(driver, wait, "#player-info button.close", ".no-popup-hide:not(.d-none)");
 
         //population
         switchTabsAndToggleInputs(driver, wait, "#stats-tabs");
+    }
+
+    private static void testCharacterMatches(WebDriver driver, WebDriverWait wait)
+    {
+        clickAndWait(driver, wait, "#player-stats-matches-tab", "#player-stats-matches.show.active");
+        clickAndWait(driver, wait, "#load-more-matches", "#matches tbody tr:nth-child(20)");
+        clickAndWait(driver, wait, "#load-more-matches", "#matches tbody tr:nth-child(25)");
     }
 
     private static void testOnline(WebDriver driver, WebDriverWait wait)
@@ -337,8 +357,14 @@ public class GeneralSeleniumIT
             BaseLeagueTier.LeagueTierType.FIRST,
             10
         );
-        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
-        template.execute("UPDATE player_character SET clan_id = " + clan.getId());
+        Clan clan1 = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
+        template.execute("UPDATE player_character SET clan_id = " + clan1.getId() + " WHERE id <= 140");
+        Clan clan2 = clanDAO.merge(new Clan(null, "clanTag2", Region.EU, "clanName2"))[0];
+        template.execute("UPDATE player_character SET clan_id = " + clan2.getId() + " WHERE id > 140");
+        OffsetDateTime startDateTime = OffsetDateTime.now();
+        int matchCount = (int) Math.round(ladderMatchDAO.getResultsPerPage() * 2.5);
+        seasonGenerator.create1v1Matches(1, 280, startDateTime, Region.EU, 1, 28, matchCount);
+        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startDateTime.minusYears(1));
         clanDAO.updateStats();
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
