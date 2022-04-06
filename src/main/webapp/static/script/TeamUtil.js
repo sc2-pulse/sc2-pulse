@@ -352,7 +352,7 @@ class TeamUtil
     static createMembersCell(team)
     {
         const membersCell = document.createElement("td");
-        membersCell.classList.add("complex", "cell-main");
+        membersCell.classList.add("complex", "cell-main", "team");
         const mRow = document.createElement("span");
         mRow.classList.add("row", "no-gutters");
         for(const teamMember of team.members) mRow.appendChild(TeamUtil.createMemberInfo(team, teamMember));
