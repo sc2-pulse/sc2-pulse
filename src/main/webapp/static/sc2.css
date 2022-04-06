@@ -640,6 +640,16 @@ body.theme-dark .page-item.disabled:not(.active) .page-link
     color: #373d43;
 }
 
+.bg-success-fade-1
+{
+    background-color: rgba(0, 255, 0, 0.06);
+}
+
+.bg-danger-fade-1
+{
+    background-color: rgba(255, 0, 0, 0.06);
+}
+
 .card-equal
 {
     min-width: initial;
