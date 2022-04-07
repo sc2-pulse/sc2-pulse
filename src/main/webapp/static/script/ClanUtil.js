@@ -110,7 +110,9 @@ class ClanUtil
             const nameCell = tr.insertCell();
             nameCell.classList.add("cell-main", "complex");
             nameCell.textContent = clan.name;
-            tr.insertCell().appendChild(BufferUtil.createToggleElement(BufferUtil.clanBuffer, clan));
+            const miscCell = tr.insertCell();
+            miscCell.classList.add("text-nowrap", "misc", "text-right");
+            miscCell.appendChild(BufferUtil.createToggleElement(BufferUtil.clanBuffer, clan));
         }
     }
 
