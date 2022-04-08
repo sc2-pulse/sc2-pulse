@@ -12,7 +12,10 @@
 </head>
 <body>
 <div id="c-content">
-    <nav class="no-popup-hide">
+    <div th:replace="~{fragments/no-tab-short :: (${tabId}, ${tabName}, ${embedContent}, true)}"></div>
+</div>
+<div th:fragment="no-tab-short (tabId, tabName, embedContent, hide)">
+    <nav th:class="${hide ? 'no-popup-hide' : ''}">
         <ul class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
             <li class="nav-item">
                 <a
