@@ -13,6 +13,7 @@ class HistoryUtil
 
     static pushState(obj, title, params)
     {
+        if(params == Session.titleAndUrlHistory[Session.titleAndUrlHistory.length - 1][1]) return;
         Session.titleAndUrlHistory.push([title, params]);
         if(Session.titleAndUrlHistory.length > 2) Session.titleAndUrlHistory.shift();
         HistoryUtil.setObjectLocation(obj, params);
