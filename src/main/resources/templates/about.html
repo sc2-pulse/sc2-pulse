@@ -22,8 +22,9 @@
             </p>
         </header>
         <section th:if="${mods.size() > 0}">
-            <h3>Moderators</h3>
-            <aside><p>All moderators are approved by team league admins</p></aside>
+            <h3>Player reports</h3>
+            <aside><p>Moderators review player reports and vote on them, the majority wins. All moderators are approved by team league admins</p></aside>
+            Current mods:
             <p th:text="${mods.stream().collect(T(java.util.stream.Collectors).joining(', '))}"></p>
         </section>
         <section>
