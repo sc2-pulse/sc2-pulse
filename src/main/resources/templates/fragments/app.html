@@ -81,7 +81,7 @@
                     <div id="report-character-menu">
                         <div>
                             The reports are public, <strong class="text-danger">your BattleTag and description will be visible to all users</strong>.
-                            Moderators will review the report the vote on it, the majority wins. Moderators:
+                            Moderators will review the report and vote on it, the majority wins. Moderators:
                             <span th:text="${@userController.getModTags().stream().collect(T(java.util.stream.Collectors).joining(', '))}"></span>
                         </div>
                         <form id="report-character-form" class="px-4 py-3" method="post">
