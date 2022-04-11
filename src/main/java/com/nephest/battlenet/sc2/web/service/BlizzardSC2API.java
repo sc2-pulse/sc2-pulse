@@ -68,14 +68,14 @@ extends BaseAPI
     /*
         This data is mainly used in ladder discovery process when starting with an empty DB. The values should be
         manually updated when a new season begins.
-        Season 49
+        Season 50
      */
     public static final Map<Region, Long> LAST_LADDER_IDS = Map.of
     (
-        Region.US, 305098L,
-        Region.EU, 242907L,
-        Region.KR, 77349L,
-        Region.CN, 65915L
+        Region.US, 307074L,
+        Region.EU, 244849L,
+        Region.KR, 77775L,
+        Region.CN, 67627L
     );
 
     private String regionUri;
