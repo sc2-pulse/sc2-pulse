@@ -1,35 +1,16 @@
 # About
 SC2 Pulse is the fastest and most reliable ranked ladder tracker for StarCraft&reg;2. It is a Spring Boot web application.
 The [reference website](https://www.nephest.com/sc2/) (runs the latest release) is available 24/7.
-## Features
-* Flexible, user defined filters
-* All seasons, races, team formats
-* Player profile
-    * Career summary
-    * History: all teams and seasons, mmr chart, matches
-    * Linked profiles
-    * Public reports
-* BattleNet integration
-    * Log in with a BattleNet account
-    * Easy access to personal stats
-    * Create a personal ladder out of your favourite players
-* Built-in statistics
-    * Player count, team count, games played
-    * League, region, race distribution
-    * Daily activity
-    * Steam-like online stats
-    * Match-up win rates, average game duration, games played
-* Tier MMR ranges
-* Pro player info, [sc2revealed](http://sc2revealed.com/) and [aligulac](http://aligulac.com/) integration
-    * Barcode unmasking
-    * Pro player stats
-    * Social media links
-* [Discord bot](https://discord.com/api/oauth2/authorize?client_id=908047161994915901&permissions=264192&scope=bot%20applications.commands)
+[The public discord bot](https://discord.com/api/oauth2/authorize?client_id=908047161994915901&permissions=264192&scope=bot%20applications.commands)
+is also available.
 ## Disclaimer
 I use this project for learning, it is not production-ready.
 
 This application uses Battle.net&reg; API. 
 This is not an official Blizzard Entertainment&reg; application.
+
+The project uses [sc2revealed](http://sc2revealed.com/) and [aligulac](http://aligulac.com/) APIs to get the info about pro and 
+semipro players.
 ## Dependencies
 * Java 11
 * PostgreSQL 11 with btree_gist extension
