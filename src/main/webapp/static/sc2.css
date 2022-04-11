@@ -870,7 +870,7 @@ body.theme-dark :fullscreen, body.theme-dark #team-buffer
 
 body.modal-open.modal-open-no-popup
 {
-    overflow: auto;
+    overflow: initial;
     padding: 0 !important;
 }
 
