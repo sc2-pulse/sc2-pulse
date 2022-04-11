@@ -176,7 +176,7 @@ public class GeneralSeleniumIT
         clickAndWait(driver, wait, "#ladder a.player-link", "#player-info.modal.show");
         testCharacterMatches(driver, wait);
         switchTabsAndToggleInputs(driver, wait, "#player-stats-tabs");
-        clickAndWait(driver, wait, "#player-info button.close", ".no-popup-hide:not(.d-none)");
+        clickAndWait(driver, wait, "#player-info button.close:not(.close-left)", ".no-popup-hide:not(.d-none)");
 
         //population
         switchTabsAndToggleInputs(driver, wait, "#stats-tabs");

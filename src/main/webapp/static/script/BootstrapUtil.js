@@ -145,27 +145,40 @@ class BootstrapUtil
     static showModal(id)
     {
         const elem = document.getElementById(id);
+        const promises = [];
+        const lazyPromises = [];
         if(elem.classList.contains("no-popup"))
         {
-            Session.lastNonModalScroll = window.pageYOffset;
-            document.body.classList.add("modal-open-no-popup");
-            document.getElementById(id).classList.remove("d-none");
-            document.querySelectorAll(".no-popup-hide").forEach(e=>e.classList.add("d-none"));
-            elem.scrollIntoView();
-        }
-        return new Promise((res, rej)=>{
-            if(!elem.classList.contains("show"))
-            {
-                ElementUtil.ELEMENT_RESOLVERS.set(id, res);
-                $(elem).modal();
+            const activeModal = document.querySelector(".modal.no-popup.show");
+            if(activeModal && activeModal.id != id) {
+                Session.nonPopupSwitch = true;
+                promises.push(BootstrapUtil.hideActiveModal());
             }
-            else
-            {
-                BootstrapUtil.onModalShow(elem);
-                BootstrapUtil.onModalShown(elem);
+            lazyPromises.push(e=>new Promise((res, rej)=>{
+                Session.lastNonModalScroll = window.pageYOffset;
+                document.body.classList.add("modal-open-no-popup");
+                document.getElementById(id).classList.remove("d-none");
+                document.querySelectorAll(".no-popup-hide").forEach(e=>e.classList.add("d-none"));
+                elem.scrollIntoView();
                 res();
-            }
-        });
+            }));
+        }
+        const ap = [];
+        return Promise.all(promises)
+            .then(e => {const ap = []; for(const lp of lazyPromises) ap.push(lp()); return Promise.all(ap)})
+            .then(e => new Promise((res, rej)=>{
+                if(!elem.classList.contains("show"))
+                {
+                    ElementUtil.ELEMENT_RESOLVERS.set(id, res);
+                    $(elem).modal();
+                }
+                else
+                {
+                    BootstrapUtil.onModalShow(elem);
+                    BootstrapUtil.onModalShown(elem);
+                    res();
+                }
+            }));
     }
 
     static hideActiveModal(skipIds = [])
@@ -230,11 +243,18 @@ class BootstrapUtil
                 ElementUtil.resolveElementPromise(e.target.id);
                 if(!Session.isHistorical && !e.target.classList.contains("c-no-history"))
                 {
-                    HistoryUtil.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
-                    document.title = Session.lastNonModalTitle;
+                    if(Session.nonPopupSwitch) {
+                        const curParams = Session.titleAndUrlHistory[Session.titleAndUrlHistory.length - 1];
+                        HistoryUtil.pushState({}, curParams[0], curParams[1]);
+                        document.title = curParams[0];
+                    } else {
+                        HistoryUtil.pushState({}, Session.lastNonModalTitle, Session.lastNonModalParams);
+                        document.title = Session.lastNonModalTitle;
+                    }
                     if(e.target.classList.contains("no-popup")) HistoryUtil.showAnchoredTabs(true);
                     if(!Util.isMobile()) document.querySelectorAll(".tab-pane.active.show .c-autofocus").forEach(e=>FormUtil.selectAndFocusOnInput(e, true));
                 }
+                Session.nonPopupSwitch = false;
             })
             .on("hide.bs.modal", e=>{
                 if(e.target.classList.contains("no-popup")) {
@@ -249,6 +269,7 @@ class BootstrapUtil
             .on("shown.bs.modal", e=>{BootstrapUtil.onModalShown(e.currentTarget)});
         $("#error-session").on("shown.bs.modal", e=>window.setTimeout(Session.doRenewBlizzardRegistration, 3500));
         $("#application-version-update").on("shown.bs.modal", e=>window.setTimeout(t=>document.location.reload(), SC2Restful.REDIRECT_PAGE_TIMEOUT_MILLIS));
+        document.querySelectorAll(".modal .modal-header .close-left").forEach(e=>e.addEventListener("click", e=>history.back()));
     }
 
     static onModalShow(modal)
