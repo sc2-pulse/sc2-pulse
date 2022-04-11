@@ -45,7 +45,7 @@ class BufferUtil
         const link = document.querySelector("#team-buffer-versus");
         if(params.getAll("team1").length + params.getAll('clan1').length > 0
             && params.getAll("team2").length + params.getAll('clan2').length > 0) {
-            link.setAttribute("href", `${ROOT_CONTEXT_PATH}versus?type=versus&${params.toString()}`);
+            link.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=versus&m=1&${params.toString()}`);
             link.classList.remove("d-none");
             link.classList.add("d-inline-block");
         } else {
@@ -57,6 +57,7 @@ class BufferUtil
     static enhance()
     {
         document.querySelector("#team-buffer-clear").addEventListener("click", BufferUtil.clear);
+        document.querySelector("#team-buffer-versus").addEventListener("click", VersusUtil.onVersusLinkClick);
     }
 
     static createToggleElement(buf, item)

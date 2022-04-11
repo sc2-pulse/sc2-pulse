@@ -124,6 +124,7 @@ class MatchUtil
         if(href) {
             const vsLink = VersusUtil.createEmptyVersusLink();
             vsLink.setAttribute("href", href);
+            vsLink.addEventListener("click", VersusUtil.onVersusLinkClick);
             tr.querySelector(":scope .misc").prepend(vsLink);
         }
     }

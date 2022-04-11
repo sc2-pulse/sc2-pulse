@@ -15,7 +15,7 @@ class CharacterUtil
         searchParams.append("id", id);
         const stringParams = searchParams.toString();
         searchParams.append("m", "1");
-        promises.push(BootstrapUtil.hideActiveModal(["player-info", "error-generation"]));
+        promises.push(BootstrapUtil.hideActiveModal(["versus-modal", "player-info", "error-generation"]));
         promises.push(CharacterUtil.updateCharacter(id));
 
         return Promise.all(promises)

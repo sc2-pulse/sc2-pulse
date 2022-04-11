@@ -143,8 +143,8 @@ public class GeneralSeleniumIT
         int port = webServerAppCtxt.getWebServer().getPort();
         WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_MILLIS / 1000);
         String root = "http://localhost:" + port;
-        testVersus(driver, wait, root);
         getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
+        testVersus(driver, wait);
         testLadderUI(driver, wait);
         testOnline(driver, wait);
         testSearch(driver, wait);
@@ -158,6 +158,7 @@ public class GeneralSeleniumIT
 
     private static void testLadderUI(WebDriver driver, WebDriverWait wait)
     {
+        clickAndWait(driver, wait, "#stats-tab", "#stats.show.active");
         clickAndWait(driver, wait, "#form-ladder button[type=\"submit\"]", "tr[data-team-id]");
 
         //popovers
@@ -251,9 +252,8 @@ public class GeneralSeleniumIT
         switchTabsAndToggleInputs(driver, wait, "#team-mmr-tabs");
     }
 
-    private static void testVersus(WebDriver driver, WebDriverWait wait, String root)
+    private static void testVersus(WebDriver driver, WebDriverWait wait)
     {
-        getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
         clickAndWait(driver, wait, "#search-all-tab", "#search-all.show.active");
 
         clickAndWait(driver, wait, "#search-clan-tab", "#search-clan.show.active");
@@ -265,13 +265,13 @@ public class GeneralSeleniumIT
         driver.findElement(By.cssSelector("#team-buffer-collapse")).click();
         Select groupSelect = new Select(driver.findElement(By.cssSelector(".buffer-group")));
         groupSelect.selectByIndex(1);
-        String versusUrl = driver.findElement(By.cssSelector("#team-buffer-versus")).getAttribute("href");
+        clickAndWait(driver, wait, "#team-buffer-versus", "#versus-modal:not(.d-none)");
+        driver.findElement(By.cssSelector("#team-buffer-collapse")).click();
         driver.findElement(By.cssSelector("#team-buffer-clear")).click();
-        driver.get(versusUrl);
-        wait.until(presenceOfElementLocated(By.cssSelector("tr[data-team-id]")));
         clickAndWait(driver, wait, "#load-more-matches-versus", "#matches-versus tbody tr:nth-child(20)");
         clickAndWait(driver, wait, "#load-more-matches-versus", "#matches-versus tbody tr:nth-child(25)");
         toggleInputs(driver, "[data-view-name=\"versus\"]");
+        clickAndWait(driver, wait, "#versus-modal .close:not(.close-left)", ".tab-content-main:not(.d-none)");
     }
 
     public static void switchTabsAndToggleInputs(WebDriver driver, WebDriverWait wait, String tabContainerSelector)

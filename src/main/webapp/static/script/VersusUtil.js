@@ -36,6 +36,7 @@ class VersusUtil
                 Session.currentSearchParams = stringParams;
                 res();
             }))
+            .then(e=>BootstrapUtil.showModal("versus-modal"))
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -183,13 +184,15 @@ class VersusUtil
     static generateVersusTitle()
     {
         const buf = [];
+        const defaultTitle = "Versus";
         const searchResult = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.SEARCH);
+        if(!searchResult) return defaultTitle;
         if(searchResult.clansGroup1) searchResult.clansGroup1.forEach(c=>buf.push(ClanUtil.generateClanName(c)));
         if(searchResult.teamsGroup1) searchResult.teamsGroup1.forEach(t=>buf.push(TeamUtil.generateTeamName(t, false)));
         buf.push("VS")
         if(searchResult.clansGroup2) searchResult.clansGroup2.forEach(c=>buf.push(ClanUtil.generateClanName(c)));
         if(searchResult.teamsGroup2) searchResult.teamsGroup2.forEach(t=>buf.push(TeamUtil.generateTeamName(t, false)));
-        return buf.length > 1 ? buf.join(" ") : "Versus";
+        return buf.length > 1 ? buf.join(" ") : defaultTitle;
     }
 
     static apiParamsToUrlParams(apiParams)
@@ -197,6 +200,7 @@ class VersusUtil
         const urlParams = new URLSearchParams(apiParams.toString());
         if(urlParams.get("type")) urlParams.append("matchType", urlParams.get("type"));
         urlParams.set("type", "versus");
+        urlParams.set("m", "1");
         return urlParams;
     }
 
@@ -205,7 +209,7 @@ class VersusUtil
         return ElementUtil.createElement(
             "a",
             null,
-            "font-weight-bold d-inline-block mr-3",
+            "font-weight-bold d-inline-block mr-3 link-versus",
             "VS",
             [["rel", "noopener"], ["target", "_blank"], ["role", "button"]]
         );
@@ -214,7 +218,14 @@ class VersusUtil
     static getVersusUrl(itemName = "matches-type-versus")
     {
         const type = localStorage.getItem(itemName);
-        return `${ROOT_CONTEXT_PATH}versus?type=versus${type && type != "all" ? "&matchType=" + encodeURIComponent(type) : ''}`;
+        return `${ROOT_CONTEXT_PATH}?type=versus&m=1${type && type != "all" ? "&matchType=" + encodeURIComponent(type) : ''}`;
+    }
+
+    static onVersusLinkClick(evt)
+    {
+        evt.preventDefault();
+        const href = evt.target.getAttribute("href");
+        VersusUtil.updateFromParams(new URLSearchParams(href.substring(href.indexOf("?"))));
     }
 
 }
