@@ -108,6 +108,12 @@ class BootstrapUtil
         HistoryUtil.pushState({}, document.title, HistoryUtil.formatSearchString(fullParams.toString(), hash));
     }
 
+    //This fixes a Bootstrap bug where invalid tab may be active even though it isn't selected
+    static deactivateInvalidTabs(ul)
+    {
+        ul.querySelectorAll(':scope .nav-link.active[aria-selected="false"]').forEach(e=>e.classList.remove("active"));
+    }
+
     static hideCollapsible(id)
     {
         return new Promise((res, rej)=>{
@@ -296,6 +302,7 @@ class BootstrapUtil
                 Session.lastNonModalParams = prev[1];
             }
         }
+        modal.querySelectorAll(":scope nav").forEach(BootstrapUtil.deactivateInvalidTabs);
         ElementUtil.resolveElementPromise(modal.id);
     }
 
