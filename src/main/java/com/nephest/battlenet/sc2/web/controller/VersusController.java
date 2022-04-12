@@ -27,9 +27,9 @@ public class VersusController
 {
 
     public static final int MAX_TEAMS_GROUP1 = 100;
-    public static final int MAX_CLANS_GROUP1 = 6;
-    public static final int MAX_TEAMS_GROUP2 = 200;
-    public static final int MAX_CLANS_GROUP2 = 12;
+    public static final int MAX_CLANS_GROUP1 = 8;
+    public static final int MAX_TEAMS_GROUP2 = 100;
+    public static final int MAX_CLANS_GROUP2 = 8;
 
     @Autowired
     private LadderMatchDAO ladderMatchDAO;
