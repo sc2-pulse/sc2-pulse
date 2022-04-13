@@ -23,7 +23,7 @@
                         class="nav-link active"
                         data-toggle="pill"
                         th:data-target="|#${tabId}|"
-                        data-ignore-visibility="true"
+                        th:attrappend="data-ignore-visibility=${hide}?'true'"
                         th:href="|#${tabId}|"
                         role="tab"
                         th:aria-controls="${tabId}"
