@@ -109,6 +109,7 @@ public class LadderMatchDAO
                 + "WHERE "
                 + "player_character.clan_id = ANY (:clans) "
                 + "AND match_participant.decision IN (:validDecisions) "
+                + "AND match.type NOT IN (:excludeTypes) "
                 + "%1$s "
 
                 + "UNION "
@@ -121,6 +122,7 @@ public class LadderMatchDAO
                 + "WHERE "
                 + "(team.queue_type, team.region, team.legacy_id) IN (:teams) "
                 + "AND match_participant.decision IN (:validDecisions) "
+                + "AND match.type NOT IN (:excludeTypes) "
                 + "%1$s "
             + ") c "
             + "GROUP BY c.id "
@@ -202,6 +204,7 @@ public class LadderMatchDAO
         String.format(FIND_VERSUS_MATCHES_TEMPLATE, ">", "ASC");
 
     private static List<Integer> DEFAULT_VERSUS_DECISIONS;
+    private static List<Integer> DEFAULT_VERSUS_EXCLUDE_TYPES;
 
     private static final ResultSetExtractor<VersusSummary> VERSUS_SUMMARY_EXTRACTOR = rs->
     {
@@ -291,10 +294,13 @@ public class LadderMatchDAO
 
     private void initMisc()
     {
-        if(DEFAULT_VERSUS_DECISIONS != null) return;
-        DEFAULT_VERSUS_DECISIONS = Stream
+        if(DEFAULT_VERSUS_DECISIONS == null) DEFAULT_VERSUS_DECISIONS = Stream
             .of(BaseMatch.Decision.WIN, BaseMatch.Decision.LOSS)
             .map(d->conversionService.convert(d, Integer.class))
+            .collect(Collectors.toList());
+        if(DEFAULT_VERSUS_EXCLUDE_TYPES == null) DEFAULT_VERSUS_EXCLUDE_TYPES = Stream
+            .of(BaseMatch.MatchType.COOP)
+            .map(t->conversionService.convert(t, Integer.class))
             .collect(Collectors.toList());
     }
 
@@ -450,7 +456,8 @@ public class LadderMatchDAO
             .addValue("teams1", teamIds1.isEmpty() ? null : teamIds1)
             .addValue("clans2", clans2)
             .addValue("teams2", teamIds2.isEmpty() ? null : teamIds2)
-            .addValue("validDecisions", DEFAULT_VERSUS_DECISIONS);
+            .addValue("validDecisions", DEFAULT_VERSUS_DECISIONS)
+            .addValue("excludeTypes", DEFAULT_VERSUS_EXCLUDE_TYPES);
     }
 
 }

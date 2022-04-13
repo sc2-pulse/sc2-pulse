@@ -194,7 +194,8 @@ public class VersusIT
             new Match(null, now.minusSeconds(4), BaseMatch.MatchType._1V1, map.getId(), Region.EU),
             new Match(null, now.minusSeconds(5), BaseMatch.MatchType._1V1, map.getId(), Region.EU),
             new Match(null, now.minusSeconds(6), BaseMatch.MatchType._2V2, map.getId(), Region.EU),
-            new Match(null, now.minusSeconds(7), BaseMatch.MatchType._1V1, map.getId(), Region.EU)
+            new Match(null, now.minusSeconds(7), BaseMatch.MatchType._1V1, map.getId(), Region.EU),
+            new Match(null, now.minusSeconds(8), BaseMatch.MatchType.COOP, map.getId(), Region.EU) //invalid match type
         );
 
         matchParticipantDAO.merge
@@ -212,6 +213,9 @@ public class VersusIT
             //invalid decisions
             new MatchParticipant(matches[6].getId(), charEu2.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(matches[6].getId(), charEu3.getId(), BaseMatch.Decision.OBSERVER),
+
+            new MatchParticipant(matches[7].getId(), charEu2.getId(), BaseMatch.Decision.WIN),
+            new MatchParticipant(matches[7].getId(), charEu3.getId(), BaseMatch.Decision.LOSS),
 
             new MatchParticipant(matches[3].getId(), charEu3.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(matches[3].getId(), charEu4.getId(), BaseMatch.Decision.LOSS),
