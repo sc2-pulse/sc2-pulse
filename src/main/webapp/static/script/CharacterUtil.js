@@ -447,7 +447,7 @@ class CharacterUtil
         );
         document.getElementById("mmr-history-filters").textContent =
             "(" + queue.name
-            + (depth ? ", starting from " + Util.DATE_FORMAT.format(new Date(depthStartTimestamp)) : "")
+            + (depth ? ", starting from " + Util.DATE_TIME_FORMAT.format(new Date(depthStartTimestamp)) : "")
             + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
         CharacterUtil.updateGamesAndAverageMmrTable(document.querySelector("#mmr-summary-table"), mmrHistory);
