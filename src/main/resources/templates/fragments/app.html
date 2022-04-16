@@ -99,11 +99,9 @@
                             </div>
                             <div class="form-group">
                                 <label for="report-character-evidence">
-                                    Evidence.
-                                    Upload a replay to <a class="character-link-follow-only" href="https://drop.sc/" target="_blank" rel="nofollow noopener">drop.sc</a>
-                                    and link it here.
-                                    You can also refer to current match and mmr history(on this website) as evidence.
-                                    <strong class="text-warning">Reports without direct evidence will be removed.</strong>
+                                    Evidence. <strong class="text-danger">Please read the
+                                    <a th:href="${@environment.getProperty('com.nephest.battlenet.sc2.player.complaint.policy.link')}" rel="noopener" target="_blank">player complaint policy</a>
+                                    before reporting a player. Invalid reports will be removed.</strong>
                                 </label>
                                 <textarea
                                         id="report-character-evidence"
