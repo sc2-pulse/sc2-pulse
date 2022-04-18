@@ -205,6 +205,25 @@ public class ClanDAO
         + "LEFT JOIN clan_stats USING(clan_id) "
         + "WHERE clan.id = members.clan_id";
 
+    private static final String NULLIFY_STATS =
+        "WITH clan_filter AS "
+        + "("
+            + "SELECT clan_id "
+            + "FROM player_character "
+            + "WHERE clan_id IS NOT NULL "
+            + "GROUP BY clan_id "
+            + "HAVING COUNT(*) <= :maxMembers "
+        + ") "
+        + "UPDATE clan "
+        + "SET members = NULL, "
+        + "active_members = NULL, "
+        + "avg_rating = NULL, "
+        + "avg_league_type = NULL, "
+        + "games = NULL "
+        + "FROM clan_filter "
+        + "WHERE clan.id = clan_filter.clan_id "
+        + "AND members IS NOT NULL";
+
     private static RowMapper<Clan> STD_ROW_MAPPER;
     private static ResultSetExtractor<Clan> STD_EXTRACTOR;
 
@@ -449,6 +468,13 @@ public class ClanDAO
         }
         LOG.info("Updates stats of {} clans", count);
         return count;
+    }
+
+    public int nullifyStats(int maxMembers)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("maxMembers", maxMembers);
+        return template.update(NULLIFY_STATS, params);
     }
 
 }

@@ -204,6 +204,7 @@ public class Cron
             proPlayerService.update();
             queueStatsDAO.mergeCalculateForSeason(seasonDAO.getMaxBattlenetId());
             clanDAO.updateStats();
+            clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
             teamStateDAO.archive(defaultOdt);
             teamStateDAO.cleanArchive(defaultOdt);
             teamStateDAO.removeExpired();

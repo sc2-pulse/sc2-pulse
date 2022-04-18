@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 
@@ -41,6 +42,9 @@ public class ClanIT
 
     @Autowired
     private SeasonGenerator seasonGenerator;
+
+    @Autowired
+    private JdbcTemplate template;
 
     @BeforeEach
     public void beforeEach(@Autowired DataSource dataSource)
@@ -115,6 +119,28 @@ public class ClanIT
         assertNull(clan2WithStats.getAvgRating());
         assertNull(clan2WithStats.getAvgLeagueType());
         assertNull(clan2WithStats.getGames());
+
+        //valid stats are not nullified
+        template.execute("UPDATE player_character SET clan_id = NULL");
+        template.execute("UPDATE player_character SET clan_id = 1 WHERE id < " + ClanDAO.CLAN_STATS_MIN_MEMBERS + 1);
+        assertEquals(0, clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1));
+        Clan clan1WithStatsValid = clanDAO.findByIds(clan1.getId()).get(0);
+        assertEquals(7, clan1WithStatsValid.getMembers()); //all players
+        assertEquals(4, clan1WithStatsValid.getActiveMembers()); //1-4 teams
+        assertEquals(3, clan1WithStatsValid.getAvgRating()); // (1 + 2 + 3 + 4) / 4
+        assertEquals(BaseLeague.LeagueType.PLATINUM, clan1WithStatsValid.getAvgLeagueType()); // (1 + 2 + 3 + 4) / 4
+        assertEquals(4, clan1WithStatsValid.getGames()); //1-4 teams
+
+        //invalid stats are nullified
+        template.execute("UPDATE player_character SET clan_id = NULL");
+        template.execute("UPDATE player_character SET clan_id = 1 WHERE id < " + ClanDAO.CLAN_STATS_MIN_MEMBERS );
+        assertEquals(1, clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1));
+        Clan clan1WithStatsNullified = clanDAO.findByIds(clan1.getId()).get(0);
+        assertNull(clan1WithStatsNullified.getMembers());
+        assertNull(clan1WithStatsNullified.getActiveMembers());
+        assertNull(clan1WithStatsNullified.getAvgRating());
+        assertNull(clan1WithStatsNullified.getAvgLeagueType());
+        assertNull(clan1WithStatsNullified.getGames());
     }
 
 }
