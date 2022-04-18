@@ -70,11 +70,13 @@
         <header>
             <h2>Clan search</h2>
             <p
-                th:with="minMembers=${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_MIN_MEMBERS}, depthDays=${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_DEPTH_DAYS}"
+                th:with="minMembers=${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_MIN_MEMBERS},
+                depthDays=${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_DEPTH_DAYS},
+                daysBetweenUpdates=${T(com.nephest.battlenet.sc2.config.Cron).MAINTENANCE_FREQUENT_FRAME.toDays()}"
                 th:utext="|Only clans that have <strong>${minMembers} or more members</strong> are listed.
                     All stats except member count are based on <strong>ranked 1v1</strong> data.
                     Active member count, average MMR, and games per active member per day are based on data for the <strong>last ${depthDays} days</strong>.
-                    Clan names are not always available. Stats are updated once a day.|"></p>
+                    Clan names are not always available. Stats are updated every ${daysBetweenUpdates} days.|"></p>
             <form id="form-search-clan">
                 <div class="d-inline-block">
                 <div th:replace="~{fragments/search :: clan-search-filter('Active members', 'active-members', 'ActiveMembers', 1)}"></div>

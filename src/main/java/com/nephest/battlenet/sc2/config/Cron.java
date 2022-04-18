@@ -203,8 +203,6 @@ public class Cron
             OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
             proPlayerService.update();
             queueStatsDAO.mergeCalculateForSeason(seasonDAO.getMaxBattlenetId());
-            clanDAO.updateStats();
-            clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
             teamStateDAO.archive(defaultOdt);
             teamStateDAO.cleanArchive(defaultOdt);
             teamStateDAO.removeExpired();
@@ -326,6 +324,8 @@ public class Cron
 
     private void commenceFrequentMaintenance()
     {
+        clanDAO.updateStats();
+        clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
         postgreSQLUtils.reindex("ix_match_updated");
         this.maintenanceFrequentInstant.setValueAndSave(Instant.now());
     }
