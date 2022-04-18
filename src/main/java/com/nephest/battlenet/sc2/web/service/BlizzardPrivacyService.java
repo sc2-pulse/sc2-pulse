@@ -219,6 +219,7 @@ public class BlizzardPrivacyService
             {
                 Account account = Account.of(m.getAccount(), region);
                 PlayerCharacter character = PlayerCharacter.of(account, region, m.getCharacter());
+                if(m.getClan() != null) character.setClanId(0);
                 return Tuples.of(account, character);
             })
             .collect(Collectors.toList());

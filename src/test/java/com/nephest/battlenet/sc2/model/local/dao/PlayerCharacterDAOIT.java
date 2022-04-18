@@ -27,8 +27,7 @@ import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -38,6 +37,9 @@ public class PlayerCharacterDAOIT
 
     @Autowired
     private AccountDAO accountDAO;
+
+    @Autowired
+    private ClanDAO clanDAO;
 
     @Autowired
     private PlayerCharacterDAO playerCharacterDAO;
@@ -153,18 +155,19 @@ public class PlayerCharacterDAOIT
     public void updateCharacters()
     {
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
+        Clan clan = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
         PlayerCharacter char1 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123"));
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123", clan.getId()));
         PlayerCharacter char2 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123"));
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123", clan.getId()));
         PlayerCharacter char3 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name3#123"));
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name3#123", clan.getId()));
 
         PlayerCharacter[] updatedCharacters = new PlayerCharacter[]
         {
             new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name2#123"),
             new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name2#123"),
-            new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name4#123")
+            new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name4#123", clan.getId())
         };
 
         OffsetDateTime minTimeAllowed = OffsetDateTime.now();
@@ -178,8 +181,12 @@ public class PlayerCharacterDAOIT
         OffsetDateTime minTime = template.query("SELECT MIN(updated) FROM player_character", DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
         assertTrue(minTime.isAfter(minTimeAllowed));
 
-        assertEquals("name2#123", playerCharacterDAO.find(Region.EU, 1, 1L).orElseThrow().getName());
-        assertEquals("name4#123", playerCharacterDAO.find(Region.EU, 1, 2L).orElseThrow().getName());
+        PlayerCharacter char1 = playerCharacterDAO.find(Region.EU, 1, 1L).orElseThrow();
+        PlayerCharacter char2 = playerCharacterDAO.find(Region.EU, 1, 2L).orElseThrow();
+        assertEquals("name2#123", char1.getName());
+        assertNull(char1.getClanId());
+        assertEquals("name4#123", char2.getName());
+        assertEquals(1, char2.getClanId());
 
         template.execute
         (
@@ -201,14 +208,15 @@ public class PlayerCharacterDAOIT
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
         Account acc2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag2#123"));
         Account acc3 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag10#123"));
+        Clan clan = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
         PlayerCharacter char1 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123"));
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123", clan.getId()));
         PlayerCharacter char2 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123"));
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123", clan.getId()));
         PlayerCharacter char3 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name3#123"));
+            .merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name3#123", clan.getId()));
         PlayerCharacter char4 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name10#123"));
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name10#123", clan.getId()));
 
         List<Tuple2<Account, PlayerCharacter>> updatedAccsAndChars = List.of
         (
@@ -225,7 +233,7 @@ public class PlayerCharacterDAOIT
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag4#123"),
-                new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123")
+                new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123", clan.getId())
             ),
             Tuples.of
             (

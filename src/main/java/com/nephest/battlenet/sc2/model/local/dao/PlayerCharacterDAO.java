@@ -98,8 +98,9 @@ public class PlayerCharacterDAO
         + "vals AS (VALUES :characters) "
         + "UPDATE player_character "
         + "SET updated = NOW(), "
-        + "name = v.name "
-        + "FROM vals v(region, realm, battlenet_id, name) "
+        + "name = v.name, "
+        + "clan_id = CASE WHEN v.has_clan THEN clan_id ELSE NULL END "
+        + "FROM vals v(region, realm, battlenet_id, name, has_clan) "
         + "WHERE player_character.region = v.region "
         + "AND player_character.battlenet_id = v.battlenet_id "
         + "AND player_character.realm = v.realm";
@@ -116,8 +117,9 @@ public class PlayerCharacterDAO
                 yet rebound to it in another region due to API issues. Rebind it now.
              */
             + "account_id = COALESCE(account.id, account_id), "
-            + "name = v.name "
-            + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name) "
+            + "name = v.name, "
+            + "clan_id = CASE WHEN v.has_clan THEN clan_id ELSE NULL END "
+            + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name, has_clan) "
             + "LEFT JOIN account ON v.partition = account.partition "
                 + "AND v.battle_tag = account.battle_tag "
             + "WHERE player_character.region = v.region "
@@ -287,7 +289,8 @@ public class PlayerCharacterDAO
                 conversionService.convert(c.getRegion(), Integer.class),
                 c.getRealm(),
                 c.getBattlenetId(),
-                c.getName()
+                c.getName(),
+                c.getClanId() != null
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
@@ -306,7 +309,8 @@ public class PlayerCharacterDAO
                 conversionService.convert(c.getT2().getRegion(), Integer.class),
                 c.getT2().getRealm(),
                 c.getT2().getBattlenetId(),
-                c.getT2().getName()
+                c.getT2().getName(),
+                c.getT2().getClanId() != null
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
