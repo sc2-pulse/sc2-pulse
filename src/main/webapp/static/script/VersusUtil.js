@@ -119,7 +119,7 @@ class VersusUtil
 
     static updateVersusTeams(table, teams)
     {
-        TeamUtil.updateTeamsTable(table, {result: teams}, true);
+        TeamUtil.updateTeamsTable(table, {result: teams}, true, "xl");
         if(teams.length > 0) {
             table.classList.remove("d-none");
         } else {

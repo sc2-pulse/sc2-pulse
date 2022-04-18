@@ -4,7 +4,7 @@
 class TeamUtil
 {
 
-    static updateTeamsTable(table, searchResult, clear = true)
+    static updateTeamsTable(table, searchResult, clear = true, multiRow = "lg")
     {
         const fullMode = table.getAttribute("data-ladder-format-show") == "true";
         const ladderBody = table.getElementsByTagName("tbody")[0];
@@ -28,7 +28,7 @@ class TeamUtil
             row.insertCell().textContent = team.rating;
             TeamUtil.appendLeagueDiv(row.insertCell(), team);
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), "table-image-long"));
-            row.appendChild(TeamUtil.createMembersCell(team));
+            row.appendChild(TeamUtil.createMembersCell(team, multiRow));
             TeamUtil.appendGamesInfo(row.insertCell(), team);
             row.insertCell().textContent = Math.round( team.wins / (team.wins + team.losses) * 100);
             row.appendChild(TeamUtil.createMiscCell(team));
@@ -241,10 +241,10 @@ class TeamUtil
     }
 
 
-    static createMemberInfo(team, member, appendRaces = true)
+    static createMemberInfo(team, member, appendRaces = true, multiRow = "lg")
     {
         const result = document.createElement("span");
-        result.classList.add("team-member-info", "col-lg-" + (team.members.length > 1 ? "6" : "12"), "col-md-12");
+        result.classList.add("team-member-info", "col-" + multiRow + (team.members.length > 1 ? "-6" : "-12"), "col-md-12");
         result.appendChild(TeamUtil.createPlayerLink(team, member, appendRaces));
         return result;
     }
@@ -349,13 +349,13 @@ class TeamUtil
         return racesElem;
     }
 
-    static createMembersCell(team)
+    static createMembersCell(team, multiRow = "lg")
     {
         const membersCell = document.createElement("td");
         membersCell.classList.add("complex", "cell-main", "team");
         const mRow = document.createElement("span");
         mRow.classList.add("row", "no-gutters");
-        for(const teamMember of team.members) mRow.appendChild(TeamUtil.createMemberInfo(team, teamMember));
+        for(const teamMember of team.members) mRow.appendChild(TeamUtil.createMemberInfo(team, teamMember, true, multiRow));
         membersCell.appendChild(mRow);
         return membersCell;
     }

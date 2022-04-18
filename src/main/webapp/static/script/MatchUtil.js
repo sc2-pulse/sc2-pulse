@@ -37,7 +37,7 @@ class MatchUtil
             }
 
             allTeams.push(...teams);
-            TeamUtil.updateTeamsTable(table, {result: teams}, false);
+            TeamUtil.updateTeamsTable(table, {result: teams}, false, "xl");
             MatchUtil.decorateTeams(participantsGrouped, teams, tBody, rowNum, isMainParticipant, versusLinkPrefix);
 
             const tr = tBody.childNodes[rowNum];
