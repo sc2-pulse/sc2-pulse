@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -31,12 +32,14 @@ import javax.sql.DataSource;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -54,6 +57,9 @@ public class StandardDataReadonlyIT
 
     @Autowired
     private BlizzardDAO blizzardDAO;
+
+    @Autowired
+    private PlayerCharacterDAO playerCharacterDAO;
 
     @Autowired
     private JdbcTemplate template;
@@ -206,6 +212,23 @@ public class StandardDataReadonlyIT
         Integer fr = template.query("SELECT * FROM get_favorite_race(?::smallint, ?::smallint, ?::smallint, ?::smallint)", DAOUtils.INT_EXTRACTOR,
             terranGames, protossGames, zergGames, randomGames);
         assertEquals(expectedRace, conversionService.convert(fr, Race.class));
+    }
+
+    @Test
+    public void testFinderByUpdatedAndIdMax()
+    {
+        OffsetDateTime now = OffsetDateTime.now();
+        assertTrue(playerCharacterDAO.find(now.minusYears(1), Long.MAX_VALUE, 2).isEmpty());
+
+        List<PlayerCharacter> batch1 = playerCharacterDAO.find(now, Long.MAX_VALUE, 2);
+        assertEquals(2, batch1.size());
+        assertEquals(4480, batch1.get(0).getId());
+        assertEquals(4479, batch1.get(1).getId());
+
+        List<PlayerCharacter> batch2 = playerCharacterDAO.find(now, batch1.get(1).getId(), 2);
+        assertEquals(2, batch2.size());
+        assertEquals(4478, batch2.get(0).getId());
+        assertEquals(4477, batch2.get(1).getId());
     }
 
 }

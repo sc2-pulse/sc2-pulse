@@ -211,6 +211,14 @@ public class PlayerCharacterDAO
         + "AND realm=:realm "
         + "AND battlenet_id=:battlenetId";
 
+    private static final String FIND_BY_UPDATED_AND_ID_MAX_EXCLUDED =
+        "SELECT " + STD_SELECT
+        + "FROM player_character "
+        + "WHERE updated < :updatedMax "
+        + "AND id < :idMax "
+        + "ORDER BY id DESC "
+        + "LIMIT :limit";
+
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
     private static ResultSetExtractor<PlayerCharacter> STD_EXTRACTOR;
     private static ResultSetExtractor<BookmarkedResult<List<PlayerCharacter>>> BOOKMARKED_STD_ROW_EXTRACTOR;
@@ -407,6 +415,15 @@ public class PlayerCharacterDAO
             .addValue("realm", realm)
             .addValue("battlenetId", battlenetId);
         return Optional.ofNullable(template.query(FIND_BY_REGION_AND_REALM_AND_BATTLENET_ID, params, getStdExtractor()));
+    }
+
+    public List<PlayerCharacter> find(OffsetDateTime updatedMax, Long idMax, int limit)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("updatedMax", updatedMax)
+            .addValue("idMax", idMax)
+            .addValue("limit", limit);
+        return template.query(FIND_BY_UPDATED_AND_ID_MAX_EXCLUDED, params, getStdRowMapper());
     }
 
 }
