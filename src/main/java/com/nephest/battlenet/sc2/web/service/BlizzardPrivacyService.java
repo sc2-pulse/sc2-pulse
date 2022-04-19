@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.*;
@@ -28,6 +29,7 @@ import java.time.ZoneId;
 import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -39,10 +41,15 @@ public class BlizzardPrivacyService
 
     public static final Duration DATA_TTL = Duration.ofDays(30);
     public static final Duration ANONYMIZATION_DATA_TIME_FRAME = Duration.ofMinutes(60);
+    public static final Duration CHARACTER_UPDATE_TIME_FRAME = Duration.ofMinutes(60);
+    public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(2);
+    public static final Duration CHARACTER_UPDATED_MAX = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
     public static final int CURRENT_SEASON_UPDATES_PER_PERIOD = 3;
     //postgresql param limit / max players in a single ladder / param count
     public static final int LADDER_BATCH_SIZE = 32767 / 400 / 6;
     public static final int ALTERNATIVE_LADDER_BATCH_SIZE = 32767 / 400 / 4;
+    public static final int CHARACTER_BATCH_SIZE = 32767 / 4;
+    public static final int CHARACTER_UPDATES_PER_TTL = (int) (CHARACTER_UPDATE_EXPIRATION_THRESHOLD.toSeconds() / CHARACTER_UPDATE_TIME_FRAME.toSeconds());
     public static final Instant DEFAULT_ANONYMIZE_START =
         OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset()).toInstant();
     private static final QueueType[] QUEUE_TYPES = QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new);
@@ -59,10 +66,13 @@ public class BlizzardPrivacyService
     private final SC2WebServiceUtil sc2WebServiceUtil;
     private final Predicate<BlizzardTeamMember> teamMemberPredicate;
     private final Predicate<BlizzardProfileTeamMember> profileTeamMemberPredicate;
+    private final Predicate<BlizzardLegacyProfile> legacyProfilePredicate;
     private LongVar lastUpdatedSeason;
+    private LongVar lastUpdatedCharacterId;
     private InstantVar lastUpdatedSeasonInstant;
     private InstantVar lastUpdatedCurrentSeasonInstant;
     private InstantVar lastAnonymizeInstant;
+    private InstantVar lastUpdatedCharacterInstant;
 
     @Autowired
     public BlizzardPrivacyService
@@ -90,6 +100,7 @@ public class BlizzardPrivacyService
         this.webExecutorService = webExecutorService;
         this.teamMemberPredicate = DAOUtils.beanValidationPredicate(validator);
         this.profileTeamMemberPredicate = DAOUtils.beanValidationPredicate(validator);
+        this.legacyProfilePredicate = DAOUtils.beanValidationPredicate(validator);
         this.sc2WebServiceUtil = sc2WebServiceUtil;
         initVars(varDAO);
     }
@@ -97,14 +108,19 @@ public class BlizzardPrivacyService
     private void initVars(VarDAO varDAO)
     {
         lastUpdatedSeason = new LongVar(varDAO, "blizzard.privacy.season.last", false);
+        lastUpdatedCharacterId = new LongVar(varDAO, "blizzard.privacy.character.id", false);
         lastUpdatedSeasonInstant = new InstantVar(varDAO, "blizzard.privacy.season.last.updated", false);
         lastUpdatedCurrentSeasonInstant = new InstantVar(varDAO, "blizzard.privacy.season.current.updated", false);
         lastAnonymizeInstant = new InstantVar(varDAO, "blizzard.privacy.anonymized", false);
+        lastUpdatedCharacterInstant = new InstantVar(varDAO, "blizzard.privacy.character.updated", false);
         try
         {
             lastUpdatedSeason.load();
             if(lastUpdatedSeason.getValue() == null)
                 lastUpdatedSeason.setValueAndSave((long) BlizzardSC2API.FIRST_SEASON - 1);
+            lastUpdatedCharacterId.load();
+            if(lastUpdatedCharacterId.getValue() == null)
+                lastUpdatedCharacterId.setValueAndSave(Long.MAX_VALUE);
             lastUpdatedSeasonInstant.load();
             if(lastUpdatedSeasonInstant.getValue() == null)
                 lastUpdatedSeasonInstant.setValueAndSave(Instant.now().minusSeconds(DATA_TTL.toSeconds()));
@@ -114,6 +130,9 @@ public class BlizzardPrivacyService
             lastAnonymizeInstant.load();
             if(lastAnonymizeInstant.getValue() == null)
                 lastAnonymizeInstant.setValueAndSave(DEFAULT_ANONYMIZE_START);
+            lastUpdatedCharacterInstant.load();
+            if(lastUpdatedCharacterInstant.getValue() == null)
+                lastUpdatedCharacterInstant.setValueAndSave(DEFAULT_ANONYMIZE_START);
         }
         catch (Exception ex)
         {
@@ -131,9 +150,20 @@ public class BlizzardPrivacyService
         return lastUpdatedCurrentSeasonInstant;
     }
 
+    protected InstantVar getLastUpdatedCharacterInstant()
+    {
+        return lastUpdatedCharacterInstant;
+    }
+
+    protected LongVar getLastUpdatedCharacterId()
+    {
+        return lastUpdatedCharacterId;
+    }
+
     public void update()
     {
         handleExpiredData();
+        if(shouldUpdateCharacters()) updateCharacters();
         Integer season = getSeasonToUpdate();
         if(season == null) return;
 
@@ -268,6 +298,61 @@ public class BlizzardPrivacyService
         return Instant.now().getEpochSecond() - lastUpdatedCurrentSeasonInstant.getValue().getEpochSecond() >= secondsBetweenCurrentSeasonUpdates
             ? lastSeason
             : (int) (lastUpdatedSeason.getValue() + 1 >= lastSeason ? BlizzardSC2API.FIRST_SEASON : lastUpdatedSeason.getValue() + 1);
+    }
+
+    private boolean shouldUpdateCharacters()
+    {
+        return lastUpdatedCharacterInstant.getValue().isBefore(Instant.now().minus(CHARACTER_UPDATE_TIME_FRAME));
+    }
+
+    private int getCharacterBatchSize()
+    {
+        int characterCount = playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now().minus(CHARACTER_UPDATED_MAX));
+        return characterCount / CHARACTER_UPDATES_PER_TTL;
+    }
+
+    private void updateCharacters()
+    {
+        int batchSize = getCharacterBatchSize();
+        if(batchSize == 0)
+        {
+            lastUpdatedCharacterInstant.setValueAndSave(Instant.now());
+            lastUpdatedCharacterId.setValueAndSave(Long.MAX_VALUE);
+            return;
+        }
+
+        List<PlayerCharacter> batch = playerCharacterDAO.find
+        (
+            OffsetDateTime.now().minus(CHARACTER_UPDATED_MAX),
+            lastUpdatedCharacterId.getValue(),
+            batchSize
+        );
+
+        List<Future<?>> dbTasks = new ArrayList<>();
+        AtomicInteger count = new AtomicInteger();
+        api.getLegacyProfiles(batch, false)
+            .filter(c->legacyProfilePredicate.test(c.getT1()))
+            .map(this::extractCharacter)
+            .buffer(CHARACTER_BATCH_SIZE)
+            .toStream()
+            .map(l->l.toArray(PlayerCharacter[]::new))
+            .forEach(l->{
+                count.getAndAdd(l.length);
+                dbTasks.add(dbExecutorService.submit(()->
+                    LOG.debug("Updated {} characters that are about to expire", playerCharacterDAO.updateCharacters(l))));
+            });
+
+        MiscUtil.awaitAndLogExceptions(dbTasks, true);
+        lastUpdatedCharacterInstant.setValueAndSave(Instant.now());
+        lastUpdatedCharacterId.setValueAndSave(batch.get(batch.size() - 1).getId());
+        if(count.get() > 0) LOG.info("Updated {} characters that are about to expire", count.get());
+    }
+
+    private PlayerCharacter extractCharacter(Tuple2<BlizzardLegacyProfile, PlayerCharacterNaturalId> bChar)
+    {
+        PlayerCharacter character = PlayerCharacter.of(new Account(), bChar.getT2().getRegion(), bChar.getT1());
+        if(bChar.getT1().getClanTag() != null) character.setClanId(0);
+        return character;
     }
 
 }
