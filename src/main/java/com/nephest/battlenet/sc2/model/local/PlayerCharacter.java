@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 
@@ -13,7 +14,7 @@ import java.util.Objects;
 
 public class PlayerCharacter
 extends BasePlayerCharacter
-implements java.io.Serializable
+implements java.io.Serializable, PlayerCharacterNaturalId
 {
 
     private static final long serialVersionUID = 5L;
