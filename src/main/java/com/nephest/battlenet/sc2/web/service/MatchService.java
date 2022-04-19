@@ -3,10 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import com.nephest.battlenet.sc2.model.BaseMatch;
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.local.*;
 import com.nephest.battlenet.sc2.model.local.dao.*;
@@ -61,7 +58,7 @@ public class MatchService
     private final PostgreSQLUtils postgreSQLUtils;
     private final ExecutorService dbExecutorService;
     private final Predicate<BlizzardMatch> validationPredicate;
-    private final ConcurrentLinkedQueue<Set<PlayerCharacter>> failedCharacters = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Set<PlayerCharacterNaturalId>> failedCharacters = new ConcurrentLinkedQueue<>();
     private SetVar<Region> webRegions;
 
     @Autowired @Lazy
@@ -170,7 +167,7 @@ public class MatchService
     private int saveFailedMatches()
     {
         int i = 0;
-        Set<PlayerCharacter> chars;
+        Set<PlayerCharacterNaturalId> chars;
         while((chars = failedCharacters.poll()) != null)
         {
             if(chars.size() > FAILED_MATCHES_MAX)
@@ -186,11 +183,11 @@ public class MatchService
         return i;
     }
 
-    private int saveMatches(Iterable<? extends PlayerCharacter> characters, boolean saveFailedCharacters, boolean web)
+    private int saveMatches(Iterable<? extends PlayerCharacterNaturalId> characters, boolean saveFailedCharacters, boolean web)
     {
         List<Future<?>> dbTasks = new ArrayList<>();
         AtomicInteger count = new AtomicInteger(0);
-        Set<PlayerCharacter> errors = new HashSet<>();
+        Set<PlayerCharacterNaturalId> errors = new HashSet<>();
         api.getMatches(characters, errors, web)
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
@@ -205,7 +202,7 @@ public class MatchService
 
     //This method fails in a rare occasion due to unknown reason. Retry for now, should be properly fixed later.
     @Transactional @Retryable
-    protected void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacter>> matches)
+    protected void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacterNaturalId>> matches)
     {
         matches = matches.stream()
             .filter(t->validationPredicate.test(t.getT1()))
@@ -213,10 +210,10 @@ public class MatchService
         SC2Map[] mapBatch = new SC2Map[matches.size()];
         Match[] matchBatch = new Match[matches.size()];
         MatchParticipant[] participantBatch = new MatchParticipant[matches.size()];
-        List<Tuple4<SC2Map, Match, BaseMatch.Decision, PlayerCharacter>> meta = new ArrayList<>();
+        List<Tuple4<SC2Map, Match, BaseMatch.Decision, PlayerCharacterNaturalId>> meta = new ArrayList<>();
         for(int i = 0; i < matches.size(); i++)
         {
-            Tuple2<BlizzardMatch, PlayerCharacter> match = matches.get(i);
+            Tuple2<BlizzardMatch, PlayerCharacterNaturalId> match = matches.get(i);
             SC2Map map = new SC2Map(null, match.getT1().getMap());
             Match localMatch = Match.of(match.getT1(), null, match.getT2().getRegion());
             mapBatch[i] = map;
@@ -230,11 +227,11 @@ public class MatchService
         matchDAO.merge(matchBatch);
         for(int i = 0; i < meta.size(); i++)
         {
-            Tuple4<SC2Map, Match, BaseMatch.Decision, PlayerCharacter> participant = meta.get(i);
+            Tuple4<SC2Map, Match, BaseMatch.Decision, PlayerCharacterNaturalId> participant = meta.get(i);
             participantBatch[i] = new MatchParticipant
             (
                 participant.getT2().getId(),
-                participant.getT4().getId(),
+                ((PlayerCharacter) participant.getT4()).getId(),
                 participant.getT3()
             );
         }

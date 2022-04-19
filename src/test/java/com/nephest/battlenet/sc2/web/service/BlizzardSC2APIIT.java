@@ -62,11 +62,11 @@ public class BlizzardSC2APIIT
     public static final String VALID_PROFILE_LADDER = "{\"ladderTeams\":[],\"league\":\"silver\","
         + "\"allLadderMemberships\":[{\"ladderId\":\"292783\",\"localizedGameMode\":\"1v1 Silver\"}]}";
 
-    public static final PlayerCharacter SERRAL =
+    public static final PlayerCharacterNaturalId SERRAL =
         new PlayerCharacter(null, null, Region.EU, 315071L, 1, "Serral");
-    public static final PlayerCharacter HEROMARINE =
+    public static final PlayerCharacterNaturalId HEROMARINE =
         new PlayerCharacter(null, null, Region.EU, 7069585L, 1, "Heromarine");
-    public static final PlayerCharacter MARU =
+    public static final PlayerCharacterNaturalId MARU =
         new PlayerCharacter(null, null, Region.KR, 4582362L, 1, "Maru");
     public static final BlizzardPlayerCharacter BLIZZARD_CHARACTER = new BlizzardPlayerCharacter(1L, 1, "Name#123");
     @Autowired
@@ -181,7 +181,7 @@ public class BlizzardSC2APIIT
     @Test @Order(2)
     public void testFetchMatches()
     {
-        Set<PlayerCharacter> failedCharacters = new HashSet<>();
+        Set<PlayerCharacterNaturalId> failedCharacters = new HashSet<>();
         api.getMatches(Set.of(SERRAL, HEROMARINE, MARU), failedCharacters, false)
             .toStream(BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2)
             .forEach((m)->

@@ -10,7 +10,6 @@ import com.nephest.battlenet.sc2.model.*;
 import com.nephest.battlenet.sc2.model.blizzard.*;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
@@ -767,7 +766,7 @@ extends BaseAPI
         return getProfileLadders(ids, queueTypes, false);
     }
 
-    public Mono<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches(PlayerCharacter playerCharacter, boolean web)
+    public Mono<Tuple2<BlizzardMatches, PlayerCharacterNaturalId>> getMatches(PlayerCharacterNaturalId playerCharacter, boolean web)
     {
         Region region = getRegion(playerCharacter.getRegion());
         ApiContext context = getContext(region, web);
@@ -792,8 +791,8 @@ extends BaseAPI
             .doOnError(t->context.getHealthMonitor().addError());
     }
 
-    public Flux<Tuple2<BlizzardMatches, PlayerCharacter>> getMatches
-    (Iterable<? extends PlayerCharacter> playerCharacters, Set<PlayerCharacter> errors, boolean web)
+    public Flux<Tuple2<BlizzardMatches, PlayerCharacterNaturalId>> getMatches
+    (Iterable<? extends PlayerCharacterNaturalId> playerCharacters, Set<PlayerCharacterNaturalId> errors, boolean web)
     {
         return Flux.fromIterable(playerCharacters)
             .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getMatches(p, web), t->errors.add(p)));
