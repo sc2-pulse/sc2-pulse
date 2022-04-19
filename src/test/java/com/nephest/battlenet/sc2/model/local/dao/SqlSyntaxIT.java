@@ -23,6 +23,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -404,6 +405,10 @@ public class SqlSyntaxIT
         List<Account> accs = template.query("SELECT " + AccountDAO.STD_SELECT + " FROM account ORDER BY id", AccountDAO.getStdRowMapper());
         assertEquals(account, accs.get(0));
         assertEquals(account2, accs.get(1));
+
+        assertEquals(2, playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now()));
+        template.execute("UPDATE player_character SET updated = NOW() + INTERVAL '1 day' WHERE id = 1");
+        assertEquals(1, playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now()));
     }
 
     @Test

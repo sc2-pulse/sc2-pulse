@@ -219,6 +219,9 @@ public class PlayerCharacterDAO
         + "ORDER BY id DESC "
         + "LIMIT :limit";
 
+    private static final String COUNT_BY_UPDATED_MAX =
+        "SELECT COUNT(*) FROM player_character WHERE updated <= :updatedMax";
+
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
     private static ResultSetExtractor<PlayerCharacter> STD_EXTRACTOR;
     private static ResultSetExtractor<BookmarkedResult<List<PlayerCharacter>>> BOOKMARKED_STD_ROW_EXTRACTOR;
@@ -424,6 +427,13 @@ public class PlayerCharacterDAO
             .addValue("idMax", idMax)
             .addValue("limit", limit);
         return template.query(FIND_BY_UPDATED_AND_ID_MAX_EXCLUDED, params, getStdRowMapper());
+    }
+
+    public int countByUpdatedMax(OffsetDateTime updatedMax)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("updatedMax", updatedMax);
+        return template.query(COUNT_BY_UPDATED_MAX, params, DAOUtils.INT_EXTRACTOR);
     }
 
 }
