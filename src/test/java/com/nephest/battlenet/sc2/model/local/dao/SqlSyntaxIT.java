@@ -29,6 +29,10 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+/*
+    This tests contains many simple subtests that require almost no setup(things like entity merge, count, etc.).
+ */
+
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
