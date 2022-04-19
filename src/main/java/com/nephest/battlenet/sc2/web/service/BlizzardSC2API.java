@@ -798,4 +798,37 @@ extends BaseAPI
             .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getMatches(p, web), t->errors.add(p)));
     }
 
+    public Mono<Tuple2<BlizzardLegacyProfile, PlayerCharacterNaturalId>> getLegacyProfile
+    (PlayerCharacterNaturalId playerCharacter, boolean web)
+    {
+        Region region = getRegion(playerCharacter.getRegion());
+        ApiContext context = getContext(region, web);
+        return getWebClient(region)
+            .get()
+            .uri
+            (
+                regionUri != null
+                    ? regionUri
+                    : (context.getBaseUrl() + "sc2/legacy/profile/{0}/{1}/{2}"),
+                playerCharacter.getRegion().getId(),
+                playerCharacter.getRealm(),
+                playerCharacter.getBattlenetId()
+            )
+            .accept(web ? ALL : APPLICATION_JSON) //web API has invalid content type headers
+            .retrieve()
+            .bodyToMono(BlizzardLegacyProfile.class)
+            .zipWith(Mono.just(playerCharacter))
+            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY, web)))
+            .delaySubscription(context.getRateLimiter().requestSlot())
+            .doOnRequest(s->context.getHealthMonitor().addRequest())
+            .doOnError(t->context.getHealthMonitor().addError());
+    }
+
+    public Flux<Tuple2<BlizzardLegacyProfile, PlayerCharacterNaturalId>> getLegacyProfiles
+    (Iterable<? extends PlayerCharacterNaturalId> playerCharacters, boolean web)
+    {
+        return Flux.fromIterable(playerCharacters)
+            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getLegacyProfile(p, web)));
+    }
+
 }

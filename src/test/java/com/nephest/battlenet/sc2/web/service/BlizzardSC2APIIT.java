@@ -56,6 +56,8 @@ public class BlizzardSC2APIIT
     public static final String VALID_LEAGUE = "{\"type\": 0, \"queueType\": 201, \"teamType\": 0, \"tier\": []}";
     public static final String VALID_LADDER = "{\"team\": []}";
     public static final String VALID_MATCHES = "{\"matches\": []}";
+    public static final String VALID_LEGACY_PROFILE = "{\"id\":\"315071\",\"realm\":1,\"displayName\":\"Serral\","
+        + "\"clanName\":\"Ence\",\"clanTag\":\"ENCE\",\"profilePath\":\"/profile/2/1/315071\"}";
     public static final String VALID_LEGACY_LADDER = "{\"ladderMembers\":[{\"character\":{\"id\":\"11445546\","
         + "\"realm\":1,\"region\":1,\"displayName\":\"Dexter\",\"clanName\":\"\",\"clanTag\":\"\","
         + "\"profilePath\":\"/profile/1/1/11445546\"}}]}";
@@ -198,6 +200,19 @@ public class BlizzardSC2APIIT
     }
 
     @Test @Order(3)
+    public void testFetchLegacyProfiles()
+    {
+        api.getLegacyProfiles(Set.of(SERRAL, HEROMARINE, MARU), false)
+            .toStream(BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2)
+            .forEach(p->
+            {
+                assertNotNull(p.getT1().getName());
+                assertNotNull(p.getT1().getRealm());
+                assertNotNull(p.getT1().getId());
+            });
+    }
+
+    @Test @Order(4)
     public void testRetrying()
     throws Exception
     {
@@ -224,6 +239,7 @@ public class BlizzardSC2APIIT
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, mock(BlizzardTierDivision.class)), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, 1L), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getMatches(SERRAL, false), VALID_MATCHES, server, RETRY_COUNT);
+        WebServiceTestUtil.testRetrying(api.getLegacyProfile(SERRAL, false), VALID_LEGACY_PROFILE, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderId(Region.US, 292783, false), VALID_LEGACY_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderMono(Region.US, BLIZZARD_CHARACTER, 292783L, queueTypes, false),
             VALID_PROFILE_LADDER, server, RETRY_COUNT);
