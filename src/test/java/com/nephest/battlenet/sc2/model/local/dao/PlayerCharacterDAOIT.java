@@ -218,6 +218,8 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char4 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name10#123", clan.getId()));
 
+        PlayerCharacter updatedChar4 = new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, null);
+        updatedChar4.setName(null, false);
         List<Tuple2<Account, PlayerCharacter>> updatedAccsAndChars = List.of
         (
             Tuples.of
@@ -238,12 +240,22 @@ public class PlayerCharacterDAOIT
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag10#123"),
-                new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name11#123")
+                updatedChar4
             )
         );
 
+        OffsetDateTime char4Updated =
+            template.query("SELECT updated FROM player_character WHERE id = " + char4.getId(), DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
         OffsetDateTime minTimeAllowed = OffsetDateTime.now();
         assertEquals(3, playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars));
+
+        //character is not updated
+        assertEquals("name10#123", playerCharacterDAO.find(Region.EU, 1, 3L).orElseThrow().getName());
+        OffsetDateTime char4UpdatedNew =
+            template.query("SELECT updated FROM player_character WHERE id = " + char4.getId(), DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
+        assertTrue(char4UpdatedNew.isEqual(char4Updated));
+
+        template.execute("UPDATE player_character SET updated = NOW() WHERE id = " + char4.getId());
 
         verifyUpdatedCharacters(minTimeAllowed);
         OffsetDateTime minAccTime =

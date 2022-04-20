@@ -111,13 +111,13 @@ public class PlayerCharacterDAO
         + "updated_character AS "
         + "( "
             + "UPDATE player_character "
-            + "SET updated = NOW(), "
+            + "SET updated = CASE WHEN v.name IS NULL THEN player_character.updated ELSE NOW() END, "
             /*
                 There can be a situation when a BattleTag already exists in one region, but characters were not
                 yet rebound to it in another region due to API issues. Rebind it now.
              */
             + "account_id = COALESCE(account.id, account_id), "
-            + "name = v.name, "
+            + "name = COALESCE(v.name, player_character.name), "
             + "clan_id = CASE WHEN v.has_clan THEN clan_id ELSE NULL END "
             + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name, has_clan) "
             + "LEFT JOIN account ON v.partition = account.partition "

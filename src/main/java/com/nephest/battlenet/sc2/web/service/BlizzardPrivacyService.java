@@ -7,10 +7,41 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.blizzard.*;
-import com.nephest.battlenet.sc2.model.local.*;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLegacyProfile;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeamMember;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.InstantVar;
+import com.nephest.battlenet.sc2.model.local.LongVar;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,17 +52,6 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
-
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @Service
 public class BlizzardPrivacyService
@@ -241,6 +261,7 @@ public class BlizzardPrivacyService
     {
         if(ladders.isEmpty()) return List.of();
         Region region = ladders.get(0).getT2().getT2();
+        boolean isAlternativeUpdate = statsService.isAlternativeUpdate(region, true);
         return ladders.stream()
             .flatMap(l->Arrays.stream(l.getT1().getTeams()))
             .flatMap(t->Arrays.stream(t.getMembers()))
@@ -249,7 +270,8 @@ public class BlizzardPrivacyService
             {
                 Account account = Account.of(m.getAccount(), region);
                 PlayerCharacter character = PlayerCharacter.of(account, region, m.getCharacter());
-                if(m.getClan() != null) character.setClanId(0);
+                character.setClanId(isAlternativeUpdate ? Integer.valueOf(0) : m.getClan() != null ? 0 : null);
+                if(isAlternativeUpdate) character.setName(null, false);
                 return Tuples.of(account, character);
             })
             .collect(Collectors.toList());
