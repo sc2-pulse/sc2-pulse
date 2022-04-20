@@ -42,7 +42,7 @@ public class BlizzardPrivacyService
     public static final Duration DATA_TTL = Duration.ofDays(30);
     public static final Duration ANONYMIZATION_DATA_TIME_FRAME = Duration.ofMinutes(60);
     public static final Duration CHARACTER_UPDATE_TIME_FRAME = Duration.ofMinutes(60);
-    public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(2);
+    public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(5);
     public static final Duration CHARACTER_UPDATED_MAX = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
     public static final int CURRENT_SEASON_UPDATES_PER_PERIOD = 3;
     //postgresql param limit / max players in a single ladder / param count
