@@ -280,7 +280,12 @@ public class BlizzardPrivacyService
             .flatMap(l->Arrays.stream(l.getT1().getLadderTeams()))
             .flatMap(t->Arrays.stream(t.getTeamMembers()))
             .filter(profileTeamMemberPredicate)
-            .map(m->PlayerCharacter.of(new Account(), region, m))
+            .map(m->
+            {
+                PlayerCharacter character = PlayerCharacter.of(new Account(), region, m);
+                if(m.getClanTag() != null) character.setClanId(0);
+                return character;
+            })
             .toArray(PlayerCharacter[]::new);
     }
 
