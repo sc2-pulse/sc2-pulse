@@ -251,7 +251,6 @@ public class StatsService
         {
             updateSeason(region, seasonId, queues, leagues);
         }
-        postgreSQLUtils.vacuumAnalyze();
         updateSeasonStats(seasonId, true);
     }
 
@@ -263,9 +262,7 @@ public class StatsService
 
     public void afterCurrentSeasonUpdate(UpdateContext updateContext, boolean allStats)
     {
-        postgreSQLUtils.vacuumAnalyze();
         teamStateDAO.removeExpired();
-        postgreSQLUtils.vacuumAnalyze();
         playerCharacterStatsDAO.mergeCalculate
         (
             updateContext.getInternalUpdate() != null

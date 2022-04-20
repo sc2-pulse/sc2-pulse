@@ -207,8 +207,6 @@ public class Cron
             teamStateDAO.cleanArchive(defaultOdt);
             teamStateDAO.removeExpired();
             evidenceDAO.nullifyReporterIps(defaultOdt);
-            postgreSQLUtils.vacuum();
-            postgreSQLUtils.analyze();
             heavyStatsInstant.setValueAndSave(Instant.ofEpochMilli(System.currentTimeMillis()));
             return true;
         }

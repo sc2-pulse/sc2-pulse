@@ -241,7 +241,6 @@ public class MatchService
 
     private void identify(UpdateContext updateContext)
     {
-        postgreSQLUtils.vacuumAnalyze();
         int identified = matchParticipantDAO.identify(
             seasonDAO.getMaxBattlenetId(),
             /*
