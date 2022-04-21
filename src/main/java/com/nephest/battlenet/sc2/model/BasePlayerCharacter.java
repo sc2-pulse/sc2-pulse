@@ -36,16 +36,25 @@ public class BasePlayerCharacter
         return realm;
     }
 
-    public void setName(String name)
+    public void setName(String name, boolean autoFix)
     {
+        if(!autoFix)
+        {
+            this.name = name;
+        }
         //Some characters can have an empty name. Use a fake name for them.
-        if(name == null) {
+        else if(name == null) {
             this.name = DEFAULT_FAKE_FULL_NAME;
         } else
         {
             name = name.contains("#") ? name : name + DEFAULT_HASH_SUFFIX;
             this.name = name;
         }
+    }
+
+    public void setName(String name)
+    {
+        setName(name, true);
     }
 
     public String getName()
