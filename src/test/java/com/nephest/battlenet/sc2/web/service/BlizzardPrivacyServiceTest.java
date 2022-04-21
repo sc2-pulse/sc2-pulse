@@ -3,35 +3,68 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.anyBoolean;
+import static org.mockito.Mockito.anyInt;
+import static org.mockito.Mockito.anyLong;
+import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.eq;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardClan;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadderLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLegacyProfile;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeamMember;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InOrder;
-import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
-import org.springframework.validation.Validator;
-import reactor.core.publisher.Flux;
-import reactor.util.function.Tuples;
-
+import java.math.BigInteger;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
+import org.mockito.InOrder;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.stubbing.OngoingStubbing;
+import org.springframework.validation.Validator;
+import reactor.core.publisher.Flux;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
+import reactor.util.function.Tuples;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
-
+@ExtendWith(MockitoExtension.class)
 public class BlizzardPrivacyServiceTest
 {
 
@@ -62,7 +95,11 @@ public class BlizzardPrivacyServiceTest
     @Mock
     private SC2WebServiceUtil sc2WebServiceUtil;
 
-    private final ExecutorService executorService = Executors.newSingleThreadExecutor();
+    @Captor
+    private ArgumentCaptor<List<Tuple2<Account, PlayerCharacter>>> accountPlayerCaptor;
+
+    private static final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
+    private static final ExecutorService webExecutor = Executors.newSingleThreadExecutor();
 
     public BlizzardPrivacyService privacyService;
 
@@ -71,7 +108,6 @@ public class BlizzardPrivacyServiceTest
     @BeforeEach
     public void beforeEach()
     {
-        mocks = MockitoAnnotations.openMocks(this);
         privacyService = new BlizzardPrivacyService
         (
             api,
@@ -81,18 +117,19 @@ public class BlizzardPrivacyServiceTest
             varDAO,
             accountDAO,
             playerCharacterDAO,
-            executorService,
-            executorService,
+            dbExecutor,
+            webExecutor,
             validator,
             sc2WebServiceUtil
         );
     }
 
-    @AfterEach
-    public void afterEach()
+    @AfterAll
+    public static void afterAll()
     throws Exception
     {
-        mocks.close();
+        dbExecutor.shutdown();
+        webExecutor.shutdown();
     }
 
     @Test
@@ -164,19 +201,136 @@ public class BlizzardPrivacyServiceTest
         List<PlayerCharacter> chars = List.of(new PlayerCharacter());
         when(playerCharacterDAO.find(any(), eq(100L), eq(9999 / BlizzardPrivacyService.CHARACTER_UPDATES_PER_TTL)))
             .thenReturn(chars);
-        BlizzardLegacyProfile profile = new BlizzardLegacyProfile();
-        profile.setId(1L);
-        profile.setName("name");
-        profile.setRealm(2);
-        PlayerCharacter character = new PlayerCharacter(null, null, Region.EU, 1L, 2, "name");
-        when(api.getLegacyProfiles(chars, false)).thenReturn(Flux.just(Tuples.of(profile, character)));
+        BlizzardLegacyProfile profile1 = new BlizzardLegacyProfile(1L, 2, "name", "clanTag", null);
+        PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 2, "name");
+        BlizzardLegacyProfile profile2 = new BlizzardLegacyProfile(2L, 2, "name", null, null);
+        PlayerCharacter character2 = new PlayerCharacter(null, null, Region.EU, 2L, 2, "name");
+        when(api.getLegacyProfiles(chars, false))
+            .thenReturn(Flux.just(Tuples.of(profile1, character1), Tuples.of(profile2, character2)));
 
         privacyService.update();
         ArgumentCaptor<PlayerCharacter> characterArgumentCaptor = ArgumentCaptor.forClass(PlayerCharacter.class);
         verify(playerCharacterDAO).updateCharacters(characterArgumentCaptor.capture());
         List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues();
-        assertEquals(1, argChars.size());
-        assertEquals(character, argChars.get(0));
+        assertEquals(2, argChars.size());
+        assertEquals(character1, argChars.get(0));
+        assertEquals(0, argChars.get(0).getClanId());
+        assertEquals(character2, argChars.get(1));
+        assertNull(argChars.get(1).getClanId());
     }
-    
+
+    @Test
+    public void testUpdateAlternativeLadder()
+    {
+        when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON);
+        when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(true);
+        Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> ladders = Flux.just
+        (
+            Tuples.of
+            (
+                new BlizzardProfileLadder
+                (
+                    new BlizzardProfileTeam[]
+                    {
+                        new BlizzardProfileTeam
+                        (
+                            new BlizzardProfileTeamMember[]
+                            {
+                                new BlizzardProfileTeamMember(1L, 1, "name1", Race.TERRAN, "clan1"),
+                                new BlizzardProfileTeamMember(2L, 1, "name2", Race.TERRAN, null)
+                            },
+                            0L, 0, 0, 0, 0
+                        )
+                    },
+                    null
+                ),
+                Tuples.of
+                (
+                    Region.EU,
+                    new BlizzardPlayerCharacter[0],
+                    0L
+                )
+            )
+        );
+        OngoingStubbing<Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>>> stub =
+            when(api.getProfileLadders(any(), any(), anyBoolean())).thenReturn(ladders);
+        for(int i = 1; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
+        privacyService.update();
+
+        PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
+        PlayerCharacter character2 = new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2");
+        ArgumentCaptor<PlayerCharacter> characterArgumentCaptor = ArgumentCaptor.forClass(PlayerCharacter.class);
+        verify(playerCharacterDAO).updateCharacters(characterArgumentCaptor.capture());
+        List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues();
+        assertEquals(2, argChars.size());
+        assertEquals(character1, argChars.get(0));
+        assertEquals(0, argChars.get(0).getClanId());
+        assertEquals(character2, argChars.get(1));
+        assertNull(argChars.get(1).getClanId());
+    }
+
+    @CsvSource
+    ({"true", "false"})
+    @ParameterizedTest
+    public void testUpdateLadder(boolean updated)
+    {
+        when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
+        when(statsService.isAlternativeUpdate(any(), eq(true))).thenReturn(!updated);
+        when(statsService.isAlternativeUpdate(any(), eq(false))).thenReturn(false);
+        when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
+
+        //update previous season
+        privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(Instant.now());
+        OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>>
+            stub = when(api.getLadders(any(), anyLong(), any())).thenReturn(createLadder());
+        for(int i = 1; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
+
+        privacyService.update();
+
+        verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
+        List<Tuple2<Account, PlayerCharacter>> argChars = accountPlayerCaptor.getValue();
+        PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
+        assertEquals(1, argChars.size());
+        PlayerCharacter extractedCharacter = argChars.get(0).getT2();
+        assertEquals(character1, extractedCharacter);
+        if(!updated) {
+            assertNull(extractedCharacter.getName());
+            assertEquals(0, extractedCharacter.getClanId());
+        } else {
+            assertEquals("name2#1", extractedCharacter.getName());
+            assertEquals(0, extractedCharacter.getClanId());
+        }
+    }
+
+    private Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>
+    createLadder()
+    {
+        BlizzardTeamMember member = new BlizzardTeamMember
+        (
+            new BlizzardPlayerCharacter(1L, 1, "name2#1"), new BlizzardTeamMemberRace[0],
+            new BlizzardAccount(1L, "btag1")
+        );
+        member.setClan(new BlizzardClan(1L, "tag", "clanName"));
+        return Flux.just
+        (
+            Tuples.of
+            (
+                new BlizzardLadder
+                (
+                    new BlizzardTeam[]
+                    {
+                        new BlizzardTeam
+                        (
+                            BigInteger.ONE,
+                            new BlizzardTeamMember[]{member},
+                            Instant.now(), 1L, 1, 1, 1, 1
+                        )
+                    },
+                    new BlizzardLadderLeague()
+                ),
+                Tuples.of(new BlizzardLeague(), Region.EU, new BlizzardLeagueTier(), new BlizzardTierDivision())
+            )
+        );
+    }
+
 }
