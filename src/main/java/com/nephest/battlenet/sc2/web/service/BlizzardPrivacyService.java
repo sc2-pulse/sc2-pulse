@@ -62,8 +62,9 @@ public class BlizzardPrivacyService
     public static final Duration DATA_TTL = Duration.ofDays(30);
     public static final Duration ANONYMIZATION_DATA_TIME_FRAME = Duration.ofMinutes(60);
     public static final Duration CHARACTER_UPDATE_TIME_FRAME = Duration.ofMinutes(60);
-    public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(5);
+    public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(20);
     public static final Duration CHARACTER_UPDATED_MAX = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
+    public static final Duration OLD_LADDER_DATA_TTL = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
     public static final int CURRENT_SEASON_UPDATES_PER_PERIOD = 3;
     //postgresql param limit / max players in a single ladder / param count
     public static final int LADDER_BATCH_SIZE = 32767 / 400 / 6;
@@ -317,11 +318,11 @@ public class BlizzardPrivacyService
         if(lastSeason == null || lastSeason < BlizzardSC2API.FIRST_SEASON) return null;
 
         int updatesPerPeriod = ((lastSeason - BlizzardSC2API.FIRST_SEASON) + 1) + CURRENT_SEASON_UPDATES_PER_PERIOD;
-        long secondsBetweenUpdates = DATA_TTL.toSeconds() / updatesPerPeriod;
+        long secondsBetweenUpdates = OLD_LADDER_DATA_TTL.toSeconds() / updatesPerPeriod;
         if(Instant.now().getEpochSecond() - lastUpdatedSeasonInstant.getValue().getEpochSecond() < secondsBetweenUpdates)
             return null;
 
-        long secondsBetweenCurrentSeasonUpdates = DATA_TTL.toSeconds() / CURRENT_SEASON_UPDATES_PER_PERIOD;
+        long secondsBetweenCurrentSeasonUpdates = OLD_LADDER_DATA_TTL.toSeconds() / CURRENT_SEASON_UPDATES_PER_PERIOD;
         return Instant.now().getEpochSecond() - lastUpdatedCurrentSeasonInstant.getValue().getEpochSecond() >= secondsBetweenCurrentSeasonUpdates
             ? lastSeason
             : (int) (lastUpdatedSeason.getValue() + 1 >= lastSeason ? BlizzardSC2API.FIRST_SEASON : lastUpdatedSeason.getValue() + 1);

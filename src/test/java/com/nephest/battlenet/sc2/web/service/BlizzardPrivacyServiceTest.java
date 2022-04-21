@@ -159,10 +159,10 @@ public class BlizzardPrivacyServiceTest
         privacyService.getLastUpdatedCharacterInstant()
             .setValue(Instant.now().minus(BlizzardPrivacyService.CHARACTER_UPDATE_TIME_FRAME).minusSeconds(1));
 
-        when(playerCharacterDAO.countByUpdatedMax(any())).thenReturn(200);
+        when(playerCharacterDAO.countByUpdatedMax(any())).thenReturn(9999);
         privacyService.getLastUpdatedCharacterId().setValue(100L);
         List<PlayerCharacter> chars = List.of(new PlayerCharacter());
-        when(playerCharacterDAO.find(any(), eq(100L), eq(200 / BlizzardPrivacyService.CHARACTER_UPDATES_PER_TTL)))
+        when(playerCharacterDAO.find(any(), eq(100L), eq(9999 / BlizzardPrivacyService.CHARACTER_UPDATES_PER_TTL)))
             .thenReturn(chars);
         BlizzardLegacyProfile profile = new BlizzardLegacyProfile();
         profile.setId(1L);
