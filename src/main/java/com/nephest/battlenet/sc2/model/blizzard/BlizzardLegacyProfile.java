@@ -11,6 +11,15 @@ extends BlizzardPlayerCharacter
 
     private String clanTag, clanName;
 
+    public BlizzardLegacyProfile(){}
+
+    public BlizzardLegacyProfile(Long id, Integer realm, String name, String clanTag, String clanName)
+    {
+        super(id, realm, name);
+        this.clanTag = clanTag;
+        this.clanName = clanName;
+    }
+
     @Override
     @JsonAlias("displayName")
     public void setName(String name)
