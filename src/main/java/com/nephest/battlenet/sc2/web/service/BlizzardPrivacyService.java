@@ -344,8 +344,7 @@ public class BlizzardPrivacyService
         int batchSize = getCharacterBatchSize();
         if(batchSize == 0)
         {
-            lastUpdatedCharacterInstant.setValueAndSave(Instant.now());
-            lastUpdatedCharacterId.setValueAndSave(Long.MAX_VALUE);
+            resetCharacterUpdateVars();
             return;
         }
 
@@ -355,6 +354,11 @@ public class BlizzardPrivacyService
             lastUpdatedCharacterId.getValue(),
             batchSize
         );
+        if(batch.isEmpty())
+        {
+            resetCharacterUpdateVars();
+            return;
+        }
 
         List<Future<?>> dbTasks = new ArrayList<>();
         AtomicInteger count = new AtomicInteger();
@@ -375,6 +379,13 @@ public class BlizzardPrivacyService
         lastUpdatedCharacterId.setValueAndSave(batch.get(batch.size() - 1).getId());
         if(count.get() > 0) LOG.info("Updated {} characters that are about to expire", count.get());
     }
+
+    private void resetCharacterUpdateVars()
+    {
+        lastUpdatedCharacterInstant.setValueAndSave(Instant.now());
+        lastUpdatedCharacterId.setValueAndSave(Long.MAX_VALUE);
+    }
+
 
     private PlayerCharacter extractCharacter(Tuple2<BlizzardLegacyProfile, PlayerCharacterNaturalId> bChar)
     {

@@ -189,7 +189,7 @@ public class BlizzardPrivacyServiceTest
         privacyService.getLastUpdatedCharacterId().setValue(10L);
         when(playerCharacterDAO.countByUpdatedMax(any())).thenReturn(0);
         privacyService.update();
-        //reset id cursor due to empty batch
+        //reset id cursor due to empty batch size
         assertEquals(Long.MAX_VALUE, privacyService.getLastUpdatedCharacterId().getValue());
 
         //rewind
@@ -217,6 +217,17 @@ public class BlizzardPrivacyServiceTest
         assertEquals(0, argChars.get(0).getClanId());
         assertEquals(character2, argChars.get(1));
         assertNull(argChars.get(1).getClanId());
+    }
+
+    @Test
+    public void testUpdateCharactersEmptyBatch()
+    {
+        privacyService.getLastUpdatedCharacterId().setValue(10L);
+        when(playerCharacterDAO.countByUpdatedMax(any())).thenReturn(9999);
+        when(playerCharacterDAO.find(any(), any(), anyInt())).thenReturn(List.of());
+        privacyService.update();
+        //reset id cursor due to empty batch
+        assertEquals(Long.MAX_VALUE, privacyService.getLastUpdatedCharacterId().getValue());
     }
 
     @Test
