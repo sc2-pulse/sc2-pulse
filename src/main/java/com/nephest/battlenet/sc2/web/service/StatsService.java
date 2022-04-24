@@ -3,12 +3,69 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.blizzard.*;
-import com.nephest.battlenet.sc2.model.local.*;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.Version;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadderLeagueKey;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.InstantVar;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,19 +79,11 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.*;
-
-import javax.annotation.PostConstruct;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
+import reactor.util.function.Tuple5;
+import reactor.util.function.Tuples;
 
 @Service
 public class StatsService
@@ -135,7 +184,7 @@ public class StatsService
         this.conversionService = conversionService;
         this.dbExecutorService = dbExecutorService;
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
-        for(Region r : Region.values()) failedLadders.put(r, new HashSet<>());
+        for(Region r : Region.values()) failedLadders.put(r, ConcurrentHashMap.newKeySet());
     }
 
     @PostConstruct
