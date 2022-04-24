@@ -284,7 +284,7 @@ class TeamUtil
 
         const nameElem = document.createElement("span");
         nameElem.classList.add("player-name");
-        nameElem.textContent = unmasked.unmaskedName;
+        nameElem.textContent = Util.convertFakeName(member, unmasked.unmaskedName);
         nameContainer.appendChild(nameElem);
 
         if(unmasked.maskedName.toLowerCase() != unmasked.unmaskedName.toLowerCase()
@@ -301,7 +301,7 @@ class TeamUtil
             }
             const maskedNameElem = document.createElement("span");
             maskedNameElem.classList.add("player-name-masked");
-            maskedNameElem.textContent = unmasked.maskedName;
+            maskedNameElem.textContent = Util.convertFakeName(member, unmasked.maskedName);
             maskedContainer.appendChild(maskedNameElem);
             nameContainer.appendChild(maskedContainer);
         }

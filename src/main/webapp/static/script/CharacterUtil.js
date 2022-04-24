@@ -255,7 +255,7 @@ class CharacterUtil
             charNameAdditional = member.character.name;
             charNameAdditionalClan = maskedTeam;
         }
-        document.getElementById("player-info-title-name").textContent = charName;
+        document.getElementById("player-info-title-name").textContent = Util.convertFakeName(member, charName);
         const titleElem = document.getElementById("player-info-title");
         const clanElem = document.getElementById("player-info-title-clan");
         const teamElem = document.getElementById("player-info-title-team");
