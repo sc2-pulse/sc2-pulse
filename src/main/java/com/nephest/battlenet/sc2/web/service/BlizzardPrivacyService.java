@@ -41,13 +41,15 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
+import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
@@ -66,10 +68,7 @@ public class BlizzardPrivacyService
     public static final Duration CHARACTER_UPDATED_MAX = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
     public static final Duration OLD_LADDER_DATA_TTL = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
     public static final int CURRENT_SEASON_UPDATES_PER_PERIOD = 3;
-    //postgresql param limit / max players in a single ladder / param count
-    public static final int LADDER_BATCH_SIZE = 32767 / 400 / 6;
-    public static final int ALTERNATIVE_LADDER_BATCH_SIZE = 32767 / 400 / 4;
-    public static final int CHARACTER_BATCH_SIZE = 32767 / 4;
+    public static final int ACCOUNT_AND_CHARACTER_BATCH_SIZE = 250;
     public static final int CHARACTER_UPDATES_PER_TTL = (int) (CHARACTER_UPDATE_EXPIRATION_THRESHOLD.toSeconds() / CHARACTER_UPDATE_TIME_FRAME.toSeconds());
     public static final Instant DEFAULT_ANONYMIZE_START =
         OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset()).toInstant();
@@ -181,6 +180,7 @@ public class BlizzardPrivacyService
         return lastUpdatedCharacterId;
     }
 
+    @Transactional
     public void update()
     {
         handleExpiredData();
@@ -249,21 +249,20 @@ public class BlizzardPrivacyService
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, QUEUE_TYPES, LEAGUE_TYPES), currentSeason);
         api.getLadders(ladderIds, 1, new EnumMap<>(Region.class))
-            .buffer(LADDER_BATCH_SIZE)
-            .map(this::extractPrivateInfo)
+            .flatMap(l->Flux.fromStream(extractPrivateInfo(l)))
+            .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
             .forEach(l->dbTasks.add(dbExecutorService.submit(()->
                 LOG.debug("Updated {} accounts and characters", playerCharacterDAO.updateAccountsAndCharacters(l)))));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 
-    private List<Tuple2<Account, PlayerCharacter>> extractPrivateInfo
-    (List<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>> ladders)
+    private Stream<Tuple2<Account, PlayerCharacter>> extractPrivateInfo
+    (Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladder)
     {
-        if(ladders.isEmpty()) return List.of();
-        Region region = ladders.get(0).getT2().getT2();
+        Region region = ladder.getT2().getT2();
         boolean isAlternativeUpdate = statsService.isAlternativeUpdate(region, true);
-        return ladders.stream()
+        return Stream.of(ladder)
             .flatMap(l->Arrays.stream(l.getT1().getTeams()))
             .flatMap(t->Arrays.stream(t.getMembers()))
             .filter(teamMemberPredicate)
@@ -274,8 +273,7 @@ public class BlizzardPrivacyService
                 character.setClanId(isAlternativeUpdate ? Integer.valueOf(0) : m.getClan() != null ? 0 : null);
                 if(isAlternativeUpdate) character.setName(null, false);
                 return Tuples.of(account, character);
-            })
-            .collect(Collectors.toList());
+            });
     }
 
     private void alternativeUpdate(Region region, int seasonId)
@@ -285,21 +283,19 @@ public class BlizzardPrivacyService
             .getExistingLadderIds(season, QUEUE_TYPES, LEAGUE_TYPES);
         List<Future<?>> dbTasks = new ArrayList<>();
         api.getProfileLadders(ladderIds, Set.of(QUEUE_TYPES), alternativeLadderService.isProfileLadderWebRegion(region))
-            .buffer(ALTERNATIVE_LADDER_BATCH_SIZE)
-            .map(this::extractAlternativePrivateInfo)
+            .flatMap(l->Flux.fromStream(extractAlternativePrivateInfo(l)))
+            .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
             .forEach(l->dbTasks.add(dbExecutorService.submit(()->
-                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(l)))));
+                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(l.toArray(PlayerCharacter[]::new))))));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 
-    private PlayerCharacter[] extractAlternativePrivateInfo
-    (List<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> ladders)
+    private Stream<PlayerCharacter> extractAlternativePrivateInfo
+    (Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladder)
     {
-        if(ladders.isEmpty()) return new PlayerCharacter[0];
-
-        Region region = ladders.get(0).getT2().getT1();
-        return ladders.stream()
+        Region region = ladder.getT2().getT1();
+        return Stream.of(ladder)
             .flatMap(l->Arrays.stream(l.getT1().getLadderTeams()))
             .flatMap(t->Arrays.stream(t.getTeamMembers()))
             .filter(profileTeamMemberPredicate)
@@ -308,8 +304,7 @@ public class BlizzardPrivacyService
                 PlayerCharacter character = PlayerCharacter.of(new Account(), region, m);
                 if(m.getClanTag() != null) character.setClanId(0);
                 return character;
-            })
-            .toArray(PlayerCharacter[]::new);
+            });
     }
 
     protected Integer getSeasonToUpdate()
@@ -365,7 +360,7 @@ public class BlizzardPrivacyService
         api.getLegacyProfiles(batch, false)
             .filter(c->legacyProfilePredicate.test(c.getT1()))
             .map(this::extractCharacter)
-            .buffer(CHARACTER_BATCH_SIZE)
+            .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
             .map(l->l.toArray(PlayerCharacter[]::new))
             .forEach(l->{
