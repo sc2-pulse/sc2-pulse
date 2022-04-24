@@ -3,11 +3,35 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
+import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
+import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
+import static org.springframework.http.MediaType.ALL;
+import static org.springframework.http.MediaType.APPLICATION_JSON;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.blizzard.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamFormat;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardDataSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadderLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadderMembership;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLegacyProfile;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatches;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.Var;
@@ -15,6 +39,17 @@ import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.LongStream;
+import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,21 +62,12 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.*;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
+import reactor.util.function.Tuple5;
+import reactor.util.function.Tuples;
 import reactor.util.retry.RetrySpec;
-
-import javax.annotation.PostConstruct;
-import java.time.Duration;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.*;
-import java.util.stream.LongStream;
-
-import static com.nephest.battlenet.sc2.model.BaseLeague.LeagueType.GRANDMASTER;
-import static com.nephest.battlenet.sc2.model.TeamFormat.ARCHON;
-import static com.nephest.battlenet.sc2.model.TeamFormat._1V1;
-import static org.springframework.http.MediaType.ALL;
-import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 @Service
 public class BlizzardSC2API
@@ -547,7 +573,7 @@ extends BaseAPI
         return Flux.fromIterable(ladderIds)
             .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipMono
             (
-                startingFromEpochSeconds < 1
+                startingFromEpochSeconds < 1 || errors.get(d.getT2()).contains(d.getT4().getLadderId())
                     ? getLadder(d.getT2(), d.getT4()).zipWith(Mono.just(d))
                     : getFilteredLadder(d.getT2(), d.getT4().getLadderId(), startingFromEpochSeconds).zipWith(Mono.just(d)),
                 t->errors.get(d.getT2()).add(d.getT4().getLadderId())
