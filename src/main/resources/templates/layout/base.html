@@ -173,6 +173,8 @@
             ? @environment.getProperty('server.servlet.session.timeout')
             : 1800}]]*/ 1800);
         const APPLICATION_VERSION = /*[[${T(com.nephest.battlenet.sc2.Application).VERSION}]]*/ '';
+        const FAKE_NAME = /*[[${T(com.nephest.battlenet.sc2.model.BasePlayerCharacter).DEFAULT_FAKE_NAME}]]*/ '';
+        const DEFAULT_HASH_SUFFIX = /*[[${T(com.nephest.battlenet.sc2.model.BasePlayerCharacter).DEFAULT_HASH_SUFFIX}]]*/ '';
     </script>
     <th:block  id="script-additional" th:switch="${#arrays.contains(@environment.getActiveProfiles(), 'dev')}">
         <th:block th:case="true">

@@ -297,6 +297,11 @@ class Util
         for(const val of vals) params.append(name, val);
     }
 
+    static convertFakeName(member, name)
+    {
+        return name == FAKE_NAME ? member.character.id : name;
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
