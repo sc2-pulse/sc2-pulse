@@ -64,9 +64,9 @@ public class BlizzardPrivacyService
     public static final Duration DATA_TTL = Duration.ofDays(30);
     public static final Duration ANONYMIZATION_DATA_TIME_FRAME = Duration.ofMinutes(60);
     public static final Duration CHARACTER_UPDATE_TIME_FRAME = Duration.ofMinutes(60);
-    public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(20);
+    public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(15);
     public static final Duration CHARACTER_UPDATED_MAX = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
-    public static final Duration OLD_LADDER_DATA_TTL = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
+    public static final Duration OLD_LADDER_DATA_TTL = Duration.ofDays(20);
     public static final int CURRENT_SEASON_UPDATES_PER_PERIOD = 3;
     public static final int ACCOUNT_AND_CHARACTER_BATCH_SIZE = 250;
     public static final int CHARACTER_UPDATES_PER_TTL = (int) (CHARACTER_UPDATE_EXPIRATION_THRESHOLD.toSeconds() / CHARACTER_UPDATE_TIME_FRAME.toSeconds());
