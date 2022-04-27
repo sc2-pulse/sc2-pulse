@@ -635,5 +635,16 @@ class TeamUtil
         if(includeId) group.push(team.id);
         return group.join(", ");
     }
+    
+    static createTeamFromSnapshot(team, snapshot)
+    {
+        let teamClone = {};
+        Object.assign(teamClone, team);
+        teamClone.rating = snapshot.teamState.rating;
+        teamClone.league = snapshot.league;
+        teamClone.leagueType = snapshot.league.type;
+        teamClone.tierType = snapshot.tier;
+        return teamClone;
+    }
 
 }

@@ -22,17 +22,7 @@ class MatchUtil
                 if(!p.team) {
                     teams.push({id: -1, alternativeData: p.participant.playerCharacterId + "," + p.participant.decision})
                 } else if(teams.length == 0 || teams[teams.length - 1].id != p.team.id) {
-                    if(historical) {
-                        let teamClone = {};
-                        Object.assign(teamClone, p.team);
-                        teamClone.rating = p.teamState.teamState.rating;
-                        teamClone.league = p.teamState.league;
-                        teamClone.leagueType = p.teamState.league.type;
-                        teamClone.tierType = p.teamState.tier;
-                        teams.push(teamClone);
-                    } else {
-                        teams.push(p.team);
-                    }
+                    teams.push(historical ? TeamUtil.createTeamFromSnapshot(p.team, p.teamState) : p.team);
                 }
             }
 
