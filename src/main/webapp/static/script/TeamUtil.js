@@ -152,9 +152,9 @@ class TeamUtil
 
         const ranksTable = TableUtil.createTable(["Scope", "Rank", "Total", "Top%"], false);
         const tbody = ranksTable.querySelector("tbody");
-        tbody.appendChild(TeamUtil.createRankRow(team, "global", Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)));
-        tbody.appendChild(TeamUtil.createRankRow(team, "region", stats.regionTeamCount[team.region]));
-        tbody.appendChild(TeamUtil.createRankRow(team, "league", stats.leagueTeamCount[team.league.type]));
+        tbody.appendChild(TeamUtil.createRankRow(team, "global", team.globalTeamCount || Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)));
+        tbody.appendChild(TeamUtil.createRankRow(team, "region", team.regionTeamCount || stats.regionTeamCount[team.region]));
+        tbody.appendChild(TeamUtil.createRankRow(team, "league", team.leagueTeamCount || stats.leagueTeamCount[team.league.type]));
 
         return ranksTable;
     }
@@ -640,10 +640,12 @@ class TeamUtil
     {
         let teamClone = {};
         Object.assign(teamClone, team);
-        teamClone.rating = snapshot.teamState.rating;
+        Object.assign(teamClone, snapshot.teamState);
         teamClone.league = snapshot.league;
         teamClone.leagueType = snapshot.league.type;
         teamClone.tierType = snapshot.tier;
+        teamClone.leagueTeamCount = -1;
+        teamClone.leagueRank = NaN;
         return teamClone;
     }
 
