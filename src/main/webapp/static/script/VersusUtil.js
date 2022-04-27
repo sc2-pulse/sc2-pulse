@@ -88,7 +88,7 @@ class VersusUtil
                         team.queueType == data.team.queueType
                         && team.region == data.team.region
                         && team.legacyId == data.team.legacyId)),
-            localStorage.getItem("matches-historical-mmr-versus") == "true",
+            localStorage.getItem("matches-historical-mmr-versus") != "false",
             `${ROOT_CONTEXT_PATH}versus?${versusLinkParams.toString()}`
         );
         Model.DATA.get(VIEW.VERSUS).set(VIEW_DATA.TEAMS, {result: result.teams});

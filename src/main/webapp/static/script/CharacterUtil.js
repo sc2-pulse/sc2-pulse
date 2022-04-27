@@ -849,7 +849,7 @@ class CharacterUtil
         pane.classList.remove("d-none");
         const result = MatchUtil.updateMatchTable(document.querySelector("#matches"), matches,
             (data)=>Number.isInteger(data) ? data == characterId : data.member.character.id == characterId,
-            localStorage.getItem("matches-historical-mmr") == "true"
+            localStorage.getItem("matches-historical-mmr") != "false"
         );
         Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.TEAMS, {result: result.teams});
         if(result.validMatches.length >= MATCH_BATCH_SIZE) {
