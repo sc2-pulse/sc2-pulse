@@ -7,17 +7,43 @@ package com.nephest.battlenet.sc2.selenium;
     This test does all UI interactions and searches for any js errors
  */
 
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated;
+import static org.openqa.selenium.support.ui.ExpectedConditions.presenceOfElementLocated;
+
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import io.github.bonigarcia.wdm.WebDriverManager;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.List;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.openqa.selenium.*;
+import org.openqa.selenium.By;
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.Keys;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,17 +55,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.TestPropertySource;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.fail;
-import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated;
-import static org.openqa.selenium.support.ui.ExpectedConditions.presenceOfElementLocated;
 
 @SpringBootTest
 (
@@ -386,7 +401,13 @@ public class GeneralSeleniumIT
         template.execute("UPDATE player_character SET clan_id = " + clan2.getId() + " WHERE id > 140");
         OffsetDateTime startDateTime = OffsetDateTime.now();
         int matchCount = (int) Math.round(ladderMatchDAO.getResultsPerPage() * 2.5);
-        seasonGenerator.create1v1Matches(1, 280, startDateTime, Region.EU, 1, 28, matchCount);
+        seasonGenerator.createMatches
+        (
+            BaseMatch.MatchType._1V1,
+            1, 280, new long[]{1}, new long[]{280},
+            startDateTime, Region.EU, 1, 28,
+            matchCount
+        );
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startDateTime.minusYears(1));
         clanDAO.updateStats();
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);

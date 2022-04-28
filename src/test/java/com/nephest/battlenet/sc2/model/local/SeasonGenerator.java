@@ -286,9 +286,12 @@ public class SeasonGenerator
     }
 
     @Transactional
-    public void create1v1Matches
+    public void createMatches
     (
+        BaseMatch.MatchType matchType,
         long id1, long id2,
+        long[] characterIds1,
+        long[] characterIds2,
         OffsetDateTime date,
         Region region,
         Integer duration,
@@ -298,9 +301,11 @@ public class SeasonGenerator
     )
     {
         for(int i = 0; i < count; i++)
-            create1v1Match
+            createMatch
             (
+                matchType,
                 id1, id2,
+                characterIds1, characterIds2,
                 date.minusSeconds(i),
                 region,
                 duration + i,
@@ -310,9 +315,12 @@ public class SeasonGenerator
     }
 
     @Transactional
-    public void create1v1Match
+    public void createMatch
     (
-        long id1, long id2,
+        BaseMatch.MatchType matchType,
+        long teamId1, long teamId2,
+        long[] characterIds1,
+        long[] characterIds2,
         OffsetDateTime date,
         Region region,
         Integer duration,
@@ -322,16 +330,15 @@ public class SeasonGenerator
     {
         teamStateDAO.saveState
         (
-            new TeamState(id1, date, division, 1, rating1),
-            new TeamState(id2, date, division, 1, rating2)
+            new TeamState(teamId1, date, division, 1, rating1),
+            new TeamState(teamId2, date, division, 1, rating2)
         );
         SC2Map map = mapDAO.merge(new SC2Map(null, "map"))[0];
-        Match match = matchDAO.merge(new Match(null, date, BaseMatch.MatchType._1V1, map.getId(), region, duration))[0];
-        matchParticipantDAO.merge
-        (
-            new MatchParticipant(match.getId(), id1, BaseMatch.Decision.WIN),
-            new MatchParticipant(match.getId(), id2, BaseMatch.Decision.LOSS)
-        );
+        Match match = matchDAO.merge(new Match(null, date, matchType, map.getId(), region, duration))[0];
+        for(long charId : characterIds1)
+            matchParticipantDAO.merge(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.WIN));
+        for(long charId : characterIds2)
+            matchParticipantDAO.merge(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.LOSS));
     }
 
     public void cleanAll()
