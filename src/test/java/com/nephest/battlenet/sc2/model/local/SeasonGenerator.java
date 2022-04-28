@@ -11,6 +11,8 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeamMember;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
@@ -212,12 +214,32 @@ public class SeasonGenerator
         for(int teamIx = 0; teamIx < teamsPerLeague; teamIx++)
         {
             Race race = races[teamIx % races.length];
+            PlayerCharacter[] characters = new PlayerCharacter[queueType.getTeamFormat().getMemberCount(teamType)];
+            BlizzardProfileTeamMember[] bCharacters = new BlizzardProfileTeamMember[characters.length];
+            BlizzardProfileTeam bTeam = new BlizzardProfileTeam();
+            bTeam.setTeamMembers(bCharacters);
+            for(int memberIx = 0; memberIx < queueType.getTeamFormat().getMemberCount(teamType); memberIx++) {
+                int accId = Integer.parseInt(teamCount + "" + memberIx);
+                Account account = accountDAO.create(
+                    new Account(null, Partition.of(season.getRegion()), "battletag#" + (long) accId));
+                PlayerCharacter character = playerCharacterDAO.create(
+                    new PlayerCharacter(null, account.getId(), season.getRegion(), (long) accId, DEFAULT_REALM, "character#" + (long) accId));
+                characters[memberIx] = character;
+                bCharacters[memberIx] = new BlizzardProfileTeamMember
+                (
+                    character.getBattlenetId(),
+                    character.getRealm(),
+                    character.getName(),
+                    spreadRaces ? race : Race.RANDOM,
+                    null
+                );
+            }
             Team newTeam = new Team
-           (
-               null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
-               BigInteger.valueOf(teamCount), division.getId(),
-               (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3
-           );
+            (
+                null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
+                teamDAO.legacyIdOf(league, bTeam), division.getId(),
+                (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3
+            );
             Team team = teamDAO.create(newTeam);
             TeamState teamState = TeamState.of(team);
             teamState.setDateTime(seasonStart);
@@ -225,11 +247,7 @@ public class SeasonGenerator
 
             for(int memberIx = 0; memberIx < queueType.getTeamFormat().getMemberCount(teamType); memberIx++)
             {
-                int accId = Integer.parseInt(teamCount + "" + memberIx);
-                Account account = accountDAO.create(new Account(null,
-                    Partition.of(season.getRegion()), "battletag#" + (long) accId));
-                PlayerCharacter character = playerCharacterDAO
-                    .create(new PlayerCharacter(null, account.getId(),season.getRegion(), (long) accId, DEFAULT_REALM, "character#" + (long) accId));
+                PlayerCharacter character = characters[memberIx];
                 TeamMember teamMember = spreadRaces
                     ? new TeamMember
                         (
