@@ -3,14 +3,26 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.dao.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.stereotype.Component;
-import org.springframework.test.jdbc.JdbcTestUtils;
-import org.springframework.transaction.annotation.Transactional;
-
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -19,6 +31,11 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Component;
+import org.springframework.test.jdbc.JdbcTestUtils;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 public class SeasonGenerator
@@ -270,18 +287,43 @@ public class SeasonGenerator
 
     @Transactional
     public void create1v1Matches
-    (long id1, long id2, OffsetDateTime date, Region region, Integer duration, Integer division, int count)
+    (
+        long id1, long id2,
+        OffsetDateTime date,
+        Region region,
+        Integer duration,
+        Integer division,
+        int count,
+        int... rating
+    )
     {
-        for(int i = 0; i < count; i++) create1v1Match(id1, id2, date.minusSeconds(i), region, duration + i, division);
+        for(int i = 0; i < count; i++)
+            create1v1Match
+            (
+                id1, id2,
+                date.minusSeconds(i),
+                region,
+                duration + i,
+                division,
+                rating.length > 0 ? rating[i * 2] : 1, rating.length > 0 ? rating[i * 2 + 1] : 1
+            );
     }
 
     @Transactional
-    public void create1v1Match(long id1, long id2, OffsetDateTime date, Region region, Integer duration, Integer division)
+    public void create1v1Match
+    (
+        long id1, long id2,
+        OffsetDateTime date,
+        Region region,
+        Integer duration,
+        Integer division,
+        int rating1, int rating2
+    )
     {
         teamStateDAO.saveState
         (
-            new TeamState(id1, date, division, 1, 1),
-            new TeamState(id2, date, division, 1, 1)
+            new TeamState(id1, date, division, 1, rating1),
+            new TeamState(id2, date, division, 1, rating2)
         );
         SC2Map map = mapDAO.merge(new SC2Map(null, "map"))[0];
         Match match = matchDAO.merge(new Match(null, date, BaseMatch.MatchType._1V1, map.getId(), region, duration))[0];
