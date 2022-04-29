@@ -3,12 +3,43 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
-import com.nephest.battlenet.sc2.model.local.*;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.Match;
+import com.nephest.battlenet.sc2.model.local.MatchParticipant;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.SC2Map;
+import com.nephest.battlenet.sc2.model.local.SetVar;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,19 +53,6 @@ import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
-
-import java.time.Instant;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 @Service
@@ -241,23 +259,28 @@ public class MatchService
 
     private void identify(UpdateContext updateContext)
     {
-        int identified = matchParticipantDAO.identify(
+        int identified = matchParticipantDAO.identify
+        (
             seasonDAO.getMaxBattlenetId(),
-            /*
-                Matches are fetched retroactively, some of them can happen before the lastUpdated instant.
-                Try to catch these matches by moving the start instant back in time.
-             */
-            OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault()).minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES)
+            calculateRetroactiveDateTime(updateContext)
         );
         LOG.info("Identified {} matches", identified);
     }
 
     private void calculateDuration(UpdateContext updateContext)
     {
-        OffsetDateTime from = OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault())
-            .minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES);
-        int updated = matchDAO.updateDuration(from);
+        int updated = matchDAO.updateDuration(calculateRetroactiveDateTime(updateContext));
         LOG.debug("Calculated duration of {} matches", updated);
+    }
+
+    /*
+        Matches are fetched retroactively, some of them can happen before the lastUpdated instant.
+        Try to catch these matches by moving the start instant back in time.
+     */
+    private static OffsetDateTime calculateRetroactiveDateTime(UpdateContext updateContext)
+    {
+        return OffsetDateTime.ofInstant(updateContext.getExternalUpdate(), ZoneOffset.systemDefault())
+            .minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES);
     }
 
     public void updateMeta(UpdateContext updateContext)
