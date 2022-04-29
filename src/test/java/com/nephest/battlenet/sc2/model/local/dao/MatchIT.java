@@ -1,25 +1,41 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertIterableEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.Match;
+import com.nephest.battlenet.sc2.model.local.MatchParticipant;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.ProPlayer;
+import com.nephest.battlenet.sc2.model.local.ProTeam;
+import com.nephest.battlenet.sc2.model.local.ProTeamMember;
+import com.nephest.battlenet.sc2.model.local.SC2Map;
+import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.ClassPathResource;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
-import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -27,8 +43,16 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.*;
+import javax.sql.DataSource;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -83,6 +107,9 @@ public class MatchIT
 
     @Autowired
     private SeasonGenerator seasonGenerator;
+
+    @Autowired
+    private JdbcTemplate template;
 
     @BeforeEach
     public void beforeAll(@Autowired DataSource dataSource)
@@ -705,6 +732,76 @@ public class MatchIT
         assertEquals(1, matches.get(1).getMatch().getDuration());
         assertNull(matches.get(2).getMatch().getDuration());
         assertNull(matches.get(3).getMatch().getDuration());
+    }
+
+    @Test
+    public void testRatingChange()
+    {
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.EU),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_4V4),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            2
+        );
+
+        OffsetDateTime now = OffsetDateTime.now();
+        seasonGenerator.createMatches
+        (
+            BaseMatch.MatchType._4V4,
+            1L, 2L,
+            new long[]{1, 2, 3, 4}, new long[]{5, 6, 7, 8},
+            now, Region.EU, 10, 1,
+            10,
+            120, 80, //5
+            115, 85, //null, identical values
+            115, 85, //5
+            110, 90, //10
+            100, 100, //10
+            90, 110, //null, rating change does not match the decision
+            100, 100, //null, prev match is invalid
+            90, 110, //null, unidentified match
+            85, 115, //5
+            80, 120, //null, excluded by "from" timestamp
+            75, 125 //null, out of scope values
+        );
+
+        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, OffsetDateTime.now().minusYears(1));
+        //unidentify match
+        assertEquals(8, template.update("UPDATE match_participant SET team_id = NULL WHERE match_id = 8"));
+
+        //4mmr changes * 8 participants(4v4)
+        assertEquals(40, matchParticipantDAO.calculateRatingDifference(now.minusSeconds(8)));
+
+        List<LadderMatch> matches = ladderMatchDAO
+            .findMatchesByCharacterId(1L, now.plusSeconds(1), BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
+        assertEquals(10, matches.size());
+        verifyRatingChange(matches.get(0), 5);
+        verifyRatingChange(matches.get(1), null);
+        verifyRatingChange(matches.get(2), 5);
+        verifyRatingChange(matches.get(3), 10);
+        verifyRatingChange(matches.get(4), 10);
+        verifyRatingChange(matches.get(5), null);
+        verifyRatingChange(matches.get(6), null);
+        verifyRatingChange(matches.get(7), null);
+        verifyRatingChange(matches.get(8), 5);
+        verifyRatingChange(matches.get(9), null);
+    }
+
+    public void verifyRatingChange(LadderMatch match, Integer ratingDifference)
+    {
+        if(ratingDifference == null)
+        {
+            assertTrue(match.getParticipants().stream()
+                .allMatch(p->p.getParticipant().getRatingChange() == null));
+        } else
+        {
+            assertTrue(match.getParticipants().stream()
+                .allMatch(p->p.getParticipant().getRatingChange() ==
+                    (p.getParticipant().getDecision() == BaseMatch.Decision.WIN ? ratingDifference : -ratingDifference)));
+        }
     }
 
 }

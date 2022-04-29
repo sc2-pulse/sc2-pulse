@@ -267,6 +267,13 @@ public class MatchService
         LOG.info("Identified {} matches", identified);
     }
 
+    private void calculateRatingDifference(UpdateContext updateContext)
+    {
+        int count = matchParticipantDAO
+            .calculateRatingDifference(calculateRetroactiveDateTime(updateContext));
+        LOG.info("Calculated rating difference of {} match participants", count);
+    }
+
     private void calculateDuration(UpdateContext updateContext)
     {
         int updated = matchDAO.updateDuration(calculateRetroactiveDateTime(updateContext));
@@ -286,6 +293,7 @@ public class MatchService
     public void updateMeta(UpdateContext updateContext)
     {
         identify(updateContext);
+        calculateRatingDifference(updateContext);
         calculateDuration(updateContext);
     }
 

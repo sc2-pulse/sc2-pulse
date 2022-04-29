@@ -28,7 +28,7 @@ class MatchUtil
 
             allTeams.push(...teams);
             TeamUtil.updateTeamsTable(table, {result: teams}, false, "xl");
-            MatchUtil.decorateTeams(participantsGrouped, teams, tBody, rowNum, isMainParticipant, versusLinkPrefix);
+            MatchUtil.decorateTeams(participantsGrouped, teams, tBody, rowNum, isMainParticipant, historical, versusLinkPrefix);
 
             const tr = tBody.childNodes[rowNum];
             tr.classList.add("section-splitter");
@@ -53,7 +53,7 @@ class MatchUtil
         return {teams: allTeams, validMatches: validMatches};
     }
 
-    static decorateTeams(participantsGrouped, teams, tBody, rowNum, isMainParticipant, versusLinkPrefix)
+    static decorateTeams(participantsGrouped, teams, tBody, rowNum, isMainParticipant, historical, versusLinkPrefix)
     {
         const mainTeam = versusLinkPrefix ? null : MatchUtil.findMainTeam(teams, isMainParticipant);
 
@@ -68,6 +68,12 @@ class MatchUtil
                 MatchUtil.appendUnknownMatchParticipant(tr, decisionElem, isMainParticipant);
                 rowNum++;
                 continue;
+            }
+
+            if(historical) {
+                const participant = participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId)
+                    || participantsGrouped.get("LOSS").find(p=>p.team && p.team.id == teamId);
+                MatchUtil.addMmrChange(tr, participant);
             }
 
             const decision = participantsGrouped.get("WIN") ?
@@ -89,6 +95,27 @@ class MatchUtil
             tr.prepend(decisionElem);
             rowNum++;
         }
+    }
+
+    static createMmrChangeElem(diff)
+    {
+        if(!diff) return null;
+
+        const changeElem = document.createElement("span");
+        changeElem.classList.add(diff > 0 ? "text-success" : "text-danger", "rating-change");
+        changeElem.textContent = Util.NUMBER_FORMAT_DIFF.format(diff);
+        return changeElem;
+    }
+
+    static addMmrChange(tr, participant)
+    {
+        const changeElem = MatchUtil.createMmrChangeElem(participant.participant.ratingChange);
+        if(!changeElem) return;
+
+        const ratingElem = tr.querySelector(":scope .rating");
+        const rating = ratingElem.textContent;
+        ratingElem.innerHTML = `<span class="text-nowrap"><span>${rating}</span> </span>`;
+        ratingElem.querySelector(":scope > span").appendChild(changeElem);
     }
 
     static findMainTeam(teams, isMainParticipant)

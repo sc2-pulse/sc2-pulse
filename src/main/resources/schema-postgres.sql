@@ -519,6 +519,7 @@ CREATE TABLE "match_participant"
     "team_id" BIGINT,
     "team_state_timestamp" TIMESTAMP WITH TIME ZONE,
     "decision" SMALLINT NOT NULL,
+    "rating_change" SMALLINT,
 
     PRIMARY KEY ("match_id", "player_character_id"),
 

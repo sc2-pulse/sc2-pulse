@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -10,6 +10,11 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -17,12 +22,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class MatchParticipantDAO
@@ -35,7 +34,8 @@ public class MatchParticipantDAO
         + "match_participant.player_character_id AS \"match_participant.player_character_id\", "
         + "match_participant.team_id AS \"match_participant.team_id\", "
         + "match_participant.team_state_timestamp AS \"match_participant.team_state_timestamp\", "
-        + "match_participant.decision AS \"match_participant.decision\" ";
+        + "match_participant.decision AS \"match_participant.decision\", "
+        + "match_participant.rating_change AS \"match_participant.rating_change\" ";
     private static final String MERGE_QUERY =
         "WITH "
         + "vals AS (VALUES :participants), "
@@ -137,6 +137,78 @@ public class MatchParticipantDAO
         + "AND team.legacy_id = team_filter.legacy_id ";
 
     private static final List<String> IDENTIFY_PARTICIPANT_QUERIES = new ArrayList<>();
+    
+    private static final String UPDATE_RATING_CHANGE =
+        "WITH "
+        + "match_participant_filter_first AS "
+        + "("
+            + "SELECT DISTINCT ON(player_character_id) "
+            + "match_participant.player_character_id, "
+            + "match.date "
+            + "FROM match "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+            + "WHERE match.date >= :from "
+            + "ORDER BY match_participant.player_character_id, match.date"
+        + "), "
+        + "match_participant_filter_prev AS "
+        + "("
+            + "SELECT DISTINCT ON(match_participant.player_character_id) "
+            + "match.id "
+            + "FROM match_participant_filter_first "
+            + "INNER JOIN match_participant USING(player_character_id) "
+            + "INNER JOIN match ON match_participant.match_id = match.id "
+            + "WHERE match.date < match_participant_filter_first.date "
+            + "ORDER BY match_participant.player_character_id DESC, match.date DESC"
+        + "), "
+        + "match_filter_all AS "
+        + "("
+            + "SELECT id "
+            + "FROM match "
+            + "WHERE date >= :from "
+
+            + "UNION "
+
+            + "SELECT DISTINCT(id) FROM match_participant_filter_prev"
+        + "), "
+        + "rating_diff AS "
+        + "( "
+            + "SELECT match_participant.match_id, "
+            + "match_participant.player_character_id, "
+            + "CASE "
+                + "WHEN "
+                    + "LAG(team_state.rating) "
+                    + "OVER "
+                    + "("
+                        + "PARTITION BY match_participant.player_character_id "
+                        + "ORDER BY match.date "
+                    + ")"
+                    + "IS NOT NULL "
+                + "THEN "
+                    + "team_state.rating - LAG(team_state.rating) "
+                        + "OVER "
+                        + "("
+                            + "PARTITION BY match_participant.player_character_id, team_state.team_id "
+                            + "ORDER BY match.date"
+                        + ") "
+                + "ELSE NULL "
+            + "END AS rating_change "
+            + "FROM match_filter_all "
+            + "INNER JOIN match USING(id) "
+            + "INNER JOIN match_participant ON match.id = match_participant.match_id "
+            + "LEFT JOIN team_state ON match_participant.team_id = team_state.team_id "
+                + "AND match_participant.team_state_timestamp = team_state.timestamp "
+        + ") "
+        + "UPDATE match_participant "
+        + "SET rating_change = rating_diff.rating_change "
+        + "FROM rating_diff "
+        + "WHERE match_participant.match_id = rating_diff.match_id "
+        + "AND match_participant.player_character_id = rating_diff.player_character_id "
+        + "AND match_participant.rating_change IS NULL "
+        + "AND "
+        + "("
+            + "(match_participant.decision = :win AND rating_diff.rating_change > 0)"
+            + "OR (match_participant.decision = :loss AND rating_diff.rating_change < 0)"
+        + ")";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -167,6 +239,7 @@ public class MatchParticipantDAO
             );
             participant.setTeamId(DAOUtils.getLong(rs, "match_participant.team_id"));
             participant.setTeamStateDateTime(rs.getObject("match_participant.team_state_timestamp", OffsetDateTime.class));
+            participant.setRatingChange(DAOUtils.getInteger(rs, "match_participant.rating_change"));
            return participant;
         };
     }
@@ -232,6 +305,15 @@ public class MatchParticipantDAO
         int identified = 0;
         for(String q : IDENTIFY_PARTICIPANT_QUERIES) identified += template.update(q, params);
         return identified;
+    }
+
+    public int calculateRatingDifference(OffsetDateTime from)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("from", from)
+            .addValue("win", conversionService.convert(BaseMatch.Decision.WIN, Integer.class))
+            .addValue("loss", conversionService.convert(BaseMatch.Decision.LOSS, Integer.class));
+        return template.update(UPDATE_RATING_CHANGE, params);
     }
 
 }

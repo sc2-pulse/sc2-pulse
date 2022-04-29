@@ -225,6 +225,11 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     word-break: break-word;
 }
 
+.matches .rating
+{
+    text-align: left !important;
+}
+
 #form-search-clan input[type="number"]
 {
     max-width: 6em !important;
