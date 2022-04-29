@@ -3,15 +3,32 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.blizzard.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import java.time.Instant;
+import java.util.concurrent.ExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,13 +36,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.validation.Validator;
-
-import java.time.Instant;
-import java.util.concurrent.ExecutorService;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
@@ -49,7 +59,7 @@ public class StatsServiceIT
     public void beforeEach(@Autowired Validator validator)
     {
         teamDAO = mock(TeamDAO.class);
-        statsService = new StatsService(null, null, mock(SeasonDAO.class), null, null, null, teamDAO, null, null,
+        statsService = new StatsService(null, null, mock(SeasonDAO.class), null, null, null, teamDAO, null,
             null, null, null, null, null, null, null, null, null, null, validator, dbExecutorService);
         StatsService nss = mock(StatsService.class);
         statsService.setNestedService(nss);

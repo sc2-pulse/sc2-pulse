@@ -43,7 +43,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
-import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
 import java.time.Instant;
@@ -130,7 +129,6 @@ public class StatsService
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private VarDAO varDAO;
     private SC2WebServiceUtil sc2WebServiceUtil;
-    private PostgreSQLUtils postgreSQLUtils;
     private ConversionService conversionService;
     private ExecutorService dbExecutorService;
     private Predicate<BlizzardTeam> teamValidationPredicate;
@@ -157,7 +155,6 @@ public class StatsService
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
         VarDAO varDAO,
         SC2WebServiceUtil sc2WebServiceUtil,
-        PostgreSQLUtils postgreSQLUtils,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService
@@ -180,7 +177,6 @@ public class StatsService
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.varDAO = varDAO;
         this.sc2WebServiceUtil = sc2WebServiceUtil;
-        this.postgreSQLUtils = postgreSQLUtils;
         this.conversionService = conversionService;
         this.dbExecutorService = dbExecutorService;
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);

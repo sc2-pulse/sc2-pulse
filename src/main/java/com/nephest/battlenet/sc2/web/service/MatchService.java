@@ -21,7 +21,6 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
-import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -73,7 +72,6 @@ public class MatchService
     private final SeasonDAO seasonDAO;
     private final SC2MapDAO mapDAO;
     private final AlternativeLadderService alternativeLadderService;
-    private final PostgreSQLUtils postgreSQLUtils;
     private final ExecutorService dbExecutorService;
     private final Predicate<BlizzardMatch> validationPredicate;
     private final ConcurrentLinkedQueue<Set<PlayerCharacterNaturalId>> failedCharacters = new ConcurrentLinkedQueue<>();
@@ -93,7 +91,6 @@ public class MatchService
         SC2MapDAO mapDAO,
         VarDAO varDAO,
         AlternativeLadderService alternativeLadderService,
-        PostgreSQLUtils postgreSQLUtils,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         Validator validator
     )
@@ -105,7 +102,6 @@ public class MatchService
         this.seasonDAO = seasonDAO;
         this.mapDAO = mapDAO;
         this.alternativeLadderService = alternativeLadderService;
-        this.postgreSQLUtils = postgreSQLUtils;
         this.dbExecutorService = dbExecutorService;
         initVars(varDAO);
         validationPredicate = DAOUtils.beanValidationPredicate(validator);
