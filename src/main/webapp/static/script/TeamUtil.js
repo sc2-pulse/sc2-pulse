@@ -25,7 +25,7 @@ class TeamUtil
             const isCheater = TeamUtil.isCheaterTeam(team);
             if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
             TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, isCheater ? -1 : nonCheaterIx);
-            row.insertCell().textContent = team.rating;
+            TableUtil.insertCell(row, "rating").textContent = team.rating;
             TeamUtil.appendLeagueDiv(row.insertCell(), team);
             row.insertCell().appendChild(ElementUtil.createImage("flag/", team.region.toLowerCase(), "table-image-long"));
             row.appendChild(TeamUtil.createMembersCell(team, multiRow));
