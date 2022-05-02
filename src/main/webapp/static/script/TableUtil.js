@@ -39,6 +39,13 @@ class TableUtil
         return th;
     }
 
+    static insertCell(tr, clazz)
+    {
+        const td = tr.insertCell();
+        td.setAttribute("class", clazz);
+        return td;
+    }
+
     static updateColRowTable(table, data, sorter = null, headTranslator = null, rowTranslator = null, rowSorter = null)
     {
         const headRow = table.querySelector(":scope thead tr");
