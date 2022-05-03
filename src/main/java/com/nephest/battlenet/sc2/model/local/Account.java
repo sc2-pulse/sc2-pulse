@@ -1,16 +1,17 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.nephest.battlenet.sc2.model.BaseAccount;
+import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
-
-import javax.validation.constraints.NotNull;
 import java.util.Comparator;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public class Account
 extends BaseAccount
@@ -28,6 +29,8 @@ implements java.io.Serializable
     @NotNull
     private Partition partition;
 
+    private Boolean hidden;
+
     public Account(){}
 
     public Account(Long id, Partition partition, String battleTag)
@@ -35,6 +38,14 @@ implements java.io.Serializable
         super(battleTag);
         this.id = id;
         this.partition = partition;
+    }
+
+    public Account(Long id, Partition partition, String battleTag, Boolean hidden)
+    {
+        super(battleTag);
+        this.id = id;
+        this.partition = partition;
+        this.hidden = hidden;
     }
 
     public static Account of(BlizzardAccount bAccount, Region region)
@@ -93,6 +104,28 @@ implements java.io.Serializable
     public void setPartition(Partition partition)
     {
         this.partition = partition;
+    }
+
+    public Boolean getHidden() {
+        return hidden;
+    }
+
+    public void setHidden(Boolean hidden) {
+        this.hidden = hidden;
+    }
+
+    @Override @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
+    public String getBattleTag()
+    {
+        return super.getBattleTag();
+    }
+
+    @JsonProperty("battleTag")
+    public String getFakeOrRealBattleTag()
+    {
+        return getHidden() != null && getHidden()
+            ? BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME
+            : getBattleTag();
     }
 
 }

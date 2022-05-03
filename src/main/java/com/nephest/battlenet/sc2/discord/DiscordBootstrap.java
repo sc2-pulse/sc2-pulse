@@ -27,11 +27,22 @@ import discord4j.core.object.entity.Message;
 import discord4j.core.object.presence.ClientActivity;
 import discord4j.core.object.presence.ClientPresence;
 import discord4j.core.spec.EmbedCreateSpec;
-import discord4j.discordjson.json.*;
+import discord4j.discordjson.json.ApplicationCommandData;
+import discord4j.discordjson.json.ApplicationCommandOptionChoiceData;
+import discord4j.discordjson.json.ApplicationCommandOptionData;
+import discord4j.discordjson.json.ApplicationCommandRequest;
+import discord4j.discordjson.json.ImmutableApplicationCommandRequest;
 import discord4j.rest.RestClient;
 import discord4j.rest.http.client.ClientException;
 import discord4j.rest.service.ApplicationService;
 import discord4j.rest.util.Color;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,10 +52,6 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-
-import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Service
 public class DiscordBootstrap
@@ -343,8 +350,8 @@ public class DiscordBootstrap
             .append(generateName(member));
         if(boldName) sb.append("**");
         if(!additionalName.isBlank()) sb.append(" | ").append(additionalName);
-        if(!Account.isFakeBattleTag(member.getAccount().getBattleTag()))
-            sb.append(" | ").append(member.getAccount().getBattleTag());
+        if(!Account.isFakeBattleTag(member.getAccount().getFakeOrRealBattleTag()))
+            sb.append(" | ").append(member.getAccount().getFakeOrRealBattleTag());
         if(member.getProNickname() != null) sb.append(" | " + SC2_REVEALED_TAG);
         return sb.toString();
     }

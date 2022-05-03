@@ -8,6 +8,9 @@ import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -19,17 +22,14 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
-
 @Repository
 public class AccountDAO
 {
     public static final String STD_SELECT =
         "account.id AS \"account.id\", "
         + "account.partition AS \"account.partition\", "
-        + "account.battle_tag AS \"account.battle_tag\" ";
+        + "account.battle_tag AS \"account.battle_tag\", "
+        + "account.hidden AS \"account.hidden\" ";
 
     private static final String CREATE_QUERY = "INSERT INTO account "
         + "(partition, battle_tag) "
@@ -121,7 +121,8 @@ public class AccountDAO
         (
             rs.getLong("account.id"),
             conversionService.convert(rs.getInt("account.partition"), Partition.class),
-            rs.getString("account.battle_tag")
+            rs.getString("account.battle_tag"),
+            DAOUtils.getBoolean(rs, "account.hidden")
         );
 
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);

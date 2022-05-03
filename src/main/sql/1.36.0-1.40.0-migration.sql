@@ -4,3 +4,6 @@
 
 ALTER TABLE "match_participant"
     ADD COLUMN "rating_change" SMALLINT;
+
+ALTER TABLE "account"
+    ADD COLUMN "hidden" BOOLEAN;
