@@ -54,6 +54,7 @@ class SC2Restful
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
                 StatsUtil.enhanceMatchUpControls();
+                StatsUtil.enhanceSettings();
                 StatsUtil.addMatchUpLegend();
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");
                 BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
@@ -63,6 +64,7 @@ class SC2Restful
                 Session.enhanceCsrfForms();
                 ChartUtil.enhanceHeightControls();
                 ChartUtil.enhanceBeginAtZeroControls();
+                StatsUtil.updateGamesStatsVisibility();
             case START_MODE.MINIMAL:
                 BootstrapUtil.init();
                 BootstrapUtil.enhanceModals();

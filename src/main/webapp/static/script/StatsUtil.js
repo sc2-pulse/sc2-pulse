@@ -152,6 +152,7 @@ class StatsUtil
                     percentageResult[param][seasonId][header] = Util.calculatePercentage(value, sum);
             }
         }
+        StatsUtil.applyUserSettings(globalResult);
         TableUtil.updateColRowTable
             (document.getElementById("games-played-global-table"), globalResult.gamesPlayed, null, null, SeasonUtil.seasonIdTranslator);
         TableUtil.updateColRowTable
@@ -210,6 +211,17 @@ class StatsUtil
             SeasonUtil.seasonIdTranslator
         );
     }
+
+    static applyUserSettings(globalResult)
+    {
+        const gamesOption = localStorage.getItem("settings-games-played-number");
+        if(!gamesOption || gamesOption == "match") {
+            const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
+            const matchParticipants = EnumUtil.enumOfFullName(searchResult.urlParams.get("queue"), TEAM_FORMAT).memberCount * 2;
+            Object.values(globalResult.gamesPlayed).forEach(g=>g.global = Math.round(g.global / matchParticipants));
+        }
+    }
+
 
     static updateLadderStatsCurrentView()
     {
@@ -627,6 +639,22 @@ class StatsUtil
             .forEach(l=>legend.appendChild(l));
     }
 
+    static enhanceSettings()
+    {
+        document.querySelector("#settings-games-played-number").addEventListener("change", e=>window.setTimeout(t=>{
+            if(Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS)) StatsUtil.updateLadderStatsView();
+            StatsUtil.updateGamesStatsVisibility();
+        }, 1));
+    }
 
+    static updateGamesStatsVisibility()
+    {
+        const gamesOption = localStorage.getItem("settings-games-played-number");
+        if(!gamesOption || gamesOption == "match") {
+            document.querySelectorAll(".games-participant").forEach(elem=>elem.classList.add("d-none"));
+        } else {
+            document.querySelectorAll(".games-participant").forEach(elem=>elem.classList.remove("d-none"));
+        }
+    }
 
 }

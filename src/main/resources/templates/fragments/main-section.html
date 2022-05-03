@@ -111,6 +111,20 @@
                     </div>
                 </div>
                 <div class="row mb-3">
+                    <legend class="col-form-label col-sm-2 pt-0">Stats</legend>
+                    <div >
+                        <div class="form-group col">
+                            <label class="text-nowrap" for="chart-tooltip-position">
+                                Games played
+                            </label>
+                            <select class="form-control serializable" name="chart-tooltip-position" id="settings-games-played-number">
+                                <option value="match" selected="selected">1v1 match = 1 game(aoe4world)</option>
+                                <option value="participant">1v1 match = 2 games(rankedftw)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mb-3">
                     <legend class="col-form-label col-sm-2 pt-0">Player search</legend>
                     <div class="col-sm-10">
                         <div class="form-check mb-3">
@@ -214,7 +228,7 @@
             </table>
             <div id="online-players-chart-container" class="container-chart"><canvas id="online-players-chart" class="c-chart"></canvas></div>
         </section>
-        <section id="online-games" class="col-lg-12 mb-3">
+        <section id="online-games" class="col-lg-12 mb-3 games-participant">
             <h3>Games</h3>
             <p>The "games played" numbers are not 100% precise. The reason for this is that "games played" stats are reset
             when the player manually leaves their division. Some players have thousands of games played, so they create huge
