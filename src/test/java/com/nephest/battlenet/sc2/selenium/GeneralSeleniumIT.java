@@ -410,7 +410,7 @@ public class GeneralSeleniumIT
         );
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startDateTime.minusYears(1));
         matchParticipantDAO.calculateRatingDifference(startDateTime.minusYears(1));
-        clanDAO.updateStats();
+        clanDAO.updateStats(List.of(clan1.getId(), clan2.getId()));
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         queueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);

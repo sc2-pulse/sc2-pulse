@@ -7,10 +7,41 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PersistentLoginDAO;
+import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
-import com.nephest.battlenet.sc2.web.service.*;
+import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
+import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
+import com.nephest.battlenet.sc2.web.service.ClanService;
+import com.nephest.battlenet.sc2.web.service.MatchService;
+import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
+import com.nephest.battlenet.sc2.web.service.ProPlayerService;
+import com.nephest.battlenet.sc2.web.service.StatsService;
+import com.nephest.battlenet.sc2.web.service.StatusService;
+import com.nephest.battlenet.sc2.web.service.UpdateContext;
+import com.nephest.battlenet.sc2.web.service.UpdateService;
+import com.nephest.battlenet.sc2.web.service.VarService;
+import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
+import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,15 +49,6 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-
-import javax.annotation.PostConstruct;
-import java.time.*;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 @Profile({"!maintenance & !dev"})
 @Component
@@ -88,9 +110,6 @@ public class Cron
     private MapStatsDAO mapStatsDAO;
 
     @Autowired
-    private ClanDAO clanDAO;
-
-    @Autowired
     private PlayerCharacterReportService characterReportService;
 
     @Autowired
@@ -107,6 +126,9 @@ public class Cron
 
     @Autowired
     private StatusService statusService;
+
+    @Autowired
+    private ClanService clanService;
 
     @Autowired
     private BlizzardPrivacyService blizzardPrivacyService;
@@ -181,6 +203,7 @@ public class Cron
             System.gc();
             statsService.afterCurrentSeasonUpdate(updateService.getUpdateContext(null), false);
             calculateHeavyStats();
+            clanService.update();
             blizzardPrivacyService.update();
             updateService.updated(begin);
             if(!Objects.equals(lastMatchInstant, matchInstant.getValue())) matchUpdateContext =
@@ -322,8 +345,6 @@ public class Cron
 
     private void commenceFrequentMaintenance()
     {
-        clanDAO.updateStats();
-        clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
         postgreSQLUtils.reindex("ix_match_updated");
         this.maintenanceFrequentInstant.setValueAndSave(Instant.now());
     }

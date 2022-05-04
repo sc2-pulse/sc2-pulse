@@ -476,11 +476,10 @@ public class ClanDAO
     }
 
     @Transactional
-    public int updateStats()
+    public int updateStats(List<Integer> validClans)
     {
         int batchIx = 0;
         int count = 0;
-        List<Integer> validClans = findIdsByMinMemberCount(CLAN_STATS_MIN_MEMBERS);
         Integer[] races = Arrays.stream(Race.values())
             .map(r->conversionService.convert(r, Integer.class))
             .toArray(Integer[]::new);

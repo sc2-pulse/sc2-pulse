@@ -96,7 +96,7 @@ public class ClanIT
         template.update("UPDATE player_character SET clan_id = " + clan1.getId());
 
         //only clans with new stats are updated
-        assertEquals(1, clanDAO.updateStats());
+        assertEquals(1, clanDAO.updateStats(List.of(clan1.getId(), clan2.getId())));
 
         List<Clan> clans = clanDAO.findByIds(clan1.getId(), clan2.getId());
         clans.sort(Comparator.comparing(Clan::getId));
