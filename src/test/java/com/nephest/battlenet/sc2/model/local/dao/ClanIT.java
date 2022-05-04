@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
@@ -19,7 +20,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -92,10 +95,6 @@ public class ClanIT
         Clan clan2 = clanDAO.merge(new Clan(null, "clan2", Region.EU, "clan2Name"))[0];
         template.update("UPDATE player_character SET clan_id = " + clan1.getId());
 
-        List<Integer> validClans = clanDAO.findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS);
-        assertEquals(1, validClans.size());
-        assertEquals(clan1.getId(), validClans.get(0));
-
         //only clans with new stats are updated
         assertEquals(1, clanDAO.updateStats());
 
@@ -141,6 +140,35 @@ public class ClanIT
         assertNull(clan1WithStatsNullified.getAvgRating());
         assertNull(clan1WithStatsNullified.getAvgLeagueType());
         assertNull(clan1WithStatsNullified.getGames());
+    }
+
+    @Test
+    public void testFindByMinMemberCount()
+    {
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.EU),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            ClanDAO.CLAN_STATS_MIN_MEMBERS * 10
+        );
+
+        for(int i = 0; i < 10; i++)
+            clanDAO.merge(new Clan(null, "tag" + i, Region.EU, "name" + i));
+        for(int i = 0; i < 5; i++)
+            template.update(String.format(
+                "UPDATE player_character SET clan_id = %1$s WHERE id > %2$s AND id <= %3$s",
+                i + 1,
+                i * ClanDAO.CLAN_STATS_MIN_MEMBERS,
+                (i + 1) * ClanDAO.CLAN_STATS_MIN_MEMBERS)
+            );
+
+        Set<Integer> validClans =
+            new HashSet<>(clanDAO.findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS));
+        assertEquals(5, validClans.size());
+        for(int i = 1; i < 6; i++) assertTrue(validClans.contains(i));
     }
 
 }

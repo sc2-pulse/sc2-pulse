@@ -9,6 +9,12 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,13 +27,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
-import java.util.Objects;
-import java.util.stream.Collectors;
 
 @Repository
 public class ClanDAO
@@ -112,6 +111,7 @@ public class ClanDAO
     private static final String FIND_BY_MIN_MEMBER_COUNT =
         "SELECT clan_id "
         + "FROM player_character "
+        + "WHERE clan_id IS NOT NULL "
         + "GROUP BY clan_id "
         + "HAVING COUNT(*) >= :minMemberCount";
 
