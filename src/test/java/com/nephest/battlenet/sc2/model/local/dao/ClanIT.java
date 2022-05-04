@@ -170,6 +170,8 @@ public class ClanIT
         assertEquals(5, validClans.size());
         for(int i = 1; i < 6; i++) assertTrue(validClans.contains(i));
 
+        assertEquals(validClans.size(), clanDAO.getCountByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS));
+
         List<Integer> page1 = clanDAO
             .findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS, 0, 2);
         assertEquals(2, page1.size());

@@ -115,6 +115,10 @@ public class ClanDAO
         + "GROUP BY clan_id "
         + "HAVING COUNT(*) >= :minMemberCount";
 
+    private static final String GET_COUNT_BY_MIN_MEMBER_COUNT =
+        "WITH clan_filter AS (" + FIND_BY_MIN_MEMBER_COUNT + ") "
+        + "SELECT COUNT(*) FROM clan_filter";
+
     private static final String FIND_BY_MIN_MEMBER_COUNT_BY_CURSOR =
         "SELECT clan_id "
         + "FROM player_character "
@@ -395,6 +399,13 @@ public class ClanDAO
             .addValue("cursor", cursor)
             .addValue("limit", limit);
         return template.query(FIND_BY_MIN_MEMBER_COUNT_BY_CURSOR, params, DAOUtils.INT_MAPPER);
+    }
+
+    public Integer getCountByMinMemberCount(int minMemberCount)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("minMemberCount", minMemberCount);
+        return template.query(GET_COUNT_BY_MIN_MEMBER_COUNT, params, DAOUtils.INT_EXTRACTOR);
     }
 
     public List<Clan> findByIds(Integer... ids)
