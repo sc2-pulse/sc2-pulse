@@ -4,7 +4,6 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.web.util.Level;
-
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Set;
@@ -16,7 +15,8 @@ public class Status
     {
 
         OPERATIONAL("operational", "Fully operational.", Level.SUCCESS),
-        PARTIAL("partial", "No BattleTags, league tiers, and clan names. Simplified races in team formats.", Level.WARNING),
+        PARTIAL("partial", "1v1 is prioritized, no BattleTags, league tiers, and clan names. "
+            + "Simplified races in team formats.", Level.WARNING),
         REDIRECTED("redirected", "May be slower in some cases. Arbitrary data may be missing.", Level.WARNING),
         WEB
         (

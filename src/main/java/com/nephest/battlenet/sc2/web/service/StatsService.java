@@ -53,6 +53,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -96,6 +97,11 @@ public class StatsService
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 2;
     public static final int LADDER_BATCH_SIZE = 100;
     public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(2);
+    public static final int PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD = 3;
+    public static final int PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE = 2;
+    public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_LEAGUE_TYPES =
+        EnumSet.allOf(BaseLeague.LeagueType.class);
+    public static final Set<QueueType> PARTIAL_UPDATE_QUEUE_TYPES = EnumSet.of(QueueType.LOTV_1V1);
 
     @Autowired
     private StatsService statsService;
@@ -107,6 +113,8 @@ public class StatsService
 
     @Value("${com.nephest.battlenet.sc2.ladder.forceUpdate:#{'false'}}")
     private boolean forceUpdate;
+
+    private final Map<Region, Integer> partialAlternativeUpdates = new EnumMap<>(Region.class);
 
     private final Set<Integer> pendingStatsUpdates = new HashSet<>();
     private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
@@ -180,7 +188,11 @@ public class StatsService
         this.conversionService = conversionService;
         this.dbExecutorService = dbExecutorService;
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
-        for(Region r : Region.values()) failedLadders.put(r, ConcurrentHashMap.newKeySet());
+        for(Region r : Region.values())
+        {
+            failedLadders.put(r, ConcurrentHashMap.newKeySet());
+            partialAlternativeUpdates.put(r, 0);
+        }
     }
 
     @PostConstruct
@@ -373,8 +385,40 @@ public class StatsService
             }
             else
             {
-                alternativeLadderService.updateSeason(season, queues, leagues);
+                alternativeUpdate(season, queues, leagues);
             }
+        }
+    }
+
+    private void alternativeUpdate(Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    {
+        Region region = season.getRegion();
+        boolean partialUpdate = alternativeRegions.size() + forcedAlternativeRegions.size()
+            >= PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD
+            && partialAlternativeUpdates.get(region) < PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE
+            && Arrays.asList(queues).containsAll(PARTIAL_UPDATE_QUEUE_TYPES)
+            && Arrays.asList(leagues).containsAll(PARTIAL_UPDATE_LEAGUE_TYPES);
+        if(partialUpdate)
+            LOG.info
+            (
+                "Partially updating {}({}, {})",
+                season,
+                PARTIAL_UPDATE_QUEUE_TYPES,
+                PARTIAL_UPDATE_LEAGUE_TYPES
+            );
+        alternativeLadderService.updateSeason
+        (
+            season,
+            partialUpdate ? PARTIAL_UPDATE_QUEUE_TYPES.toArray(QueueType[]::new) : queues,
+            partialUpdate ? PARTIAL_UPDATE_LEAGUE_TYPES.toArray(BaseLeague.LeagueType[]::new) : leagues
+        );
+        if(partialUpdate)
+        {
+            partialAlternativeUpdates.put(region, partialAlternativeUpdates.get(region) + 1);
+        }
+        else
+        {
+            partialAlternativeUpdates.put(region, 0);
         }
     }
 
