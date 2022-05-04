@@ -15,8 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -26,15 +24,11 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
-import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class ClanDAO
 {
 
-    private static final Logger LOG = LoggerFactory.getLogger(ClanDAO.class);
-
-    public static final int CLAN_STATS_BATCH_SIZE = 12;
     public static final int CLAN_STATS_DEPTH_DAYS = 60;
     public static final int CLAN_STATS_MIN_MEMBERS = 4;
 
@@ -240,6 +234,7 @@ public class ClanDAO
 
     private static RowMapper<Clan> STD_ROW_MAPPER;
     private static ResultSetExtractor<Clan> STD_EXTRACTOR;
+    private static Integer[] DEFAULT_STATS_RACES;
 
     public enum Cursor
     {
@@ -320,6 +315,9 @@ public class ClanDAO
         this.template = template;
         this.conversionService = conversionService;
         initMappers(conversionService);
+        DEFAULT_STATS_RACES = Arrays.stream(Race.values())
+            .map(r->conversionService.convert(r, Integer.class))
+            .toArray(Integer[]::new);
     }
 
     private static void initMappers(ConversionService conversionService)
@@ -475,28 +473,14 @@ public class ClanDAO
         return new PagedSearchResult<>(null, (long) PAGE_SIZE, finalPage, clans);
     }
 
-    @Transactional
-    public int updateStats(List<Integer> validClans)
+    public int updateStats(List<Integer> clans)
     {
-        int batchIx = 0;
-        int count = 0;
-        Integer[] races = Arrays.stream(Race.values())
-            .map(r->conversionService.convert(r, Integer.class))
-            .toArray(Integer[]::new);
         OffsetDateTime from = OffsetDateTime.now().minusDays(CLAN_STATS_DEPTH_DAYS);
-        while(batchIx < validClans.size())
-        {
-            List<Integer> batch = validClans.subList(batchIx, Math.min(batchIx + CLAN_STATS_BATCH_SIZE, validClans.size()));
-            MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("clans", batch)
-                .addValue("races", races)
-                .addValue("from", from);
-            count += template.update(UPDATE_STATS, params);
-            batchIx += batch.size();
-            LOG.trace("Clan stats progress: {}/{} ", batchIx, validClans.size());
-        }
-        LOG.info("Updates stats of {} clans", count);
-        return count;
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("clans", clans)
+            .addValue("races", DEFAULT_STATS_RACES)
+            .addValue("from", from);
+        return template.update(UPDATE_STATS, params);
     }
 
     public int nullifyStats(int maxMembers)

@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ClanService
@@ -22,6 +23,7 @@ public class ClanService
     private static final Logger LOG = LoggerFactory.getLogger(ClanService.class);
 
     public static final Duration STATS_UPDATE_FRAME = Duration.ofDays(2);
+    public static final int CLAN_STATS_BATCH_SIZE = 12;
 
     private final ClanDAO clanDAO;
 
@@ -69,6 +71,7 @@ public class ClanService
         return statsCursor;
     }
 
+    @Transactional
     public void update()
     {
         if(shouldUpdateStats()) updateStats();
@@ -103,11 +106,26 @@ public class ClanService
         }
         else
         {
-            clanDAO.updateStats(batch);
+            updateStats(batch);
             statsCursor.setValueAndSave((long) batch.get(batch.size() - 1));
             statsUpdated.setValueAndSave(Instant.now());
         }
 
+    }
+
+    public int updateStats(List<Integer> validClans)
+    {
+        int batchIx = 0;
+        int count = 0;
+        while(batchIx < validClans.size())
+        {
+            List<Integer> batch = validClans.subList(batchIx, Math.min(batchIx + CLAN_STATS_BATCH_SIZE, validClans.size()));
+            count += clanDAO.updateStats(batch);
+            batchIx += batch.size();
+            LOG.trace("Clan stats progress: {}/{} ", batchIx, validClans.size());
+        }
+        LOG.info("Updates stats of {} clans", count);
+        return count;
     }
 
     private int getClanBatchSize()
