@@ -169,6 +169,19 @@ public class ClanIT
             new HashSet<>(clanDAO.findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS));
         assertEquals(5, validClans.size());
         for(int i = 1; i < 6; i++) assertTrue(validClans.contains(i));
+
+        List<Integer> page1 = clanDAO
+            .findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS, 0, 2);
+        assertEquals(2, page1.size());
+        assertEquals(1, page1.get(0));
+        assertEquals(2, page1.get(1));
+
+        List<Integer> page2 = clanDAO
+            .findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS, 2, 10);
+        assertEquals(3, page2.size());
+        assertEquals(3, page2.get(0));
+        assertEquals(4, page2.get(1));
+        assertEquals(5, page2.get(2));
     }
 
 }
