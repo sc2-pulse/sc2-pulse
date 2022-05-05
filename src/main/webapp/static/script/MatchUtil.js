@@ -71,9 +71,13 @@ class MatchUtil
             }
 
             if(historical) {
-                const participant = participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId)
-                    || participantsGrouped.get("LOSS").find(p=>p.team && p.team.id == teamId);
-                MatchUtil.addMmrChange(tr, participant);
+                for(const participants of participantsGrouped.values()) {
+                    const participant = participants.find(p=>p.team && p.team.id == teamId);
+                    if(participant) {
+                        MatchUtil.addMmrChange(tr, participant);
+                        break;
+                    }
+                }
             }
 
             const decision = participantsGrouped.get("WIN") ?
