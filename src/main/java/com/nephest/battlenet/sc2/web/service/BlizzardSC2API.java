@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLegacyProfile;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatches;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfile;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
@@ -855,6 +856,39 @@ extends BaseAPI
     {
         return Flux.fromIterable(playerCharacters)
             .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getLegacyProfile(p, web)));
+    }
+
+    public Mono<Tuple2<BlizzardProfile, PlayerCharacterNaturalId>> getProfile
+    (PlayerCharacterNaturalId playerCharacter, boolean web)
+    {
+        Region region = getRegion(playerCharacter.getRegion());
+        ApiContext context = getContext(region, web);
+        return getWebClient(region)
+            .get()
+            .uri
+            (
+                regionUri != null
+                    ? regionUri
+                    : (context.getBaseUrl() + "sc2/profile/{0}/{1}/{2}"),
+                playerCharacter.getRegion().getId(),
+                playerCharacter.getRealm(),
+                playerCharacter.getBattlenetId()
+            )
+            .accept(web ? ALL : APPLICATION_JSON) //web API has invalid content type headers
+            .retrieve()
+            .bodyToMono(BlizzardProfile.class)
+            .zipWith(Mono.just(playerCharacter))
+            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY, web)))
+            .delaySubscription(context.getRateLimiter().requestSlot())
+            .doOnRequest(s->context.getHealthMonitor().addRequest())
+            .doOnError(t->context.getHealthMonitor().addError());
+    }
+
+    public Flux<Tuple2<BlizzardProfile, PlayerCharacterNaturalId>> getProfiles
+    (Iterable<? extends PlayerCharacterNaturalId> playerCharacters, boolean web)
+    {
+        return Flux.fromIterable(playerCharacters)
+            .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getProfile(p, web)));
     }
 
 }

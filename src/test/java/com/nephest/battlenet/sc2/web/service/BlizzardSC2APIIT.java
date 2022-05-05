@@ -3,14 +3,50 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.blizzard.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.Instant;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
+import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockWebServer;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -28,23 +64,6 @@ import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.mock;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
@@ -58,6 +77,7 @@ public class BlizzardSC2APIIT
     public static final String VALID_MATCHES = "{\"matches\": []}";
     public static final String VALID_LEGACY_PROFILE = "{\"id\":\"315071\",\"realm\":1,\"displayName\":\"Serral\","
         + "\"clanName\":\"Ence\",\"clanTag\":\"ENCE\",\"profilePath\":\"/profile/2/1/315071\"}";
+    public static final String VALID_PROFILE = "{\"summary\": " + VALID_LEGACY_PROFILE + "}";
     public static final String VALID_LEGACY_LADDER = "{\"ladderMembers\":[{\"character\":{\"id\":\"11445546\","
         + "\"realm\":1,\"region\":1,\"displayName\":\"Dexter\",\"clanName\":\"\",\"clanTag\":\"\","
         + "\"profilePath\":\"/profile/1/1/11445546\"}}]}";
@@ -213,6 +233,19 @@ public class BlizzardSC2APIIT
     }
 
     @Test @Order(4)
+    public void testFetchProfiles()
+    {
+        api.getProfiles(Set.of(SERRAL, HEROMARINE, MARU), false)
+            .toStream(BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2)
+            .forEach(p->
+            {
+                assertNotNull(p.getT1().getSummary().getName());
+                assertNotNull(p.getT1().getSummary().getRealm());
+                assertNotNull(p.getT1().getSummary().getId());
+            });
+    }
+
+    @Test @Order(5)
     public void testRetrying()
     throws Exception
     {
@@ -240,6 +273,7 @@ public class BlizzardSC2APIIT
         WebServiceTestUtil.testRetrying(api.getLadder(Region.EU, 1L), VALID_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getMatches(SERRAL, false), VALID_MATCHES, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getLegacyProfile(SERRAL, false), VALID_LEGACY_PROFILE, server, RETRY_COUNT);
+        WebServiceTestUtil.testRetrying(api.getProfile(SERRAL, false), VALID_PROFILE, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderId(Region.US, 292783, false), VALID_LEGACY_LADDER, server, RETRY_COUNT);
         WebServiceTestUtil.testRetrying(api.getProfileLadderMono(Region.US, BLIZZARD_CHARACTER, 292783L, queueTypes, false),
             VALID_PROFILE_LADDER, server, RETRY_COUNT);
