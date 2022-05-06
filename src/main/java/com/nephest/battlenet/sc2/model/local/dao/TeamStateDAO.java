@@ -3,8 +3,11 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import java.time.OffsetDateTime;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,9 +18,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.time.OffsetDateTime;
-import java.util.Set;
 
 @Repository
 public class TeamStateDAO
@@ -191,6 +191,13 @@ public class TeamStateDAO
         + "AND timestamp < :from "
         + "AND (archived IS NULL OR archived = false)";
 
+    private static final String GET_COUNT_BY_TIMESTAMP_START_AND_REGION =
+        "SELECT COUNT(*) "
+        + "FROM team_state "
+        + "INNER JOIN team ON team_state.team_id = team.id "
+        + "WHERE team_state.timestamp >= :from "
+        + "AND team.region = :region";
+
     public static final RowMapper<TeamState> STD_ROW_MAPPER = (rs, i)->
     new TeamState
     (
@@ -317,6 +324,14 @@ public class TeamStateDAO
         int removedTeam = template.update(REMOVE_EXPIRED_SECONDARY_QUERY, paramsSecondary);
         LOG.debug("Removed expired team states({} 1v1, {} team)", removed1v1, removedTeam);
         return removed1v1 + removedTeam;
+    }
+
+    public Integer getCount(Region region, OffsetDateTime from)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("from", from);
+        return template.query(GET_COUNT_BY_TIMESTAMP_START_AND_REGION, params, DAOUtils.INT_EXTRACTOR);
     }
 
 }

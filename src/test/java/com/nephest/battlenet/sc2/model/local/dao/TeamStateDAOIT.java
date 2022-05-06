@@ -3,8 +3,18 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import static com.nephest.battlenet.sc2.model.local.ladder.dao.LegacySearchIT.LEGACY_ID_1;
+import static com.nephest.battlenet.sc2.model.local.ladder.dao.LegacySearchIT.LEGACY_ID_2;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
@@ -14,6 +24,14 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LegacySearchIT;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,19 +40,6 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-
-import static com.nephest.battlenet.sc2.model.local.ladder.dao.LegacySearchIT.LEGACY_ID_1;
-import static com.nephest.battlenet.sc2.model.local.ladder.dao.LegacySearchIT.LEGACY_ID_2;
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -148,6 +153,29 @@ public class TeamStateDAOIT
 
         teamStateDAO.setMaxDepthDaysMain(originalLengthMain);
         teamStateDAO.setMaxDepthDaysSecondary(originalLengthSecondary);
+    }
+
+    @Test
+    public void testGetCount()
+    {
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.EU, Region.US),
+            List.of(BaseLeague.LeagueType.values()),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            1
+        );
+        OffsetDateTime from = OffsetDateTime.now();
+        teamStateDAO.saveState
+        (
+            new TeamState(1L, from, 1, 1, 1),
+            new TeamState(3L, from.plusSeconds(1), 1, 1, 1)
+        );
+
+        assertEquals(2, teamStateDAO.getCount(Region.EU, from));
+        assertEquals(0, teamStateDAO.getCount(Region.US, from));
     }
 
 }
