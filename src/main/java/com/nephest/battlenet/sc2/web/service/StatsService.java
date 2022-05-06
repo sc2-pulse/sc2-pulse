@@ -112,7 +112,7 @@ public class StatsService
     private final Set<Region> alternativeRegions = new HashSet<>();
 
     @Value("${com.nephest.battlenet.sc2.ladder.alternative.regions:#{''}}")
-    private Set<Region> forcedAlternativeRegions;
+    private final Set<Region> forcedAlternativeRegions = new HashSet<>();
 
     @Value("${com.nephest.battlenet.sc2.ladder.forceUpdate:#{'false'}}")
     private boolean forceUpdate;
