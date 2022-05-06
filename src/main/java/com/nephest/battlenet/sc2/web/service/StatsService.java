@@ -64,6 +64,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -398,8 +399,10 @@ public class StatsService
     private void alternativeUpdate(Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         Region region = season.getRegion();
-        boolean partialUpdate = alternativeRegions.size() + forcedAlternativeRegions.size()
-            >= PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD
+        boolean partialUpdate =
+            Stream.concat(alternativeRegions.stream(), forcedAlternativeRegions.stream())
+                .distinct()
+                .count() >= PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD
             && partialAlternativeUpdates.get(region) < PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE
             && Arrays.asList(queues).containsAll(PARTIAL_UPDATE_QUEUE_TYPES)
             && Arrays.asList(leagues).containsAll(PARTIAL_UPDATE_LEAGUE_TYPES);
