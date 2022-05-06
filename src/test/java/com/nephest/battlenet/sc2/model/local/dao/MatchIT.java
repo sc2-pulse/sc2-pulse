@@ -445,7 +445,7 @@ public class MatchIT
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr1.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr2.getId(), BaseMatch.Decision.LOSS)
         );
-        TeamState state4v4Win = TeamState.of(team4v4Win, now.minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
+        TeamState state4v4Win = TeamState.of(team4v4Win, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         TeamState state4v4Loss = TeamState.of(team4v4Loss, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         TeamState state4v4Loss2 = TeamState.of(team4v4Loss, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES - 1));
         TeamState state2v2Win1 = TeamState.of(team2v2Win1, now);
@@ -453,8 +453,9 @@ public class MatchIT
         TeamState state2v2Loss1 = TeamState.of(team2v2Loss1, now);
         TeamState state2v2Loss2 = TeamState.of(team2v2Loss2, now);
         TeamState state1v1Win0 = TeamState.of(team1v1Win, now.minusSeconds(1));
-        TeamState state1v1Win1 = TeamState.of(team1v1Win, now); //should be picked as the closest state
-        TeamState state1v1Loss1 = TeamState.of(team1v1Loss, now);
+        //should be picked as the closest state because it's after the match
+        TeamState state1v1Win1 = TeamState.of(team1v1Win, now.plusSeconds(2));
+        TeamState state1v1Loss1 = TeamState.of(team1v1Loss, now.plusSeconds(1));
         TeamState state1v1Win2 = TeamState.of(team1v1Win, now.plusSeconds(30));
         TeamState state1v1Win3 = TeamState.of(team1v1Win, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1));
         TeamState state1v1Loss3 = TeamState.of(team1v1Loss, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1));

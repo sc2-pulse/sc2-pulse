@@ -89,7 +89,12 @@ public class MatchParticipantDAO
             + "INNER JOIN team_member USING(player_character_id) "
             + "INNER JOIN team ON team_member.team_id = team.id "
             + "INNER JOIN team_state ON team.id = team_state.team_id "
-                + "AND team_state.timestamp >= match.date - INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
+            /*TODO
+                This is an experimental change to improve the identification precision. If this
+                works, then GIST operators should be replaced with regular SELECT
+                DISTINCT ON, and GIST indexes should be removed.
+             */
+                + "AND team_state.timestamp >= match.date "
                 + "AND team_state.timestamp <= match.date + INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
             + "WHERE team.season = :season "
             + "AND team.queue_type = %2$s "
