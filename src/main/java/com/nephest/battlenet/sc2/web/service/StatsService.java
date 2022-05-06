@@ -54,7 +54,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -118,7 +117,7 @@ public class StatsService
 
     private final Set<Integer> pendingStatsUpdates = new HashSet<>();
     private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
-    private final Map<Region, InstantVar> forcedUpdateInstants = new HashMap<>();
+    private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
 
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
