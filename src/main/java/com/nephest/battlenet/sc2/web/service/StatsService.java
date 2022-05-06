@@ -238,6 +238,11 @@ public class StatsService
         return Collections.unmodifiableSet(forcedAlternativeRegions);
     }
 
+    protected Map<Region, InstantVar> getForcedAlternativeUpdateInstants()
+    {
+        return forcedAlternativeUpdateInstants;
+    }
+
     @CacheEvict
     (
         cacheNames=

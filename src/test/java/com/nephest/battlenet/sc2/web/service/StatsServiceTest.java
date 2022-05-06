@@ -3,13 +3,19 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
@@ -157,6 +163,42 @@ public class StatsServiceTest
 
         verify(teamDAO, never()).merge(any());
     }
+
+    @Test
+    public void testStaleDataDetection()
+    {
+        ss.init();
+        when(teamStateDAO.getCount(eq(Region.EU), any())).thenReturn(100);
+        ss.checkStaleDataByTeamStateCount(Region.EU);
+        assertFalse(ss.isAlternativeUpdate(Region.EU, true));
+
+        //alternative, no matches found
+        Instant before = Instant.now();
+        when(teamStateDAO.getCount(eq(Region.EU), any())).thenReturn(0);
+        ss.checkStaleDataByTeamStateCount(Region.EU);
+        assertTrue(ss.isAlternativeUpdate(Region.EU, true));
+        assertTrue(ss.getForcedAlternativeUpdateInstants().get(Region.EU).getValue().isAfter(before));
+
+        //alternative, still no matches, nothing has changed
+        ss.checkStaleDataByTeamStateCount(Region.EU);
+        assertTrue(ss.isAlternativeUpdate(Region.EU, true));
+        assertTrue(ss.getForcedAlternativeUpdateInstants().get(Region.EU).getValue().isAfter(before));
+
+        //alternative, there are matches, but time has not passed yet
+        when(teamStateDAO.getCount(eq(Region.EU), any())).thenReturn(100);
+        ss.checkStaleDataByTeamStateCount(Region.EU);
+        assertTrue(ss.isAlternativeUpdate(Region.EU, true));
+        assertTrue(ss.getForcedAlternativeUpdateInstants().get(Region.EU).getValue().isAfter(before));
+
+        //standard, there are matches and time has passed
+        ss.getForcedAlternativeUpdateInstants().get(Region.EU).setValue(Instant.now()
+            .minus(StatsService.FORCED_ALTERNATIVE_UPDATE_DURATION)
+            .minusSeconds(1));
+        ss.checkStaleDataByTeamStateCount(Region.EU);
+        assertFalse(ss.isAlternativeUpdate(Region.EU, true));
+        assertNull(ss.getForcedAlternativeUpdateInstants().get(Region.EU).getValue());
+    }
+
 /*
     @Test
     public void testMemberTransaction()
