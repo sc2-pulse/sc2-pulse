@@ -28,6 +28,7 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
@@ -201,15 +202,21 @@ public class StatsService
     @PostConstruct
     public void init()
     {
+        for(Region region : Region.values())
+        {
+            forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced", false));
+            forcedAlternativeUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.forced.timestamp", false));
+        }
         //catch exceptions to allow service autowiring for tests
         try {
             loadAlternativeRegions();
             loadForcedAlternativeRegions();
-            for(Region region : Region.values())
-            {
-                forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced"));
-                forcedAlternativeUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.forced.timestamp"));
-            }
+            Stream.concat
+            (
+                forcedUpdateInstants.values().stream(),
+                forcedAlternativeUpdateInstants.values().stream()
+            )
+                .forEach(Var::load);
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
