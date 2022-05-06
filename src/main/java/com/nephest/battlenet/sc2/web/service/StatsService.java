@@ -101,6 +101,8 @@ public class StatsService
     public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_LEAGUE_TYPES =
         EnumSet.allOf(BaseLeague.LeagueType.class);
     public static final Set<QueueType> PARTIAL_UPDATE_QUEUE_TYPES = EnumSet.of(QueueType.LOTV_1V1);
+    public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
+    public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofDays(7);
 
     @Autowired
     private StatsService statsService;
@@ -118,6 +120,7 @@ public class StatsService
     private final Set<Integer> pendingStatsUpdates = new HashSet<>();
     private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
+    private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
 
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
@@ -202,7 +205,10 @@ public class StatsService
             loadAlternativeRegions();
             loadForcedAlternativeRegions();
             for(Region region : Region.values())
+            {
                 forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced"));
+                forcedAlternativeUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.forced.timestamp"));
+            }
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -677,6 +683,7 @@ public class StatsService
         int maxSeason = seasonDao.getMaxBattlenetId();
         for(Region region : regions)
         {
+            checkStaleDataByTeamStateCount(region);
             BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
             long maxId = getMaxLadderId(bSeason, region);
             if(maxId < 0) {
@@ -689,6 +696,34 @@ public class StatsService
         }
         saveAlternativeRegions();
     }
+
+    public void checkStaleDataByTeamStateCount(Region region)
+    {
+        removeForcedAlternativeRegionIfExpired(region);
+        if(teamStateDAO.getCount(region, OffsetDateTime.now().minus(STALE_DATA_TEAM_STATES_DEPTH)) == 0)
+        {
+            if(forcedAlternativeRegions.add(region))
+            {
+                LOG.warn("Stale data detected for {}, added this region to forced alternative update", region);
+                forcedAlternativeUpdateInstants.get(region).setValueAndSave(Instant.now());
+            }
+        }
+    }
+
+    public void removeForcedAlternativeRegionIfExpired(Region region)
+    {
+        Instant from = forcedAlternativeUpdateInstants.get(region).getValue();
+        if(from == null) return;
+
+        OffsetDateTime fromOdt = OffsetDateTime.ofInstant(from, ZoneId.systemDefault());
+        if(fromOdt.isBefore(OffsetDateTime.now().minus(FORCED_ALTERNATIVE_UPDATE_DURATION)))
+        {
+            if(forcedAlternativeRegions.remove(region))
+                LOG.info("Removed {} from forced alternative update due to timeout", region);
+            forcedAlternativeUpdateInstants.get(region).setValueAndSave(null);
+        }
+    }
+
 
     private Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> chainStaleDataCheck(Region region, long ladderId, int count)
     {
