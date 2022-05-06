@@ -92,8 +92,8 @@ public class StatsService
     private static final Logger LOG = LoggerFactory.getLogger(StatsService.class);
 
     public static final Version VERSION = Version.LOTV;
-    public static final int STALE_LADDER_TOLERANCE = 3;
-    public static final int STALE_LADDER_DEPTH = 10;
+    public static final int STALE_LADDER_TOLERANCE = 1;
+    public static final int STALE_LADDER_DEPTH = 12;
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 2;
     public static final int LADDER_BATCH_SIZE = 100;
     public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(2);
