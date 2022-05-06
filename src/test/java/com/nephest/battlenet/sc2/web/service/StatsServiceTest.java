@@ -17,27 +17,129 @@ import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import java.time.Instant;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.validation.Validator;
 
+@ExtendWith(MockitoExtension.class)
 public class StatsServiceTest
 {
 
+    @Mock
     private StatsService ss;
 
+    @Mock
     private TeamDAO teamDAO;
+
+    @Mock
+    private AlternativeLadderService alternativeLadderService;
+
+    @Mock
+    private BlizzardSC2API api;
+
+    @Mock
+    private SeasonDAO seasonDao;
+
+    @Mock
+    private LeagueDAO leagueDao;
+
+    @Mock
+    private LeagueTierDAO leagueTierDao;
+
+    @Mock
+    private DivisionDAO divisionDao;
+
+    @Mock
+    private TeamDAO teamDao;
+
+    @Mock
+    private TeamStateDAO teamStateDAO;
+
+    @Mock
+    private AccountDAO accountDao;
+
+    @Mock
+    private PlayerCharacterDAO playerCharacterDao;
+
+    @Mock
+    private ClanDAO clanDAO;
+
+    @Mock
+    private TeamMemberDAO teamMemberDao;
+
+    @Mock
+    private QueueStatsDAO queueStatsDAO;
+
+    @Mock
+    private LeagueStatsDAO leagueStatsDao;
+
+    @Mock
+    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
+
+    @Mock
+    private VarDAO varDAO;
+
+    @Mock
+    private SC2WebServiceUtil sc2WebServiceUtil;
+
+    @Mock
+    private ConversionService conversionService;
+
+    private final ExecutorService dbExecutorService = Executors.newSingleThreadExecutor();
+
+    @Mock
+    private Validator validator;
+    
+    @Mock
+    StatsService nss;
 
     @BeforeEach
     public void beforeEach()
     {
-        teamDAO = mock(TeamDAO.class);
-        ss = new StatsService(null, null, mock(SeasonDAO.class), null, null, null, teamDAO, null, null, null,
-            null, null, null, null, null, null, null, null, mock(Validator.class), null);
-        StatsService nss = mock(StatsService.class);
+        ss = new StatsService
+        (
+            alternativeLadderService,
+            api,
+            seasonDao,
+            leagueDao,
+            leagueTierDao,
+            divisionDao,
+            teamDao,
+            teamStateDAO,
+            accountDao,
+            playerCharacterDao,
+            clanDAO,
+            teamMemberDao,
+            queueStatsDAO,
+            leagueStatsDao,
+            playerCharacterStatsDAO,
+            varDAO,
+            sc2WebServiceUtil,
+            conversionService,
+            validator,
+            dbExecutorService
+        );
         ss.setNestedService(nss);
     }
 
