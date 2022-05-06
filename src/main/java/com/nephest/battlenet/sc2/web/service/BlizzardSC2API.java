@@ -845,7 +845,7 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardLegacyProfile.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY, web)))
+            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY_NEVER, web)))
             .delaySubscription(context.getRateLimiter().requestSlot())
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
@@ -878,7 +878,7 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardProfile.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY, web)))
+            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY_NEVER, web)))
             .delaySubscription(context.getRateLimiter().requestSlot())
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
