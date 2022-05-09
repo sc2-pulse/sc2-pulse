@@ -12,8 +12,8 @@ This is not an official Blizzard Entertainment&reg; application.
 The project uses [sc2revealed](http://sc2revealed.com/) and [aligulac](http://aligulac.com/) APIs to get the info about pro and 
 semipro players.
 ## Dependencies
-* Java 11
-* PostgreSQL 11 with btree_gist extension
+* Java 11+
+* PostgreSQL 13+ with btree_gist extension
 * Maven 3
 * BattleNet API access keys(you must use your own keys)
 * Aligulac API key(you must use your own key)
