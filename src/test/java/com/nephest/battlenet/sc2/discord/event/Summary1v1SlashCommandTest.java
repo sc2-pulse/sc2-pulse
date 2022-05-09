@@ -3,23 +3,24 @@
 
 package com.nephest.battlenet.sc2.discord.event;
 
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.web.service.SearchService;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandOption;
 import discord4j.discordjson.json.ApplicationCommandInteractionOptionData;
+import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.ConversionService;
-
-import java.util.Optional;
-
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class Summary1v1SlashCommandTest
@@ -37,12 +38,21 @@ public class Summary1v1SlashCommandTest
     @Mock
     private Summary1v1Command cmdd;
 
+    @Mock
+    private SearchService searchService;
+
+    private Summary1v1SlashCommand cmd;
+
+    @BeforeEach
+    public void beforeEach()
+    {
+        cmd = new Summary1v1SlashCommand(cmdd, conversionService, searchService);
+    }
+
     @Test
     public void test()
     {
         stub();
-
-        Summary1v1SlashCommand cmd = new Summary1v1SlashCommand(cmdd, conversionService);
         cmd.handle(evt);
         verify(cmdd).handle(evt, Region.EU, Race.TERRAN, 100, "term");
     }

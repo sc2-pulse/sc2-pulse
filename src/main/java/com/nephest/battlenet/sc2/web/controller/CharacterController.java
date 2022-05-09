@@ -14,8 +14,16 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.*;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
+import com.nephest.battlenet.sc2.web.service.SearchService;
+import java.time.OffsetDateTime;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,9 +32,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.OffsetDateTime;
-import java.util.List;
-
 @RestController
 @RequestMapping("/api/character")
 public class CharacterController
@@ -34,6 +39,7 @@ public class CharacterController
 
     public static final int SUMMARY_DEPTH_MAX = 120;
     public static final int SUMMARY_IDS_MAX = 50;
+    public static final int SEARCH_SUGGESTIONS_SIZE = 10;
 
     @Autowired
     private LadderSearchDAO ladderSearch;
@@ -62,10 +68,19 @@ public class CharacterController
     @Autowired
     private PlayerCharacterReportService reportService;
 
+    @Autowired
+    private SearchService searchService;
+
     @GetMapping("/search/{term}")
     public List<LadderDistinctCharacter> getCharacterTeams(@PathVariable("term") String term)
     {
         return ladderCharacterDAO.findDistinctCharacters(term);
+    }
+
+    @GetMapping("/search/{term}/suggestions")
+    public List<String> suggest(@PathVariable("term") String term)
+    {
+        return searchService.suggestIfQuick(term, SEARCH_SUGGESTIONS_SIZE);
     }
 
     @GetMapping

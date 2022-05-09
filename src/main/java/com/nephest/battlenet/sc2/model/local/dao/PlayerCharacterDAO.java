@@ -10,8 +10,16 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.util.BookmarkedResult;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SimpleBookmarkedResultSetExtractor;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
+import java.sql.Types;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -25,14 +33,6 @@ import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import reactor.util.function.Tuple2;
-
-import java.sql.Types;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 public class PlayerCharacterDAO
@@ -217,6 +217,23 @@ public class PlayerCharacterDAO
         + "WHERE updated < :updatedMax "
         + "AND id < :idMax "
         + "ORDER BY id DESC "
+        + "LIMIT :limit";
+
+    private static final String FIND_NAMES_WITHOUT_DISCRIMINATOR_BY_NAME_LIKE =
+        "WITH character_filter AS "
+        + "("
+            + "SELECT player_character.name, MAX(rating_max) AS rating_max "
+            + "FROM player_character "
+            + "INNER JOIN player_character_stats ON player_character.id = player_character_stats.player_character_id "
+            + "WHERE LOWER(name) LIKE LOWER(:nameLike) "
+            + "GROUP BY player_character.name "
+            + "ORDER BY rating_max DESC "
+            + "LIMIT :limit * 3 "
+        + ") "
+        + "SELECT substring(name from '^.*(?=(#))') AS sub_name "
+        + "FROM character_filter "
+        + "GROUP BY sub_name "
+        + "ORDER BY MAX(rating_max) DESC "
         + "LIMIT :limit";
 
     private static final String COUNT_BY_UPDATED_MAX =
@@ -434,6 +451,15 @@ public class PlayerCharacterDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("updatedMax", updatedMax);
         return template.query(COUNT_BY_UPDATED_MAX, params, DAOUtils.INT_EXTRACTOR);
+    }
+
+    public List<String> findNamesWithoutDiscriminator(String nameLike, int limit)
+    {
+        nameLike = PostgreSQLUtils.escapeLikePattern(nameLike) + "%";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("nameLike", nameLike)
+            .addValue("limit", limit);
+        return template.queryForList(FIND_NAMES_WITHOUT_DISCRIMINATOR_BY_NAME_LIKE, params, String.class);
     }
 
 }

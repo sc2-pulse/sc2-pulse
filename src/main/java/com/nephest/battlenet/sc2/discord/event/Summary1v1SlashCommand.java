@@ -7,12 +7,17 @@ import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.web.service.SearchService;
+import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.command.ApplicationCommandOption;
 import discord4j.core.object.entity.Message;
+import discord4j.discordjson.json.ApplicationCommandOptionChoiceData;
 import discord4j.discordjson.json.ApplicationCommandOptionData;
 import discord4j.discordjson.json.ImmutableApplicationCommandRequest;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,21 +28,24 @@ import reactor.core.publisher.Mono;
 @Component
 @ConditionalOnProperty(prefix = "discord", name = "token")
 public class Summary1v1SlashCommand
-implements SlashCommand
+implements SlashCommand, AutoComplete
 {
 
     private final Summary1v1Command summary1v1Command;
     private final ConversionService conversionService;
+    private final SearchService searchService;
 
     @Autowired
     public Summary1v1SlashCommand
     (
         Summary1v1Command summary1v1Command,
-        @Qualifier("mvcConversionService") ConversionService conversionService
+        @Qualifier("mvcConversionService") ConversionService conversionService,
+        SearchService searchService
     )
     {
         this.summary1v1Command = summary1v1Command;
         this.conversionService = conversionService;
+        this.searchService = searchService;
     }
 
     @Override
@@ -51,6 +59,7 @@ implements SlashCommand
                 .description("name, btag#123, [cLaNtAg]. Clan tag is case sensitive.")
                 .type(ApplicationCommandOption.Type.STRING.getValue())
                 .required(true)
+                .autocomplete(true)
                 .build())
             .addOption(ApplicationCommandOptionData.builder()
                 .name("region")
@@ -100,6 +109,20 @@ implements SlashCommand
             .getArgument(evt, "depth", ApplicationCommandInteractionOptionValue::asLong, maxDepth);
         if(depth < 1 || depth > maxDepth) depth = maxDepth;
         return depth;
+    }
+
+    @Override
+    public Iterable<ApplicationCommandOptionChoiceData> autoComplete(ChatInputAutoCompleteEvent evt)
+    {
+        if(!evt.getFocusedOption().getName().equals("name")) evt.respondWithSuggestions(List.of());
+
+        String term = evt.getFocusedOption()
+            .getValue()
+            .map(ApplicationCommandInteractionOptionValue::asString)
+            .orElse("");
+        return searchService.suggestIfQuick(term, AutoComplete.DEFAULT_SUGGESTIONS_SIZE).stream()
+            .map(s->ApplicationCommandOptionChoiceData.builder().name(s).value(s).build())
+            .collect(Collectors.toList());
     }
 
 }

@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -96,6 +97,16 @@ public class AccountDAO
         + "INNER JOIN account ON account_role.account_id = account.id "
         + "WHERE account_role.role = :role "
         + "ORDER BY account.id";
+
+    private static final String FIND_BATTLE_TAGS_BY_BATTLE_TAG_LIKE =
+        "SELECT battle_tag "
+        + "FROM account "
+        + "INNER JOIN player_character ON account.id = player_character.account_id "
+        + "INNER JOIN player_character_stats ON player_character.id = player_character_stats.player_character_id "
+        + "WHERE LOWER(battle_tag) LIKE LOWER(:battleTagLike) "
+        + "GROUP BY battle_tag "
+        + "ORDER BY MAX(rating_max) DESC "
+        + "LIMIT :limit";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -187,6 +198,15 @@ public class AccountDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("role", conversionService.convert(authority, Integer.class));
         return template.query(FIND_BY_ROLE, params, STD_ROW_MAPPER);
+    }
+
+    public List<String> findBattleTags(String battleTagLike, int limit)
+    {
+        battleTagLike = PostgreSQLUtils.escapeLikePattern(battleTagLike) + "%";
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("battleTagLike", battleTagLike)
+            .addValue("limit", limit);
+        return template.queryForList(FIND_BATTLE_TAGS_BY_BATTLE_TAG_LIKE, params, String.class);
     }
 
     private MapSqlParameterSource createParameterSource(Account account)

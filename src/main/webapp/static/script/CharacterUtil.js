@@ -1033,6 +1033,15 @@ class CharacterUtil
                 CharacterUtil.findCharactersByName();
             }
         );
+        const searchInput = document.querySelector("#search-player-name");
+        searchInput.addEventListener("input", CharacterUtil.onSearchInput);
+        searchInput.addEventListener("keydown", (e)=>{
+            if(!e.key) {
+                const form = e.target.closest("form");
+                window.setTimeout(t=>form.requestSubmit(form.querySelector(':scope [type="submit]"')), 1);
+            }
+        });
+
     }
 
     static enhanceMmrForm()
@@ -1377,6 +1386,44 @@ class CharacterUtil
     {
         document.querySelector("#matches-historical-mmr").addEventListener("change",
             e=>window.setTimeout(CharacterUtil.updateCharacterMatchesView, 1));
+    }
+
+    static loadSearchSuggestions(term)
+    {
+        const reqTimestamp = Date.now();
+        return Session.beforeRequest()
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/search/${encodeURIComponent(term)}/suggestions`))
+            .then(Session.verifyResponse)
+            .then(resp=>Promise.all([resp.json(), Promise.resolve(reqTimestamp)]));
+    }
+
+    static updateSearchSuggestions(term)
+    {
+        if(!term) {
+            document.querySelector("#search-player-suggestions").innerHTML = '';
+            return Promise.resolve();
+        } else
+        {
+            return CharacterUtil.loadSearchSuggestions(term)
+                .then(resp=>{
+                    const lastTs = ElementUtil.INPUT_TIMESTAMPS.get("search-player-suggestions");
+                    if(!lastTs || lastTs < resp[1]) {
+                        ElementUtil.INPUT_TIMESTAMPS.set("search-player-suggestions", resp[1]);
+                        const dataList = ElementUtil.createDataList(resp[0]);
+                        document.querySelector("#search-player-suggestions").innerHTML = dataList.innerHTML;
+                    }
+                });
+        }
+    }
+
+    static onSearchInput(evt)
+    {
+        CharacterUtil.updateSearchSuggestions(CharacterUtil.shouldLoadSearchSuggestions(evt.target.value) ? evt.target.value : null);
+    }
+
+    static shouldLoadSearchSuggestions(term)
+    {
+        return term && ((term.startsWith("[") && term.length >= 2) || term.includes("#") || term.length >= 4);
     }
 
 }

@@ -421,10 +421,22 @@ class ElementUtil
         return elem;
     }
 
+    static createDataList(options)
+    {
+        const dataList = document.createElement("datalist");
+        options.forEach(o=>{
+            const option = document.createElement("option");
+            option.setAttribute("value", o);
+            dataList.appendChild(option);
+        });
+        return dataList;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
 ElementUtil.INPUT_TIMEOUTS = new Map();
+ElementUtil.INPUT_TIMESTAMPS = new Map();
 ElementUtil.TITLE_CONSTRUCTORS = new Map();
 ElementUtil.DESCRIPTION_CONSTRUCTORS = new Map();
 ElementUtil.NEGATION_PREFIX = "neg-";

@@ -33,6 +33,7 @@ CREATE INDEX "ix_clan_search_games"
     ON "clan"(("games"::double precision / "active_members" / 60), "id", "active_members", "avg_rating", "region")
     WHERE "active_members" IS NOT NULL;
 CREATE INDEX "ix_clan_name" ON "clan"(LOWER("name") text_pattern_ops) WHERE "name" IS NOT NULL;
+CREATE INDEX "ix_clan_tag" ON "clan"(LOWER("tag") text_pattern_ops);
 
 CREATE TABLE "account"
 (
