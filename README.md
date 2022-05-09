@@ -4,7 +4,8 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
 [The public discord bot](https://discord.com/api/oauth2/authorize?client_id=908047161994915901&permissions=264192&scope=bot%20applications.commands)
 is also available.
 ## Disclaimer
-I use this project for learning, it is not production-ready.
+It's my first Spring Boot project, and it's old, there is a lot of legacy code that is poorly though out. Please do
+not use this project as a reference if you are new to programming.
 
 This application uses Battle.net&reg; API. 
 This is not an official Blizzard Entertainment&reg; application.
