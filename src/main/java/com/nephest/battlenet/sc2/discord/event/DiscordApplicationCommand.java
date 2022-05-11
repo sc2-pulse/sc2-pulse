@@ -9,11 +9,10 @@ import discord4j.discordjson.json.ImmutableApplicationCommandRequest;
 import reactor.core.publisher.Mono;
 
 public interface DiscordApplicationCommand<T extends ApplicationCommandInteractionEvent>
+extends NamedCommand
 {
 
     ImmutableApplicationCommandRequest.Builder generateCommandRequest();
-
-    String getCommandName();
 
     Mono<Message> handle(T evt);
 

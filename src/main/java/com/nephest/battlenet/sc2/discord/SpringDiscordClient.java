@@ -3,16 +3,16 @@
 
 package com.nephest.battlenet.sc2.discord;
 
+import com.nephest.battlenet.sc2.discord.event.AutoComplete;
 import com.nephest.battlenet.sc2.discord.event.SlashCommand;
 import com.nephest.battlenet.sc2.discord.event.UserCommand;
 import discord4j.core.GatewayDiscordClient;
+import java.time.Duration;
+import java.util.List;
+import javax.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
-
-import javax.annotation.PreDestroy;
-import java.time.Duration;
-import java.util.List;
 
 @Service
 @ConditionalOnProperty(prefix = "discord", name = "token")
@@ -27,11 +27,13 @@ public class SpringDiscordClient
     (
         List<SlashCommand> handlers,
         List<UserCommand> userInteractionHandlers,
+        List<AutoComplete> autoCompleteHandlers,
         @Value("${discord.token:}") String token,
         @Value("${discord.guild:}") Long guild
     )
     {
-        this.client = DiscordBootstrap.load(handlers, userInteractionHandlers, token, guild);
+        this.client = DiscordBootstrap
+            .load(handlers, userInteractionHandlers, autoCompleteHandlers, token, guild);
     }
 
     @PreDestroy
