@@ -8,6 +8,7 @@ package com.nephest.battlenet.sc2.selenium;
  */
 
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
 import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated;
 import static org.openqa.selenium.support.ui.ExpectedConditions.presenceOfElementLocated;
 
@@ -303,7 +304,9 @@ public class GeneralSeleniumIT
 
     public static void clickAndWait(WebDriver driver, WebDriverWait wait, String clickSelector, String waitSelector)
     {
-        driver.findElement(By.cssSelector(clickSelector)).click();
+        WebElement e = driver.findElement(By.cssSelector(clickSelector));
+        wait.until(elementToBeClickable(e));
+        e.click();
         wait.until(presenceOfElementLocated(By.cssSelector(waitSelector)));
     }
 
