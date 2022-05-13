@@ -4,11 +4,26 @@
 package com.nephest.battlenet.sc2;
 
 import com.nephest.battlenet.sc2.config.GlobalRestTemplateCustomizer;
-import com.nephest.battlenet.sc2.config.convert.*;
+import com.nephest.battlenet.sc2.config.convert.IdentifiableToIntegerConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToDecisionConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTierTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToMatchTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToPlayerCharacterReportTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToQueueTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToRaceConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToRegionConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToSC2PulseAuthority;
+import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
 import com.nephest.battlenet.sc2.config.filter.AverageSessionCacheFilter;
 import com.nephest.battlenet.sc2.config.filter.MaintenanceFilter;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import javax.sql.DataSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
@@ -27,11 +42,6 @@ import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
-
-import javax.sql.DataSource;
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 @SpringBootApplication
 @EnableCaching
@@ -53,7 +63,8 @@ extends SpringBootServletInitializer
         boost whatsoever. Concurrency/CPU intensive work is done by web threads.
      */
     public static final int DB_THREADS = 1;
-    public static final int WEB_THREADS = Region.values().length;
+    //+2 for background tasks
+    public static final int WEB_THREADS = Region.values().length + 2;
 
     public static void main(String[] args)
     {

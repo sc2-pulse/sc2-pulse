@@ -37,9 +37,9 @@ import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -47,7 +47,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
@@ -64,7 +63,7 @@ public class BlizzardPrivacyService
     public static final Duration DATA_TTL = Duration.ofDays(30);
     public static final Duration ANONYMIZATION_DATA_TIME_FRAME = Duration.ofMinutes(60);
     public static final Duration CHARACTER_UPDATE_TIME_FRAME = Duration.ofMinutes(60);
-    public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(10);
+    public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(15);
     public static final Duration CHARACTER_UPDATED_MAX = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
     public static final Duration OLD_LADDER_DATA_TTL = Duration.ofDays(20);
     public static final int CURRENT_SEASON_UPDATES_PER_PERIOD = 3;
@@ -93,6 +92,7 @@ public class BlizzardPrivacyService
     private InstantVar lastUpdatedCurrentSeasonInstant;
     private InstantVar lastAnonymizeInstant;
     private InstantVar lastUpdatedCharacterInstant;
+    private Future<?> characterUpdateTask = CompletableFuture.completedFuture(null);
 
     @Autowired
     public BlizzardPrivacyService
@@ -180,13 +180,18 @@ public class BlizzardPrivacyService
         return lastUpdatedCharacterId;
     }
 
-    @Transactional
-    public void update()
+    public Future<?> getCharacterUpdateTask()
+    {
+        return characterUpdateTask;
+    }
+
+    public Future<?> update()
     {
         handleExpiredData();
-        if(shouldUpdateCharacters()) updateCharacters();
+        if(shouldUpdateCharacters() && (characterUpdateTask == null || characterUpdateTask.isDone()))
+            characterUpdateTask = webExecutorService.submit(this::updateCharacters);
         Integer season = getSeasonToUpdate();
-        if(season == null) return;
+        if(season == null) return characterUpdateTask;
 
         LOG.debug("Updating old names and BattleTags for season {}", season);
         boolean current = seasonDAO.getMaxBattlenetId().equals(season);
@@ -215,6 +220,7 @@ public class BlizzardPrivacyService
         }
 
         LOG.info("Updated old names and BattleTags for season {}", season);
+        return characterUpdateTask;
     }
 
     private boolean shouldHandleExpiredData()
@@ -356,7 +362,6 @@ public class BlizzardPrivacyService
         }
 
         List<Future<?>> dbTasks = new ArrayList<>();
-        AtomicInteger count = new AtomicInteger();
         api.getLegacyProfiles(batch, false)
             .filter(c->legacyProfilePredicate.test(c.getT1()))
             .map(this::extractCharacter)
@@ -364,15 +369,11 @@ public class BlizzardPrivacyService
             .toStream()
             .map(l->l.toArray(PlayerCharacter[]::new))
             .forEach(l->{
-                count.getAndAdd(l.length);
                 dbTasks.add(dbExecutorService.submit(()->
-                    LOG.debug("Updated {} characters that are about to expire", playerCharacterDAO.updateCharacters(l))));
+                    LOG.info("Updated {} characters that are about to expire", playerCharacterDAO.updateCharacters(l))));
             });
-
-        MiscUtil.awaitAndLogExceptions(dbTasks, true);
         lastUpdatedCharacterInstant.setValueAndSave(Instant.now());
         lastUpdatedCharacterId.setValueAndSave(batch.get(batch.size() - 1).getId());
-        if(count.get() > 0) LOG.info("Updated {} characters that are about to expire", count.get());
     }
 
     private void resetCharacterUpdateVars()
