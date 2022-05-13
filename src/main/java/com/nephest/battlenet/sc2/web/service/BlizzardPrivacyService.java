@@ -248,7 +248,7 @@ public class BlizzardPrivacyService
         if(accounts > 0 || characters > 0) LOG.info("Anonymized {} accounts and {} characters", accounts, characters);
     }
 
-    private void update(Region region, int seasonId, boolean currentSeason)
+    protected void update(Region region, int seasonId, boolean currentSeason)
     {
         BlizzardSeason bSeason = sc2WebServiceUtil.getExternalOrExistingSeason(region, seasonId);
         List<Future<?>> dbTasks = new ArrayList<>();

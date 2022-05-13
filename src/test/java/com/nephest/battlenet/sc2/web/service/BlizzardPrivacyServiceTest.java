@@ -10,6 +10,7 @@ import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.verify;
@@ -43,10 +44,9 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -56,6 +56,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
+import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.validation.Validator;
@@ -99,8 +100,8 @@ public class BlizzardPrivacyServiceTest
     @Captor
     private ArgumentCaptor<List<Tuple2<Account, PlayerCharacter>>> accountPlayerCaptor;
 
-    private static final ExecutorService dbExecutor = Executors.newSingleThreadExecutor();
-    private static final ExecutorService webExecutor = Executors.newSingleThreadExecutor();
+    @Mock
+    private ExecutorService executor;
 
     public BlizzardPrivacyService privacyService;
 
@@ -109,6 +110,11 @@ public class BlizzardPrivacyServiceTest
     @BeforeEach
     public void beforeEach()
     {
+        when(executor.submit(any(Runnable.class))).then(i->{
+            Runnable r = i.getArgument(0);
+            r.run();
+            return CompletableFuture.completedFuture(null);
+        });
         privacyService = new BlizzardPrivacyService
         (
             api,
@@ -118,32 +124,19 @@ public class BlizzardPrivacyServiceTest
             varDAO,
             accountDAO,
             playerCharacterDAO,
-            dbExecutor,
-            webExecutor,
+            executor,
+            executor,
             validator,
             sc2WebServiceUtil
         );
-    }
-
-    @AfterAll
-    public static void afterAll()
-    throws Exception
-    {
-        dbExecutor.shutdown();
-        webExecutor.shutdown();
-    }
-    
-    private void update()
-    throws ExecutionException, InterruptedException
-    {
-        privacyService.update();
-        if(privacyService.getCharacterUpdateTask() != null) privacyService.getCharacterUpdateTask().get();
     }
 
     @Test
     public void testGetSeasonToUpdate()
     throws ExecutionException, InterruptedException
     {
+        BlizzardPrivacyService spy = Mockito.spy(privacyService);
+        doNothing().when(spy).update(any(), anyInt(), anyBoolean());
         //there ate no seasons in the db, nothing to update
         assertNull(privacyService.getSeasonToUpdate());
 
@@ -151,8 +144,8 @@ public class BlizzardPrivacyServiceTest
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 2);
         assertEquals(BlizzardSC2API.FIRST_SEASON + 2, privacyService.getSeasonToUpdate());
 
+        spy.update();
         //season was updated recently, nothing to update
-        update();
         assertNull(privacyService.getSeasonToUpdate());
 
         OffsetDateTime anonymizeOffset = OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
@@ -172,24 +165,24 @@ public class BlizzardPrivacyServiceTest
         //rewind update timestamp to simulate the time flow
         privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON, privacyService.getSeasonToUpdate());
-        update();
+        spy.update();
 
         //rewind update timestamp to simulate the time flow, next season is updated
         privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON + 1, privacyService.getSeasonToUpdate());
-        update();
+        spy.update();
 
         //rewind update timestamp to simulate the time flow, all previous season were updated, starting from the first
         //season again
         privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON, privacyService.getSeasonToUpdate());
-        update();
+        spy.update();
 
         //current season update is prioritized
         privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(Instant.now().minusSeconds(currentUpdateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON + 2, privacyService.getSeasonToUpdate());
-        update();
+        spy.update();
     }
 
     @Test
@@ -198,7 +191,7 @@ public class BlizzardPrivacyServiceTest
     {
         privacyService.getLastUpdatedCharacterId().setValue(10L);
         when(playerCharacterDAO.countByUpdatedMax(any())).thenReturn(0);
-        update();
+        privacyService.update();
         //reset id cursor due to empty batch size
         assertEquals(Long.MAX_VALUE, privacyService.getLastUpdatedCharacterId().getValue());
 
@@ -218,7 +211,7 @@ public class BlizzardPrivacyServiceTest
         when(api.getLegacyProfiles(chars, false))
             .thenReturn(Flux.just(Tuples.of(profile1, character1), Tuples.of(profile2, character2)));
 
-        update();
+        privacyService.update();
         ArgumentCaptor<PlayerCharacter> characterArgumentCaptor = ArgumentCaptor.forClass(PlayerCharacter.class);
         verify(playerCharacterDAO).updateCharacters(characterArgumentCaptor.capture());
         List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues();
@@ -236,7 +229,7 @@ public class BlizzardPrivacyServiceTest
         privacyService.getLastUpdatedCharacterId().setValue(10L);
         when(playerCharacterDAO.countByUpdatedMax(any())).thenReturn(9999);
         when(playerCharacterDAO.find(any(), any(), anyInt())).thenReturn(List.of());
-        update();
+        privacyService.update();
         //reset id cursor due to empty batch
         assertEquals(Long.MAX_VALUE, privacyService.getLastUpdatedCharacterId().getValue());
     }
@@ -278,7 +271,7 @@ public class BlizzardPrivacyServiceTest
         OngoingStubbing<Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>>> stub =
             when(api.getProfileLadders(any(), any(), anyBoolean())).thenReturn(ladders);
         for(int i = 1; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
-        update();
+        privacyService.update();
 
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
         PlayerCharacter character2 = new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2");
@@ -309,7 +302,7 @@ public class BlizzardPrivacyServiceTest
             stub = when(api.getLadders(any(), anyLong(), any())).thenReturn(createLadder());
         for(int i = 1; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
 
-        update();
+        privacyService.update();
 
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         List<Tuple2<Account, PlayerCharacter>> argChars = accountPlayerCaptor.getValue();
