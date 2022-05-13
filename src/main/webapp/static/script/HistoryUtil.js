@@ -91,6 +91,8 @@ class HistoryUtil
             dataTarget = modal == null ? dataTarget : "#" + modal.id;
         }
         Session.sectionParams.set(dataTarget, paramsStr.split("#")[0]);
+        if(document.getElementById(deepestTabId).classList.contains("root"))
+            Session.sectionParams.set("#" + deepestTabId, paramsStr.split("#")[0]);
     }
 
     static getDeepestTabId(el)

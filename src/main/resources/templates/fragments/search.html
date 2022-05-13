@@ -40,7 +40,7 @@
         </li>
     </ul>
     <div class="tab-content">
-    <section id="search" class="tab-pane fade show active"
+    <section id="search" class="tab-pane fade show active root"
              data-view-name="character-search"
              data-view-title="Player search"
              data-view-description="Find a StarCraft2 player by name, professional nickname, BattleTag, or profile link. Info includes: full profile, best race, best MMR, games played, BattleTag."
@@ -63,7 +63,7 @@
             <div th:replace="~{fragments/table :: player-search('search-table', 'Players', '')}"></div>
         </div>
     </section>
-    <section id="search-clan" class="tab-pane fade"
+    <section id="search-clan" class="tab-pane fade root"
              data-view-name="clan-search"
              data-view-title="Clan search"
              data-view-description="Find StarCraft2 clan by tag, average MMR, games played, or member count. Info includes: member count, active member count, avg MMR, games played, avg league."

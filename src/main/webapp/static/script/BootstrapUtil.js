@@ -94,7 +94,9 @@ class BootstrapUtil
 
         const parentDataTarget = modal != null
             ? "#" + modal.id
-            : (newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2]);
+            : document.querySelector(dataTarget).classList.contains("root")
+                ? dataTarget
+                : (newTabs.length == 1 ? "#" + newTabs[0] : "#" + newTabs[newTabs.length - 2]);
         const lastDataTarget = "#" + newTabs[newTabs.length - 1];
         ElementUtil.setMainContent(lastDataTarget);
         document.querySelectorAll(dataTarget + " .c-autofocus").forEach(e=>FormUtil.selectAndFocusOnInput(e, true));
