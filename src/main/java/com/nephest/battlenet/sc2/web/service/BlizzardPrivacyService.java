@@ -263,7 +263,7 @@ public class BlizzardPrivacyService
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 
-    private Stream<Tuple2<Account, PlayerCharacter>> extractPrivateInfo
+    private Stream<Tuple3<Account, PlayerCharacter, Boolean>> extractPrivateInfo
     (Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladder)
     {
         Region region = ladder.getT2().getT2();
@@ -277,8 +277,7 @@ public class BlizzardPrivacyService
                 Account account = Account.of(m.getAccount(), region);
                 PlayerCharacter character = PlayerCharacter.of(account, region, m.getCharacter());
                 character.setClanId(isAlternativeUpdate ? Integer.valueOf(0) : m.getClan() != null ? 0 : null);
-                if(isAlternativeUpdate) character.setName(null, false);
-                return Tuples.of(account, character);
+                return Tuples.of(account, character, !isAlternativeUpdate);
             });
     }
 

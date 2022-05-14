@@ -32,7 +32,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 
 @Repository
 public class PlayerCharacterDAO
@@ -117,7 +117,7 @@ public class PlayerCharacterDAO
         + "lock_filter AS "
         + "("
             + "SELECT player_character.id, v.* "
-            + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name, has_clan) "
+            + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name, has_clan, fresh) "
             + "INNER JOIN player_character USING(region, realm, battlenet_id) "
             + "ORDER BY region, realm, battlenet_id "
             + "FOR UPDATE "
@@ -125,13 +125,25 @@ public class PlayerCharacterDAO
         + "updated_character AS "
         + "( "
             + "UPDATE player_character "
-            + "SET updated = CASE WHEN v.name IS NULL THEN player_character.updated ELSE NOW() END, "
+            + "SET updated = "
+            + "CASE "
+                + "WHEN v.fresh "
+                + "THEN NOW() "
+                + "ELSE "
+                    + "CASE "
+                        + "WHEN "
+                        + "substring(v.name, 0, position('#' in v.name)) = "
+                        + "substring(player_character.name, 0, position('#' in player_character.name)) "
+                        + "THEN NOW() "
+                        + "ELSE player_character.updated "
+                    + "END "
+            + "END, "
             /*
                 There can be a situation when a BattleTag already exists in one region, but characters were not
                 yet rebound to it in another region due to API issues. Rebind it now.
              */
             + "account_id = COALESCE(account.id, account_id), "
-            + "name = COALESCE(v.name, player_character.name), "
+            + "name = CASE WHEN v.fresh THEN v.name ELSE player_character.name END, "
             + "clan_id = CASE WHEN v.has_clan THEN clan_id ELSE NULL END "
             + "FROM lock_filter v "
             + "LEFT JOIN account ON v.partition = account.partition "
@@ -337,7 +349,7 @@ public class PlayerCharacterDAO
         return template.update(UPDATE_CHARACTERS, params);
     }
 
-    public int updateAccountsAndCharacters(List<Tuple2<Account, PlayerCharacter>> accountsAndCharacters)
+    public int updateAccountsAndCharacters(List<Tuple3<Account, PlayerCharacter, Boolean>> accountsAndCharacters)
     {
         if(accountsAndCharacters.isEmpty()) return 0;
 
@@ -350,7 +362,8 @@ public class PlayerCharacterDAO
                 c.getT2().getRealm(),
                 c.getT2().getBattlenetId(),
                 c.getT2().getName(),
-                c.getT2().getClanId() != null
+                c.getT2().getClanId() != null,
+                c.getT3()
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);

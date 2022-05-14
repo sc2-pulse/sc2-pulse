@@ -98,7 +98,7 @@ public class BlizzardPrivacyServiceTest
     private SC2WebServiceUtil sc2WebServiceUtil;
 
     @Captor
-    private ArgumentCaptor<List<Tuple2<Account, PlayerCharacter>>> accountPlayerCaptor;
+    private ArgumentCaptor<List<Tuple3<Account, PlayerCharacter, Boolean>>> accountPlayerCaptor;
 
     @Mock
     private ExecutorService executor;
@@ -305,18 +305,13 @@ public class BlizzardPrivacyServiceTest
         privacyService.update();
 
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
-        List<Tuple2<Account, PlayerCharacter>> argChars = accountPlayerCaptor.getValue();
+        List<Tuple3<Account, PlayerCharacter, Boolean>> argChars = accountPlayerCaptor.getValue();
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
         assertEquals(1, argChars.size());
         PlayerCharacter extractedCharacter = argChars.get(0).getT2();
         assertEquals(character1, extractedCharacter);
-        if(!updated) {
-            assertNull(extractedCharacter.getName());
-            assertEquals(0, extractedCharacter.getClanId());
-        } else {
-            assertEquals("name2#1", extractedCharacter.getName());
-            assertEquals(0, extractedCharacter.getClanId());
-        }
+        assertEquals("name2#1", extractedCharacter.getName());
+        assertEquals(0, extractedCharacter.getClanId());
     }
 
     private Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>

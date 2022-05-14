@@ -3,10 +3,34 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
+import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.List;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,18 +40,8 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
-
-import javax.sql.DataSource;
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.OffsetDateTime;
-import java.util.Comparator;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -217,30 +231,40 @@ public class PlayerCharacterDAOIT
             .merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name3#123", clan.getId()));
         PlayerCharacter char4 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name10#123", clan.getId()));
+        PlayerCharacter char5 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#123", clan.getId()));
 
-        PlayerCharacter updatedChar4 = new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, null);
-        updatedChar4.setName(null, false);
-        List<Tuple2<Account, PlayerCharacter>> updatedAccsAndChars = List.of
+        List<Tuple3<Account, PlayerCharacter, Boolean>> updatedAccsAndChars = List.of
         (
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag3#123"),
-                new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123")
+                new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123"),
+                true
             ),
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag3#123"),
-                new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123")
+                new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123"),
+                true
             ),
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag4#123"),
-                new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123", clan.getId())
+                new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123", clan.getId()),
+                true
             ),
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag10#123"),
-                updatedChar4
+                new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name11#123"),
+                false
+            ),
+            Tuples.of
+            (
+                new Account(null, Partition.GLOBAL, "tag10#123"),
+                new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#1"),
+                false
             )
         );
 
@@ -254,6 +278,11 @@ public class PlayerCharacterDAOIT
         OffsetDateTime char4UpdatedNew =
             template.query("SELECT updated FROM player_character WHERE id = " + char4.getId(), DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
         assertTrue(char4UpdatedNew.isEqual(char4Updated));
+
+        //char5 is updated despite being stale because it has the same name prefix
+        OffsetDateTime char5Updated =
+            template.query("SELECT updated FROM player_character WHERE id = " + char5.getId(), DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
+        assertTrue(char5Updated.isAfter(minTimeAllowed));
 
         template.execute("UPDATE player_character SET updated = NOW() WHERE id = " + char4.getId());
 
