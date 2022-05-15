@@ -6,9 +6,9 @@ package com.nephest.battlenet.sc2.web.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.anyLong;
 import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.eq;
@@ -299,8 +299,8 @@ public class BlizzardPrivacyServiceTest
         //update previous season
         privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(Instant.now());
         OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>>
-            stub = when(api.getLadders(any(), anyLong(), any())).thenReturn(createLadder());
-        for(int i = 1; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
+            stub = when(api.getLadders(any(), eq(-1L), isNull())).thenReturn(createLadder());
+        for(int i = 0; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
 
         privacyService.update();
 

@@ -34,7 +34,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -254,7 +253,7 @@ public class BlizzardPrivacyService
         List<Future<?>> dbTasks = new ArrayList<>();
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, QUEUE_TYPES, LEAGUE_TYPES), currentSeason);
-        api.getLadders(ladderIds, 1, new EnumMap<>(Region.class))
+        api.getLadders(ladderIds, -1, null)
             .flatMap(l->Flux.fromStream(extractPrivateInfo(l)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
