@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -7,10 +7,9 @@ import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.MapStats;
 import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.Season;
-
-import javax.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
+import javax.validation.constraints.NotNull;
 
 public class LadderMapStats
 {
@@ -24,7 +23,6 @@ public class LadderMapStats
     @NotNull
     private final Map<Integer, League> leagues;
 
-    @NotNull
     private final SC2Map map;
 
     @NotNull
