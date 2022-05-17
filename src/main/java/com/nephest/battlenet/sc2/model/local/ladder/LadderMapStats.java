@@ -37,6 +37,11 @@ public class LadderMapStats
         this.maps = maps;
     }
 
+    public static LadderMapStats empty()
+    {
+        return new LadderMapStats(List.of(), Map.of(), Map.of(), null, List.of());
+    }
+
     public List<MapStats> getStats()
     {
         return stats;
