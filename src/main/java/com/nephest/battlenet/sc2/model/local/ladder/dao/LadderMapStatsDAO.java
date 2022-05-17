@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -15,6 +15,12 @@ import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStats;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -23,13 +29,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
-
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Repository
 public class LadderMapStatsDAO
@@ -85,6 +84,8 @@ public class LadderMapStatsDAO
                 SeasonDAO.getStdRowMapper().mapRow(rs, i),
                 LeagueDAO.getStdRowMapper().mapRow(rs, i)
             ));
+        if(seasonLeagues.isEmpty()) return LadderMapStats.empty();
+
         Map<Integer, Season> seasons = seasonLeagues.stream()
             .map(Tuple2::getT1)
             .distinct()
