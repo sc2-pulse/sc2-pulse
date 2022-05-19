@@ -970,6 +970,7 @@ class CharacterUtil
     static updateCharacterSearch(name)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
+        name = CharacterUtil.autoCompleteIfClanSearch(name);
         const searchParams = new URLSearchParams();
         searchParams.append("type", "search");
         searchParams.append("name", name);
@@ -983,6 +984,11 @@ class CharacterUtil
                 res();
             }))
             .catch(error => Session.onPersonalException(error));
+    }
+
+    static autoCompleteIfClanSearch(name)
+    {
+        return name && name.startsWith("[") && !name.endsWith("]") ? name + "]" : name;
     }
 
     static updatePersonalCharactersModel()
