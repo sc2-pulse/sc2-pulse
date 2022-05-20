@@ -717,7 +717,7 @@ public class StatsService
         removeForcedAlternativeRegionIfExpired(region);
         if(teamStateDAO.getCount(region, OffsetDateTime.now().minus(STALE_DATA_TEAM_STATES_DEPTH)) == 0)
         {
-            if(forcedAlternativeRegions.add(region))
+            if(addForcedAlternativeRegion(region))
             {
                 LOG.warn("Stale data detected for {}, added this region to forced alternative update", region);
                 forcedAlternativeUpdateInstants.get(region).setValueAndSave(Instant.now());
@@ -733,7 +733,7 @@ public class StatsService
         OffsetDateTime fromOdt = OffsetDateTime.ofInstant(from, ZoneId.systemDefault());
         if(fromOdt.isBefore(OffsetDateTime.now().minus(FORCED_ALTERNATIVE_UPDATE_DURATION)))
         {
-            if(forcedAlternativeRegions.remove(region))
+            if(removeForcedAlternativeRegion(region))
                 LOG.info("Removed {} from forced alternative update due to timeout", region);
             forcedAlternativeUpdateInstants.get(region).setValueAndSave(null);
         }
@@ -782,16 +782,18 @@ public class StatsService
         varDAO.merge("region.alternative", var);
     }
 
-    public void addForcedAlternativeRegion(Region region)
+    public boolean addForcedAlternativeRegion(Region region)
     {
-        forcedAlternativeRegions.add(region);
+        boolean result = forcedAlternativeRegions.add(region);
         saveForcedAlternativeRegions();
+        return result;
     }
 
-    public void removeForcedAlternativeRegion(Region region)
+    public boolean removeForcedAlternativeRegion(Region region)
     {
-        forcedAlternativeRegions.remove(region);
+        boolean result = forcedAlternativeRegions.remove(region);
         saveForcedAlternativeRegions();
+        return result;
     }
 
     private void loadForcedAlternativeRegions()
