@@ -290,7 +290,7 @@ extends BaseAPI
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
             oauth2Client.setDefaultClientRegistrationId("sc2-sys-" + region.name().toLowerCase());
             //some endpoints return invalid content type headers, ignore the headers and handle all types
-            clients.put(region, WebServiceUtil.getWebClientBuilder(objectMapper, 500 * 1024, ALL)
+            clients.put(region, WebServiceUtil.getWebClientBuilder(objectMapper, 600 * 1024, ALL)
                 .apply(oauth2Client.oauth2Configuration()).build());
         }
     }
