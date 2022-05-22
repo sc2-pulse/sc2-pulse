@@ -161,7 +161,7 @@ public class Cron
         return dt;
     }
 
-    @Scheduled(initialDelay = 30_000, fixedDelay = 10_000)
+    @Scheduled(fixedDelay = 10_000)
     public void updateAll()
     {
         if(!updatingLadders.compareAndSet(false, true)) return;
