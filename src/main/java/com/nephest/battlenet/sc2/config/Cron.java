@@ -190,7 +190,10 @@ public class Cron
 
     private void nonStopUpdate()
     {
-        if(!shouldUpdate()) return;
+        if(!shouldUpdate()) {
+            LOG.info("Can't update the ladder because request cap is reached");
+            return;
+        }
 
         try
         {
