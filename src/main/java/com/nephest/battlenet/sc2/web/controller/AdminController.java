@@ -8,9 +8,14 @@ import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import com.nephest.battlenet.sc2.web.service.SupporterService;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/admin")
@@ -29,6 +34,9 @@ public class AdminController
 
     @Autowired
     private MatchService matchService;
+
+    @Autowired
+    private SupporterService supporterService;
 
     @PostMapping("/alternative/forced/{region}")
     public void addForcedAlternativeRegion(@PathVariable("region") Region region)
@@ -94,6 +102,32 @@ public class AdminController
     public void removeMatchWebRegion(@PathVariable("region") Region region)
     {
         matchService.removeWebRegion(region);
+    }
+
+    @PostMapping("/supporters/supporter/{name}")
+    public void addSupporter(@PathVariable String name)
+    {
+        supporterService.addSupporter(name);
+    }
+
+    @DeleteMapping("/supporters/supporter/{name}")
+    public void removeSupporter(@PathVariable String name)
+    {
+        supporterService.removeSupporter(name);
+    }
+
+    @PostMapping("/supporters/donor/{name}")
+    public void addDonor(@PathVariable String name)
+    {
+        supporterService.getDonorsVar().getValue().add(name);
+        supporterService.getDonorsVar().save();
+    }
+
+    @DeleteMapping("/supporters/donor/{name}")
+    public void removeDonor(@PathVariable String name)
+    {
+        supporterService.getDonorsVar().getValue().remove(name);
+        supporterService.getDonorsVar().save();
     }
 
 }
