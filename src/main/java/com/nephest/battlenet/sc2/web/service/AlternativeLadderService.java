@@ -3,15 +3,62 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
+import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.dao.BlizzardDAO;
-import com.nephest.battlenet.sc2.model.local.*;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.CollectionVar;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.InstantVar;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
+import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,16 +74,6 @@ import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
-
-import javax.annotation.PostConstruct;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 @Service
 public class AlternativeLadderService
@@ -66,8 +103,8 @@ public class AlternativeLadderService
 
     private final Map<Region, InstantVar> discoveryInstants = new HashMap<>();
     private final Map<Region, InstantVar> additionalWebScanInstants = new EnumMap<>(Region.class);
-    private SetVar<Region> profileLadderWebRegions;
-    private SetVar<Region> discoveryWebRegions;
+    private CollectionVar<Set<Region>, Region> profileLadderWebRegions;
+    private CollectionVar<Set<Region>, Region> discoveryWebRegions;
 
     @Autowired
     private AlternativeLadderService alternativeLadderService;

@@ -9,11 +9,11 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
+import com.nephest.battlenet.sc2.model.local.CollectionVar;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SC2Map;
-import com.nephest.battlenet.sc2.model.local.SetVar;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
@@ -75,7 +75,7 @@ public class MatchService
     private final ExecutorService dbExecutorService;
     private final Predicate<BlizzardMatch> validationPredicate;
     private final ConcurrentLinkedQueue<Set<PlayerCharacterNaturalId>> failedCharacters = new ConcurrentLinkedQueue<>();
-    private SetVar<Region> webRegions;
+    private CollectionVar<Set<Region>, Region> webRegions;
 
     @Autowired @Lazy
     private MatchService matchService;

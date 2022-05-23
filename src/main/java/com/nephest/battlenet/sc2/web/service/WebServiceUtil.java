@@ -5,12 +5,18 @@ package com.nephest.battlenet.sc2.web.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.SetVar;
+import com.nephest.battlenet.sc2.model.local.CollectionVar;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import java.time.Duration;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,10 +33,6 @@ import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.util.retry.RetrySpec;
-
-import java.time.Duration;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 @Service
 public class WebServiceUtil
@@ -179,11 +181,17 @@ public class WebServiceUtil
         }
     }
 
-    public static SetVar<Region> loadRegionSetVar(VarDAO varDAO, String key, String error)
+    public static CollectionVar<Set<Region>, Region> loadRegionSetVar(VarDAO varDAO, String key, String error)
     {
-        SetVar<Region> setVar = new SetVar<>(varDAO, key,
+        CollectionVar<Set<Region>, Region> setVar = new CollectionVar<>
+        (
+            varDAO, key,
             r->r == null ? null : String.valueOf(r.getId()),
-            s->s == null || s.isEmpty() ? null : Region.from(Integer.parseInt(s)), false);
+            s->s == null || s.isEmpty() ? null : Region.from(Integer.parseInt(s)),
+            HashSet::new,
+            Collectors.toSet(),
+            false
+        );
         //catch errors to allow autowiring in tests
         try
         {
