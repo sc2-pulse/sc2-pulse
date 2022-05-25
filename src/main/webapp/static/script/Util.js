@@ -316,6 +316,7 @@ Util.HTML_ENTITY_MAP =
    '=': '&#x3D;'
  };
 Util.BARCODE_REGEX = new RegExp("^[lI]+$");
+Util.SECURE_URI_REGEX = new RegExp(/^(?!.*[%;/\\])(?!^(\.)\1*$).*$/);
 Util.NUMBER_FORMAT = new Intl.NumberFormat(navigator.language);
 Util.NUMBER_FORMAT_DIFF = new Intl.NumberFormat(navigator.language, {signDisplay: "exceptZero"});
 Util.DECIMAL_FORMAT = new Intl.NumberFormat(navigator.language, {minimumFractionDigits: 2, maximumFractionDigits: 2});

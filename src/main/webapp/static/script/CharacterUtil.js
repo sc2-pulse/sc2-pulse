@@ -1431,9 +1431,8 @@ class CharacterUtil
     {
         return term
             && ((term.startsWith("[") && term.length >= 2) || term.includes("#") || term.length >= 4)
-            && term.search(CharacterUtil.INVALID_SEARCH_CHARACTERS) == -1;
+            && Util.SECURE_URI_REGEX.test(term);
     }
 
 }
 CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS = 2 * 24 * 60 * 60 * 1000;
-CharacterUtil.INVALID_SEARCH_CHARACTERS = /%|;|\\|\//g;

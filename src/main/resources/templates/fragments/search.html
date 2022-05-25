@@ -58,8 +58,8 @@
                         required="required"
                         list="search-player-suggestions"
                         autocomplete="off"
-                        pattern="[^%;/\\]*"
-                        title="'%/\;' characters are forbidden"
+                        th:pattern="${T(com.nephest.battlenet.sc2.web.util.HTMLTemplateUtil).SECURE_URI_REGEX}"
+                        th:title="${T(com.nephest.battlenet.sc2.web.util.HTMLTemplateUtil).SECURE_URI_REGEX_DESCRIPTION}"
                 />
                 <datalist id="search-player-suggestions"></datalist>
                 <button class="btn btn-primary mb-3" type="submit">
@@ -123,8 +123,8 @@
                            class="form-control"
                            name="tagOrName"
                            data-group="2"
-                           pattern="[^%;/\\]*"
-                           title="'%/\;' characters are forbidden"
+                           th:pattern="${T(com.nephest.battlenet.sc2.web.util.HTMLTemplateUtil).SECURE_URI_REGEX}"
+                           th:title="${T(com.nephest.battlenet.sc2.web.util.HTMLTemplateUtil).SECURE_URI_REGEX_DESCRIPTION}"
                     />
                 </div>
                 <div class="error-out text-danger font-weight-bold mb-3 d-none"></div>
