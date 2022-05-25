@@ -1436,4 +1436,4 @@ class CharacterUtil
 
 }
 CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS = 2 * 24 * 60 * 60 * 1000;
-CharacterUtil.INVALID_SEARCH_CHARACTERS = /;|\\|\//g;
+CharacterUtil.INVALID_SEARCH_CHARACTERS = /%|;|\\|\//g;
