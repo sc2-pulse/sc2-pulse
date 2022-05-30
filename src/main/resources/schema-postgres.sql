@@ -191,9 +191,9 @@ CREATE TABLE "team"
     "wins" SMALLINT NOT NULL,
     "losses" SMALLINT NOT NULL,
     "ties" SMALLINT NOT NULL,
-    "global_rank" INTEGER NOT NULL DEFAULT 2147483647,
-    "region_rank" INTEGER NOT NULL DEFAULT 2147483647,
-    "league_rank" INTEGER NOT NULL DEFAULT 2147483647,
+    "global_rank" INTEGER,
+    "region_rank" INTEGER,
+    "league_rank" INTEGER,
 
     PRIMARY KEY ("id"),
 

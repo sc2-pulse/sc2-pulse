@@ -3,14 +3,56 @@
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.*;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.ProPlayer;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -24,24 +66,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import javax.sql.DataSource;
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -272,10 +296,10 @@ public class LadderSearchIndependentIT
         assertEquals(249, char1.getTotalGamesPlayed());
         assertEquals(98, char1.getCurrentStats().getRating());
         assertEquals(149, char1.getCurrentStats().getGamesPlayed());
-        assertEquals(2147483647, char1.getCurrentStats().getRank());
+        assertNull(char1.getCurrentStats().getRank());
         assertEquals(100, char1.getPreviousStats().getRating());
         assertEquals(100, char1.getPreviousStats().getGamesPlayed());
-        assertEquals(2147483647, char1.getPreviousStats().getRank());
+        assertNull(char1.getPreviousStats().getRank());
 
         List<LadderDistinctCharacter> byAccount = ladderCharacterDAO.findDistinctCharactersByAccountId(acc.getId());
         verifyCharacterAccountStats(byAccount);
@@ -298,10 +322,10 @@ public class LadderSearchIndependentIT
         assertEquals(249, byProfileLink.getTotalGamesPlayed());
         assertEquals(98, byProfileLink.getCurrentStats().getRating());
         assertEquals(149, byProfileLink.getCurrentStats().getGamesPlayed());
-        assertEquals(2147483647, byProfileLink.getCurrentStats().getRank());
+        assertNull(byProfileLink.getCurrentStats().getRank());
         assertEquals(100, byProfileLink.getPreviousStats().getRating());
         assertEquals(100, byProfileLink.getPreviousStats().getGamesPlayed());
-        assertEquals(2147483647, byProfileLink.getPreviousStats().getRank());
+        assertNull(byProfileLink.getPreviousStats().getRank());
 
         mvc.perform
         (
@@ -385,10 +409,10 @@ public class LadderSearchIndependentIT
         assertEquals(249, char11.getTotalGamesPlayed());
         assertEquals(98, char11.getCurrentStats().getRating());
         assertEquals(149, char11.getCurrentStats().getGamesPlayed());
-        assertEquals(2147483647, char11.getCurrentStats().getRank());
+        assertNull(char11.getCurrentStats().getRank());
         assertEquals(100, char11.getPreviousStats().getRating());
         assertEquals(100, char11.getPreviousStats().getGamesPlayed());
-        assertEquals(2147483647, char11.getPreviousStats().getRank());
+        assertNull(char11.getPreviousStats().getRank());
 
         LadderDistinctCharacter char12 = byAccount.get(0);
         assertEquals("refaccount#123", char12.getMembers().getAccount().getBattleTag());
@@ -405,7 +429,7 @@ public class LadderSearchIndependentIT
         assertNull(char12.getCurrentStats().getRank());
         assertEquals(101, char12.getPreviousStats().getRating());
         assertEquals(100, char12.getPreviousStats().getGamesPlayed());
-        assertEquals(2147483647, char12.getPreviousStats().getRank());
+        assertNull(char12.getPreviousStats().getRank());
     }
 
     private void verifyProCharacterAccountStats(List<LadderDistinctCharacter> byAccount)
@@ -421,10 +445,10 @@ public class LadderSearchIndependentIT
         assertEquals(200, char13.getTotalGamesPlayed());
         assertEquals(102, char13.getCurrentStats().getRating());
         assertEquals(100, char13.getCurrentStats().getGamesPlayed());
-        assertEquals(2147483647, char13.getCurrentStats().getRank());
+        assertNull(char13.getCurrentStats().getRank());
         assertEquals(102, char13.getPreviousStats().getRating());
         assertEquals(100, char13.getPreviousStats().getGamesPlayed());
-        assertEquals(2147483647, char13.getPreviousStats().getRank());
+        assertNull(char13.getPreviousStats().getRank());
 
         verifyCharacterAccountStats(List.of(byAccount.get(1), byAccount.get(2)));
     }

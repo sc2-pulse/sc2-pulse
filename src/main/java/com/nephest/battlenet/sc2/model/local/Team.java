@@ -1,23 +1,24 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseTeam;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
-
-import javax.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.util.Comparator;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public class Team
 extends BaseTeam
 implements java.io.Serializable
 {
-
-    public static final Integer DEFAULT_RANK = 2147483647;
 
     public static final Comparator<Team> NATURAL_ID_COMPARATOR =
         Comparator.comparing(Team::getLegacyId)
@@ -46,14 +47,11 @@ implements java.io.Serializable
 
     private LeagueTier.LeagueTierType tierType;
 
-    @NotNull
-    private Integer globalRank = DEFAULT_RANK;
+    private Integer globalRank;
 
-    @NotNull
-    private Integer regionRank = DEFAULT_RANK;
+    private Integer regionRank;
 
-    @NotNull
-    private Integer leagueRank = DEFAULT_RANK;
+    private Integer leagueRank;
 
     public Team(){}
 

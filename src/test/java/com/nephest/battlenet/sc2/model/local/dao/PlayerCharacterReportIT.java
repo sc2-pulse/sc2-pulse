@@ -3,18 +3,66 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.*;
-import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Evidence;
+import com.nephest.battlenet.sc2.model.local.EvidenceVote;
+import com.nephest.battlenet.sc2.model.local.Match;
+import com.nephest.battlenet.sc2.model.local.MatchParticipant;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.local.SC2Map;
+import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidence;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidenceVote;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
+import java.math.BigInteger;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -28,28 +76,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import javax.sql.DataSource;
-import java.math.BigInteger;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.OffsetDateTime;
-import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
-
-import static org.junit.jupiter.api.Assertions.*;
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -636,7 +662,6 @@ public class PlayerCharacterReportIT
         assertTrue(endReports.stream().anyMatch(r->r.getId().equals(expiredConfirmedReport.getId())));
         assertTrue(endEvidences.stream().anyMatch(e->e.getId().equals(expiredConfirmedEvidence.getId())));
 
-        //cheater team is a team where at least on of its members is a cheater
         Team secondCheaterTeam = teamDAO.merge(new Team
         (
             null,
@@ -644,6 +669,14 @@ public class PlayerCharacterReportIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("12344"), 1, 10L, 10, 0, 0, 0
         ))[0];
+        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
+        Team foundSecondCheaterTeamPreCheat = teamDAO.findById(secondCheaterTeam.getId()).orElseThrow();
+        //ranks are assigned because there are no cheaters yet
+        assertNotNull(foundSecondCheaterTeamPreCheat.getGlobalRank());
+        assertNotNull(foundSecondCheaterTeamPreCheat.getRegionRank());
+        assertNotNull(foundSecondCheaterTeamPreCheat.getLeagueRank());
+
+        //cheater team is a team where at least on of its members is a cheater, add cheaters
         teamMemberDAO.merge
         (
             new TeamMember(secondCheaterTeam.getId(), 1L, 0, 0, 0, 10),
@@ -668,11 +701,11 @@ public class PlayerCharacterReportIT
         //cheater team is a team where at least on of its members is a cheater
         assertTrue(cheaterTeams.stream().anyMatch(t->t.equals(secondCheaterTeam.getId())));
 
-        //cheaters are excluded from ranking
+        //cheaters are excluded from ranking, existing ranks are nullified
         Team foundSecondCheaterTeam = teamDAO.findById(secondCheaterTeam.getId()).orElseThrow();
-        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getGlobalRank());
-        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getRegionRank());
-        assertEquals(Team.DEFAULT_RANK, foundSecondCheaterTeam.getLeagueRank());
+        assertNull(foundSecondCheaterTeam.getGlobalRank());
+        assertNull(foundSecondCheaterTeam.getRegionRank());
+        assertNull(foundSecondCheaterTeam.getLeagueRank());
 
         //cheaters are excluded from ranking
         LadderTeamState cheaterTeamState = ladderTeamStateDAO.find(1L).stream()

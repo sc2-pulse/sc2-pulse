@@ -3,9 +3,33 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.blizzard.*;
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
+import com.nephest.battlenet.sc2.model.local.BaseLocalTeamMember;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import java.math.BigDecimal;
+import java.math.BigInteger;
+import java.util.AbstractMap;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,11 +44,6 @@ import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Repository
 public class TeamDAO
@@ -189,6 +208,15 @@ public class TeamDAO
             + "FROM team "
             + "WHERE season = :season "
             + "AND id NOT IN(SELECT team_id FROM cheaters)"
+        + "), "
+        + "cheater_update AS "
+        + "("
+            + "UPDATE team "
+            + "SET global_rank = null, "
+            + "region_rank = null, "
+            + "league_rank = null "
+            + "FROM cheaters "
+            + "WHERE team.id = cheaters.team_id"
         + ") "
         + "UPDATE team "
         + "set global_rank = ranks.global_rank, "

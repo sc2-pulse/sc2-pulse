@@ -158,7 +158,7 @@ class Util
 
     static isUndefinedRank(rank)
     {
-        return rank == SC2Restful.UNDEFINED_RANK;
+        return !rank;
     }
 
     static isFakeBattleTag(btag)
