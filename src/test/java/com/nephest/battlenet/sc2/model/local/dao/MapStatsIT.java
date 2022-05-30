@@ -28,7 +28,6 @@ import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
-import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStats;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsDAO;
 import java.sql.Connection;
@@ -53,12 +52,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 @SpringBootTest(classes = AllTestConfig.class)
@@ -105,6 +106,9 @@ public class MapStatsIT
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private JdbcTemplate template;
 
     private static MockMvc mvc;
 
@@ -255,7 +259,7 @@ public class MapStatsIT
     (List<Region> regions, OffsetDateTime odt, int leagueCount, int teamsPerLeague, int mapId)
     {
         List<Tuple2<Match, MatchParticipant[]>> matches = new ArrayList<>();
-        List<TeamState> states = new ArrayList<>();
+        List<Tuple3<Long, Long, OffsetDateTime>> snapshotData = new ArrayList<>();
         for (int li = 0; li < leagueCount; li++)
         {
             int leagueOffset = li * regions.size() * teamsPerLeague;
@@ -273,8 +277,7 @@ public class MapStatsIT
                     long char2Id = char1Id + 1;
                     //unique date to prevent duplicates
                     OffsetDateTime uniqueOdt = odt.plusSeconds(char1Id);
-                    states.add(new TeamState(char1Id, uniqueOdt, divisionId, 1, (int) char1Id));
-                    states.add(new TeamState(char2Id, uniqueOdt, divisionId, 1, (int) char2Id));
+                    snapshotData.add(Tuples.of(char1Id, char2Id, uniqueOdt));
                     Match match = new Match(null, uniqueOdt, BaseMatch.MatchType._1V1, mapId, region);
                     MatchParticipant[] participants = new MatchParticipant[]
                     {
@@ -285,7 +288,6 @@ public class MapStatsIT
                 }
             }
         }
-        teamStateDAO.saveState(states.toArray(TeamState[]::new));
         matchDAO.merge(matches.stream().map(Tuple2::getT1).toArray(Match[]::new));
         matches.forEach(m->{
             m.getT2()[0].setMatchId(m.getT1().getId());
@@ -295,7 +297,12 @@ public class MapStatsIT
         matchDAO.updateDuration(odt);
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
-        teamStateDAO.updateRanks(odt, Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
+        snapshotData.forEach(t->teamStateDAO.takeSnapshot
+        (
+            Set.of(SeasonGenerator.DEFAULT_SEASON_ID),
+            List.of(t.getT1(), t.getT2()),
+            t.getT3()
+        ));
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, odt);
     }
 

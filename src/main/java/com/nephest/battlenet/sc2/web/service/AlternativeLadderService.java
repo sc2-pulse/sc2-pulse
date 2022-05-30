@@ -27,7 +27,6 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
-import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
@@ -53,6 +52,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -105,6 +105,8 @@ public class AlternativeLadderService
     private final Map<Region, InstantVar> additionalWebScanInstants = new EnumMap<>(Region.class);
     private CollectionVar<Set<Region>, Region> profileLadderWebRegions;
     private CollectionVar<Set<Region>, Region> discoveryWebRegions;
+
+    private final ConcurrentLinkedQueue<Long> pendingTeams = new ConcurrentLinkedQueue<>();
 
     @Autowired
     private AlternativeLadderService alternativeLadderService;
@@ -406,7 +408,6 @@ public class AlternativeLadderService
         BaseLeague baseLeague = ladder.getLeague();
         Division division = getOrCreateDivision(season, ladder.getLeague(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladderMemberCount, 1.0F);
-        Set<TeamState> states = new HashSet<>(ladder.getLadderTeams().length, 1.0F);
         Set<PlayerCharacter> characters = new HashSet<>();
         List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans = new ArrayList<>();
@@ -432,13 +433,12 @@ public class AlternativeLadderService
         teamDao.merge(validTeams.stream().map(Tuple2::getT1).toArray(Team[]::new));
         validTeams.stream()
             .filter(t->t.getT1().getId() != null)
-            .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, existingCharacterClans, members, states));
+            .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, existingCharacterClans, members));
         StatsService.saveClans(clanDAO, clans);
         saveExistingCharacterClans(existingCharacterClans, characters);
         saveNewCharacterData(newTeams, members);
         savePlayerCharacters(characters);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
-        teamStateDAO.saveState(states.toArray(TeamState[]::new));
         LOG.debug("Ladder saved: {} {} {}", id.getT1(), id.getT3(), ladder.getLeague());
     }
 
@@ -451,11 +451,10 @@ public class AlternativeLadderService
         Set<PlayerCharacter> characters,
         List<Tuple2<PlayerCharacter, Clan>> clans,
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans,
-        Set<TeamMember> members,
-        Set<TeamState> states
+        Set<TeamMember> members
     )
     {
-        states.add(TeamState.of(team));
+        pendingTeams.add(team.getId());
         for(BlizzardProfileTeamMember bMember : bTeam.getTeamMembers())
         {
             PlayerCharacter playerCharacter = playerCharacterDao.find(season.getRegion(), bMember.getRealm(), bMember.getId())
@@ -605,6 +604,16 @@ public class AlternativeLadderService
         return team.getTeamMembers().length == expectedMemberCount
             //a team can have 0 games while a team member can have some games played, which is clearly invalid
             && (team.getWins() > 0 || team.getLosses() > 0 || team.getTies() > 0);
+    }
+
+    public void afterCurrentSeasonUpdate(Set<Integer> pendingSeasons)
+    {
+        LOG.info
+        (
+            "Created {} team snapshots",
+            teamStateDAO.takeSnapshot(pendingSeasons, new ArrayList<>(pendingTeams))
+        );
+        pendingTeams.clear();
     }
 
 }

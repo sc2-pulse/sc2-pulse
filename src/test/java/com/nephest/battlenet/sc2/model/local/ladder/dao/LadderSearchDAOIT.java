@@ -3,12 +3,54 @@
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
+import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_END;
+import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_ID;
+import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_NUMBER;
+import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_START;
+import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.DEFAULT_SEASON_YEAR;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.*;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.QueueStats;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
-import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -16,22 +58,10 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
-import javax.sql.DataSource;
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.ZoneOffset;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static com.nephest.battlenet.sc2.model.local.SeasonGenerator.*;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
@@ -86,7 +116,8 @@ public class LadderSearchDAOIT
         @Autowired DivisionDAO divisionDAO,
         @Autowired TeamDAO teamDAO,
         @Autowired TeamMemberDAO teamMemberDAO,
-        @Autowired TeamStateDAO teamStateDAO
+        @Autowired TeamStateDAO teamStateDAO,
+        @Autowired JdbcTemplate template
     )
     throws SQLException
     {
@@ -153,10 +184,6 @@ public class LadderSearchDAOIT
         //old player
         teamMemberDAO.create(new TeamMember(team.getId(), 1L, 1, 2, 3, 4));
 
-        //this state should have no rank info because it's too old
-        TeamState oldTeamState = TeamState.of(newTeam, DEFAULT_SEASON_START.minusDays(30).atStartOfDay().atOffset(ZoneOffset.UTC));
-        teamStateDAO.saveState(oldTeamState);
-
         teamDAO.updateRanks(DEFAULT_SEASON_ID);
         teamDAO.updateRanks(DEFAULT_SEASON_ID + 1);
         teamDAO.updateRanks(DEFAULT_SEASON_ID + 2);
@@ -164,14 +191,17 @@ public class LadderSearchDAOIT
         leagueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
-        teamStateDAO.updateRanks(oldTeamState.getDateTime().plusSeconds(1),
-            Set.of(DEFAULT_SEASON_ID, DEFAULT_SEASON_ID + 1, DEFAULT_SEASON_ID + 2));
+        //recreate snapshots with ranks
+        template.update("DELETE FROM team_state");
+        teamStateDAO.takeSnapshot
+            (
+                Set.of(SeasonGenerator.DEFAULT_SEASON_ID, DEFAULT_SEASON_ID + 1, DEFAULT_SEASON_ID + 2),
+                LongStream.rangeClosed(1, TEAMS_TOTAL).boxed().collect(Collectors.toList())
+        );
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
         queueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
-
-        assertNull(oldTeamState.getGlobalRank());
     }
 
     @AfterAll

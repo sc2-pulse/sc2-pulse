@@ -27,7 +27,6 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
-import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
@@ -60,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
@@ -123,6 +123,7 @@ public class StatsService
     private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
+    private final ConcurrentLinkedQueue<Long> pendingTeams = new ConcurrentLinkedQueue<>();
 
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
@@ -346,7 +347,13 @@ public class StatsService
         );
         Set<Integer> pendingSeasons = Set.copyOf(pendingStatsUpdates);
         updatePendingStats(allStats);
-        teamStateDAO.updateRanks(OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault()), pendingSeasons);
+        LOG.info
+        (
+            "Created {} team snapshots",
+            teamStateDAO.takeSnapshot(pendingSeasons, new ArrayList<>(pendingTeams))
+        );
+        pendingTeams.clear();
+        alternativeLadderService.afterCurrentSeasonUpdate(pendingSeasons);
     }
 
     private void updateSeasonStats
@@ -543,7 +550,6 @@ public class StatsService
         }
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members = new ArrayList<>(bTeams.length * memberCount);
-        Set<TeamState> states = new HashSet<>(bTeams.length, 1f);
         List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
         Integer curSeason = seasonDao.getMaxBattlenetId() == null ? 0 : seasonDao.getMaxBattlenetId();
         List<Tuple2<Team, BlizzardTeam>> validTeams = Arrays.stream(bTeams)
@@ -557,11 +563,10 @@ public class StatsService
             .filter(t->t.getT1().getId() != null)
             .forEach(t->{
                 extractTeamMembers(t.getT2().getMembers(), members, clans, season, t.getT1());
-                if(season.getBattlenetId().equals(curSeason)) states.add(TeamState.of(t.getT1()));
+                if(season.getBattlenetId().equals(curSeason)) pendingTeams.add(t.getT1().getId());
             });
         saveClans(clanDAO, clans);
         saveMembersConcurrently(members);
-        if(states.size() > 0) teamStateDAO.saveState(states.toArray(TeamState[]::new));
     }
 
     //cross field validation

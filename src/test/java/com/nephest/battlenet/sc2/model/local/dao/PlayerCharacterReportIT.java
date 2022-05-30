@@ -37,7 +37,6 @@ import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
-import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidence;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidenceVote;
@@ -58,10 +57,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.LongStream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -682,15 +682,16 @@ public class PlayerCharacterReportIT
             new TeamMember(secondCheaterTeam.getId(), 1L, 0, 0, 0, 10),
             new TeamMember(secondCheaterTeam.getId(), 2L, 0, 0, 0, 10)
         );
-        teamStateDAO.saveState(TeamState.of(secondCheaterTeam));
 
         //cheaters are excluded from ranking
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
-        teamStateDAO.updateRanks
+        //recreate snapshots with ranks
+        template.update("DELETE FROM team_state");
+        teamStateDAO.takeSnapshot
         (
-            SeasonGenerator.DEFAULT_SEASON_START.minusDays(1).atStartOfDay().atOffset(ZoneOffset.UTC),
-            Set.of(SeasonGenerator.DEFAULT_SEASON_ID)
+            Set.of(SeasonGenerator.DEFAULT_SEASON_ID),
+            LongStream.range(1, 12).boxed().collect(Collectors.toList())
         );
 
         List<Long> cheaterTeams = teamDAO.findCheaterTeamIds(SeasonGenerator.DEFAULT_SEASON_ID);
@@ -712,9 +713,9 @@ public class PlayerCharacterReportIT
             .filter(s->s.getTeamState().getTeamId().equals(foundSecondCheaterTeam.getId()))
             .findAny().orElseThrow();
         assertNull(cheaterTeamState.getTeamState().getGlobalRank());
-        assertNull(cheaterTeamState.getTeamState().getGlobalTeamCount());
+        assertEquals(7, cheaterTeamState.getTeamState().getGlobalTeamCount());
         assertNull(cheaterTeamState.getTeamState().getRegionRank());
-        assertNull(cheaterTeamState.getTeamState().getRegionTeamCount());
+        assertEquals(7, cheaterTeamState.getTeamState().getRegionTeamCount());
 
         LadderTeamState nonCheaterTeamState = ladderTeamStateDAO.find(2L).get(0);
         //11 team in total, 4 teams with cheater members, 7 valid teams(11 - 4)

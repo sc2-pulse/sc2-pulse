@@ -7,7 +7,9 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,6 +20,7 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class TeamStateDAO
@@ -30,6 +33,8 @@ public class TeamStateDAO
 
     @Value("${com.nephest.battlenet.sc2.mmr.history.secondary.length:#{'180'}}")
     private int MAX_DEPTH_DAYS_SECONDARY = 180;
+
+    public static final int TEAM_SNAPSHOT_BATCH_SIZE = 200;
 
     public static final String STD_SELECT =
         "team_state.team_id AS \"team_state.team_id\", "
@@ -125,7 +130,7 @@ public class TeamStateDAO
         + "AND team_state.timestamp != max_filter.timestamp "
         + "AND team_state.archived = true";
 
-    private static final String UPDATE_RANK_QUERY =
+    private static final String TAKE_TEAM_SNAPSHOT =
         "WITH "
         + "cheaters AS "
         + "("
@@ -163,23 +168,23 @@ public class TeamStateDAO
             + "LEFT JOIN cheaters_global USING(season, queue_type, team_type) "
             + "GROUP BY season, queue_type, team_type "
         + ") "
-        + "UPDATE team_state "
-        + "SET global_rank = team.global_rank, "
-        + "global_team_count = global_team_count.count, "
-        + "region_rank = team.region_rank, "
-        + "region_team_count = region_team_count.count "
+        + "INSERT INTO team_state "
+        + "("
+            + "team_id, \"timestamp\", division_id, games, rating, secondary, "
+            + "global_rank, global_team_count, region_rank, region_team_count"
+        + ") "
+        + "SELECT id, :timestamp, division_id, wins + losses, rating, "
+        + "CASE WHEN team.queue_type != :mainQueueType THEN true ELSE null::boolean END, "
+        + "global_rank, global_team_count.count, region_rank, region_team_count.count "
         + "FROM team "
-        + "INNER JOIN region_team_count ON team.season = region_team_count.season "
+        + "LEFT JOIN region_team_count ON team.season = region_team_count.season "
             + "AND team.queue_type = region_team_count.queue_type "
             + "AND team.team_type = region_team_count.team_type "
             + "AND team.region = region_team_count.region "
-        + "INNER JOIN global_team_count ON team.season = global_team_count.season "
+        + "LEFT JOIN global_team_count ON team.season = global_team_count.season "
             + "AND team.queue_type = global_team_count.queue_type "
             + "AND team.team_type = global_team_count.team_type "
-        + "WHERE team_state.team_id = team.id "
-        + "AND team_state.timestamp >= :from "
-        + "AND team_state.global_rank IS NULL "
-        + "AND team_state.team_id NOT IN (SELECT team_id FROM cheaters)";
+        + "WHERE team.id IN(:teamIds)";
 
     public static final String REMOVE_EXPIRED_MAIN_QUERY =
         "DELETE FROM team_state "
@@ -275,6 +280,15 @@ public class TeamStateDAO
             .addValue("secondary", history.getSecondary());
     }
 
+    /**
+     * <p>
+     *     This method should be used only in tests. Production code should use
+     *     {@link #takeSnapshot(Set, List, OffsetDateTime) takeSnapshot} method to create snapshots.
+     *     Use this method when you need to create a very specific team state in tests.
+     * </p>
+     * @param states states to save
+     * @return batch numbers of saves states
+     */
     public int[] saveState(TeamState... states)
     {
         if(states.length == 0) return new int[0];
@@ -285,19 +299,43 @@ public class TeamStateDAO
         return template.batchUpdate(CREATE_QUERY, params);
     }
 
-    public int updateRanks(OffsetDateTime from, Set<Integer> seasons)
+    private int takeSnapshotBatch(Set<Integer> seasons, List<Long> teamIds, OffsetDateTime timestamp)
     {
+        if(teamIds.isEmpty()) return 0;
+
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", from)
             .addValue("seasons", seasons)
+            .addValue("mainQueueType", conversionService.convert(TeamState.MAIN_QUEUE_TYPE, Integer.class))
+            .addValue("teamIds", teamIds.stream().distinct().collect(Collectors.toList()))
+            .addValue("timestamp", timestamp)
             .addValue
             (
                 "cheaterReportType",
                 conversionService.convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class)
             );
-        int updated = template.update(UPDATE_RANK_QUERY, params);
-        LOG.debug("Updated ranks of {} team states({}, {})", updated, seasons, from);
-        return updated;
+        return template.update(TAKE_TEAM_SNAPSHOT, params);
+    }
+
+    @Transactional
+    public int takeSnapshot(Set<Integer> seasons, List<Long> teamIds, OffsetDateTime timestamp)
+    {
+        if(teamIds.isEmpty()) return 0;
+
+        int count = 0;
+        for(int i = 0; i < teamIds.size();)
+        {
+            int to = Math.min(i + TEAM_SNAPSHOT_BATCH_SIZE, teamIds.size());
+            List<Long> batch = teamIds.subList(i, to);
+            count += takeSnapshotBatch(seasons, batch, timestamp);
+            i = to;
+        }
+        return count;
+    }
+
+    @Transactional
+    public int takeSnapshot(Set<Integer> seasons, List<Long> teamIds)
+    {
+        return takeSnapshot(seasons, teamIds, OffsetDateTime.now());
     }
 
     public void archive(OffsetDateTime from)
