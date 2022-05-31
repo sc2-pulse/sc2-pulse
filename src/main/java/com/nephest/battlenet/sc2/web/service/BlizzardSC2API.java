@@ -206,11 +206,22 @@ extends BaseAPI
                 Instant ts = forceRegionInstants.get(region).getValue();
                 if(ts == null
                     || Instant.now().getEpochSecond() - ts.getEpochSecond() > AUTO_FORCE_REGION_MAX_DURATION.toSeconds())
-                setForceRegion(region, null);
+                {
+                    LOG.info("{} API host redirect timeout reached, removing redirect", region);
+                    setForceRegion(region, null);
+                }
             }
             else
             {
                 if(healthMonitors.get(region).getErrorRate() <= FORCE_REGION_ERROR_RATE_THRESHOLD) continue;
+
+                LOG.warn
+                (
+                    "{} API health threshold reached({}/{}), redirecting to default host",
+                    region,
+                    healthMonitors.get(region).getErrorRate(),
+                    FORCE_REGION_ERROR_RATE_THRESHOLD
+                );
                 setForceRegion(region);
             }
         }
