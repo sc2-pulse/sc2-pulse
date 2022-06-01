@@ -5,6 +5,9 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Season;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -16,10 +19,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public class SeasonDAO
@@ -106,6 +105,12 @@ public class SeasonDAO
 
     private static final String FIND_MAX_BATTLENET_ID_QUERY =
         "SELECT MAX(battlenet_id) FROM season";
+
+    private static final String FIND_LAST_IN_ALL_REGIONS =
+        "SELECT DISTINCT ON (region) "
+        + STD_SELECT
+        + "FROM season "
+        + "ORDER BY region DESC, battlenet_id DESC ";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -199,6 +204,11 @@ public class SeasonDAO
     public Optional<Season> findLast()
     {
         return Optional.ofNullable(template.query(FIND_LAST, STD_EXTRACTOR));
+    }
+
+    public List<Season> findLastInAllRegions()
+    {
+        return template.query(FIND_LAST_IN_ALL_REGIONS, STD_ROW_MAPPER);
     }
 
     @Cacheable(cacheNames="search-season-last")
