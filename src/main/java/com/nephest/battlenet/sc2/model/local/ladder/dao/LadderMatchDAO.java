@@ -79,6 +79,8 @@ public class LadderMatchDAO
         + "LEFT JOIN team_member ON team.id = team_member.team_id "
         + "LEFT JOIN team_state ON match_participant.team_id = team_state.team_id "
             + "AND match_participant.team_state_timestamp = team_state.timestamp "
+        + "LEFT JOIN population_state "
+            + "ON team_state.population_state_id = population_state.id "
         + "LEFT JOIN player_character ON team_member.player_character_id = player_character.id "
         + "LEFT JOIN account ON player_character.account_id = account.id "
         + "LEFT JOIN clan ON player_character.clan_id = clan.id "

@@ -3,12 +3,14 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,9 +45,9 @@ public class TeamStateDAO
         + "team_state.games AS \"team_state.games\", "
         + "team_state.rating AS \"team_state.rating\", "
         + "team_state.global_rank AS \"team_state.global_rank\", "
-        + "team_state.global_team_count AS \"team_state.global_team_count\", "
+        + "population_state.global_team_count AS \"team_state.global_team_count\", "
         + "team_state.region_rank AS \"team_state.region_rank\", "
-        + "team_state.region_team_count AS \"team_state.region_team_count\", "
+        + "population_state.region_team_count AS \"team_state.region_team_count\", "
         + "team_state.archived AS \"team_state.archived\", "
         + "team_state.secondary AS \"team_state.secondary\" ";
 
@@ -55,9 +57,9 @@ public class TeamStateDAO
         + "team_state.games AS \"team_state.games\", "
         + "team_state.rating AS \"team_state.rating\", "
         + "team_state.global_rank AS \"team_state.global_rank\", "
-        + "team_state.global_team_count AS \"team_state.global_team_count\", "
+        + "population_state.global_team_count AS \"team_state.global_team_count\", "
         + "team_state.region_rank AS \"team_state.region_rank\", "
-        + "team_state.region_team_count AS \"team_state.region_team_count\"";
+        + "population_state.region_team_count AS \"team_state.region_team_count\"";
 
     public static final String CREATE_QUERY =
         "INSERT INTO team_state (team_id, \"timestamp\", division_id, games, rating, secondary) "
@@ -131,59 +133,39 @@ public class TeamStateDAO
         + "AND team_state.archived = true";
 
     private static final String TAKE_TEAM_SNAPSHOT =
-        "WITH "
-        + "cheaters AS "
+        "WITH last_population_snapshot AS"
         + "("
-            + String.format(TeamDAO.FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE, "DISTINCT(team_id)")
-        + "),"
-        + "cheaters_region AS "
-        + "( "
-            + String.format(TeamDAO.FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE,
-                "COUNT(DISTINCT(team.id)) as count, season AS battlenet_id, region, queue_type, team_type") + " "
-            + "GROUP BY season, region, queue_type, team_type"
+            + "SELECT id, league_id "
+            + "FROM population_state "
+            + "ORDER BY id DESC "
+            + "LIMIT " +
+                Region.values().length
+                //-1 to offset 1v1 and archon
+                * (QueueType.getTypes(StatsService.VERSION).size() - 1)
+                * BaseLeague.LeagueType.values().length
+                * TeamType.values().length
+                * 2 //offset season change
         + "), "
-        + "cheaters_global AS "
-        + "( "
-            + "SELECT battlenet_id AS season, queue_type, team_type, SUM(count) AS count "
-            + "FROM cheaters_region "
-            + "GROUP BY battlenet_id, queue_type, team_type "
-        + "), "
-        + "region_team_count AS "
+        + "last_population_snapshot_filter AS"
         + "("
-            + "SELECT season.battlenet_id AS season, queue_type, team_type, region, "
-            + "SUM(team_count) - COALESCE(MAX(cheaters_region.count), 0) AS count,  "
-            + "SUM(team_count) AS count_original "
-            + "FROM league_stats "
-            + "INNER JOIN league ON league_stats.league_id = league.id "
-            + "INNER JOIN season ON league.season_id = season.id "
-            + "LEFT JOIN cheaters_region USING(battlenet_id, region ,queue_type, team_type) "
-            + "WHERE season.battlenet_id IN(:seasons) "
-            + "GROUP BY season.battlenet_id, season.region, queue_type, team_type "
-        + "), "
-        + "global_team_count AS "
-        + "("
-            + "SELECT season, queue_type, team_type, "
-            + "SUM(region_team_count.count_original) - COALESCE(MAX(cheaters_global.count), 0) AS count  "
-            + "FROM region_team_count "
-            + "LEFT JOIN cheaters_global USING(season, queue_type, team_type) "
-            + "GROUP BY season, queue_type, team_type "
+            + "SELECT DISTINCT ON(league_id) "
+            + "* "
+            + "FROM last_population_snapshot "
+            + "ORDER BY league_id DESC, id DESC"
         + ") "
         + "INSERT INTO team_state "
         + "("
             + "team_id, \"timestamp\", division_id, games, rating, secondary, "
-            + "global_rank, global_team_count, region_rank, region_team_count"
+            + "global_rank, region_rank, population_state_id"
         + ") "
-        + "SELECT id, :timestamp, division_id, wins + losses, rating, "
+        + "SELECT team.id, :timestamp, division_id, wins + losses, rating, "
         + "CASE WHEN team.queue_type != :mainQueueType THEN true ELSE null::boolean END, "
-        + "global_rank, global_team_count.count, region_rank, region_team_count.count "
+        + "global_rank, region_rank,  "
+        + "last_population_snapshot_filter.id "
         + "FROM team "
-        + "LEFT JOIN region_team_count ON team.season = region_team_count.season "
-            + "AND team.queue_type = region_team_count.queue_type "
-            + "AND team.team_type = region_team_count.team_type "
-            + "AND team.region = region_team_count.region "
-        + "LEFT JOIN global_team_count ON team.season = global_team_count.season "
-            + "AND team.queue_type = global_team_count.queue_type "
-            + "AND team.team_type = global_team_count.team_type "
+        + "INNER JOIN division ON team.division_id = division.id "
+        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
+        + "INNER JOIN last_population_snapshot_filter USING(league_id) "
         + "WHERE team.id IN(:teamIds)";
 
     public static final String REMOVE_EXPIRED_MAIN_QUERY =
@@ -283,7 +265,7 @@ public class TeamStateDAO
     /**
      * <p>
      *     This method should be used only in tests. Production code should use
-     *     {@link #takeSnapshot(Set, List, OffsetDateTime) takeSnapshot} method to create snapshots.
+     *     {@link #takeSnapshot(List, OffsetDateTime) takeSnapshot} method to create snapshots.
      *     Use this method when you need to create a very specific team state in tests.
      * </p>
      * @param states states to save
@@ -299,25 +281,29 @@ public class TeamStateDAO
         return template.batchUpdate(CREATE_QUERY, params);
     }
 
-    private int takeSnapshotBatch(Set<Integer> seasons, List<Long> teamIds, OffsetDateTime timestamp)
+    private int takeSnapshotBatch(List<Long> teamIds, OffsetDateTime timestamp)
     {
         if(teamIds.isEmpty()) return 0;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("seasons", seasons)
             .addValue("mainQueueType", conversionService.convert(TeamState.MAIN_QUEUE_TYPE, Integer.class))
             .addValue("teamIds", teamIds.stream().distinct().collect(Collectors.toList()))
-            .addValue("timestamp", timestamp)
-            .addValue
-            (
-                "cheaterReportType",
-                conversionService.convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class)
-            );
+            .addValue("timestamp", timestamp);
         return template.update(TAKE_TEAM_SNAPSHOT, params);
     }
 
+    /**
+     * <p>
+     *     Creates team snapshots. Uses last population snapshot, make sure you called
+     *     {@link com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO#takeSnapshot(List) takeSnapshot}
+     *     before calling this method, otherwise old values will be used.
+     * </p>
+     * @param teamIds team ids to create snapshots of
+     * @param timestamp timestamp of snapshots
+     * @return number of created snapshots
+     */
     @Transactional
-    public int takeSnapshot(Set<Integer> seasons, List<Long> teamIds, OffsetDateTime timestamp)
+    public int takeSnapshot(List<Long> teamIds, OffsetDateTime timestamp)
     {
         if(teamIds.isEmpty()) return 0;
 
@@ -326,16 +312,23 @@ public class TeamStateDAO
         {
             int to = Math.min(i + TEAM_SNAPSHOT_BATCH_SIZE, teamIds.size());
             List<Long> batch = teamIds.subList(i, to);
-            count += takeSnapshotBatch(seasons, batch, timestamp);
+            count += takeSnapshotBatch(batch, timestamp);
             i = to;
         }
         return count;
     }
 
+    /**
+     * <p>
+     *     calls {@link #takeSnapshot(List, OffsetDateTime) takeSnapshot} with current datetime.
+     * </p>
+     * @param teamIds team ids to create snapshots of
+     * @return number of created snapshots
+     */
     @Transactional
-    public int takeSnapshot(Set<Integer> seasons, List<Long> teamIds)
+    public int takeSnapshot(List<Long> teamIds)
     {
-        return takeSnapshot(seasons, teamIds, OffsetDateTime.now());
+        return takeSnapshot(teamIds, OffsetDateTime.now());
     }
 
     public void archive(OffsetDateTime from)

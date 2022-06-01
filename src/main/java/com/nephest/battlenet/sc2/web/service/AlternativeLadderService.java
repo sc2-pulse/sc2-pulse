@@ -611,7 +611,7 @@ public class AlternativeLadderService
         LOG.info
         (
             "Created {} team snapshots",
-            teamStateDAO.takeSnapshot(pendingSeasons, new ArrayList<>(pendingTeams))
+            teamStateDAO.takeSnapshot(new ArrayList<>(pendingTeams))
         );
         pendingTeams.clear();
     }

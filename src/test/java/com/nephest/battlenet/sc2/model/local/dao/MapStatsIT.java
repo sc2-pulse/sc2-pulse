@@ -38,7 +38,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -97,6 +96,9 @@ public class MapStatsIT
 
     @Autowired
     private LeagueStatsDAO leagueStatsDAO;
+
+    @Autowired
+    private PopulationStateDAO populationStateDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -297,9 +299,9 @@ public class MapStatsIT
         matchDAO.updateDuration(odt);
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
+        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
         snapshotData.forEach(t->teamStateDAO.takeSnapshot
         (
-            Set.of(SeasonGenerator.DEFAULT_SEASON_ID),
             List.of(t.getT1(), t.getT2()),
             t.getT3()
         ));

@@ -37,6 +37,7 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
@@ -140,6 +141,7 @@ public class StatsService
     private QueueStatsDAO queueStatsDAO;
     private LeagueStatsDAO leagueStatsDao;
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
+    private PopulationStateDAO populationStateDAO;
     private VarDAO varDAO;
     private SC2WebServiceUtil sc2WebServiceUtil;
     private ConversionService conversionService;
@@ -166,6 +168,7 @@ public class StatsService
         QueueStatsDAO queueStatsDAO,
         LeagueStatsDAO leagueStatsDao,
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
+        PopulationStateDAO populationStateDAO,
         VarDAO varDAO,
         SC2WebServiceUtil sc2WebServiceUtil,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
@@ -188,6 +191,7 @@ public class StatsService
         this.queueStatsDAO = queueStatsDAO;
         this.leagueStatsDao = leagueStatsDao;
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
+        this.populationStateDAO = populationStateDAO;
         this.varDAO = varDAO;
         this.sc2WebServiceUtil = sc2WebServiceUtil;
         this.conversionService = conversionService;
@@ -347,10 +351,11 @@ public class StatsService
         );
         Set<Integer> pendingSeasons = Set.copyOf(pendingStatsUpdates);
         updatePendingStats(allStats);
+        populationStateDAO.takeSnapshot(pendingSeasons);
         LOG.info
         (
             "Created {} team snapshots",
-            teamStateDAO.takeSnapshot(pendingSeasons, new ArrayList<>(pendingTeams))
+            teamStateDAO.takeSnapshot(new ArrayList<>(pendingTeams))
         );
         pendingTeams.clear();
         alternativeLadderService.afterCurrentSeasonUpdate(pendingSeasons);

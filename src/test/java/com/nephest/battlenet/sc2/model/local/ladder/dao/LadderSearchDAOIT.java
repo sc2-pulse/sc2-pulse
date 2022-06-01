@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
@@ -117,6 +118,7 @@ public class LadderSearchDAOIT
         @Autowired TeamDAO teamDAO,
         @Autowired TeamMemberDAO teamMemberDAO,
         @Autowired TeamStateDAO teamStateDAO,
+        @Autowired PopulationStateDAO populationStateDAO,
         @Autowired JdbcTemplate template
     )
     throws SQLException
@@ -193,11 +195,9 @@ public class LadderSearchDAOIT
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
         //recreate snapshots with ranks
         template.update("DELETE FROM team_state");
-        teamStateDAO.takeSnapshot
-            (
-                Set.of(SeasonGenerator.DEFAULT_SEASON_ID, DEFAULT_SEASON_ID + 1, DEFAULT_SEASON_ID + 2),
-                LongStream.rangeClosed(1, TEAMS_TOTAL).boxed().collect(Collectors.toList())
-        );
+        populationStateDAO.takeSnapshot(List.of(DEFAULT_SEASON_ID, DEFAULT_SEASON_ID + 1, DEFAULT_SEASON_ID + 2));
+        teamStateDAO.takeSnapshot(
+            LongStream.rangeClosed(1, TEAMS_TOTAL).boxed().collect(Collectors.toList()));
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
         queueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);

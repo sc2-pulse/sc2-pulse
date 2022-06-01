@@ -132,6 +132,9 @@ public class PlayerCharacterReportIT
     private SC2MapDAO mapDAO;
 
     @Autowired
+    private PopulationStateDAO populationStateDAO;
+
+    @Autowired
     private SeasonGenerator seasonGenerator;
 
     @Autowired
@@ -688,11 +691,8 @@ public class PlayerCharacterReportIT
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         //recreate snapshots with ranks
         template.update("DELETE FROM team_state");
-        teamStateDAO.takeSnapshot
-        (
-            Set.of(SeasonGenerator.DEFAULT_SEASON_ID),
-            LongStream.range(1, 12).boxed().collect(Collectors.toList())
-        );
+        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
+        teamStateDAO.takeSnapshot(LongStream.range(1, 12).boxed().collect(Collectors.toList()));
 
         List<Long> cheaterTeams = teamDAO.findCheaterTeamIds(SeasonGenerator.DEFAULT_SEASON_ID);
         assertEquals(4, cheaterTeams.size());

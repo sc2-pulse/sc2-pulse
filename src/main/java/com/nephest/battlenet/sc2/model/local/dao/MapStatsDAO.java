@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -6,6 +6,9 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.local.MapStats;
+import java.time.OffsetDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +19,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Repository
 public class MapStatsDAO
@@ -68,7 +67,7 @@ public class MapStatsDAO
         + "get_top_percentage_league_lotv"
         + "("
             + "team_state.region_rank, "
-            + "team_state.region_team_count::DOUBLE PRECISION, "
+            + "population_state.region_team_count::DOUBLE PRECISION, "
             + "true"
         + ") AS league_type "
         + "FROM versus_race_filter "
@@ -77,7 +76,9 @@ public class MapStatsDAO
         + "INNER JOIN team ON match_participant.team_id = team.id "
         + "INNER JOIN team_member ON team.id = team_member.team_id "
         + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id "
-        + "AND match_participant.team_state_timestamp = team_state.timestamp ";
+            + "AND match_participant.team_state_timestamp = team_state.timestamp "
+        + "LEFT JOIN population_state "
+            + "ON team_state.population_state_id = population_state.id ";
 
     private static final String UPDATE_STATS_TEMPLATE_END =
         "matchup_filter AS "

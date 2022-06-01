@@ -10,6 +10,10 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -18,11 +22,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 @Repository
 public class LadderTeamStateDAO
@@ -37,6 +36,8 @@ public class LadderTeamStateDAO
         + "FROM team_filter "
         + "INNER JOIN team USING(id) "
         + "INNER JOIN team_state ON team_filter.id = team_state.team_id "
+        + "LEFT JOIN population_state "
+            + "ON team_state.population_state_id = population_state.id "
         + "INNER JOIN division ON team_state.division_id = division.id "
         + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
         + "INNER JOIN league ON league_tier.league_id = league.id "
