@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -295,7 +296,7 @@ public class TeamStateDAO
     /**
      * <p>
      *     Creates team snapshots. Uses last population snapshot, make sure you called
-     *     {@link com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO#takeSnapshot(List) takeSnapshot}
+     *     {@link com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO#takeSnapshot(Collection) takeSnapshot}
      *     before calling this method, otherwise old values will be used.
      * </p>
      * @param teamIds team ids to create snapshots of
