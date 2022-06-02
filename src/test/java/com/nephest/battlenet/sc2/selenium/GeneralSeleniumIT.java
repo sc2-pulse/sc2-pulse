@@ -223,6 +223,10 @@ public class GeneralSeleniumIT
         driver.findElement(By.cssSelector("#search-player-name")).sendKeys("character");
         clickAndWait(driver, wait, "#form-search button[type=\"submit\"]", "#search-result-all:not(.d-none)");
 
+        //find by bnet profile link
+        driver.findElement(By.cssSelector("#search-player-name")).sendKeys("https://starcraft2.com/profile/1/1/10");
+        clickAndWait(driver, wait, "#form-search button[type=\"submit\"]", "#search-result-all:not(.d-none) tbody tr");
+
         //clan
         testClanCursorSearch(driver, wait);
     }

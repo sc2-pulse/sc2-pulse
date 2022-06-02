@@ -7,12 +7,16 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import io.swagger.v3.oas.annotations.Hidden;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/clan")
@@ -54,14 +58,28 @@ public class ClanController
         );
     }
 
+    @Hidden
     @GetMapping("/tag/{tag}")
-    public List<Clan> findByTag(@PathVariable("tag") String tag)
+    public List<Clan> findByTagLegacy(@PathVariable("tag") String tag)
     {
         return clanDAO.findByTag(tag);
     }
 
+    @GetMapping("/tag")
+    public List<Clan> findByTag(@RequestParam("term") String tag)
+    {
+        return clanDAO.findByTag(tag);
+    }
+
+    @Hidden
     @GetMapping("/tag-or-name/{term}")
-    public List<Clan> findByTagOrName(@PathVariable("term") String term)
+    public List<Clan> findByTagOrNameLegacy(@PathVariable("term") String term)
+    {
+        return clanDAO.findByTagOrName(term);
+    }
+
+    @GetMapping("/tag-or-name")
+    public List<Clan> findByTagOrName(@RequestParam("term") String term)
     {
         return clanDAO.findByTagOrName(term);
     }

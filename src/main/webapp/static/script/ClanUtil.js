@@ -31,7 +31,7 @@ class ClanUtil
         const tagOrName = searchParams.get("tagOrName");
         const byTagOrName = tagOrName && tagOrName.length > 0;
         const request = byTagOrName
-            ? `${ROOT_CONTEXT_PATH}api/clan/tag-or-name/${encodeURIComponent(tagOrName)}`
+            ? `${ROOT_CONTEXT_PATH}api/clan/tag-or-name?term=${encodeURIComponent(tagOrName)}`
             : `${ROOT_CONTEXT_PATH}api/clan/cursor/${cursor.fullName}/${cursorValue}/${idCursor}/${page}/${pageDiff}?${formParams}`;
         return Session.beforeRequest()
             .then(n=>fetch(request))

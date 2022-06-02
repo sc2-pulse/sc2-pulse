@@ -869,7 +869,7 @@ class CharacterUtil
 
     static updateCharacterSearchModel(name)
     {
-        const request = ROOT_CONTEXT_PATH + "api/characters?name=" + encodeURIComponent(name);
+        const request = ROOT_CONTEXT_PATH + "api/character/search?term=" + encodeURIComponent(name);
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
@@ -1398,7 +1398,7 @@ class CharacterUtil
     {
         const reqTimestamp = Date.now();
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/search/${encodeURIComponent(term)}/suggestions`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/search/suggestions?term=${encodeURIComponent(term)}`))
             .then(Session.verifyResponse)
             .then(resp=>Promise.all([resp.json(), Promise.resolve(reqTimestamp)]));
     }
@@ -1430,8 +1430,7 @@ class CharacterUtil
     static shouldLoadSearchSuggestions(term)
     {
         return term
-            && ((term.startsWith("[") && term.length >= 2) || term.includes("#") || term.length >= 4)
-            && Util.SECURE_URI_REGEX.test(term);
+            && ((term.startsWith("[") && term.length >= 2) || term.includes("#") || term.length >= 4);
     }
 
 }

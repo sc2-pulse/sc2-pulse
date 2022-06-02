@@ -22,6 +22,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.SearchService;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +30,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -71,14 +73,28 @@ public class CharacterController
     @Autowired
     private SearchService searchService;
 
+    @Hidden
     @GetMapping("/search/{term}")
-    public List<LadderDistinctCharacter> getCharacterTeams(@PathVariable("term") String term)
+    public List<LadderDistinctCharacter> getCharacterTeamsLegacy(@PathVariable("term") String term)
     {
         return ladderCharacterDAO.findDistinctCharacters(term);
     }
 
+    @GetMapping("/search")
+    public List<LadderDistinctCharacter> getCharacterTeams(@RequestParam("term") String term)
+    {
+        return ladderCharacterDAO.findDistinctCharacters(term);
+    }
+
+    @Hidden
     @GetMapping("/search/{term}/suggestions")
-    public List<String> suggest(@PathVariable("term") String term)
+    public List<String> suggestLegacy(@PathVariable("term") String term)
+    {
+        return searchService.suggestIfQuick(term, SEARCH_SUGGESTIONS_SIZE);
+    }
+
+    @GetMapping("/search/suggestions")
+    public List<String> suggest(@RequestParam("term") String term)
     {
         return searchService.suggestIfQuick(term, SEARCH_SUGGESTIONS_SIZE);
     }
