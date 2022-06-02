@@ -25,6 +25,8 @@ implements java.io.Serializable
     @NotNull
     private Integer divisionId;
 
+    private Integer wins;
+
     @NotNull
     private Integer games;
 
@@ -64,6 +66,7 @@ implements java.io.Serializable
         @NotNull Long teamId,
         @NotNull OffsetDateTime dateTime,
         @NotNull Integer divisionId,
+        Integer wins,
         @NotNull Integer games,
         @NotNull Integer rating,
         Integer globalRank,
@@ -75,6 +78,7 @@ implements java.io.Serializable
     )
     {
         this(teamId, dateTime, divisionId, games, rating);
+        this.wins = wins;
         this.globalRank = globalRank;
         this.globalTeamCount = globalTeamCount;
         this.regionRank = regionRank;
@@ -90,6 +94,7 @@ implements java.io.Serializable
             team.getId(),
             timestamp,
             team.getDivisionId(),
+            team.getWins(),
             team.getWins() + team.getLosses() + team.getTies(),
             team.getRating().intValue(),
             null, null, null, null,
@@ -157,6 +162,16 @@ implements java.io.Serializable
     public void setDivisionId(Integer divisionId)
     {
         this.divisionId = divisionId;
+    }
+
+    public Integer getWins()
+    {
+        return wins;
+    }
+
+    public void setWins(Integer wins)
+    {
+        this.wins = wins;
     }
 
     public Integer getGames()

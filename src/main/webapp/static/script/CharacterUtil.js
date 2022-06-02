@@ -709,6 +709,7 @@ class CharacterUtil
             teamId: team.id,
             dateTime: dateTime,
             divisionId: team.divisionId,
+            wins: team.wins,
             games: team.wins + team.losses + team.ties,
             rating: team.rating,
         };
@@ -764,9 +765,18 @@ class CharacterUtil
         curData.tierType = curData.tier;
         lines.push(TeamUtil.createLeagueDiv(curData));
         lines.push(curData.teamState.rating);
-        lines.push(curData.teamState.games);
+        lines.push(CharacterUtil.createMmrHistoryGames(curData));
         CharacterUtil.appendAdditionalMmrHistoryRanks(curData, lines);
         return lines;
+    }
+
+    static createMmrHistoryGames(curData)
+    {
+        const container = document.createElement("span");
+        container.innerHTML = curData.teamState.wins
+            ? `${curData.teamState.games}<br/>(${Math.round((curData.teamState.wins / curData.teamState.games) * 100)}%)`
+            : `${curData.teamState.games}<br/>-`;
+        return container;
     }
 
     static appendAdditionalMmrHistoryRanks(curData, lines)
@@ -1059,7 +1069,7 @@ class CharacterUtil
 
     static setMmrYAxis(mode, chartable)
     {
-        if(mode == "mmr") {
+        if(mode == "mmr" || mode == "win-rate-season") {
             ChartUtil.setNormalYAxis(chartable);
         } else {
             ChartUtil.setTopPercentYAxis(chartable);
@@ -1430,5 +1440,9 @@ CharacterUtil.MMR_Y_VALUE_GETTERS = new Map([
     ["mmr", (history)=>history.teamState.rating],
     ["percent-global", (history)=>history.teamState.globalTopPercent],
     ["percent-region", (history)=>history.teamState.regionTopPercent],
+    ["win-rate-season", (history)=>history.teamState.wins
+        ? (history.teamState.wins / history.teamState.games) * 100
+        : null
+    ],
     ["default", (history)=>history.teamState.rating],
 ]);

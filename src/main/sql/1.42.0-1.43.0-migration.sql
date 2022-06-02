@@ -88,3 +88,7 @@ ALTER TABLE "team_state"
         ON DELETE SET NULL ON UPDATE CASCADE,
     DROP COLUMN "global_team_count",
     DROP COLUMN "region_team_count";
+
+ALTER TABLE "team_state"
+    ADD COLUMN "wins" SMALLINT;
+

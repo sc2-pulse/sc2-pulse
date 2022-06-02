@@ -4,7 +4,6 @@
 package com.nephest.battlenet.sc2.config.convert.jackson;
 
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
-
 import java.util.Map;
 
 public class LadderTeamStateCollectionToArraySerializer
@@ -16,6 +15,10 @@ extends SimpleCollectionToFieldArraySerializer<LadderTeamState>
         super(Map.ofEntries(
             Map.entry("teamId", (g, s)->g.writeNumber(s.getTeamState().getTeamId())),
             Map.entry("dateTime", (g, s)->g.writeString(s.getTeamState().getDateTime().toString())),
+            Map.entry("wins", (g, s)->{
+                if(s.getTeamState().getWins() == null) {g.writeNull();}
+                else{g.writeNumber(s.getTeamState().getWins());}
+            }),
             Map.entry("games", (g, s)->g.writeNumber(s.getTeamState().getGames())),
             Map.entry("rating", (g, s)->g.writeNumber(s.getTeamState().getRating())),
             Map.entry("leagueType", (g, s)->g.writeNumber(s.getLeague().getType().getId())),

@@ -43,6 +43,7 @@ public class TeamStateDAO
         "team_state.team_id AS \"team_state.team_id\", "
         + "team_state.\"timestamp\" AS \"team_state.timestamp\", "
         + "team_state.division_id AS \"team_state.division_id\", "
+        + "team_state.wins AS \"team_state.wins\", "
         + "team_state.games AS \"team_state.games\", "
         + "team_state.rating AS \"team_state.rating\", "
         + "team_state.global_rank AS \"team_state.global_rank\", "
@@ -55,6 +56,7 @@ public class TeamStateDAO
     public static final String SHORT_SELECT =
         "team_state.team_id AS \"team_state.team_id\", "
         + "team_state.\"timestamp\" AS \"team_state.timestamp\", "
+        + "team_state.wins AS \"team_state.wins\", "
         + "team_state.games AS \"team_state.games\", "
         + "team_state.rating AS \"team_state.rating\", "
         + "team_state.global_rank AS \"team_state.global_rank\", "
@@ -156,10 +158,10 @@ public class TeamStateDAO
         + ") "
         + "INSERT INTO team_state "
         + "("
-            + "team_id, \"timestamp\", division_id, games, rating, secondary, "
+            + "team_id, \"timestamp\", division_id, wins, games, rating, secondary, "
             + "global_rank, region_rank, population_state_id"
         + ") "
-        + "SELECT team.id, :timestamp, division_id, wins + losses, rating, "
+        + "SELECT team.id, :timestamp, division_id, wins, wins + losses, rating, "
         + "CASE WHEN team.queue_type != :mainQueueType THEN true ELSE null::boolean END, "
         + "global_rank, region_rank,  "
         + "last_population_snapshot_filter.id "
@@ -192,6 +194,7 @@ public class TeamStateDAO
         rs.getLong("team_state.team_id"),
         rs.getObject("team_state.timestamp", OffsetDateTime.class),
         rs.getInt("team_state.division_id"),
+        DAOUtils.getInteger(rs, "team_state.wins"),
         rs.getInt("team_state.games"),
         rs.getInt("team_state.rating"),
         DAOUtils.getInteger(rs, "team_state.global_rank"),
@@ -208,6 +211,7 @@ public class TeamStateDAO
         rs.getLong("team_state.team_id"),
         rs.getObject("team_state.timestamp", OffsetDateTime.class),
         null,
+        DAOUtils.getInteger(rs, "team_state.wins"),
         rs.getInt("team_state.games"),
         rs.getInt("team_state.rating"),
         DAOUtils.getInteger(rs, "team_state.global_rank"),

@@ -329,7 +329,7 @@ public class LadderSearchDAOIT
                 .map(LadderTeamState::getTeamState)
                 .findAny()
                 .orElseThrow();
-            verifyTeamRanks(team, state, 1);
+            verifyTeamState(team, state, 1);
             //validate members
             //no reason to sort members in query, sorting manually for testing
             team.getMembers().sort(Comparator.comparing(m->m.getCharacter().getBattlenetId()));
@@ -347,7 +347,7 @@ public class LadderSearchDAOIT
         }
     }
 
-    private void verifyTeamRanks(LadderTeam team, TeamState state, int seasonOrdinal)
+    private void verifyTeamState(LadderTeam team, TeamState state, int seasonOrdinal)
     {
         long expectedGlobalRank = (TEAMS_TOTAL - team.getId() + 1) / seasonOrdinal;
         long expectedLeagueRank = (TEAMS_PER_LEAGUE_REGION - ((team.getId() - 1) % TEAMS_PER_LEAGUE_REGION)) / seasonOrdinal;
@@ -365,6 +365,8 @@ public class LadderSearchDAOIT
         assertEquals(TEAMS_TOTAL, (long) state.getGlobalTeamCount());
         assertEquals(expectedRegionRank, (long) state.getRegionRank());
         assertEquals(TEAMS_PER_REGION, (long) state.getRegionTeamCount());
+
+        assertEquals(team.getWins(), state.getWins());
     }
 
     private void verifyLadderOffset

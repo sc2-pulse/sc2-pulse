@@ -568,7 +568,7 @@ class TeamUtil
         curData.tierType = curData.tier;
         lines.push(TeamUtil.createLeagueDiv(curData));
         lines.push(curData.teamState.rating);
-        lines.push(curData.teamState.games);
+        lines.push(CharacterUtil.createMmrHistoryGames(curData));
         CharacterUtil.appendAdditionalMmrHistoryRanks(curData, lines);
         return lines;
     }
@@ -647,6 +647,8 @@ class TeamUtil
         teamClone.tierType = snapshot.tier;
         teamClone.leagueTeamCount = -1;
         teamClone.leagueRank = NaN;
+        if(snapshot.teamState.wins)
+            teamClone.losses = snapshot.teamState.games - snapshot.teamState.wins;
         return teamClone;
     }
 

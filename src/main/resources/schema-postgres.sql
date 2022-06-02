@@ -256,6 +256,7 @@ CREATE TABLE "team_state"
     "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     "division_id" INTEGER NOT NULL,
     "population_state_id" INTEGER,
+    "wins" SMALLINT,
     "games" SMALLINT NOT NULL,
     "rating" SMALLINT NOT NULL,
     "global_rank" INTEGER,
