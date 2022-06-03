@@ -1,0 +1,38 @@
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _, true)}">
+<head>
+    <title>Terms of Service - SC2 Pulse</title>
+    <meta name="description" content="Privacy policy"/>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: content(~{::section})}">
+    <section id="privacy">
+        <h2>Terms of Service</h2>
+        <dl>
+            <dt>Data source</dt>
+            <dd>The original data source is public <a href="https://develop.battle.net/" target="_blank" rel="noopener">Blizzard API</a>.
+                3rd party sources may also be used to enhance user experience.</dd>
+            <dt>Disclaimer</dt>
+            <dd>This is a fan made project, it's not an official Blizzard project.</dd>
+            <dt>Data modification</dt>
+            <dd><a href="https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use" target="_blank" rel="noopener">Blizzard ToS</a>
+                forbids any data manipulation, I can't edit or remove your data. The data is shown as it is
+                in their public API.</dd>
+            <dt>Data removal</dt>
+            <dd>You can submit a request to remove your data from Blizzard services, then all relevant data will also
+                be removed from SC2 Pulse withing 30 days, in accordance with Blizzard ToS. Bear in mind that StartCraft&reg;2 leaderboards are
+                <a href="https://us.forums.blizzard.com/en/blizzard/t/data-protection-notice-and-faq/609/2"
+                   target="_blank" rel="noopener">deemed as public data(section 15)</a>
+            </dd>
+            <dt>NO WARRANTY</dt>
+            <dd>SC2 PULSE PROVIDES THE DATA “AS IS,” AND “AS AVAILABLE,” AND THE ENTIRE RISK AS TO SATISFACTORY QUALITY, PERFORMANCE, ACCURACY, AND EFFORT IS WITH YOU.</dd>
+        </dl>
+    </section>
+</div>
+</body>
+</html>
