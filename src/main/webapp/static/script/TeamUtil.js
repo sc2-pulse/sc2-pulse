@@ -486,6 +486,7 @@ class TeamUtil
         const excludeStart = document.getElementById("team-mmr-exclude-start").value || 0;
         const excludeEnd = document.getElementById("team-mmr-exclude-end").value || 0;
         const yAxis = document.getElementById("team-mmr-y-axis").value;
+        const mmrYValueGetter = CharacterUtil.mmrYValueGetter(yAxis);
         const xAxisType = document.getElementById("team-mmr-x-type").checked ? "time" : "category";
         const showLeagues = document.getElementById("team-mmr-leagues").checked;
         TeamUtil.updateTeamsTable(document.querySelector("#team-mmr-teams-table"), Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH));
@@ -521,7 +522,7 @@ class TeamUtil
         {
             rawData.push(histories);
             data[dateTime] = {};
-            for(const history of histories) data[dateTime][history.group.name] = CharacterUtil.getMmrYValue(history, yAxis);;
+            for(const history of histories) data[dateTime][history.group.name] = mmrYValueGetter(history);
         }
         ChartUtil.CHART_RAW_DATA.set("team-mmr-table", {rawData: rawData, additionalDataGetter: TeamUtil.getAdditionalMmrHistoryData});
         TableUtil.updateVirtualColRowTable

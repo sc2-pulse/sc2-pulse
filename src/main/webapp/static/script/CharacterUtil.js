@@ -401,6 +401,7 @@ class CharacterUtil
         const bestRaceOnly = document.getElementById("mmr-best-race").checked;
         const seasonLastOnly = document.getElementById("mmr-season-last").checked;
         const yAxis = document.getElementById("mmr-y-axis").value;
+        const mmrYValueGetter = CharacterUtil.mmrYValueGetter(yAxis);
         const xAxisType = document.getElementById("mmr-x-type").checked ? "time" : "category";
         const showLeagues = document.getElementById("mmr-leagues").checked;
 
@@ -428,7 +429,7 @@ class CharacterUtil
         {
             rawData.push(histories);
             data[dateTime] = {};
-            for(const history of histories) data[dateTime][history.race] = CharacterUtil.getMmrYValue(history, yAxis);
+            for(const history of histories) data[dateTime][history.race] = mmrYValueGetter(history);
         }
         ChartUtil.CHART_RAW_DATA.set("player-stats-mmr-table", {rawData: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
         TableUtil.updateVirtualColRowTable
@@ -452,20 +453,10 @@ class CharacterUtil
               + mmrHistory.length  + " entries)";
         CharacterUtil.updateGamesAndAverageMmrTable(document.querySelector("#mmr-summary-table"), mmrHistory);
     }
-
-    static getMmrYValue(history, mode)
+    
+    static mmrYValueGetter(mode)
     {
-        switch(mode)
-        {
-            case "mmr":
-                return history.teamState.rating;
-            case "percent-global":
-                return history.teamState.globalTopPercent;
-            case "percent-region":
-                return history.teamState.regionTopPercent;
-            default:
-                return history.teamState.rating;
-        }
+        return CharacterUtil.MMR_Y_VALUE_GETTERS.get(mode ? mode : "default");
     }
 
     static getLastSeasonTeamSnapshotDates(states)
@@ -1435,3 +1426,9 @@ class CharacterUtil
 
 }
 CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS = 2 * 24 * 60 * 60 * 1000;
+CharacterUtil.MMR_Y_VALUE_GETTERS = new Map([
+    ["mmr", (history)=>history.teamState.rating],
+    ["percent-global", (history)=>history.teamState.globalTopPercent],
+    ["percent-region", (history)=>history.teamState.regionTopPercent],
+    ["default", (history)=>history.teamState.rating],
+]);
