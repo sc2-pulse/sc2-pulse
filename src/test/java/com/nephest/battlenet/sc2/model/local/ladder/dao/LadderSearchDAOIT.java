@@ -350,16 +350,21 @@ public class LadderSearchDAOIT
     private void verifyTeamState(LadderTeam team, TeamState state, int seasonOrdinal)
     {
         long expectedGlobalRank = (TEAMS_TOTAL - team.getId() + 1) / seasonOrdinal;
-        long expectedLeagueRank = (TEAMS_PER_LEAGUE_REGION - ((team.getId() - 1) % TEAMS_PER_LEAGUE_REGION)) / seasonOrdinal;
+        long expectedGlobalLeagueRank =
+            (TEAMS_PER_LEAGUE_REGION - ((team.getId() - 1) % TEAMS_PER_LEAGUE_REGION)) / seasonOrdinal;
+        long expectedRegionLeagueRank =
+            TEAMS_PER_LEAGUE
+                - (team.getId() % TEAMS_PER_LEAGUE == 0 ? TEAMS_PER_LEAGUE : team.getId() % TEAMS_PER_LEAGUE)
+                + 1 / seasonOrdinal;
         long expectedRegionRank =
             (((TEAMS_TOTAL - team.getId()) / TEAMS_PER_LEAGUE_REGION) * TEAMS_PER_LEAGUE //prev region ranks
-            + expectedLeagueRank //cur region ranks
+            + expectedGlobalLeagueRank //cur region ranks
             - (REGIONS.size() - 1 - REGIONS.indexOf(team.getRegion())) * TEAMS_PER_LEAGUE) //region offset
             / seasonOrdinal;
 
         assertEquals(expectedGlobalRank, (long) team.getGlobalRank());
         assertEquals(expectedRegionRank, (long) team.getRegionRank());
-        assertEquals(expectedLeagueRank, (long) team.getLeagueRank());
+        assertEquals(expectedRegionLeagueRank, (long) team.getLeagueRank());
 
         assertEquals(expectedGlobalRank, (long) state.getGlobalRank());
         assertEquals(TEAMS_TOTAL, (long) state.getGlobalTeamCount());

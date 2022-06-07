@@ -92,3 +92,35 @@ ALTER TABLE "team_state"
 ALTER TABLE "team_state"
     ADD COLUMN "wins" SMALLINT;
 
+--change global league rank to regional league rank
+DO
+$do$
+BEGIN
+   FOR i IN 0..60 LOOP
+        WITH
+        cheaters AS
+        (
+            DISTINCT(team_id)
+            FROM team
+            INNER JOIN team_member ON team.id = team_member.team_id
+            INNER JOIN player_character_report AS confirmed_cheater_report
+                ON team_member.player_character_id = confirmed_cheater_report.player_character_id
+                AND confirmed_cheater_report.type = 1
+                AND confirmed_cheater_report.status = true
+            WHERE team.season = i
+        ),
+        ranks AS
+        (
+            SELECT id,
+            RANK() OVER(PARTITION BY queue_type, team_type, region, league_type ORDER BY rating DESC) as league_rank
+            FROM team
+            WHERE season = i
+            AND id NOT IN(SELECT team_id FROM cheaters)
+        )
+        UPDATE team
+        set league_rank = ranks.league_rank
+        FROM ranks
+        WHERE team.id = ranks.id
+    END LOOP;
+END
+$do$;

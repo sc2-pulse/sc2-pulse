@@ -204,7 +204,7 @@ public class TeamDAO
             + "SELECT id, "
             + "RANK() OVER(PARTITION BY queue_type, team_type ORDER BY rating DESC) as global_rank, "
             + "RANK() OVER(PARTITION BY queue_type, team_type, region ORDER BY rating DESC) as region_rank, "
-            + "RANK() OVER(PARTITION BY queue_type, team_type, league_type ORDER BY rating DESC) as league_rank "
+            + "RANK() OVER(PARTITION BY queue_type, team_type, region, league_type ORDER BY rating DESC) as league_rank "
             + "FROM team "
             + "WHERE season = :season "
             + "AND id NOT IN(SELECT team_id FROM cheaters)"
