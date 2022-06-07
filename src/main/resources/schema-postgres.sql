@@ -261,6 +261,7 @@ CREATE TABLE "team_state"
     "rating" SMALLINT NOT NULL,
     "global_rank" INTEGER,
     "region_rank" INTEGER,
+    "league_rank" INTEGER,
     "archived" BOOLEAN,
     "secondary" BOOLEAN,
 

@@ -39,6 +39,9 @@ implements java.io.Serializable
     private Integer regionRank;
     private Integer regionTeamCount;
 
+    private Integer leagueRank;
+    private Integer leagueTeamCount;
+
     private Boolean archived;
 
     private Boolean secondary;
@@ -73,6 +76,8 @@ implements java.io.Serializable
         Integer globalTeamCount,
         Integer regionRank,
         Integer regionTeamCount,
+        Integer leagueRank,
+        Integer leagueTeamCount,
         Boolean archived,
         Boolean secondary
     )
@@ -83,6 +88,8 @@ implements java.io.Serializable
         this.globalTeamCount = globalTeamCount;
         this.regionRank = regionRank;
         this.regionTeamCount = regionTeamCount;
+        this.leagueRank = leagueRank;
+        this.leagueTeamCount = leagueTeamCount;
         this.archived = archived;
         this.secondary = secondary;
     }
@@ -97,7 +104,7 @@ implements java.io.Serializable
             team.getWins(),
             team.getWins() + team.getLosses() + team.getTies(),
             team.getRating().intValue(),
-            null, null, null, null,
+            null, null, null, null, null, null,
             null,
             team.getQueueType() != MAIN_QUEUE_TYPE ? true : null
         );
@@ -232,6 +239,26 @@ implements java.io.Serializable
     public void setRegionTeamCount(Integer regionTeamCount)
     {
         this.regionTeamCount = regionTeamCount;
+    }
+
+    public Integer getLeagueRank()
+    {
+        return leagueRank;
+    }
+
+    public void setLeagueRank(Integer leagueRank)
+    {
+        this.leagueRank = leagueRank;
+    }
+
+    public Integer getLeagueTeamCount()
+    {
+        return leagueTeamCount;
+    }
+
+    public void setLeagueTeamCount(Integer leagueTeamCount)
+    {
+        this.leagueTeamCount = leagueTeamCount;
     }
 
     public Boolean getArchived()

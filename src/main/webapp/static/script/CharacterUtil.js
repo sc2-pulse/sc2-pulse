@@ -721,6 +721,8 @@ class CharacterUtil
             teamState.regionRank = team.regionRank;
             teamState.regionTeamCount = stats.regionTeamCount[team.region];
             teamState.regionTopPercent = (team.regionRank / stats.regionTeamCount[team.region]) * 10;
+            teamState.leagueRank = team.leagueRank;
+            teamState.leagueTeamCount = stats.leagueTeamCount[team.league.type];
         }
         return {
             team: team,
@@ -795,6 +797,18 @@ class CharacterUtil
                 (${Util.DECIMAL_FORMAT.format(curData.teamState.regionTopPercent)}%)`
             : "-"
         lines.push(regionRank);
+        lines.push(CharacterUtil.createMMRHistoryLeagueRank(curData, lines));
+    }
+
+    static createMMRHistoryLeagueRank(curData, lines)
+    {
+        const elem = document.createElement("span");
+        elem.classList.add("tooltip-mmr-rank");
+        elem.innerHTML = curData.teamState.leagueRank
+            ? `${Util.NUMBER_FORMAT.format(curData.teamState.leagueRank)}/${Util.NUMBER_FORMAT.format(curData.teamState.leagueTeamCount)}<br/>
+                (${Util.DECIMAL_FORMAT.format((curData.teamState.leagueRank / curData.teamState.leagueTeamCount) * 100)}%)`
+            : "-"
+        return elem;
     }
 
     static filterMmrHistory(history, queueFilter, teamTypeFilter, excludeStart, excludeEnd)
@@ -1440,6 +1454,7 @@ CharacterUtil.MMR_Y_VALUE_GETTERS = new Map([
     ["mmr", (history)=>history.teamState.rating],
     ["percent-global", (history)=>history.teamState.globalTopPercent],
     ["percent-region", (history)=>history.teamState.regionTopPercent],
+    ["percent-league", (history)=>(history.teamState.leagueRank / history.teamState.leagueTeamCount) * 100],
     ["win-rate-season", (history)=>history.teamState.wins
         ? (history.teamState.wins / history.teamState.games) * 100
         : null

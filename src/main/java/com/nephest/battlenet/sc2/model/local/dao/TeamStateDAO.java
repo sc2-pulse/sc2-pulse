@@ -50,6 +50,8 @@ public class TeamStateDAO
         + "population_state.global_team_count AS \"team_state.global_team_count\", "
         + "team_state.region_rank AS \"team_state.region_rank\", "
         + "population_state.region_team_count AS \"team_state.region_team_count\", "
+        + "team_state.league_rank AS \"team_state.league_rank\", "
+        + "population_state.region_league_team_count AS \"team_state.league_team_count\", "
         + "team_state.archived AS \"team_state.archived\", "
         + "team_state.secondary AS \"team_state.secondary\" ";
 
@@ -62,7 +64,9 @@ public class TeamStateDAO
         + "team_state.global_rank AS \"team_state.global_rank\", "
         + "population_state.global_team_count AS \"team_state.global_team_count\", "
         + "team_state.region_rank AS \"team_state.region_rank\", "
-        + "population_state.region_team_count AS \"team_state.region_team_count\"";
+        + "population_state.region_team_count AS \"team_state.region_team_count\", "
+        + "team_state.league_rank AS \"team_state.league_rank\", "
+        + "population_state.region_league_team_count AS \"team_state.league_team_count\" ";
 
     public static final String CREATE_QUERY =
         "INSERT INTO team_state (team_id, \"timestamp\", division_id, games, rating, secondary) "
@@ -159,11 +163,11 @@ public class TeamStateDAO
         + "INSERT INTO team_state "
         + "("
             + "team_id, \"timestamp\", division_id, wins, games, rating, secondary, "
-            + "global_rank, region_rank, population_state_id"
+            + "global_rank, region_rank, league_rank, population_state_id"
         + ") "
         + "SELECT team.id, :timestamp, division_id, wins, wins + losses, rating, "
         + "CASE WHEN team.queue_type != :mainQueueType THEN true ELSE null::boolean END, "
-        + "global_rank, region_rank,  "
+        + "global_rank, region_rank, league_rank, "
         + "last_population_snapshot_filter.id "
         + "FROM team "
         + "INNER JOIN division ON team.division_id = division.id "
@@ -201,6 +205,8 @@ public class TeamStateDAO
         DAOUtils.getInteger(rs, "team_state.global_team_count"),
         DAOUtils.getInteger(rs, "team_state.region_rank"),
         DAOUtils.getInteger(rs, "team_state.region_team_count"),
+        DAOUtils.getInteger(rs, "team_state.league_rank"),
+        DAOUtils.getInteger(rs, "team_state.league_team_count"),
         DAOUtils.getBoolean(rs, "team_state.archived"),
         DAOUtils.getBoolean(rs, "team_state.secondary")
     );
@@ -218,6 +224,8 @@ public class TeamStateDAO
         DAOUtils.getInteger(rs, "team_state.global_team_count"),
         DAOUtils.getInteger(rs, "team_state.region_rank"),
         DAOUtils.getInteger(rs, "team_state.region_team_count"),
+        DAOUtils.getInteger(rs, "team_state.league_rank"),
+        DAOUtils.getInteger(rs, "team_state.league_team_count"),
         null,
         null
     );

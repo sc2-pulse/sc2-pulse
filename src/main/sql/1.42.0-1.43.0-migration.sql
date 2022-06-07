@@ -100,7 +100,7 @@ BEGIN
         WITH
         cheaters AS
         (
-            DISTINCT(team_id)
+            SELECT DISTINCT(team_id)
             FROM team
             INNER JOIN team_member ON team.id = team_member.team_id
             INNER JOIN player_character_report AS confirmed_cheater_report
@@ -116,6 +116,15 @@ BEGIN
             FROM team
             WHERE season = i
             AND id NOT IN(SELECT team_id FROM cheaters)
+        ),
+        cheater_update AS
+        (
+            UPDATE team
+            SET global_rank = null,
+            region_rank = null,
+            league_rank = null
+            FROM cheaters
+            WHERE team.id = cheaters.team_id
         )
         UPDATE team
         set league_rank = ranks.league_rank
@@ -124,3 +133,6 @@ BEGIN
     END LOOP;
 END
 $do$;
+
+ALTER TABLE "team_state"
+    ADD COLUMN "league_rank" INTEGER;

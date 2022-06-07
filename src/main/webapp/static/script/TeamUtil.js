@@ -645,8 +645,6 @@ class TeamUtil
         teamClone.league = snapshot.league;
         teamClone.leagueType = snapshot.league.type;
         teamClone.tierType = snapshot.tier;
-        teamClone.leagueTeamCount = -1;
-        teamClone.leagueRank = NaN;
         if(snapshot.teamState.wins)
             teamClone.losses = snapshot.teamState.games - snapshot.teamState.wins;
         return teamClone;
