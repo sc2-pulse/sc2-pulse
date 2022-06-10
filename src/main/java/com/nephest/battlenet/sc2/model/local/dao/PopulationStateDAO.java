@@ -4,10 +4,13 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.local.PopulationState;
 import java.util.Collection;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -15,6 +18,14 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class PopulationStateDAO
 {
+
+    public static final String STD_SELECT =
+        "population_state.id AS \"population_state.id\", "
+        + "population_state.league_id AS \"population_state.league_id\", "
+        + "population_state.global_team_count AS \"population_state.global_team_count\", "
+        + "population_state.region_team_count AS \"population_state.region_team_count\", "
+        + "population_state.league_team_count AS \"population_state.league_team_count\", "
+        + "population_state.region_league_team_count AS \"population_state.region_league_team_count\" ";
 
     private static final String TAKE_SNAPSHOT =
         "WITH "
@@ -120,6 +131,20 @@ public class PopulationStateDAO
             + "AND region_league_team_count.queue_type = global_team_count.queue_type "
             + "AND region_league_team_count.team_type = global_team_count.team_type";
 
+    private static final String FIND_BY_IDS = "SELECT " + STD_SELECT
+        + "FROM population_state "
+        + "WHERE id IN(:ids)";
+
+    public static final RowMapper<PopulationState> STD_ROW_MAPPER = (rs, i)->new PopulationState
+    (
+        rs.getInt("population_state.id"),
+        rs.getInt("population_state.league_id"),
+        rs.getInt("population_state.global_team_count"),
+        rs.getInt("population_state.region_team_count"),
+        DAOUtils.getInteger(rs, "population_state.league_team_count"),
+        DAOUtils.getInteger(rs, "population_state.region_league_team_count")
+    );
+
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
     private final SeasonDAO seasonDAO;
@@ -155,6 +180,13 @@ public class PopulationStateDAO
             );
 
         return template.update(TAKE_SNAPSHOT, params);
+    }
+
+    public List<PopulationState> findByIds(Collection<Integer> ids)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("ids", ids);
+        return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
 }

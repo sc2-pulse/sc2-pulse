@@ -3,17 +3,38 @@
 
 package com.nephest.battlenet.sc2.model.dao;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.dao.BlizzardDAO;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -27,19 +48,6 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import reactor.util.function.Tuple3;
-
-import javax.sql.DataSource;
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.OffsetDateTime;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Map;
-import java.util.stream.Collectors;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -62,6 +70,9 @@ public class StandardDataReadonlyIT
     private PlayerCharacterDAO playerCharacterDAO;
 
     @Autowired
+    private PopulationStateDAO populationStateDAO;
+
+    @Autowired
     private JdbcTemplate template;
 
     @Autowired @Qualifier("sc2StatsConversionService")
@@ -71,7 +82,9 @@ public class StandardDataReadonlyIT
     public static void init
     (
         @Autowired DataSource dataSource,
-        @Autowired SeasonGenerator generator
+        @Autowired SeasonGenerator generator,
+        @Autowired LeagueStatsDAO leagueStatsDAO,
+        @Autowired PopulationStateDAO populationStateDAO
     )
     throws SQLException
     {
@@ -90,6 +103,8 @@ public class StandardDataReadonlyIT
             BaseLeagueTier.LeagueTierType.FIRST,
             TEAMS_PER_LEAGUE
         );
+        leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
+        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
     }
 
     @Test
@@ -229,6 +244,30 @@ public class StandardDataReadonlyIT
         assertEquals(2, batch2.size());
         assertEquals(4478, batch2.get(0).getId());
         assertEquals(4477, batch2.get(1).getId());
+    }
+
+    @Test
+    public void testFindPopulationStateByIds()
+    {
+        List<PopulationState> states = populationStateDAO.findByIds(List.of(1, 2));
+        assertEquals(2, states.size());
+        for(PopulationState state : states)
+        {
+            assertTrue(state.getId() == 1 || state.getId() == 2);
+            assertNotNull(state.getLeagueId());
+            assertEquals
+            (
+                Region.values().length * BaseLeague.LeagueType.values().length * TEAMS_PER_LEAGUE,
+                state.getGlobalTeamCount()
+            );
+            assertEquals
+            (
+                BaseLeague.LeagueType.values().length * TEAMS_PER_LEAGUE,
+                state.getRegionTeamCount()
+            );
+            assertEquals(Region.values().length * TEAMS_PER_LEAGUE, state.getLeagueTeamCount());
+            assertEquals(TEAMS_PER_LEAGUE, state.getRegionLeagueTeamCount());
+        }
     }
 
 }
