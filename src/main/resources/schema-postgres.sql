@@ -134,6 +134,23 @@ CREATE TABLE "league"
 
 );
 
+CREATE TABLE "population_state"
+(
+    "id" SERIAL,
+    "league_id" INTEGER NOT NULL,
+    "global_team_count" INTEGER NOT NULL,
+    "region_team_count" INTEGER NOT NULL,
+    "league_team_count" INTEGER,
+    "region_league_team_count" INTEGER,
+
+    PRIMARY KEY("id"),
+
+    CONSTRAINT "fk_population_state_league_id"
+        FOREIGN KEY ("league_id")
+        REFERENCES "league"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE "league_tier"
 (
 
@@ -180,6 +197,7 @@ CREATE TABLE "team"
     "id" BIGSERIAL,
     "legacy_id" NUMERIC NOT NULL,
     "division_id" INTEGER NOT NULL,
+    "population_state_id" INTEGER,
     "season" SMALLINT NOT NULL,
     "region" SMALLINT NOT NULL,
     "league_type" SMALLINT NOT NULL,
@@ -201,6 +219,10 @@ CREATE TABLE "team"
         FOREIGN KEY ("division_id")
         REFERENCES "division"("id")
         ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_team_population_state_id"
+        FOREIGN KEY ("population_state_id")
+        REFERENCES "population_state"("id")
+        ON DELETE SET NULL ON UPDATE CASCADE,
 
     CONSTRAINT "uq_team_queue_type_region_legacy_id_season"
         UNIQUE ("queue_type", "region", "legacy_id", "season")
@@ -232,23 +254,6 @@ CREATE TABLE "team_member"
 );
 
 CREATE INDEX "ix_fk_team_member_player_character_id" ON "team_member"("player_character_id");
-
-CREATE TABLE "population_state"
-(
-    "id" SERIAL,
-    "league_id" INTEGER NOT NULL,
-    "global_team_count" INTEGER NOT NULL,
-    "region_team_count" INTEGER NOT NULL,
-    "league_team_count" INTEGER,
-    "region_league_team_count" INTEGER,
-
-    PRIMARY KEY("id"),
-
-    CONSTRAINT "fk_population_state_league_id"
-        FOREIGN KEY ("league_id")
-        REFERENCES "league"("id")
-        ON DELETE CASCADE ON UPDATE CASCADE
-);
 
 CREATE TABLE "team_state"
 (

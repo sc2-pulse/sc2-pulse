@@ -27,6 +27,11 @@ public class PopulationStateDAO
         + "population_state.league_team_count AS \"population_state.league_team_count\", "
         + "population_state.region_league_team_count AS \"population_state.region_league_team_count\" ";
 
+    public static final String TEAM_DATA_SELECT =
+        "population_state.global_team_count AS \"population_state.global_team_count\", "
+        + "population_state.region_team_count AS \"population_state.region_team_count\", "
+        + "population_state.region_league_team_count AS \"population_state.region_league_team_count\" ";
+
     private static final String TAKE_SNAPSHOT =
         "WITH "
         + "cheaters_league AS "
@@ -145,6 +150,13 @@ public class PopulationStateDAO
         DAOUtils.getInteger(rs, "population_state.region_league_team_count")
     );
 
+    public static final RowMapper<PopulationState> TEAM_DATA_ROW_MAPPER = (rs, i)->PopulationState.teamDataOnly
+    (
+        rs.getInt("population_state.global_team_count"),
+        rs.getInt("population_state.region_team_count"),
+        DAOUtils.getInteger(rs, "population_state.region_league_team_count")
+    );
+
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
     private final SeasonDAO seasonDAO;
@@ -164,7 +176,7 @@ public class PopulationStateDAO
 
     /**
      * <p>
-     *     Creates full population snapshot. It is mainly used in team snapshots.
+     *     Creates full population snapshot. It is mainly used in teams.
      * </p>
      * @param seasons target seasons
      * @return number of created snapshots

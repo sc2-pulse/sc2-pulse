@@ -672,6 +672,8 @@ public class PlayerCharacterReportIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("12344"), 1, 10L, 10, 0, 0, 0
         ))[0];
+        leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
+        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         Team foundSecondCheaterTeamPreCheat = teamDAO.findById(secondCheaterTeam.getId()).orElseThrow();
         //ranks are assigned because there are no cheaters yet
@@ -687,11 +689,11 @@ public class PlayerCharacterReportIT
         );
 
         //cheaters are excluded from ranking
-        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
+        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
+        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         //recreate snapshots with ranks
         template.update("DELETE FROM team_state");
-        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
         teamStateDAO.takeSnapshot(LongStream.range(1, 12).boxed().collect(Collectors.toList()));
 
         List<Long> cheaterTeams = teamDAO.findCheaterTeamIds(SeasonGenerator.DEFAULT_SEASON_ID);

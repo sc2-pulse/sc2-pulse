@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
@@ -99,6 +100,9 @@ public class GeneralSeleniumIT
 
     @Autowired
     private MatchParticipantDAO matchParticipantDAO;
+
+    @Autowired
+    private PopulationStateDAO populationStateDAO;
 
     @Autowired
     private JdbcTemplate template;
@@ -418,8 +422,9 @@ public class GeneralSeleniumIT
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startDateTime.minusYears(1));
         matchParticipantDAO.calculateRatingDifference(startDateTime.minusYears(1));
         clanDAO.updateStats(List.of(clan1.getId(), clan2.getId()));
-        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
+        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
+        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         queueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         playerCharacterStatsDAO.calculate();
         seasonStateDAO.merge(SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay().atOffset(ZoneOffset.UTC).plusMinutes(1),

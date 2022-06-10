@@ -3,9 +3,13 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
 public class PopulationState
 {
 
@@ -20,8 +24,10 @@ public class PopulationState
     @NotNull
     private Integer regionTeamCount;
 
+    @JsonIgnore
     private Integer leagueTeamCount;
 
+    @JsonProperty("leagueTeamCount")
     private Integer regionLeagueTeamCount;
 
     public PopulationState(){}
@@ -54,6 +60,20 @@ public class PopulationState
         this.leagueTeamCount = leagueTeamCount;
         this.regionLeagueTeamCount = regionLeagueTeamCount;
         this.leagueId = leagueId;
+    }
+
+    public static PopulationState teamDataOnly
+    (
+        Integer globalTeamCount,
+        Integer regionTeamCount,
+        Integer regionLeagueTeamCount
+    )
+    {
+        PopulationState state = new PopulationState();
+        state.setGlobalTeamCount(globalTeamCount);
+        state.setRegionTeamCount(regionTeamCount);
+        state.setRegionLeagueTeamCount(regionLeagueTeamCount);
+        return state;
     }
 
     @Override

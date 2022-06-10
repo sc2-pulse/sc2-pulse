@@ -48,6 +48,64 @@ ALTER TABLE "team_state"
 
 SET work_mem = '32MB';
 
+ALTER TABLE "team"
+    ADD COLUMN "population_state_id" INTEGER;
+
+WITH global_team_count AS
+(
+    SELECT season, queue_type, team_type, COUNT(*) AS count
+    FROM team
+    GROUP BY season, queue_type, team_type
+),
+region_team_count AS
+(
+    SELECT season, region, queue_type, team_type, COUNT(*) AS count
+    FROM team
+    GROUP BY season, region, queue_type, team_type
+),
+region_league_team_count AS
+(
+    SELECT season, region, queue_type, team_type, league_id, COUNT(*) AS count
+    FROM team
+    INNER JOIN division ON team.division_id = division.id
+    INNER JOIN league_tier ON division.league_tier_id = league_tier.id
+    GROUP BY season, region, queue_type, team_type, league_id
+)
+INSERT INTO population_state(league_id, global_team_count, region_team_count, region_league_team_count)
+SELECT region_league_team_count.league_id,
+global_team_count.count,
+region_team_count.count,
+region_league_team_count.count
+FROM region_league_team_count
+INNER JOIN region_team_count USING(season, region, queue_type, team_type)
+INNER JOIN global_team_count USING(season, queue_type, team_type);
+
+VACUUM(ANALYZE) population_state;
+CREATE INDEX "ix_population_state_temporary" ON "population_state"("league_id", "id");
+
+DO
+$do$
+BEGIN
+    FOR i IN 0..60 LOOP
+        UPDATE team
+        SET population_state_id = population_state.id
+        FROM team t
+        INNER JOIN division ON t.division_id = division.id
+        INNER JOIN league_tier ON division.league_tier_id = league_tier.id
+        INNER JOIN population_state USING(league_id)
+        WHERE team.id = t.id
+        AND team.season = i;
+    END LOOP;
+END
+$do$;
+
+ALTER TABLE "team"
+    ADD CONSTRAINT "fk_team_population_state_id"
+        FOREIGN KEY ("population_state_id")
+        REFERENCES "population_state"("id")
+        ON DELETE SET NULL ON UPDATE CASCADE;
+DROP INDEX "ix_population_state_temporary";
+
 INSERT INTO population_state(league_id, global_team_count, region_team_count)
 SELECT league_id, global_team_count, region_team_count
 FROM team_state
@@ -78,8 +136,6 @@ BEGIN
    END LOOP;
 END
 $do$;
-
-SET work_mem = '4MB';
 
 ALTER TABLE "team_state"
     ADD CONSTRAINT "fk_team_state_population_state_id"
@@ -136,3 +192,5 @@ $do$;
 
 ALTER TABLE "team_state"
     ADD COLUMN "league_rank" INTEGER;
+
+SET work_mem = '4MB';

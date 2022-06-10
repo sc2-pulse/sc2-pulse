@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
@@ -50,6 +51,7 @@ public class LadderMatchDAO
         + SC2MapDAO.STD_SELECT + ", "
         + MatchParticipantDAO.STD_SELECT + ", "
         + TeamDAO.STD_SELECT + ", "
+        + PopulationStateDAO.TEAM_DATA_SELECT + ", "
         + "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played, "
         + TeamStateDAO.STD_SELECT + ", "

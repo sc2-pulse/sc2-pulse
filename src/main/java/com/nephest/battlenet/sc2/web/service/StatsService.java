@@ -51,6 +51,7 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -334,12 +335,6 @@ public class StatsService
         updateSeasonStats(seasonId, true);
     }
 
-    public void updatePendingStats(boolean allStats)
-    {
-        for(int season : pendingStatsUpdates) updateSeasonStats(season, allStats);
-        pendingStatsUpdates.clear();
-    }
-
     public void afterCurrentSeasonUpdate(UpdateContext updateContext, boolean allStats)
     {
         teamStateDAO.removeExpired();
@@ -349,16 +344,11 @@ public class StatsService
                 ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
                 : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH)
         );
-        Set<Integer> pendingSeasons = Set.copyOf(pendingStatsUpdates);
-        updatePendingStats(allStats);
-        populationStateDAO.takeSnapshot(pendingSeasons);
-        LOG.info
-        (
-            "Created {} team snapshots",
-            teamStateDAO.takeSnapshot(new ArrayList<>(pendingTeams))
-        );
+        for(int season : pendingStatsUpdates) updateSeasonStats(season, allStats);
+        takePopulationSnapshot(pendingStatsUpdates, pendingTeams);
+        alternativeLadderService.afterCurrentSeasonUpdate(pendingStatsUpdates);
         pendingTeams.clear();
-        alternativeLadderService.afterCurrentSeasonUpdate(pendingSeasons);
+        pendingStatsUpdates.clear();
     }
 
     private void updateSeasonStats
@@ -366,7 +356,17 @@ public class StatsService
     {
         if(allStats) queueStatsDAO.mergeCalculateForSeason(seasonId);
         leagueStatsDao.mergeCalculateForSeason(seasonId);
-        teamDao.updateRanks(seasonId);
+    }
+
+    private void takePopulationSnapshot(Collection<Integer> seasons, Collection<Long> teams)
+    {
+        populationStateDAO.takeSnapshot(seasons);
+        for(Integer seasonId : seasons) teamDao.updateRanks(seasonId);
+        LOG.info
+        (
+            "Created {} team snapshots",
+            teamStateDAO.takeSnapshot(new ArrayList<>(teams))
+        );
     }
 
     private void updateSeason(Region region, int seasonId, QueueType[] queues, BaseLeague.LeagueType[] leagues)

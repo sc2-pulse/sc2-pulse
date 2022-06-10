@@ -298,8 +298,8 @@ public class MapStatsIT
         matchParticipantDAO.merge(matches.stream().flatMap(m->Arrays.stream(m.getT2())).toArray(MatchParticipant[]::new));
         matchDAO.updateDuration(odt);
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
-        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
+        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         snapshotData.forEach(t->teamStateDAO.takeSnapshot
         (
             List.of(t.getT1(), t.getT2()),

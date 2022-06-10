@@ -186,16 +186,16 @@ public class LadderSearchDAOIT
         //old player
         teamMemberDAO.create(new TeamMember(team.getId(), 1L, 1, 2, 3, 4));
 
-        teamDAO.updateRanks(DEFAULT_SEASON_ID);
-        teamDAO.updateRanks(DEFAULT_SEASON_ID + 1);
-        teamDAO.updateRanks(DEFAULT_SEASON_ID + 2);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 1);
         leagueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID + 2);
+        populationStateDAO.takeSnapshot(List.of(DEFAULT_SEASON_ID, DEFAULT_SEASON_ID + 1, DEFAULT_SEASON_ID + 2));
+        teamDAO.updateRanks(DEFAULT_SEASON_ID);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID + 1);
+        teamDAO.updateRanks(DEFAULT_SEASON_ID + 2);
         //recreate snapshots with ranks
         template.update("DELETE FROM team_state");
-        populationStateDAO.takeSnapshot(List.of(DEFAULT_SEASON_ID, DEFAULT_SEASON_ID + 1, DEFAULT_SEASON_ID + 2));
         teamStateDAO.takeSnapshot(
             LongStream.rangeClosed(1, TEAMS_TOTAL).boxed().collect(Collectors.toList()));
         queueStatsDAO.calculateForSeason(DEFAULT_SEASON_ID);
@@ -363,8 +363,11 @@ public class LadderSearchDAOIT
             / seasonOrdinal;
 
         assertEquals(expectedGlobalRank, (long) team.getGlobalRank());
+        assertEquals(TEAMS_TOTAL, (long) team.getPopulationState().getGlobalTeamCount());
         assertEquals(expectedRegionRank, (long) team.getRegionRank());
+        assertEquals(TEAMS_PER_REGION, (long) team.getPopulationState().getRegionTeamCount());
         assertEquals(expectedRegionLeagueRank, (long) team.getLeagueRank());
+        assertEquals(TEAMS_PER_LEAGUE, (long) team.getPopulationState().getRegionLeagueTeamCount());
 
         assertEquals(expectedGlobalRank, (long) state.getGlobalRank());
         assertEquals(TEAMS_TOTAL, (long) state.getGlobalTeamCount());

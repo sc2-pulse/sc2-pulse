@@ -3,14 +3,9 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.TeamState;
-import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.time.OffsetDateTime;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
@@ -140,27 +135,7 @@ public class TeamStateDAO
         + "AND team_state.archived = true";
 
     private static final String TAKE_TEAM_SNAPSHOT =
-        "WITH last_population_snapshot AS"
-        + "("
-            + "SELECT id, league_id "
-            + "FROM population_state "
-            + "ORDER BY id DESC "
-            + "LIMIT " +
-                Region.values().length
-                //-1 to offset 1v1 and archon
-                * (QueueType.getTypes(StatsService.VERSION).size() - 1)
-                * BaseLeague.LeagueType.values().length
-                * TeamType.values().length
-                * 2 //offset season change
-        + "), "
-        + "last_population_snapshot_filter AS"
-        + "("
-            + "SELECT DISTINCT ON(league_id) "
-            + "* "
-            + "FROM last_population_snapshot "
-            + "ORDER BY league_id DESC, id DESC"
-        + ") "
-        + "INSERT INTO team_state "
+        "INSERT INTO team_state "
         + "("
             + "team_id, \"timestamp\", division_id, wins, games, rating, secondary, "
             + "global_rank, region_rank, league_rank, population_state_id"
@@ -168,11 +143,8 @@ public class TeamStateDAO
         + "SELECT team.id, :timestamp, division_id, wins, wins + losses, rating, "
         + "CASE WHEN team.queue_type != :mainQueueType THEN true ELSE null::boolean END, "
         + "global_rank, region_rank, league_rank, "
-        + "last_population_snapshot_filter.id "
+        + "team.population_state_id "
         + "FROM team "
-        + "INNER JOIN division ON team.division_id = division.id "
-        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
-        + "INNER JOIN last_population_snapshot_filter USING(league_id) "
         + "WHERE team.id IN(:teamIds)";
 
     public static final String REMOVE_EXPIRED_MAIN_QUERY =
@@ -305,16 +277,6 @@ public class TeamStateDAO
         return template.update(TAKE_TEAM_SNAPSHOT, params);
     }
 
-    /**
-     * <p>
-     *     Creates team snapshots. Uses last population snapshot, make sure you called
-     *     {@link com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO#takeSnapshot(Collection) takeSnapshot}
-     *     before calling this method, otherwise old values will be used.
-     * </p>
-     * @param teamIds team ids to create snapshots of
-     * @param timestamp timestamp of snapshots
-     * @return number of created snapshots
-     */
     @Transactional
     public int takeSnapshot(List<Long> teamIds, OffsetDateTime timestamp)
     {

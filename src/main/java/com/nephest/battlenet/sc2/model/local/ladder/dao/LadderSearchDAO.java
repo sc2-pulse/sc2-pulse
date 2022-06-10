@@ -7,12 +7,30 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.*;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,15 +42,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.math.BigDecimal;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
-
 @Repository
 public class LadderSearchDAO
 {
@@ -41,6 +50,7 @@ public class LadderSearchDAO
         "team_member.terran_games_played, team_member.protoss_games_played, "
         + "team_member.zerg_games_played, team_member.random_games_played, "
         + TeamDAO.STD_SELECT + ", "
+        + PopulationStateDAO.TEAM_DATA_SELECT + ", "
         + PlayerCharacterDAO.STD_SELECT + ", "
         + AccountDAO.STD_SELECT + ", "
         + ClanDAO.STD_SELECT + ", "
@@ -51,6 +61,7 @@ public class LadderSearchDAO
     private static final String LADDER_SEARCH_TEAM_FROM_SHORT =
         "FROM team_member "
         + "INNER JOIN team ON team_member.team_id=team.id "
+        + "LEFT JOIN population_state ON team.population_state_id = population_state.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id ";
 
@@ -90,6 +101,7 @@ public class LadderSearchDAO
         + FIND_TEAM_MEMBERS_BASE
         + "FROM following_team "
         + "INNER JOIN team ON following_team.id = team.id "
+        + "LEFT JOIN population_state ON team.population_state_id = population_state.id "
         + "INNER JOIN team_member ON team_member.team_id = team.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
@@ -136,6 +148,7 @@ public class LadderSearchDAO
 
         + "FROM team_filtered "
         + "INNER JOIN team ON team_filtered.id=team.id "
+        + "LEFT JOIN population_state ON team.population_state_id = population_state.id "
         + "INNER JOIN team_member ON team.id = team_member.team_id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
@@ -175,6 +188,7 @@ public class LadderSearchDAO
         + FIND_TEAM_MEMBERS_BASE
         + "FROM team_filter "
         + "INNER JOIN team ON team_filter.id = team.id "
+        + "LEFT JOIN population_state ON team.population_state_id = population_state.id "
         + "INNER JOIN team_member ON team_member.team_id = team.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
@@ -261,7 +275,8 @@ public class LadderSearchDAO
                 rs.getInt("team.losses"),
                 rs.getInt("team.ties"),
                 null,
-                new ArrayList<>()
+                new ArrayList<>(),
+                PopulationStateDAO.TEAM_DATA_ROW_MAPPER.mapRow(rs, 1)
             );
             team.setGlobalRank(rs.getInt("team.global_rank"));
             team.setRegionRank(rs.getInt("team.region_rank"));

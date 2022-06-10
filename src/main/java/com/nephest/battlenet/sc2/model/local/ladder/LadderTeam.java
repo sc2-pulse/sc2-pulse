@@ -1,14 +1,15 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonUnwrapped;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.Team;
-
 import java.math.BigInteger;
 import java.util.List;
 
@@ -22,6 +23,9 @@ implements java.io.Serializable
 
     private final List<LadderTeamMember> members;
 
+    @JsonUnwrapped
+    private final PopulationState populationState;
+
     public LadderTeam
     (
         Long id,
@@ -32,11 +36,13 @@ implements java.io.Serializable
         BigInteger legacyId,
         Integer divisionId,
         Long rating, Integer wins, Integer losses, Integer ties, Integer points,
-        List<LadderTeamMember> members
+        List<LadderTeamMember> members,
+        PopulationState populationState
     )
     {
         super(id, season, region, league, leagueTierType, legacyId, divisionId, rating, wins, losses, ties,points);
         this.members = members;
+        this.populationState = populationState;
     }
 
     public List<LadderTeamMember> getMembers()
@@ -44,5 +50,9 @@ implements java.io.Serializable
         return members;
     }
 
+    public PopulationState getPopulationState()
+    {
+        return populationState;
+    }
 }
 

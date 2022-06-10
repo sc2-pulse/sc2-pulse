@@ -20,10 +20,12 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.AbstractMap;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
@@ -193,15 +195,38 @@ public class TeamDAO
     private static final String FIND_CHEATER_TEAM_IDS_BY_SEASON_QUERY =
         String.format(FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE, "DISTINCT(team_id)");
 
+    public static final String LAST_POPULATION_SNAPSHOT =
+        "last_population_snapshot AS"
+        + "("
+        + "SELECT id, league_id "
+        + "FROM population_state "
+        + "ORDER BY id DESC "
+        + "LIMIT " +
+        Region.values().length
+            //-1 to offset 1v1 and archon
+            * (QueueType.getTypes(StatsService.VERSION).size() - 1)
+            * BaseLeague.LeagueType.values().length
+            * TeamType.values().length
+            * 2 //offset season change
+        + "), "
+        + "last_population_snapshot_filter AS"
+        + "("
+        + "SELECT DISTINCT ON(league_id) "
+        + "* "
+        + "FROM last_population_snapshot "
+        + "ORDER BY league_id DESC, id DESC"
+        + ") ";
+
     private static final String CALCULATE_RANK_QUERY =
         "WITH "
+        + LAST_POPULATION_SNAPSHOT + ", "
         + "cheaters AS "
         + "( "
             + FIND_CHEATER_TEAM_IDS_BY_SEASON_QUERY
         + "), "
         + "ranks AS "
         + "( "
-            + "SELECT id, "
+            + "SELECT id, division_id, "
             + "RANK() OVER(PARTITION BY queue_type, team_type ORDER BY rating DESC) as global_rank, "
             + "RANK() OVER(PARTITION BY queue_type, team_type, region ORDER BY rating DESC) as region_rank, "
             + "RANK() OVER(PARTITION BY queue_type, team_type, region, league_type ORDER BY rating DESC) as league_rank "
@@ -221,8 +246,12 @@ public class TeamDAO
         + "UPDATE team "
         + "set global_rank = ranks.global_rank, "
         + "region_rank = ranks.region_rank, "
-        + "league_rank = ranks.league_rank "
+        + "league_rank = ranks.league_rank, "
+        + "population_state_id = last_population_snapshot_filter.id "
         + "FROM ranks "
+        + "INNER JOIN division ON ranks.division_id = division.id "
+        + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
+        + "LEFT JOIN last_population_snapshot_filter USING(league_id) "
         + "WHERE team.id = ranks.id";
 
     private static final Map<Race, String> FIND_1V1_TEAM_BY_FAVOURITE_RACE_QUERIES = new EnumMap<>(Race.class);
@@ -408,6 +437,15 @@ public class TeamDAO
         return Optional.ofNullable(template.query(FIND_BY_ID_QUERY, params, getStdExtractor()));
     }
 
+    /**
+     * <p>
+     *     Updates ranks and population state id. Make sure you called
+     *     {@link com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO#takeSnapshot(Collection) PopulationStateDAO.takeSnapshot}
+     *     before calling this method, otherwise old values will be used. Population state id is
+     *     updated only for last 2 seasons, it will be nullified otherwise.
+     * </p>
+     * @param season target season
+     */
     @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void updateRanks(int season)
     {
