@@ -33,16 +33,16 @@ extends SimpleCollectionToFieldArraySerializer<LadderTeamState>
                 else {g.writeNumber(s.getTeamState().getGlobalRank());}
             }),
             Map.entry("globalTeamCount", (g, s)->{
-                if(s.getTeamState().getGlobalTeamCount() == null) {g.writeNull();}
-                else {g.writeNumber(s.getTeamState().getGlobalTeamCount());}
+                if(s.getPopulationState().getGlobalTeamCount() == null) {g.writeNull();}
+                else {g.writeNumber(s.getPopulationState().getGlobalTeamCount());}
             }),
             Map.entry("regionRank", (g, s)->{
                 if(s.getTeamState().getRegionRank() == null) {g.writeNull();}
                 else {g.writeNumber(s.getTeamState().getRegionRank());}
             }),
             Map.entry("regionTeamCount", (g, s)->{
-                if(s.getTeamState().getRegionTeamCount() == null) {g.writeNull();}
-                else {g.writeNumber(s.getTeamState().getRegionTeamCount());}
+                if(s.getPopulationState().getRegionTeamCount() == null) {g.writeNull();}
+                else {g.writeNumber(s.getPopulationState().getRegionTeamCount());}
             }),
             Map.entry("race", (g, s)->{
                 if(s.getRace() == null) {g.writeNull();}

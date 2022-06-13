@@ -23,7 +23,6 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
-import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
@@ -324,9 +323,8 @@ public class LadderSearchDAOIT
             assertEquals(teamId, team.getWins());
             assertEquals(teamId + 1, team.getLosses());
             assertEquals(teamId + 2, team.getTies());
-            TeamState state = ladderTeamStateDAO
+            LadderTeamState state = ladderTeamStateDAO
                 .find(Set.of(TeamLegacyUid.of(team))).stream()
-                .map(LadderTeamState::getTeamState)
                 .findAny()
                 .orElseThrow();
             verifyTeamState(team, state, 1);
@@ -347,7 +345,7 @@ public class LadderSearchDAOIT
         }
     }
 
-    private void verifyTeamState(LadderTeam team, TeamState state, int seasonOrdinal)
+    private void verifyTeamState(LadderTeam team, LadderTeamState state, int seasonOrdinal)
     {
         long expectedGlobalRank = (TEAMS_TOTAL - team.getId() + 1) / seasonOrdinal;
         long expectedGlobalLeagueRank =
@@ -369,14 +367,14 @@ public class LadderSearchDAOIT
         assertEquals(expectedRegionLeagueRank, (long) team.getLeagueRank());
         assertEquals(TEAMS_PER_LEAGUE, (long) team.getPopulationState().getRegionLeagueTeamCount());
 
-        assertEquals(expectedGlobalRank, (long) state.getGlobalRank());
-        assertEquals(TEAMS_TOTAL, (long) state.getGlobalTeamCount());
-        assertEquals(expectedRegionRank, (long) state.getRegionRank());
-        assertEquals(TEAMS_PER_REGION, (long) state.getRegionTeamCount());
-        assertEquals(expectedRegionLeagueRank, (long) state.getLeagueRank());
-        assertEquals(TEAMS_PER_LEAGUE, (long) state.getLeagueTeamCount());
+        assertEquals(expectedGlobalRank, (long) state.getTeamState().getGlobalRank());
+        assertEquals(TEAMS_TOTAL, (long) state.getPopulationState().getGlobalTeamCount());
+        assertEquals(expectedRegionRank, (long) state.getTeamState().getRegionRank());
+        assertEquals(TEAMS_PER_REGION, (long) state.getPopulationState().getRegionTeamCount());
+        assertEquals(expectedRegionLeagueRank, (long) state.getTeamState().getLeagueRank());
+        assertEquals(TEAMS_PER_LEAGUE, (long) state.getPopulationState().getRegionLeagueTeamCount());
 
-        assertEquals(team.getWins(), state.getWins());
+        assertEquals(team.getWins(), state.getTeamState().getWins());
     }
 
     private void verifyLadderOffset

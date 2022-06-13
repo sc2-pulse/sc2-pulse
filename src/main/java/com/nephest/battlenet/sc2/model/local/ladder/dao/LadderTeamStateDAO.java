@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
@@ -30,6 +31,7 @@ public class LadderTeamStateDAO
     private static final String SELECT_QUERY_PART =
         "SELECT team_filter.race, "
         + TeamStateDAO.SHORT_SELECT + ", "
+        + PopulationStateDAO.TEAM_DATA_SELECT + ", "
         + "team.tier_type AS \"team.tier_type\", "
         + LeagueDAO.SHORT_SELECT + ", "
         + "season.battlenet_id as \"season.battlenet_id\" "
@@ -115,7 +117,8 @@ public class LadderTeamStateDAO
             DAOUtils.getConvertedObjectFromInteger(rs, "race", conversionService, Race.class),
             conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), BaseLeagueTier.LeagueTierType.class),
             LeagueDAO.getShortRowMapper().mapRow(rs, 0),
-            rs.getInt("season.battlenet_id")
+            rs.getInt("season.battlenet_id"),
+            PopulationStateDAO.TEAM_DATA_ROW_MAPPER.mapRow(rs, 0)
         );
 
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = (rs)->

@@ -152,8 +152,8 @@ public class PopulationStateDAO
 
     public static final RowMapper<PopulationState> TEAM_DATA_ROW_MAPPER = (rs, i)->PopulationState.teamDataOnly
     (
-        rs.getInt("population_state.global_team_count"),
-        rs.getInt("population_state.region_team_count"),
+        DAOUtils.getInteger(rs, "population_state.global_team_count"),
+        DAOUtils.getInteger(rs, "population_state.region_team_count"),
         DAOUtils.getInteger(rs, "population_state.region_league_team_count")
     );
 

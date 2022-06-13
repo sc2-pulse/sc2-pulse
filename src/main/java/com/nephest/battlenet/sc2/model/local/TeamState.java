@@ -34,13 +34,8 @@ implements java.io.Serializable
     private Integer rating;
 
     private Integer globalRank;
-    private Integer globalTeamCount;
-
     private Integer regionRank;
-    private Integer regionTeamCount;
-
     private Integer leagueRank;
-    private Integer leagueTeamCount;
 
     private Boolean archived;
 
@@ -73,11 +68,8 @@ implements java.io.Serializable
         @NotNull Integer games,
         @NotNull Integer rating,
         Integer globalRank,
-        Integer globalTeamCount,
         Integer regionRank,
-        Integer regionTeamCount,
         Integer leagueRank,
-        Integer leagueTeamCount,
         Boolean archived,
         Boolean secondary
     )
@@ -85,11 +77,8 @@ implements java.io.Serializable
         this(teamId, dateTime, divisionId, games, rating);
         this.wins = wins;
         this.globalRank = globalRank;
-        this.globalTeamCount = globalTeamCount;
         this.regionRank = regionRank;
-        this.regionTeamCount = regionTeamCount;
         this.leagueRank = leagueRank;
-        this.leagueTeamCount = leagueTeamCount;
         this.archived = archived;
         this.secondary = secondary;
     }
@@ -104,7 +93,7 @@ implements java.io.Serializable
             team.getWins(),
             team.getWins() + team.getLosses() + team.getTies(),
             team.getRating().intValue(),
-            null, null, null, null, null, null,
+            null, null, null,
             null,
             team.getQueueType() != MAIN_QUEUE_TYPE ? true : null
         );
@@ -211,16 +200,6 @@ implements java.io.Serializable
         this.globalRank = globalRank;
     }
 
-    public Integer getGlobalTeamCount()
-    {
-        return globalTeamCount;
-    }
-
-    public void setGlobalTeamCount(Integer globalTeamCount)
-    {
-        this.globalTeamCount = globalTeamCount;
-    }
-
     public Integer getRegionRank()
     {
         return regionRank;
@@ -231,16 +210,6 @@ implements java.io.Serializable
         this.regionRank = regionRank;
     }
 
-    public Integer getRegionTeamCount()
-    {
-        return regionTeamCount;
-    }
-
-    public void setRegionTeamCount(Integer regionTeamCount)
-    {
-        this.regionTeamCount = regionTeamCount;
-    }
-
     public Integer getLeagueRank()
     {
         return leagueRank;
@@ -249,16 +218,6 @@ implements java.io.Serializable
     public void setLeagueRank(Integer leagueRank)
     {
         this.leagueRank = leagueRank;
-    }
-
-    public Integer getLeagueTeamCount()
-    {
-        return leagueTeamCount;
-    }
-
-    public void setLeagueTeamCount(Integer leagueTeamCount)
-    {
-        this.leagueTeamCount = leagueTeamCount;
     }
 
     public Boolean getArchived()

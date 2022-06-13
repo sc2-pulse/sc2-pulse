@@ -715,18 +715,18 @@ public class PlayerCharacterReportIT
             .filter(s->s.getTeamState().getTeamId().equals(foundSecondCheaterTeam.getId()))
             .findAny().orElseThrow();
         assertNull(cheaterTeamState.getTeamState().getGlobalRank());
-        assertEquals(7, cheaterTeamState.getTeamState().getGlobalTeamCount());
+        assertEquals(7, cheaterTeamState.getPopulationState().getGlobalTeamCount());
         assertNull(cheaterTeamState.getTeamState().getRegionRank());
-        assertEquals(7, cheaterTeamState.getTeamState().getRegionTeamCount());
+        assertEquals(7, cheaterTeamState.getPopulationState().getRegionTeamCount());
 
         LadderTeamState nonCheaterTeamState = ladderTeamStateDAO.find(2L).get(0);
         //11 team in total, 4 teams with cheater members, 7 valid teams(11 - 4)
-        assertEquals(7, nonCheaterTeamState.getTeamState().getGlobalTeamCount());
-        assertEquals(7, nonCheaterTeamState.getTeamState().getRegionTeamCount());
+        assertEquals(7, nonCheaterTeamState.getPopulationState().getGlobalTeamCount());
+        assertEquals(7, nonCheaterTeamState.getPopulationState().getRegionTeamCount());
         assertEquals(7, nonCheaterTeamState.getTeamState().getGlobalRank());
-        assertEquals(7, nonCheaterTeamState.getTeamState().getGlobalTeamCount());
+        assertEquals(7, nonCheaterTeamState.getPopulationState().getGlobalTeamCount());
         assertEquals(7, nonCheaterTeamState.getTeamState().getRegionRank());
-        assertEquals(7, nonCheaterTeamState.getTeamState().getRegionTeamCount());
+        assertEquals(7, nonCheaterTeamState.getPopulationState().getRegionTeamCount());
     }
 
     private static void verifyReports

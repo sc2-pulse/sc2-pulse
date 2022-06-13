@@ -42,11 +42,8 @@ public class TeamStateDAO
         + "team_state.games AS \"team_state.games\", "
         + "team_state.rating AS \"team_state.rating\", "
         + "team_state.global_rank AS \"team_state.global_rank\", "
-        + "population_state.global_team_count AS \"team_state.global_team_count\", "
         + "team_state.region_rank AS \"team_state.region_rank\", "
-        + "population_state.region_team_count AS \"team_state.region_team_count\", "
         + "team_state.league_rank AS \"team_state.league_rank\", "
-        + "population_state.region_league_team_count AS \"team_state.league_team_count\", "
         + "team_state.archived AS \"team_state.archived\", "
         + "team_state.secondary AS \"team_state.secondary\" ";
 
@@ -57,11 +54,8 @@ public class TeamStateDAO
         + "team_state.games AS \"team_state.games\", "
         + "team_state.rating AS \"team_state.rating\", "
         + "team_state.global_rank AS \"team_state.global_rank\", "
-        + "population_state.global_team_count AS \"team_state.global_team_count\", "
         + "team_state.region_rank AS \"team_state.region_rank\", "
-        + "population_state.region_team_count AS \"team_state.region_team_count\", "
-        + "team_state.league_rank AS \"team_state.league_rank\", "
-        + "population_state.region_league_team_count AS \"team_state.league_team_count\" ";
+        + "team_state.league_rank AS \"team_state.league_rank\" ";
 
     public static final String CREATE_QUERY =
         "INSERT INTO team_state (team_id, \"timestamp\", division_id, games, rating, secondary) "
@@ -174,11 +168,8 @@ public class TeamStateDAO
         rs.getInt("team_state.games"),
         rs.getInt("team_state.rating"),
         DAOUtils.getInteger(rs, "team_state.global_rank"),
-        DAOUtils.getInteger(rs, "team_state.global_team_count"),
         DAOUtils.getInteger(rs, "team_state.region_rank"),
-        DAOUtils.getInteger(rs, "team_state.region_team_count"),
         DAOUtils.getInteger(rs, "team_state.league_rank"),
-        DAOUtils.getInteger(rs, "team_state.league_team_count"),
         DAOUtils.getBoolean(rs, "team_state.archived"),
         DAOUtils.getBoolean(rs, "team_state.secondary")
     );
@@ -193,11 +184,8 @@ public class TeamStateDAO
         rs.getInt("team_state.games"),
         rs.getInt("team_state.rating"),
         DAOUtils.getInteger(rs, "team_state.global_rank"),
-        DAOUtils.getInteger(rs, "team_state.global_team_count"),
         DAOUtils.getInteger(rs, "team_state.region_rank"),
-        DAOUtils.getInteger(rs, "team_state.region_team_count"),
         DAOUtils.getInteger(rs, "team_state.league_rank"),
-        DAOUtils.getInteger(rs, "team_state.league_team_count"),
         null,
         null
     );
