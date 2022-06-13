@@ -12,11 +12,11 @@ public class PopulationStateTest
     @Test
     public void testEquality()
     {
-        PopulationState state = new PopulationState(1, 1, 1, 1, 1, 1);
-        PopulationState equalState = new PopulationState(1, 0, 0, 0, 0, 0);
+        PopulationState state = new PopulationState(1, 1, 1, 1, 1);
+        PopulationState equalState = new PopulationState(1, 0, 0, 0, 0);
         PopulationState[] notEqualsStates = new PopulationState[]
         {
-            new PopulationState(0, 1, 1, 1, 1, 1)
+            new PopulationState(0, 1, 1, 1, 1)
         };
         TestUtil.testUniqueness(state, equalState, notEqualsStates);
     }

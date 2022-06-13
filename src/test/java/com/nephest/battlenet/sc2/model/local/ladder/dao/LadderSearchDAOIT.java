@@ -365,14 +365,14 @@ public class LadderSearchDAOIT
         assertEquals(expectedRegionRank, (long) team.getRegionRank());
         assertEquals(TEAMS_PER_REGION, (long) team.getPopulationState().getRegionTeamCount());
         assertEquals(expectedRegionLeagueRank, (long) team.getLeagueRank());
-        assertEquals(TEAMS_PER_LEAGUE, (long) team.getPopulationState().getRegionLeagueTeamCount());
+        assertEquals(TEAMS_PER_LEAGUE, (long) team.getPopulationState().getLeagueTeamCount());
 
         assertEquals(expectedGlobalRank, (long) state.getTeamState().getGlobalRank());
         assertEquals(TEAMS_TOTAL, (long) state.getPopulationState().getGlobalTeamCount());
         assertEquals(expectedRegionRank, (long) state.getTeamState().getRegionRank());
         assertEquals(TEAMS_PER_REGION, (long) state.getPopulationState().getRegionTeamCount());
         assertEquals(expectedRegionLeagueRank, (long) state.getTeamState().getLeagueRank());
-        assertEquals(TEAMS_PER_LEAGUE, (long) state.getPopulationState().getRegionLeagueTeamCount());
+        assertEquals(TEAMS_PER_LEAGUE, (long) state.getPopulationState().getLeagueTeamCount());
 
         assertEquals(team.getWins(), state.getTeamState().getWins());
     }

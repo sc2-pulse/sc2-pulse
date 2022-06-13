@@ -265,8 +265,7 @@ public class StandardDataReadonlyIT
                 BaseLeague.LeagueType.values().length * TEAMS_PER_LEAGUE,
                 state.getRegionTeamCount()
             );
-            assertEquals(Region.values().length * TEAMS_PER_LEAGUE, state.getLeagueTeamCount());
-            assertEquals(TEAMS_PER_LEAGUE, state.getRegionLeagueTeamCount());
+            assertEquals(TEAMS_PER_LEAGUE, state.getLeagueTeamCount());
         }
     }
 

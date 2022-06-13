@@ -3,9 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -24,11 +22,7 @@ public class PopulationState
     @NotNull
     private Integer regionTeamCount;
 
-    @JsonIgnore
     private Integer leagueTeamCount;
-
-    @JsonProperty("leagueTeamCount")
-    private Integer regionLeagueTeamCount;
 
     public PopulationState(){}
 
@@ -50,15 +44,13 @@ public class PopulationState
         Integer leagueId,
         Integer globalTeamCount,
         Integer regionTeamCount,
-        Integer leagueTeamCount,
-        Integer regionLeagueTeamCount
+        Integer leagueTeamCount
     )
     {
         this.id = id;
         this.globalTeamCount = globalTeamCount;
         this.regionTeamCount = regionTeamCount;
         this.leagueTeamCount = leagueTeamCount;
-        this.regionLeagueTeamCount = regionLeagueTeamCount;
         this.leagueId = leagueId;
     }
 
@@ -66,13 +58,13 @@ public class PopulationState
     (
         Integer globalTeamCount,
         Integer regionTeamCount,
-        Integer regionLeagueTeamCount
+        Integer leagueTeamCount
     )
     {
         PopulationState state = new PopulationState();
         state.setGlobalTeamCount(globalTeamCount);
         state.setRegionTeamCount(regionTeamCount);
-        state.setRegionLeagueTeamCount(regionLeagueTeamCount);
+        state.setLeagueTeamCount(leagueTeamCount);
         return state;
     }
 
@@ -135,16 +127,6 @@ public class PopulationState
     public void setLeagueTeamCount(Integer leagueTeamCount)
     {
         this.leagueTeamCount = leagueTeamCount;
-    }
-
-    public Integer getRegionLeagueTeamCount()
-    {
-        return regionLeagueTeamCount;
-    }
-
-    public void setRegionLeagueTeamCount(Integer regionLeagueTeamCount)
-    {
-        this.regionLeagueTeamCount = regionLeagueTeamCount;
     }
 
     public Integer getLeagueId()

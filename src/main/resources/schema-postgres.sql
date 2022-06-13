@@ -141,7 +141,6 @@ CREATE TABLE "population_state"
     "global_team_count" INTEGER NOT NULL,
     "region_team_count" INTEGER NOT NULL,
     "league_team_count" INTEGER,
-    "region_league_team_count" INTEGER,
 
     PRIMARY KEY("id"),
 

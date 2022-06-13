@@ -24,28 +24,16 @@ public class PopulationStateDAO
         + "population_state.league_id AS \"population_state.league_id\", "
         + "population_state.global_team_count AS \"population_state.global_team_count\", "
         + "population_state.region_team_count AS \"population_state.region_team_count\", "
-        + "population_state.league_team_count AS \"population_state.league_team_count\", "
-        + "population_state.region_league_team_count AS \"population_state.region_league_team_count\" ";
+        + "population_state.league_team_count AS \"population_state.league_team_count\" ";
 
     public static final String TEAM_DATA_SELECT =
         "population_state.global_team_count AS \"population_state.global_team_count\", "
         + "population_state.region_team_count AS \"population_state.region_team_count\", "
-        + "population_state.region_league_team_count AS \"population_state.region_league_team_count\" ";
+        + "population_state.league_team_count AS \"population_state.league_team_count\" ";
 
     private static final String TAKE_SNAPSHOT =
         "WITH "
         + "cheaters_league AS "
-        + "( "
-            + String.format
-            (
-                TeamDAO.FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE,
-                "COUNT(DISTINCT(team.id)) as count, season AS battlenet_id, queue_type, team_type, "
-                + "league_type AS type"
-            )
-            + " "
-            + "GROUP BY season, queue_type, team_type, team.league_type "
-        + "), "
-        + "cheaters_region_league AS "
         + "( "
             + String.format
             (
@@ -72,29 +60,17 @@ public class PopulationStateDAO
             + "FROM cheaters_region "
             + "GROUP BY battlenet_id, queue_type, team_type "
         + "), "
-        + "region_league_team_count AS "
+        + "league_team_count AS "
         + "("
             + "SELECT season.battlenet_id AS season, queue_type, team_type, season.region, "
             + "MAX(type) AS type, league.id AS league_id, "
-            + "SUM(team_count) - COALESCE(MAX(cheaters_region_league.count), 0) AS count "
-            + "FROM league_stats "
-            + "INNER JOIN league ON league_stats.league_id = league.id "
-            + "INNER JOIN season ON league.season_id = season.id "
-            + "LEFT JOIN cheaters_region_league USING(battlenet_id, region, queue_type, team_type, type) "
-            + "WHERE season.battlenet_id IN(:seasons) "
-            + "GROUP BY season.battlenet_id, season.region, queue_type, team_type, league.id "
-        + "), "
-        + "league_team_count AS "
-        + "("
-            + "SELECT season.battlenet_id AS season, queue_type, team_type, "
-            + "type, "
             + "SUM(team_count) - COALESCE(MAX(cheaters_league.count), 0) AS count "
             + "FROM league_stats "
             + "INNER JOIN league ON league_stats.league_id = league.id "
             + "INNER JOIN season ON league.season_id = season.id "
-            + "LEFT JOIN cheaters_league USING(battlenet_id, queue_type, team_type, type) "
+            + "LEFT JOIN cheaters_league USING(battlenet_id, region, queue_type, team_type, type) "
             + "WHERE season.battlenet_id IN(:seasons) "
-            + "GROUP BY season.battlenet_id, queue_type, team_type, type "
+            + "GROUP BY season.battlenet_id, season.region, queue_type, team_type, league.id "
         + "), "
         + "region_team_count AS "
         + "("
@@ -118,23 +94,21 @@ public class PopulationStateDAO
         + ") "
         + "INSERT INTO "
         + "population_state"
-        + "(league_id, global_team_count, region_team_count, league_team_count, region_league_team_count) "
-        + "SELECT region_league_team_count.league_id, "
+        + "(league_id, global_team_count, region_team_count, league_team_count) "
+        + "SELECT league_team_count.league_id, "
         + "global_team_count.count, "
         + "region_team_count.count, "
-        + "league_team_count.count, "
-        + "region_league_team_count.count "
-        + "FROM region_league_team_count "
-        + "INNER JOIN league_team_count USING(type) "
+        + "league_team_count.count "
+        + "FROM league_team_count "
         + "INNER JOIN region_team_count "
-            + "ON region_league_team_count.season = region_team_count.season "
-            + "AND region_league_team_count.region = region_team_count.region "
-            + "AND region_league_team_count.queue_type = region_team_count.queue_type "
-            + "AND region_league_team_count.team_type = region_team_count.team_type "
+            + "ON league_team_count.season = region_team_count.season "
+            + "AND league_team_count.region = region_team_count.region "
+            + "AND league_team_count.queue_type = region_team_count.queue_type "
+            + "AND league_team_count.team_type = region_team_count.team_type "
         + "INNER JOIN global_team_count "
-            + "ON region_league_team_count.season = global_team_count.season "
-            + "AND region_league_team_count.queue_type = global_team_count.queue_type "
-            + "AND region_league_team_count.team_type = global_team_count.team_type";
+            + "ON league_team_count.season = global_team_count.season "
+            + "AND league_team_count.queue_type = global_team_count.queue_type "
+            + "AND league_team_count.team_type = global_team_count.team_type";
 
     private static final String FIND_BY_IDS = "SELECT " + STD_SELECT
         + "FROM population_state "
@@ -146,15 +120,14 @@ public class PopulationStateDAO
         rs.getInt("population_state.league_id"),
         rs.getInt("population_state.global_team_count"),
         rs.getInt("population_state.region_team_count"),
-        DAOUtils.getInteger(rs, "population_state.league_team_count"),
-        DAOUtils.getInteger(rs, "population_state.region_league_team_count")
+        DAOUtils.getInteger(rs, "population_state.league_team_count")
     );
 
     public static final RowMapper<PopulationState> TEAM_DATA_ROW_MAPPER = (rs, i)->PopulationState.teamDataOnly
     (
         DAOUtils.getInteger(rs, "population_state.global_team_count"),
         DAOUtils.getInteger(rs, "population_state.region_team_count"),
-        DAOUtils.getInteger(rs, "population_state.region_league_team_count")
+        DAOUtils.getInteger(rs, "population_state.league_team_count")
     );
 
     private final NamedParameterJdbcTemplate template;

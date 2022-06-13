@@ -33,7 +33,6 @@ CREATE TABLE "population_state"
     "global_team_count" INTEGER NOT NULL,
     "region_team_count" INTEGER NOT NULL,
     "league_team_count" INTEGER,
-    "region_league_team_count" INTEGER,
 
     PRIMARY KEY("id"),
 
@@ -63,7 +62,7 @@ region_team_count AS
     FROM team
     GROUP BY season, region, queue_type, team_type
 ),
-region_league_team_count AS
+league_team_count AS
 (
     SELECT season, region, queue_type, team_type, league_id, COUNT(*) AS count
     FROM team
@@ -71,12 +70,12 @@ region_league_team_count AS
     INNER JOIN league_tier ON division.league_tier_id = league_tier.id
     GROUP BY season, region, queue_type, team_type, league_id
 )
-INSERT INTO population_state(league_id, global_team_count, region_team_count, region_league_team_count)
-SELECT region_league_team_count.league_id,
+INSERT INTO population_state(league_id, global_team_count, region_team_count, league_team_count)
+SELECT league_team_count.league_id,
 global_team_count.count,
 region_team_count.count,
-region_league_team_count.count
-FROM region_league_team_count
+league_team_count.count
+FROM league_team_count
 INNER JOIN region_team_count USING(season, region, queue_type, team_type)
 INNER JOIN global_team_count USING(season, queue_type, team_type);
 
