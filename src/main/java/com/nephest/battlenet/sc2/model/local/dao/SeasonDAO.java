@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -212,6 +213,14 @@ public class SeasonDAO
     public List<Season> findLastInAllRegions()
     {
         return template.query(FIND_LAST_IN_ALL_REGIONS, STD_ROW_MAPPER);
+    }
+
+    public List<Integer> getLastInAllRegions()
+    {
+        return findLastInAllRegions().stream()
+            .map(Season::getBattlenetId)
+            .distinct()
+            .collect(Collectors.toList());
     }
 
     @Cacheable(cacheNames="search-season-last")

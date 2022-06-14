@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.Region;
@@ -64,6 +65,15 @@ public class SeasonIT
         assertEquals(Region.values().length, lastSeasons.size());
         for(Season season : lastSeasons)
             assertEquals(season.getRegion() == Region.EU ? 2 : 1, season.getBattlenetId());
+    }
+
+    @Test
+    public void testFindLastBattlenetIdInAllRegions()
+    {
+        List<Integer> lastSeasons = seasonDAO.getLastInAllRegions();
+        assertEquals(2, lastSeasons.size());
+        assertTrue(lastSeasons.contains(1));
+        assertTrue(lastSeasons.contains(2));
     }
 
     @Test
