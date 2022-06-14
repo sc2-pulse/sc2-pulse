@@ -106,6 +106,9 @@ public class SeasonDAO
     private static final String FIND_MAX_BATTLENET_ID_QUERY =
         "SELECT MAX(battlenet_id) FROM season";
 
+    private static final String FIND_MAX_BATTLENET_ID_BY_REGION_QUERY =
+        FIND_MAX_BATTLENET_ID_QUERY + " WHERE region = :region";
+
     private static final String FIND_LAST_IN_ALL_REGIONS =
         "SELECT DISTINCT ON (region) "
         + STD_SELECT
@@ -215,6 +218,14 @@ public class SeasonDAO
     public Integer getMaxBattlenetId()
     {
         return template.query(FIND_MAX_BATTLENET_ID_QUERY, DAOUtils.INT_EXTRACTOR);
+    }
+
+    @Cacheable(cacheNames="search-season-last")
+    public Integer getMaxBattlenetId(Region region)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("region", conversionService.convert(region, Integer.class));
+        return template.query(FIND_MAX_BATTLENET_ID_BY_REGION_QUERY, params, DAOUtils.INT_EXTRACTOR);
     }
 
     public RowMapper<Season> getStandardRowMapper()

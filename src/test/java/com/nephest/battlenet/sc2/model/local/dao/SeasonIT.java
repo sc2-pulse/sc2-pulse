@@ -66,4 +66,11 @@ public class SeasonIT
             assertEquals(season.getRegion() == Region.EU ? 2 : 1, season.getBattlenetId());
     }
 
+    @Test
+    public void testFindLastInRegion()
+    {
+        assertEquals(2, seasonDAO.getMaxBattlenetId(Region.EU));
+        assertEquals(1, seasonDAO.getMaxBattlenetId(Region.US));
+    }
+
 }
