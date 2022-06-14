@@ -232,7 +232,8 @@ public class Cron
                 : Instant.now().minusSeconds(24 * 60 * 60 * 1000);
             OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
             proPlayerService.update();
-            queueStatsDAO.mergeCalculateForSeason(seasonDAO.getMaxBattlenetId());
+            for(Integer season : seasonDAO.getLastInAllRegions())
+                queueStatsDAO.mergeCalculateForSeason(season);
             teamStateDAO.archive(defaultOdt);
             teamStateDAO.cleanArchive(defaultOdt);
             teamStateDAO.removeExpired();

@@ -382,9 +382,9 @@ public class StatsService
     {
         //there can be two seasons here when a new season starts
         Set<Integer> seasons = new HashSet<>(2);
-        int maxSeason = seasonDao.getMaxBattlenetId();
         for(Region region : regions)
         {
+            int maxSeason = seasonDao.getMaxBattlenetId(region);
             UpdateContext regionalContext = getLadderUpdateContext(region, updateContext);
             BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
             Season season = seasonDao.merge(Season.of(bSeason, region));
@@ -556,7 +556,8 @@ public class StatsService
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members = new ArrayList<>(bTeams.length * memberCount);
         List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
-        Integer curSeason = seasonDao.getMaxBattlenetId() == null ? 0 : seasonDao.getMaxBattlenetId();
+        Integer curSeason = seasonDao.getMaxBattlenetId(season.getRegion()) == null
+            ? 0 : seasonDao.getMaxBattlenetId(season.getRegion());
         List<Tuple2<Team, BlizzardTeam>> validTeams = Arrays.stream(bTeams)
             .filter(teamValidationPredicate.and(t->isValidTeam(t, memberCount)))
             .map(bTeam->Tuples.of(Team.of(season, league, tier, division, bTeam, teamDao), bTeam))
@@ -705,9 +706,9 @@ public class StatsService
 
     public void checkStaleData(Region[] regions)
     {
-        int maxSeason = seasonDao.getMaxBattlenetId();
         for(Region region : regions)
         {
+            int maxSeason = seasonDao.getMaxBattlenetId(region);
             checkStaleDataByTeamStateCount(region);
             BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
             long maxId = getMaxLadderId(bSeason, region);

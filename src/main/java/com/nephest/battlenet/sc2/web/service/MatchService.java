@@ -255,12 +255,15 @@ public class MatchService
 
     private void identify(UpdateContext updateContext)
     {
-        int identified = matchParticipantDAO.identify
-        (
-            seasonDAO.getMaxBattlenetId(),
-            calculateRetroactiveDateTime(updateContext)
-        );
-        LOG.info("Identified {} matches", identified);
+        for(Integer season : seasonDAO.getLastInAllRegions())
+        {
+            int identified = matchParticipantDAO.identify
+            (
+                season,
+                calculateRetroactiveDateTime(updateContext)
+            );
+            LOG.info("Identified {} matches", identified);
+        }
     }
 
     private void calculateRatingDifference(UpdateContext updateContext)
