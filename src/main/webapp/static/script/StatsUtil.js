@@ -417,14 +417,6 @@ class StatsUtil
             .catch(error => Session.onPersonalException(error));
     }
 
-    static updateBundleModel()
-    {
-        return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/ladder/stats/bundle"))
-            .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.BUNDLE, json); res(json);}));
-    }
-
     static calculateDailyStats(stats)
     {
         SeasonUtil.updateSeasonDuration(Session.currentSeasons[0]);

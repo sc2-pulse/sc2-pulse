@@ -25,7 +25,7 @@ class VersusUtil
     static updateVersus(clans1, teams1, clans2, teams2, types)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return Promise.all([VersusUtil.updateVersusModel(clans1, teams1, clans2, teams2, types), StatsUtil.updateBundleModel()])
+        return VersusUtil.updateVersusModel(clans1, teams1, clans2, teams2, types)
             .then(VersusUtil.updateVersusView)
             .then(e=>new Promise((res, rej)=>{
                 Util.setGeneratingStatus(STATUS.SUCCESS);

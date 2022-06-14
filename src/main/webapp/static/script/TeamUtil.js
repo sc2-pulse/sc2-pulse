@@ -82,29 +82,8 @@ class TeamUtil
         return document.createTextNode(Util.getTeamFormatAndTeamTypeString(teamFormat, teamType));
     }
 
-    static getRank(team, rankType, teamCountCalculator)
-    {
-        const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
-        const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
-
-        const rank = (!Util.isUndefinedRank(team[rankType]) ? Util.NUMBER_FORMAT.format(team[rankType]) : "-");
-        const teamCount = teamCountCalculator(stats);
-        const topPercentage = (!Util.isUndefinedRank(team[rankType])
-            ? Util.DECIMAL_FORMAT.format( (team[rankType] / teamCount) * 100)
-            : "");
-        return {rank: rank, teamCount: teamCount, topPercentage: topPercentage}
-    }
-
-    static getRankString(rankInfo, header, includeTeamCount = true)
-    {
-        return header + ": " + rankInfo.rank + (includeTeamCount ? "/" + rankInfo.teamCount : "") + "(" + rankInfo.topPercentage + "%)";
-    }
-
     static appendRankInfo(parent, searchResult, team, teamIx)
     {
-        const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
-        const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
-
         const rank = teamIx == -1
             ? "-"
             : searchResult.meta != null
@@ -115,7 +94,7 @@ class TeamUtil
             : searchResult.meta != null
                 ? Util.DECIMAL_FORMAT.format((Util.calculateRank(searchResult, teamIx) / searchResult.meta.totalCount) * 100)
                 : (!Util.isUndefinedRank(team.globalRank)
-                    ? Util.DECIMAL_FORMAT.format( (team.globalRank / Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)) * 100)
+                    ? Util.DECIMAL_FORMAT.format( (team.globalRank / team.globalTeamCount) * 100)
                     : "");
 
         parent.setAttribute("data-toggle", "popover");
@@ -141,8 +120,6 @@ class TeamUtil
         const viewData = Model.DATA.get(ViewUtil.getView(parent));
         const searchResult = viewData.get(VIEW_DATA.TEAMS) || viewData.get(VIEW_DATA.SEARCH);
         const team = TeamUtil.getTeamFromElement(parent);
-        const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
-        const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
         if(TeamUtil.isCheaterTeam(team))
         {
             const span = document.createElement("span");
@@ -152,9 +129,9 @@ class TeamUtil
 
         const ranksTable = TableUtil.createTable(["Scope", "Rank", "Total", "Top%"], false);
         const tbody = ranksTable.querySelector("tbody");
-        tbody.appendChild(TeamUtil.createRankRow(team, "global", team.globalTeamCount || Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)));
-        tbody.appendChild(TeamUtil.createRankRow(team, "region", team.regionTeamCount || stats.regionTeamCount[team.region]));
-        tbody.appendChild(TeamUtil.createRankRow(team, "league", team.leagueTeamCount || stats.leagueTeamCount[team.league.type]));
+        tbody.appendChild(TeamUtil.createRankRow(team, "global", team.globalTeamCount));
+        tbody.appendChild(TeamUtil.createRankRow(team, "region", team.regionTeamCount));
+        tbody.appendChild(TeamUtil.createRankRow(team, "league", team.leagueTeamCount));
 
         return ranksTable;
     }
@@ -204,10 +181,9 @@ class TeamUtil
     static createDynamicLeagueTable(parent)
     {
         const team = TeamUtil.getTeamFromElement(parent);
-        const stats = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE)[team.league.queueType][team.league.teamType][team.season];
 
-        const globalRange = TeamUtil.getGlobalLeagueRange(team, stats);
-        const regionRange = TeamUtil.getRegionLeagueRange(team, stats);
+        const globalRange = TeamUtil.getGlobalLeagueRange(team);
+        const regionRange = TeamUtil.getRegionLeagueRange(team);
 
         const leagueTable = TableUtil.createTable(["Type", "League"], false);
         const tbody = leagueTable.querySelector("tbody");
@@ -222,21 +198,19 @@ class TeamUtil
         return leagueTable;
     }
 
-    static getRegionLeagueRange(team, stats)
+    static getRegionLeagueRange(team)
     {
         if(team.regionRank <= 200) return {league: LEAGUE.GRANDMASTER, tierType: 0};
 
-        const regionTeamCount = stats.regionTeamCount[team.region];
-        const regionTopPercent = (team.regionRank / regionTeamCount) * 100;
+        const regionTopPercent = (team.regionRank / team.regionTeamCount) * 100;
         return Object.values(TIER_RANGE).find(r=>regionTopPercent <= r.bottomThreshold);
     }
 
-    static getGlobalLeagueRange(team, stats)
+    static getGlobalLeagueRange(team)
     {
         if(team.globalRank <= Object.values(REGION).length * 200) return {league: LEAGUE.GRANDMASTER, tierType: 0};
 
-        const globalTeamCount = Object.values(stats.regionTeamCount).reduce((a, b)=>a+b);
-        const globalTopPercent = (team.globalRank / globalTeamCount) * 100;
+        const globalTopPercent = (team.globalRank / team.globalTeamCount) * 100;
         return Object.values(TIER_RANGE).find(r=>globalTopPercent <= r.bottomThreshold);
     }
 
@@ -460,7 +434,7 @@ class TeamUtil
         const reqParams = new URLSearchParams();
         for(const id of searchParams.getAll("legacyUid")) reqParams.append("legacyUid", id);
         const request = `${ROOT_CONTEXT_PATH}api/team/history/common?${reqParams.toString()}`;
-        const mmrPromise = Session.beforeRequest()
+        return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
@@ -474,7 +448,6 @@ class TeamUtil
                 Model.DATA.get(VIEW.TEAM_MMR).set(VIEW_DATA.VAR, json);
                 res(json);
             }));
-        return Promise.all([mmrPromise, StatsUtil.updateBundleModel()]);
     }
 
     static updateTeamMmrView()

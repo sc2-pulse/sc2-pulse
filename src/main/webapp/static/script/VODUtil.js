@@ -51,7 +51,7 @@ class VODUtil
     static update(params, dateAnchor = Util.currentISODateTimeString(), mapAnchor = 0)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return Promise.all([VODUtil.updateModel(params, dateAnchor, mapAnchor), StatsUtil.updateBundleModel()])
+        return VODUtil.updateModel(params, dateAnchor, mapAnchor)
             .then(VODUtil.updateView)
             .then(e=>{
                 Util.setGeneratingStatus(STATUS.SUCCESS);

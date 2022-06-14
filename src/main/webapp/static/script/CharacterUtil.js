@@ -32,15 +32,15 @@ class CharacterUtil
         const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common" + CharacterUtil.getMatchTypePath();
         const characterPromise = Session.beforeRequest()
             .then(n=>fetch(request).then(Session.verifyJsonResponse));
-        return Promise.all([characterPromise, StatsUtil.updateBundleModel()])
-            .then(jsons => new Promise((res, rej)=>{
-                jsons[0].history = CharacterUtil.expandMmrHistory(jsons[0].history);
-                const searchStd = jsons[0];
-                searchStd.result = jsons[0].teams;
+        return characterPromise
+            .then(json => new Promise((res, rej)=>{
+                json.history = CharacterUtil.expandMmrHistory(json.history);
+                const searchStd = json;
+                searchStd.result = json.teams;
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, searchStd);
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, id);
-                Model.DATA.get(VIEW.CHARACTER).set("reports", jsons[0].reports)
-                res(jsons);
+                Model.DATA.get(VIEW.CHARACTER).set("reports", json.reports)
+                res(json);
              }));
     }
 
@@ -702,8 +702,6 @@ class CharacterUtil
 
     static createTeamSnapshot(team, dateTime, injected = false)
     {
-        const statsBundle = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.BUNDLE);
-        const stats = statsBundle[team.league.queueType][team.league.teamType][team.season];
         const teamState = 
         {
             teamId: team.id,
@@ -716,13 +714,13 @@ class CharacterUtil
         if(!TeamUtil.isCheaterTeam(team) && !Util.isUndefinedRank(team.globalRank) )
         {
             teamState.globalRank = team.globalRank;
-            teamState.globalTeamCount = Object.values(stats.regionTeamCount).reduce((a, b)=>a+b);
-            teamState.globalTopPercent = (team.globalRank / Object.values(stats.regionTeamCount).reduce((a, b)=>a+b)) * 100;
+            teamState.globalTeamCount = team.globalTeamCount;
+            teamState.globalTopPercent = (team.globalRank / team.globalTeamCount) * 100;
             teamState.regionRank = team.regionRank;
-            teamState.regionTeamCount = stats.regionTeamCount[team.region];
-            teamState.regionTopPercent = (team.regionRank / stats.regionTeamCount[team.region]) * 10;
+            teamState.regionTeamCount = team.regionTeamCount;
+            teamState.regionTopPercent = (team.regionRank / team.regionTeamCount) * 10;
             teamState.leagueRank = team.leagueRank;
-            teamState.leagueTeamCount = stats.leagueTeamCount[team.league.type];
+            teamState.leagueTeamCount = team.leagueTeamCount;
         }
         return {
             team: team,

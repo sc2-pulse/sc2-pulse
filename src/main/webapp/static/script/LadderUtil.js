@@ -18,7 +18,7 @@ class LadderUtil
 
     static updateLadderModel(params, formParams, ratingAnchor = 99999, idAnchor = 0, count = 1)
     {
-        return Promise.all([LadderUtil.chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count), StatsUtil.updateBundleModel()]);
+        return LadderUtil.chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count);
     }
 
     static chainLadderPromise(params, formParams, ratingAnchor, idAnchor, count, isLastPage = false)
@@ -97,7 +97,7 @@ class LadderUtil
 
         return LadderUtil.updateLadderModel(params, formParams, ratingAnchor, idAnchor, count)
             .then(e => new Promise((res, rej)=>{
-                const searchParams = new URLSearchParams(e[0].form);
+                const searchParams = new URLSearchParams(e.form);
                 searchParams.append("type", "ladder");
                 for(const [param, val] of Object.entries(params)) if(param != "form") searchParams.append(param, val);
                 const stringParams = searchParams.toString();
@@ -116,7 +116,7 @@ class LadderUtil
 
     static updateMyLadderModel(formParams)
     {
-        const ladderPromise = Session.beforeRequest()
+        return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/ladder?" + formParams))
             .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
@@ -131,7 +131,6 @@ class LadderUtil
                     }
                 }
                 Model.DATA.get(VIEW.FOLLOWING_LADDER).set(VIEW_DATA.SEARCH, result); res(result);}));
-        return Promise.all([ladderPromise, StatsUtil.updateBundleModel()]);
     }
 
     static updateMyLadderView()
