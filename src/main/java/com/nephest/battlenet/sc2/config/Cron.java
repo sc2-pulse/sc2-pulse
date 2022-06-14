@@ -208,7 +208,6 @@ public class Cron
             doUpdateSeasons();
             //There is a long pause here due to stats calculations in the DB, a good place to do a GC run, make a hint.
             System.gc();
-            statsService.afterCurrentSeasonUpdate(updateService.getUpdateContext(null), false);
             calculateHeavyStats();
             clanService.update();
             blizzardPrivacyService.update();
@@ -304,7 +303,7 @@ public class Cron
         for(Region region : Region.values()) tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
 
         MiscUtil.awaitAndThrowException(tasks, true, true);
-
+        statsService.afterCurrentSeasonUpdate(updateService.getUpdateContext(null), false);
         try
         {
             if (shouldUpdateMatches())
