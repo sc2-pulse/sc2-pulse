@@ -338,17 +338,17 @@ public class StatsService
     public void afterCurrentSeasonUpdate(UpdateContext updateContext, boolean allStats)
     {
         teamStateDAO.removeExpired();
+        for(int season : pendingStatsUpdates) updateSeasonStats(season, allStats);
+        takePopulationSnapshot(pendingStatsUpdates, pendingTeams);
+        pendingTeams.clear();
+        alternativeLadderService.afterCurrentSeasonUpdate(pendingStatsUpdates);
+        pendingStatsUpdates.clear();
         playerCharacterStatsDAO.mergeCalculate
         (
             updateContext.getInternalUpdate() != null
                 ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
                 : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH)
         );
-        for(int season : pendingStatsUpdates) updateSeasonStats(season, allStats);
-        takePopulationSnapshot(pendingStatsUpdates, pendingTeams);
-        alternativeLadderService.afterCurrentSeasonUpdate(pendingStatsUpdates);
-        pendingTeams.clear();
-        pendingStatsUpdates.clear();
     }
 
     private void updateSeasonStats
