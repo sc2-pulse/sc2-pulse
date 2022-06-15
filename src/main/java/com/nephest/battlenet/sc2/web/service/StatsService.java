@@ -365,7 +365,8 @@ public class StatsService
         LOG.info
         (
             "Created {} team snapshots",
-            teamStateDAO.takeSnapshot(new ArrayList<>(teams))
+            //team ids can be duplicated when the update is too slow
+            teamStateDAO.takeSnapshot(new ArrayList<>(new HashSet<>(teams)))
         );
     }
 

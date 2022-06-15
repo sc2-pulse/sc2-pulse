@@ -611,7 +611,8 @@ public class AlternativeLadderService
         LOG.info
         (
             "Created {} team snapshots",
-            teamStateDAO.takeSnapshot(new ArrayList<>(pendingTeams))
+            //team ids can be duplicated when the update is too slow
+            teamStateDAO.takeSnapshot(new ArrayList<>(new HashSet<>(pendingTeams)))
         );
         pendingTeams.clear();
     }
