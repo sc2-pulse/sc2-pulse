@@ -718,7 +718,7 @@ class CharacterUtil
             teamState.globalTopPercent = (team.globalRank / team.globalTeamCount) * 100;
             teamState.regionRank = team.regionRank;
             teamState.regionTeamCount = team.regionTeamCount;
-            teamState.regionTopPercent = (team.regionRank / team.regionTeamCount) * 10;
+            teamState.regionTopPercent = (team.regionRank / team.regionTeamCount) * 100;
             teamState.leagueRank = team.leagueRank;
             teamState.leagueTeamCount = team.leagueTeamCount;
         }
