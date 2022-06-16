@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -6,6 +6,12 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -14,10 +20,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.time.OffsetDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 @Repository
 public class SocialMediaLinkDAO
@@ -39,6 +41,8 @@ public class SocialMediaLinkDAO
         + "FROM social_media_link "
         + "INNER JOIN pro_player ON pro_player.id = social_media_link.pro_player_id "
         + "WHERE type = :type";
+    private static final String FIND_LIST_BY_TYPES =
+        "SELECT " + STD_SELECT + "FROM social_media_link WHERE type IN(:types)";
 
     private static RowMapper<SocialMediaLink> STD_ROW_MAPPER;
     private static ResultSetExtractor<Map<ProPlayer, SocialMediaLink>> GROUP_FETCH_MAPPER;
@@ -120,6 +124,18 @@ public class SocialMediaLinkDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("type", conversionService.convert(type, Integer.class));
         return template.query(FIND_LIST_BY_TYPE, params, getGroupFetchMapper());
+    }
+
+    public List<SocialMediaLink> findByTypes(SocialMedia... types)
+    {
+        if(types.length == 0) return List.of();
+
+        List<Integer> typeInts = Arrays.stream(types)
+            .map(t->conversionService.convert(t, Integer.class))
+            .collect(Collectors.toList());
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("types", typeInts);
+        return template.query(FIND_LIST_BY_TYPES, params, STD_ROW_MAPPER);
     }
 
 }
