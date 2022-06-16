@@ -126,5 +126,73 @@
         </div>
     </div>
 </div>
+<form th:fragment="form-mmr-history (id, full)">
+    <div class="form-row">
+        <div class="form-group col">
+            <label th:for="|${id}-y-axis|" class="text-nowrap">Y axis</label>
+            <select th:id="|${id}-y-axis|" class="form-control text-center serializable" th:data-chartable="|${id}-table|">
+                <option value="mmr" selected="selected">MMR</option>
+                <option value="percent-global">Top% Global</option>
+                <option value="percent-region">Top% Region</option>
+                <option value="percent-league">Top% League</option>
+                <option value="win-rate-season">Win% Season</option>
+            </select>
+        </div>
+        <div class="form-group col" th:if="${full == true}">
+            <label th:for="|${id}-queue-filter|" class="text-nowrap">Team format</label>
+            <select th:id="|${id}-queue-filter|" class="form-control text-center">
+                <option value="LOTV_1V1" selected="selected">1V1</option>
+                <option value="LOTV_2V2">2V2</option>
+                <option value="LOTV_3V3">3V3</option>
+                <option value="LOTV_4V4">4V4</option>
+            </select>
+        </div>
+        <div class="form-group col">
+            <label th:for="|${id}-depth|" class="text-nowrap">Depth(days)</label>
+            <input th:id="|${id}-depth|" class="form-control text-center serializable"
+                   type="number"
+                   min="1"
+                   max="10000"
+            />
+        </div>
+        <div class="form-group col">
+            <label th:for="|${id}-exclude-start|" class="text-nowrap">Exclude from</label>
+            <input th:id="|${id}-exclude-start|" class="form-control text-center" type="number" min="0" th:list="|${id}-range-list|"/>
+        </div>
+        <div class="form-group col">
+            <label th:for="|${id}-exclude-end|" class="text-nowrap">Exclude to</label>
+            <input th:id="|${id}-exclude-end|" class="form-control text-center" type="number" min="0" th:list="|${id}-range-list|">
+        </div>
+        <datalist th:id="|${id}-range-list|">
+            <option value="3000">
+            <option value="4000">
+            <option value="5000">
+            <option value="6000">
+            <option value="7000">
+        </datalist>
+    </div>
+    <div class="form-check form-check-inline mb-3" th:if="${full == true}">
+        <input th:id="|${id}-best-race|" class="form-check-input serializable" type="checkbox" checked="checked" />
+        <label th:for="|${id}-best-race|" class="text-nowrap form-check-label">Best race</label>
+    </div>
+    <div class="form-check form-check-inline mb-3">
+        <input th:id="|${id}-season-last|" class="form-check-input serializable" type="checkbox" />
+        <label th:for="|${id}-season-last|" class="text-nowrap form-check-label">End of season</label>
+    </div>
+    <div class="form-check form-check-inline mb-3">
+        <input th:id="|${id}-x-type|" class="form-check-input serializable chart-x-time-toggle" type="checkbox" checked="checked"
+               th:data-chartable="|${id}-table|"/>
+        <label th:for="|${id}-x-type|" class="text-nowrap form-check-label">Time axis</label>
+    </div>
+    <div class="form-check form-check-inline mb-3">
+        <input th:id="|${id}-leagues|" class="form-check-input serializable" type="checkbox" checked="checked"/>
+        <label th:for="|${id}-leagues|" class="text-nowrap form-check-label">Leagues</label>
+    </div>
+    <div class="form-check form-check-inline mb-3">
+        <input th:id="|${id}-zoom|" class="form-check-input serializable chart-zoom-toggle" type="checkbox"
+               th:data-chartable="|${id}-table|"/>
+        <label th:for="|${id}-zoom|" class="text-nowrap form-check-label">Zoom</label>
+    </div>
+</form>
 </body>
 </html>

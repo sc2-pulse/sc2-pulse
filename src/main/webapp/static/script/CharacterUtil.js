@@ -431,14 +431,14 @@ class CharacterUtil
             data[dateTime] = {};
             for(const history of histories) data[dateTime][history.race] = mmrYValueGetter(history);
         }
-        ChartUtil.CHART_RAW_DATA.set("player-stats-mmr-table", {rawData: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
+        ChartUtil.CHART_RAW_DATA.set("mmr-table", {rawData: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
         TableUtil.updateVirtualColRowTable
         (
-            document.getElementById("player-stats-mmr-table"),
+            document.getElementById("mmr-table"),
             data,
             (tableData=>{
                 CharacterUtil.decorateMmrPoints(tableData, rawData, headers, (raw, header)=>raw.find(e=>e.race == header), showLeagues);
-                ChartUtil.CHART_RAW_DATA.get("player-stats-mmr-table").data = tableData;
+                ChartUtil.CHART_RAW_DATA.get("mmr-table").data = tableData;
             }),
             queue == TEAM_FORMAT._1V1
                 ? (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order

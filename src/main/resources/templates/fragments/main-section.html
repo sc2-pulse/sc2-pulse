@@ -334,56 +334,7 @@
                 data-view-title="MMR history"
         >
             <div id="team-mmr-filters"></div>
-            <form>
-                <div class="form-row">
-                    <div class="form-group col">
-                        <label for="team-mmr-y-axis" class="text-nowrap">Y axis</label>
-                        <select id="team-mmr-y-axis" class="form-control text-center serializable" data-chartable="team-mmr-table">
-                            <option value="mmr" selected="selected">MMR</option>
-                            <option value="percent-global">Top% Global</option>
-                            <option value="percent-region">Top% Region</option>
-                            <option value="percent-league">Top% League</option>
-                        </select>
-                    </div>
-                    <div class="form-group col">
-                        <label for="team-mmr-depth" class="text-nowrap">Depth(days)</label>
-                        <input id="team-mmr-depth" class="form-control text-center serializable" type="number" min="0"/>
-                    </div>
-                    <div class="form-group col">
-                        <label for="team-mmr-exclude-start" class="text-nowrap">Exclude from</label>
-                        <input id="team-mmr-exclude-start" class="form-control text-center" type="number" min="0" list="team-mmr-range-list"/>
-                    </div>
-                    <div class="form-group col">
-                        <label for="team-mmr-exclude-end" class="text-nowrap">Exclude to</label>
-                        <input id="team-mmr-exclude-end" class="form-control text-center" type="number" min="0" list="team-mmr-range-list">
-                    </div>
-                    <datalist id="team-mmr-range-list">
-                        <option value="3000">
-                        <option value="4000">
-                        <option value="5000">
-                        <option value="6000">
-                        <option value="7000">
-                    </datalist>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input id="team-mmr-season-last" class="form-check-input serializable" type="checkbox" />
-                    <label for="team-mmr-season-last" class="text-nowrap form-check-label">End of season</label>
-                </div>
-                <div class="form-check form-check-inline mb-3">
-                    <input id="team-mmr-x-type" class="form-check-input serializable chart-x-time-toggle" type="checkbox" checked="checked"
-                           data-chartable="team-mmr-table"/>
-                    <label for="team-mmr-x-type" class="text-nowrap form-check-label">Time axis</label>
-                </div>
-                <div class="form-check form-check-inline mb-3">
-                    <input id="team-mmr-leagues" class="form-check-input serializable" type="checkbox" checked="checked"/>
-                    <label for="team-mmr-leagues" class="text-nowrap form-check-label">Leagues</label>
-                </div>
-                <div class="form-check form-check-inline">
-                    <input id="team-mmr-zoom" class="form-check-input serializable chart-zoom-toggle" type="checkbox"
-                           data-chartable="team-mmr-table"/>
-                    <label for="team-mmr-zoom" class="text-nowrap form-check-label">Zoom</label>
-                </div>
-            </form>
+            <div th:replace="~{fragments/section:: form-mmr-history('team-mmr', false)}"></div>
             <div id="team-mmr-container">
                 <table
                         id="team-mmr-table"
