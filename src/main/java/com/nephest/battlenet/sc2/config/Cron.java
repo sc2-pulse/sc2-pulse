@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.StatusService;
+import com.nephest.battlenet.sc2.web.service.TwitchService;
 import com.nephest.battlenet.sc2.web.service.UpdateContext;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.service.VarService;
@@ -129,6 +130,9 @@ public class Cron
 
     @Autowired
     private ClanService clanService;
+
+    @Autowired
+    private TwitchService twitchService;
 
     @Autowired
     private BlizzardPrivacyService blizzardPrivacyService;
@@ -310,6 +314,7 @@ public class Cron
                 MiscUtil.awaitAndThrowException(tasks, true, true);
                 matchService.updateMeta(muc);
                 matchInstant.setValueAndSave(Instant.now());
+                twitchService.update();
             }
         }
         catch (RuntimeException ex)
