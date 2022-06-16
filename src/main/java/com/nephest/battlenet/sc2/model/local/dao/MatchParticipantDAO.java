@@ -28,6 +28,9 @@ public class MatchParticipantDAO
 {
     
     public static final int IDENTIFICATION_FRAME_MINUTES = 60;
+    public static final int TWITCH_VOD_HIGH_MMR = 5500;
+    public static final int TWITCH_VOD_HIGH_MMR_OFFSET = 95;
+    public static final int TWITCH_VOD_OFFSET = 35;
 
     public static final String STD_SELECT =
         "match_participant.match_id AS \"match_participant.match_id\", "
@@ -215,6 +218,39 @@ public class MatchParticipantDAO
             + "OR (match_participant.decision = :loss AND rating_diff.rating_change < 0)"
         + ")";
 
+    private static final String LINK_TWITCH_VIDEO = 
+        String.format
+        (
+            MatchDAO.PRO_MATCH_FILTER_TEMPLATE,
+            "WHERE match.date > :from "
+            + "AND match.type = :matchType "
+            + "AND match.duration IS NOT NULL "
+        )
+        + "UPDATE match_participant "
+        + "SET twitch_video_id = twitch_video.id, "
+        + "twitch_video_offset = EXTRACT(EPOCH FROM ("
+            + "match.date "
+            + "- make_interval"
+            + "(secs => "
+                + "match.duration::double precision "
+                + "- " + TWITCH_VOD_OFFSET
+            + ") "
+            + "- twitch_video.begin)) "
+        + "FROM pro_match_filter " + "INNER JOIN match USING(id) "
+        + "INNER JOIN match_participant mp ON match.id = mp.match_id "
+        + "INNER JOIN team_state ON mp.team_id = team_state.team_id "
+            + "AND mp.team_state_timestamp = team_state.timestamp "
+        + "INNER JOIN player_character ON mp.player_character_id = player_character.id "
+        + "INNER JOIN account ON player_character.account_id = account.id "
+        + "INNER JOIN pro_player_account ON account.id = pro_player_account.account_id "
+        + "INNER JOIN pro_player ON pro_player_account.pro_player_id = pro_player.id "
+        + "INNER JOIN twitch_user ON pro_player.twitch_user_id = twitch_user.id "
+        + "INNER JOIN twitch_video ON match.date - make_interval(secs => match.duration::double precision) "
+        + "BETWEEN twitch_video.begin AND twitch_video.\"end\" "
+            + "AND twitch_user.id = twitch_video.twitch_user_id "
+        + "WHERE match_participant.match_id = mp.match_id "
+        + "AND match_participant.player_character_id = mp.player_character_id";
+
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
 
@@ -319,6 +355,14 @@ public class MatchParticipantDAO
             .addValue("win", conversionService.convert(BaseMatch.Decision.WIN, Integer.class))
             .addValue("loss", conversionService.convert(BaseMatch.Decision.LOSS, Integer.class));
         return template.update(UPDATE_RATING_CHANGE, params);
+    }
+
+    public int linkTwitchVideo(OffsetDateTime from)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("from", from)
+            .addValue("matchType", conversionService.convert(BaseMatch.MatchType._1V1, Integer.class));
+        return template.update(LINK_TWITCH_VIDEO, params);
     }
 
 }

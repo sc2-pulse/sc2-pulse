@@ -354,11 +354,39 @@ CREATE TABLE "account_following"
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE "twitch_user"
+(
+    "id" BIGINT NOT NULL,
+    "login" TEXT NOT NULL,
+
+    PRIMARY KEY ("id")
+);
+
+CREATE TABLE "twitch_video"
+(
+    "id" BIGINT NOT NULL,
+    "twitch_user_id" BIGINT NOT NULL,
+    "url" TEXT NOT NULL,
+    "begin" TIMESTAMP WITH TIME ZONE NOT NULL,
+    "end" TIMESTAMP WITH TIME ZONE NOT NULL,
+
+    PRIMARY KEY ("id"),
+
+    CONSTRAINT "fk_twitch_video_twitch_user_id"
+        FOREIGN KEY ("twitch_user_id")
+        REFERENCES "twitch_user"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX "ix_twitch_user_login" ON "twitch_user"(LOWER("login"));
+CREATE INDEX "ix_twitch_video_twitch_user_id_begin_end" ON "twitch_video"("twitch_user_id", "begin", "end");
+
 CREATE TABLE "pro_player"
 (
     "id" BIGSERIAL,
     "revealed_id" bytea NOT NULL,
     "aligulac_id" BIGINT,
+    "twitch_user_id" BIGINT,
     "nickname" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "country" CHAR(2),
@@ -370,7 +398,12 @@ CREATE TABLE "pro_player"
     PRIMARY KEY ("id"),
 
     CONSTRAINT "uq_pro_player_revealed_id"
-        UNIQUE("revealed_id")
+        UNIQUE("revealed_id"),
+
+    CONSTRAINT "fk_pro_player_twitch_user_id"
+        FOREIGN KEY ("twitch_user_id")
+        REFERENCES "twitch_user"("id")
+        ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 CREATE INDEX "ix_pro_player_updated" ON "pro_player"("updated");
@@ -519,6 +552,8 @@ CREATE TABLE "match_participant"
     "match_id" BIGINT NOT NULL,
     "player_character_id" BIGINT NOT NULL,
     "team_id" BIGINT,
+    "twitch_video_id" BIGINT,
+    "twitch_video_offset" INTEGER,
     "team_state_timestamp" TIMESTAMP WITH TIME ZONE,
     "decision" SMALLINT NOT NULL,
     "rating_change" SMALLINT,
@@ -540,6 +575,10 @@ CREATE TABLE "match_participant"
     CONSTRAINT "fk_match_participant_team_state_uid"
         FOREIGN KEY ("team_id", "team_state_timestamp")
         REFERENCES "team_state"("team_id", "timestamp")
+        ON DELETE SET NULL ON UPDATE CASCADE,
+    CONSTRAINT "fk_match_participant_twitch_video_id"
+        FOREIGN KEY ("twitch_video_id")
+        REFERENCES "twitch_video"("id")
         ON DELETE SET NULL ON UPDATE CASCADE
 );
 

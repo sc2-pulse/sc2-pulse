@@ -1,20 +1,21 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.stereotype.Repository;
-
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class ProPlayerDAO
@@ -75,16 +76,28 @@ extends StandardDAO
     private static final String FIND_ALIGULAC_LIST = "SELECT " + STD_SELECT
         + "FROM pro_player WHERE aligulac_id IS NOT NULL";
 
+    private static final String LINK_TWITCH_USERS = "UPDATE pro_player "
+        + "SET twitch_user_id = twitch_user.id "
+        + "FROM pro_player pp "
+        + "INNER JOIN social_media_link ON pp.id = social_media_link.pro_player_id "
+            + "AND social_media_link.type = :twitchMediaType "
+        + "INNER JOIN twitch_user ON LOWER(reverse(split_part(reverse(social_media_link.url), '/', 1))) = LOWER(twitch_user.login) "
+        + "WHERE pro_player.id = pp.id "
+        + "AND pro_player.twitch_user_id IS DISTINCT FROM twitch_user.id";
+
     private final NamedParameterJdbcTemplate template;
+    private final ConversionService conversionService;
 
     @Autowired
     public  ProPlayerDAO
     (
-        @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
+        @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService
     )
     {
         super(template, "pro_player", "30 DAYS");
         this.template = template;
+        this.conversionService = conversionService;
         initMappers();
     }
 
@@ -151,6 +164,13 @@ extends StandardDAO
     public List<ProPlayer> findAligulacList()
     {
         return template.query(FIND_ALIGULAC_LIST, getStdRowMapper());
+    }
+
+    public int linkTwitchUsers()
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("twitchMediaType", conversionService.convert(SocialMedia.TWITCH, Integer.class));
+        return template.update(LINK_TWITCH_USERS, params);
     }
 
 }

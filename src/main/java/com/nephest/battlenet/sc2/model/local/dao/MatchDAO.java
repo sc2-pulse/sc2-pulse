@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -6,6 +6,10 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Match;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -14,11 +18,6 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class MatchDAO
@@ -138,6 +137,24 @@ extends StandardDAO
         + "AND (match.duration IS NULL OR match.duration > match_duration.duration)";
 
     private static final String REMOVE_EXPIRED_QUERY = "DELETE FROM match WHERE date < :toDate OR updated < :toUpdated";
+
+    public static final String PRO_MATCH_FILTER_TEMPLATE =
+        "WITH pro_filter AS "
+        + "( "
+            + "SELECT DISTINCT(player_character.id) "
+            + "FROM player_character "
+            + "INNER JOIN account ON player_character.account_id = account.id "
+            + "INNER JOIN pro_player_account ON account.id = pro_player_account.account_id "
+            + "INNER JOIN pro_player ON pro_player_account.pro_player_id = pro_player.id "
+        + "), "
+        + "pro_match_filter AS "
+        + "( "
+            + "SELECT DISTINCT(match.id) "
+            + "FROM pro_filter "
+            + "INNER JOIN match_participant ON pro_filter.id = match_participant.player_character_id "
+            + "INNER JOIN match ON match_participant.match_id = match.id "
+            + "%1$s"
+        + ") ";
 
     private static RowMapper<Match> STD_ROW_MAPPER;
     private final ConversionService conversionService;

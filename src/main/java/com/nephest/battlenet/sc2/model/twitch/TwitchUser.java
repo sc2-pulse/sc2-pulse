@@ -1,0 +1,77 @@
+// Copyright (C) 2020-2022 Oleksandr Masniuk
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+package com.nephest.battlenet.sc2.model.twitch;
+
+import com.github.twitch4j.helix.domain.User;
+import java.util.Objects;
+import javax.validation.constraints.NotNull;
+
+public class TwitchUser
+{
+
+    @NotNull
+    private Long id;
+
+    @NotNull
+    private String login;
+
+    public TwitchUser(){}
+
+    public TwitchUser(Long id, String login)
+    {
+        this.id = id;
+        this.login = login;
+    }
+
+    @Override
+    public boolean equals(Object o)
+    {
+        if (this == o) {return true;}
+        if (!(o instanceof TwitchUser)) {return false;}
+        TwitchUser that = (TwitchUser) o;
+        return getId().equals(that.getId());
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(getId());
+    }
+
+    @Override
+    public String toString()
+    {
+        return "TwitchUser{" + "id=" + id + '}';
+    }
+
+    public static TwitchUser of(User user)
+    {
+        return new TwitchUser
+        (
+            Long.parseLong(user.getId()),
+            user.getLogin()
+        );
+    }
+
+    public Long getId()
+    {
+        return id;
+    }
+
+    public void setId(Long id)
+    {
+        this.id = id;
+    }
+
+    public String getLogin()
+    {
+        return login;
+    }
+
+    public void setLogin(String login)
+    {
+        this.login = login;
+    }
+
+}
