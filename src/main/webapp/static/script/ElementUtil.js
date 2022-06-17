@@ -80,6 +80,20 @@ class ElementUtil
     {
         const img = document.createElement("img");
         img.setAttribute("src", `${RESOURCE_PATH}icon/${prefix}${name}.svg`);
+        ElementUtil.setImageAttributes(img, name, classes, width, height);
+        return img;
+    }
+
+    static createCustomImage(prefix, name, extension, classes, width, height = width)
+    {
+        const img = document.createElement("img");
+        img.setAttribute("src", `${RESOURCE_PATH}icon/${prefix}${name}.${extension}`);
+        ElementUtil.setImageAttributes(img, name, classes, width, height);
+        return img;
+    }
+
+    static setImageAttributes(img, name, classes, width, height = width)
+    {
         img.setAttribute("alt", name);
         img.setAttribute("title", name);
         img.setAttribute("class", classes);
