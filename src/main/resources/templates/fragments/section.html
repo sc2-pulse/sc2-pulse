@@ -65,11 +65,11 @@
 <section th:id="${id}" class="col-lg-6 mb-3" th:fragment="stats (id, title, titleY, type)"
          th:replace="~{fragments/section :: statsFull(${id}, ${title}, ${titleY}, ${type}, 'true', 'true', 1)}">>
 </section>
-<div th:fragment="matches(suffix)">
+<div th:fragment="matches(suffix, typeSelect)">
     <h3>
         Recent ladder matches
     </h3>
-    <div th:replace="~{fragments/section :: matches-header(${suffix})}"></div>
+    <div th:replace="~{fragments/section :: matches-header(${suffix}, ${typeSelect})}"></div>
     <div th:replace="~{fragments/table :: match(${'matches' + suffix}, '')}"></div>
     <button th:id="|load-more-matches${suffix}|" type="button" class="btn btn-primary mb-3">More matches</button>
 </div>
@@ -78,10 +78,10 @@
     Match history length is ~<span th:text="${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).UPDATED_TTL_DAYS}"></span> days
     (up to <span th:text="${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).TTL_DAYS}"></span> days in some cases)
 </p>
-<div th:fragment="matches-header (suffix)">
+<div th:fragment="matches-header (suffix, typeSelect)">
     <p th:replace="~{fragments/section :: matches-warning}"></p>
     <form th:id="|matches-form${suffix}|" class="form-inline justify-content-center">
-        <div class="form-group mb-3">
+        <div class="form-group mb-3" th:if="${typeSelect}">
             <label th:for="|matches-type${suffix}|">Type</label>
             <select th:id="|matches-type${suffix}|" name="matches-type" class="form-control serializable mx-sm-3">
                 <option value="all" selected="selected">all</option>
