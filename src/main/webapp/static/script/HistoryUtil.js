@@ -252,6 +252,11 @@ class HistoryUtil
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                 promises.push(CharacterUtil.updateCharacterSearch(name));
                 break;
+            case "vod-search":
+                lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
+                scrollTo = "search-result-vod-all";
+                promises.push(VODUtil.update(params));
+                break;
             case "team-mmr":
                  lazyPromises.push(e=>BootstrapUtil.hideActiveModal("error-generation"));
                  promises.push(TeamUtil.updateTeamMmr(params));

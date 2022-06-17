@@ -4,20 +4,26 @@
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.inner.VersusSummary;
-import com.nephest.battlenet.sc2.model.local.ladder.*;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.stereotype.Repository;
-
+import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +31,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
+import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.stereotype.Repository;
 
 @Repository
 public class LadderMatchDAO
@@ -48,7 +61,9 @@ public class LadderMatchDAO
         + ClanDAO.STD_SELECT + ", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\", "
-        + "confirmed_cheater_report.id AS \"confirmed_cheater_report.id\" "
+        + "confirmed_cheater_report.id AS \"confirmed_cheater_report.id\", "
+        + "match_participant.twitch_video_offset AS \"match_participant.twitch_video_offset\", "
+        + "twitch_video.url AS \"twitch_video.url\" "
 
         + "FROM match_filter "
         + "INNER JOIN match ON match_filter.id = match.id "
@@ -73,6 +88,7 @@ public class LadderMatchDAO
             + "ON player_character.id = confirmed_cheater_report.player_character_id "
             + "AND confirmed_cheater_report.type = :cheaterReportType "
             + "AND confirmed_cheater_report.status = true "
+        + "LEFT JOIN twitch_video ON match_participant.twitch_video_id = twitch_video.id "
         + "ORDER BY (match.date , match.type , match.map_id) %2$s, "
             + "(match_participant.match_id, match_participant.player_character_id) %2$s ";
 
@@ -95,6 +111,77 @@ public class LadderMatchDAO
         String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, "<", "DESC");
     public static String FIND_MATCHES_BY_CHARACTER_ID_REVERSED =
         String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC");
+
+    private static final String FIND_TWITCH_VODS_TEMPLATE =
+        "WITH pro_match_filter AS "
+        + "("
+            + "SELECT match_id AS id "
+            + "FROM match_participant "
+            + "WHERE twitch_video_id IS NOT NULL"
+        + "), "
+        + "%1$s"
+        + "match_filter AS "
+        + "("
+            + "SELECT MAX(match.id) AS id "
+            + "FROM match_filter_versus_race "
+            + "INNER JOIN match_participant USING(match_id)"
+            + "INNER JOIN match ON match_participant.match_id = match.id "
+            + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id "
+            + "AND match_participant.team_state_timestamp = team_state.timestamp "
+            + "WHERE (date, type, map_id) < (:dateAnchor, :typeAnchor, :mapIdAnchor) "
+            + "AND (:mapId::integer IS NULL OR match.map_id = :mapId) "
+            + "AND (:minDuration::integer IS NULL OR match.duration >= :minDuration) "
+            + "AND (:maxDuration::integer IS NULL OR match.duration <= :maxDuration) "
+            + "GROUP BY date, type, map_id "
+            + "HAVING COUNT(*) = CASE WHEN :race::integer = :versusRace::integer THEN 4 ELSE 2 END "
+            + "AND (:minRating::integer IS NULL OR MIN(team_state.rating) >= :minRating) "
+            + "AND (:maxRating::integer IS NULL OR MAX(team_state.rating) <= :maxRating) "
+
+            + "ORDER BY (date, type, map_id) DESC "
+            + "LIMIT :limit "
+        + ") ";
+
+    private static final String FIND_TWITCH_VODS =
+        String.format
+        (
+            String.format
+            (
+                FIND_TWITCH_VODS_TEMPLATE,
+                "match_filter_race AS "
+                + "("
+                    + "SELECT match_id, player_character_id "
+                    + "FROM pro_match_filter "
+                    + "INNER JOIN match_participant ON pro_match_filter.id = match_participant.match_id "
+                    + "INNER JOIN team ON match_participant.team_id = team.id "
+                    + "WHERE :race::integer IS NULL "
+                    + "OR substring(team.legacy_id::text from char_length(team.legacy_id::text))::integer = :race"
+                + "), "
+                + "match_filter_versus_race AS "
+                + "("
+                    + "SELECT match_id "
+                    + "FROM match_filter_race "
+                    + "INNER JOIN match_participant USING(match_id) "
+                    + "INNER JOIN team ON match_participant.team_id = team.id "
+                    + "WHERE (:versusRace::integer IS NULL "
+                    + "OR substring(team.legacy_id::text from char_length(team.legacy_id::text))::integer = :versusRace) "
+                    + "AND match_participant.player_character_id != match_filter_race.player_character_id"
+                + "), "
+            )
+            + FIND_MATCHES_TEMPLATE,
+            "<", "DESC"
+        );
+
+    private static final String FIND_TWITCH_VODS_ALL_RACES =
+        String.format
+        (
+            String.format
+            (
+                FIND_TWITCH_VODS_TEMPLATE,
+                "match_filter_versus_race AS (SELECT id AS match_id FROM pro_match_filter), "
+            )
+            + FIND_MATCHES_TEMPLATE,
+            "<", "DESC"
+        );
 
     private static final String VERSUS_FILTER_TEMPLATE =
         "WITH "
@@ -251,11 +338,14 @@ public class LadderMatchDAO
             MatchParticipant participant = MatchParticipantDAO.getStdRowMapper().mapRow(rs, 0);
             if(DAOUtils.getLong(rs, "team.id") == null) {
                 rs.next();
-                return new LadderMatchParticipant(participant, null, null);
+                return new LadderMatchParticipant(participant, null, null, null);
             }
 
             LadderTeamState state = LadderTeamStateDAO.getStdRowMapper().mapRow(rs, 0);
             LadderTeam team = LadderSearchDAO.getLadderTeamMapper().mapRow(rs, 0);
+            String twitchUrl = rs.getString("twitch_video.url");
+            if(twitchUrl != null)
+                twitchUrl += "?t=" + rs.getInt("match_participant.twitch_video_offset") + "s";
             do
             {
                 if(rs.getLong("match_participant.match_id") != participant.getMatchId()
@@ -264,7 +354,7 @@ public class LadderMatchDAO
                 team.getMembers().add(LadderSearchDAO.getLadderTeamMemberMapper().mapRow(rs, 0));
             }
             while(rs.next());
-            return new LadderMatchParticipant(participant, team, state);
+            return new LadderMatchParticipant(participant, team, state, twitchUrl);
         };
     }
 
@@ -346,6 +436,44 @@ public class LadderMatchDAO
 
         String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
+        return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
+    }
+
+    public PagedSearchResult<List<LadderMatch>> findTwitchVods
+    (
+        Race race, Race versusRace,
+        Integer minRating, Integer maxRating,
+        Integer minDuration, Integer maxDuration,
+        Integer mapId,
+        OffsetDateTime dateAnchor,
+        BaseMatch.MatchType typeAnchor,
+        int mapAnchor,
+        int page,
+        int pageDiff
+    )
+    {
+        if(Math.abs(pageDiff) != 1) throw new IllegalArgumentException("Invalid page diff");
+        long finalPage = page + pageDiff;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("matchType", conversionService.convert(BaseMatch.MatchType._1V1, Integer.class))
+            .addValue("race", conversionService.convert(race, Integer.class))
+            .addValue("versusRace", conversionService.convert(versusRace, Integer.class))
+            .addValue("minRating", minRating)
+            .addValue("maxRating", maxRating)
+            .addValue("minDuration", minDuration)
+            .addValue("maxDuration", maxDuration)
+            .addValue("mapId", mapId)
+            .addValue("limit", getResultsPerPage());
+        addMatchCursorParams
+        (
+            dateAnchor, typeAnchor, mapAnchor, new BaseMatch.MatchType[]{BaseMatch.MatchType._1V1},
+            params
+        );
+        String query = race == null && versusRace == null
+            ? FIND_TWITCH_VODS_ALL_RACES
+            : FIND_TWITCH_VODS;
+        List<LadderMatch> matches = template.query(query, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
     }
 

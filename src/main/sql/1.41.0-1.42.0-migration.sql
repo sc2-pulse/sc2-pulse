@@ -44,3 +44,7 @@ ALTER TABLE "match_participant"
         REFERENCES "twitch_video"("id")
         ON DELETE SET NULL ON UPDATE CASCADE,
     ADD COLUMN "twitch_video_offset" INTEGER;
+
+CREATE INDEX "ix_match_participant_twitch_video_id"
+    ON "match_participant"("twitch_video_id")
+    WHERE "twitch_video_id" IS NOT NULL;

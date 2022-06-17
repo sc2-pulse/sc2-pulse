@@ -70,15 +70,16 @@ class MatchUtil
                 continue;
             }
 
-            if(historical) {
-                for(const participants of participantsGrouped.values()) {
-                    const participant = participants.find(p=>p.team && p.team.id == teamId);
-                    if(participant) {
-                        MatchUtil.addMmrChange(tr, participant);
-                        break;
-                    }
+            let participant;
+            for(const participants of participantsGrouped.values()) {
+                const pt = participants.find(p=>p.team && p.team.id == teamId);
+                if(pt) {
+                    participant = pt;
+                    break;
                 }
             }
+
+            if(historical && participant) MatchUtil.addMmrChange(tr, participant);
 
             const decision = participantsGrouped.get("WIN") ?
                (participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId) ? "Win" : "Loss")
@@ -95,7 +96,7 @@ class MatchUtil
             } else {
                 MatchUtil.appendVersusLink(tr, mainTeam, team, versusLinkPrefix);
             }
-
+            if(participant && participant.twitchVodUrl) MatchUtil.prependTwitchVodLink(tr, participant);
             decisionElem.textContent = decision;
             tr.prepend(decisionElem);
             rowNum++;
@@ -156,6 +157,17 @@ class MatchUtil
             vsLink.addEventListener("click", VersusUtil.onVersusLinkClick);
             tr.querySelector(":scope .misc").prepend(vsLink);
         }
+    }
+
+    static prependTwitchVodLink(tr, participant)
+    {
+        const a = document.createElement("a");
+        a.setAttribute("href", participant.twitchVodUrl);
+        a.setAttribute("target", "_blank");
+        a.setAttribute("rel", "noopener");
+        a.setAttribute("title", "Twitch VOD");
+        a.setAttribute("class", "table-image table-image-square background-cover mr-3 d-inline-block twitch-img");
+        tr.querySelector(":scope .misc").prepend(a);
     }
 
     static appendUnknownMatchParticipant(tr, decisionElem, isMainParticipant)

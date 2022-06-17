@@ -586,6 +586,9 @@ CREATE INDEX "ix_match_participant_player_character_id" ON "match_participant"("
 CREATE INDEX "ix_match_participant_team_id_team_state_timestamp" ON "match_participant"("team_id", "team_state_timestamp")
     WHERE "team_id" IS NOT NULL
     OR "team_state_timestamp" IS NOT NULL;
+CREATE INDEX "ix_match_participant_twitch_video_id"
+    ON "match_participant"("twitch_video_id")
+    WHERE "twitch_video_id" IS NOT NULL;
 
 CREATE TABLE "var"
 (

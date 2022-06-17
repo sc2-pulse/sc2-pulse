@@ -84,7 +84,8 @@ const VIEW = Object.freeze
     FOLLOWING_CHARACTERS: {name: "following-characters", order: 11},
     CLAN_SEARCH: {name: "clan-search", order: 12},
     CLAN_BUFFER: {name: "clan-buffer", order: 13},
-    VERSUS: {name: "versus", order: 14}
+    VERSUS: {name: "versus", order: 14},
+    VOD_SEARCH: {name: "vod-search", order: 15}
 });
 
 const VIEW_DATA = Object.freeze

@@ -231,7 +231,8 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     font-family: mono;
 }
 
-#form-search-clan input[type="number"]
+#form-search-clan input[type="number"],
+#form-search-vod input[type="number"]
 {
     max-width: 6em !important;
 }
@@ -429,6 +430,11 @@ th.hoverable span
 .background-cover
 {
     background-size: cover;
+}
+
+.twitch-img
+{
+    background-image: url("icon/logo/twitch.svg");
 }
 
 .chart-line-img

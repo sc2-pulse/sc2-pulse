@@ -1,10 +1,9 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
 
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
-
 import javax.validation.constraints.NotNull;
 
 public class LadderMatchParticipant
@@ -19,11 +18,20 @@ public class LadderMatchParticipant
     @NotNull
     private final LadderTeamState teamState;
 
-    public LadderMatchParticipant(MatchParticipant participant, LadderTeam team, LadderTeamState teamState)
+    private final String twitchVodUrl;
+
+    public LadderMatchParticipant
+    (
+        MatchParticipant participant,
+        LadderTeam team,
+        LadderTeamState teamState,
+        String twitchVodUrl
+    )
     {
         this.participant = participant;
         this.team = team;
         this.teamState = teamState;
+        this.twitchVodUrl = twitchVodUrl;
     }
 
     public MatchParticipant getParticipant()
@@ -39,6 +47,11 @@ public class LadderMatchParticipant
     public LadderTeamState getTeamState()
     {
         return teamState;
+    }
+
+    public String getTwitchVodUrl()
+    {
+        return twitchVodUrl;
     }
 
 }
