@@ -91,6 +91,7 @@ class MatchUtil
             if((mainTeam && teamId == mainTeam.id) || (versusLinkPrefix && team.members.find(m=>isMainParticipant({team: team, member: m})))) {
                 teamElem.classList.add("font-weight-bold");
                 decisionElem.classList.add("font-weight-bold", decisionClass);
+                MatchUtil.appendInvisibleVersusLink(tr);
             } else {
                 MatchUtil.appendVersusLink(tr, mainTeam, team, versusLinkPrefix);
             }
@@ -128,6 +129,13 @@ class MatchUtil
             if(team.members.find(m=>isMainParticipant({team: team, member: m})))
                 return team;
         return null;
+    }
+
+    static appendInvisibleVersusLink(tr)
+    {
+        const vsLink = VersusUtil.createEmptyVersusLink();
+        vsLink.classList.add("invisible");
+        tr.querySelector(":scope .misc").prepend(vsLink);
     }
 
     static appendVersusLink(tr, mainTeam, versusTeam, versusLinkPrefix)
