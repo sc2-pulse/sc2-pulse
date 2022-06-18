@@ -1,26 +1,27 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderUtil;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class SC2MapDAO
@@ -87,16 +88,20 @@ public class SC2MapDAO
         rs.getString("map.name")
     );
 
+    private final SeasonDAO seasonDAO;
+
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
 
     @Autowired
     public SC2MapDAO
     (
+        SeasonDAO seasonDAO,
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService
     )
     {
+        this.seasonDAO = seasonDAO;
         this.template = template;
         this.conversionService = conversionService;
     }
@@ -133,6 +138,19 @@ public class SC2MapDAO
         MapSqlParameterSource params = LadderUtil
             .createSearchParams(conversionService, season, regions, leagueTypes, queueType, teamType);
         return template.query(FIND_BY_LADDER_QUERY, params, STD_ROW_MAPPER);
+    }
+
+    @Cacheable("var-strings")
+    public List<SC2Map> findCurrent1v1()
+    {
+        return find
+        (
+            seasonDAO.getMaxBattlenetId(),
+            List.of(Region.values()),
+            List.of(BaseLeague.LeagueType.values()),
+            QueueType.LOTV_1V1,
+            TeamType.ARRANGED
+        );
     }
 
 
