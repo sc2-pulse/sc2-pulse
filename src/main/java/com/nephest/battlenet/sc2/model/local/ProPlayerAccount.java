@@ -1,17 +1,17 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public class ProPlayerAccount
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
 
     @NotNull
     private Long proPlayerId;
@@ -34,13 +34,13 @@ implements java.io.Serializable
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ProPlayerAccount that = (ProPlayerAccount) o;
-        return proPlayerId.equals(that.proPlayerId) && accountId.equals(that.accountId);
+        return accountId.equals(that.accountId);
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(proPlayerId, accountId);
+        return Objects.hash(accountId);
     }
 
     @Override
@@ -48,9 +48,9 @@ implements java.io.Serializable
     {
         return String.format
         (
-            "%s[%s %s]",
+            "%s[%s]",
             ProPlayerAccount.class.getSimpleName(),
-            proPlayerId, accountId
+            accountId
         );
     }
 
