@@ -1,15 +1,14 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
-
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public class SocialMediaLink
 implements java.io.Serializable
@@ -29,6 +28,9 @@ implements java.io.Serializable
     @NotNull
     private OffsetDateTime updated = OffsetDateTime.now();
 
+    @NotNull
+    private Boolean isProtected;
+
     public SocialMediaLink
     (
         @NotNull Long proPlayerId, @NotNull SocialMedia type, @NotNull String url
@@ -37,6 +39,23 @@ implements java.io.Serializable
         this.proPlayerId = proPlayerId;
         this.type = type;
         this.url = url;
+        this.isProtected = false;
+    }
+
+    public SocialMediaLink
+    (
+        Long proPlayerId,
+        SocialMedia type,
+        String url,
+        OffsetDateTime updated,
+        Boolean isProtected
+    )
+    {
+        this.proPlayerId = proPlayerId;
+        this.type = type;
+        this.url = url;
+        this.updated = updated;
+        this.isProtected = isProtected;
     }
 
     @Override
@@ -115,6 +134,16 @@ implements java.io.Serializable
     public void setUpdated(OffsetDateTime updated)
     {
         this.updated = updated;
+    }
+
+    public Boolean isProtected()
+    {
+        return isProtected;
+    }
+
+    public void setIsProtected(Boolean isProtected)
+    {
+        this.isProtected = isProtected;
     }
 
 }

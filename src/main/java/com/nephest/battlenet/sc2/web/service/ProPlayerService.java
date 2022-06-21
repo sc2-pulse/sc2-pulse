@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -8,8 +8,16 @@ import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProTeam;
 import com.nephest.battlenet.sc2.model.local.ProTeamMember;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProTeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProTeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,11 +25,6 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.nio.ByteBuffer;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
 
 @Service
 public class ProPlayerService
@@ -102,7 +105,7 @@ public class ProPlayerService
 
             proPlayerDAO.merge(proPlayer);
             for(SocialMediaLink link : links) link.setProPlayerId(proPlayer.getId());
-            socialMediaLinkDAO.merge(links);
+            socialMediaLinkDAO.merge(true, links);
             proPlayerAccountDAO.link(proPlayer.getId(), revealedProPlayer.getBnetTags());
         }
         idBuffer.clear();

@@ -48,3 +48,7 @@ ALTER TABLE "match_participant"
 CREATE INDEX "ix_match_participant_twitch_video_id"
     ON "match_participant"("twitch_video_id")
     WHERE "twitch_video_id" IS NOT NULL;
+
+ALTER TABLE "social_media_link"
+    ADD COLUMN "protected" BOOLEAN;
+
