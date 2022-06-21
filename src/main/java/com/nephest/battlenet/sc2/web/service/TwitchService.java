@@ -33,6 +33,8 @@ public class TwitchService
     public static final int USER_BATCH_SIZE = 100;
     public static final int VIDEO_BATCH_SIZE = 100;
     public static final Duration LINK_VIDEO_OFFSET = Duration.ofDays(1);
+    public static final String VIDEO_TYPE_FILTER = "archive";
+    public static final String VIDEO_VIEWABLE_FILTER = "public";
 
     private final TwitchUserDAO twitchUserDAO;
     private final TwitchVideoDAO twitchVideoDAO;
@@ -114,11 +116,12 @@ public class TwitchService
             null,
             null,
             null,
-            null,
+            VIDEO_TYPE_FILTER,
             null,
             null,
             VIDEO_BATCH_SIZE
         ).execute().getVideos().stream()
+            .filter(v->v.getViewable().equals(VIDEO_VIEWABLE_FILTER))
             .map(v->TwitchVideo.of(user, v))
             .toArray(TwitchVideo[]::new);
         twitchVideoDAO.merge(videos);
