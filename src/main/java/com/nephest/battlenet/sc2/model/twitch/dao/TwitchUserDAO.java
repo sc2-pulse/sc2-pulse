@@ -20,7 +20,8 @@ public class TwitchUserDAO
 
     public static final String STD_SELECT =
         "twitch_user.id AS \"twitch_user.id\", "
-        + "twitch_user.login AS \"twitch_user.login\" ";
+        + "twitch_user.login AS \"twitch_user.login\", "
+        + "twitch_user.sub_only_vod AS \"twitch_user.sub_only_vod\" ";
 
     private static final String MERGE = "WITH "
         + "vals AS (VALUES :users), "
@@ -77,6 +78,13 @@ public class TwitchUserDAO
         this.template = template;
     }
 
+    /**
+     * <p>
+     *     Merges users. Boolean flags are ignored.
+     * </p>
+     * @param users users to merge
+     * @return merged users
+     */
     public TwitchUser[] merge(TwitchUser... users)
     {
         if(users.length == 0) return users;

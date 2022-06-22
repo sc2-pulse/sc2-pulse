@@ -358,6 +358,7 @@ CREATE TABLE "twitch_user"
 (
     "id" BIGINT NOT NULL,
     "login" TEXT NOT NULL,
+    "sub_only_vod" BOOLEAN NOT NULL DEFAULT false,
 
     PRIMARY KEY ("id")
 );

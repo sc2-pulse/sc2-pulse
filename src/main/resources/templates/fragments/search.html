@@ -168,6 +168,8 @@
     >
         <header>
             <h2>Twitch VOD search</h2>
+            <p>Please <a href="https://nephest.com/#contacts" target="_blank" rel="noopener">contact me</a> if you are
+            a streamer and want your VoDs to be indexed by this search, or if you want to report a sub-only VoD.</p>
             <form id="form-search-vod" th:with="maxDuration=${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).DURATION_MAX},
                 maxMmr=${T(com.nephest.battlenet.sc2.model.BaseTeam).MAX_RATING}"
             >
@@ -207,6 +209,10 @@
                         >
                         </option>
                     </select>
+                </div>
+                <div class="form-group d-inline-block align-bottom mr-2">
+                    <label for="vod-search-include-sub-only"><span>Sub only</br>VoDs</span></label>
+                    <input id="vod-search-include-sub-only" class="form-control serializable" name="includeSubOnly" type="checkbox" value="true"/>
                 </div>
 
                 <div class="error-out text-danger font-weight-bold mb-3 d-none"></div>

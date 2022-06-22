@@ -58,3 +58,7 @@ ALTER TABLE "pro_player_account"
 UPDATE social_media_link SET updated = NOW() + INTERVAL '100 years';
 UPDATE pro_player SET updated = NOW() + INTERVAL '100 years';
 UPDATE pro_player_account SET updated = NOW() + INTERVAL '100 years';
+
+ALTER TABLE "twitch_user"
+    ADD COLUMN "sub_only_vod" BOOLEAN NOT NULL DEFAULT false;
+

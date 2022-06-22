@@ -19,19 +19,22 @@ public class LadderMatchParticipant
     private final LadderTeamState teamState;
 
     private final String twitchVodUrl;
+    private final Boolean subOnlyTwitchVod;
 
     public LadderMatchParticipant
     (
         MatchParticipant participant,
         LadderTeam team,
         LadderTeamState teamState,
-        String twitchVodUrl
+        String twitchVodUrl,
+        Boolean subOnlyTwitchVod
     )
     {
         this.participant = participant;
         this.team = team;
         this.teamState = teamState;
         this.twitchVodUrl = twitchVodUrl;
+        this.subOnlyTwitchVod = subOnlyTwitchVod;
     }
 
     public MatchParticipant getParticipant()
@@ -52,6 +55,11 @@ public class LadderMatchParticipant
     public String getTwitchVodUrl()
     {
         return twitchVodUrl;
+    }
+
+    public Boolean getSubOnlyTwitchVod()
+    {
+        return subOnlyTwitchVod;
     }
 
 }

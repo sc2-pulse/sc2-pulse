@@ -16,12 +16,21 @@ public class TwitchUser
     @NotNull
     private String login;
 
+    @NotNull
+    private Boolean subOnlyVod;
+
     public TwitchUser(){}
 
-    public TwitchUser(Long id, String login)
+    public TwitchUser(Long id, String login, Boolean subOnlyVod)
     {
         this.id = id;
         this.login = login;
+        this.subOnlyVod = subOnlyVod;
+    }
+
+    public TwitchUser(Long id, String login)
+    {
+        this(id, login, false);
     }
 
     @Override
@@ -72,6 +81,16 @@ public class TwitchUser
     public void setLogin(String login)
     {
         this.login = login;
+    }
+
+    public Boolean getSubOnlyVod()
+    {
+        return subOnlyVod;
+    }
+
+    public void setSubOnlyVod(Boolean subOnlyVod)
+    {
+        this.subOnlyVod = subOnlyVod;
     }
 
 }

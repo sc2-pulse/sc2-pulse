@@ -63,7 +63,8 @@ public class LadderMatchDAO
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\", "
         + "confirmed_cheater_report.id AS \"confirmed_cheater_report.id\", "
         + "match_participant.twitch_video_offset AS \"match_participant.twitch_video_offset\", "
-        + "twitch_video.url AS \"twitch_video.url\" "
+        + "twitch_video.url AS \"twitch_video.url\", "
+        + "twitch_user.sub_only_vod AS \"twitch_user.sub_only_vod\" "
 
         + "FROM match_filter "
         + "INNER JOIN match ON match_filter.id = match.id "
@@ -89,6 +90,7 @@ public class LadderMatchDAO
             + "AND confirmed_cheater_report.type = :cheaterReportType "
             + "AND confirmed_cheater_report.status = true "
         + "LEFT JOIN twitch_video ON match_participant.twitch_video_id = twitch_video.id "
+        + "LEFT JOIN twitch_user ON twitch_video.twitch_user_id = twitch_user.id "
         + "ORDER BY (match.date , match.type , match.map_id) %2$s, "
             + "(match_participant.match_id, match_participant.player_character_id) %2$s ";
 
@@ -127,7 +129,9 @@ public class LadderMatchDAO
             + "INNER JOIN match_participant USING(match_id)"
             + "INNER JOIN match ON match_participant.match_id = match.id "
             + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id "
-            + "AND match_participant.team_state_timestamp = team_state.timestamp "
+                + "AND match_participant.team_state_timestamp = team_state.timestamp "
+            + "LEFT JOIN twitch_video ON match_participant.twitch_video_id = twitch_video.id "
+            + "LEFT JOIN twitch_user ON twitch_video.twitch_user_id = twitch_user.id "
             + "WHERE (date, type, map_id) < (:dateAnchor, :typeAnchor, :mapIdAnchor) "
             + "AND (:mapId::integer IS NULL OR match.map_id = :mapId) "
             + "AND (:minDuration::integer IS NULL OR match.duration >= :minDuration) "
@@ -136,6 +140,7 @@ public class LadderMatchDAO
             + "HAVING COUNT(*) = CASE WHEN :race::integer = :versusRace::integer THEN 4 ELSE 2 END "
             + "AND (:minRating::integer IS NULL OR MIN(team_state.rating) >= :minRating) "
             + "AND (:maxRating::integer IS NULL OR MAX(team_state.rating) <= :maxRating) "
+            + "AND (:includeSubOnly = true OR bool_or(NOT twitch_user.sub_only_vod) = true)"
 
             + "ORDER BY (date, type, map_id) DESC "
             + "LIMIT :limit "
@@ -338,14 +343,18 @@ public class LadderMatchDAO
             MatchParticipant participant = MatchParticipantDAO.getStdRowMapper().mapRow(rs, 0);
             if(DAOUtils.getLong(rs, "team.id") == null) {
                 rs.next();
-                return new LadderMatchParticipant(participant, null, null, null);
+                return new LadderMatchParticipant(participant, null, null, null, null);
             }
 
             LadderTeamState state = LadderTeamStateDAO.getStdRowMapper().mapRow(rs, 0);
             LadderTeam team = LadderSearchDAO.getLadderTeamMapper().mapRow(rs, 0);
             String twitchUrl = rs.getString("twitch_video.url");
+            Boolean subOnlyVod = null;
             if(twitchUrl != null)
+            {
                 twitchUrl += "?t=" + rs.getInt("match_participant.twitch_video_offset") + "s";
+                subOnlyVod = rs.getBoolean("twitch_user.sub_only_vod");
+            }
             do
             {
                 if(rs.getLong("match_participant.match_id") != participant.getMatchId()
@@ -354,7 +363,7 @@ public class LadderMatchDAO
                 team.getMembers().add(LadderSearchDAO.getLadderTeamMemberMapper().mapRow(rs, 0));
             }
             while(rs.next());
-            return new LadderMatchParticipant(participant, team, state, twitchUrl);
+            return new LadderMatchParticipant(participant, team, state, twitchUrl, subOnlyVod);
         };
     }
 
@@ -444,6 +453,7 @@ public class LadderMatchDAO
         Race race, Race versusRace,
         Integer minRating, Integer maxRating,
         Integer minDuration, Integer maxDuration,
+        boolean includeSubOnly,
         Integer mapId,
         OffsetDateTime dateAnchor,
         BaseMatch.MatchType typeAnchor,
@@ -463,6 +473,7 @@ public class LadderMatchDAO
             .addValue("maxRating", maxRating)
             .addValue("minDuration", minDuration)
             .addValue("maxDuration", maxDuration)
+            .addValue("includeSubOnly", includeSubOnly)
             .addValue("mapId", mapId)
             .addValue("limit", getResultsPerPage());
         addMatchCursorParams

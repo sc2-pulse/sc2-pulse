@@ -41,6 +41,7 @@ public class VodController
         @RequestParam(value = "maxRating", required = false) Integer maxRating,
         @RequestParam(value = "minDuration", required = false) Integer minDuration,
         @RequestParam(value = "maxDuration", required = false) Integer maxDuration,
+        @RequestParam(value = "includeSubOnly", defaultValue = "false") boolean includeSubOnly,
         @RequestParam(value = "map", required = false) Integer map
     )
     {
@@ -51,6 +52,7 @@ public class VodController
             race, versusRace,
             minRating, maxRating,
             minDuration, maxDuration,
+            includeSubOnly,
             map,
             OffsetDateTime.parse(dateAnchor),
             typeAnchor,

@@ -165,8 +165,9 @@ class MatchUtil
         a.setAttribute("href", participant.twitchVodUrl);
         a.setAttribute("target", "_blank");
         a.setAttribute("rel", "noopener");
-        a.setAttribute("title", "Twitch VOD");
-        a.setAttribute("class", "table-image table-image-square background-cover mr-3 d-inline-block twitch-img");
+        a.setAttribute("title", "Twitch VOD" + (participant.subOnlyTwitchVod ? "(sub only)" : ""));
+        a.setAttribute("class", "table-image table-image-square background-cover mr-3 d-inline-block twitch-img"
+            + (participant.subOnlyTwitchVod ? "-warning" : ""));
         tr.querySelector(":scope .misc").prepend(a);
     }
 
