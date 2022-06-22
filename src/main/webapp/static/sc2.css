@@ -437,6 +437,11 @@ th.hoverable span
     background-image: url("icon/logo/twitch.svg");
 }
 
+.twitch-img-warning
+{
+    background-image: url("icon/logo/twitch-warning.svg");
+}
+
 .chart-line-img
 {
     background-image: url("icon/misc/chart-line.svg");
