@@ -20,6 +20,12 @@ public class ProPlayerAccountDAO
 extends StandardDAO
 {
 
+    public static final String STD_SELECT =
+        "pro_player_account.pro_player_id AS \"pro_player_account.pro_player_id\", "
+        + "pro_player_account.account_id AS \"pro_player_account.account_id\", "
+        + "pro_player_account.updated AS \"pro_player_account.updated\", "
+        + "pro_player_account.protected AS \"pro_player_account.protected\" ";
+
     private static RowMapper<ProPlayerAccount> STD_ROW_MAPPER;
 
     private static final String CREATE_QUERY =
