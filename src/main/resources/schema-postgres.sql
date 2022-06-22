@@ -535,6 +535,11 @@ CREATE TABLE "match"
     "region" SMALLINT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     "duration" SMALLINT,
+    "vod" BOOLEAN,
+    "sub_only_vod" BOOLEAN,
+    "rating_min" INTEGER,
+    "rating_max" INTEGER,
+    "race" TEXT,
 
     PRIMARY KEY ("id"),
 
@@ -549,6 +554,8 @@ CREATE TABLE "match"
 WITH (fillfactor = 90);
 
 CREATE INDEX "ix_match_updated" ON "match"("updated");
+CREATE INDEX "ix_match_vod_search" ON "match"("date", "type", "map_id", "vod", "sub_only_vod", "race" text_pattern_ops, "rating_min", "duration", "rating_max")
+    WHERE "vod" = true;
 
 CREATE TABLE "match_participant"
 (

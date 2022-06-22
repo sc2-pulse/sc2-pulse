@@ -62,3 +62,12 @@ UPDATE pro_player_account SET updated = NOW() + INTERVAL '100 years';
 ALTER TABLE "twitch_user"
     ADD COLUMN "sub_only_vod" BOOLEAN NOT NULL DEFAULT false;
 
+ALTER TABLE "match"
+    ADD COLUMN "vod" BOOLEAN,
+    ADD COLUMN "sub_only_vod" BOOLEAN,
+    ADD COLUMN "rating_min" INTEGER,
+    ADD COLUMN "rating_max" INTEGER,
+    ADD COLUMN "race" TEXT;
+
+CREATE INDEX "ix_match_vod_search" ON "match"("date", "type", "map_id", "vod", "sub_only_vod", "race" text_pattern_ops, "rating_min", "duration", "rating_max")
+    WHERE "vod" = true;

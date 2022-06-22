@@ -28,6 +28,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -114,77 +115,25 @@ public class LadderMatchDAO
     public static String FIND_MATCHES_BY_CHARACTER_ID_REVERSED =
         String.format(FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE, ">", "ASC");
 
-    private static final String FIND_TWITCH_VODS_TEMPLATE =
-        "WITH pro_match_filter AS "
-        + "("
-            + "SELECT match_id AS id "
-            + "FROM match_participant "
-            + "WHERE twitch_video_id IS NOT NULL"
-        + "), "
-        + "%1$s"
-        + "match_filter AS "
-        + "("
-            + "SELECT MAX(match.id) AS id "
-            + "FROM match_filter_versus_race "
-            + "INNER JOIN match_participant USING(match_id)"
-            + "INNER JOIN match ON match_participant.match_id = match.id "
-            + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id "
-                + "AND match_participant.team_state_timestamp = team_state.timestamp "
-            + "LEFT JOIN twitch_video ON match_participant.twitch_video_id = twitch_video.id "
-            + "LEFT JOIN twitch_user ON twitch_video.twitch_user_id = twitch_user.id "
-            + "WHERE (date, type, map_id) < (:dateAnchor, :typeAnchor, :mapIdAnchor) "
-            + "AND (:mapId::integer IS NULL OR match.map_id = :mapId) "
-            + "AND (:minDuration::integer IS NULL OR match.duration >= :minDuration) "
-            + "AND (:maxDuration::integer IS NULL OR match.duration <= :maxDuration) "
-            + "GROUP BY date, type, map_id "
-            + "HAVING COUNT(*) = CASE WHEN :race::integer = :versusRace::integer THEN 4 ELSE 2 END "
-            + "AND (:minRating::integer IS NULL OR MIN(team_state.rating) >= :minRating) "
-            + "AND (:maxRating::integer IS NULL OR MAX(team_state.rating) <= :maxRating) "
-            + "AND (:includeSubOnly = true OR bool_or(NOT twitch_user.sub_only_vod) = true)"
-
-            + "ORDER BY (date, type, map_id) DESC "
-            + "LIMIT :limit "
-        + ") ";
-
     private static final String FIND_TWITCH_VODS =
         String.format
         (
-            String.format
-            (
-                FIND_TWITCH_VODS_TEMPLATE,
-                "match_filter_race AS "
-                + "("
-                    + "SELECT match_id, player_character_id "
-                    + "FROM pro_match_filter "
-                    + "INNER JOIN match_participant ON pro_match_filter.id = match_participant.match_id "
-                    + "INNER JOIN team ON match_participant.team_id = team.id "
-                    + "WHERE :race::integer IS NULL "
-                    + "OR substring(team.legacy_id::text from char_length(team.legacy_id::text))::integer = :race"
-                + "), "
-                + "match_filter_versus_race AS "
-                + "("
-                    + "SELECT match_id "
-                    + "FROM match_filter_race "
-                    + "INNER JOIN match_participant USING(match_id) "
-                    + "INNER JOIN team ON match_participant.team_id = team.id "
-                    + "WHERE (:versusRace::integer IS NULL "
-                    + "OR substring(team.legacy_id::text from char_length(team.legacy_id::text))::integer = :versusRace) "
-                    + "AND match_participant.player_character_id != match_filter_race.player_character_id"
-                + "), "
-            )
-            + FIND_MATCHES_TEMPLATE,
-            "<", "DESC"
-        );
-
-    private static final String FIND_TWITCH_VODS_ALL_RACES =
-        String.format
-        (
-            String.format
-            (
-                FIND_TWITCH_VODS_TEMPLATE,
-                "match_filter_versus_race AS (SELECT id AS match_id FROM pro_match_filter), "
-            )
-            + FIND_MATCHES_TEMPLATE,
+        "WITH match_filter AS "
+        + "("
+            + "SELECT id "
+            + "FROM match "
+            + "WHERE vod = true "
+            + "AND (date, type, map_id) < (:dateAnchor, :typeAnchor, :mapIdAnchor) "
+            + "AND (:mapId::integer IS NULL OR map_id = :mapId) "
+            + "AND (:minDuration::integer IS NULL OR duration >= :minDuration) "
+            + "AND (:maxDuration::integer IS NULL OR duration <= :maxDuration) "
+            + "AND (:minRating::integer IS NULL OR rating_min >= :minRating) "
+            + "AND (:maxRating::integer IS NULL OR rating_max <= :maxRating) "
+            + "AND (:race::text IS NULL OR race LIKE :race) "
+            + "AND (:includeSubOnly = true OR sub_only_vod = false) "
+            + "ORDER BY (date, type, map_id) DESC "
+            + "LIMIT :limit "
+        + ") " + FIND_MATCHES_TEMPLATE,
             "<", "DESC"
         );
 
@@ -465,10 +414,16 @@ public class LadderMatchDAO
         if(Math.abs(pageDiff) != 1) throw new IllegalArgumentException("Invalid page diff");
         long finalPage = page + pageDiff;
 
+        String raceStr = Stream.of(race, versusRace)
+            .filter(Objects::nonNull)
+            .mapToInt(r->conversionService.convert(r, Integer.class))
+            .sorted()
+            .mapToObj(String::valueOf)
+            .collect(Collectors.joining(""));
+        raceStr = raceStr.isEmpty() ? null : "%" + raceStr + "%";
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("matchType", conversionService.convert(BaseMatch.MatchType._1V1, Integer.class))
-            .addValue("race", conversionService.convert(race, Integer.class))
-            .addValue("versusRace", conversionService.convert(versusRace, Integer.class))
+            .addValue("race", raceStr)
             .addValue("minRating", minRating)
             .addValue("maxRating", maxRating)
             .addValue("minDuration", minDuration)
@@ -481,10 +436,7 @@ public class LadderMatchDAO
             dateAnchor, typeAnchor, mapAnchor, new BaseMatch.MatchType[]{BaseMatch.MatchType._1V1},
             params
         );
-        String query = race == null && versusRace == null
-            ? FIND_TWITCH_VODS_ALL_RACES
-            : FIND_TWITCH_VODS;
-        List<LadderMatch> matches = template.query(query, params, MATCHES_EXTRACTOR);
+        List<LadderMatch> matches = template.query(FIND_TWITCH_VODS, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
     }
 

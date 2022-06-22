@@ -156,6 +156,45 @@ extends StandardDAO
             + "%1$s"
         + ") ";
 
+    private static final String UPDATE_TWITCH_VOD_STATS =
+        "WITH pro_match_filter AS "
+        + "( "
+            + "SELECT match_id "
+            + "FROM match_participant "
+            + "INNER JOIN match ON match_participant.match_id = match.id "
+            + "WHERE twitch_video_id IS NOT NULL "
+            + "AND match.date > :from "
+        + "), "
+        + "match_filter AS "
+        + "( "
+            + "SELECT "
+            + "match_participant.match_id AS id, "
+            + "MIN(substring(team.legacy_id::text from char_length(team.legacy_id::text))::smallint)::text "
+            + "|| "
+            + "MAX(substring(team.legacy_id::text from char_length(team.legacy_id::text))::smallint)::text "
+            + "AS race, "
+            + "MAX(team_state.rating) AS rating_max, "
+            + "MIN(team_state.rating) AS rating_min, "
+            + "bool_and(twitch_user.sub_only_vod) AS sub_only_vod "
+            + "FROM pro_match_filter "
+            + "INNER JOIN match_participant USING(match_id) "
+            + "INNER JOIN team ON match_participant.team_id = team.id "
+            + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id "
+            + "AND match_participant.team_state_timestamp = team_state.timestamp "
+            + "LEFT JOIN twitch_video ON match_participant.twitch_video_id = twitch_video.id "
+            + "LEFT JOIN twitch_user ON twitch_video.twitch_user_id = twitch_user.id "
+            + "GROUP BY match_participant.match_id "
+            + "HAVING COUNT(*) = 2 "
+        + ") "
+        + "UPDATE match "
+        + "SET vod = true, "
+        + "race = match_filter.race, "
+        + "rating_max = match_filter.rating_max, "
+        + "rating_min = match_filter.rating_min, "
+        + "sub_only_vod = match_filter.sub_only_vod "
+        + "FROM match_filter "
+        + "WHERE match.id = match_filter.id";
+
     private static RowMapper<Match> STD_ROW_MAPPER;
     private final ConversionService conversionService;
 
@@ -252,6 +291,13 @@ extends StandardDAO
     public int updateDuration(OffsetDateTime from)
     {
         return updateDuration(from, DEFAULT_DURATION_MATCH_TYPES);
+    }
+
+    public int updateTwitchVodStats(OffsetDateTime from)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("from", from);
+        return getTemplate().update(UPDATE_TWITCH_VOD_STATS, params);
     }
 
 }

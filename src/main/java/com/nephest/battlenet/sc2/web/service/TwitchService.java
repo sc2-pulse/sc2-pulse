@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.web.service;
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.helix.domain.User;
 import com.nephest.battlenet.sc2.model.SocialMedia;
+import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
@@ -40,6 +41,7 @@ public class TwitchService
     private final TwitchVideoDAO twitchVideoDAO;
     private final ProPlayerDAO proPlayerDAO;
     private final SocialMediaLinkDAO socialMediaLinkDAO;
+    private final MatchDAO matchDAO;
     private final MatchParticipantDAO matchParticipantDAO;
     private final TwitchClient twitchClient;
     private final ExecutorService webExecutorService;
@@ -51,6 +53,7 @@ public class TwitchService
         TwitchVideoDAO twitchVideoDAO,
         ProPlayerDAO proPlayerDAO,
         SocialMediaLinkDAO socialMediaLinkDAO,
+        MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
         TwitchClient twitchClient,
         @Qualifier("webExecutorService") ExecutorService webExecutorService
@@ -60,6 +63,7 @@ public class TwitchService
         this.twitchVideoDAO = twitchVideoDAO;
         this.proPlayerDAO = proPlayerDAO;
         this.socialMediaLinkDAO = socialMediaLinkDAO;
+        this.matchDAO = matchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
         this.twitchClient = twitchClient;
         this.webExecutorService = webExecutorService;
@@ -78,7 +82,9 @@ public class TwitchService
     {
         updateTwitchData();
         proPlayerDAO.linkTwitchUsers();
-        matchParticipantDAO.linkTwitchVideo(OffsetDateTime.now().minus(LINK_VIDEO_OFFSET));
+        OffsetDateTime from = OffsetDateTime.now().minus(LINK_VIDEO_OFFSET);
+        matchParticipantDAO.linkTwitchVideo(from);
+        matchDAO.updateTwitchVodStats(from);
         LOG.info("Updated twitch data");
     }
 
