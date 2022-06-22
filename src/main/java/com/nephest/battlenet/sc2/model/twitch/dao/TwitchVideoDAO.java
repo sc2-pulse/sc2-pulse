@@ -29,6 +29,16 @@ public class TwitchVideoDAO
 
     private static final String MERGE = "WITH "
         + "vals AS (VALUES :videos), "
+        + "updated AS "
+        + "("
+            + "UPDATE twitch_video "
+            + "SET url = v.url, "
+            + "begin = v.begin, "
+            + "\"end\" = v.\"end\" "
+            + "FROM vals v(id, twitch_user_id, url, begin, \"end\") "
+            + "WHERE twitch_video.id = v.id "
+            + "RETURNING twitch_video.id "
+        + "), "
         + "missing AS "
         + "("
             + "SELECT v.id, v.twitch_user_id, v.url, v.begin, v.\"end\" "
@@ -43,6 +53,8 @@ public class TwitchVideoDAO
             + "ON CONFLICT DO NOTHING "
             + "RETURNING id "
         + ") "
+        + "SELECT * FROM updated "
+        + "UNION "
         + "SELECT * FROM inserted";
 
     private static final String FIND_BY_IDS =

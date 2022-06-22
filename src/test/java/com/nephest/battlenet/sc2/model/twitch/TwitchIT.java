@@ -128,6 +128,16 @@ public class TwitchIT
         assertTrue(videos2.contains(video1));
         assertTrue(videos2.contains(video2));
         assertTrue(videos2.contains(video3));
+
+        //updated video
+        OffsetDateTime newBegin = begin.plusMinutes(1);
+        OffsetDateTime newEnd = end.plusMinutes(1);
+        TwitchVideo video4 = new TwitchVideo(1L, 1L, "url11", newBegin, newEnd);
+        twitchVideoDAO.merge(video4);
+        TwitchVideo updatedVideo = twitchVideoDAO.findById(1L).get(0);
+        assertEquals("url11", updatedVideo.getUrl());
+        assertTrue(newBegin.isEqual(updatedVideo.getBegin()));
+        assertTrue(newEnd.isEqual(updatedVideo.getEnd()));
     }
 
     @Test
