@@ -11,7 +11,7 @@ public class ProPlayerAccount
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     @NotNull
     private Long proPlayerId;
@@ -22,10 +22,22 @@ implements java.io.Serializable
     @NotNull
     private OffsetDateTime updated = OffsetDateTime.now();
 
+    @NotNull
+    private Boolean isProtected;
+
     public ProPlayerAccount(@NotNull Long proPlayerId, @NotNull Long accountId)
     {
         this.proPlayerId = proPlayerId;
         this.accountId = accountId;
+        this.isProtected = false;
+    }
+
+    public ProPlayerAccount(Long proPlayerId, Long accountId, OffsetDateTime updated, Boolean isProtected)
+    {
+        this.proPlayerId = proPlayerId;
+        this.accountId = accountId;
+        this.updated = updated;
+        this.isProtected = isProtected;
     }
 
     @Override
@@ -82,6 +94,16 @@ implements java.io.Serializable
     public void setUpdated(OffsetDateTime updated)
     {
         this.updated = updated;
+    }
+
+    public Boolean isProtected()
+    {
+        return isProtected;
+    }
+
+    public void setProtected(Boolean aProtected)
+    {
+        isProtected = aProtected;
     }
 
 }

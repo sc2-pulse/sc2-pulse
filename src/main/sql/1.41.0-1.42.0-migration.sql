@@ -52,3 +52,5 @@ CREATE INDEX "ix_match_participant_twitch_video_id"
 ALTER TABLE "social_media_link"
     ADD COLUMN "protected" BOOLEAN;
 
+ALTER TABLE "pro_player_account"
+    ADD COLUMN "protected" BOOLEAN;

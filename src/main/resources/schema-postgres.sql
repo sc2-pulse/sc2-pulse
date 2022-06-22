@@ -432,6 +432,7 @@ CREATE TABLE "pro_player_account"
     "pro_player_id" BIGINT NOT NULL,
     "account_id" BIGINT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "protected" BOOLEAN,
 
     PRIMARY KEY("account_id"),
 
