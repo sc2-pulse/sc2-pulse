@@ -72,7 +72,6 @@ public class ProPlayerService
     )
     public void update()
     {
-        updateRevealed();
         updateAligulac();
         proTeamMemberDAO.removeExpired();
         proTeamDAO.removeExpired();
@@ -81,7 +80,7 @@ public class ProPlayerService
         LOG.info("Updated pro players");
     }
 
-    private void updateRevealed()
+    protected void updateRevealed()
     {
         ByteBuffer idBuffer = ByteBuffer.allocate(Long.BYTES);
         for(RevealedProPlayer revealedProPlayer : sc2RevealedAPI.getPlayers().block().getPlayers())

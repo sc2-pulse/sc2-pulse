@@ -54,3 +54,7 @@ ALTER TABLE "social_media_link"
 
 ALTER TABLE "pro_player_account"
     ADD COLUMN "protected" BOOLEAN;
+
+UPDATE social_media_link SET updated = NOW() + INTERVAL '100 years';
+UPDATE pro_player SET updated = NOW() + INTERVAL '100 years';
+UPDATE pro_player_account SET updated = NOW() + INTERVAL '100 years';
