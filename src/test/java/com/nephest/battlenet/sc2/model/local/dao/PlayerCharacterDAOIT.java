@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
@@ -16,9 +17,15 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.Evidence;
+import com.nephest.battlenet.sc2.model.local.EvidenceVote;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.local.ProPlayer;
+import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
@@ -50,7 +57,19 @@ public class PlayerCharacterDAOIT
 {
 
     @Autowired
+    private ProPlayerDAO proPlayerDAO;
+
+    @Autowired
+    private ProPlayerAccountDAO proPlayerAccountDAO;
+
+    @Autowired
     private AccountDAO accountDAO;
+
+    @Autowired
+    private AccountRoleDAO accountRoleDAO;
+
+    @Autowired
+    private AccountFollowingDAO accountFollowingDAO;
 
     @Autowired
     private ClanDAO clanDAO;
@@ -69,6 +88,15 @@ public class PlayerCharacterDAOIT
 
     @Autowired
     private TeamStateDAO teamStateDAO;
+
+    @Autowired
+    private PlayerCharacterReportDAO playerCharacterReportDAO;
+
+    @Autowired
+    private EvidenceDAO evidenceDAO;
+
+    @Autowired
+    private EvidenceVoteDAO evidenceVoteDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -308,6 +336,153 @@ public class PlayerCharacterDAOIT
 
         accountDAO.anonymizeExpiredAccounts(OffsetDateTime.MIN);
         assertEquals(BasePlayerCharacter.DEFAULT_FAKE_NAME + "#211", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
+    }
+
+    @Test
+    public void testCharacterRebinding()
+    {
+        //stub
+        stubCharacterChain(1, true);
+        stubCharacterChain(2, true);
+        stubCharacterChain(3, true);
+        stubCharacterChain(4, false);
+        stubReport(1, 2, true);
+        stubReport(3, 4, false);
+        accountFollowingDAO.create(new AccountFollowing(1L, 1L));
+        accountFollowingDAO.create(new AccountFollowing(2L, 2L));
+        accountFollowingDAO.create(new AccountFollowing(3L, 3L));
+        accountRoleDAO.addRoles(1, SC2PulseAuthority.ADMIN);
+        accountRoleDAO.addRoles(2, SC2PulseAuthority.ADMIN, SC2PulseAuthority.MODERATOR);
+
+        //rebind character2 to account 1
+        playerCharacterDAO.merge(new PlayerCharacter(null, 1L, Region.EU, 2L, 2, "name2"));
+
+        //rebound value already exists, do nothing, it will be cleared later when account expires
+        List<ProPlayerAccount> proPlayerAccounts = proPlayerAccountDAO.findByProPlayerId(2);
+        assertEquals(1, proPlayerAccounts.size());
+        assertEquals(2, proPlayerAccounts.get(0).getAccountId());
+
+        List<AccountFollowing> followings = accountFollowingDAO.findAccountFollowingList(2L);
+        assertEquals(1, followings.size());
+        assertEquals(2L, followings.get(0).getAccountId());
+        assertEquals(2L, followings.get(0).getFollowingAccountId());
+
+        evidenceVoteDAO.findByEvidenceIds(1).stream()
+            .filter(v->v.getVoterAccountId() == 2)
+            .findAny()
+            .orElseThrow();
+
+        //admin is untouched because it already exists, moderator is rebound
+        List<SC2PulseAuthority> roles = accountRoleDAO.getRoles(1);
+        assertEquals(3, roles.size());
+        assertTrue(roles.contains(SC2PulseAuthority.ADMIN));
+        assertTrue(roles.contains(SC2PulseAuthority.MODERATOR));
+
+        List<SC2PulseAuthority> roles2 = accountRoleDAO.getRoles(2);
+        assertEquals(2, roles2.size());
+        assertTrue(roles2.contains(SC2PulseAuthority.ADMIN));
+
+        //rebind character 3 to account 4
+        playerCharacterDAO.merge(new PlayerCharacter(null, 4L, Region.EU, 3L, 3, "name3"));
+
+        //rebound value does not exist, successfully rebound
+        List<ProPlayerAccount> proPlayerAccountsRebound = proPlayerAccountDAO.findByProPlayerId(3);
+        assertEquals(1, proPlayerAccountsRebound.size());
+        assertEquals(4, proPlayerAccountsRebound.get(0).getAccountId());
+
+        //old followings were moved to the new account
+        List<AccountFollowing> followingsRebound = accountFollowingDAO.findAccountFollowingList(3L);
+        assertTrue(followingsRebound.isEmpty());
+
+        List<AccountFollowing> followingsRebound2 = accountFollowingDAO.findAccountFollowingList(4L);
+        assertEquals(1, followingsRebound2.size());
+        assertEquals(4L, followingsRebound2.get(0).getAccountId());
+        assertEquals(4L, followingsRebound2.get(0).getFollowingAccountId());
+
+        assertEquals(4, evidenceDAO.findById(false, 3).orElseThrow().getReporterAccountId());
+
+        List<EvidenceVote> reboundVotes = evidenceVoteDAO.findByEvidenceIds(3);
+        assertEquals(1, reboundVotes.size());
+        assertEquals(4L, reboundVotes.get(0).getVoterAccountId());
+
+    }
+
+    private Account stubCharacterChain(int num, boolean bind)
+    {
+        ProPlayer proPlayer = proPlayerDAO
+            .merge(new ProPlayer(null, new byte[(byte) num], "proTag" + num, "proName" + num));
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag" + num));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, (long) num, num, "name" + num));
+        if(bind)
+        {
+            proPlayerAccountDAO.link(proPlayer.getId(), "tag" + num);
+        }
+        return acc1;
+    }
+
+    private void stubReport(long accountId, long accountId2, boolean secondVote)
+    {
+        PlayerCharacterReport report = playerCharacterReportDAO.merge
+        (
+            new PlayerCharacterReport
+            (
+                null,
+                accountId,
+                null,
+                PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
+                false,
+                OffsetDateTime.now()
+            )
+        );
+        Evidence evidence = evidenceDAO.create
+        (
+            new Evidence
+            (
+                null,
+                report.getId(),
+                accountId,
+                null,
+                "description",
+                false,
+                OffsetDateTime.now(), OffsetDateTime.now()
+            )
+        );
+        evidenceVoteDAO.merge
+        (
+            new EvidenceVote
+            (
+                evidence.getId(),
+                OffsetDateTime.now(),
+                accountId,
+                true,
+                OffsetDateTime.now()
+            )
+        );
+        if(secondVote) evidenceVoteDAO.merge
+        (
+            new EvidenceVote
+            (
+                evidence.getId(),
+                OffsetDateTime.now(),
+                accountId2,
+                true,
+                OffsetDateTime.now()
+            )
+        );
+        Evidence evidence2 = evidenceDAO.create
+        (
+            new Evidence
+            (
+                null,
+                report.getId(),
+                accountId2,
+                null,
+                "description",
+                false,
+                OffsetDateTime.now(), OffsetDateTime.now()
+            )
+        );
     }
 
 }
