@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import java.time.OffsetDateTime;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -54,6 +55,10 @@ extends StandardDAO
     private static final String DELETE_BY_BATTLE_TAG_QUERY =
         "DELETE FROM pro_player_account WHERE pro_player_id = :proPlayerId "
             + "AND account_id = :accountId";
+    private static final String FIND_BY_PRO_PLAYER_ID =
+        "SELECT " + STD_SELECT
+        + "FROM pro_player_account "
+        + "WHERE pro_player_id = :proPlayerId";
 
 
     private final NamedParameterJdbcTemplate template;
@@ -169,6 +174,13 @@ extends StandardDAO
             .addValue("proPlayerId", proPlayerId)
             .addValue("accountId", accountId);
         return template.update(DELETE_BY_BATTLE_TAG_QUERY, params);
+    }
+
+    public List<ProPlayerAccount> findByProPlayerId(Integer id)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("proPlayerId", id);
+        return template.query(FIND_BY_PRO_PLAYER_ID, params, STD_ROW_MAPPER);
     }
 
 }
