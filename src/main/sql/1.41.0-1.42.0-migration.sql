@@ -67,7 +67,8 @@ ALTER TABLE "match"
     ADD COLUMN "sub_only_vod" BOOLEAN,
     ADD COLUMN "rating_min" INTEGER,
     ADD COLUMN "rating_max" INTEGER,
-    ADD COLUMN "race" TEXT;
+    ADD COLUMN "race" TEXT,
+    ADD COLUMN "race_vod" TEXT;
 
-CREATE INDEX "ix_match_vod_search" ON "match"("date", "type", "map_id", "vod", "sub_only_vod", "race" text_pattern_ops, "rating_min", "duration", "rating_max")
+CREATE INDEX "ix_match_vod_search" ON "match"("date", "type", "map_id", "vod", "sub_only_vod", "race_vod" text_pattern_ops, "race" text_pattern_ops, "rating_min", "duration", "rating_max")
     WHERE "vod" = true;

@@ -129,6 +129,7 @@ public class LadderMatchDAO
             + "AND (:maxDuration::integer IS NULL OR duration <= :maxDuration) "
             + "AND (:minRating::integer IS NULL OR rating_min >= :minRating) "
             + "AND (:maxRating::integer IS NULL OR rating_max <= :maxRating) "
+            + "AND (:raceVod::text IS NULL OR race_vod LIKE :raceVod) "
             + "AND (:race::text IS NULL OR race LIKE :race) "
             + "AND (:includeSubOnly = true OR sub_only_vod = false) "
             + "ORDER BY (date, type, map_id) DESC "
@@ -421,8 +422,12 @@ public class LadderMatchDAO
             .mapToObj(String::valueOf)
             .collect(Collectors.joining(""));
         raceStr = raceStr.isEmpty() ? null : "%" + raceStr + "%";
+        String raceVodStr = race == null
+            ? null
+            : "%" + conversionService.convert(race, Integer.class) + "%";
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("matchType", conversionService.convert(BaseMatch.MatchType._1V1, Integer.class))
+            .addValue("raceVod", raceVodStr)
             .addValue("race", raceStr)
             .addValue("minRating", minRating)
             .addValue("maxRating", maxRating)

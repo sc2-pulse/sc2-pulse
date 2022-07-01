@@ -540,6 +540,7 @@ CREATE TABLE "match"
     "rating_min" INTEGER,
     "rating_max" INTEGER,
     "race" TEXT,
+    "race_vod" TEXT,
 
     PRIMARY KEY ("id"),
 
@@ -554,7 +555,7 @@ CREATE TABLE "match"
 WITH (fillfactor = 90);
 
 CREATE INDEX "ix_match_updated" ON "match"("updated");
-CREATE INDEX "ix_match_vod_search" ON "match"("date", "type", "map_id", "vod", "sub_only_vod", "race" text_pattern_ops, "rating_min", "duration", "rating_max")
+CREATE INDEX "ix_match_vod_search" ON "match"("date", "type", "map_id", "vod", "sub_only_vod", "race_vod" text_pattern_ops, "race" text_pattern_ops, "rating_min", "duration", "rating_max")
     WHERE "vod" = true;
 
 CREATE TABLE "match_participant"
