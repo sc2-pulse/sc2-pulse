@@ -30,7 +30,7 @@ public class MatchParticipantDAO
     public static final int IDENTIFICATION_FRAME_MINUTES = 60;
     public static final int TWITCH_VOD_HIGH_MMR = 5500;
     public static final int TWITCH_VOD_HIGH_MMR_OFFSET = 95;
-    public static final int TWITCH_VOD_OFFSET = 35;
+    public static final int TWITCH_VOD_OFFSET = 15;
 
     public static final String STD_SELECT =
         "match_participant.match_id AS \"match_participant.match_id\", "
