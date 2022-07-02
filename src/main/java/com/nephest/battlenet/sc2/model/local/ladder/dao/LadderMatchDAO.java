@@ -92,8 +92,8 @@ public class LadderMatchDAO
             + "AND confirmed_cheater_report.status = true "
         + "LEFT JOIN twitch_video ON match_participant.twitch_video_id = twitch_video.id "
         + "LEFT JOIN twitch_user ON twitch_video.twitch_user_id = twitch_user.id "
-        + "ORDER BY (match.date , match.type , match.map_id) %2$s, "
-            + "(match_participant.match_id, match_participant.player_character_id) %2$s ";
+        + "ORDER BY match.date %2$s, match.type %2$s, match.map_id %2$s, "
+            + "match_participant.match_id %2$s, match_participant.player_character_id %2$s ";
 
     private static final String FIND_MATCHES_BY_CHARACTER_ID_TEMPLATE =
         "WITH match_filter AS "
@@ -105,7 +105,7 @@ public class LadderMatchDAO
             + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) "
             + "AND match_participant.player_character_id = :playerCharacterId "
             + "GROUP BY date, type, map_id "
-            + "ORDER BY (date, type, map_id) %2$s "
+            + "ORDER BY date %2$s, type %2$s, map_id %2$s "
             + "LIMIT :limit"
         + ") "
         + FIND_MATCHES_TEMPLATE;
@@ -132,7 +132,7 @@ public class LadderMatchDAO
             + "AND (:raceVod::text IS NULL OR race_vod LIKE :raceVod) "
             + "AND (:race::text IS NULL OR race LIKE :race) "
             + "AND (:includeSubOnly = true OR sub_only_vod = false) "
-            + "ORDER BY (date, type, map_id) DESC "
+            + "ORDER BY date DESC, type DESC, map_id DESC "
             + "LIMIT :limit "
         + ") " + FIND_MATCHES_TEMPLATE,
             "<", "DESC"
@@ -214,7 +214,7 @@ public class LadderMatchDAO
             + "GROUP BY date, type, map_id "
             + "HAVING MAX(match_participant.decision) = MIN(match_participant.decision) "
             + "AND MAX(match_participant.decision) != MAX(match_filter_g1.decision) "
-            + "ORDER BY (date, type, map_id) %2$s "
+            + "ORDER BY date %2$s, type %2$s, map_id %2$s "
             + "%3$s"
         + ") ";
 
