@@ -109,6 +109,7 @@ public class TwitchService
             batchIx += batch.size();
             LOG.trace("Twitch users progress: {}/{} ", batchIx, twitchLogins.size());
         }
+        twitchVideoDAO.removeExpired();
     }
 
     private void updateVideos(User user)

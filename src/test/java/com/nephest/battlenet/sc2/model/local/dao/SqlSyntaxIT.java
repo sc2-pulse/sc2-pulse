@@ -3,11 +3,40 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
-import com.nephest.battlenet.sc2.model.*;
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.SC2Map;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.twitch.dao.TwitchVideoDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import java.math.BigInteger;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -17,17 +46,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-
-import javax.sql.DataSource;
-import java.math.BigInteger;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-
-import static org.junit.jupiter.api.Assertions.*;
 
 /*
     This tests contains many simple subtests that require almost no setup(things like entity merge, count, etc.).
@@ -88,6 +106,9 @@ public class SqlSyntaxIT
 
     @Autowired
     private SC2MapDAO mapDAO;
+
+    @Autowired
+    private TwitchVideoDAO twitchVideoDAO;
 
     @Autowired
     private VarDAO varDAO;
@@ -394,6 +415,7 @@ public class SqlSyntaxIT
         proTeamMemberDAO.removeExpired();
         teamStateDAO.removeExpired();
         persistentLoginDAO.removeExpired();
+        twitchVideoDAO.removeExpired();
 
         teamMemberDAO.removeByTeamId(zergTeam.getId());
         assertTrue(teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).isEmpty());

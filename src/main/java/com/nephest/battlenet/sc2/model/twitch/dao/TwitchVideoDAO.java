@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.model.twitch.dao;
 
+import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
+import com.nephest.battlenet.sc2.model.local.dao.StandardDAO;
 import com.nephest.battlenet.sc2.model.twitch.TwitchVideo;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
@@ -17,6 +19,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class TwitchVideoDAO
+extends StandardDAO
 {
     
     public static final String STD_SELECT = 
@@ -77,6 +80,7 @@ public class TwitchVideoDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
+        super(template, "twitch_video", "\"end\"", MatchDAO.TTL_DAYS + " DAYS");
         this.template = template;
     }
 
