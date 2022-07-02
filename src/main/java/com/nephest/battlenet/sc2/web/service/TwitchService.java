@@ -32,7 +32,7 @@ public class TwitchService
     private static final Logger LOG = LoggerFactory.getLogger(TwitchService.class);
 
     public static final int USER_BATCH_SIZE = 100;
-    public static final int VIDEO_BATCH_SIZE = 100;
+    public static final int VIDEO_BATCH_SIZE = 50;
     public static final Duration LINK_VIDEO_OFFSET = Duration.ofDays(1);
     public static final String VIDEO_TYPE_FILTER = "archive";
     public static final String VIDEO_VIEWABLE_FILTER = "public";
