@@ -22,7 +22,9 @@ class MatchUtil
                 if(!p.team) {
                     teams.push({id: -1, alternativeData: p.participant.playerCharacterId + "," + p.participant.decision})
                 } else if(teams.length == 0 || teams[teams.length - 1].id != p.team.id) {
-                    teams.push(historical ? TeamUtil.createTeamFromSnapshot(p.team, p.teamState) : p.team);
+                    const pushTeam = historical ? TeamUtil.createTeamFromSnapshot(p.team, p.teamState) : p.team;
+                    pushTeam.matchParticipant = p;
+                    teams.push(pushTeam);
                 }
             }
 
