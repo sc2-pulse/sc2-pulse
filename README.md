@@ -17,6 +17,7 @@ semipro players.
 * PostgreSQL 13+ with btree_gist extension
 * Maven 3
 * BattleNet API access keys(you must use your own keys)
+* Twitch API keys(you must use your own keys)
 * Aligulac API key(you must use your own key)
 
 ## Testing
@@ -41,6 +42,8 @@ spring.security.oauth2.client.registration.sc2-sys-kr.client-id={client_id}
 spring.security.oauth2.client.registration.sc2-sys-kr.client-secret={client_secret}
 spring.security.oauth2.client.registration.sc2-sys-cn.client-id={client_id}
 spring.security.oauth2.client.registration.sc2-sys-cn.client-secret={client_secret}
+twitch.client-id={client_id}
+twitch.client-secret={client_secret}
 com.nephest.battlenet.sc2.aligulac.api.key={api_key}
 ```
 
@@ -81,6 +84,8 @@ spring.security.oauth2.client.registration.sc2-lg-kr.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-kr.client-secret = {client_secret}
 spring.security.oauth2.client.registration.sc2-lg-cn.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-cn.client-secret = {client_secret}
+twitch.client-id={client_id}
+twitch.client-secret={client_secret}
 com.nephest.battlenet.sc2.aligulac.api.key={api_key}
 ```
 
