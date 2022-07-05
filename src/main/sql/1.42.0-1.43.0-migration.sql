@@ -121,7 +121,7 @@ BEGIN
         UPDATE team
         set league_rank = ranks.league_rank
         FROM ranks
-        WHERE team.id = ranks.id
+        WHERE team.id = ranks.id;
     END LOOP;
 END
 $do$;
