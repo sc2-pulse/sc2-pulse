@@ -618,8 +618,11 @@ class TeamUtil
         teamClone.league = snapshot.league;
         teamClone.leagueType = snapshot.league.type;
         teamClone.tierType = snapshot.tier;
-        if(snapshot.teamState.wins)
+        if(snapshot.teamState.wins) {
             teamClone.losses = snapshot.teamState.games - snapshot.teamState.wins;
+        } else {
+            teamClone.wins = team.wins;
+        }
         return teamClone;
     }
 
