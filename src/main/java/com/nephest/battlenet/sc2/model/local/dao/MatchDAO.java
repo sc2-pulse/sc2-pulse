@@ -159,7 +159,7 @@ extends StandardDAO
     private static final String UPDATE_TWITCH_VOD_STATS =
         "WITH pro_match_filter AS "
         + "( "
-            + "SELECT match_id "
+            + "SELECT DISTINCT(match_id) "
             + "FROM match_participant "
             + "INNER JOIN match ON match_participant.match_id = match.id "
             + "WHERE twitch_video_id IS NOT NULL "
