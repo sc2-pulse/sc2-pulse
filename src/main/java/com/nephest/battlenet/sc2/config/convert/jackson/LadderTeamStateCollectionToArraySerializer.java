@@ -44,6 +44,14 @@ extends SimpleCollectionToFieldArraySerializer<LadderTeamState>
                 if(s.getPopulationState().getRegionTeamCount() == null) {g.writeNull();}
                 else {g.writeNumber(s.getPopulationState().getRegionTeamCount());}
             }),
+            Map.entry("leagueRank", (g, s)->{
+                if(s.getTeamState().getLeagueRank() == null) {g.writeNull();}
+                else {g.writeNumber(s.getTeamState().getLeagueRank());}
+            }),
+            Map.entry("leagueTeamCount", (g, s)->{
+                if(s.getPopulationState().getLeagueTeamCount() == null) {g.writeNull();}
+                else {g.writeNumber(s.getPopulationState().getLeagueTeamCount());}
+            }),
             Map.entry("race", (g, s)->{
                 if(s.getRace() == null) {g.writeNull();}
                 else {g.writeString(s.getRace().toString());}
