@@ -57,11 +57,14 @@ class CharacterUtil
                     teamId: history.teamId[i],
                     dateTime: history.dateTime[i],
                     games: history.games[i],
+                    wins: history.wins[i],
                     rating: history.rating[i],
                     globalRank: history.globalRank[i],
                     globalTeamCount: history.globalTeamCount[i],
                     regionRank: history.regionRank[i],
-                    regionTeamCount: history.regionTeamCount[i]
+                    regionTeamCount: history.regionTeamCount[i],
+                    leagueRank: history.leagueRank[i],
+                    leagueTeamCount: history.leagueTeamCount[i],
                 },
                 league:
                 {
