@@ -22,6 +22,7 @@ class TeamUtil
             }
 
             row.setAttribute("data-team-id", team.id);
+            if(team.dateTime) row.setAttribute("data-team-date-time", team.dateTime);
             const isCheater = TeamUtil.isCheaterTeam(team);
             if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
             TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, isCheater ? -1 : nonCheaterIx);
@@ -109,9 +110,11 @@ class TeamUtil
 
     static getTeamFromElement(parent)
     {
-        const teamId = parent.closest("tr").getAttribute("data-team-id");
+        const tr = parent.closest("tr");
+        const teamId = tr.getAttribute("data-team-id");
+        const teamDateTime = tr.getAttribute("data-team-date-time");
         const viewData = Model.DATA.get(ViewUtil.getView(parent));
-        return (viewData.get(VIEW_DATA.TEAMS) ? viewData.get(VIEW_DATA.TEAMS).result.find(t=>t.id==teamId) : null)
+        return (viewData.get(VIEW_DATA.TEAMS) ? viewData.get(VIEW_DATA.TEAMS).result.find(t=>t.id==teamId && (teamDateTime ? t.dateTime==teamDateTime : true)) : null)
             || viewData.get(VIEW_DATA.SEARCH).result.find(t=>t.id==teamId);
     }
 
