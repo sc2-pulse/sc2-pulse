@@ -48,7 +48,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableRetry
 @EnableScheduling
 @EnableTransactionManagement
-@PropertySource("classpath:application-private.properties")
+@PropertySource(value = "classpath:application-private.properties", ignoreResourceNotFound = true)
 public class Application
 extends SpringBootServletInitializer
 {
