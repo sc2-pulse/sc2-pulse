@@ -361,6 +361,16 @@ class PersonalUtil
         if(myTab) myTab.querySelector(":scope .tab-name").textContent = Session.currentAccount.battleTag;
 
         const rolesElem = document.querySelector("#login-roles");
-        if(rolesElem) rolesElem.textContent = data.roles.sort((a, b)=>a.localeCompare(b)).join(", ");
+        if(rolesElem) {
+            rolesElem.textContent = data.roles.sort((a, b)=>a.localeCompare(b)).join(", ");
+            if(data.roles.includes("SERVER_WATCHER")) {
+                const adminLink = document.createElement("a");
+                adminLink.setAttribute("href", ROOT_CONTEXT_PATH + "sba/");
+                adminLink.setAttribute("id", "server-info-panel-link");
+                adminLink.setAttribute("target", "_blank");
+                adminLink.textContent = "Server info panel";
+                document.querySelector("#account-additional-info").appendChild(adminLink);
+            }
+        }
     }
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -11,6 +11,7 @@ implements Identifiable, GrantedAuthority
 {
 
     ADMIN("ROLE_ADMIN", "ADMIN", 127),
+    SERVER_WATCHER("ROLE_SERVER_WATCHER", "SERVER_WATCHER", 11),
     MODERATOR("ROLE_MODERATOR", "MODERATOR", 10),
     SUPPORTER("ROLE_SUPPORTER", "SUPPORTER", 3),
     USER("ROLE_USER", "USER", 1),

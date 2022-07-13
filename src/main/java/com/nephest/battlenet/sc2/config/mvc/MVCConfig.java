@@ -14,6 +14,7 @@ implements WebMvcConfigurer
 
     @Override
     public void addViewControllers(ViewControllerRegistry registry) {
+        registry.addViewController("/").setViewName("home");
         registry.addViewController("/terms-of-service").setViewName("terms-of-service");
         registry.addViewController("/privacy-policy").setViewName("privacy-policy");
         registry.addViewController("/about").setViewName("about");

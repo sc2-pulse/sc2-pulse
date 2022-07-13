@@ -3,21 +3,30 @@
 
 package com.nephest.battlenet.sc2.config.security;
 
+import static org.springframework.security.config.Customizer.withDefaults;
+
 import com.nephest.battlenet.sc2.config.filter.RobotsDenyFilter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
+import java.time.Duration;
+import javax.sql.DataSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.keygen.Base64StringKeyGenerator;
-import org.springframework.security.oauth2.client.*;
+import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
@@ -25,9 +34,6 @@ import org.springframework.security.web.authentication.rememberme.PersistentToke
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
-import javax.sql.DataSource;
-import java.time.Duration;
 
 @Configuration
 @EnableWebSecurity
@@ -60,6 +66,13 @@ extends WebSecurityConfigurerAdapter
         http
             .csrf()
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
+                //built-in sba server
+                .ignoringRequestMatchers
+                (
+                    new AntPathRequestMatcher("/sba/instances", HttpMethod.POST.toString()),
+                    new AntPathRequestMatcher("/sba/instances/*", HttpMethod.DELETE.toString()),
+                    new AntPathRequestMatcher("/actuator/**")
+                )
             .and().exceptionHandling()
                 .defaultAuthenticationEntryPointFor
                 (
@@ -67,7 +80,9 @@ extends WebSecurityConfigurerAdapter
                     new AntPathRequestMatcher("/api/my/**")
                 )
             .and().authorizeRequests()
-                .antMatchers("/actuator/**").hasRole(SC2PulseAuthority.ADMIN.getName())
+                //built-in sba server
+                .antMatchers("/actuator/**").hasRole(SC2PulseAuthority.SERVER_WATCHER.getName())
+                .antMatchers("/sba/**").hasRole(SC2PulseAuthority.SERVER_WATCHER.getName())
                 .antMatchers("/admin/**").hasRole(SC2PulseAuthority.ADMIN.getName())
                 .antMatchers("/api/character/report/vote/**").hasRole(SC2PulseAuthority.MODERATOR.getName())
                 .antMatchers("/api/my/**").authenticated()
@@ -80,7 +95,9 @@ extends WebSecurityConfigurerAdapter
                 .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, accountRoleDAO))
             .and().and().rememberMe()
                 .rememberMeServices(concurrentPersistentTokenBasedRememberMeService)
-                .key(concurrentPersistentTokenBasedRememberMeService.getKey());
+                .key(concurrentPersistentTokenBasedRememberMeService.getKey())
+            //built-in sba server
+            .and().httpBasic(withDefaults());
     }
 
     //the been definition is needed by remember me
