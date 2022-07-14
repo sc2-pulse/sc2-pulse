@@ -33,7 +33,9 @@ class Session
     {
         if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
         const versionHeader = resp.headers.get("X-Application-Version");
-        if(versionHeader && versionHeader != Session.APPLICATION_VERSION) throw new Error(Session.INVALID_API_VERSION_CODE + " API version has changed");
+        const cacheHeader = resp.headers.get("Cache-Control");
+        if((!cacheHeader || cacheHeader.toLowerCase().includes("max-age=0")) && versionHeader && versionHeader != Session.APPLICATION_VERSION)
+            throw new Error(Session.INVALID_API_VERSION_CODE + " API version has changed");
         return Promise.resolve(resp);
     }
 
