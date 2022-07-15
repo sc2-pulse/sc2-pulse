@@ -276,7 +276,7 @@ class BootstrapUtil
             .on("show.bs.modal", e=>{BootstrapUtil.onModalShow(e.currentTarget)})
             .on("shown.bs.modal", e=>{BootstrapUtil.onModalShown(e.currentTarget)});
         $("#error-session").on("shown.bs.modal", e=>window.setTimeout(Session.doRenewBlizzardRegistration, 3500));
-        $("#application-version-update").on("shown.bs.modal", e=>window.setTimeout(t=>document.location.reload(), SC2Restful.REDIRECT_PAGE_TIMEOUT_MILLIS));
+        $("#application-version-update").on("shown.bs.modal", e=>Util.reload("application-version-update"));
         document.querySelectorAll(".modal .modal-header .close-left").forEach(e=>e.addEventListener("click", e=>history.back()));
     }
 
