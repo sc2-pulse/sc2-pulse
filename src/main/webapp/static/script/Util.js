@@ -307,6 +307,18 @@ class Util
         return name == FAKE_NAME ? member.character.id : name;
     }
 
+    static reload(id, ifLoaded = true)
+    {
+        ElementUtil.INPUT_TIMEOUTS.set(id, window.setTimeout(e=>{
+                if(!ifLoaded || Session.currentRequests < 1) {
+                    document.location.reload();
+                } else {
+                    Util.reload(id);
+                }
+            }, SC2Restful.REDIRECT_PAGE_TIMEOUT_MILLIS)
+        );
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
