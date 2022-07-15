@@ -186,7 +186,7 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     top: calc(50vh - 1rem);
 }
 
-#modal-generic
+#modal-generic, #application-version-update
 {
     z-index: 10000;
 }
