@@ -5,12 +5,19 @@ package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.Startup;
+import com.nephest.battlenet.sc2.config.mvc.TokenErrorController;
 import com.nephest.battlenet.sc2.config.openapi.SpringDocConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
 import com.nephest.battlenet.sc2.web.controller.AdminController;
 import com.nephest.battlenet.sc2.web.controller.StatusController;
 import com.nephest.battlenet.sc2.web.controller.TeamController;
-import com.nephest.battlenet.sc2.web.service.*;
+import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
+import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
+import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
+import com.nephest.battlenet.sc2.web.service.MatchService;
+import com.nephest.battlenet.sc2.web.service.SC2WebServiceUtil;
+import com.nephest.battlenet.sc2.web.service.StatsService;
+import com.nephest.battlenet.sc2.web.service.StatusService;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -37,6 +44,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatusController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AdminController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TeamController.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TokenErrorController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class)
     }
