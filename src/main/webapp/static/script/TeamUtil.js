@@ -294,13 +294,24 @@ class TeamUtil
         games.set(RACE.RANDOM, typeof member.randomGamesPlayed === "undefined" ? 0 : member.randomGamesPlayed);
         let gamesTotal = 0;
         for(const val of games.values()) gamesTotal += val;
+        const racesElem = document.createElement("span");
+        racesElem.classList.add("race-percentage-container", "mr-1", "text-nowrap", "d-inline-block");
+
+        //no favorite race
+        if(gamesTotal == 0)
+        {
+            const percentageEntry = document.createElement("span");
+            percentageEntry.classList.add("race-percentage-entry", "c-divider-slash", "text-secondary");
+            percentageEntry.appendChild(ElementUtil.createNoRaceImage());
+            racesElem.appendChild(percentageEntry);
+            return racesElem;
+        }
+
+        //races
         const percentage = new Map();
         for(const [key, val] of games.entries())
             if(val != 0) percentage.set(key, Math.round((val / gamesTotal) * 100));
         const percentageSorted = new Map([...percentage.entries()].sort((a, b)=>b[1] - a[1]));
-
-        const racesElem = document.createElement("span");
-        racesElem.classList.add("race-percentage-container", "mr-1", "text-nowrap", "d-inline-block");
         if(percentageSorted.size > 0)
         {
             for(const [race, val] of percentageSorted.entries())

@@ -6,21 +6,17 @@ package com.nephest.battlenet.sc2.model.blizzard;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import com.nephest.battlenet.sc2.model.Race;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-
 public class BlizzardProfileTeamMember
 extends BlizzardPlayerCharacter
 {
 
-    @NotNull @Valid
     private Race favoriteRace;
 
     private String clanTag;
 
     public BlizzardProfileTeamMember(){}
 
-    public BlizzardProfileTeamMember(@NotNull @Valid Race favoriteRace)
+    public BlizzardProfileTeamMember(Race favoriteRace)
     {
         this.favoriteRace = favoriteRace;
     }

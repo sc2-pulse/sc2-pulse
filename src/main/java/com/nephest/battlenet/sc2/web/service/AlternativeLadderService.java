@@ -8,8 +8,8 @@ import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
@@ -38,6 +38,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.AlternativeTeamData;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
 import java.time.Instant;
@@ -72,7 +73,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
-import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
 @Service
@@ -411,9 +411,9 @@ public class AlternativeLadderService
         Set<PlayerCharacter> characters = new HashSet<>();
         List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans = new ArrayList<>();
-        List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams = new ArrayList<>();
+        List<AlternativeTeamData> newTeams = new ArrayList<>();
         List<Tuple2<Team, BlizzardProfileTeam>> validTeams = Arrays.stream(ladder.getLadderTeams())
-            .filter(teamValidationPredicate.and(t->isValidTeam(t, teamMemberCount)))
+            .filter(teamValidationPredicate.and(t->isValidTeam(t, teamMemberCount, ladder.getLeague().getQueueType().getTeamFormat())))
             .map
             (
                 bTeam->Tuples.of
@@ -447,7 +447,7 @@ public class AlternativeLadderService
         Season season,
         Team team,
         BlizzardProfileTeam bTeam,
-        List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams,
+        List<AlternativeTeamData> newTeams,
         Set<PlayerCharacter> characters,
         List<Tuple2<PlayerCharacter, Clan>> clans,
         List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans,
@@ -476,7 +476,7 @@ public class AlternativeLadderService
         Season season,
         Team team,
         BlizzardProfileTeamMember bMember,
-        List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams,
+        List<AlternativeTeamData> newTeams,
         List<Tuple2<PlayerCharacter, Clan>> clans
     )
     {
@@ -488,7 +488,7 @@ public class AlternativeLadderService
         PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bMember);
         if(bMember.getClanTag() != null)
             clans.add(Tuples.of(character, Clan.of(bMember.getClanTag(), character.getRegion())));
-        newTeams.add(Tuples.of(fakeAccount, character, team, bMember.getFavoriteRace()));
+        newTeams.add(new AlternativeTeamData(fakeAccount, character, team, bMember.getFavoriteRace()));
     }
 
     private void addExistingAlternativeCharacter
@@ -537,24 +537,24 @@ public class AlternativeLadderService
 
     //this ensures the consistent order for concurrent entities(accounts and players)
     private void saveNewCharacterData
-    (List<Tuple4<Account, PlayerCharacter, Team, Race>> newTeams, Set<TeamMember> teamMembers)
+    (List<AlternativeTeamData> newTeams, Set<TeamMember> teamMembers)
     {
         if(newTeams.size() == 0) return;
 
-        newTeams.sort(Comparator.comparing(Tuple2::getT1, Account.NATURAL_ID_COMPARATOR));
-        for(Tuple4<Account, PlayerCharacter, Team, Race> curMembers : newTeams) accountDAO.merge(curMembers.getT1());
+        newTeams.sort(Comparator.comparing(AlternativeTeamData::getAccount, Account.NATURAL_ID_COMPARATOR));
+        for(AlternativeTeamData curMembers : newTeams) accountDAO.merge(curMembers.getAccount());
 
-        newTeams.sort(Comparator.comparing(Tuple2::getT2, PlayerCharacter.NATURAL_ID_COMPARATOR));
-        for(Tuple4<Account, PlayerCharacter, Team, Race> curNewTeam : newTeams)
+        newTeams.sort(Comparator.comparing(AlternativeTeamData::getCharacter, PlayerCharacter.NATURAL_ID_COMPARATOR));
+        for(AlternativeTeamData curNewTeam : newTeams)
         {
-            Account account = curNewTeam.getT1();
+            Account account = curNewTeam.getAccount();
 
-            curNewTeam.getT2().setAccountId(account.getId());
-            PlayerCharacter character = playerCharacterDao.merge(curNewTeam.getT2());
+            curNewTeam.getCharacter().setAccountId(account.getId());
+            PlayerCharacter character = playerCharacterDao.merge(curNewTeam.getCharacter());
 
-            Team team = curNewTeam.getT3();
+            Team team = curNewTeam.getTeam();
             TeamMember teamMember = new TeamMember(team.getId(), character.getId(), null, null, null, null);
-            teamMember.setGamesPlayed(curNewTeam.getT4(), team.getWins() + team.getLosses() + team.getTies());
+            teamMember.setGamesPlayed(curNewTeam.getRace(), team.getWins() + team.getLosses() + team.getTies());
             teamMembers.add(teamMember);
         }
     }
@@ -594,7 +594,7 @@ public class AlternativeLadderService
             });
     }
 
-    private boolean isValidTeam(BlizzardProfileTeam team, int expectedMemberCount)
+    private boolean isValidTeam(BlizzardProfileTeam team, int expectedMemberCount, TeamFormat teamFormat)
     {
         /*
             empty teams are messing with the stats numbers
@@ -603,8 +603,10 @@ public class AlternativeLadderService
          */
         return team.getTeamMembers().length == expectedMemberCount
             //a team can have 0 games while a team member can have some games played, which is clearly invalid
-            && (team.getWins() > 0 || team.getLosses() > 0 || team.getTies() > 0);
-    }
+            && (team.getWins() > 0 || team.getLosses() > 0 || team.getTies() > 0)
+            //1v1 members *MUST* have a favorite race
+            && (teamFormat != TeamFormat._1V1 || team.getTeamMembers()[0].getFavoriteRace() != null);
+        }
 
     public void afterCurrentSeasonUpdate(Set<Integer> pendingSeasons)
     {

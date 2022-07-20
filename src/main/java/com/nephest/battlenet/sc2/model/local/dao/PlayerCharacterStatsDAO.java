@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -8,6 +8,13 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -19,9 +26,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.time.OffsetDateTime;
-import java.util.*;
 
 @Repository
 public class PlayerCharacterStatsDAO
@@ -86,12 +90,7 @@ public class PlayerCharacterStatsDAO
         + "WHERE player_character_stats.games_played<>excluded.games_played";
     public static final String CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE =
         CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
-        + "("
-            + "COALESCE(SUM(terran_games_played), 0) "
-            + "+ COALESCE(SUM(protoss_games_played), 0) "
-            + "+ COALESCE(SUM(zerg_games_played), 0) "
-            + "+ COALESCE(SUM(random_games_played), 0)"
-        + ") "
+        + "SUM(team.wins) + SUM(team.losses) + SUM(team.ties) "
         + "%2$s"
         + CALCULATE_PLAYER_CHARACTER_STATS_GROUP;
     public static final String CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_QUERY =

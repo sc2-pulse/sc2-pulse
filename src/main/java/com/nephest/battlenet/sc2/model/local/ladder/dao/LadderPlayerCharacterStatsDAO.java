@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -11,17 +11,16 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.EnumMap;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 @Repository
 public class LadderPlayerCharacterStatsDAO
@@ -88,12 +87,7 @@ public class LadderPlayerCharacterStatsDAO
             + "(  "
                 + "SELECT season, queue_type, team_type, NULL::integer AS race,  "
                 + "MAX(rating) AS rating,  "
-                + "("
-                    + "COALESCE(SUM(terran_games_played), 0) "
-                    + "+ COALESCE(SUM(protoss_games_played), 0) "
-                    + "+ COALESCE(SUM(zerg_games_played), 0) "
-                    + "+ COALESCE(SUM(random_games_played), 0)"
-                + ") AS games "
+                + "SUM(team.wins) + SUM(team.losses) + SUM(team.ties) AS games "
                 + "FROM team_member  "
                 + "INNER JOIN team ON team_member.team_id = team.id  "
                 + "WHERE player_character_id = :playerCharacterId "
