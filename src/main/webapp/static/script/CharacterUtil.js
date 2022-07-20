@@ -29,7 +29,7 @@ class CharacterUtil
 
     static updateCharacterModel(id)
     {
-        const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common" + CharacterUtil.getMatchTypePath();
+        const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common?matchType=" + CharacterUtil.getMatchTypePath(false);
         const characterPromise = Session.beforeRequest()
             .then(n=>fetch(request).then(Session.verifyJsonResponse));
         return characterPromise
@@ -80,11 +80,11 @@ class CharacterUtil
         return expanded;
     }
 
-    static getMatchTypePath()
+    static getMatchTypePath(path = true)
     {
         const type = localStorage.getItem("matches-type");
         if(type == null || type == "all") return "";
-        return "/" + type;
+        return path ? "/" + type : type;
     }
 
     static updateCharacterReportsModel()

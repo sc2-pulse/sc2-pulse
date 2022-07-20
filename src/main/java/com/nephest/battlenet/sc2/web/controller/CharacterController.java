@@ -99,15 +99,33 @@ public class CharacterController
         return searchService.suggestIfQuick(term, SEARCH_SUGGESTIONS_SIZE);
     }
 
-    @GetMapping
-    ({
-        "/{id}/common",
-        "/{id}/common/{types}"
-    })
+    @Hidden
+    @GetMapping("/{id}/common/{types}")
+    public CommonCharacter getCommonCharacterLegacy
+    (
+        @PathVariable("id") long id,
+        @PathVariable(name = "types") BaseMatch.MatchType[] types
+    )
+    {
+        if(types == null) types = new BaseMatch.MatchType[0];
+        return new CommonCharacter
+        (
+            ladderSearch.findCharacterTeams(id),
+            ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id),
+            ladderPlayerCharacterStatsDAO.findGlobalList(id),
+            ladderProPlayerDAO.getProPlayerByCharacterId(id),
+            ladderMatchDAO.findMatchesByCharacterId(
+                id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
+            ladderTeamStateDAO.find(id),
+            reportService.findReportsByCharacterId(id)
+        );
+    }
+
+    @GetMapping("/{id}/common")
     public CommonCharacter getCommonCharacter
     (
         @PathVariable("id") long id,
-        @PathVariable(name = "types", required = false) BaseMatch.MatchType[] types
+        @RequestParam(name = "matchType", required = false) BaseMatch.MatchType[] types
     )
     {
         if(types == null) types = new BaseMatch.MatchType[0];
