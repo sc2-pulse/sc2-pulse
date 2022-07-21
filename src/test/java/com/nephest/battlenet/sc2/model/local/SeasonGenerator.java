@@ -28,7 +28,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -199,7 +199,8 @@ public class SeasonGenerator
         boolean spreadRaces
     )
     {
-        OffsetDateTime seasonStart = season.getStart().atStartOfDay(ZoneId.of("UTC")).toOffsetDateTime();
+        ZoneOffset offset = OffsetDateTime.now().getOffset();
+        OffsetDateTime seasonStart = season.getStart().atStartOfDay(offset).toOffsetDateTime();
         League league = leagueDAO.create(new League(null, season.getId(), type, queueType, teamType));
         LeagueTier newTier = new LeagueTier
         (
