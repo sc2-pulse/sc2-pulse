@@ -26,10 +26,12 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -62,6 +64,9 @@ public class StandardDataReadonlyIT
 
     @Autowired
     private TeamDAO teamDAO;
+
+    @Autowired
+    private LadderTeamStateDAO ladderTeamStateDAO;
 
     @Autowired
     private BlizzardDAO blizzardDAO;
@@ -267,6 +272,19 @@ public class StandardDataReadonlyIT
             );
             assertEquals(TEAMS_PER_LEAGUE, state.getLeagueTeamCount());
         }
+    }
+
+    @Test
+    public void testFindTeamState()
+    {
+        ZoneOffset offset = OffsetDateTime.now().getOffset();
+        OffsetDateTime seasonStart =
+            SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay().atOffset(offset);
+
+        assertEquals(1, ladderTeamStateDAO.find(1L, null).size());
+        assertEquals(1, ladderTeamStateDAO.find(1L, seasonStart).size());
+        assertEquals(0, ladderTeamStateDAO.find(1L, seasonStart.plusSeconds(1)).size());
+
     }
 
 }

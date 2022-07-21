@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -43,8 +44,7 @@ public class LadderTeamStateDAO
         + "INNER JOIN division ON team_state.division_id = division.id "
         + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
         + "INNER JOIN league ON league_tier.league_id = league.id "
-        + "INNER JOIN season ON league.season_id = season.id "
-        + "ORDER BY team_state.timestamp ASC";
+        + "INNER JOIN season ON league.season_id = season.id ";
 
     private static final String FIND_BY_CHARACTER_ID_QUERY_TEMPLATE =
         "WITH team_filter AS "
@@ -66,9 +66,11 @@ public class LadderTeamStateDAO
     private static final String FIND_BY_LEGACY_ID =
         "WITH team_filter AS "
         + "(SELECT id, NULL AS \"race\" FROM team WHERE (team.queue_type, team.region, team.legacy_id) IN (:legacyUids) )"
-        + SELECT_QUERY_PART;
+        + SELECT_QUERY_PART
+        + "ORDER BY team_state.timestamp ASC ";
 
     private static String FIND_QUERY;
+    private static String FIND_FROM_QUERY;
 
     private static RowMapper<LadderTeamState> STD_ROW_MAPPER;
     private static ResultSetExtractor<List<LadderTeamState>> STD_EXTRACTOR;
@@ -101,7 +103,16 @@ public class LadderTeamStateDAO
 
     private static void initQueries(ConversionService conversionService)
     {
-        FIND_QUERY = String.format(FIND_BY_CHARACTER_ID_QUERY_TEMPLATE,
+        FIND_QUERY = String.format(FIND_BY_CHARACTER_ID_QUERY_TEMPLATE
+            + "ORDER BY team_state.timestamp ASC ",
+            "terran", conversionService.convert(Race.TERRAN, Integer.class),
+            "protoss", conversionService.convert(Race.PROTOSS, Integer.class),
+            "zerg", conversionService.convert(Race.ZERG, Integer.class),
+            "random", conversionService.convert(Race.RANDOM, Integer.class)
+        );
+        FIND_FROM_QUERY = String.format(FIND_BY_CHARACTER_ID_QUERY_TEMPLATE
+            + "WHERE (:from::timestamp with time zone IS NULL OR team_state.timestamp >= :from) "
+            + "ORDER BY team_state.timestamp ASC ",
             "terran", conversionService.convert(Race.TERRAN, Integer.class),
             "protoss", conversionService.convert(Race.PROTOSS, Integer.class),
             "zerg", conversionService.convert(Race.ZERG, Integer.class),
@@ -134,6 +145,14 @@ public class LadderTeamStateDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterId", characterId);
         return template.query(FIND_QUERY, params, getStdExtractor());
+    }
+
+    public List<LadderTeamState> find(Long characterId, OffsetDateTime from)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("playerCharacterId", characterId)
+            .addValue("from", from);
+        return template.query(FIND_FROM_QUERY, params, getStdExtractor());
     }
 
     public List<LadderTeamState> find(Set<TeamLegacyUid> ids)

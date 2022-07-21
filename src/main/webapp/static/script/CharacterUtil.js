@@ -29,7 +29,10 @@ class CharacterUtil
 
     static updateCharacterModel(id)
     {
-        const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common?matchType=" + CharacterUtil.getMatchTypePath(false);
+        const params = new URLSearchParams();
+        params.append("matchType", CharacterUtil.getMatchTypePath(false));
+        if(document.getElementById("mmr-depth").value) params.append("mmrHistoryDepth", document.getElementById("mmr-depth").value);
+        const request = ROOT_CONTEXT_PATH + "api/character/" + id + "/common?" + params.toString();
         const characterPromise = Session.beforeRequest()
             .then(n=>fetch(request).then(Session.verifyJsonResponse));
         return characterPromise
@@ -1095,7 +1098,7 @@ class CharacterUtil
     {
         const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
         if(prev != null)  window.clearTimeout(prev);
-        ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(CharacterUtil.updateCharacterMmrHistoryView, ElementUtil.INPUT_TIMEOUT));
+        ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(e=>CharacterUtil.updateCharacter(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)), ElementUtil.INPUT_TIMEOUT));
     }
 
     static enhanceMatchTypeInput()

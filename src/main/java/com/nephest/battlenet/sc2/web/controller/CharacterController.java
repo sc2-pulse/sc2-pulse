@@ -125,10 +125,12 @@ public class CharacterController
     public CommonCharacter getCommonCharacter
     (
         @PathVariable("id") long id,
-        @RequestParam(name = "matchType", required = false) BaseMatch.MatchType[] types
+        @RequestParam(name = "matchType", required = false) BaseMatch.MatchType[] types,
+        @RequestParam(name = "mmrHistoryDepth", required = false) Integer depth
     )
     {
         if(types == null) types = new BaseMatch.MatchType[0];
+        OffsetDateTime from = depth == null ? null : OffsetDateTime.now().minusDays(depth);
         return new CommonCharacter
         (
             ladderSearch.findCharacterTeams(id),
@@ -137,7 +139,7 @@ public class CharacterController
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
             ladderMatchDAO.findMatchesByCharacterId(
                 id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
-            ladderTeamStateDAO.find(id),
+            ladderTeamStateDAO.find(id, from),
             reportService.findReportsByCharacterId(id)
         );
     }
