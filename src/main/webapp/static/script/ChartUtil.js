@@ -987,6 +987,19 @@ class ChartUtil
             localStorage.setItem("chart-tooltip-position", "average");
     }
 
+    static setCustomConfigOption(chartable, name, value)
+    {
+        const chart = ChartUtil.CHARTS.get(chartable);
+        if(chart)
+        {
+            chart.customConfig[name] = value;
+        }
+        else
+        {
+            document.getElementById(chartable).setAttribute(name, value);
+        }
+    }
+
 }
 
 ChartUtil.CHARTS = new Map();
