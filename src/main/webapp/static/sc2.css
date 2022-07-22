@@ -357,7 +357,7 @@ th.hoverable span
     margin-bottom: 0;
 }
 
-.chartjs-tooltip .table td:nth-child(2)
+.chartjs-tooltip[data-layout="horizontal"] .table td:nth-child(2)
 {
     text-align: left;
 }
@@ -377,6 +377,7 @@ th.hoverable span
     height: 1em;
     width: 1em;
     border-radius: 1em;
+    margin: auto;
 }
 
 .tooltip-mmr-rank

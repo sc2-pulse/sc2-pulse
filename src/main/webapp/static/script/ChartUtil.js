@@ -398,8 +398,8 @@ class ChartUtil
             tooltipEl.style.opacity = 0;
             return;
         }
-        ChartUtil.injectTooltipTableHeaders(tooltipEl, tooltipModel);
-        ChartUtil.injectTooltipTableData(tooltipEl, tooltipModel);
+        ChartUtil.injectTooltipTableHeaders(tooltipEl, tooltipModel, context);
+        ChartUtil.injectTooltipTableData(tooltipEl, tooltipModel, context);
         ChartUtil.setTooltipPosition(tooltipEl, tooltipModel, context, position);
     }
 
@@ -426,24 +426,45 @@ class ChartUtil
         return tooltipEl;
     }
 
-    static injectTooltipTableHeaders(tooltipEl, tooltipModel)
+    static injectTooltipTableHeaders(tooltipEl, tooltipModel, context)
     {
         const theads = tooltipEl.querySelectorAll(":scope table thead");
+        const layout = theads.length > 1 ? "horizontal" : ChartUtil.getTooltipLayout(context);
+        tooltipEl.setAttribute("data-layout", layout);
         for(const thead of theads)
         {
             ElementUtil.removeChildren(thead);
-            if(tooltipModel.beforeBody && tooltipModel.beforeBody.length > 0)
+            if(layout == "horizontal")
             {
-                const thr = thead.insertRow();
-                TableUtil.createRowTh(thr).textContent = "L";
-                for(const header of tooltipModel.beforeBody) TableUtil.createRowTh(thr).textContent = header;
+                if(tooltipModel.beforeBody && tooltipModel.beforeBody.length > 0)
+                {
+                    const thr = thead.insertRow();
+                    TableUtil.createRowTh(thr).textContent = "L";
+                    for(const header of tooltipModel.beforeBody) TableUtil.createRowTh(thr).textContent = header;
+                }
+            }
+            else
+            {
+                if(tooltipModel.body)
+                {
+                    const thr = thead.insertRow();
+                    const bodyLines = tooltipModel.body.map(bodyItem=>bodyItem.lines);
+                    if(tooltipModel.beforeBody && bodyLines[0].length == tooltipModel.beforeBody.length)
+                        TableUtil.createRowTh(thr).textContent = "L";
+                    for(let i = 0; i < bodyLines.length; i++)
+                    {
+                        const legendColor = TableUtil.createRowTh(thr);
+                        ChartUtil.setLegendItem(legendColor, tooltipModel, i);
+                    }
+                }
             }
         }
     }
 
-    static injectTooltipTableData(tooltipEl, tooltipModel)
+    static injectTooltipTableData(tooltipEl, tooltipModel, context)
     {
         const tbodies = tooltipEl.querySelectorAll(":scope table tbody");
+        const layout = tbodies.length > 1 ? "horizontal" : ChartUtil.getTooltipLayout(context);
         tbodies.forEach(tbody=>ElementUtil.removeChildren(tbody));
         if (tooltipModel.body)
         {
@@ -452,33 +473,85 @@ class ChartUtil
 
             titleLines.forEach(title=>tooltipEl.querySelector(":scope h2").textContent = title);
 
-            const linesPerTable = bodyLines.length / tbodies.length;
-            bodyLines.forEach((body, i)=>{
-                const tbody = tbodies[Math.floor(i / linesPerTable)];
-                const row = tbody.insertRow();
-                const legendColor = row.insertCell();
-                const colorObj = tooltipModel.labelColors[i];
-                const color = colorObj.borderColor
-                    ? colorObj.borderColor
-                    : colorObj.backgroundColor;
-                legendColor.innerHTML ='<div class="legend-color" style="background-color: ' + color + ';"></div>';
-                const image = SC2Restful.IMAGES.get(body[0]);
+            if(layout == "horizontal")
+            {
+                ChartUtil.appendHorizontalTooltipData(tooltipModel, tbodies, bodyLines);
+            }
+            else
+            {
+                ChartUtil.appendVerticalTooltipData(tooltipModel, tbodies, bodyLines);
+            }
+        }
+    }
+
+    static getTooltipLayout(context)
+    {
+        const group = context.chart.customConfig.group;
+        const defaultConfig = ChartUtil.DEFAULT_GROUP_CONFIG.get(group);
+        const defaultValue = defaultConfig ? defaultConfig.tooltipLayout : "horizontal";
+        return localStorage.getItem("chart-" + group +"-tooltip-layout") || defaultValue;
+    }
+
+    static setLegendItem(parent, tooltipModel, i)
+    {
+        const colorObj = tooltipModel.labelColors[i];
+        const color = colorObj.borderColor
+            ? colorObj.borderColor
+            : colorObj.backgroundColor;
+        parent.innerHTML ='<div class="legend-color" style="background-color: ' + color + ';"></div>';
+    }
+
+    static appendHorizontalTooltipData(tooltipModel, tbodies, bodyLines)
+    {
+        const linesPerTable = bodyLines.length / tbodies.length;
+        bodyLines.forEach((body, i)=>{
+            const tbody = tbodies[Math.floor(i / linesPerTable)];
+            const row = tbody.insertRow();
+            const legendColor = row.insertCell();
+            const colorObj = tooltipModel.labelColors[i];
+            const color = colorObj.borderColor
+                ? colorObj.borderColor
+                : colorObj.backgroundColor;
+            legendColor.innerHTML ='<div class="legend-color" style="background-color: ' + color + ';"></div>';
+            const image = SC2Restful.IMAGES.get(body[0]);
+            if(image) {
+                const cell = row.insertCell();
+                cell.classList.add("text-center");
+                cell.appendChild(image.cloneNode());
+            } else {
+                row.insertCell().textContent = body[0];
+            }
+            for(let i = 1; i < body.length; i++) {
+                const l = body[i];
+                if(l.nodeType) {
+                    row.insertCell().appendChild(l);
+                } else {
+                    row.insertCell().textContent = l;
+                }
+            }
+        });
+    }
+
+    static appendVerticalTooltipData(tooltipModel, tbodies, bodyLines)
+    {
+        const tbody = tbodies[0];
+        for(let i = 0; i < bodyLines[0].length; i++) {
+            const row = tbody.insertRow();
+            if(tooltipModel.beforeBody && tooltipModel.beforeBody.length > 0)
+                TableUtil.createRowTh(row).textContent = tooltipModel.beforeBody[i];
+            for(let body of bodyLines) {
+                const l = body[i];
+                const image = SC2Restful.IMAGES.get(l);
                 if(image) {
                     const cell = row.insertCell();
                     cell.classList.add("text-center");
                     cell.appendChild(image.cloneNode());
+                } else if(l.nodeType) {
+                    row.insertCell().appendChild(l);
                 } else {
-                    row.insertCell().textContent = body[0];
+                    row.insertCell().textContent = l;
                 }
-                for(let i = 1; i < body.length; i++) {
-                    const l = body[i];
-                    if(l.nodeType) {
-                        row.insertCell().appendChild(l);
-                    } else {
-                        row.insertCell().textContent = l;
-                    }
-                }
-            });
+            }
         }
     }
 
@@ -1028,6 +1101,9 @@ ChartUtil.ASPECT_RATIO = 2.5;
 ChartUtil.LOW_HEIGHT_REM = 8.5;
 ChartUtil.MEDIUM_HEIGHT_REM = 13.8;
 ChartUtil.HIGH_HEIGHT_REM = 17.1;
+ChartUtil.DEFAULT_GROUP_CONFIG = new Map([
+    ["mmr", {tooltipLayout: "vertical"}]
+]);
 
 class ChartLineVCursor extends Chart.LineController
 {
