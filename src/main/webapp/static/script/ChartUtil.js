@@ -11,6 +11,7 @@ class ChartUtil
     {
         const config = {};
         config["type"] = chartable.getAttribute("data-chart-type");
+        config["group"] = chartable.getAttribute("data-chart-group") || "global";
         config["stacked"] = chartable.getAttribute("data-chart-stacked");
         config["maintainAspectRatio"] = chartable.getAttribute("data-chart-maintain-aspect-ratio");
         config["title"] = chartable.getAttribute("data-chart-title");
