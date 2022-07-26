@@ -606,8 +606,8 @@ class ChartUtil
         }
         if(left < 0) left = 0;
         if(left > canvasRect.width - width) left = canvasRect.width - width;
-        if(yAlign != "bottom" && caretY - height < 0) top = 0;
-        if(yAlign != "top" && top + height > canvasRect.height) top = canvasRect.height - height;
+        if(yAlign != "bottom" && caretY - height - space < 0) top = positionY;
+        if(yAlign != "top" && caretY + height + space > canvasRect.height) top = (positionY + canvasRect.height) - height;
 
         tooltipEl.style.top = `${top}px`;
         tooltipEl.style.left = `${left}px`;
