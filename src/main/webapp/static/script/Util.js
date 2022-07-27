@@ -319,6 +319,12 @@ class Util
         );
     }
 
+    static rectContains(rect, x, y)
+    {
+        return rect.x <= x && x <= rect.x + rect.width
+            && rect.y <= y && y <= rect.y + rect.height;
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
