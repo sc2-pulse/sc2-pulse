@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
@@ -16,7 +16,7 @@ extends BaseTeam
         in a very rare occasion some of the values could be null.
         defaulting to zeros in this case
     */
-    public BlizzardBaseTeam(){super(0L, 0, 0, 0, 0);}
+    public BlizzardBaseTeam(){super(null, 0, 0, 0, 0);}
 
     public BlizzardBaseTeam
     (
@@ -38,11 +38,11 @@ extends BaseTeam
     }
 
     //Blizzard can return unobtainable values here(cheaters?).
-    //Reducing them to zero to avoid ladder pollution
+    //Nullifying them to avoid ladder pollution
     @Override
     public void setRating(Long rating)
     {
-        if(rating == null || rating > RATING_MAX) rating = 0L;
+        if(rating != null && rating > RATING_MAX) rating = null;
         super.setRating(rating);
     }
 
