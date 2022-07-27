@@ -516,7 +516,8 @@ public class AlternativeLadderService
         }
 
         TeamMember member = new TeamMember(team.getId(), playerCharacter.getId(), null, null, null, null);
-        member.setGamesPlayed(bMember.getFavoriteRace(), bTeam.getWins() + bTeam.getLosses());
+        if(bMember.getFavoriteRace() != null)
+            member.setGamesPlayed(bMember.getFavoriteRace(), bTeam.getWins() + bTeam.getLosses());
         members.add(member);
     }
 
@@ -554,7 +555,8 @@ public class AlternativeLadderService
 
             Team team = curNewTeam.getTeam();
             TeamMember teamMember = new TeamMember(team.getId(), character.getId(), null, null, null, null);
-            teamMember.setGamesPlayed(curNewTeam.getRace(), team.getWins() + team.getLosses() + team.getTies());
+            if(curNewTeam.getRace() != null)
+                teamMember.setGamesPlayed(curNewTeam.getRace(), team.getWins() + team.getLosses() + team.getTies());
             teamMembers.add(teamMember);
         }
     }
