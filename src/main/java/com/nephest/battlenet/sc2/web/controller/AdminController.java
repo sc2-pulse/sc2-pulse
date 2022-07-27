@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.config.Cron;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
@@ -11,6 +12,7 @@ import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.SupporterService;
 import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -37,6 +39,10 @@ public class AdminController
 
     @Autowired
     private SupporterService supporterService;
+
+    //lazy for tests
+    @Autowired @Lazy
+    private Cron cron;
 
     @PostMapping("/alternative/forced/{region}")
     public void addForcedAlternativeRegion(@PathVariable("region") Region region)
@@ -128,6 +134,12 @@ public class AdminController
     {
         supporterService.getDonorsVar().getValue().remove(name);
         supporterService.getDonorsVar().save();
+    }
+
+    @PostMapping("/update/ladder/{update}")
+    public void setUpdateLadder(@PathVariable("update") Boolean updateLadder)
+    {
+        cron.setShouldUpdateLadder(updateLadder);
     }
 
 }

@@ -73,6 +73,7 @@ public class Cron
     private InstantVar matchInstant;
     private InstantVar mapStatsInstant;
     private UpdateContext matchUpdateContext;
+    private boolean updateLadder = true;
 
     @Autowired
     private BlizzardSC2API sc2API;
@@ -195,7 +196,8 @@ public class Cron
     private void nonStopUpdate()
     {
         if(!shouldUpdate()) {
-            LOG.info("Can't update the ladder because request cap is reached");
+            LOG.info("Can't update the ladder because request cap is reached "
+                + "or updateLadder flag is set to false");
             return;
         }
 
@@ -332,7 +334,12 @@ public class Cron
 
     private boolean shouldUpdate()
     {
-        return sc2API.requestCapNotReached();
+        return updateLadder && sc2API.requestCapNotReached();
+    }
+
+    public void setShouldUpdateLadder(boolean updateLadder)
+    {
+        this.updateLadder = updateLadder;
     }
 
     private void commenceMaintenance()
