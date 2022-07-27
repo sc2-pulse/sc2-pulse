@@ -589,7 +589,35 @@ class ChartUtil
         const yAlign = localStorage.getItem("chart-tooltip-y-align") == "auto"
             ? isTop ? "top" : "bottom"
             : localStorage.getItem("chart-tooltip-y-align") || "top";
+        const tooltipPosition = localStorage.getItem("chart-tooltip-position")
+            || Util.isMobile() ? "average" : "dataXCursorY";
 
+        const calculatedPosition = ChartUtil.calculateTooltipPosition(xAlign, yAlign, width, height, space, canvasRect, caretY, positionY, left, top);
+        left = calculatedPosition[0];
+        top = calculatedPosition[1];
+        tooltipEl.style.top = `${top}px`;
+        tooltipEl.style.left = `${left}px`;
+
+        //make sure that cursor is visible
+        const tooltipRect = tooltipEl.getBoundingClientRect();
+        if((tooltipPosition.includes("data") || tooltipPosition == "average")
+            && Util.rectContains(tooltipRect, canvasRect.x + caretX, canvasRect.y + caretY)) {
+                const calculatedPosition2 = ChartUtil.calculateTooltipPosition(
+                isLeft ? "right" : "left",
+                isTop ? "bottom" : "top",
+                width, height, space,
+                canvasRect, caretY, positionY,
+                positionX + caretX - width / 2, positionY + caretY - height
+            );
+            left = calculatedPosition2[0];
+            top = calculatedPosition2[1];
+            tooltipEl.style.top = `${top}px`;
+            tooltipEl.style.left = `${left}px`;
+        }
+    }
+
+    static calculateTooltipPosition(xAlign, yAlign, width, height, space, canvasRect, caretY, positionY, left, top)
+    {
         if (yAlign === "bottom") {
           top += height + space;
         } else if (yAlign === "center") {
@@ -608,9 +636,7 @@ class ChartUtil
         if(left > canvasRect.width - width) left = canvasRect.width - width;
         if(yAlign != "bottom" && caretY - height - space < 0) top = positionY;
         if(yAlign != "top" && caretY + height + space > canvasRect.height) top = (positionY + canvasRect.height) - height;
-
-        tooltipEl.style.top = `${top}px`;
-        tooltipEl.style.left = `${left}px`;
+        return [left, top];
     }
 
     static decorateChartData(data, config)
