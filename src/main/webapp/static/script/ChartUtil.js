@@ -585,10 +585,10 @@ class ChartUtil
 
         const xAlign = localStorage.getItem("chart-tooltip-x-align") == "auto"
             ? isLeft ? "right" : "left"
-            : localStorage.getItem("chart-tooltip-x-align") || "center"
+            : localStorage.getItem("chart-tooltip-x-align") || "left"
         const yAlign = localStorage.getItem("chart-tooltip-y-align") == "auto"
             ? isTop ? "top" : "bottom"
-            : localStorage.getItem("chart-tooltip-y-align") || "top";
+            : localStorage.getItem("chart-tooltip-y-align") || "bottom";
         const tooltipPosition = localStorage.getItem("chart-tooltip-position")
             || Util.isMobile() ? "average" : "dataXCursorY";
 
