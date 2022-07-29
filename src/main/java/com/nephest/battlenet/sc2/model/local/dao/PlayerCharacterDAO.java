@@ -355,6 +355,11 @@ public class PlayerCharacterDAO
         + "ORDER BY MAX(rating_max) DESC "
         + "LIMIT :limit";
 
+    private static final String FIND_BY_IDS =
+        "SELECT " + STD_SELECT
+        + "FROM player_character "
+        + "WHERE id IN(:ids)";
+
     private static final String COUNT_BY_UPDATED_MAX =
         "SELECT COUNT(*) FROM player_character WHERE updated <= :updatedMax";
 
@@ -564,6 +569,15 @@ public class PlayerCharacterDAO
             .addValue("idMax", idMax)
             .addValue("limit", limit);
         return template.query(FIND_BY_UPDATED_AND_ID_MAX_EXCLUDED, params, getStdRowMapper());
+    }
+
+    public List<PlayerCharacter> find(Long... ids)
+    {
+        if(ids.length == 0) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("ids", List.of(ids));
+        return template.query(FIND_BY_IDS, params, getStdRowMapper());
     }
 
     public int countByUpdatedMax(OffsetDateTime updatedMax)

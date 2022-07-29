@@ -5,7 +5,9 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
@@ -25,8 +27,10 @@ import com.nephest.battlenet.sc2.web.service.SearchService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -41,10 +45,14 @@ public class CharacterController
 
     public static final int SUMMARY_DEPTH_MAX = 120;
     public static final int SUMMARY_IDS_MAX = 50;
+    public static final int PLAYER_CHARACTERS_MAX = 100;
     public static final int SEARCH_SUGGESTIONS_SIZE = 10;
 
     @Autowired
     private LadderSearchDAO ladderSearch;
+
+    @Autowired
+    private PlayerCharacterDAO playerCharacterDAO;
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
@@ -97,6 +105,15 @@ public class CharacterController
     public List<String> suggest(@RequestParam("term") String term)
     {
         return searchService.suggestIfQuick(term, SEARCH_SUGGESTIONS_SIZE);
+    }
+
+    @GetMapping("/{ids}")
+    public ResponseEntity<List<PlayerCharacter>> getPlayerCharacters(@PathVariable("ids") Long[] ids)
+    {
+        if(ids.length > PLAYER_CHARACTERS_MAX)
+            return ResponseEntity.badRequest().build();
+
+        return ResponseEntity.of(Optional.of(playerCharacterDAO.find(ids)));
     }
 
     @Hidden
