@@ -458,6 +458,11 @@ th.hoverable span
     background-image: url("icon/misc/cross.svg");
 }
 
+.clipboard-img
+{
+    background-image: url("icon/misc/clipboard.svg");
+}
+
 .team-buffer-toggle.add
 {
     background-image: url("icon/misc/plus.svg");
