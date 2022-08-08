@@ -171,6 +171,11 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     border-right: solid 2px;
 }
 
+.gap-1
+{
+    gap: 1em;
+}
+
 #status-generating-fullscreen
 {
     left: 0;
