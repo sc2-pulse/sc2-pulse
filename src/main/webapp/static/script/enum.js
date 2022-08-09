@@ -11,10 +11,10 @@ const REGION = Object.freeze
 
 const RACE = Object.freeze
 ({
-    TERRAN: {name: "terran", order: 1},
-    PROTOSS: {name: "protoss", order: 2},
-    ZERG: {name: "zerg", order: 3},
-    RANDOM: {name: "random", order: 4}
+    TERRAN: {code: 1, name: "terran", order: 1},
+    PROTOSS: {code: 2, name: "protoss", order: 2},
+    ZERG: {code: 3, name: "zerg", order: 3},
+    RANDOM: {code: 4, name: "random", order: 4}
 });
 
 const LEAGUE = Object.freeze
