@@ -9,8 +9,10 @@ package com.nephest.battlenet.sc2.selenium;
 
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
+import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOf;
 import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOfElementLocated;
 import static org.openqa.selenium.support.ui.ExpectedConditions.presenceOfElementLocated;
+import static org.openqa.selenium.support.ui.ExpectedConditions.visibilityOf;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
@@ -263,9 +265,11 @@ public class GeneralSeleniumIT
     {
         clickAndWait(driver, wait, "#stats-tab", "#stats.show.active");
         clickAndWait(driver, wait, "#ladder-tab", "#ladder-top.show.active");
+        clickAndWait(driver, wait, "#form-ladder button[type=\"submit\"]", "tr[data-team-id]");
         driver.findElements(By.cssSelector("#ladder .team-buffer-toggle")).stream()
             .limit(3)
-            .forEach(WebElement::click);
+            .forEach(e->waitToBeClickableAndClick(wait, e));
+        clickDropdowns(driver, wait, "#team-buffer");
         WebElement teamBufferCollapse = driver.findElement(By.cssSelector("#team-buffer-collapse"));
         teamBufferCollapse.click();
         teamBufferCollapse.click();
@@ -313,9 +317,14 @@ public class GeneralSeleniumIT
     public static void clickAndWait(WebDriver driver, WebDriverWait wait, String clickSelector, String waitSelector)
     {
         WebElement e = driver.findElement(By.cssSelector(clickSelector));
-        wait.until(elementToBeClickable(e));
-        e.click();
+        waitToBeClickableAndClick(wait, e);
         wait.until(presenceOfElementLocated(By.cssSelector(waitSelector)));
+    }
+
+    public static void waitToBeClickableAndClick(WebDriverWait wait, WebElement element)
+    {
+        wait.until(elementToBeClickable(element));
+        element.click();
     }
 
     public static void getAndWait(WebDriver driver, WebDriverWait wait, String url, String waitSelector)
@@ -392,6 +401,24 @@ public class GeneralSeleniumIT
             wait.until(presenceOfElementLocated(By.cssSelector(".popover.show")));
             nonPopoverElement.click();
             wait.until(invisibilityOfElementLocated(By.cssSelector(".popover.show")));
+        }
+    }
+
+    public static void clickDropdowns
+    (WebDriver driver, WebDriverWait wait, String containerSelector)
+    {
+        for(WebElement dropdown : driver.findElements(By.cssSelector(containerSelector + " [data-toggle=\"dropdown\"]")))
+        {
+            String id = dropdown.getAttribute("id");
+            WebElement menu = driver.findElement(
+                By.cssSelector(".dropdown-menu[aria" + "-labelledby=\"" + id + "\"]"));
+            for (WebElement menuItem : menu.findElements(By.cssSelector(".dropdown-item")))
+            {
+                dropdown.click();
+                wait.until(visibilityOf(menu));
+                menuItem.click();
+                wait.until(invisibilityOf(menu));
+            }
         }
     }
 

@@ -571,6 +571,16 @@ th.hoverable span
     border-bottom: .3em solid;
 }
 
+.dropdown-toggle-no-symbol::after
+{
+    display: none !important;
+}
+
+.vertical-align-initial
+{
+    vertical-align: initial !important;
+}
+
 .social-media img
 {
   height: 2em;
@@ -828,11 +838,17 @@ body.theme-dark .popover-body
     color: #d3d3d3;
 }
 
-body :fullscreen, body #team-buffer
+body :fullscreen
 {
     background-color: white;
     overflow-y: auto;
     overflow-x: hidden;
+}
+
+body #team-buffer
+{
+    background-color: white;
+    padding-bottom: 0.0001rem;
 }
 
 body.theme-dark :fullscreen, body.theme-dark #team-buffer

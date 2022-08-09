@@ -20,6 +20,7 @@ class BufferUtil
         }
         BufferUtil.updateTeamMmrLink();
         BufferUtil.updateVersusLink();
+        BufferUtil.updateCopyLink();
     }
 
     static updateTeamMmrLink()
@@ -54,10 +55,67 @@ class BufferUtil
         }
     }
 
+    static updateCopyLink()
+    {
+        const teamActions = document.querySelectorAll("#team-buffer .action-team");
+        if(BufferUtil.teamBuffer.buffer.size > 0) {
+            teamActions.forEach(a=>a.classList.remove("disabled"));
+        } else {
+            teamActions.forEach(a=>a.classList.add("disabled"));
+        }
+    }
+
+    static copyCharacterId(evt)
+    {
+        evt.preventDefault();
+        const str = Array.from(BufferUtil.teamBuffer.buffer.values())
+            .flatMap(t=>t.members)
+            .map(m=>m.character.id)
+            .join(",");
+        return navigator.clipboard.writeText(str);
+    }
+
+    static copyClanId(evt)
+    {
+        evt.preventDefault();
+        const teamClanIds = Array.from(BufferUtil.teamBuffer.buffer.values())
+            .flatMap(t=>t.members)
+            .map(m=>m.character.clanId)
+            .filter(c=>c);
+        const clanIds = Array.from(BufferUtil.clanBuffer.buffer.values())
+            .map(c=>c.id);
+        const str = teamClanIds.concat(clanIds)
+            .join(",");
+        return navigator.clipboard.writeText(str);
+    }
+
+    static copyLegacyId(evt)
+    {
+        evt.preventDefault();
+        const str = Array.from(BufferUtil.teamBuffer.buffer.values())
+            .map(t=>t.legacyId)
+            .join(",");
+        return navigator.clipboard.writeText(str);
+    }
+
+    static copyCharacterRaceId(evt)
+    {
+        evt.preventDefault();
+        const str = Array.from(BufferUtil.teamBuffer.buffer.values())
+            .flatMap(t=>t.members)
+            .map(m=>m.character.id + "" + TeamUtil.getFavoriteRace(m).code)
+            .join(",");
+        return navigator.clipboard.writeText(str);
+    }
+
     static enhance()
     {
         document.querySelector("#team-buffer-clear").addEventListener("click", BufferUtil.clear);
         document.querySelector("#team-buffer-versus").addEventListener("click", VersusUtil.onVersusLinkClick);
+        document.querySelector("#team-buffer-copy-character-id").addEventListener("click", BufferUtil.copyCharacterId);
+        document.querySelector("#team-buffer-copy-legacy-id").addEventListener("click", BufferUtil.copyLegacyId);
+        document.querySelector("#team-buffer-copy-character-race-id").addEventListener("click", BufferUtil.copyCharacterRaceId);
+        document.querySelector("#team-buffer-copy-clan-id").addEventListener("click", BufferUtil.copyClanId);
     }
 
     static createToggleElement(buf, item)

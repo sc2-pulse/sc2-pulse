@@ -403,6 +403,21 @@
                 Buffer(<span id="team-buffer-count"></span> teams, <span id="team-buffer-clan-count"></span> clans)
             </a>
             <span class="d-flex gap-1">
+                <div class="dropup">
+                     <span id="team-buffer-copy"
+                           class="table-image table-image-square vertical-align-initial background-cover clipboard-img d-inline-block dropdown-toggle dropdown-toggle-no-symbol"
+                           role="button"
+                           title="Copy to clipboard"
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false" data-boundary="body">
+                        <span class="sr-only">Copy to clipboard</span>
+                    </span>
+                    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="team-buffer-copy">
+                        <a id="team-buffer-copy-character-id" class="dropdown-item action-team" href="#">characterId</a>
+                        <a id="team-buffer-copy-legacy-id" class="dropdown-item action-team" href="#">legacyId</a>
+                        <a id="team-buffer-copy-character-race-id" class="dropdown-item action-team" href="#">raceId</a>
+                        <a id="team-buffer-copy-clan-id" class="dropdown-item" href="#">clanId</a>
+                    </div>
+                </div>
                 <a id="team-buffer-versus" href="#" rel="noopener" target="_blank" class="font-weight-bold d-inline-block" role="button">
                     VS
                 </a>
