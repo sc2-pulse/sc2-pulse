@@ -696,7 +696,7 @@ body.theme-dark .page-item.disabled:not(.active) .page-link
     border-radius: 0;
 }
 
-body.theme-dark a:not(.btn):not(.nav-link):not(.page-link)
+body.theme-dark a:not(.btn):not(.nav-link):not(.page-link):not(.disabled)
 {
     color: #00b0f4;
 }
