@@ -74,9 +74,7 @@ implements RememberMeServices, LogoutHandler
     public void loginSuccess
     (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication)
     {
-        CookieAwareHttpServletResponse cookieResponse = new CookieAwareHttpServletResponse(httpServletResponse);
-        persistentTokenBasedRememberMeServices.loginSuccess(httpServletRequest, cookieResponse, authentication);
-        cacheAuthentication(cookieResponse, authentication);
+        persistentTokenBasedRememberMeServices.loginSuccess(httpServletRequest, httpServletResponse, authentication);
     }
 
     @Override

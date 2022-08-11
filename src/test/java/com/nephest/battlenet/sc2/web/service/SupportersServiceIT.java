@@ -104,4 +104,16 @@ public class SupportersServiceIT
         assertFalse(supporterService.getDonors().contains("don1"));
     }
 
+    @Test
+    @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER})
+    public void testDonorsSecurity() throws Exception
+    {
+        mvc.perform
+        (
+            post("/admin/supporters/donor/{name}", "don1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        ).andExpect(status().isForbidden());
+    }
+
 }

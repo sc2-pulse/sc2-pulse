@@ -75,6 +75,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -108,7 +109,7 @@ public class StatsService
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
     public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofDays(7);
 
-    @Autowired
+    @Autowired @Lazy
     private StatsService statsService;
 
     private final Set<Region> alternativeRegions = new HashSet<>();

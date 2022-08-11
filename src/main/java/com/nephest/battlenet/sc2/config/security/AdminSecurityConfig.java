@@ -8,7 +8,6 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
@@ -16,7 +15,6 @@ import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
@@ -37,7 +35,7 @@ extends WebSecurityConfigurerAdapter
     throws Exception
     {
         http
-            .antMatcher("/sba/**")
+            .mvcMatcher("/sba/**")
             .csrf()
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .ignoringRequestMatchers
@@ -47,9 +45,9 @@ extends WebSecurityConfigurerAdapter
                     new AntPathRequestMatcher("/sba/actuator/**")
                 )
             .and().authorizeRequests()
-                .antMatchers("/sba/instances/**/loggers").hasRole(SC2PulseAuthority.ADMIN.getName())
-                .antMatchers("/sba/actuator/**").hasRole(SC2PulseAuthority.ACTUATOR.getName())
-                .antMatchers("/sba/**").hasRole(SC2PulseAuthority.SERVER_WATCHER.getName())
+                .mvcMatchers("/sba/instances/*/actuator/loggers").hasRole(SC2PulseAuthority.ADMIN.getName())
+                .mvcMatchers("/sba/actuator/**").hasRole(SC2PulseAuthority.ACTUATOR.getName())
+                .mvcMatchers("/sba/**").hasRole(SC2PulseAuthority.SERVER_WATCHER.getName())
                 .anyRequest().denyAll()
             .and().httpBasic(withDefaults());
     }
@@ -58,22 +56,18 @@ extends WebSecurityConfigurerAdapter
     public void configureGlobal
     (
         AuthenticationManagerBuilder auth,
+        PasswordEncoder passwordEncoder,
         @Value("${spring.boot.admin.client.username:}") String name,
         @Value("${spring.boot.admin.client.password:}") String password
     ) throws Exception
     {
         auth.inMemoryAuthentication()
-            .withUser(name).password(passwordEncoder().encode(password))
+            .withUser(name).password(passwordEncoder.encode(password))
             .authorities
             (
                 SC2PulseAuthority.SERVER_WATCHER.getRoleName(),
                 SC2PulseAuthority.ACTUATOR.getRoleName()
             );
-    }
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
     }
 
 }

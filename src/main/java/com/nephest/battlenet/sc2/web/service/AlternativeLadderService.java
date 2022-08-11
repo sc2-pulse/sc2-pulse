@@ -66,6 +66,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
@@ -108,7 +109,7 @@ public class AlternativeLadderService
 
     private final ConcurrentLinkedQueue<Long> pendingTeams = new ConcurrentLinkedQueue<>();
 
-    @Autowired
+    @Autowired @Lazy
     private AlternativeLadderService alternativeLadderService;
 
     private final BlizzardSC2API api;
