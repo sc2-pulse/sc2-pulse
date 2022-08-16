@@ -7,10 +7,16 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.nephest.battlenet.sc2.config.convert.jackson.ArrayToLadderTeamStateArrayListDeserializer;
 import com.nephest.battlenet.sc2.config.convert.jackson.LadderTeamStateCollectionToArraySerializer;
-import com.nephest.battlenet.sc2.model.local.ladder.*;
-
-import javax.validation.constraints.NotNull;
+import com.nephest.battlenet.sc2.model.discord.DiscordIdentity;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import java.util.List;
+import javax.validation.constraints.NotNull;
 
 public class CommonCharacter
 {
@@ -26,7 +32,9 @@ public class CommonCharacter
 
     private LadderProPlayer proPlayer;
 
-    private final List<LadderMatch> matches;
+    private DiscordIdentity discordUser;
+
+    private List<LadderMatch> matches;
 
     @JsonSerialize(using = LadderTeamStateCollectionToArraySerializer.class)
     @JsonDeserialize(using = ArrayToLadderTeamStateArrayListDeserializer.class)
@@ -45,6 +53,7 @@ public class CommonCharacter
         @NotNull List<LadderDistinctCharacter> linkedDistinctCharacters,
         @NotNull List<LadderPlayerCharacterStats> stats,
         LadderProPlayer proPlayer,
+        DiscordIdentity discordUser,
         List<LadderMatch> matches,
         List<LadderTeamState> history,
         List<LadderPlayerCharacterReport> reports
@@ -54,6 +63,7 @@ public class CommonCharacter
         this.linkedDistinctCharacters = linkedDistinctCharacters;
         this.stats = stats;
         this.proPlayer = proPlayer;
+        this.discordUser = discordUser;
         this.matches = matches;
         this.history = history;
         this.reports = reports;
@@ -97,6 +107,16 @@ public class CommonCharacter
     public void setProPlayer(LadderProPlayer proPlayer)
     {
         this.proPlayer = proPlayer;
+    }
+
+    public DiscordIdentity getDiscordUser()
+    {
+        return discordUser;
+    }
+
+    public void setDiscordUser(DiscordIdentity discordUser)
+    {
+        this.discordUser = discordUser;
     }
 
     public List<LadderMatch> getMatches()

@@ -374,5 +374,53 @@ class PersonalUtil
                 document.querySelector("#account-additional-info").appendChild(adminLink);
             }
         }
+        PersonalUtil.updateAccountConnections(data);
+    }
+
+    static updateAccountConnections(data)
+    {
+        const table = document.querySelector("#account-linked-accounts-table");
+        if(!table) return;
+
+        table.querySelectorAll(".dynamic").forEach(ElementUtil.removeChildren);
+        const section = document.querySelector("#account-linked-accounts");
+        if(!data.characters) {
+            section.querySelectorAll(":scope .eligible").forEach(e=>e.classList.add("d-none"));
+            section.querySelectorAll(":scope .ineligible").forEach(e=>e.classList.remove("d-none"));
+        } else {
+            section.querySelectorAll(":scope .eligible").forEach(e=>e.classList.remove("d-none"));
+            section.querySelectorAll(":scope .ineligible").forEach(e=>e.classList.add("d-none"));
+            PersonalUtil.updateDiscordConnection(table, data);
+        }
+    }
+
+    static updateDiscordConnection(table, data)
+    {
+        const tr = table.querySelector(":scope #account-connection-discord");
+        if(!data.discordUser) {
+            tr.querySelector(":scope .account-connection-action").appendChild(ElementUtil.createElement(
+                "a",
+                null,
+                "btn btn-outline-success",
+                "Link",
+                [["href", ROOT_CONTEXT_PATH + "oauth2/authorization/discord-lg"]]
+            ));
+        } else {
+            tr.querySelector(":scope .account-connection-name").textContent = data.discordUser.name + "#" + data.discordUser.discriminator;
+            const action = ElementUtil.createElement("a", null, "btn btn-outline-danger", "Unlink", [["href", "#"]]);
+            action.addEventListener("click", PersonalUtil.unlinkDiscordAccount);
+            tr.querySelector(":scope .account-connection-action").appendChild(action);
+        }
+    }
+
+    static unlinkDiscordAccount()
+    {
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        return Session.beforeRequest()
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/discord/unlink", Util.addCsrfHeader({method: "POST"})))
+            .then(Session.verifyResponse)
+            .then(Session.getMyInfo)
+            .then(Util.successStatusPromise)
+            .catch(error => Session.onPersonalException(error));
     }
 }

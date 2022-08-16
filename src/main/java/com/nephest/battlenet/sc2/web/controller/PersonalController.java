@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
@@ -19,16 +20,22 @@ import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.service.AccountFollowingService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-
+import com.nephest.battlenet.sc2.web.service.DiscordService;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/my")
@@ -48,7 +55,13 @@ public class PersonalController
     private LadderCharacterDAO ladderCharacterDAO;
 
     @Autowired
+    private DiscordUserDAO discordUserDAO;
+
+    @Autowired
     private AccountFollowingService accountFollowingService;
+
+    @Autowired
+    private DiscordService discordService;
 
     @GetMapping("/common")
     public CommonPersonalData getCommon(@AuthenticationPrincipal AccountUser user)
@@ -59,7 +72,8 @@ public class PersonalController
             user.getAuthorities().stream().map(a->(SC2PulseAuthority) a).collect(Collectors.toList()),
             ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(user.getAccount().getId()),
             accountFollowingService.getAccountFollowingList(user.getAccount().getId()),
-            ladderCharacterDAO.findDistinctCharactersByFollowing(user.getAccount().getId())
+            ladderCharacterDAO.findDistinctCharactersByFollowing(user.getAccount().getId()),
+            discordUserDAO.findByAccountId(user.getAccount().getId()).orElse(null)
         );
     }
 
@@ -149,6 +163,12 @@ public class PersonalController
             queue,
             teamType
         );
+    }
+
+    @PostMapping("/discord/unlink")
+    public void unlinkDiscordUser(@AuthenticationPrincipal AccountUser user)
+    {
+        discordService.unlinkAccountFromDiscordUser(user.getAccount().getId(), null);
     }
 
 }

@@ -402,6 +402,12 @@ th.hoverable span
     display: none;
 }
 
+.table-image-md
+{
+    height: 2.2em;
+    vertical-align: middle;
+}
+
 .table-image, .form-icon
 {
     height: 1.2em;

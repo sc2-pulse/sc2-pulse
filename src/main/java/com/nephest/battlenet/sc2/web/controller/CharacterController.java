@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
@@ -76,6 +77,9 @@ public class CharacterController
     private LadderTeamStateDAO ladderTeamStateDAO;
 
     @Autowired
+    private DiscordUserDAO discordUserDAO;
+
+    @Autowired
     private PlayerCharacterReportService reportService;
 
     @Autowired
@@ -125,12 +129,24 @@ public class CharacterController
     )
     {
         if(types == null) types = new BaseMatch.MatchType[0];
+        List<LadderDistinctCharacter> linkedCharacters =
+            ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id);
+        LadderDistinctCharacter currentCharacter = linkedCharacters.isEmpty()
+            ? null
+            : linkedCharacters.stream()
+                .filter(c->c.getMembers().getCharacter().getId() == id)
+                .findAny()
+                .orElseThrow();
         return new CommonCharacter
         (
             ladderSearch.findCharacterTeams(id),
-            ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id),
+            linkedCharacters,
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
+            currentCharacter != null
+                ? discordUserDAO.findByAccountId(currentCharacter.getMembers().getAccount().getId())
+                    .orElse(null)
+                : null,
             ladderMatchDAO.findMatchesByCharacterId(
                 id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
             ladderTeamStateDAO.find(id),
@@ -148,12 +164,24 @@ public class CharacterController
     {
         if(types == null) types = new BaseMatch.MatchType[0];
         OffsetDateTime from = depth == null ? null : OffsetDateTime.now().minusDays(depth);
+        List<LadderDistinctCharacter> linkedCharacters =
+            ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id);
+        LadderDistinctCharacter currentCharacter = linkedCharacters.isEmpty()
+            ? null
+            : linkedCharacters.stream()
+                .filter(c->c.getMembers().getCharacter().getId() == id)
+                .findAny()
+                .orElseThrow();
         return new CommonCharacter
         (
             ladderSearch.findCharacterTeams(id),
-            ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id),
+            linkedCharacters,
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
+            currentCharacter != null
+                ? discordUserDAO.findByAccountId(currentCharacter.getMembers().getAccount().getId())
+                    .orElse(null)
+                : null,
             ladderMatchDAO.findMatchesByCharacterId(
                 id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
             ladderTeamStateDAO.find(id, from),

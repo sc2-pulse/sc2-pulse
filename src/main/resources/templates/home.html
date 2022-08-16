@@ -601,6 +601,37 @@
                             <span id="login-battletag"></span>
                             <span class="parenthesis text-secondary text-lowercase mr-3" id="login-roles"></span>
                         </div>
+                        <section id="account-linked-accounts">
+                            <h4>Linked services</h4>
+                            <div class="eligible">
+                                <p>Your account name/tag from linked services will be publicly displayed in the "Links" section
+                                of your SC2 Pulse profile. Additional effects may apply, see "Effects" column.</p>
+                                <div class="table-responsive">
+                                    <table id="account-linked-accounts-table" class="table inline-table" >
+                                        <thead>
+                                            <tr>
+                                                <th>Service</th>
+                                                <th>Account</th>
+                                                <th>Effects</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <tr id="account-connection-discord">
+                                                <td><img src="/static/icon/logo/discord.svg" alt="discord" title="discord" class="table-image-md"></td>
+                                                <td class="dynamic account-connection-name"></td>
+                                                <td>Discord user commands will use your BattleTag instead of Discord username</td>
+                                                <td class="dynamic account-connection-action"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="ineligible d-none">
+                                <p>Unfortunately Blizzard API doesn't provide enough info about your account atm, therefore this section has been disabled.
+                                    Try again when a new season starts, or when a new sc2 patch(even a minor one) is released.</p>
+                            </div>
+                        </section>
                         <div id="account-additional-info" class="mb-3"></div>
                         <form class="form-csrf" th:action="@{/logout}" method="post">
                             <button type="submit" class="btn btn-primary">Log out</button>

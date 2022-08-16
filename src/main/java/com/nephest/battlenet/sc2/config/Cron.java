@@ -22,6 +22,7 @@ import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.ClanService;
+import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
@@ -68,10 +69,12 @@ public class Cron
     public static final Duration MAP_STATS_DEFAULT_UPDATE_FRAME = Duration.ofMinutes(60);
     public static final Duration MAP_STATS_SKIP_NEW_SEASON_FRAME = Duration.ofDays(8);
     public static final Duration HEAVY_STATS_UPDATE_FRAME = Duration.ofDays(1);
+    public static final Duration DISCORD_UPDATE_FRAME = Duration.ofDays(1);
 
     private TimerVar calculateHeavyStatsTask;
     private TimerVar maintenanceFrequentTask;
     private TimerVar maintenanceInfrequentTask;
+    private TimerVar updateDiscordTask;
     private InstantVar matchInstant;
     private InstantVar mapStatsInstant;
     private UpdateContext matchUpdateContext;
@@ -138,6 +141,9 @@ public class Cron
     private TwitchService twitchService;
 
     @Autowired
+    private DiscordService discordService;
+
+    @Autowired
     private BlizzardPrivacyService blizzardPrivacyService;
 
     private final AtomicBoolean updatingLadders = new AtomicBoolean(false);
@@ -170,6 +176,14 @@ public class Cron
                 true,
                 MAINTENANCE_INFREQUENT_FRAME,
                 this::commenceInfrequentMaintenance
+            );
+            updateDiscordTask = new TimerVar
+            (
+                varDAO,
+                "discord.update.timestamp",
+                true,
+                DISCORD_UPDATE_FRAME,
+                ()->webExecutorService.submit(discordService::update)
             );
             matchInstant = new InstantVar(varDAO, "match.updated");
             mapStatsInstant = new InstantVar(varDAO, "ladder.stats.map.timestamp");
@@ -214,6 +228,12 @@ public class Cron
     public void updateSeasonState()
     {
         seasonStateDAO.merge(OffsetDateTime.now(), seasonDAO.getMaxBattlenetId());
+    }
+
+    @Scheduled(cron="0 0/10 * * * *")
+    public void updateBackgroundServices()
+    {
+        updateDiscordTask.runIfAvailable();
     }
 
     private void nonStopUpdate()

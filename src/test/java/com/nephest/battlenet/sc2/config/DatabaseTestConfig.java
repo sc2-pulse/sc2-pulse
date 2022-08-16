@@ -7,9 +7,12 @@ import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.Startup;
 import com.nephest.battlenet.sc2.config.mvc.TokenErrorController;
 import com.nephest.battlenet.sc2.config.openapi.SpringDocConfig;
+import com.nephest.battlenet.sc2.config.security.DiscordOauth2UserService;
 import com.nephest.battlenet.sc2.config.security.SecurityBeanConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
+import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.web.controller.AdminController;
+import com.nephest.battlenet.sc2.web.controller.PersonalController;
 import com.nephest.battlenet.sc2.web.controller.StatusController;
 import com.nephest.battlenet.sc2.web.controller.TeamController;
 import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
@@ -35,6 +38,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Application.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SecurityConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SecurityBeanConfig.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DiscordOauth2UserService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SpringDocConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardSC2API.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardPrivacyService.class),
@@ -47,8 +51,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AdminController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TeamController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TokenErrorController.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = PersonalController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class)
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class),
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, value = Discord.class)
     }
 )
 @Import(CoreTestConfig.class)

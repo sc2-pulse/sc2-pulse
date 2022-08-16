@@ -23,6 +23,8 @@ DROP TABLE IF EXISTS "account_following" CASCADE;
 DROP TABLE IF EXISTS "player_character_stats" CASCADE;
 DROP TABLE IF EXISTS "team_member" CASCADE;
 DROP TABLE IF EXISTS "player_character" CASCADE;
+DROP TABLE IF EXISTS "account_discord_user" CASCADE;
+DROP TABLE IF EXISTS "discord_user" CASCADE;
 DROP TABLE IF EXISTS "account_role" CASCADE;
 DROP TABLE IF EXISTS "account" CASCADE;
 DROP TABLE IF EXISTS "clan" CASCADE;

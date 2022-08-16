@@ -117,6 +117,12 @@ public class AccountDAO
         + "WHERE partition = :partition "
         + "AND battle_tag = :battleTag";
 
+    private static final String FIND_BY_DISCORD_USER_ID =
+        "SELECT " + STD_SELECT
+        + "FROM account_discord_user "
+        + "INNER JOIN account ON account_discord_user.account_id = account.id "
+        + "WHERE account_discord_user.discord_user_id = :discordUserId";
+
     private static final String FIND_BY_IDS =
         "SELECT " + STD_SELECT
         + "FROM account "
@@ -225,6 +231,13 @@ public class AccountDAO
             .addValue("partition", conversionService.convert(partition, Integer.class))
             .addValue("battleTag", battleTag);
         return Optional.ofNullable(template.query(FIND_BY_PARTITION_AND_BATTLE_TAG, params, STD_EXTRACTOR));
+    }
+
+    public Optional<Account> findByDiscordUserId(Long discordUserId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("discordUserId", discordUserId);
+        return Optional.ofNullable(template.query(FIND_BY_DISCORD_USER_ID, params, STD_EXTRACTOR));
     }
 
     public List<Account> findByIds(Long... ids)

@@ -11,11 +11,10 @@ import java.time.Duration;
 import java.util.List;
 import javax.annotation.PreDestroy;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 @Service
-@ConditionalOnProperty(prefix = "discord", name = "token")
+@Discord
 public class SpringDiscordClient
 {
 
@@ -40,6 +39,11 @@ public class SpringDiscordClient
     public void destroy()
     {
         client.logout().block(TIMEOUT);
+    }
+
+    public GatewayDiscordClient getClient()
+    {
+        return client;
     }
 
 }

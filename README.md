@@ -42,6 +42,9 @@ spring.security.oauth2.client.registration.sc2-sys-kr.client-id={client_id}
 spring.security.oauth2.client.registration.sc2-sys-kr.client-secret={client_secret}
 spring.security.oauth2.client.registration.sc2-sys-cn.client-id={client_id}
 spring.security.oauth2.client.registration.sc2-sys-cn.client-secret={client_secret}
+discord.token={token}
+spring.security.oauth2.client.registration.discord-lg.client-id={client_id}
+spring.security.oauth2.client.registration.discord-lg.client-secret={client_secret}
 twitch.client-id={client_id}
 twitch.client-secret={client_secret}
 com.nephest.battlenet.sc2.aligulac.api.key={api_key}
@@ -84,6 +87,9 @@ spring.security.oauth2.client.registration.sc2-lg-kr.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-kr.client-secret = {client_secret}
 spring.security.oauth2.client.registration.sc2-lg-cn.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-cn.client-secret = {client_secret}
+discord.token={token}
+spring.security.oauth2.client.registration.discord-lg.client-id={client_id}
+spring.security.oauth2.client.registration.discord-lg.client-secret={client_secret}
 twitch.client-id={client_id}
 twitch.client-secret={client_secret}
 com.nephest.battlenet.sc2.aligulac.api.key={api_key}
@@ -156,8 +162,6 @@ To ensure that the potential violation is a minor one, the following rules are a
 
 ## Task configuration
 [Cron class](src/main/java/com/nephest/battlenet/sc2/config/Cron.java) contains all scheduled tasks.
-## Discord bot
-You can add `discord.token = {token}` application property to run the optional discord bot.
 ## Application properties
 * `com.nephest.battlenet.sc2.mmr.history.main.length` 1v1 mmr history length in days, 180 by default.
 * `com.nephest.battlenet.sc2.mmr.history.secondary.length` team mmr history length in days, 180 by default.

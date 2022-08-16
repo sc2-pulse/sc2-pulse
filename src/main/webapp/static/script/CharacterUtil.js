@@ -195,7 +195,20 @@ class CharacterUtil
             document.querySelector("#link-battletag").classList.remove("d-none");
             document.querySelector("#link-battletag span").textContent = account.battleTag;
         }
+        CharacterUtil.updateCharacterDiscordConnection(commonCharacter);
         CharacterUtil.updateCharacterProInfo(commonCharacter);
+    }
+
+    static updateCharacterDiscordConnection(commonCharacter)
+    {
+        const discordUser = commonCharacter.discordUser;
+        const connectionElem = document.querySelector("#link-discord-connection");
+        if(!discordUser) {
+            connectionElem.classList.add("d-none");
+        } else {
+            connectionElem.querySelector(":scope .tag").textContent = discordUser.name + "#" + discordUser.discriminator;
+            connectionElem.classList.remove("d-none");
+        }
     }
 
     static updateCharacterProInfo(commonCharacter)
