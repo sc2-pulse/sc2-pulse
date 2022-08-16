@@ -3,7 +3,9 @@
 
 package com.nephest.battlenet.sc2.model.local.ladder.common;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.nephest.battlenet.sc2.config.convert.jackson.ArrayToLadderTeamStateArrayListDeserializer;
 import com.nephest.battlenet.sc2.config.convert.jackson.LadderTeamStateCollectionToArraySerializer;
 import com.nephest.battlenet.sc2.model.local.ladder.*;
 
@@ -14,23 +16,28 @@ public class CommonCharacter
 {
 
     @NotNull
-    private final List<LadderTeam> teams;
+    private List<LadderTeam> teams;
 
     @NotNull
-    private final List<LadderDistinctCharacter> linkedDistinctCharacters;
+    private List<LadderDistinctCharacter> linkedDistinctCharacters;
 
     @NotNull
-    private final List<LadderPlayerCharacterStats> stats;
+    private List<LadderPlayerCharacterStats> stats;
 
-    private final LadderProPlayer proPlayer;
+    private LadderProPlayer proPlayer;
 
     private final List<LadderMatch> matches;
 
     @JsonSerialize(using = LadderTeamStateCollectionToArraySerializer.class)
-    private final List<LadderTeamState> history;
+    @JsonDeserialize(using = ArrayToLadderTeamStateArrayListDeserializer.class)
+    private List<LadderTeamState> history;
 
     @NotNull
-    private final List<LadderPlayerCharacterReport> reports;
+    private List<LadderPlayerCharacterReport> reports;
+
+    public CommonCharacter()
+    {
+    }
 
     public CommonCharacter
     (
@@ -57,9 +64,19 @@ public class CommonCharacter
         return teams;
     }
 
+    public void setTeams(List<LadderTeam> teams)
+    {
+        this.teams = teams;
+    }
+
     public List<LadderDistinctCharacter> getLinkedDistinctCharacters()
     {
         return linkedDistinctCharacters;
+    }
+
+    public void setLinkedDistinctCharacters(List<LadderDistinctCharacter> linkedDistinctCharacters)
+    {
+        this.linkedDistinctCharacters = linkedDistinctCharacters;
     }
 
     public List<LadderPlayerCharacterStats> getStats()
@@ -67,9 +84,19 @@ public class CommonCharacter
         return stats;
     }
 
+    public void setStats(List<LadderPlayerCharacterStats> stats)
+    {
+        this.stats = stats;
+    }
+
     public LadderProPlayer getProPlayer()
     {
         return proPlayer;
+    }
+
+    public void setProPlayer(LadderProPlayer proPlayer)
+    {
+        this.proPlayer = proPlayer;
     }
 
     public List<LadderMatch> getMatches()
@@ -77,14 +104,30 @@ public class CommonCharacter
         return matches;
     }
 
+    public void setMatches(List<LadderMatch> matches)
+    {
+        this.matches = matches;
+    }
+
     public List<LadderTeamState> getHistory()
     {
         return history;
     }
 
+    public void setHistory(List<LadderTeamState> history
+    )
+    {
+        this.history = history;
+    }
+
     public List<LadderPlayerCharacterReport> getReports()
     {
         return reports;
+    }
+
+    public void setReports(List<LadderPlayerCharacterReport> reports)
+    {
+        this.reports = reports;
     }
 
 }

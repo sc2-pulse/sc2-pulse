@@ -13,14 +13,18 @@ import com.nephest.battlenet.sc2.model.local.TeamState;
 public class LadderTeamState
 {
 
-    private final TeamState teamState;
-    private final Race race;
-    private final League league;
-    private final BaseLeagueTier.LeagueTierType tier;
-    private final int season;
+    private TeamState teamState;
+    private Race race;
+    private League league;
+    private BaseLeagueTier.LeagueTierType tier;
+    private int season;
 
     @JsonUnwrapped
-    private final PopulationState populationState;
+    private PopulationState populationState;
+
+    public LadderTeamState()
+    {
+    }
 
     public LadderTeamState
     (
@@ -45,9 +49,19 @@ public class LadderTeamState
         return teamState;
     }
 
+    public void setTeamState(TeamState teamState)
+    {
+        this.teamState = teamState;
+    }
+
     public Race getRace()
     {
         return race;
+    }
+
+    public void setRace(Race race)
+    {
+        this.race = race;
     }
 
     public League getLeague()
@@ -55,9 +69,19 @@ public class LadderTeamState
         return league;
     }
 
+    public void setLeague(League league)
+    {
+        this.league = league;
+    }
+
     public BaseLeagueTier.LeagueTierType getTier()
     {
         return tier;
+    }
+
+    public void setTier(BaseLeagueTier.LeagueTierType tier)
+    {
+        this.tier = tier;
     }
 
     public int getSeason()
@@ -65,9 +89,19 @@ public class LadderTeamState
         return season;
     }
 
+    public void setSeason(int season)
+    {
+        this.season = season;
+    }
+
     public PopulationState getPopulationState()
     {
         return populationState;
+    }
+
+    public void setPopulationState(PopulationState populationState)
+    {
+        this.populationState = populationState;
     }
 
 }
