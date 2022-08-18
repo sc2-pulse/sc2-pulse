@@ -48,6 +48,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
@@ -115,13 +116,20 @@ public class MapStatsIT
     private static MockMvc mvc;
 
     @BeforeEach
-    public void beforeAll(@Autowired DataSource dataSource, @Autowired WebApplicationContext webApplicationContext)
+    public void beforeAll
+    (
+        @Autowired DataSource dataSource,
+        @Autowired WebApplicationContext webApplicationContext,
+        @Autowired CacheManager cacheManager
+    )
     throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+            cacheManager.getCacheNames()
+                .forEach(cacheName->cacheManager.getCache(cacheName).clear());
             mvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())

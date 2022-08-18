@@ -45,6 +45,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -98,7 +99,8 @@ public class AccountFollowingIT
     (
         @Autowired DataSource dataSource,
         @Autowired AccountDAO accountDAO,
-        @Autowired WebApplicationContext webApplicationContext
+        @Autowired WebApplicationContext webApplicationContext,
+        @Autowired CacheManager cacheManager
     )
     throws SQLException
     {
@@ -106,6 +108,8 @@ public class AccountFollowingIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+            cacheManager.getCacheNames()
+                .forEach(cacheName->cacheManager.getCache(cacheName).clear());
             account = accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
             mvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)

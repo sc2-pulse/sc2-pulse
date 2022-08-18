@@ -36,6 +36,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -63,6 +64,7 @@ public class StandardAPIReadonlyIT
     (
         @Autowired DataSource dataSource,
         @Autowired WebApplicationContext webApplicationContext,
+        @Autowired CacheManager cacheManager,
         @Autowired SeasonGenerator generator,
         @Autowired LeagueStatsDAO leagueStatsDAO,
         @Autowired PopulationStateDAO populationStateDAO
@@ -73,6 +75,8 @@ public class StandardAPIReadonlyIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+            cacheManager.getCacheNames()
+                .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         }
 
         generator.generateDefaultSeason
