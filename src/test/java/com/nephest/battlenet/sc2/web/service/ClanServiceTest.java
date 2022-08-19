@@ -41,17 +41,17 @@ public class ClanServiceTest
     @Test
     public void testNullifyStats()
     {
-        clanService.getStatsNullified().setValue(Instant.now()
+        clanService.getNullifyStatsTask().setValue(Instant.now()
             .minus(ClanService.STATS_UPDATE_FRAME)
             .plusSeconds(1));
         clanService.update();
         verify(clanDAO, never()).nullifyStats(anyInt());
 
         Instant beforeStart = Instant.now();
-        clanService.getStatsNullified().setValue(Instant.now().minus(ClanService.STATS_UPDATE_FRAME));
+        clanService.getNullifyStatsTask().setValue(Instant.now().minus(ClanService.STATS_UPDATE_FRAME));
         clanService.update();
         verify(clanDAO).nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
-        assertTrue(beforeStart.isBefore(clanService.getStatsNullified().getValue()));
+        assertTrue(beforeStart.isBefore(clanService.getNullifyStatsTask().getValue()));
     }
 
     @Test

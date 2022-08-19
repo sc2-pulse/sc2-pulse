@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LongVar;
+import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import java.time.Duration;
@@ -28,7 +29,7 @@ public class ClanService
     private final ClanDAO clanDAO;
 
     private InstantVar statsUpdated;
-    private InstantVar statsNullified;
+    private TimerVar nullifyStatsTask;
     private LongVar statsCursor;
 
     @Autowired
@@ -41,12 +42,19 @@ public class ClanService
     private void init(VarDAO varDAO)
     {
         statsUpdated = new InstantVar(varDAO, "clan.stats.updated", false);
-        statsNullified = new InstantVar(varDAO, "clan.stats.nullified", false);
+        nullifyStatsTask = new TimerVar
+        (
+            varDAO,
+            "clan.stats.nullified",
+            false,
+            STATS_UPDATE_FRAME,
+            this::nullifyStats
+        );
         statsCursor = new LongVar(varDAO, "clan.stats.id", false);
         try
         {
             if(statsUpdated.load() == null) statsUpdated.setValueAndSave(Instant.now());
-            if(statsNullified.load() == null) statsNullified
+            if(nullifyStatsTask.load() == null) nullifyStatsTask
                 .setValueAndSave(Instant.now().minus(STATS_UPDATE_FRAME));
             if(statsCursor.load() == null) statsCursor.setValueAndSave(0L);
         }
@@ -61,9 +69,9 @@ public class ClanService
         return statsUpdated;
     }
 
-    protected InstantVar getStatsNullified()
+    protected TimerVar getNullifyStatsTask()
     {
-        return statsNullified;
+        return nullifyStatsTask;
     }
 
     protected LongVar getStatsCursor()
@@ -75,17 +83,12 @@ public class ClanService
     public void update()
     {
         if(shouldUpdateStats()) updateStats();
-        if(shouldNullifyStats()) nullifyStats();
+        nullifyStatsTask.runIfAvailable();
     }
 
     private boolean shouldUpdateStats()
     {
         return true;
-    }
-
-    private boolean shouldNullifyStats()
-    {
-        return statsNullified.getValue().isBefore(Instant.now().minus(STATS_UPDATE_FRAME));
     }
 
     private void updateStats()
@@ -140,7 +143,6 @@ public class ClanService
     private void nullifyStats()
     {
         clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
-        statsNullified.setValueAndSave(Instant.now());
     }
 
 }

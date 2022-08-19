@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
+import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
@@ -66,10 +67,11 @@ public class Cron
     public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(300);
     public static final Duration MAP_STATS_DEFAULT_UPDATE_FRAME = Duration.ofMinutes(60);
     public static final Duration MAP_STATS_SKIP_NEW_SEASON_FRAME = Duration.ofDays(8);
+    public static final Duration HEAVY_STATS_UPDATE_FRAME = Duration.ofDays(1);
 
-    private InstantVar heavyStatsInstant;
-    private InstantVar maintenanceFrequentInstant;
-    private InstantVar maintenanceInfrequentInstant;
+    private TimerVar calculateHeavyStatsTask;
+    private TimerVar maintenanceFrequentTask;
+    private TimerVar maintenanceInfrequentTask;
     private InstantVar matchInstant;
     private InstantVar mapStatsInstant;
     private UpdateContext matchUpdateContext;
@@ -145,9 +147,30 @@ public class Cron
     {
         //catch exceptions to allow service autowiring for tests
         try {
-            heavyStatsInstant = new InstantVar(varDAO, "ladder.stats.heavy.timestamp");
-            maintenanceFrequentInstant = new InstantVar(varDAO, "maintenance.frequent");
-            maintenanceInfrequentInstant = new InstantVar(varDAO, "maintenance.infrequent");
+            calculateHeavyStatsTask = new TimerVar
+            (
+                varDAO,
+                "ladder.stats.heavy.timestamp",
+                true,
+                HEAVY_STATS_UPDATE_FRAME,
+                this::calculateHeavyStats
+            );
+            maintenanceFrequentTask = new TimerVar
+            (
+                varDAO,
+                "maintenance.frequent",
+                true,
+                MAINTENANCE_FREQUENT_FRAME,
+                this::commenceFrequentMaintenance
+            );
+            maintenanceInfrequentTask = new TimerVar
+            (
+                varDAO,
+                "maintenance.infrequent",
+                true,
+                MAINTENANCE_INFREQUENT_FRAME,
+                this::commenceInfrequentMaintenance
+            );
             matchInstant = new InstantVar(varDAO, "match.updated");
             mapStatsInstant = new InstantVar(varDAO, "ladder.stats.map.timestamp");
             if(matchInstant.getValue() != null) matchUpdateContext = new UpdateContext(
@@ -210,7 +233,7 @@ public class Cron
             doUpdateSeasons();
             //There is a long pause here due to stats calculations in the DB, a good place to do a GC run, make a hint.
             System.gc();
-            calculateHeavyStats();
+            calculateHeavyStatsTask.runIfAvailable();
             clanService.update();
             blizzardPrivacyService.update();
             updateService.updated(begin);
@@ -225,24 +248,19 @@ public class Cron
         }
     }
 
-    private boolean calculateHeavyStats()
+    private void calculateHeavyStats()
     {
-        if(heavyStatsInstant.getValue() == null || System.currentTimeMillis() - heavyStatsInstant.getValue().toEpochMilli() >= 24 * 60 * 60 * 1000) {
-            Instant defaultInstant = heavyStatsInstant.getValue() != null
-                ? heavyStatsInstant.getValue()
-                : Instant.now().minusSeconds(24 * 60 * 60 * 1000);
-            OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
-            proPlayerService.update();
-            for(Integer season : seasonDAO.getLastInAllRegions())
-                queueStatsDAO.mergeCalculateForSeason(season);
-            teamStateDAO.archive(defaultOdt);
-            teamStateDAO.cleanArchive(defaultOdt);
-            teamStateDAO.removeExpired();
-            evidenceDAO.nullifyReporterIps(defaultOdt);
-            heavyStatsInstant.setValueAndSave(Instant.ofEpochMilli(System.currentTimeMillis()));
-            return true;
-        }
-        return false;
+        Instant defaultInstant = calculateHeavyStatsTask.getValue() != null
+            ? calculateHeavyStatsTask.getValue()
+            : Instant.now().minusSeconds(24 * 60 * 60 * 1000);
+        OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
+        proPlayerService.update();
+        for(Integer season : seasonDAO.getLastInAllRegions())
+            queueStatsDAO.mergeCalculateForSeason(season);
+        teamStateDAO.archive(defaultOdt);
+        teamStateDAO.cleanArchive(defaultOdt);
+        teamStateDAO.removeExpired();
+        evidenceDAO.nullifyReporterIps(defaultOdt);
     }
 
     private void updateMapStats()
@@ -344,24 +362,13 @@ public class Cron
 
     private void commenceMaintenance()
     {
-        if
-        (
-            maintenanceFrequentInstant.getValue() == null
-            || System.currentTimeMillis() - maintenanceFrequentInstant.getValue().toEpochMilli() >= MAINTENANCE_FREQUENT_FRAME.toMillis()
-        )
-            commenceFrequentMaintenance();
-        if
-        (
-            maintenanceInfrequentInstant.getValue() == null
-            || System.currentTimeMillis() - maintenanceInfrequentInstant.getValue().toEpochMilli() >= MAINTENANCE_INFREQUENT_FRAME.toMillis()
-        )
-            commenceInfrequentMaintenance();
+        maintenanceFrequentTask.runIfAvailable();
+        maintenanceInfrequentTask.runIfAvailable();
     }
 
     private void commenceFrequentMaintenance()
     {
         postgreSQLUtils.reindex("ix_match_updated");
-        this.maintenanceFrequentInstant.setValueAndSave(Instant.now());
     }
 
     private void commenceInfrequentMaintenance()
@@ -374,7 +381,6 @@ public class Cron
             "ix_player_character_updated"
         );
         persistentLoginDAO.removeExpired();
-        this.maintenanceInfrequentInstant.setValueAndSave(Instant.now());
     }
 
 }
