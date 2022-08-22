@@ -3,8 +3,6 @@
 
 package com.nephest.battlenet.sc2.config.security;
 
-import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -28,10 +26,7 @@ extends WebSecurityConfigurerAdapter
     public static final String REMEMBER_ME_COOKIE_NAME = "remember-me";
 
     @Autowired
-    private AccountDAO accountDAO;
-
-    @Autowired
-    private AccountRoleDAO accountRoleDAO;
+    private RegistrationDelegatingOauth2UserService registrationDelegatingOauth2UserService;
 
     @Autowired
     private PersistentTokenRepository persistentTokenRepository;
@@ -63,7 +58,7 @@ extends WebSecurityConfigurerAdapter
                 .loginPage("/?#personal")
                 .defaultSuccessUrl("/?#personal-characters")
                 .failureUrl("/?oauthError=1#personal")
-                .userInfoEndpoint().oidcUserService(new BlizzardOidcUserService(accountDAO, accountRoleDAO))
+                .userInfoEndpoint().userService(registrationDelegatingOauth2UserService)
             .and().and().rememberMe()
                 .rememberMeServices(concurrentPersistentTokenBasedRememberMeService)
                 .key(concurrentPersistentTokenBasedRememberMeService.getKey());
