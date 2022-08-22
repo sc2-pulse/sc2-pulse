@@ -23,6 +23,9 @@ import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import javax.sql.DataSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -40,6 +43,7 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
@@ -63,8 +67,10 @@ extends SpringBootServletInitializer
         boost whatsoever. Concurrency/CPU intensive work is done by web threads.
      */
     public static final int DB_THREADS = 1;
-    //+2 for background tasks
-    public static final int WEB_THREADS = Region.values().length + 2;
+    public static final int CORE_WEB_THREADS = Region.values().length;
+    public static final int BACKGROUND_WEB_THREADS = 10;
+    public static final int WEB_THREAD_TTL_SECONDS = 60;
+    public static final String WEB_THREAD_POOL_NAME = "p-web-";
 
     public static void main(String[] args)
     {
@@ -128,7 +134,14 @@ extends SpringBootServletInitializer
     @Bean
     public ExecutorService webExecutorService()
     {
-        return Executors.newFixedThreadPool(WEB_THREADS);
+        return new ThreadPoolExecutor
+        (
+            CORE_WEB_THREADS,
+            CORE_WEB_THREADS + BACKGROUND_WEB_THREADS,
+            WEB_THREAD_TTL_SECONDS, TimeUnit.SECONDS,
+            new SynchronousQueue<>(),
+            new CustomizableThreadFactory(WEB_THREAD_POOL_NAME)
+        );
     }
 
     @Bean

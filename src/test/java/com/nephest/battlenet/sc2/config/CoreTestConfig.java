@@ -1,23 +1,37 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.Application;
-import com.nephest.battlenet.sc2.config.convert.*;
+import com.nephest.battlenet.sc2.config.convert.IdentifiableToIntegerConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToDecisionConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTierTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToMatchTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToPlayerCharacterReportTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToQueueTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToRaceConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToRegionConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToSC2PulseAuthority;
+import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
+import java.time.Duration;
+import java.util.Random;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.SynchronousQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import javax.sql.DataSource;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.transaction.PlatformTransactionManager;
-
-import javax.sql.DataSource;
-import java.time.Duration;
-import java.util.Random;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 public class CoreTestConfig
 {
@@ -75,7 +89,14 @@ public class CoreTestConfig
     @Bean
     public ExecutorService webExecutorService()
     {
-        return Executors.newFixedThreadPool(Application.WEB_THREADS);
+        return new ThreadPoolExecutor
+        (
+            Application.CORE_WEB_THREADS,
+            Application.CORE_WEB_THREADS + Application.BACKGROUND_WEB_THREADS,
+            Application.WEB_THREAD_TTL_SECONDS, TimeUnit.SECONDS,
+            new SynchronousQueue<>(),
+            new CustomizableThreadFactory(Application.WEB_THREAD_POOL_NAME)
+        );
     }
 
 }
