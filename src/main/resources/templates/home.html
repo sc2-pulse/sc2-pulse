@@ -597,9 +597,12 @@
                     </section>
                     <section id="personal-account" class="tab-pane fade" data-view-title="Personal account">
                         <h3>Account</h3>
-                        <div class="mb-3">
-                            <span id="login-battletag"></span>
-                            <span class="parenthesis text-secondary text-lowercase mr-3" id="login-roles"></span>
+                        <div class="d-flex justify-content-center align-items-center flex-wrap gap-1 mb-3">
+                            <span id="login-battletag" class="d-inline-block"></span>
+                            <span class="parenthesis text-secondary text-lowercase d-inline-block" id="login-roles"></span>
+                            <form class="form-csrf d-inline-block" th:action="@{/logout}" method="post">
+                                <button type="submit" class="btn btn-primary">Log out</button>
+                            </form>
                         </div>
                         <section id="account-linked-accounts">
                             <h4>Linked services</h4>
@@ -633,9 +636,6 @@
                             </div>
                         </section>
                         <div id="account-additional-info" class="mb-3"></div>
-                        <form class="form-csrf" th:action="@{/logout}" method="post">
-                            <button type="submit" class="btn btn-primary">Log out</button>
-                        </form>
                     </section>
                     <section
                             id="personal-following"
