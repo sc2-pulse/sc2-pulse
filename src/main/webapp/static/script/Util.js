@@ -58,6 +58,12 @@ class Util
         }
     }
 
+    static successStatusPromise(e)
+    {
+        Util.setGeneratingStatus(STATUS.SUCCESS);
+        return Promise.resolve(e);
+    }
+
     static getCookie(cname)
     {
         var name = cname + "=";
