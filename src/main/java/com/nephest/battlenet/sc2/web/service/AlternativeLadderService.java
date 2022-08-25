@@ -544,7 +544,8 @@ public class AlternativeLadderService
         if(newTeams.size() == 0) return;
 
         newTeams.sort(Comparator.comparing(AlternativeTeamData::getAccount, Account.NATURAL_ID_COMPARATOR));
-        for(AlternativeTeamData curMembers : newTeams) accountDAO.merge(curMembers.getAccount());
+        for(AlternativeTeamData curMembers : newTeams)
+            accountDAO.merge(curMembers.getAccount(), curMembers.getCharacter());
 
         newTeams.sort(Comparator.comparing(AlternativeTeamData::getCharacter, PlayerCharacter.NATURAL_ID_COMPARATOR));
         for(AlternativeTeamData curNewTeam : newTeams)

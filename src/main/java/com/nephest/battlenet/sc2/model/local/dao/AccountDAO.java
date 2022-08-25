@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import java.time.OffsetDateTime;
@@ -50,6 +51,46 @@ public class AccountDAO
             + "RETURNING id"
         + ") "
         + "SELECT id FROM selected "
+        + "UNION "
+        + "SELECT id FROM inserted";
+
+    private static final String MERGE_WITH_ACCOUNT_QUERY =
+        "WITH selected AS "
+        + "("
+            + "SELECT id FROM account WHERE partition = :partition AND battle_tag = :battleTag "
+        + "), "
+        + "selected_by_character AS "
+        + "("
+            + "SELECT account.id "
+            + "FROM player_character "
+            + "INNER JOIN account ON account.id = player_character.account_id "
+            + "WHERE player_character.region = :region "
+            + "AND player_character.realm = :realm "
+            + "AND player_character.battlenet_id = :battlenetId "
+        + "), "
+        + "updated AS "
+        + "("
+            + "UPDATE account "
+            + "SET battle_tag = :battleTag "
+            + "FROM selected_by_character "
+            + "WHERE NOT EXISTS(SELECT 1 FROM selected) "
+            + "AND selected_by_character.id = account.id "
+            + "RETURNING account.id "
+        + "), "
+        + "inserted AS"
+        + " ("
+            + "INSERT INTO account "
+            + "(partition, battle_tag) "
+            + "SELECT :partition, :battleTag "
+            + "WHERE NOT EXISTS(SELECT 1 FROM selected) "
+            + "AND NOT EXISTS(SELECT 1 FROM updated) "
+            + "ON CONFLICT(partition, battle_tag) DO UPDATE SET "
+            + "partition=excluded.partition "
+            + "RETURNING id"
+        + ") "
+        + "SELECT id FROM selected "
+        + "UNION "
+        + "SELECT id FROM updated "
         + "UNION "
         + "SELECT id FROM inserted";
 
@@ -154,6 +195,18 @@ public class AccountDAO
         account.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return account;
     }
+
+
+    public Account merge(Account account, PlayerCharacter playerCharacter)
+    {
+        MapSqlParameterSource params = createParameterSource(account);
+        params.addValue("region", conversionService.convert(playerCharacter.getRegion(), Integer.class))
+            .addValue("realm", playerCharacter.getRealm())
+            .addValue("battlenetId", playerCharacter.getBattlenetId());
+        account.setId(template.query(MERGE_WITH_ACCOUNT_QUERY, params, DAOUtils.LONG_EXTRACTOR));
+        return account;
+    }
+
 
     public int removeEmptyAccounts()
     {

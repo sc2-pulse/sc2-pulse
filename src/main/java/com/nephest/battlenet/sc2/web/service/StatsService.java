@@ -621,7 +621,8 @@ public class StatsService
         Set<TeamMember> teamMembers = new HashSet<>(members.size(), 1.0F);
 
         members.sort(Comparator.comparing(Tuple2::getT1, Account.NATURAL_ID_COMPARATOR));
-        for(Tuple3<Account, PlayerCharacter, TeamMember> curMembers : members) accountDao.merge(curMembers.getT1());
+        for(Tuple3<Account, PlayerCharacter, TeamMember> curMembers : members)
+            accountDao.merge(curMembers.getT1(), curMembers.getT2());
 
         members.sort(Comparator.comparing(Tuple2::getT2, PlayerCharacter.NATURAL_ID_COMPARATOR));
         for(Tuple3<Account, PlayerCharacter, TeamMember> curMembers : members)
