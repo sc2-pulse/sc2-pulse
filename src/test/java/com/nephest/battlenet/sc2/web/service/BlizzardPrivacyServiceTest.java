@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.anyBoolean;
@@ -13,6 +14,7 @@ import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -100,6 +102,9 @@ public class BlizzardPrivacyServiceTest
     @Captor
     private ArgumentCaptor<List<Tuple3<Account, PlayerCharacter, Boolean>>> accountPlayerCaptor;
 
+    @Captor
+    private ArgumentCaptor<OffsetDateTime> offsetDateTimeArgumentCaptor;
+
     @Mock
     private ExecutorService executor;
 
@@ -151,7 +156,11 @@ public class BlizzardPrivacyServiceTest
         OffsetDateTime anonymizeOffset = OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
         InOrder order = inOrder(accountDAO, playerCharacterDAO);
         order.verify(accountDAO).removeEmptyAccounts();
-        order.verify(accountDAO).anonymizeExpiredAccounts(argThat(m->m.isEqual(anonymizeOffset)));
+        order.verify(accountDAO, times(2)).anonymizeExpiredAccounts(offsetDateTimeArgumentCaptor.capture());
+        //full anonymization
+        assertTrue(BlizzardPrivacyService.DEFAULT_ANONYMIZE_START.isEqual(offsetDateTimeArgumentCaptor.getAllValues().get(0)));
+        //partial anonymization
+        assertTrue(anonymizeOffset.isEqual(offsetDateTimeArgumentCaptor.getAllValues().get(1)));
         order.verify(playerCharacterDAO).anonymizeExpiredCharacters(argThat(m->m.isEqual(anonymizeOffset)));
 
         long updateTimeFrame = BlizzardPrivacyService.DATA_TTL
