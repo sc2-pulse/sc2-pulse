@@ -38,8 +38,6 @@ import java.util.Comparator;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -106,35 +104,6 @@ public class DiscordIT
             .apply(springSecurity())
             .alwaysDo(print())
             .build();
-    }
-
-
-    //required by @WithBlizzardMockUser
-    @BeforeAll
-    public static void beforeAll
-    (
-        @Autowired DataSource dataSource,
-        @Autowired AccountDAO accountDAO
-    )
-    throws SQLException
-    {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
-    }
-
-    @AfterEach
-    public void afterEach(@Autowired DataSource dataSource)
-    throws SQLException
-    {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
-
     }
 
     @AfterAll

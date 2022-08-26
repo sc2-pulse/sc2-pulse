@@ -54,7 +54,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,11 +120,11 @@ public class LadderSearchIndependentIT
 
     private static final String BATTLETAG = "refaccount123#123";
 
-    @BeforeAll
-    public static void beforeAll
+    @BeforeEach
+    public void beforeEach
     (
         @Autowired DataSource dataSource,
-        @Autowired AccountDAO accountDAO,
+        @Autowired CacheManager cacheManager,
         @Autowired WebApplicationContext webApplicationContext
     )
     throws SQLException
@@ -139,20 +138,8 @@ public class LadderSearchIndependentIT
                 .apply(springSecurity())
                 .alwaysDo(print())
                 .build();
-        }
-    }
-
-    @BeforeEach
-    public void beforeEach(@Autowired DataSource dataSource, @Autowired CacheManager cacheManager)
-    throws SQLException
-    {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
             cacheManager.getCacheNames()
                 .forEach(cacheName->cacheManager.getCache(cacheName).clear());
-            accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
         }
     }
 
@@ -171,6 +158,7 @@ public class LadderSearchIndependentIT
     public void testStatsCalculation()
     throws Exception
     {
+        accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
         Region region = Region.EU;
         Season season1 = new Season(null, 1, region, 2020, 1,
             LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));

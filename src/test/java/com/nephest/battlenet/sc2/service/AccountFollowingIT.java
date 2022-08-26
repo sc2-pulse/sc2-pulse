@@ -41,7 +41,7 @@ import java.time.LocalDate;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -94,11 +94,10 @@ public class AccountFollowingIT
 
     public static final String BATTLETAG = "refaccount#123";
 
-    @BeforeAll
-    public static void beforeAll
+    @BeforeEach
+    public void beforeEach
     (
         @Autowired DataSource dataSource,
-        @Autowired AccountDAO accountDAO,
         @Autowired WebApplicationContext webApplicationContext,
         @Autowired CacheManager cacheManager
     )
@@ -110,7 +109,6 @@ public class AccountFollowingIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
             cacheManager.getCacheNames()
                 .forEach(cacheName->cacheManager.getCache(cacheName).clear());
-            account = accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
             mvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
@@ -134,6 +132,7 @@ public class AccountFollowingIT
     public void testFollowing()
     throws Exception
     {
+        account = accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLETAG));
         Region region = Region.EU;
         Season season1 = new Season(null, 1, region, 2020, 1, LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));
         Season season2 = new Season(null, 2, region, 2020, 2, LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1));

@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.model.Partition;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.sql.DataSource;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,6 +61,16 @@ public class SupportersServiceIT
             .apply(springSecurity())
             .alwaysDo(print())
             .build();
+    }
+
+    @AfterAll
+    public static void afterAll(@Autowired DataSource dataSource)
+    throws SQLException
+    {
+        try(Connection connection = dataSource.getConnection())
+        {
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
+        }
     }
 
     @Test
