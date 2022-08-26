@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.util.MiscUtil;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.object.entity.Message;
 import java.time.OffsetDateTime;
@@ -101,6 +102,11 @@ public class Summary1v1Command
         StringBuilder description = new StringBuilder()
             .append("**1v1 Summary**\n")
             .append(generateDescription(name, depth, maxLines, region, race)).append("\n\n");
+        int gamesDigits = summaries.stream()
+            .mapToInt(PlayerCharacterSummary::getGames)
+            .map(MiscUtil::stringLength)
+            .max()
+            .orElseThrow();
         for(PlayerCharacterSummary summary : summaries)
         {
             LadderTeamMember member = characters.get(summary.getPlayerCharacterId());
@@ -109,7 +115,9 @@ public class Summary1v1Command
                 .append(DiscordBootstrap.REGION_EMOJIS.get(member.getCharacter().getRegion()))
                 .append(" ").append(discordBootstrap.getLeagueEmojiOrName(summary.getLeagueTypeLast()))
                 .append(" ").append(discordBootstrap.getRaceEmojiOrName(summary.getRace()))
-                .append(" | **").append(summary.getGames()).append("** | **")
+                .append(" | **`")
+                .append(String.format("%" + gamesDigits + "d", summary.getGames()))
+                .append("`** | **")
                 .append(summary.getRatingLast()).append("**")
                 .append("/").append(summary.getRatingAvg())
                 .append("/").append(summary.getRatingMax())
@@ -129,7 +137,7 @@ public class Summary1v1Command
         if(race != null) sb.append(", ").append(race.getName());
         sb.append("*");
 
-        sb.append( "\nGames | last/avg/max MMR");
+        sb.append( "\n**`Games`** | last/avg/max MMR");
 
         return sb.toString();
     }
