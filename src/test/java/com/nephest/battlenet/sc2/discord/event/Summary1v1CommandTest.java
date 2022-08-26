@@ -74,7 +74,7 @@ public class Summary1v1CommandTest
         //verify output
         StringBuilder sb = new StringBuilder()
             .append("**1v1 Summary**\n")
-            .append("*term, 100 days, Top 5, EU, Terran*\n**`Games`** | **last**/avg/max MMR\n\n");
+            .append("*term, 100 days, Top 5, EU, Terran*\n**`Games`** | **last**/*avg*/max MMR\n\n");
         for(int i = 3; i > -1; i--)
         {
             sb.append(String.format(
@@ -82,7 +82,7 @@ public class Summary1v1CommandTest
                     + "(<https://www.nephest.com/sc2/?type=character&id=%1$s&m=1#player-stats-mmr>)\n" //web link
                     + DiscordBootstrap.REGION_EMOJIS.get(Region.EU) + " diamond terran" //region, league, race
                     + " | **`%4$s`** | " //games
-                    + "**%1$s**/%2$s/%3$s\n\n", //last, avg, max mmr
+                    + "**%1$s**/*%2$s*/%3$s\n\n", //last, avg, max mmr
                 i, i * 2, i * 3, i == 3 ? "9999" : "   " + i)); //stubbed values
 
         }

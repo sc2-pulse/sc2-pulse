@@ -119,8 +119,8 @@ public class Summary1v1Command
                 .append(String.format("%" + gamesDigits + "d", summary.getGames()))
                 .append("`** | **")
                 .append(summary.getRatingLast()).append("**")
-                .append("/").append(summary.getRatingAvg())
-                .append("/").append(summary.getRatingMax())
+                .append("/*").append(summary.getRatingAvg())
+                .append("*/").append(summary.getRatingMax())
                 .append("\n\n");
         }
 
@@ -137,7 +137,7 @@ public class Summary1v1Command
         if(race != null) sb.append(", ").append(race.getName());
         sb.append("*");
 
-        sb.append( "\n**`Games`** | **last**/avg/max MMR");
+        sb.append( "\n**`Games`** | **last**/*avg*/max MMR");
 
         return sb.toString();
     }
