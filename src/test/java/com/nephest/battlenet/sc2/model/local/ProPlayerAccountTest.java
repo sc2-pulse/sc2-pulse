@@ -18,7 +18,7 @@ public class ProPlayerAccountTest
         {
             new ProPlayerAccount(1L, 2L)
         };
-        TestUtil.testUniqueness(proPlayerAccount, equalProPlayerAccount, notEqualProAccounts);
+        TestUtil.testUniqueness(proPlayerAccount, equalProPlayerAccount, (Object[]) notEqualProAccounts);
     }
 
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -19,7 +19,7 @@ public class ProTeamMemberTest
             new ProTeamMember(1L, 2L)
         };
 
-        TestUtil.testUniqueness(proTeamMember, equalTeamMember, notEqualTeamMembers);
+        TestUtil.testUniqueness(proTeamMember, equalTeamMember, (Object[]) notEqualTeamMembers);
     }
 
 }

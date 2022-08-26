@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -20,7 +20,7 @@ public class SocialMediaLinkTest
             new SocialMediaLink(2L, SocialMedia.ALIGULAC, "url"),
             new SocialMediaLink(1L, SocialMedia.TWITCH, "url")
         };
-        TestUtil.testUniqueness(link, equalLink, notEqualLinks);
+        TestUtil.testUniqueness(link, equalLink, (Object[]) notEqualLinks);
     }
 
 }

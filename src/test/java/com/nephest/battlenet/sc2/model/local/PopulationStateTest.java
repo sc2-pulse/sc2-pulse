@@ -18,7 +18,7 @@ public class PopulationStateTest
         {
             new PopulationState(0, 1, 1, 1, 1)
         };
-        TestUtil.testUniqueness(state, equalState, notEqualsStates);
+        TestUtil.testUniqueness(state, equalState, (Object[]) notEqualsStates);
     }
 
 }

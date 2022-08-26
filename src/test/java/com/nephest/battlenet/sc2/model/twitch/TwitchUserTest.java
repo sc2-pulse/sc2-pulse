@@ -19,7 +19,7 @@ public class TwitchUserTest
             new TwitchUser(2L, "login1")
         };
 
-        TestUtil.testUniqueness(user, equalUser, notEqualUsers);
+        TestUtil.testUniqueness(user, equalUser, (Object[]) notEqualUsers);
     }
 
 }

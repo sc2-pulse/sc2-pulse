@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -21,7 +21,7 @@ public class DivisionTest
             new Division(0, 0, 1L)
         };
 
-        TestUtil.testUniqueness(division, equalDivision, notEqualDivisions);
+        TestUtil.testUniqueness(division, equalDivision, (Object[]) notEqualDivisions);
     }
 
 }

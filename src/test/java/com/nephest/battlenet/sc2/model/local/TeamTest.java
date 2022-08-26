@@ -1,19 +1,18 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
+
+import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.FIRST;
+import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.SECOND;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.util.TestUtil;
-import org.junit.jupiter.api.Test;
-
 import java.math.BigInteger;
-
-import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.FIRST;
-import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.SECOND;
+import org.junit.jupiter.api.Test;
 
 public class TeamTest
 {
@@ -40,7 +39,7 @@ public class TeamTest
             new Team(0L, 0, Region.EU, league, FIRST, BigInteger.ONE, 0, 0L, 0, 0, 0,0)
         };
 
-        TestUtil.testUniqueness(team, equalTeam, notEqualTeams);
+        TestUtil.testUniqueness(team, equalTeam, (Object[]) notEqualTeams);
     }
 
 }

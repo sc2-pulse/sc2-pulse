@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -20,7 +20,7 @@ public class AccountFollowingTest
             new AccountFollowing(1L, 0L),
             new AccountFollowing(0L, 0L)
         };
-        TestUtil.testUniqueness(following, equalFollowing, notEqualFollowings);
+        TestUtil.testUniqueness(following, equalFollowing, (Object[]) notEqualFollowings);
     }
 
 }

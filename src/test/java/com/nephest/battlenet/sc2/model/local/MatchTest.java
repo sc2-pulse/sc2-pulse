@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -6,9 +6,8 @@ package com.nephest.battlenet.sc2.model.local;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.util.TestUtil;
-import org.junit.jupiter.api.Test;
-
 import java.time.OffsetDateTime;
+import org.junit.jupiter.api.Test;
 
 public class MatchTest
 {
@@ -28,7 +27,7 @@ public class MatchTest
             new Match(1L, equalTime, BaseMatch.MatchType._1V1, 1, Region.US)
         };
 
-        TestUtil.testUniqueness(match, equalMatch, notEqualMatches);
+        TestUtil.testUniqueness(match, equalMatch, (Object[]) notEqualMatches);
     }
 
 }

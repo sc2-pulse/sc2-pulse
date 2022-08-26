@@ -21,7 +21,7 @@ public class TwitchVideoTest
         {
             new TwitchVideo(2L, 1L, "url1", equalDate, equalDate)
         };
-        TestUtil.testUniqueness(video, equalVideo, notEqualVideos);
+        TestUtil.testUniqueness(video, equalVideo, (Object[]) notEqualVideos);
     }
 
 }

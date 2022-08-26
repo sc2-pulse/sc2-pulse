@@ -25,7 +25,7 @@ public class AccountTest
             new Account(0L, Partition.GLOBAL, "DiffName#123"),
         };
 
-        TestUtil.testUniqueness(account, equalsAccount, notEqualAccounts);
+        TestUtil.testUniqueness(account, equalsAccount, (Object[]) notEqualAccounts);
     }
 
     @Test

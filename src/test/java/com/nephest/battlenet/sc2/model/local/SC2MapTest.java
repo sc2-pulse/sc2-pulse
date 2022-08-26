@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -18,7 +18,7 @@ public class SC2MapTest
         {
             new SC2Map(0, "map2")
         };
-        TestUtil.testUniqueness(map, equalMap, notEqualMaps);
+        TestUtil.testUniqueness(map, equalMap, (Object[]) notEqualMaps);
     }
 
 }

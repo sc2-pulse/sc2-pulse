@@ -20,7 +20,7 @@ public class AccountDiscordUserTest
             new AccountDiscordUser(1L, 2L)
         };
 
-        TestUtil.testUniqueness(user, equalUser, notEqualUsers);
+        TestUtil.testUniqueness(user, equalUser, (Object[]) notEqualUsers);
     }
 
 }

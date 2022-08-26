@@ -1,13 +1,13 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
-import com.nephest.battlenet.sc2.util.TestUtil;
-import org.junit.jupiter.api.Test;
-
 import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.FIRST;
 import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.SECOND;
+
+import com.nephest.battlenet.sc2.util.TestUtil;
+import org.junit.jupiter.api.Test;
 
 public class LeagueTierTest
 {
@@ -24,7 +24,7 @@ public class LeagueTierTest
             new LeagueTier(0, 0, SECOND, 0, 0),
         };
 
-        TestUtil.testUniqueness(tier, equalTier, notEqualTiers);
+        TestUtil.testUniqueness(tier, equalTier, (Object[]) notEqualTiers);
     }
 
 }

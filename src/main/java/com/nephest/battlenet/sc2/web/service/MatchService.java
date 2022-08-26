@@ -151,7 +151,7 @@ public class MatchService
         LOG.info("Saved {} matches for {}", matchCount, regions);
         if(api.isAutoForceRegion() && matchCount < 1)
         {
-            LOG.warn("No matches found in {} regions", regions);
+            LOG.warn("No matches found in {} regions", (Object[]) regions);
             for(Region region : regions) api.setForceRegion(region);
         }
     }

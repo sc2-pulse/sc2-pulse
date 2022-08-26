@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -22,7 +22,7 @@ public class MapStatsTest
             new MapStats(null, 0, 0, Race.ZERG, Race.PROTOSS, 0, 0, 0, 0, 0, 0),
             new MapStats(null, 0, 0, Race.TERRAN, Race.ZERG, 0, 0, 0, 0, 0, 0),
         };
-        TestUtil.testUniqueness(stats, equalStats, notEqualStats);
+        TestUtil.testUniqueness(stats, equalStats, (Object[]) notEqualStats);
     }
 
 }

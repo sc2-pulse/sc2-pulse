@@ -310,6 +310,7 @@ public class DiscordBootstrap
         return !discordCommand.options().equals(command.options());
     }
 
+    @SafeVarargs
     public static <T> List<ApplicationCommandOptionChoiceData> generateChoices
     (ConversionService conversionService, Function<? super T, ? extends String> nameGetter, T... vals)
     {
