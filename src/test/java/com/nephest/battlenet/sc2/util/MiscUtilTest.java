@@ -3,13 +3,12 @@
 
 package com.nephest.battlenet.sc2.util;
 
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.CsvSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 public class MiscUtilTest
 {
@@ -38,6 +37,21 @@ public class MiscUtilTest
     {
         Duration expectedResult = Duration.ofSeconds(seconds);
         assertEquals(expectedResult, MiscUtil.untilNextHour(dateTime));
+    }
+
+    @CsvSource
+    ({
+        "0, 1",
+        "-1, 1",
+        "9999, 4",
+        "-1234, 4",
+        Integer.MAX_VALUE + ", 10",
+        Integer.MIN_VALUE + ", 10"
+    })
+    @ParameterizedTest
+    public void testStringLength(int i, int expectedLength)
+    {
+        assertEquals(expectedLength, MiscUtil.stringLength(i));
     }
 
 

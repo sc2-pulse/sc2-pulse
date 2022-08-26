@@ -3,15 +3,14 @@
 
 package com.nephest.battlenet.sc2.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.time.Duration;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class MiscUtil
 {
@@ -77,6 +76,15 @@ public final class MiscUtil
     public static double getHourProgress(Temporal temporal)
     {
         return (sinceHourStart(temporal).toSeconds() / 3600.0);
+    }
+
+    public static int stringLength(int n)
+    {
+        if(n == Integer.MIN_VALUE) return 10;
+        n = Math.abs(n);
+
+        return n<100000?n<100?n<10?1:2:n<1000?3:n<10000?4:5:
+            n<10000000?n<1000000?6:7:n<100000000?8: n<1000000000?9:10;
     }
 
 }
