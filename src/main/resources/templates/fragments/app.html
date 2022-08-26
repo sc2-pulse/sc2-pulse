@@ -331,40 +331,66 @@
                             </section>
                             <section>
                                 <h3>Links</h3>
-                                <ul class="list-inline text-center">
-                                    <li class="list-inline-item mr-3 pro-player-info"><a id="link-liquipedia" class="social-media mb-3" href="#" target="_blank" rel="noopener">
-                                        <img th:src="@{/static/icon/logo/liquipedia.svg}" alt="Liquipedia"/>
-                                    </a></li>
-                                    <li class="list-inline-item mr-3 pro-player-info"><a id="link-aligulac" class="social-media mb-3" href="#" target="_blank" rel="noopener">
-                                        <span>&sum;</span>
-                                    </a></li>
-                                    <li class="list-inline-item mr-3 pro-player-info"><a id="link-instagram" class="social-media mb-3" href="#" target="_blank" rel="noopener">
-                                        <img th:src="@{/static/icon/logo/instagram.svg}" alt="Instagram"/>
-                                    </a></li>
-                                    <li class="list-inline-item mr-3 pro-player-info"><a id="link-twitter" class="social-media mb-3" href="#" target="_blank" rel="noopener">
-                                        <img th:src="@{/static/icon/logo/twitter.svg}" alt="Twitter"/>
-                                    </a></li>
-                                    <li class="list-inline-item mr-3 pro-player-info"><a id="link-twitch" class="social-media mb-3" href="#" target="_blank" rel="noopener">
-                                        <img th:src="@{/static/icon/logo/twitch.svg}" alt="Twitch"/>
-                                    </a></li>
-                                    <li class="list-inline-item mr-3 pro-player-info"><a id="link-youtube" class="social-media mb-3" href="#" target="_blank" rel="noopener">
-                                        <img th:src="@{/static/icon/logo/youtube.svg}" alt="Youtube"/>
-                                    </a></li>
-                                    <li class="list-inline-item mr-3 pro-player-info"><a id="link-discord" class="social-media mb-3" href="#" target="_blank" rel="noopener">
-                                        <img th:src="@{/static/icon/logo/discord.svg}" alt="Discord"/>
-                                    </a></li>
-                                    <li class="list-inline-item mr-3"><a id="link-sc2" class="social-media mb-3" href="#" target="_blank" rel="noopener">
-                                        <img th:src="@{/static/icon/logo/sc2.svg}" alt="SC2"/>
-                                    </a></li>
-                                    <li class="list-inline-item mr-3"><span id="link-battletag" class="social-media mb-3">
-                                                <img th:src="@{/static/icon/logo/battlenet.svg}" alt="BattleTag" title="BattleTag"/>
-                                            <span></span>
-                                            </span></li>
-                                    <li class="list-inline-item mr-3">
-                                        <span id="link-discord-connection" class="social-media mb-3">
-                                            <img th:src="@{/static/icon/logo/discord.svg}" alt="Discord" title="Discord"/>
-                                            <span class="tag"></span>
-                                        </span>
+                                <ul class="list-unstyled text-center">
+                                    <li class="mb-3">
+                                        <ul class="d-flex flex-center-wrap-gap list-unstyled">
+                                            <li class="pro-player-info">
+                                                <a id="link-liquipedia" class="social-media" href="#" target="_blank" rel="noopener">
+                                                    <img th:src="@{/static/icon/logo/liquipedia.svg}" alt="Liquipedia"/>
+                                                </a>
+                                            </li>
+                                            <li class="pro-player-info">
+                                                <a id="link-aligulac" class="social-media" href="#" target="_blank" rel="noopener">
+                                                    &sum;
+                                                </a>
+                                            </li>
+                                            <li class="pro-player-info">
+                                                <a id="link-instagram" class="social-media" href="#" target="_blank" rel="noopener">
+                                                    <img th:src="@{/static/icon/logo/instagram.svg}" alt="Instagram"/>
+                                                </a>
+                                            </li>
+                                            <li class="pro-player-info">
+                                                <a id="link-twitter" class="social-media" href="#" target="_blank" rel="noopener">
+                                                    <img th:src="@{/static/icon/logo/twitter.svg}" alt="Twitter"/>
+                                                </a>
+                                            </li>
+                                            <li class="pro-player-info">
+                                                <a id="link-twitch" class="social-media" href="#" target="_blank" rel="noopener">
+                                                    <img th:src="@{/static/icon/logo/twitch.svg}" alt="Twitch"/>
+                                                </a>
+                                            </li>
+                                            <li class="pro-player-info">
+                                                <a id="link-youtube" class="social-media" href="#" target="_blank" rel="noopener">
+                                                    <img th:src="@{/static/icon/logo/youtube.svg}" alt="Youtube"/>
+                                                </a>
+                                            </li>
+                                            <li class="pro-player-info">
+                                                <a id="link-discord" class="social-media" href="#" target="_blank" rel="noopener">
+                                                    <img th:src="@{/static/icon/logo/discord.svg}" alt="Discord"/>
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a id="link-sc2" class="social-media" href="#" target="_blank" rel="noopener">
+                                                    <img th:src="@{/static/icon/logo/sc2.svg}" alt="SC2"/>
+                                                </a>
+                                            </li>
+                                        </ul>
+                                    </li>
+                                    <li class="mb-3">
+                                        <ul class="d-inline-flex flex-column flex-center-wrap-gap list-unstyled flex-list">
+                                            <li>
+                                                <span id="link-battletag" class="social-media d-flex flex-center-wrap-gap">
+                                                    <img th:src="@{/static/icon/logo/battlenet.svg}" alt="BattleTag" title="BattleTag" class="flex-grow-1"/>
+                                                    <span class="tag text-right"></span>
+                                                </span>
+                                            </li>
+                                            <li>
+                                                <span id="link-discord-connection" class="social-media d-flex flex-center-wrap-gap">
+                                                    <img th:src="@{/static/icon/logo/discord.svg}" alt="Discord" title="Discord" class="flex-grow-1"/>
+                                                    <span class="tag text-right"></span>
+                                                </span>
+                                            </li>
+                                        </ul>
                                     </li>
                                 </ul>
                             </section>

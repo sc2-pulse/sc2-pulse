@@ -253,6 +253,19 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     font-size: 0.8rem;
 }
 
+.flex-list li
+{
+    width: 100%;
+}
+
+.flex-center-wrap-gap
+{
+    gap: 1em;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
 .table
 {
     font-size: 0.875rem;
@@ -623,11 +636,7 @@ body.theme-light .adaptive-border-color-splitter
   font-family: serif;
   width: 1em;
   display: inline-block;
-}
-
-#link-aligulac span
-{
-  vertical-align: middle;
+  text-align: center;
 }
 
 .player-flag
