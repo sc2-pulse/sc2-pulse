@@ -74,7 +74,7 @@ public class Summary1v1CommandTest
         //verify output
         StringBuilder sb = new StringBuilder()
             .append("**1v1 Summary**\n")
-            .append("*term, 100 days, Top 5, EU, Terran*\n**`Games`** | last/avg/max MMR\n\n");
+            .append("*term, 100 days, Top 5, EU, Terran*\n**`Games`** | **last**/avg/max MMR\n\n");
         for(int i = 3; i > -1; i--)
         {
             sb.append(String.format(

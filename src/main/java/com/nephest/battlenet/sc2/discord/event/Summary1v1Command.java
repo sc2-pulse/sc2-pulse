@@ -137,7 +137,7 @@ public class Summary1v1Command
         if(race != null) sb.append(", ").append(race.getName());
         sb.append("*");
 
-        sb.append( "\n**`Games`** | last/avg/max MMR");
+        sb.append( "\n**`Games`** | **last**/avg/max MMR");
 
         return sb.toString();
     }
