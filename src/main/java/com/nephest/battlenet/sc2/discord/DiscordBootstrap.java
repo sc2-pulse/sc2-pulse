@@ -359,8 +359,8 @@ public class DiscordBootstrap
 
     public static String generateCharacterURL(LadderTeamMember member)
     {
-        return "[" + generateFullName(member, true) + "]("
-            + String.format(CHARACTER_URL_TEMPLATE, member.getCharacter().getId()) + ")";
+        return "[" + generateFullName(member, true) + "](<"
+            + String.format(CHARACTER_URL_TEMPLATE, member.getCharacter().getId()) + ">)";
     }
 
     public static String generateFullName(LadderTeamMember member, boolean boldName)

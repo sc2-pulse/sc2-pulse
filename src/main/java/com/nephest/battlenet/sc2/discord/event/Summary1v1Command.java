@@ -14,7 +14,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.object.entity.Message;
-import discord4j.core.spec.EmbedCreateSpec;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -99,8 +98,9 @@ public class Summary1v1Command
             .collect(Collectors.toList());
         if(summaries.isEmpty()) return null;
 
-        StringBuilder description = new StringBuilder();
-        description.append(generateDescription(name, depth, maxLines, region, race)).append("\n\n");
+        StringBuilder description = new StringBuilder()
+            .append("**1v1 Summary**\n")
+            .append(generateDescription(name, depth, maxLines, region, race)).append("\n\n");
         for(PlayerCharacterSummary summary : summaries)
         {
             LadderTeamMember member = characters.get(summary.getPlayerCharacterId());
@@ -116,11 +116,7 @@ public class Summary1v1Command
                 .append("\n\n");
         }
 
-        EmbedCreateSpec.Builder embed = discordBootstrap.embedBuilder()
-            .title("1v1 Summary")
-            .description(description.toString());
-        return evt.createFollowup()
-            .withEmbeds(embed.build());
+        return evt.createFollowup().withContent(description.toString());
     }
 
     private static String generateDescription(String name, long depth, int lines, Region region, Race race)
