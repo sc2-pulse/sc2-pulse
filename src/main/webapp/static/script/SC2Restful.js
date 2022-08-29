@@ -83,6 +83,7 @@ class SC2Restful
                 BufferUtil.enhance();
                 BootstrapUtil.enhanceTooltips();
                 ElementUtil.enhanceFullscreenToggles();
+                ElementUtil.enhanceCopyToClipboard();
                 Session.enhanceSerializable();
                 ChartUtil.enhanceZoomToggles();
                 ChartUtil.enhanceTimeAxisToggles();

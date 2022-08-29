@@ -639,6 +639,20 @@ body.theme-light .adaptive-border-color-splitter
   text-align: center;
 }
 
+.copy-to-clipboard
+{
+    cursor: copy;
+}
+
+.copy-to-clipboard::after
+{
+    content: url("icon/misc/copy.svg");
+    display: inline-block;
+    vertical-align: middle;
+    margin-left: 0.5rem;
+    line-height: 1;
+}
+
 .player-flag
 {
     border: rgba(128, 128, 128, 0.6) solid 0.1em;

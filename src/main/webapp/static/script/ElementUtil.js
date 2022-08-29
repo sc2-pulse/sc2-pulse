@@ -446,6 +446,36 @@ class ElementUtil
         return dataList;
     }
 
+    static clearInputTimeout(key)
+    {
+        const timeout = ElementUtil.INPUT_TIMEOUTS.get(key);
+        if(timeout) {
+            window.clearTimeout(timeout);
+            ElementUtil.INPUT_TIMEOUTS.delete(key);
+        }
+    }
+
+    static enhanceCopyToClipboard()
+    {
+        document.querySelectorAll(".copy-to-clipboard")
+            .forEach(e=>e.addEventListener("click", ElementUtil.copyToClipboard))
+    }
+
+    static copyToClipboard(evt)
+    {
+        const text = evt.target.textContent;
+        return navigator.clipboard.writeText(text)
+            .then(e=>{
+                ElementUtil.clearInputTimeout(evt.target);
+                const bsTooltip = $(evt.target);
+                if(!bsTooltip.data('bs.tooltip'))
+                    bsTooltip.tooltip({trigger: "manual", title: "Copied!"});
+                bsTooltip.tooltip("show");
+                ElementUtil.INPUT_TIMEOUTS.set(evt.target, window.setTimeout(t=>$(evt.target).tooltip("hide"), ElementUtil.MANUAL_TOOLTIP_TIMEOUT));
+                return Promise.resolve(text);
+            });
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
@@ -455,3 +485,4 @@ ElementUtil.TITLE_CONSTRUCTORS = new Map();
 ElementUtil.DESCRIPTION_CONSTRUCTORS = new Map();
 ElementUtil.NEGATION_PREFIX = "neg-";
 ElementUtil.INPUT_TIMEOUT = 1000;
+ElementUtil.MANUAL_TOOLTIP_TIMEOUT = 1000;
