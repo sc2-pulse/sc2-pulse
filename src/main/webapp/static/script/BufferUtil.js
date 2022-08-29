@@ -29,10 +29,8 @@ class BufferUtil
         if(BufferUtil.teamBuffer.buffer.size > 0) {
             elem.setAttribute("href", TeamUtil.getTeamMmrHistoryHref(BufferUtil.teamBuffer.buffer.values()));
             elem.classList.remove("d-none");
-            elem.classList.add("d-inline-block");
         } else {
             elem.classList.add("d-none");
-            elem.classList.remove("d-inline-block");
         }
     }
 
@@ -48,9 +46,7 @@ class BufferUtil
             && params.getAll("team2").length + params.getAll('clan2').length > 0) {
             link.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=versus&m=1&${params.toString()}`);
             link.classList.remove("d-none");
-            link.classList.add("d-inline-block");
         } else {
-            link.classList.remove("d-inline-block");
             link.classList.add("d-none");
         }
     }
