@@ -1,22 +1,29 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
+import java.time.Duration;
+import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.test.StepVerifier;
 import reactor.util.retry.Retry;
-
-import java.time.Duration;
-import java.util.concurrent.TimeUnit;
 
 public class WebServiceTestUtil
 {
@@ -96,6 +103,46 @@ public class WebServiceTestUtil
     {
         api.setWebClient(originalClient);
         api.setRetry(null);
+    }
+
+    public static <T> T getObject
+    (
+        MockMvc mvc,
+        ObjectMapper objectMapper,
+        Class<T> clazz,
+        String uriTemplate,
+        Object... uriArgs
+    )
+    throws Exception
+    {
+        return objectMapper.readValue(mvc.perform
+        (
+            get(uriTemplate, uriArgs)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), clazz);
+    }
+
+    public static <T> T getObject
+    (
+        MockMvc mvc,
+        ObjectMapper objectMapper,
+        TypeReference<T> clazz,
+        String uriTemplate,
+        Object... uriArgs
+    )
+    throws Exception
+    {
+        return objectMapper.readValue(mvc.perform
+        (
+            get(uriTemplate, uriArgs)
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), clazz);
     }
 
 }

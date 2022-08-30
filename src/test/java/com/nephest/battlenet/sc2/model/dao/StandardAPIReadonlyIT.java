@@ -23,6 +23,7 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -101,13 +102,8 @@ public class StandardAPIReadonlyIT
     @Test
     public void testFindCharacterById() throws Exception
     {
-        PlayerCharacter[] characters = objectMapper.readValue(mvc.perform
-            (
-                get("/api/character/1,2")
-                    .contentType(MediaType.APPLICATION_JSON)
-            )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        PlayerCharacter[] characters = WebServiceTestUtil
+            .getObject(mvc, objectMapper, new TypeReference<>(){}, "/api/character/1,2");
         Arrays.sort(characters, Comparator.comparing(PlayerCharacter::getId));
 
         assertEquals(2, characters.length);

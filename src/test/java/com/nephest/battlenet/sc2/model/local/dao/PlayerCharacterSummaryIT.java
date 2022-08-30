@@ -1,15 +1,44 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.*;
+import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
+import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,22 +51,6 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -214,13 +227,11 @@ public class PlayerCharacterSummaryIT
         teamDAO.updateRanks(2);
         teamDAO.updateRanks(3);
 
-        PlayerCharacterSummary[] summary = objectMapper.readValue(mvc.perform
+        PlayerCharacterSummary[] summary = WebServiceTestUtil.getObject
         (
-            get("/api/character/{ids}/summary/1v1/50", charEu1.getId() + "," + charEu2.getId() + "," + charEu2.getId())
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-        .andExpect(status().isOk())
-        .andReturn().getResponse().getContentAsString(), PlayerCharacterSummary[].class);
+            mvc, objectMapper, PlayerCharacterSummary[].class,
+            "/api/character/{ids}/summary/1v1/50", charEu1.getId() + "," + charEu2.getId() + "," + charEu2.getId()
+        );
 
         assertEquals(4, summary.length);
 
@@ -246,18 +257,14 @@ public class PlayerCharacterSummaryIT
         assertEquals(BaseLeague.LeagueType.SILVER, c1t.getLeagueTypeLast());
         assertEquals(1, c1t.getGlobalRankLast());
 
-        PlayerCharacterSummary[] zergSummary = objectMapper.readValue(mvc.perform
-        (
-            get
+        PlayerCharacterSummary[] zergSummary = WebServiceTestUtil
+            .getObject
             (
+                mvc, objectMapper, PlayerCharacterSummary[].class,
                 "/api/character/{ids}/summary/1v1/50/{races}",
                 charEu1.getId() + "," + charEu2.getId() + "," + charEu2.getId(),
                 Race.ZERG
-            )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-        .andExpect(status().isOk())
-        .andReturn().getResponse().getContentAsString(), PlayerCharacterSummary[].class);
+            );
 
         assertEquals(2, zergSummary.length);
         verifyZergs(zergSummary, charEu1.getId(), charEu2.getId());

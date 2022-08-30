@@ -50,6 +50,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
+import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.math.BigInteger;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -471,13 +472,11 @@ public class PlayerCharacterReportIT
         verifyReports(reports, new Boolean[]{true, true, true}, new Boolean[]{true, false, true, true});
 
         //verify find by character id
-        LadderPlayerCharacterReport[] characterReports = objectMapper.readValue(mvc.perform
+        LadderPlayerCharacterReport[] characterReports = WebServiceTestUtil.getObject
         (
-            get("/api/character/report/list/1")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-        .andExpect(status().isOk())
-        .andReturn().getResponse().getContentAsString(), LadderPlayerCharacterReport[].class);
+            mvc, objectMapper, LadderPlayerCharacterReport[].class,
+            "/api/character/report/list/1"
+        );
         assertEquals(2, characterReports.length);
         assertEquals(reports[0].getReport().getId(), characterReports[0].getReport().getId());
         assertEquals(reports[2].getReport().getId(), characterReports[1].getReport().getId());
@@ -809,13 +808,11 @@ public class PlayerCharacterReportIT
     private LadderPlayerCharacterReport[] getReports()
     throws Exception
     {
-        return objectMapper.readValue(mvc.perform
+        return WebServiceTestUtil.getObject
         (
-            get("/api/character/report/list")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-        .andExpect(status().isOk())
-        .andReturn().getResponse().getContentAsString(), LadderPlayerCharacterReport[].class);
+            mvc, objectMapper, LadderPlayerCharacterReport[].class,
+            "/api/character/report/list"
+        );
     }
 
     @Test

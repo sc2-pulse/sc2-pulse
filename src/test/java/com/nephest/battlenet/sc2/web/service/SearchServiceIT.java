@@ -5,9 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -32,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
@@ -130,13 +127,12 @@ public class SearchServiceIT
     throws Exception
     {
         String searchTermA = "a".repeat(SearchService.MIN_CHARACTER_NAME_LENGTH);
-        String[] suggestionsA = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/search/{name}/suggestions", searchTermA)
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        String[] suggestionsA = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/character/search/{name}/suggestions", searchTermA
+            );
 
         assertEquals(CharacterController.SEARCH_SUGGESTIONS_SIZE, suggestionsA.length);
         //sorted by max rating desc
@@ -154,13 +150,12 @@ public class SearchServiceIT
     throws Exception
     {
         String shortSearchTerm = "a".repeat(SearchService.MIN_CHARACTER_NAME_LENGTH - 1);
-        String[] suggestionsA = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/search/{name}/suggestions", shortSearchTerm)
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        String[] suggestionsA = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/character/search/{name}/suggestions", shortSearchTerm
+            );
 
         assertEquals(0, suggestionsA.length);
     }
@@ -169,13 +164,12 @@ public class SearchServiceIT
     public void testBattleTagSuggestion()
     throws Exception
     {
-        String[] suggestions = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/search/{name}/suggestions", "ab#")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        String[] suggestions = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/character/search/{name}/suggestions", "ab#"
+            );
 
         assertEquals(CharacterController.SEARCH_SUGGESTIONS_SIZE, suggestions.length);
         //sorted by max rating desc
@@ -190,13 +184,12 @@ public class SearchServiceIT
     public void testFakeBattleTagSuggestion()
     throws Exception
     {
-        String[] suggestions = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/search/{name}/suggestions", BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME)
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        String[] suggestions = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/character/search/{name}/suggestions",BasePlayerCharacter.DEFAULT_FAKE_FULL_NAME
+            );
 
         assertEquals(0, suggestions.length);
     }
@@ -205,13 +198,12 @@ public class SearchServiceIT
     public void testClanTagSuggestion()
     throws Exception
     {
-        String[] suggestions = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/search/{name}/suggestions", "[a")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        String[] suggestions = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/character/search/{name}/suggestions", "[a"
+            );
 
         assertEquals(CharacterController.SEARCH_SUGGESTIONS_SIZE, suggestions.length);
         //sorted by active member count desc
@@ -228,13 +220,12 @@ public class SearchServiceIT
     public void testShortClanTagSuggestion()
     throws Exception
     {
-        String[] suggestions = objectMapper.readValue(mvc.perform
-        (
-            get("/api/character/search/{name}/suggestions", "[")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        String[] suggestions = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/character/search/{name}/suggestions", "["
+            );
 
         assertEquals(0, suggestions.length);
     }

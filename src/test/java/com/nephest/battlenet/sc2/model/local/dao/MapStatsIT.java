@@ -8,9 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
@@ -30,6 +28,7 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStats;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsDAO;
+import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -51,7 +50,6 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
@@ -331,13 +329,8 @@ public class MapStatsIT
         String teamType = conversionService.convert(TeamType.ARRANGED, String.class);
         String req = String.format(reqTemplate,
             season, queueType, teamType, regionStrings, leagueStrings, mapId == null ? "" : "/" + mapId);
-        return objectMapper.readValue(mvc.perform
-        (
-            get(req)
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-        .andExpect(status().isOk())
-        .andReturn().getResponse().getContentAsString(), LadderMapStats.class);
+        return WebServiceTestUtil
+            .getObject(mvc, objectMapper, LadderMapStats.class, req);
     }
 
     private void verifyStats

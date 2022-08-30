@@ -6,9 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -16,6 +14,7 @@ import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
@@ -31,7 +30,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
@@ -105,13 +103,8 @@ public class ClanSearchIT
     public void testIdsSearch()
     throws Exception
     {
-        Clan[] clans = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/id/1,5,7")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Clan[] clans = WebServiceTestUtil
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/id/1,5,7");
 
         assertEquals(3, clans.length);
         Arrays.sort(clans, Comparator.comparing(Clan::getId));
@@ -124,13 +117,8 @@ public class ClanSearchIT
     public void testTagSearch()
     throws Exception
     {
-        Clan[] clans = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/tag/clan1")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Clan[] clans = WebServiceTestUtil
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag/clan1");
         assertEquals(1, clans.length);
         Clan clan = clans[0];
         assertNotNull(clan);
@@ -143,13 +131,9 @@ public class ClanSearchIT
     public void testTagOrNameSearch()
     throws Exception
     {
-        Clan[] clansByTag = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/tag-or-name/clan" + (CLAN_COUNT - 1))
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        Clan[] clansByTag = WebServiceTestUtil
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/clan" + (CLAN_COUNT - 1));
         assertEquals(1, clansByTag.length);
         Clan clan = clansByTag[0];
         assertNotNull(clan);
@@ -157,23 +141,14 @@ public class ClanSearchIT
         assertEquals("clan" + (CLAN_COUNT - 1), clan.getTag());
         assertEquals("clan" + (CLAN_COUNT - 1) + "Name", clan.getName());
 
-        Clan[] clansByName = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/tag-or-name/cLAn") //case-insensitive
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        Clan[] clansByName = WebServiceTestUtil
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/cLAn");
         assertEquals(CLAN_COUNT, clansByName.length);
 
         //LIKE search must be used only for names that are at least 3 characters long.
-        Clan[] clansByShortName = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/tag-or-name/cl")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Clan[] clansByShortName = WebServiceTestUtil
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/cl");
         assertEquals(0, clansByShortName.length);
     }
 
@@ -188,58 +163,54 @@ public class ClanSearchIT
     throws Exception
     {
         //normal, first page
-        PagedSearchResult<List<Clan>> result = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1", cursor, max + 1, max + 1)
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        PagedSearchResult<List<Clan>> result = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1",
+                cursor, max + 1, max + 1
+            );
 
         assertEquals(ClanDAO.PAGE_SIZE, result.getResult().size());
         for(int i = 0; i < ClanDAO.PAGE_SIZE; i++)
             assertEquals(clanCount - i, result.getResult().get(i).getId());
 
         //reversed, last page
-        PagedSearchResult<List<Clan>> reversedResult = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/cursor/{cursor}/{minCursor}/{minCursor}/2/-1", cursor, min - 1, min - 1)
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        PagedSearchResult<List<Clan>> reversedResult = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/clan/cursor/{cursor}/{minCursor}/{minCursor}/2/-1",
+                cursor, min - 1, min - 1
+            );
 
         assertEquals(ClanDAO.PAGE_SIZE, reversedResult.getResult().size());
         for(int i = 0; i < ClanDAO.PAGE_SIZE; i++)
             assertEquals(ClanDAO.PAGE_SIZE - i, reversedResult.getResult().get(i).getId());
 
         //filtered by active member count
-        PagedSearchResult<List<Clan>> filteredByActiveMembersResult = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
+        PagedSearchResult<List<Clan>> filteredByActiveMembersResult = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
                     + "?minActiveMembers={min}&maxActiveMembers={max}",
                 cursor, max, max, 10, 19
-            )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+            );
 
         assertEquals(10, filteredByActiveMembersResult.getResult().size());
         for(int i = 0; i < filteredByActiveMembersResult.getResult().size(); i++)
             assertEquals(19 - i, filteredByActiveMembersResult.getResult().get(i).getId());
 
         //filtered by active avg rating
-        PagedSearchResult<List<Clan>> filteredByAvgRatingResult = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
+        PagedSearchResult<List<Clan>> filteredByAvgRatingResult = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
                     + "?minAvgRating={min}&maxAvgRating={max}",
                 cursor, max, max, 10, 19
-            )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+            );
 
         assertEquals(10, filteredByAvgRatingResult.getResult().size());
         for(int i = 0; i < filteredByAvgRatingResult.getResult().size(); i++)
@@ -247,15 +218,13 @@ public class ClanSearchIT
 
         //filtered by region
         Region[] regions = Region.values();
-        PagedSearchResult<List<Clan>> filteredByRegion = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1?region=EU",
+        PagedSearchResult<List<Clan>> filteredByRegion = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1?region=EU",
                 cursor, max, max
-            )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+            );
 
         assertEquals(CLAN_COUNT / regions.length, filteredByRegion.getResult().size());
 
@@ -265,18 +234,16 @@ public class ClanSearchIT
             assertEquals(firstId - i * regions.length, filteredByRegion.getResult().get(i).getId());
 
         //filtered by all
-        PagedSearchResult<List<Clan>> filteredByAllResult = objectMapper.readValue(mvc.perform
-        (
-            get("/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
+        PagedSearchResult<List<Clan>> filteredByAllResult = WebServiceTestUtil
+            .getObject
+            (
+                mvc, objectMapper, new TypeReference<>(){},
+                "/api/clan/cursor/{cursor}/{maxCursor}/{maxCursor}/0/1"
                     + "?minActiveMembers={min}&maxActiveMembers={max}"
                     + "&minAvgRating={min}&maxAvgRating={max}"
                     + "&region=EU",
                 cursor, max, max, 10, 19, 10, 19
-            )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+            );
 
         assertEquals(3, filteredByAllResult.getResult().size());
         int firstAllId = 18;

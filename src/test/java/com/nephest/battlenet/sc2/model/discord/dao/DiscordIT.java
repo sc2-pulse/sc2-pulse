@@ -9,7 +9,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -32,6 +31,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
+import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Comparator;
@@ -157,13 +157,11 @@ public class DiscordIT
     private void verifyLinkedDiscordUser(Long characterId, DiscordUser discordUser)
     throws Exception
     {
-        CommonCharacter commonChar = objectMapper.readValue(mvc.perform
-            (
-                get("/api/character/{id}/common", characterId)
-                    .contentType(MediaType.APPLICATION_JSON)
-            )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), CommonCharacter.class);
+        CommonCharacter commonChar = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, CommonCharacter.class,
+            "/api/character/{id}/common", characterId
+        );
         if(discordUser == null)
         {
             assertNull(commonChar.getDiscordUser());
