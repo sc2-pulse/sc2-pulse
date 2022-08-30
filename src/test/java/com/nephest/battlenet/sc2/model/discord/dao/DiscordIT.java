@@ -25,11 +25,14 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.discord.DiscordIdentity;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.DiscordUserMeta;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
@@ -65,6 +68,9 @@ public class DiscordIT
 
     @Autowired
     private DiscordUserDAO discordUserDAO;
+
+    @Autowired
+    private AccountDiscordUserDAO accountDiscordUserDAO;
 
     @Autowired
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
@@ -135,10 +141,24 @@ public class DiscordIT
 
         discordService.linkAccountToNewDiscordUser(2L, discordUser);
         verifyLinkedDiscordUser(1L, null);
-        verifyLinkedDiscordUser(2L, discordUser);
+        //invisible by default
+        verifyLinkedDiscordUser(2L, discordUser, false);
+
+        //visible
+        discordService.setVisibility(2L, true);
+        verifyLinkedDiscordUser(2L, discordUser, true);
+
+        //invisible
+        discordService.setVisibility(2L, false);
+        verifyLinkedDiscordUser(2L, discordUser, false);
+
+        //back to visible for further test chain
+        discordService.setVisibility(2L, true);
+        verifyLinkedDiscordUser(2L, discordUser, true);
 
         //previous link is removed, one-to-one relationship
         discordService.linkAccountToDiscordUser(1L, discordUser.getId());
+        discordService.setVisibility(1L, true);
         verifyLinkedDiscordUser(1L, discordUser);
         verifyLinkedDiscordUser(2L, null);
 
@@ -170,6 +190,51 @@ public class DiscordIT
         {
             assertDeepEquals(discordUser, commonChar.getDiscordUser());
         }
+    }
+
+    private void verifyLinkedDiscordUser
+    (
+        long characterId,
+        DiscordUser discordUser,
+        boolean isVisible
+    )
+    throws Exception
+    {
+        verifyLinkedDiscordUser(characterId, isVisible ? discordUser : null);
+        DiscordUserMeta meta = accountDiscordUserDAO.findMeta(discordUser.getId()).orElseThrow();
+        assertEquals(isVisible, meta.isPublic());
+    }
+
+    @Test
+    @WithBlizzardMockUser(partition = Partition.GLOBAL, username = BATTLE_TAG)
+    public void testPersonalData()
+    throws Exception
+    {
+        accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLE_TAG));
+        playerCharacterStatsDAO.mergeCalculate();
+
+        DiscordUser discordUser = new DiscordUser(123L, "name", 123);
+        discordService.linkAccountToNewDiscordUser(1L, discordUser);
+
+        CommonPersonalData data = WebServiceTestUtil
+            .getObject(mvc, objectMapper, CommonPersonalData.class, "/api/my/common");
+        assertNotNull(data.getDiscordUser());
+        assertDeepEquals(discordUser, data.getDiscordUser().getUser());
+        //invisible by default
+        assertEquals(false, data.getDiscordUser().getMeta().isPublic());
+
+        //make connection visible
+        mvc.perform
+        (
+            post("/api/my/discord/public/true")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk());
+
+        CommonPersonalData data2 = WebServiceTestUtil
+            .getObject(mvc, objectMapper, CommonPersonalData.class, "/api/my/common");
+        assertEquals(true, data2.getDiscordUser().getMeta().isPublic());
     }
 
     @Test

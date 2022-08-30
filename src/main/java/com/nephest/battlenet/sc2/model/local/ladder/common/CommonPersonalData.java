@@ -4,10 +4,9 @@
 package com.nephest.battlenet.sc2.model.local.ladder.common;
 
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
-import com.nephest.battlenet.sc2.model.discord.DiscordIdentity;
-import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDiscordUser;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import java.util.Collection;
 import java.util.List;
@@ -31,7 +30,7 @@ public class CommonPersonalData
     @NotNull
     private final List<LadderDistinctCharacter> followingCharacters;
 
-    private final DiscordIdentity discordUser;
+    private final LadderDiscordUser discordUser;
 
     public CommonPersonalData
     (
@@ -40,7 +39,7 @@ public class CommonPersonalData
         List<LadderDistinctCharacter> characters,
         List<AccountFollowing> accountFollowings,
         List<LadderDistinctCharacter> followingCharacters,
-        DiscordUser discordUser
+        LadderDiscordUser discordUser
     )
     {
         this.account = account;
@@ -76,7 +75,7 @@ public class CommonPersonalData
         return followingCharacters;
     }
 
-    public DiscordIdentity getDiscordUser()
+    public LadderDiscordUser getDiscordUser()
     {
         return discordUser;
     }

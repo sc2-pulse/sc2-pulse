@@ -406,10 +406,17 @@ class PersonalUtil
                 [["href", ROOT_CONTEXT_PATH + "oauth2/authorization/discord-lg"]]
             ));
         } else {
-            tr.querySelector(":scope .account-connection-name").textContent = data.discordUser.name + "#" + data.discordUser.discriminator;
+            tr.querySelector(":scope .account-connection-name").textContent =
+                data.discordUser.user.name + "#" + data.discordUser.user.discriminator;
+
             const action = ElementUtil.createElement("a", null, "btn btn-outline-danger", "Unlink", [["href", "#"]]);
             action.addEventListener("click", PersonalUtil.unlinkDiscordAccount);
             tr.querySelector(":scope .account-connection-action").appendChild(action);
+
+            const publicCtl = ElementUtil.createElement("input", null, "", null, [["type", "checkbox"]]);
+            ElementUtil.changeInputValue(publicCtl, data.discordUser.meta.public);
+            publicCtl.addEventListener("click", PersonalUtil.updateDiscordAccountVisibility);
+            tr.querySelector(":scope .account-connection-public").appendChild(publicCtl);
         }
     }
 
@@ -423,4 +430,16 @@ class PersonalUtil
             .then(Util.successStatusPromise)
             .catch(error => Session.onPersonalException(error));
     }
+
+    static updateDiscordAccountVisibility(evt)
+    {
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        return Session.beforeRequest()
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/discord/public/" + evt.target.checked, Util.addCsrfHeader({method: "POST"})))
+            .then(Session.verifyResponse)
+            .then(Session.getMyInfo)
+            .then(Util.successStatusPromise)
+            .catch(error => Session.onPersonalException(error));
+    }
+
 }

@@ -18,6 +18,7 @@ CREATE TABLE "account_discord_user"
 (
     "account_id" BIGINT NOT NULL,
     "discord_user_id" BIGINT NOT NULL,
+    "public" BOOLEAN,
 
     PRIMARY KEY("account_id"),
 

@@ -75,6 +75,11 @@ public class DiscordService
         accountDiscordUserDAO.remove(accountId, discordUserId);
     }
 
+    public void setVisibility(Long accountId, boolean isVisible)
+    {
+        accountDiscordUserDAO.updatePublicFlag(accountId, isVisible);
+    }
+
     public void update()
     {
         removeUsersWithNoAccountLinked();

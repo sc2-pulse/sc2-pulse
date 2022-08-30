@@ -144,7 +144,8 @@ public class CharacterController
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
             currentCharacter != null
-                ? discordUserDAO.findByAccountId(currentCharacter.getMembers().getAccount().getId())
+                ? discordUserDAO
+                    .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
                     .orElse(null)
                 : null,
             ladderMatchDAO.findMatchesByCharacterId(
@@ -179,7 +180,8 @@ public class CharacterController
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.getProPlayerByCharacterId(id),
             currentCharacter != null
-                ? discordUserDAO.findByAccountId(currentCharacter.getMembers().getAccount().getId())
+                ? discordUserDAO
+                    .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
                     .orElse(null)
                 : null,
             ladderMatchDAO.findMatchesByCharacterId(

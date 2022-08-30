@@ -7,6 +7,7 @@ import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
 public class AccountDiscordUser
+implements DiscordUserMeta
 {
 
     @NotNull
@@ -14,6 +15,8 @@ public class AccountDiscordUser
 
     @NotNull
     private Long discordUserId;
+
+    private Boolean isPublic;
 
     public AccountDiscordUser()
     {
@@ -23,6 +26,13 @@ public class AccountDiscordUser
     {
         this.accountId = accountId;
         this.discordUserId = discordUserId;
+    }
+
+    public AccountDiscordUser(Long accountId, Long discordUserId, Boolean isPublic)
+    {
+        this.accountId = accountId;
+        this.discordUserId = discordUserId;
+        this.isPublic = isPublic;
     }
 
     @Override
@@ -64,6 +74,17 @@ public class AccountDiscordUser
     public void setDiscordUserId(Long discordUserId)
     {
         this.discordUserId = discordUserId;
+    }
+
+    @Override
+    public Boolean isPublic()
+    {
+        return isPublic;
+    }
+
+    public void setPublic(Boolean aPublic)
+    {
+        isPublic = aPublic;
     }
 
 }

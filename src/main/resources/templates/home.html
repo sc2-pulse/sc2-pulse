@@ -607,8 +607,10 @@
                         <section id="account-linked-accounts">
                             <h4>Linked services</h4>
                             <div class="eligible">
-                                <p>Your account name/tag from linked services will be publicly displayed in the "Links" section
-                                of your SC2 Pulse profile. Additional effects may apply, see "Effects" column.</p>
+                                <p>Linked accounts are visible to all users within the service scope(see "Effects" column).
+                                You can make your data available to all SC2 Pulse users by enabling the "Public" option.
+                                Currently, public connections are displayed in the "Links" section of
+                                the corresponding SC2 Pulse profile.</p>
                                 <div class="table-responsive">
                                     <table id="account-linked-accounts-table" class="table inline-table" >
                                         <thead>
@@ -616,6 +618,7 @@
                                                 <th>Service</th>
                                                 <th>Account</th>
                                                 <th>Effects</th>
+                                                <th>Public</th>
                                                 <th>Action</th>
                                             </tr>
                                         </thead>
@@ -624,6 +627,7 @@
                                                 <td><img src="/static/icon/logo/discord.svg" alt="discord" title="discord" class="table-image-md"></td>
                                                 <td class="dynamic account-connection-name"></td>
                                                 <td>Discord user commands will use your BattleTag instead of Discord username</td>
+                                                <td class="dynamic account-connection-public"></td>
                                                 <td class="dynamic account-connection-action"></td>
                                             </tr>
                                         </tbody>

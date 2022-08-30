@@ -9,11 +9,14 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDiscordUser;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
@@ -58,6 +61,9 @@ public class PersonalController
     private DiscordUserDAO discordUserDAO;
 
     @Autowired
+    private AccountDiscordUserDAO accountDiscordUserDAO;
+
+    @Autowired
     private AccountFollowingService accountFollowingService;
 
     @Autowired
@@ -66,6 +72,9 @@ public class PersonalController
     @GetMapping("/common")
     public CommonPersonalData getCommon(@AuthenticationPrincipal AccountUser user)
     {
+        DiscordUser discordUser = discordUserDAO
+            .findByAccountId(user.getAccount().getId(), false)
+            .orElse(null);
         return new CommonPersonalData
         (
             getAccount(user),
@@ -73,7 +82,13 @@ public class PersonalController
             ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(user.getAccount().getId()),
             accountFollowingService.getAccountFollowingList(user.getAccount().getId()),
             ladderCharacterDAO.findDistinctCharactersByFollowing(user.getAccount().getId()),
-            discordUserDAO.findByAccountId(user.getAccount().getId()).orElse(null)
+            discordUser == null
+                ? null
+                : new LadderDiscordUser
+                (
+                    discordUser,
+                    accountDiscordUserDAO.findMeta(discordUser.getId()).orElse(null)
+                )
         );
     }
 
@@ -169,6 +184,16 @@ public class PersonalController
     public void unlinkDiscordUser(@AuthenticationPrincipal AccountUser user)
     {
         discordService.unlinkAccountFromDiscordUser(user.getAccount().getId(), null);
+    }
+
+    @PostMapping("/discord/public/{public}")
+    public void setPublicFlag
+    (
+        @AuthenticationPrincipal AccountUser user,
+        @PathVariable("public") Boolean isPublic
+    )
+    {
+        discordService.setVisibility(user.getAccount().getId(), isPublic);
     }
 
 }

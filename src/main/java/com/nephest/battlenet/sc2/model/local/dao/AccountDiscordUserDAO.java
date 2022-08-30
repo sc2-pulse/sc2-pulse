@@ -4,10 +4,14 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
+import com.nephest.battlenet.sc2.model.local.DiscordUserMeta;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -20,12 +24,32 @@ public class AccountDiscordUserDAO
         "INSERT INTO account_discord_user(account_id, discord_user_id) "
         + "VALUES(:accountId, :discordUserId)";
 
+    private static final String FIND_META_BY_ID =
+        "SELECT public "
+        + "FROM account_discord_user "
+        + "WHERE discord_user_id = :discordUserId";
+
     private static final String DELETE_BY_ACCOUNT_ID_OR_DISCORD_USER_ID =
         "DELETE FROM account_discord_user "
         + "WHERE account_id = :accountId "
         + "OR discord_user_id = :discordUserId";
 
+    private static final String UPDATE_PUBLIC_FLAG =
+        "UPDATE account_discord_user "
+        + "SET public = :public "
+        + "WHERE account_id = :accountId";
+
     private final NamedParameterJdbcTemplate template;
+
+    public static final RowMapper<DiscordUserMeta> META_MAPPER = (rs, rowNum)->new AccountDiscordUser
+    (
+        null,
+        null,
+        rs.getBoolean("public")
+    );
+
+    public static final ResultSetExtractor<DiscordUserMeta> META_EXTRACTOR =
+        DAOUtils.getResultSetExtractor(META_MAPPER);
 
     @Autowired
     public AccountDiscordUserDAO
@@ -53,6 +77,13 @@ public class AccountDiscordUserDAO
         return template.batchUpdate(CREATE, params);
     }
 
+    public Optional<DiscordUserMeta> findMeta(Long discordUserId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("discordUserId", discordUserId);
+        return Optional.ofNullable(template.query(FIND_META_BY_ID, params, META_EXTRACTOR));
+    }
+
     public int remove(Long accountId, Long discordUserId)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -60,6 +91,14 @@ public class AccountDiscordUserDAO
             .addValue("discordUserId", discordUserId);
 
         return template.update(DELETE_BY_ACCOUNT_ID_OR_DISCORD_USER_ID, params);
+    }
+
+    public boolean updatePublicFlag(long accountId, boolean isPublic)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("accountId", accountId)
+            .addValue("public", isPublic ? true : null);
+        return template.update(UPDATE_PUBLIC_FLAG, params) == 1;
     }
 
 }

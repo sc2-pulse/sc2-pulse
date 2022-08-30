@@ -36,7 +36,8 @@ public class DiscordUserDAO
         "SELECT " + STD_SELECT
         + "FROM account_discord_user "
         + "INNER JOIN discord_user ON account_discord_user.discord_user_id = discord_user.id "
-        + "WHERE account_discord_user.account_id = :accountId";
+        + "WHERE account_discord_user.account_id = :accountId "
+        + "AND(NOT :respectVisibility OR account_discord_user.public)";
 
     private static final String FIND_BY_ID_CURSOR_TEMPLATE =
         "FROM discord_user "
@@ -123,10 +124,11 @@ public class DiscordUserDAO
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
-    public Optional<DiscordUser> findByAccountId(Long accountId)
+    public Optional<DiscordUser> findByAccountId(Long accountId, boolean respectVisibility)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("accountId", accountId);
+            .addValue("accountId", accountId)
+            .addValue("respectVisibility", respectVisibility);
         return Optional.ofNullable(template.query(FIND_BY_ACCOUNT_ID, params, STD_EXTRACTOR));
     }
 
