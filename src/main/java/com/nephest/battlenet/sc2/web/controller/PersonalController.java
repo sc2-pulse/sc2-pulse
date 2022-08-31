@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.service.AccountFollowingService;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -40,6 +41,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Hidden
 @RestController
 @RequestMapping("/api/my")
 public class PersonalController
