@@ -21,6 +21,7 @@ import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEven
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
+import discord4j.core.event.domain.lifecycle.ReconnectEvent;
 import discord4j.core.object.command.ApplicationCommand;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
@@ -125,9 +126,15 @@ public class DiscordBootstrap
         registerCommands(handlers, ChatInputInteractionEvent.class, ApplicationCommand.Type.CHAT_INPUT, client, guild, true);
         registerCommands(userInteractionHandlers, UserInteractionEvent.class, ApplicationCommand.Type.USER, client, guild, false);
         registerAutoCompleteHandlers(autoCompleteHandlers, client);
-        client.updatePresence(ClientPresence.online(ClientActivity.watching(SC2_GAME_NAME))).block();
+        client.on(ReconnectEvent.class, (e)->updatePresence(client));
+        updatePresence(client).subscribe();
 
         return client;
+    }
+
+    private static Mono<Void> updatePresence(GatewayDiscordClient client)
+    {
+        return client.updatePresence(ClientPresence.online(ClientActivity.watching(SC2_GAME_NAME)));
     }
 
     private static void registerAutoCompleteHandlers
