@@ -500,10 +500,20 @@
             <h2>Personal</h2>
             <div class="login-anonymous">
                 <h3>Log in</h3>
-                <a class="btn btn-primary mb-3" role="button" href="#" th:href="@{/oauth2/authorization/sc2-lg-eu}">BattleNet EU</a>
-                <a class="btn btn-primary mb-3" role="button" href="#" th:href="@{/oauth2/authorization/sc2-lg-us}">BattleNet US</a>
-                <a class="btn btn-primary mb-3" role="button" href="#" th:href="@{/oauth2/authorization/sc2-lg-kr}">BattleNet KR</a>
-                <a class="btn btn-primary mb-3" role="button" href="#" th:href="@{/oauth2/authorization/sc2-lg-cn}">BattleNet CN</a>
+                <ul class="d-flex flex-center-wrap-gap list-unstyled">
+                    <li>
+                        <a class="btn btn-outline-primary mb-3" href="#" th:href="@{/oauth2/authorization/sc2-lg-eu}">BattleNet EU</a>
+                    </li>
+                    <li>
+                        <a class="btn btn-outline-primary mb-3" href="#" th:href="@{/oauth2/authorization/sc2-lg-us}">BattleNet US</a>
+                    </li>
+                    <li>
+                        <a class="btn btn-outline-primary mb-3" href="#" th:href="@{/oauth2/authorization/sc2-lg-kr}">BattleNet KR</a>
+                    </li>
+                    <li>
+                        <a class="btn btn-outline-primary mb-3" href="#" th:href="@{/oauth2/authorization/sc2-lg-cn}">BattleNet CN</a>
+                    </li>
+                </ul>
                 <ul class="d-inline-block">
                     <li>Easy access to your stats</li>
                     <li>Create a personal ladder out of your favourite players</li>
