@@ -122,8 +122,11 @@ class MatchUtil
 
         const ratingElem = tr.querySelector(":scope .rating");
         const rating = ratingElem.textContent;
-        ratingElem.innerHTML = `<span class="text-nowrap"><span>${rating}</span> </span>`;
-        ratingElem.querySelector(":scope > span").appendChild(changeElem);
+        ElementUtil.removeChildren(ratingElem);
+        const wrapper = ElementUtil.createElement("span", null, "text-nowrap");
+        wrapper.appendChild(ElementUtil.createElement("span", null, "", rating));
+        wrapper.appendChild(changeElem);
+        ratingElem.appendChild(wrapper);
     }
 
     static findMainTeam(teams, isMainParticipant)
