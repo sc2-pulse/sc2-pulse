@@ -4,6 +4,9 @@
 package com.nephest.battlenet.sc2.web.controller;
 
 import io.swagger.v3.oas.annotations.Hidden;
+import java.io.File;
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -16,20 +19,19 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.File;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
-
 @RestController @Hidden
 @RequestMapping("/dl")
 public class DownloadsController
 {
 
+    @Value("${com.nephest.battlenet.sc2.db-dump-file:#{''}}")
+    private String dbDumpPath;
+
     @GetMapping("/db-dump")
-    public ResponseEntity<Resource> downloadDatabaseDump(@Value("${com.nephest.battlenet.sc2.db-dump-file:#{''}}") String filePath)
+    public ResponseEntity<Resource> downloadDatabaseDump()
     {
-        if(filePath.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
-        File file = new File(filePath);
+        if(dbDumpPath.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
+        File file = new File(dbDumpPath);
         if(!file.exists()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
 
         HttpHeaders headers = new HttpHeaders();
