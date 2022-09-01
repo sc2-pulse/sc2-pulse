@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -16,7 +17,10 @@ import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.discord.DiscordUser;
+import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.Division;
@@ -97,6 +101,12 @@ public class PlayerCharacterDAOIT
 
     @Autowired
     private EvidenceVoteDAO evidenceVoteDAO;
+
+    @Autowired
+    private DiscordUserDAO discordUserDAO;
+
+    @Autowired
+    private AccountDiscordUserDAO accountDiscordUserDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -372,6 +382,9 @@ public class PlayerCharacterDAOIT
             .findAny()
             .orElseThrow();
 
+        DiscordUser discordUser2 = discordUserDAO.findByAccountId(2L, false).orElseThrow();
+        assertEquals(2L, discordUser2.getId());
+
         //admin is untouched because it already exists, moderator is rebound
         List<SC2PulseAuthority> roles = accountRoleDAO.getRoles(1);
         assertEquals(3, roles.size());
@@ -405,10 +418,15 @@ public class PlayerCharacterDAOIT
         assertEquals(1, reboundVotes.size());
         assertEquals(4L, reboundVotes.get(0).getVoterAccountId());
 
+        assertFalse(discordUserDAO.findByAccountId(3L, false).isPresent());
+        DiscordUser discordUser3 = discordUserDAO.findByAccountId(4L, false).orElseThrow();
+        assertEquals(3L, discordUser3.getId());
     }
 
     private Account stubCharacterChain(int num, boolean bind)
     {
+        DiscordUser discordUser = discordUserDAO
+            .merge(new DiscordUser((long) num, "name" + num, num))[0];
         ProPlayer proPlayer = proPlayerDAO
             .merge(new ProPlayer(null, new byte[(byte) num], "proTag" + num, "proName" + num));
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag" + num));
@@ -417,6 +435,7 @@ public class PlayerCharacterDAOIT
         if(bind)
         {
             proPlayerAccountDAO.link(proPlayer.getId(), "tag" + num);
+            accountDiscordUserDAO.create(new AccountDiscordUser(acc1.getId(), discordUser.getId()));
         }
         return acc1;
     }
