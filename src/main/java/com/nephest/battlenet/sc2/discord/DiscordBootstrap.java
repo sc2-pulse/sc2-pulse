@@ -65,6 +65,7 @@ public class DiscordBootstrap
 
     public static final boolean DEFAULT_EPHEMERAL = false;
     public static final int DEFAULT_LINES = 5;
+    public static final int MESSAGE_LENGTH_MAX = 2000;
     public static final String SC2_GAME_NAME = "StarCraft II";
     public static final String SC2_REVEALED_TAG = "revealed";
     public static final String CHARACTER_URL_TEMPLATE =
