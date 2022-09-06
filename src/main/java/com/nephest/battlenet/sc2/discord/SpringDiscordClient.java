@@ -27,12 +27,13 @@ public class SpringDiscordClient
         List<SlashCommand> handlers,
         List<UserCommand> userInteractionHandlers,
         List<AutoComplete> autoCompleteHandlers,
+        GuildEmojiStore guildEmojiStore,
         @Value("${discord.token:}") String token,
         @Value("${discord.guild:}") Long guild
     )
     {
         this.client = DiscordBootstrap
-            .load(handlers, userInteractionHandlers, autoCompleteHandlers, token, guild);
+            .load(handlers, userInteractionHandlers, autoCompleteHandlers, guildEmojiStore, token, guild);
     }
 
     @PreDestroy

@@ -17,9 +17,11 @@ import com.nephest.battlenet.sc2.web.service.UpdateService;
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.guild.EmojisUpdateEvent;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
+import discord4j.core.event.domain.interaction.InteractionCreateEvent;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
 import discord4j.core.event.domain.lifecycle.ReconnectEvent;
 import discord4j.core.object.command.ApplicationCommand;
@@ -84,6 +86,7 @@ public class DiscordBootstrap
 
     private final Map<Race, String> raceEmojis;
     private final Map<BaseLeague.LeagueType, String> leagueEmojis;
+    private final GuildEmojiStore guildEmojiStore;
     private final UpdateService updateService;
 
     @Autowired
@@ -91,23 +94,27 @@ public class DiscordBootstrap
     (
         @Value("#{${discord.race.emoji:{:}}}") Map<Race, String> raceEmojis,
         @Value("#{${discord.league.emoji:{:}}}") Map<BaseLeague.LeagueType, String> leagueEmojis,
+        GuildEmojiStore guildEmojiStore,
         UpdateService updateService
 
     )
     {
         this.raceEmojis = raceEmojis;
         this.leagueEmojis = leagueEmojis;
+        this.guildEmojiStore = guildEmojiStore;
         this.updateService = updateService;
     }
 
-    public String getRaceEmojiOrName(Race race)
+    public String getRaceEmojiOrName(InteractionCreateEvent evt, Race race)
     {
-        return raceEmojis.getOrDefault(race, race.getName());
+        return guildEmojiStore.getGuildRaceEmoji(guildEmojiStore.getGuildEmojis(evt), race)
+            .orElse(raceEmojis.getOrDefault(race, race.getName()));
     }
 
-    public String getLeagueEmojiOrName(BaseLeague.LeagueType league)
+    public String getLeagueEmojiOrName(InteractionCreateEvent evt, BaseLeague.LeagueType league)
     {
-        return leagueEmojis.getOrDefault(league, league.getName());
+        return guildEmojiStore.getGuildLeagueEmoji(guildEmojiStore.getGuildEmojis(evt), league)
+            .orElse(leagueEmojis.getOrDefault(league, league.getName()));
     }
 
     public static GatewayDiscordClient load
@@ -115,6 +122,7 @@ public class DiscordBootstrap
         List<SlashCommand> handlers,
         List<UserCommand> userInteractionHandlers,
         List<AutoComplete> autoCompleteHandlers,
+        GuildEmojiStore guildEmojiStore,
         String token,
         Long guild
     )
@@ -129,7 +137,7 @@ public class DiscordBootstrap
         registerAutoCompleteHandlers(autoCompleteHandlers, client);
         client.on(ReconnectEvent.class, (e)->updatePresence(client));
         updatePresence(client).subscribe();
-
+        client.on(EmojisUpdateEvent.class, guildEmojiStore::removeGuildEmojis).subscribe();
         return client;
     }
 
