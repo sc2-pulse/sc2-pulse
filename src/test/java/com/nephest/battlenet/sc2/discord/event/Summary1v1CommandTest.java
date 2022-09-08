@@ -120,8 +120,8 @@ public class Summary1v1CommandTest
                 )
             );
         when(summaryDAO.find(eq(new Long[]{0L, 1L, 2L, 3L, 4L}), any(), eq(Race.TERRAN))).thenReturn(summaries);
-        when(discordBootstrap.getLeagueEmojiOrName(BaseLeague.LeagueType.DIAMOND)).thenReturn("diamond");
-        when(discordBootstrap.getRaceEmojiOrName(Race.TERRAN)).thenReturn("terran");
+        when(discordBootstrap.getLeagueEmojiOrName(evt, BaseLeague.LeagueType.DIAMOND)).thenReturn("diamond");
+        when(discordBootstrap.getRaceEmojiOrName(evt, Race.TERRAN)).thenReturn("terran");
         when(evt.createFollowup()).thenReturn(followup);
     }
 
