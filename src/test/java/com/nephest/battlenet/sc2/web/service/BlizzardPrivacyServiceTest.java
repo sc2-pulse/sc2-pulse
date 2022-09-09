@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -307,9 +308,7 @@ public class BlizzardPrivacyServiceTest
 
         //update previous season
         privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(Instant.now());
-        OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>>
-            stub = when(api.getLadders(any(), eq(-1L), isNull())).thenReturn(createLadder());
-        for(int i = 0; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
+        stubLadderApi();
 
         privacyService.update();
 
@@ -321,6 +320,30 @@ public class BlizzardPrivacyServiceTest
         assertEquals(character1, extractedCharacter);
         assertEquals("name2#1", extractedCharacter.getName());
         assertEquals(0, extractedCharacter.getClanId());
+        //false because season is not the current season
+        assertFalse(argChars.get(0).getT3());
+    }
+
+    @Test
+    public void testUpdateCurrentLadder()
+    {
+        when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
+        when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
+        when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
+
+        stubLadderApi();
+        //update current season
+        privacyService.update();
+        verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
+        //true because season is the current season and alternative update route is disabled
+        assertTrue(accountPlayerCaptor.getValue().get(0).getT3());
+    }
+
+    private void stubLadderApi()
+    {
+        OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>>
+            stub = when(api.getLadders(any(), eq(-1L), isNull())).thenReturn(createLadder());
+        for(int i = 0; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
     }
 
     private Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>

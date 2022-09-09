@@ -271,7 +271,7 @@ public class BlizzardPrivacyService
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, QUEUE_TYPES, LEAGUE_TYPES), currentSeason);
         api.getLadders(ladderIds, -1, null)
-            .flatMap(l->Flux.fromStream(extractPrivateInfo(l)))
+            .flatMap(l->Flux.fromStream(extractPrivateInfo(l, currentSeason)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
             .forEach(l->dbTasks.add(dbExecutorService.submit(()->
@@ -280,10 +280,13 @@ public class BlizzardPrivacyService
     }
 
     private Stream<Tuple3<Account, PlayerCharacter, Boolean>> extractPrivateInfo
-    (Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladder)
+    (
+        Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladder,
+        boolean currentSeason
+    )
     {
         Region region = ladder.getT2().getT2();
-        boolean isAlternativeUpdate = statsService.isAlternativeUpdate(region, true);
+        boolean fresh = !statsService.isAlternativeUpdate(region, true) && currentSeason;
         return Stream.of(ladder)
             .flatMap(l->Arrays.stream(l.getT1().getTeams()))
             .flatMap(t->Arrays.stream(t.getMembers()))
@@ -292,8 +295,8 @@ public class BlizzardPrivacyService
             {
                 Account account = Account.of(m.getAccount(), region);
                 PlayerCharacter character = PlayerCharacter.of(account, region, m.getCharacter());
-                character.setClanId(isAlternativeUpdate ? Integer.valueOf(0) : m.getClan() != null ? 0 : null);
-                return Tuples.of(account, character, !isAlternativeUpdate);
+                character.setClanId(!fresh ? Integer.valueOf(0) : m.getClan() != null ? 0 : null);
+                return Tuples.of(account, character, fresh);
             });
     }
 
