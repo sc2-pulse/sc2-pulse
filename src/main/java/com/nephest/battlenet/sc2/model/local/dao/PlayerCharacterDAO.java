@@ -32,7 +32,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
 
 @Repository
 public class PlayerCharacterDAO
@@ -225,7 +225,7 @@ public class PlayerCharacterDAO
         + "lock_filter AS "
         + "("
             + "SELECT player_character.id, v.* "
-            + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name, has_clan, fresh) "
+            + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name, has_clan, fresh, season) "
             + "INNER JOIN player_character USING(region, realm, battlenet_id) "
             + "ORDER BY region, realm, battlenet_id "
             + "FOR UPDATE "
@@ -257,11 +257,23 @@ public class PlayerCharacterDAO
             + "LEFT JOIN account ON v.partition = account.partition "
                 + "AND v.battle_tag = account.battle_tag "
             + "WHERE player_character.id = v.id "
-            + "RETURNING player_character.account_id, v.battle_tag "
+            + "RETURNING player_character.account_id, v.battle_tag, v.season "
         + ") "
         + "UPDATE account "
-        + "SET updated = NOW(), "
-        + "battle_tag = updated_character.battle_tag "
+        + "SET updated = "
+            + "CASE "
+                + "WHEN account.battle_tag_last_season <= updated_character.season "
+                + "OR account.battle_tag = updated_character.battle_tag "
+                + "THEN NOW() "
+                + "ELSE account.updated "
+            + "END, "
+        + "battle_tag = "
+            + "CASE "
+                + "WHEN account.battle_tag_last_season <= updated_character.season "
+                + "THEN updated_character.battle_tag "
+                + "ELSE account.battle_tag "
+            + "END, "
+        + "battle_tag_last_season = GREATEST(account.battle_tag_last_season, updated_character.season) "
         + "FROM updated_character "
         + "WHERE account.id = updated_character.account_id";
 
@@ -462,7 +474,8 @@ public class PlayerCharacterDAO
         return template.update(UPDATE_CHARACTERS, params);
     }
 
-    public int updateAccountsAndCharacters(List<Tuple3<Account, PlayerCharacter, Boolean>> accountsAndCharacters)
+    public int updateAccountsAndCharacters
+    (List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> accountsAndCharacters)
     {
         if(accountsAndCharacters.isEmpty()) return 0;
 
@@ -476,7 +489,8 @@ public class PlayerCharacterDAO
                 c.getT2().getBattlenetId(),
                 c.getT2().getName(),
                 c.getT2().getClanId() != null,
-                c.getT3()
+                c.getT3(),
+                c.getT4()
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);

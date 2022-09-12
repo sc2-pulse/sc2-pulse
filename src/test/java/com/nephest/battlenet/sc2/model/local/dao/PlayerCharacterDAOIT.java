@@ -51,7 +51,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import reactor.util.function.Tuple3;
+import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
@@ -272,37 +272,42 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char5 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#123", clan.getId()));
 
-        List<Tuple3<Account, PlayerCharacter, Boolean>> updatedAccsAndChars = List.of
+        List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> updatedAccsAndChars = List.of
         (
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag3#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123"),
-                true
+                true,
+                0
             ),
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag3#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123"),
-                true
+                true,
+                0
             ),
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag4#123"),
                 new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123", clan.getId()),
-                true
+                true,
+                0
             ),
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag10#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name11#123"),
-                false
+                false,
+                0
             ),
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag10#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#1"),
-                false
+                false,
+                0
             )
         );
 

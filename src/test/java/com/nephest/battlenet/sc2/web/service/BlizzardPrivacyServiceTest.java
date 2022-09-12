@@ -101,7 +101,7 @@ public class BlizzardPrivacyServiceTest
     private SC2WebServiceUtil sc2WebServiceUtil;
 
     @Captor
-    private ArgumentCaptor<List<Tuple3<Account, PlayerCharacter, Boolean>>> accountPlayerCaptor;
+    private ArgumentCaptor<List<Tuple4<Account, PlayerCharacter, Boolean, Integer>>> accountPlayerCaptor;
 
     @Captor
     private ArgumentCaptor<OffsetDateTime> offsetDateTimeArgumentCaptor;
@@ -313,7 +313,8 @@ public class BlizzardPrivacyServiceTest
         privacyService.update();
 
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
-        List<Tuple3<Account, PlayerCharacter, Boolean>> argChars = accountPlayerCaptor.getValue();
+        List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> argChars =
+            accountPlayerCaptor.getValue();
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
         assertEquals(1, argChars.size());
         PlayerCharacter extractedCharacter = argChars.get(0).getT2();

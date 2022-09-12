@@ -42,6 +42,7 @@ CREATE TABLE "account"
     "partition" SMALLINT NOT NULL,
     "battle_tag" TEXT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "battle_tag_last_season" SMALLINT NOT NULL DEFAULT 0,
     "hidden" BOOLEAN,
 
     PRIMARY KEY ("id"),
