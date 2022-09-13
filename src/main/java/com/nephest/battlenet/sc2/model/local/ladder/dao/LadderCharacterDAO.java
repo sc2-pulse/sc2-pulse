@@ -9,10 +9,16 @@ import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
-import com.nephest.battlenet.sc2.model.local.dao.*;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -21,9 +27,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public class LadderCharacterDAO
@@ -116,7 +119,8 @@ public class LadderCharacterDAO
     + "INNER JOIN player_character_stats_max ON player_character.id = player_character_stats_max.player_character_id "
     + "INNER JOIN player_character_stats ON player_character_stats_filtered.id = player_character_stats.id "
     + "LEFT JOIN player_character_recent_race ON player_character.id = player_character_recent_race.player_character_id "
-    + "LEFT JOIN clan ON player_character.clan_id = clan.id "
+    + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
+    + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
     + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
     + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
     + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
@@ -171,7 +175,8 @@ public class LadderCharacterDAO
     private static final String FIND_DISTINCT_CHARACTER_BY_CLAN_TAG_QUERY = String.format
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
-        "INNER JOIN clan ON player_character.clan_id = clan.id "
+        "INNER JOIN clan_member ON player_character.id = clan_member.player_character_id "
+        + "INNER JOIN clan ON clan_member.clan_id = clan.id "
         + "WHERE clan.tag = :clanTag ", ""
     );
 

@@ -13,7 +13,6 @@ import com.nephest.battlenet.sc2.model.util.BookmarkedResult;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SimpleBookmarkedResultSetExtractor;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
-import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -43,38 +42,35 @@ public class PlayerCharacterDAO
         + "player_character.region AS \"player_character.region\", "
         + "player_character.battlenet_id AS \"player_character.battlenet_id\", "
         + "player_character.realm AS \"player_character.realm\", "
-        + "player_character.name AS \"player_character.name\", "
-        + "player_character.clan_id AS \"player_character.clan_id\" ";
+        + "player_character.name AS \"player_character.name\" ";
 
     private static final String CREATE_QUERY = "INSERT INTO player_character "
-        + "(account_id, region, battlenet_id, realm, name, clan_id) "
-        + "VALUES (:accountId, :region, :battlenetId, :realm, :name, :clanId)";
+        + "(account_id, region, battlenet_id, realm, name) "
+        + "VALUES (:accountId, :region, :battlenetId, :realm, :name)";
 
     private static final String MERGE_QUERY =
         "WITH "
-        + "vals AS (VALUES(:accountId, :region, :battlenetId, :realm, :name, :clanId)), "
+        + "vals AS (VALUES(:accountId, :region, :battlenetId, :realm, :name)), "
         + "selected AS "
         + "("
             + "SELECT id, region, realm, battlenet_id, player_character.account_id "
             + "FROM player_character "
-            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name, clan_id) "
+            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name) "
                 + "USING (region, realm, battlenet_id)"
         + "), "
         + "updated AS "
         + "("
             + "UPDATE player_character "
             + "SET account_id=v.account_id, "
-            + "name=v.name, "
-            + "clan_id=v.clan_id "
+            + "name=v.name "
             + "FROM selected "
-            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name, clan_id) "
+            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name) "
                 + "USING (region, realm, battlenet_id) "
             + "WHERE player_character.id = selected.id "
             + "AND "
             + "("
                 + "player_character.account_id != v.account_id "
                 + "OR player_character.name != v.name "
-                + "OR player_character.clan_id IS DISTINCT FROM v.clan_id "
             + ") "
             + "RETURNING player_character.id, player_character.account_id "
         + "), "
@@ -188,13 +184,12 @@ public class PlayerCharacterDAO
         + "inserted AS "
         + "("
             + "INSERT INTO player_character "
-            + "(account_id, region, battlenet_id, realm, name, clan_id) "
+            + "(account_id, region, battlenet_id, realm, name) "
             + "SELECT * FROM vals "
             + "WHERE NOT EXISTS(SELECT 1 FROM selected) "
             + "ON CONFLICT(region, realm, battlenet_id) DO UPDATE SET "
             + "account_id=excluded.account_id, "
-            + "name=excluded.name, "
-            + "clan_id=excluded.clan_id "
+            + "name=excluded.name "
             + "RETURNING id"
         + ") "
         + "SELECT id FROM selected "
@@ -207,15 +202,14 @@ public class PlayerCharacterDAO
         + "lock_filter AS "
         + "("
             + "SELECT player_character.id, v.* "
-            + "FROM vals v(region, realm, battlenet_id, name, has_clan) "
+            + "FROM vals v(region, realm, battlenet_id, name) "
             + "INNER JOIN player_character USING(region, realm, battlenet_id) "
             + "ORDER BY region, realm, battlenet_id "
             + "FOR UPDATE "
         + ") "
         + "UPDATE player_character "
         + "SET updated = NOW(), "
-        + "name = v.name, "
-        + "clan_id = CASE WHEN v.has_clan THEN clan_id ELSE NULL END "
+        + "name = v.name "
         + "FROM lock_filter v "
         + "WHERE player_character.id = v.id";
 
@@ -225,7 +219,7 @@ public class PlayerCharacterDAO
         + "lock_filter AS "
         + "("
             + "SELECT player_character.id, v.* "
-            + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name, has_clan, fresh, season) "
+            + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name, fresh, season) "
             + "INNER JOIN player_character USING(region, realm, battlenet_id) "
             + "ORDER BY region, realm, battlenet_id "
             + "FOR UPDATE "
@@ -251,8 +245,7 @@ public class PlayerCharacterDAO
                 yet rebound to it in another region due to API issues. Rebind it now.
              */
             + "account_id = COALESCE(account.id, account_id), "
-            + "name = CASE WHEN v.fresh THEN v.name ELSE player_character.name END, "
-            + "clan_id = CASE WHEN v.has_clan THEN clan_id ELSE NULL END "
+            + "name = CASE WHEN v.fresh THEN v.name ELSE player_character.name END "
             + "FROM lock_filter v "
             + "LEFT JOIN account ON v.partition = account.partition "
                 + "AND v.battle_tag = account.battle_tag "
@@ -416,8 +409,7 @@ public class PlayerCharacterDAO
             conversionService.convert(rs.getInt("player_character.region"), Region.class),
             rs.getLong("player_character.battlenet_id"),
             rs.getInt("player_character.realm"),
-            rs.getString("player_character.name"),
-            DAOUtils.getInteger(rs, "player_character.clan_id")
+            rs.getString("player_character.name")
         );
 
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
@@ -467,7 +459,6 @@ public class PlayerCharacterDAO
                 c.getRealm(),
                 c.getBattlenetId(),
                 c.getName(),
-                c.getClanId() != null
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
@@ -488,7 +479,6 @@ public class PlayerCharacterDAO
                 c.getT2().getRealm(),
                 c.getT2().getBattlenetId(),
                 c.getT2().getName(),
-                c.getT2().getClanId() != null,
                 c.getT3(),
                 c.getT4()
             })
@@ -510,8 +500,7 @@ public class PlayerCharacterDAO
             .addValue("region", conversionService.convert(character.getRegion(), Integer.class))
             .addValue("battlenetId", character.getBattlenetId())
             .addValue("realm", character.getRealm())
-            .addValue("name", character.getName())
-            .addValue("clanId", character.getClanId(), Types.BIGINT);
+            .addValue("name", character.getName());
     }
 
     @Cacheable(cacheNames = "pro-player-characters")

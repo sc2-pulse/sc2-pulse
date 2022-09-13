@@ -66,7 +66,8 @@ public class LadderSearchDAO
         + "INNER JOIN account ON player_character.account_id=account.id ";
 
     private static final String LADDER_SEARCH_TEAM_FROM_FULL_BODY =
-        "LEFT JOIN clan ON player_character.clan_id = clan.id "
+        "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
+        + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
@@ -105,7 +106,8 @@ public class LadderSearchDAO
         + "INNER JOIN team_member ON team_member.team_id = team.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
-        + "LEFT JOIN clan ON player_character.clan_id = clan.id "
+        + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
+        + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "
@@ -152,7 +154,8 @@ public class LadderSearchDAO
         + "INNER JOIN team_member ON team.id = team_member.team_id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
-        + "LEFT JOIN clan ON player_character.clan_id = clan.id "
+        + "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
+        + "LEFT JOIN clan ON clan_member.clan_id = clan.id "
         + "LEFT JOIN pro_player_account ON account.id=pro_player_account.account_id "
         + "LEFT JOIN pro_player ON pro_player_account.pro_player_id=pro_player.id "
         + "LEFT JOIN pro_team_member ON pro_player.id=pro_team_member.pro_player_id "

@@ -104,7 +104,7 @@ public class ClanDAO
 
     private static final String FIND_BY_MIN_MEMBER_COUNT =
         "SELECT clan_id "
-        + "FROM player_character "
+        + "FROM clan_member "
         + "WHERE clan_id IS NOT NULL "
         + "GROUP BY clan_id "
         + "HAVING COUNT(*) >= :minMemberCount";
@@ -115,7 +115,7 @@ public class ClanDAO
 
     private static final String FIND_BY_MIN_MEMBER_COUNT_BY_CURSOR =
         "SELECT clan_id "
-        + "FROM player_character "
+        + "FROM clan_member "
         + "WHERE clan_id IS NOT NULL "
         + "AND clan_id > :cursor "
         + "GROUP BY clan_id "
@@ -186,7 +186,11 @@ public class ClanDAO
         + "LIMIT :limit";
 
     private static final String UPDATE_STATS = "WITH "
-        + "character_filter AS (SELECT id FROM player_character WHERE clan_id IN (:clans)), "
+        + "character_filter AS "
+        + "("
+            + "SELECT player_character_id "
+            + "FROM clan_member "
+            + "WHERE clan_id IN (:clans)), "
         + "all_unwrap AS "
         + "("
             + "SELECT * FROM get_player_character_summary"
@@ -200,13 +204,13 @@ public class ClanDAO
             + "AVG(all_unwrap.league_type_last)::smallint AS avg_league_type, "
             + "SUM(all_unwrap.games) AS games "
             + "FROM all_unwrap "
-            + "INNER JOIN player_character ON all_unwrap.player_character_id = player_character.id "
+            + "INNER JOIN clan_member USING(player_character_id) "
             + "GROUP BY clan_id"
         + "), "
         + "members AS "
         + "("
             + "SELECT clan_id, COUNT(*) as count "
-            + "FROM player_character "
+            + "FROM clan_member "
             + "WHERE clan_id IN (:clans) "
             + "GROUP BY clan_id"
         + ") "
@@ -224,7 +228,7 @@ public class ClanDAO
         "WITH clan_filter AS "
         + "("
             + "SELECT clan_id "
-            + "FROM player_character "
+            + "FROM clan_member "
             + "WHERE clan_id IS NOT NULL "
             + "GROUP BY clan_id "
             + "HAVING COUNT(*) <= :maxMembers "

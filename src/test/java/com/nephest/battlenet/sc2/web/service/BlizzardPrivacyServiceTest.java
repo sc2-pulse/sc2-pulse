@@ -227,9 +227,7 @@ public class BlizzardPrivacyServiceTest
         List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues();
         assertEquals(2, argChars.size());
         assertEquals(character1, argChars.get(0));
-        assertEquals(0, argChars.get(0).getClanId());
         assertEquals(character2, argChars.get(1));
-        assertNull(argChars.get(1).getClanId());
     }
 
     @Test
@@ -290,9 +288,7 @@ public class BlizzardPrivacyServiceTest
         List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues();
         assertEquals(2, argChars.size());
         assertEquals(character1, argChars.get(0));
-        assertEquals(0, argChars.get(0).getClanId());
         assertEquals(character2, argChars.get(1));
-        assertNull(argChars.get(1).getClanId());
     }
 
     @CsvSource
@@ -320,7 +316,6 @@ public class BlizzardPrivacyServiceTest
         PlayerCharacter extractedCharacter = argChars.get(0).getT2();
         assertEquals(character1, extractedCharacter);
         assertEquals("name2#1", extractedCharacter.getName());
-        assertEquals(0, extractedCharacter.getClanId());
         //false because season is not the current season
         assertFalse(argChars.get(0).getT3());
     }

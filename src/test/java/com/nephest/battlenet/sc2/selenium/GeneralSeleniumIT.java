@@ -22,9 +22,11 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
@@ -84,6 +86,9 @@ public class GeneralSeleniumIT
 
     @Autowired
     private ClanDAO clanDAO;
+
+    @Autowired
+    private ClanMemberDAO clanMemberDAO;
 
     @Autowired
     private LeagueStatsDAO leagueStatsDAO;
@@ -434,9 +439,19 @@ public class GeneralSeleniumIT
             10
         );
         Clan clan1 = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
-        template.execute("UPDATE player_character SET clan_id = " + clan1.getId() + " WHERE id <= 140");
+        ClanMember[] cm1 = template
+            .queryForList("SELECT id FROM player_character WHERE id <= 140", Long.class)
+            .stream()
+            .map(id->new ClanMember(id, clan1.getId()))
+            .toArray(ClanMember[]::new);
+        clanMemberDAO.merge(cm1);
         Clan clan2 = clanDAO.merge(new Clan(null, "clanTag2", Region.EU, "clanName2"))[0];
-        template.execute("UPDATE player_character SET clan_id = " + clan2.getId() + " WHERE id > 140");
+        ClanMember[] cm2 = template
+            .queryForList("SELECT id FROM player_character WHERE id > 140", Long.class)
+            .stream()
+            .map(id->new ClanMember(id, clan2.getId()))
+            .toArray(ClanMember[]::new);
+        clanMemberDAO.merge(cm2);
         OffsetDateTime startDateTime = OffsetDateTime.now();
         int matchCount = (int) Math.round(ladderMatchDAO.getResultsPerPage() * 2.5);
         seasonGenerator.createMatches

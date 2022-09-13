@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
@@ -30,6 +31,7 @@ import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
@@ -69,6 +71,8 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -139,6 +143,7 @@ public class StatsService
     private AccountDAO accountDao;
     private PlayerCharacterDAO playerCharacterDao;
     private ClanDAO clanDAO;
+    private ClanMemberDAO clanMemberDAO;
     private TeamMemberDAO teamMemberDao;
     private QueueStatsDAO queueStatsDAO;
     private LeagueStatsDAO leagueStatsDao;
@@ -166,6 +171,7 @@ public class StatsService
         AccountDAO accountDao,
         PlayerCharacterDAO playerCharacterDao,
         ClanDAO clanDAO,
+        ClanMemberDAO clanMemberDAO,
         TeamMemberDAO teamMemberDao,
         QueueStatsDAO queueStatsDAO,
         LeagueStatsDAO leagueStatsDao,
@@ -189,6 +195,7 @@ public class StatsService
         this.accountDao = accountDao;
         this.playerCharacterDao = playerCharacterDao;
         this.clanDAO = clanDAO;
+        this.clanMemberDAO = clanMemberDAO;
         this.teamMemberDao = teamMemberDao;
         this.queueStatsDAO = queueStatsDAO;
         this.leagueStatsDao = leagueStatsDao;
@@ -557,7 +564,7 @@ public class StatsService
         }
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members = new ArrayList<>(bTeams.length * memberCount);
-        List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
+        List<Pair<PlayerCharacter, Clan>> clans = new ArrayList<>();
         Integer curSeason = seasonDao.getMaxBattlenetId(season.getRegion()) == null
             ? 0 : seasonDao.getMaxBattlenetId(season.getRegion());
         List<Tuple2<Team, BlizzardTeam>> validTeams = Arrays.stream(bTeams)
@@ -573,7 +580,7 @@ public class StatsService
                 extractTeamMembers(t.getT2().getMembers(), members, clans, season, t.getT1());
                 if(season.getBattlenetId().equals(curSeason)) pendingTeams.add(t.getT1().getId());
             });
-        saveClans(clanDAO, clans);
+        saveClans(clanDAO, clanMemberDAO, clans);
         saveMembersConcurrently(members);
     }
 
@@ -594,7 +601,7 @@ public class StatsService
     (
         BlizzardTeamMember[] bMembers,
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members,
-        List<Tuple2<PlayerCharacter, Clan>> clans,
+        List<Pair<PlayerCharacter, Clan>> clans,
         Season season,
         Team team
     )
@@ -607,10 +614,24 @@ public class StatsService
             Account account = Account.of(bMember.getAccount(), season.getRegion());
             PlayerCharacter character = PlayerCharacter.of(account, season.getRegion(), bMember.getCharacter());
             TeamMember member = TeamMember.of(team, character, bMember.getRaces());
-            if(bMember.getClan() != null)
-                clans.add(Tuples.of(character, Clan.of(bMember.getClan(), character.getRegion())));
+            clans.add(extractCharacterClanPair(bMember, character));
             members.add(Tuples.of(account, character, member));
         }
+    }
+
+    public static Pair<PlayerCharacter, Clan> extractCharacterClanPair
+    (
+        BlizzardTeamMember bMember,
+        PlayerCharacter character
+    )
+    {
+        return new ImmutablePair<>
+        (
+            character,
+            bMember.getClan() != null
+                ? Clan.of(bMember.getClan(), character.getRegion())
+                : null
+        );
     }
 
     //this ensures the consistent order for concurrent entities(accounts and players)
@@ -640,16 +661,27 @@ public class StatsService
     }
 
     public static void saveClans
-    (ClanDAO clanDAO, List<Tuple2<PlayerCharacter, Clan>> clans)
+    (ClanDAO clanDAO, ClanMemberDAO clanMemberDAO, List<Pair<PlayerCharacter, Clan>> clans)
     {
         if(clans.isEmpty()) return;
+        List<Pair<PlayerCharacter, Clan>> nonNullClans = clans.stream()
+            .filter(p->p.getValue() != null)
+            .sorted(Map.Entry.comparingByValue(Clan.NATURAL_ID_COMPARATOR))
+            .collect(Collectors.toList());
 
-        clans.sort(Comparator.comparing(Tuple2::getT2, Clan.NATURAL_ID_COMPARATOR));
-        clanDAO.merge(clans.stream()
-            .map(Tuple2::getT2)
-            .toArray(Clan[]::new)
-        );
-        for(Tuple2<PlayerCharacter, Clan> t : clans) t.getT1().setClanId(t.getT2().getId());
+        clanDAO.merge(nonNullClans.stream().map(Pair::getValue).toArray(Clan[]::new));
+
+        ClanMember[] members = nonNullClans.stream()
+            .map(t->new ClanMember(t.getKey().getId(), t.getValue().getId()))
+            .toArray(ClanMember[]::new);
+        clanMemberDAO.merge(members);
+
+        Long[] charactersWithNoClan = clans.stream()
+            .filter(c->c.getValue() == null)
+            .map(Pair::getKey)
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        clanMemberDAO.remove(charactersWithNoClan);
     }
 
     public static List<Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> getLeagueIds

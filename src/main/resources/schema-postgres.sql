@@ -105,7 +105,6 @@ CREATE TABLE "player_character"
     "region" SMALLINT NOT NULL,
     "realm" SMALLINT NOT NULL,
     "name" TEXT NOT NULL,
-    "clan_id" INTEGER,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY ("id"),
@@ -114,10 +113,6 @@ CREATE TABLE "player_character"
         FOREIGN KEY ("account_id")
         REFERENCES "account"("id")
         ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "fk_player_character_clan_id"
-        FOREIGN KEY ("clan_id")
-        REFERENCES "clan"("id")
-        ON UPDATE CASCADE,
 
     CONSTRAINT "uq_player_character_region_realm_battlenet_id"
         UNIQUE ("region", "realm", "battlenet_id")
@@ -127,8 +122,26 @@ CREATE TABLE "player_character"
 CREATE INDEX "ix_player_character_account_id" ON "player_character"("account_id");
 CREATE INDEX "ix_player_character_battlenet_id" ON "player_character"("battlenet_id");
 CREATE INDEX "ix_player_character_name" ON "player_character"(LOWER("name") text_pattern_ops);
-CREATE INDEX "ix_player_character_clan_id" ON "player_character"("clan_id") WHERE "clan_id" IS NOT NULL;
 CREATE INDEX "ix_player_character_updated" ON "player_character"("updated");
+
+CREATE TABLE "clan_member"
+(
+    "player_character_id" BIGINT NOT NULL,
+    "clan_id" INTEGER NOT NULL,
+
+    PRIMARY KEY("player_character_id"),
+
+    CONSTRAINT "fk_clan_member_player_character_id"
+        FOREIGN KEY ("player_character_id")
+        REFERENCES "player_character"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_clan_member_clan_id"
+        FOREIGN KEY ("clan_id")
+        REFERENCES "clan"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX "ix_clan_member_clan_id" ON "clan_member"("clan_id");
 
 CREATE TABLE "season"
 (

@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
@@ -77,6 +76,9 @@ public class PlayerCharacterDAOIT
 
     @Autowired
     private ClanDAO clanDAO;
+    
+    @Autowired
+    private ClanMemberDAO clanMemberDAO;
 
     @Autowired
     private PlayerCharacterDAO playerCharacterDAO;
@@ -209,17 +211,17 @@ public class PlayerCharacterDAOIT
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
         Clan clan = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
         PlayerCharacter char1 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123", clan.getId()));
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123"));
         PlayerCharacter char2 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123", clan.getId()));
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123"));
         PlayerCharacter char3 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name3#123", clan.getId()));
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name3#123"));
 
         PlayerCharacter[] updatedCharacters = new PlayerCharacter[]
         {
             new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name2#123"),
             new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name2#123"),
-            new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name4#123", clan.getId())
+            new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name4#123")
         };
 
         OffsetDateTime minTimeAllowed = OffsetDateTime.now();
@@ -236,9 +238,7 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char1 = playerCharacterDAO.find(Region.EU, 1, 1L).orElseThrow();
         PlayerCharacter char2 = playerCharacterDAO.find(Region.EU, 1, 2L).orElseThrow();
         assertEquals("name2#123", char1.getName());
-        assertNull(char1.getClanId());
         assertEquals("name4#123", char2.getName());
-        assertEquals(1, char2.getClanId());
 
         template.execute
         (
@@ -262,15 +262,15 @@ public class PlayerCharacterDAOIT
         Account acc3 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag10#123"));
         Clan clan = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
         PlayerCharacter char1 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123", clan.getId()));
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123"));
         PlayerCharacter char2 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123", clan.getId()));
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123"));
         PlayerCharacter char3 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name3#123", clan.getId()));
+            .merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name3#123"));
         PlayerCharacter char4 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name10#123", clan.getId()));
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name10#123"));
         PlayerCharacter char5 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#123", clan.getId()));
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#123"));
 
         List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> updatedAccsAndChars = List.of
         (
@@ -291,7 +291,7 @@ public class PlayerCharacterDAOIT
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag4#123"),
-                new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123", clan.getId()),
+                new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123"),
                 true,
                 0
             ),

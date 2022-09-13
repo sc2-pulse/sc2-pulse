@@ -16,7 +16,7 @@ extends BasePlayerCharacter
 implements java.io.Serializable, PlayerCharacterNaturalId
 {
 
-    private static final long serialVersionUID = 5L;
+    private static final long serialVersionUID = 6L;
 
     public static final Comparator<PlayerCharacter> NATURAL_ID_COMPARATOR =
         Comparator.comparing(PlayerCharacter::getRegion)
@@ -34,8 +34,6 @@ implements java.io.Serializable, PlayerCharacterNaturalId
     @NotNull
     private Long battlenetId;
 
-    private Integer clanId;
-
     public PlayerCharacter(){}
 
     public PlayerCharacter(Long id, Long accountId, Region region, Long battlenetId, Integer realm, String name)
@@ -45,13 +43,6 @@ implements java.io.Serializable, PlayerCharacterNaturalId
         this.accountId = accountId;
         this.region = region;
         this.battlenetId = battlenetId;
-    }
-
-    public PlayerCharacter
-    (Long id, Long accountId, Region region, Long battlenetId, Integer realm, String name, Integer clanId)
-    {
-        this(id, accountId, region, battlenetId, realm, name);
-        this.clanId = clanId;
     }
 
     public static PlayerCharacter of(Account account, Region region, BlizzardPlayerCharacter bCharacter)
@@ -135,16 +126,6 @@ implements java.io.Serializable, PlayerCharacterNaturalId
     public Long getBattlenetId()
     {
         return battlenetId;
-    }
-
-    public Integer getClanId()
-    {
-        return clanId;
-    }
-
-    public void setClanId(Integer clanId)
-    {
-        this.clanId = clanId;
     }
 
 }

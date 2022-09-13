@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import java.sql.Connection;
@@ -46,6 +47,9 @@ public class ClanIT
 
     @Autowired
     private PlayerCharacterDAO playerCharacterDAO;
+
+    @Autowired
+    private ClanMemberDAO clanMemberDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -96,7 +100,12 @@ public class ClanIT
         );
         Clan clan1 = clanDAO.merge(new Clan(null, "clan1", Region.EU, "clan1Name"))[0];
         Clan clan2 = clanDAO.merge(new Clan(null, "clan2", Region.EU, "clan2Name"))[0];
-        template.update("UPDATE player_character SET clan_id = " + clan1.getId());
+        ClanMember[] cm1 = template
+            .queryForList("SELECT id FROM player_character", Long.class)
+            .stream()
+            .map(id->new ClanMember(id, clan1.getId()))
+            .toArray(ClanMember[]::new);
+        clanMemberDAO.merge(cm1);
 
         //only clans with new stats are updated
         assertEquals(1, clanDAO.updateStats(List.of(clan1.getId(), clan2.getId())));
@@ -123,8 +132,18 @@ public class ClanIT
         assertNull(clan2WithStats.getGames());
 
         //valid stats are not nullified
-        template.execute("UPDATE player_character SET clan_id = NULL");
-        template.execute("UPDATE player_character SET clan_id = 1 WHERE id < " + ClanDAO.CLAN_STATS_MIN_MEMBERS + 1);
+        template.execute("DELETE FROM clan_member");
+        ClanMember[] cm2 = template.queryForList
+        (
+            "SELECT id "
+            + "FROM player_character "
+            + "WHERE id < " + ClanDAO.CLAN_STATS_MIN_MEMBERS + 1,
+            Long.class
+        )
+            .stream()
+            .map(id->new ClanMember(id, clan1.getId()))
+            .toArray(ClanMember[]::new);
+        clanMemberDAO.merge(cm2);
         assertEquals(0, clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1));
         Clan clan1WithStatsValid = clanDAO.findByIds(clan1.getId()).get(0);
         assertEquals(14, clan1WithStatsValid.getMembers()); //all players
@@ -134,8 +153,18 @@ public class ClanIT
         assertEquals(7, clan1WithStatsValid.getGames()); //7-14 teams
 
         //invalid stats are nullified
-        template.execute("UPDATE player_character SET clan_id = NULL");
-        template.execute("UPDATE player_character SET clan_id = 1 WHERE id < " + ClanDAO.CLAN_STATS_MIN_MEMBERS );
+        template.execute("DELETE FROM clan_member");
+        ClanMember[] cm3 = template.queryForList
+        (
+            "SELECT id "
+            + "FROM player_character "
+            + "WHERE id < " + ClanDAO.CLAN_STATS_MIN_MEMBERS,
+            Long.class
+        )
+            .stream()
+            .map(id->new ClanMember(id, clan1.getId()))
+            .toArray(ClanMember[]::new);
+        clanMemberDAO.merge(cm3);
         assertEquals(1, clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1));
         Clan clan1WithStatsNullified = clanDAO.findByIds(clan1.getId()).get(0);
         assertNull(clan1WithStatsNullified.getMembers());
@@ -161,12 +190,26 @@ public class ClanIT
         for(int i = 0; i < 10; i++)
             clanDAO.merge(new Clan(null, "tag" + i, Region.EU, "name" + i));
         for(int i = 0; i < 5; i++)
-            template.update(String.format(
-                "UPDATE player_character SET clan_id = %1$s WHERE id > %2$s AND id <= %3$s",
-                i + 1,
-                i * ClanDAO.CLAN_STATS_MIN_MEMBERS,
-                (i + 1) * ClanDAO.CLAN_STATS_MIN_MEMBERS)
-            );
+        {
+            final int fi = i;
+            ClanMember[] cm = template.queryForList
+            (
+                String.format
+                (
+                    "SELECT id "
+                    + "FROM player_character "
+                    + "WHERE id > %1$s AND id <= %2$s",
+                    i * ClanDAO.CLAN_STATS_MIN_MEMBERS,
+                    (i + 1) * ClanDAO.CLAN_STATS_MIN_MEMBERS
+                ),
+                Long.class
+            )
+                .stream()
+                .map(id->new ClanMember(id, fi + 1))
+                .toArray(ClanMember[]::new);
+            clanMemberDAO.merge(cm);
+        }
+
 
         Set<Integer> validClans =
             new HashSet<>(clanDAO.findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS));

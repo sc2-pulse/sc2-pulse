@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
@@ -36,6 +37,7 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
@@ -114,6 +116,9 @@ public class LadderSearchIndependentIT
     private ClanDAO clanDAO;
 
     @Autowired
+    private ClanMemberDAO clanMemberDAO;
+
+    @Autowired
     private ObjectMapper objectMapper;
 
     private static MockMvc mvc;
@@ -186,11 +191,16 @@ public class LadderSearchIndependentIT
         proPlayerAccountDAO.link(proPlayer.getId(), acc.getBattleTag(), acc2.getBattleTag());
         Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
         PlayerCharacter character1 = playerCharacterDAO
-            .create(new PlayerCharacter(null, acc.getId(), region, 9998L, 1, "refchar1#123", clan.getId()));
+            .create(new PlayerCharacter(null, acc.getId(), region, 9998L, 1, "refchar1#123"));
         PlayerCharacter character2 = playerCharacterDAO
-            .create(new PlayerCharacter(null, acc.getId(), region, 9999L, 1, "refchar2#123", clan.getId()));
+            .create(new PlayerCharacter(null, acc.getId(), region, 9999L, 1, "refchar2#123"));
         PlayerCharacter character3 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc2.getId(), region, 9997L, 1, "refchar3#123"));
+        clanMemberDAO.merge
+        (
+            new ClanMember(character1.getId(), clan.getId()),
+            new ClanMember(character2.getId(), clan.getId())
+        );
         Team team1 = new Team
         (
             null, season1.getBattlenetId(), region,

@@ -29,6 +29,7 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
@@ -60,6 +61,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -121,6 +124,7 @@ public class AlternativeLadderService
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDao;
     private final ClanDAO clanDAO;
+    private final ClanMemberDAO clanMemberDAO;
     private final TeamMemberDAO teamMemberDao;
     private final BlizzardDAO blizzardDAO;
     private final VarDAO varDAO;
@@ -144,6 +148,7 @@ public class AlternativeLadderService
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDao,
         ClanDAO clanDAO,
+        ClanMemberDAO clanMemberDAO,
         TeamMemberDAO teamMemberDao,
         BlizzardDAO blizzardDAO,
         VarDAO varDAO,
@@ -162,6 +167,7 @@ public class AlternativeLadderService
         this.accountDAO = accountDAO;
         this.playerCharacterDao = playerCharacterDao;
         this.clanDAO = clanDAO;
+        this.clanMemberDAO = clanMemberDAO;
         this.teamMemberDao = teamMemberDao;
         this.blizzardDAO = blizzardDAO;
         this.varDAO = varDAO;
@@ -410,8 +416,7 @@ public class AlternativeLadderService
         Division division = getOrCreateDivision(season, ladder.getLeague(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladderMemberCount, 1.0F);
         Set<PlayerCharacter> characters = new HashSet<>();
-        List<Tuple2<PlayerCharacter, Clan>> clans = new ArrayList<>();
-        List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans = new ArrayList<>();
+        List<Pair<PlayerCharacter, Clan>> clans = new ArrayList<>();
         List<AlternativeTeamData> newTeams = new ArrayList<>();
         List<Tuple2<Team, BlizzardProfileTeam>> validTeams = Arrays.stream(ladder.getLadderTeams())
             .filter(teamValidationPredicate.and(t->isValidTeam(t, teamMemberCount, ladder.getLeague().getQueueType().getTeamFormat())))
@@ -434,9 +439,8 @@ public class AlternativeLadderService
         teamDao.merge(validTeams.stream().map(Tuple2::getT1).toArray(Team[]::new));
         validTeams.stream()
             .filter(t->t.getT1().getId() != null)
-            .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, existingCharacterClans, members));
-        StatsService.saveClans(clanDAO, clans);
-        saveExistingCharacterClans(existingCharacterClans, characters);
+            .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, members));
+        StatsService.saveClans(clanDAO, clanMemberDAO, clans);
         saveNewCharacterData(newTeams, members);
         savePlayerCharacters(characters);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
@@ -450,8 +454,7 @@ public class AlternativeLadderService
         BlizzardProfileTeam bTeam,
         List<AlternativeTeamData> newTeams,
         Set<PlayerCharacter> characters,
-        List<Tuple2<PlayerCharacter, Clan>> clans,
-        List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans,
+        List<Pair<PlayerCharacter, Clan>> clans,
         Set<TeamMember> members
     )
     {
@@ -464,7 +467,7 @@ public class AlternativeLadderService
             if(playerCharacter == null) {
                 addNewAlternativeCharacter(season, team, bMember, newTeams, clans);
             } else {
-                addExistingAlternativeCharacter(team, bTeam, playerCharacter, bMember, characters, members, existingCharacterClans);
+                addExistingAlternativeCharacter(team, bTeam, playerCharacter, bMember, characters, members, clans);
             }
         }
     }
@@ -478,7 +481,7 @@ public class AlternativeLadderService
         Team team,
         BlizzardProfileTeamMember bMember,
         List<AlternativeTeamData> newTeams,
-        List<Tuple2<PlayerCharacter, Clan>> clans
+        List<Pair<PlayerCharacter, Clan>> clans
     )
     {
         String fakeBtag = BasePlayerCharacter.DEFAULT_FAKE_NAME + "#"
@@ -487,8 +490,7 @@ public class AlternativeLadderService
             + bMember.getId();
         Account fakeAccount = new Account(null, Partition.of(season.getRegion()), fakeBtag);
         PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bMember);
-        if(bMember.getClanTag() != null)
-            clans.add(Tuples.of(character, Clan.of(bMember.getClanTag(), character.getRegion())));
+        clans.add(extractClan(character, bMember));
         newTeams.add(new AlternativeTeamData(fakeAccount, character, team, bMember.getFavoriteRace()));
     }
 
@@ -500,15 +502,10 @@ public class AlternativeLadderService
         BlizzardProfileTeamMember bMember,
         Set<PlayerCharacter> characters,
         Set<TeamMember> members,
-        List<Tuple2<PlayerCharacter, Clan>> existingCharacterClans
+        List<Pair<PlayerCharacter, Clan>> clans
     )
     {
-        if(bMember.getClanTag() != null) {
-            existingCharacterClans.add(Tuples.of(playerCharacter, Clan.of(bMember.getClanTag(), playerCharacter.getRegion())));
-        } else if(playerCharacter.getClanId() != null) {
-            playerCharacter.setClanId(null);
-            characters.add(playerCharacter);
-        }
+        clans.add(extractClan(playerCharacter, bMember));
 
         if(!playerCharacter.getName().equals(bMember.getName()))
         {
@@ -522,19 +519,19 @@ public class AlternativeLadderService
         members.add(member);
     }
 
-    private void saveExistingCharacterClans(List<Tuple2<PlayerCharacter, Clan>> clans, Set<PlayerCharacter> characters)
+    public static Pair<PlayerCharacter, Clan> extractClan
+    (
+        PlayerCharacter playerCharacter,
+        BlizzardProfileTeamMember bMember
+    )
     {
-        if(clans.isEmpty()) return;
-
-        clanDAO.merge(clans.stream()
-            .map(Tuple2::getT2)
-            .sorted(Clan.NATURAL_ID_COMPARATOR)
-            .toArray(Clan[]::new)
+        return new ImmutablePair<>
+        (
+            playerCharacter,
+            bMember.getClanTag() != null
+                ? Clan.of(bMember.getClanTag(), playerCharacter.getRegion())
+                : null
         );
-        for(Tuple2<PlayerCharacter, Clan> t : clans) {
-            if(!Objects.equals(t.getT2().getId(), t.getT1().getClanId())) characters.add(t.getT1());
-            t.getT1().setClanId(t.getT2().getId());
-        }
     }
 
     //this ensures the consistent order for concurrent entities(accounts and players)

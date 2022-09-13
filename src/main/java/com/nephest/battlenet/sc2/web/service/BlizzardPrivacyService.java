@@ -296,7 +296,6 @@ public class BlizzardPrivacyService
             {
                 Account account = Account.of(m.getAccount(), region);
                 PlayerCharacter character = PlayerCharacter.of(account, region, m.getCharacter());
-                character.setClanId(!fresh ? Integer.valueOf(0) : m.getClan() != null ? 0 : null);
                 return Tuples.of(account, character, fresh, seasonId);
             });
     }
@@ -324,12 +323,7 @@ public class BlizzardPrivacyService
             .flatMap(l->Arrays.stream(l.getT1().getLadderTeams()))
             .flatMap(t->Arrays.stream(t.getTeamMembers()))
             .filter(profileTeamMemberPredicate)
-            .map(m->
-            {
-                PlayerCharacter character = PlayerCharacter.of(new Account(), region, m);
-                if(m.getClanTag() != null) character.setClanId(0);
-                return character;
-            });
+            .map(m-> PlayerCharacter.of(new Account(), region, m));
     }
 
     protected Integer getSeasonToUpdate()
@@ -404,9 +398,7 @@ public class BlizzardPrivacyService
 
     private PlayerCharacter extractCharacter(Tuple2<BlizzardLegacyProfile, PlayerCharacterNaturalId> bChar)
     {
-        PlayerCharacter character = PlayerCharacter.of(new Account(), bChar.getT2().getRegion(), bChar.getT1());
-        if(bChar.getT1().getClanTag() != null) character.setClanId(0);
-        return character;
+        return PlayerCharacter.of(new Account(), bChar.getT2().getRegion(), bChar.getT1());
     }
 
 }

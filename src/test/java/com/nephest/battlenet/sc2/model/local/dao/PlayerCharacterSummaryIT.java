@@ -141,8 +141,8 @@ public class PlayerCharacterSummaryIT
             .findDivision(3, Region.EU, QueueType.LOTV_1V1, TeamType.ARRANGED, 10).get();
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         Account acc2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#2"));
-        PlayerCharacter charEu1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1", null));
-        PlayerCharacter charEu2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2", null));
+        PlayerCharacter charEu1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
+        PlayerCharacter charEu2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2"));
 
         Team team1v1_p_s2 = teamDAO.merge(new Team(
             null, 2, Region.EU,

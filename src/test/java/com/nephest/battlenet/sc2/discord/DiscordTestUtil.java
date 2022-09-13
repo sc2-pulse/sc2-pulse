@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -34,7 +34,7 @@ public final class DiscordTestUtil
             BaseLeague.LeagueType.GRANDMASTER,
             0,
             new Account(id, Partition.GLOBAL, battleTag),
-            new PlayerCharacter(id, id, region, id, 0, name, (int) id),
+            new PlayerCharacter(id, id, region, id, 0, name),
             clan != null ? new Clan((int) id, clan, region, clan) : null,
             proName,
             proTeam,

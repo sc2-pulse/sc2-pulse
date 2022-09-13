@@ -60,7 +60,7 @@ public class StatsServiceIT
     {
         teamDAO = mock(TeamDAO.class);
         statsService = new StatsService(null, null, mock(SeasonDAO.class), null, null, null, teamDAO, null,
-            null, null, null, null, null, null, null, null, null, null, null, validator,
+            null, null, null, null, null, null, null, null, null, null, null, null, validator,
             dbExecutorService);
         StatsService nss = mock(StatsService.class);
         statsService.setNestedService(nss);
