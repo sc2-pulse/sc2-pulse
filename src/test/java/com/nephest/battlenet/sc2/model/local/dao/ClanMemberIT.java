@@ -4,6 +4,8 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -14,6 +16,7 @@ import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import javax.sql.DataSource;
@@ -22,6 +25,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
@@ -43,6 +47,9 @@ public class ClanMemberIT
 
     @Autowired
     private ClanMemberDAO clanMemberDAO;
+
+    @Autowired
+    private JdbcTemplate template;
 
     @BeforeEach
     public void beforeEach(@Autowired DataSource dataSource)
@@ -103,6 +110,7 @@ public class ClanMemberIT
         assertEquals(char2.getId(), pcc2.getPlayerCharacterId());
         assertEquals(clans[1].getId(), pcc2.getClanId());
 
+        OffsetDateTime beforeSecondMerge = OffsetDateTime.now();
         //2nd merge
         clanMemberDAO.merge
         (
@@ -129,6 +137,26 @@ public class ClanMemberIT
         ClanMember pcc2_3 = foundClans2.get(2);
         assertEquals(char3.getId(), pcc2_3.getPlayerCharacterId());
         assertEquals(clans[1].getId(), pcc2_3.getClanId());
+
+        //"updated" field was updated
+        OffsetDateTime updatedOdt = template.queryForObject
+        (
+            "SELECT updated "
+            + "FROM clan_member "
+            + "WHERE player_character_id = " + char2.getId(),
+            OffsetDateTime.class
+        );
+        assertTrue(beforeSecondMerge.isBefore(updatedOdt));
+
+        //"updated" field was not updated
+        OffsetDateTime notUpdatedOdt = template.queryForObject
+        (
+            "SELECT updated "
+            + "FROM clan_member "
+            + "WHERE player_character_id = " + char1.getId(),
+            OffsetDateTime.class
+        );
+        assertFalse(beforeSecondMerge.isBefore(notUpdatedOdt));
     }
 
     @Test
@@ -159,6 +187,35 @@ public class ClanMemberIT
         ClanMember pcc1 = foundMembers.get(0);
         assertEquals(char1.getId(), pcc1.getPlayerCharacterId());
         assertEquals(clan.getId(), pcc1.getClanId());
+    }
+
+    @Test
+    public void testRemoveExpired()
+    {
+        Account acc = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
+        PlayerCharacter char2 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 2L, 2, "name#2"));
+        Clan clan = clanDAO.merge(new Clan(null, "clan1", Region.EU, "name1"))[0];
+        clanMemberDAO.merge
+        (
+            new ClanMember(char1.getId(), clan.getId()),
+            new ClanMember(char2.getId(), clan.getId())
+        );
+
+        template.update
+        (
+            "UPDATE clan_member "
+            + "SET updated = NOW() - INTERVAL ' " + ClanMemberDAO.TTL.toDays() +  " days' "
+            + "WHERE player_character_id = " + char1.getId()
+        );
+
+        OffsetDateTime expiredOdt = OffsetDateTime.now().minus(ClanMemberDAO.TTL);
+        assertEquals(1, clanMemberDAO.getInactiveCount(expiredOdt));
+        assertEquals(1, clanMemberDAO.removeExpired());
+        assertTrue(clanMemberDAO.find(char1.getId()).isEmpty());
+        assertFalse(clanMemberDAO.find(char2.getId()).isEmpty());
     }
 
 }

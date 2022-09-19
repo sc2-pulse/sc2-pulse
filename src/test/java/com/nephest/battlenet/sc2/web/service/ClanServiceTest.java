@@ -5,37 +5,83 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLegacyProfile;
+import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.ClanMember;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import java.time.Instant;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Flux;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 @ExtendWith(MockitoExtension.class)
 public class ClanServiceTest
 {
 
     @Mock
+    private PlayerCharacterDAO playerCharacterDAO;
+
+    @Mock
     private ClanDAO clanDAO;
+
+    @Mock
+    private ClanMemberDAO clanMemberDAO;
+
+    @Mock
+    private BlizzardSC2API api;
 
     @Mock
     private VarDAO varDAO;
 
+    @Mock
+    private ExecutorService executor;
+
     private ClanService clanService;
+    private ClanService nestedClanService;
 
     @BeforeEach
     public void beforeEach()
     {
-        clanService = new ClanService(clanDAO, varDAO);
+        when(executor.submit(any(Runnable.class))).then(i->{
+            Runnable r = i.getArgument(0);
+            r.run();
+            return CompletableFuture.completedFuture(null);
+        });
+        clanService = new ClanService
+        (
+            playerCharacterDAO,
+            clanDAO,
+            clanMemberDAO,
+            varDAO,
+            api,
+            executor,
+            executor
+        );
+        nestedClanService = spy(clanService);
+        clanService.setClanService(nestedClanService);
     }
 
     @Test
@@ -90,6 +136,87 @@ public class ClanServiceTest
         //cursor was not reset
         clanService.update();
         assertEquals(33, clanService.getStatsCursor().getValue());
+    }
+    
+    @Test
+    public void testUpdateInactiveClanMembers()
+    {
+        List<PlayerCharacter> inactiveMembers = List.of
+        (
+            new PlayerCharacter(1L, 1L, Region.EU, 1L, 1, "name#1"),
+            new PlayerCharacter(2L, 2L, Region.EU, 2L, 2, "name#2")
+        );
+        Flux<Tuple2<BlizzardLegacyProfile, PlayerCharacterNaturalId>> apiData = Flux.just
+        (
+            //clan membership should be updated
+            Tuples.of
+            (
+                new BlizzardLegacyProfile(1L, 1, "name#1", "clan1", "clanName1"),
+                inactiveMembers.get(0)
+            ),
+            //no clan, clan membership should be dropped
+            Tuples.of
+            (
+                new BlizzardLegacyProfile(2L, 2, "name#2", null, null),
+                inactiveMembers.get(1)
+            )
+        );
+        when(clanMemberDAO.getInactiveCount(any())).thenReturn(inactiveMembers.size());
+        when(playerCharacterDAO.findInactiveClanMembers(any(), eq(Long.MAX_VALUE), eq(inactiveMembers.size())))
+            .thenReturn(inactiveMembers);
+        when(api.getLegacyProfiles(inactiveMembers, false)).thenReturn(apiData);
+        when(clanDAO.merge(any())).thenAnswer(inv->{
+            for(int i = 0; i < inv.getArguments().length; i++)
+                inv.getArgument(i, Clan.class).setId(i);
+            return new Clan[]{};
+        });
+        clanService.getInactiveClanMembersUpdated().setValue(Instant.now().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME));
+
+        ArgumentCaptor<ClanMember> clanMemberCaptor = ArgumentCaptor.forClass(ClanMember.class);
+        Instant beforeUpdate = Instant.now();
+        clanService.update();
+        verify(clanMemberDAO).removeExpired();
+        //clan membership dropped
+        verify(clanMemberDAO).remove(2L);
+        verify(clanMemberDAO).merge(clanMemberCaptor.capture());
+        assertEquals(1, clanMemberCaptor.getAllValues().size());
+
+        //clan membership updated
+        ClanMember cm1 = clanMemberCaptor.getValue();
+        assertEquals(inactiveMembers.get(0).getId(), cm1.getPlayerCharacterId());
+        assertEquals(0, cm1.getClanId());
+
+        //vars were updated
+        assertTrue(beforeUpdate.isBefore(clanService.getInactiveClanMembersUpdated().getValue()));
+        assertEquals(inactiveMembers.get(1).getId(), clanService.getInactiveClanMembersCursor().getValue());
+    }
+
+    @Test
+    public void whenNoInactiveClanMembers_thenDontUpdateVars()
+    {
+        Instant beforeUpdate = Instant.now().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME);
+        when(clanMemberDAO.getInactiveCount(any())).thenReturn(0);
+        clanService.getInactiveClanMembersCursor().setValue(33L);
+        clanService.getInactiveClanMembersUpdated().setValue(beforeUpdate);
+
+        clanService.update();
+
+        assertEquals(beforeUpdate, clanService.getInactiveClanMembersUpdated().getValue());
+        assertEquals(33L, clanService.getInactiveClanMembersCursor().getValue());
+    }
+
+    @Test
+    public void whenEmptyInactiveClanMemberBatch_thenResetIdCursor()
+    {
+        Instant beforeUpdate = Instant.now().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME);
+        when(clanMemberDAO.getInactiveCount(any())).thenReturn(2);
+        clanService.getInactiveClanMembersCursor().setValue(33L);
+        clanService.getInactiveClanMembersUpdated().setValue(beforeUpdate);
+
+        clanService.update();
+
+        assertEquals(beforeUpdate, clanService.getInactiveClanMembersUpdated().getValue());
+        assertEquals(Long.MAX_VALUE, clanService.getInactiveClanMembersCursor().getValue());
     }
 
 }

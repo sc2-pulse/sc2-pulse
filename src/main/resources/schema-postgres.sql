@@ -128,6 +128,7 @@ CREATE TABLE "clan_member"
 (
     "player_character_id" BIGINT NOT NULL,
     "clan_id" INTEGER NOT NULL,
+    "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY("player_character_id"),
 
@@ -142,6 +143,7 @@ CREATE TABLE "clan_member"
 );
 
 CREATE INDEX "ix_clan_member_clan_id" ON "clan_member"("clan_id");
+CREATE INDEX "ix_clan_member_updated" ON "clan_member"("updated");
 
 CREATE TABLE "season"
 (

@@ -4,6 +4,8 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.ClanMember;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -19,7 +21,10 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class ClanMemberDAO
+extends StandardDAO
 {
+
+    public static final Duration TTL = Duration.ofDays(30);
 
     public static final String STD_SELECT =
         "clan_member.player_character_id AS \"clan_member.player_character_id\", "
@@ -31,10 +36,10 @@ public class ClanMemberDAO
         + "updated AS "
         + "("
             + "UPDATE clan_member "
-            + "SET clan_id = v.clan_id "
+            + "SET clan_id = v.clan_id, "
+            + "updated = NOW() "
             + "FROM vals v(player_character_id, clan_id) "
             + "WHERE clan_member.player_character_id = v.player_character_id "
-            + "AND clan_member.clan_id != v.clan_id "
             + "RETURNING 1 "
         + "), "
         + "inserted AS "
@@ -59,6 +64,9 @@ public class ClanMemberDAO
         + "FROM clan_member "
         + "WHERE player_character_id IN (:playerCharacterIds)";
 
+    private static final String COUNT_INACTIVE =
+        "SELECT COUNT(*) FROM clan_member WHERE updated < :to";
+
     public static RowMapper<ClanMember> STD_ROW_MAPPER =
     (rs, rowNum)->new ClanMember
     (
@@ -69,22 +77,20 @@ public class ClanMemberDAO
     public static ResultSetExtractor<ClanMember> STD_EXTRACTOR =
         DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
 
-    private final NamedParameterJdbcTemplate template;
-
     @Autowired
     public ClanMemberDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
-        this.template = template;
+        super(template, "clan_member", TTL.toDays() + " days");
     }
 
     public List<ClanMember> find(Long... playerCharacterIds)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", List.of(playerCharacterIds));
-        return template.query(FIND_BY_CHARACTER_IDS, params, STD_ROW_MAPPER);
+        return getTemplate().query(FIND_BY_CHARACTER_IDS, params, STD_ROW_MAPPER);
     }
 
     public ClanMember[] merge(ClanMember... clans)
@@ -100,7 +106,7 @@ public class ClanMemberDAO
             }).collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("data", data);
-        template.query(MERGE, params, DAOUtils.INT_MAPPER);
+        getTemplate().query(MERGE, params, DAOUtils.INT_MAPPER);
         return clans;
     }
 
@@ -110,7 +116,14 @@ public class ClanMemberDAO
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", Set.of(playerCharacterIds));
-        return template.update(REMOVE_BY_CHARACTER_IDS, params);
+        return getTemplate().update(REMOVE_BY_CHARACTER_IDS, params);
+    }
+
+    public int getInactiveCount(OffsetDateTime to)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("to", to);
+        return getTemplate().queryForObject(COUNT_INACTIVE, params, Integer.class);
     }
 
 }

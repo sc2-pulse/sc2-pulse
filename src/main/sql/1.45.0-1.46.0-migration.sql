@@ -33,3 +33,8 @@ CREATE INDEX "ix_clan_member_clan_id" ON "clan_member"("clan_id");
 
 ALTER TABLE "player_character"
 DROP COLUMN "clan_id";
+
+ALTER TABLE "clan_member"
+    ADD COLUMN "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW();
+
+CREATE INDEX "ix_clan_member_updated" ON "clan_member"("updated");

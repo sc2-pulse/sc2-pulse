@@ -22,6 +22,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.Evidence;
 import com.nephest.battlenet.sc2.model.local.EvidenceVote;
@@ -203,6 +204,62 @@ public class PlayerCharacterDAOIT
         search3.sort(Comparator.comparing(PlayerCharacter::getId));
         assertEquals(char1, search3.get(0));
         assertEquals(char3, search3.get(1));
+    }
+
+    @Test
+    public void testInactiveClanMembersFinder()
+    {
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
+        PlayerCharacter char2 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 2L, 2, "name#2"));
+        PlayerCharacter char3 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 3, "name#3"));
+        PlayerCharacter char4 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 4, "name#4"));
+        Clan clan1 = clanDAO.merge(new Clan(null, "tag1", Region.EU, "name1"))[0];
+        clanMemberDAO.merge(new ClanMember(char1.getId(), clan1.getId()));
+        clanMemberDAO.merge(new ClanMember(char2.getId(), clan1.getId()));
+        clanMemberDAO.merge(new ClanMember(char3.getId(), clan1.getId()));
+        clanMemberDAO.merge(new ClanMember(char4.getId(), clan1.getId()));
+
+        OffsetDateTime now = OffsetDateTime.now();
+
+        List<PlayerCharacter> cms1 = playerCharacterDAO
+            .findInactiveClanMembers(now, Long.MAX_VALUE, 2);
+        assertEquals(2, cms1.size());
+        assertEquals(char4, cms1.get(0));
+        assertEquals(char3, cms1.get(1));
+
+        List<PlayerCharacter> cms2 = playerCharacterDAO
+            .findInactiveClanMembers(now, char3.getId(), 1);
+        assertEquals(1, cms2.size());
+        assertEquals(char2, cms2.get(0));
+
+        List<PlayerCharacter> cms3 = playerCharacterDAO
+            .findInactiveClanMembers(now, char2.getId(), 100);
+        assertEquals(1, cms3.size());
+        assertEquals(char1, cms3.get(0));
+
+        List<PlayerCharacter> cms4 = playerCharacterDAO
+            .findInactiveClanMembers(now, char1.getId(), 100);
+        assertTrue(cms4.isEmpty());
+    }
+
+    @Test
+    public void whenAllClanMembersAreFresh_thenReturnEmptyList()
+    {
+        OffsetDateTime start = OffsetDateTime.now();
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
+        Clan clan1 = clanDAO.merge(new Clan(null, "tag1", Region.EU, "name1"))[0];
+        clanMemberDAO.merge(new ClanMember(char1.getId(), clan1.getId()));
+
+        List<PlayerCharacter> cms1 = playerCharacterDAO
+            .findInactiveClanMembers(start, Long.MAX_VALUE, 100);
+        assertTrue(cms1.isEmpty());
     }
 
     @Test

@@ -378,6 +378,15 @@ public class PlayerCharacterDAO
         + "FROM player_character "
         + "WHERE id IN(:ids)";
 
+    private static final String FIND_INACTIVE_CLAN_MEMBERS =
+        "SELECT " + STD_SELECT
+        + "FROM clan_member "
+        + "INNER JOIN player_character ON clan_member.player_character_id = player_character.id "
+        + "WHERE clan_member.updated < :to "
+        + "AND clan_member.player_character_id < :idCursor "
+        + "ORDER BY clan_member.player_character_id DESC "
+        + "LIMIT :limit";
+
     private static final String COUNT_BY_UPDATED_MAX =
         "SELECT COUNT(*) FROM player_character WHERE updated <= :updatedMax";
 
@@ -594,6 +603,20 @@ public class PlayerCharacterDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("ids", List.of(ids));
         return template.query(FIND_BY_IDS, params, getStdRowMapper());
+    }
+
+    public List<PlayerCharacter> findInactiveClanMembers
+    (
+        OffsetDateTime to,
+        Long idCursor,
+        int limit
+    )
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("to", to)
+            .addValue("idCursor", idCursor)
+            .addValue("limit", limit);
+        return template.query(FIND_INACTIVE_CLAN_MEMBERS, params, STD_ROW_MAPPER);
     }
 
     public int countByUpdatedMax(OffsetDateTime updatedMax)
