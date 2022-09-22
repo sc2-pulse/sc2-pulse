@@ -101,22 +101,16 @@ public class SupporterService
 
     public String getRandomPatron()
     {
-        synchronized(supporterWriteBlock)
-        {
-            return patrons.isEmpty()
-                ? null
-                : patrons.get(rng.nextInt(patrons.size()));
-        }
+        return patrons.isEmpty()
+            ? null
+            : patrons.get(rng.nextInt(patrons.size()));
     }
 
     public String getRandomSupporter()
     {
-        synchronized(supporterWriteBlock)
-        {
-            return supporters.getValue().isEmpty()
-                ? null
-                : supporters.getValue().get(rng.nextInt(supporters.getValue().size()));
-        }
+        return supporters.getValue().isEmpty()
+            ? null
+            : supporters.getValue().get(rng.nextInt(supporters.getValue().size()));
     }
 
     public void addSupporter(String name)
