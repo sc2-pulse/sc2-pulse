@@ -38,7 +38,7 @@ public class SupporterService
     private final Object supporterWriteBlock = new Object();
 
     @Autowired
-    private SupporterService
+    public SupporterService
     (
         VarDAO varDAO,
         @Qualifier("simpleRng") Random rng,
