@@ -76,8 +76,9 @@ class BufferUtil
         evt.preventDefault();
         const teamClanIds = Array.from(BufferUtil.teamBuffer.buffer.values())
             .flatMap(t=>t.members)
-            .map(m=>m.character.clanId)
-            .filter(c=>c);
+            .map(m=>m.clan)
+            .filter(c=>c)
+            .map(c=>c.id);
         const clanIds = Array.from(BufferUtil.clanBuffer.buffer.values())
             .map(c=>c.id);
         const str = teamClanIds.concat(clanIds)
