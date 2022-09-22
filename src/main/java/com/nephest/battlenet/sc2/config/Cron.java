@@ -396,9 +396,13 @@ public class Cron
         postgreSQLUtils.reindex
         (
             "ix_team_state_team_id_archived",
-            "ix_team_state_timestamp",
+            "uq_match_date_type_map_id_region",
+            "match_pkey",
+            "ix_match_participant_team_id_team_state_timestamp",
+            "match_participant_pkey",
             "ix_account_updated",
-            "ix_player_character_updated"
+            "ix_player_character_updated",
+            "ix_clan_member_updated"
         );
         persistentLoginDAO.removeExpired();
     }
