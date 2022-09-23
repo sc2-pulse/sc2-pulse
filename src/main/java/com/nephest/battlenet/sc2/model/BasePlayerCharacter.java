@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import javax.validation.constraints.NotNull;
 
 public class BasePlayerCharacter
@@ -26,6 +27,7 @@ public class BasePlayerCharacter
         setName(name);
     }
 
+    @JsonAlias({"realmId"})
     public void setRealm(Integer realm)
     {
         this.realm = realm;
@@ -52,6 +54,7 @@ public class BasePlayerCharacter
         }
     }
 
+    @JsonAlias({"displayName"})
     public void setName(String name)
     {
         setName(name, true);

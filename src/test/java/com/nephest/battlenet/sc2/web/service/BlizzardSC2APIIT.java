@@ -25,6 +25,7 @@ import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
@@ -37,8 +38,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -348,6 +352,33 @@ public class BlizzardSC2APIIT
         assertEquals(Region.US, api.getRegion(Region.US));
 
         api.setAutoForceRegion(false);
+    }
+
+    @Test
+    public void testFetchPlayerCharacters()
+    {
+        List<BlizzardFullPlayerCharacter> chars = api.getPlayerCharacters(Region.EU, 123595611L)
+            .toStream()
+            .collect(Collectors.toList());
+        assertEquals(3, chars.size());
+        chars.sort(Comparator.comparing(BlizzardFullPlayerCharacter::getRegion));
+        verifyPlayerCharacter(chars.get(0), Region.US, 1, 5109270);
+        verifyPlayerCharacter(chars.get(1), Region.EU, 1, 2895287);
+        verifyPlayerCharacter(chars.get(2), Region.KR, 1, 6491133);
+    }
+
+    private static void verifyPlayerCharacter
+    (
+        BlizzardFullPlayerCharacter character,
+        Region expectedRegion,
+        int expectedRealm,
+        long expectedId
+    )
+    {
+        assertEquals(expectedRegion, character.getRegion());
+        assertEquals(expectedRealm, character.getRealm());
+        assertEquals(expectedId, character.getId());
+        assertNotNull(character.getName());
     }
 
 

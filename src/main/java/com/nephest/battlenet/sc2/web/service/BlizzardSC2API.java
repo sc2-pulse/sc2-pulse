@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardDataSeason;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadderLeague;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadderMembership;
@@ -900,6 +901,28 @@ extends BaseAPI
     {
         return Flux.fromIterable(playerCharacters)
             .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getProfile(p, web)));
+    }
+
+    public Flux<BlizzardFullPlayerCharacter> getPlayerCharacters(Region region, Long profileId)
+    {
+        if(region == Region.CN) throw new UnsupportedOperationException("CN region is not supported");
+        ApiContext context = getContext(region, false);
+        return getWebClient(region)
+            .get()
+            .uri
+            (
+                regionUri != null
+                    ? regionUri
+                    : (context.getBaseUrl() + "sc2/player/{0}"),
+                profileId
+            )
+            .accept(APPLICATION_JSON)
+            .retrieve()
+            .bodyToFlux(BlizzardFullPlayerCharacter.class)
+            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY_ONCE, false)))
+            .delaySubscription(context.getRateLimiter().requestSlot())
+            .doOnRequest(s->context.getHealthMonitor().addRequest())
+            .doOnError(t->context.getHealthMonitor().addError());
     }
 
 }
