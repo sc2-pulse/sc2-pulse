@@ -115,7 +115,7 @@
         </div>
         <div class="container mb-3 text-secondary"
              th:if="${@supporterService.getSupporters().size() > 0}"
-             th:utext="${'Supported by ' + @supporterService.getRandomSupporter()}">
+             th:text="${'Supported by ' + @supporterService.getRandomSupporters(5)}">
         </div>
     </footer>
     <div id="dd-mobile" class="dd-block container" th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')

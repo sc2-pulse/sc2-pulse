@@ -18,6 +18,9 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -25,6 +28,8 @@ public class SupporterService
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(SupporterService.class);
+
+    public static final String DEFAULT_DELIMITER = ", ";
 
     private final Random rng;
     private CollectionVar<List<String>, String> supporters;
@@ -36,6 +41,9 @@ public class SupporterService
     private final List<String> patrons;
     private final Map<String, String> sponsoredImageLinks;
     private final Object supporterWriteBlock = new Object();
+
+    @Autowired @Lazy
+    private SupporterService supporterService;
 
     @Autowired
     public SupporterService
@@ -89,6 +97,11 @@ public class SupporterService
         }
     }
 
+    protected void setSupporterService(SupporterService supporterService)
+    {
+        this.supporterService = supporterService;
+    }
+
     public List<String> getDonors()
     {
         return donors.getValue();
@@ -113,6 +126,26 @@ public class SupporterService
             : supporters.getValue().get(rng.nextInt(supporters.getValue().size()));
     }
 
+    public String getRandomSupporters(int count)
+    {
+        int maxSubListIx = supporters.getValue().size() / count;
+        int randomSublist = rng.nextInt(maxSubListIx + 1);
+        return supporterService.getRandomSupporters(count, randomSublist);
+    }
+
+    @Cacheable(cacheNames = "supporters")
+    public String getRandomSupporters(int count, int subListIndex)
+    {
+        List<String> names = supporters.getValue();
+        if(count >= names.size()) return String.join(DEFAULT_DELIMITER, names);
+        if(count < 1) throw new IllegalArgumentException();
+
+        List<String> subList = names
+            .subList(subListIndex * count, Math.min((subListIndex + 1) * count, names.size()));
+        return String.join(DEFAULT_DELIMITER, subList);
+    }
+
+    @CacheEvict(cacheNames = "supporters")
     public void addSupporter(String name)
     {
         synchronized(supporterWriteBlock)
@@ -123,6 +156,7 @@ public class SupporterService
         }
     }
 
+    @CacheEvict(cacheNames = "supporters")
     public void removeSupporter(String name)
     {
         synchronized(supporterWriteBlock)
