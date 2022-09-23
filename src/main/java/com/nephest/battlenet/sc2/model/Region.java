@@ -1,7 +1,9 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
+
+import com.fasterxml.jackson.annotation.JsonCreator;
 
 public enum Region
 implements Identifiable
@@ -25,6 +27,14 @@ implements Identifiable
         this.baseWebUrl = baseWebUrl;
     }
 
+    public static Region from(String name)
+    {
+        for(Region region : Region.values())
+            if(region.getName().equalsIgnoreCase(name)) return region;
+
+        throw new IllegalArgumentException("Invalid name: " + name);
+    }
+
     public static Region from(int id)
     {
         for (Region region : Region.values())
@@ -33,6 +43,12 @@ implements Identifiable
         }
 
         throw new IllegalArgumentException("Invalid id");
+    }
+
+    @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
+    public static Region fromVar(String var)
+    {
+        return var.length() > 1 ? Region.valueOf(var) : from(Integer.parseInt(var));
     }
 
     @Override
