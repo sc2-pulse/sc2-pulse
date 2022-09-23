@@ -40,7 +40,7 @@ class VODUtil
         const matches = Model.DATA.get(VIEW.VOD_SEARCH).get(VIEW_DATA.SEARCH).result;
         document.querySelector("#search-result-vod-all").classList.remove("d-none");
         const result = MatchUtil.updateMatchTable(document.querySelector("#matches-vod"), matches,
-            (data)=>data.team.matchParticipant.twitchVodUrl,
+            (data)=>data.team && data.team.matchParticipant.twitchVodUrl,
             localStorage.getItem("matches-historical-mmr-vod") != "false"
         );
         Model.DATA.get(VIEW.VOD_SEARCH).set(VIEW_DATA.TEAMS, {result: result.teams});
