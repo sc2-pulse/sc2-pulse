@@ -9,7 +9,6 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -114,8 +113,11 @@ extends StandardDAO
     {
         if(playerCharacterIds.length == 0) return 0;
 
+        List<Long> uniqueIds = Arrays.stream(playerCharacterIds)
+            .distinct()
+            .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterIds", Set.of(playerCharacterIds));
+            .addValue("playerCharacterIds", uniqueIds);
         return getTemplate().update(REMOVE_BY_CHARACTER_IDS, params);
     }
 

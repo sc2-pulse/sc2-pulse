@@ -218,4 +218,10 @@ public class ClanMemberIT
         assertFalse(clanMemberDAO.find(char2.getId()).isEmpty());
     }
 
+    @Test
+    public void whenRemoveDuplicateIds_thenIgnoreDuplicates()
+    {
+        clanMemberDAO.remove(1L, 1L); //no exception is thrown
+    }
+
 }
