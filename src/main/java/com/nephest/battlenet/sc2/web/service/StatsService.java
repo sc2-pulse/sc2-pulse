@@ -580,8 +580,8 @@ public class StatsService
                 extractTeamMembers(t.getT2().getMembers(), members, clans, season, t.getT1());
                 if(season.getBattlenetId().equals(curSeason)) pendingTeams.add(t.getT1().getId());
             });
-        saveClans(clanDAO, clanMemberDAO, clans);
         saveMembersConcurrently(members);
+        saveClans(clanDAO, clanMemberDAO, clans);
     }
 
     //cross field validation

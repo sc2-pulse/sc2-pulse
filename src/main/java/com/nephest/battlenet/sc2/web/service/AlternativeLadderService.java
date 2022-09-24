@@ -440,10 +440,10 @@ public class AlternativeLadderService
         validTeams.stream()
             .filter(t->t.getT1().getId() != null)
             .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, members));
-        StatsService.saveClans(clanDAO, clanMemberDAO, clans);
         saveNewCharacterData(newTeams, members);
         savePlayerCharacters(characters);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
+        StatsService.saveClans(clanDAO, clanMemberDAO, clans);
         LOG.debug("Ladder saved: {} {} {}", id.getT1(), id.getT3(), ladder.getLeague());
     }
 
