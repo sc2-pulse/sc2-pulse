@@ -333,6 +333,8 @@ Session.deviceThemeCallback=function(e){Session.setTheme(window.matchMedia && wi
     ? THEME.DARK : THEME.LIGHT)};
 Session.sessionStartTimestamp = null;
 Session.INVALID_API_VERSION_CODE = 112233;
+Session.confirmActionText = null;
+Session.confirmAction = null;
 
 Session.sectionParams = new Map();
 

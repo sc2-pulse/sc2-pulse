@@ -278,6 +278,7 @@ class BootstrapUtil
         $("#error-session").on("shown.bs.modal", e=>window.setTimeout(Session.doRenewBlizzardRegistration, 3500));
         $("#application-version-update").on("shown.bs.modal", e=>Util.reload("application-version-update"));
         document.querySelectorAll(".modal .modal-header .close-left").forEach(e=>e.addEventListener("click", e=>history.back()));
+        BootstrapUtil.enhanceConfirmationModal();
     }
 
     static onModalShow(modal)
@@ -350,6 +351,54 @@ class BootstrapUtil
     static enhancePopovers(selector = "body")
     {
         $(selector + ' [data-toggle="popover"]').popover();
+    }
+
+    static enhanceConfirmationModal()
+    {
+        const confirmationModal = document.querySelector("#modal-confirmation");
+        const modalObj = $(confirmationModal);
+        modalObj.on("hide.bs.modal", e=>{BootstrapUtil.resetConfirmationModal(confirmationModal)});
+        modalObj.on("shown.bs.modal", e=>{
+            document.querySelector("#modal-confirmation-input").focus();
+        });
+        confirmationModal.querySelector("#modal-confirmation-form").addEventListener("submit", e=>{
+            e.preventDefault();
+            if(Session.confirmAction) Session.confirmAction(true);
+            $(document.querySelector("#modal-confirmation")).modal("hide");
+        });
+        confirmationModal.querySelector("#modal-confirmation-input").addEventListener("input", e=>{
+            const btn = document.querySelector("#modal-confirmation .btn-action");
+            if(e.target.value == Session.confirmActionText) {
+                btn.removeAttribute("disabled");
+            } else {
+                btn.setAttribute("disabled", "disabled");
+            }
+        });
+    }
+
+    static resetConfirmationModal(confirmationModal)
+    {
+        if(Session.confirmAction) Session.confirmAction(false);
+        Session.confirmAction = null;
+        Session.confirmActionText = null;
+        document.querySelector("#modal-confirmation #modal-confirmation-input").value = null;
+        document.querySelector("#modal-confirmation .btn-action").setAttribute("disabled", "disabled");
+    }
+
+    static showConfirmationModal(requiredText, description, actionName, actionButtonClass)
+    {
+        const modal = document.querySelector("#modal-confirmation");
+        modal.querySelector(":scope .description").textContent = description;
+        const actionButton = modal.querySelector(":scope .btn-action");
+        actionButton.textContent = actionName;
+        actionButton.setAttribute("class", "btn btn-action " + actionButtonClass);
+        modal.querySelector(":scope .requirement").textContent = requiredText;
+        Session.confirmActionText = requiredText;
+        const promise = new Promise((res, rej)=>{
+            Session.confirmAction = res;
+        });
+        $(modal).modal();
+        return promise;
     }
 
 }

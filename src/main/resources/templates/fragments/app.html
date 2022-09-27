@@ -68,6 +68,30 @@
             </div>
         </div>
     </div>
+    <!-- Modal confirm action -->
+    <div class="modal fade c-no-history" id="modal-confirmation" tabindex="-1" role="dialog" aria-labelledby="modal-confirmation-title" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modal-confirmation-title">Confirmation</h2>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body">
+                    <p class="description"></p>
+                    <p>Type "<span class="requirement"></span>" to confirm the action.</p>
+                    <form id="modal-confirmation-form">
+                        <input id="modal-confirmation-input" class="form-control" type="text" />
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" form="modal-confirmation-form" class="btn btn-action" disabled="disabled"></button>
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
 </th:block>
 <th:block th:fragment="modal ()">
     <th:block th:replace="~{fragments/app::modal-essential}"></th:block>
