@@ -7,7 +7,7 @@
     <title>App</title>
 </head>
 <body>
-<th:block th:fragment="modal ()">
+<th:block th:fragment="modal-essential">
     <!-- Modal error-->
     <div class="modal fade c-no-history" id="error-generation" tabindex="-1" role="dialog" aria-labelledby="error-generation-title" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
@@ -68,6 +68,9 @@
             </div>
         </div>
     </div>
+</th:block>
+<th:block th:fragment="modal ()">
+    <th:block th:replace="~{fragments/app::modal-essential}"></th:block>
     <div class="modal fade c-no-history" id="report-character-modal" tabindex="-1" role="dialog" aria-labelledby="report-character-modal-title" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered" role="document">
             <div class="modal-content">
