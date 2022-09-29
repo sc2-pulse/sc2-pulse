@@ -73,6 +73,7 @@ public class PlayerCharacterDAO
                 + "player_character.account_id != v.account_id "
                 + "OR player_character.name != v.name "
             + ") "
+            + "AND player_character.anonymous IS NULL "
             + "RETURNING player_character.id, player_character.account_id "
         + "), "
         + "rebound AS "
@@ -212,7 +213,8 @@ public class PlayerCharacterDAO
         + "SET updated = NOW(), "
         + "name = v.name "
         + "FROM lock_filter v "
-        + "WHERE player_character.id = v.id";
+        + "WHERE player_character.id = v.id "
+        + "AND player_character.anonymous IS NULL";
 
     private static final String UPDATE_ACCOUNTS_AND_CHARACTERS =
         "WITH "
@@ -251,6 +253,7 @@ public class PlayerCharacterDAO
             + "LEFT JOIN account ON v.partition = account.partition "
                 + "AND v.battle_tag = account.battle_tag "
             + "WHERE player_character.id = v.id "
+            + "AND player_character.anonymous IS NULL "
             + "RETURNING player_character.account_id, v.battle_tag, v.season "
         + ") "
         + "UPDATE account "
@@ -269,7 +272,18 @@ public class PlayerCharacterDAO
             + "END, "
         + "battle_tag_last_season = GREATEST(account.battle_tag_last_season, updated_character.season) "
         + "FROM updated_character "
-        + "WHERE account.id = updated_character.account_id";
+        + "WHERE account.id = updated_character.account_id "
+        + "AND account.anonymous IS NULL";
+
+    private static final String UPDATE_ANONYMOUS_FLAG =
+        "UPDATE player_character "
+        + "SET anonymous = :anonymous "
+        + "WHERE id = :id";
+
+    private static final String FIND_ANONYMOUS_FLAG_BY_ID =
+        "SELECT anonymous "
+        + "FROM player_character "
+        + "WHERE id = :id";
 
     private static final String ANONYMIZE_EXPIRED_CHARACTERS =
         "UPDATE player_character "
@@ -505,6 +519,22 @@ public class PlayerCharacterDAO
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
         return template.update(UPDATE_ACCOUNTS_AND_CHARACTERS, params);
+    }
+
+    public int updateAnonymousFlag( Long id, Boolean anonymous)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("id", id)
+            .addValue("anonymous", anonymous ? true : null);
+        return template.update(UPDATE_ANONYMOUS_FLAG, params);
+    }
+
+    public boolean getAnonymousFlag(Long id)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("id", id);
+        Boolean anonymous = template.queryForObject(FIND_ANONYMOUS_FLAG_BY_ID, params, Boolean.class);
+        return anonymous != null && anonymous;
     }
 
     public int anonymizeExpiredCharacters(OffsetDateTime from)

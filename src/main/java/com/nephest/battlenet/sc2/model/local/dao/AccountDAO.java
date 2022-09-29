@@ -77,6 +77,7 @@ public class AccountDAO
             + "WHERE NOT EXISTS(SELECT 1 FROM selected) "
             + "AND selected_by_character.id = account.id "
             + "AND battle_tag != :battleTag "
+            + "AND account.anonymous IS NULL "
         + "), "
         + "inserted AS"
         + " ("
@@ -111,6 +112,16 @@ public class AccountDAO
 
     private static final String FIND_UPDATED_BY_ID =
         "SELECT updated "
+        + "FROM account "
+        + "WHERE id = :id";
+
+    private static final String UPDATE_ANONYMOUS_FLAG =
+        "UPDATE account "
+        + "SET anonymous = :anonymous "
+        + "WHERE id = :id";
+
+    private static final String FIND_ANONYMOUS_FLAG_BY_ID =
+        "SELECT anonymous "
         + "FROM account "
         + "WHERE id = :id";
 
@@ -254,6 +265,22 @@ public class AccountDAO
         return template.queryForObject(FIND_UPDATED_BY_ID, params, OffsetDateTime.class);
     }
 
+
+    public int updateAnonymousFlag(Long id, Boolean anonymous)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("id", id)
+            .addValue("anonymous", anonymous ? true : null);
+        return template.update(UPDATE_ANONYMOUS_FLAG, params);
+    }
+
+    public boolean getAnonymousFlag(Long id)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("id", id);
+        Boolean anonymous = template.queryForObject(FIND_ANONYMOUS_FLAG_BY_ID, params, Boolean.class);
+        return anonymous != null && anonymous;
+    }
 
     public Optional<Account> find(Partition partition, String battleTag)
     {

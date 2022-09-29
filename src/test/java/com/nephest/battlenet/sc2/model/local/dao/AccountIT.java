@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -167,6 +168,45 @@ public class AccountIT
         OffsetDateTime newUpdated = OffsetDateTime.now().plusDays(1);
         accountDAO.updateUpdated(newUpdated, account.getId());
         assertTrue(accountDAO.getUpdated(account.getId()).isEqual(newUpdated));
+    }
+
+    @Test
+    public void whenAnonymousFlagIsTrue_thenDontUpdateEntity()
+    {
+        //stub
+        Account acc = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter pc = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
+        accountDAO.updateAnonymousFlag(acc.getId(), true);
+        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+
+        //modifying operations that should update the entity
+        Account newAccount = new Account(null, Partition.GLOBAL, "tag#2");
+        accountDAO.merge(newAccount, pc);
+        playerCharacterDAO
+            .updateAccountsAndCharacters(List.of(Tuples.of(newAccount, pc, true, 1)));
+
+        //entity wasn't updated due to anonymous flag
+        Account foundAccount = accountDAO.findByIds(acc.getId()).get(0);
+        assertEquals(acc, foundAccount);
+        assertEquals("tag#1", foundAccount.getBattleTag());
+        OffsetDateTime afterUpdate = template
+            .queryForObject("SELECT updated FROM account", OffsetDateTime.class);
+        assertTrue(beforeUpdate.isAfter(afterUpdate));
+    }
+
+    @Test
+    public void testAnonymousFlagSetterAndGetter()
+    {
+        Account acc = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        //false by default
+        assertFalse(accountDAO.getAnonymousFlag(acc.getId()));
+
+        accountDAO.updateAnonymousFlag(acc.getId(), true);
+        assertTrue(accountDAO.getAnonymousFlag(acc.getId()));
+
+        accountDAO.updateAnonymousFlag(acc.getId(), false);
+        assertFalse(accountDAO.getAnonymousFlag(acc.getId()));
     }
 
 }

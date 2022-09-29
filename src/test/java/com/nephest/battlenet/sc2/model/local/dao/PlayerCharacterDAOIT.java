@@ -572,4 +572,47 @@ public class PlayerCharacterDAOIT
         assertTrue(playerCharacterDAO.getUpdated(char1.getId()).isEqual(newUpdated));
     }
 
+    @Test
+    public void whenAnonymousFlagIsTrue_thenDontUpdateEntity()
+    {
+        //stub
+        Account acc = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter pc = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
+        playerCharacterDAO.updateAnonymousFlag(pc.getId(), true);
+        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+
+        //modifying operations that should update the entity
+        PlayerCharacter newPlayerCharacter =
+            new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#2");
+        playerCharacterDAO.merge(newPlayerCharacter);
+        playerCharacterDAO.updateCharacters(newPlayerCharacter);
+        playerCharacterDAO
+            .updateAccountsAndCharacters(List.of(Tuples.of(acc, newPlayerCharacter, true, 1)));
+
+        //entity wasn't updated due to anonymous flag
+        PlayerCharacter foundCharacter = playerCharacterDAO.find(pc.getId()).get(0);
+        assertEquals(pc, foundCharacter);
+        assertEquals("name#1", foundCharacter.getName());
+        OffsetDateTime afterUpdate = template
+            .queryForObject("SELECT updated FROM player_character", OffsetDateTime.class);
+        assertTrue(beforeUpdate.isAfter(afterUpdate));
+    }
+
+    @Test
+    public void testAnonymousFlagSetterAndGetter()
+    {
+        Account acc = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter pc = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
+        //false by default
+        assertFalse(playerCharacterDAO.getAnonymousFlag(pc.getId()));
+
+        playerCharacterDAO.updateAnonymousFlag(pc.getId(), true);
+        assertTrue(playerCharacterDAO.getAnonymousFlag(pc.getId()));
+
+        playerCharacterDAO.updateAnonymousFlag(pc.getId(), false);
+        assertFalse(playerCharacterDAO.getAnonymousFlag(pc.getId()));
+    }
+
 }

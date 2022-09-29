@@ -44,6 +44,7 @@ CREATE TABLE "account"
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     "battle_tag_last_season" SMALLINT NOT NULL DEFAULT 0,
     "hidden" BOOLEAN,
+    "anonymous" BOOLEAN,
 
     PRIMARY KEY ("id"),
 
@@ -106,6 +107,7 @@ CREATE TABLE "player_character"
     "realm" SMALLINT NOT NULL,
     "name" TEXT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "anonymous" BOOLEAN,
 
     PRIMARY KEY ("id"),
 
