@@ -118,11 +118,7 @@ public class AccountIT
 
         //the data hasn't been updated
         assertEquals("tag#1", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
-        OffsetDateTime updatedAt = template.queryForObject
-        (
-            "SELECT updated FROM account WHERE id = " + acc1.getId(),
-            OffsetDateTime.class
-        );
+        OffsetDateTime updatedAt = accountDAO.getUpdated(acc1.getId());
         assertTrue(beforeUpdate.isAfter(updatedAt));
     }
 
@@ -141,11 +137,7 @@ public class AccountIT
 
         //the data has been updated
         assertEquals("tag#2", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
-        OffsetDateTime updatedAt = template.queryForObject
-        (
-            "SELECT updated FROM account WHERE id = " + acc1.getId(),
-            OffsetDateTime.class
-        );
+        OffsetDateTime updatedAt = accountDAO.getUpdated(acc1.getId());
         assertTrue(beforeUpdate.isBefore(updatedAt));
     }
 
@@ -164,12 +156,17 @@ public class AccountIT
 
         //the data has been updated
         assertEquals("tag#1", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
-        OffsetDateTime updatedAt = template.queryForObject
-        (
-            "SELECT updated FROM account WHERE id = " + acc1.getId(),
-            OffsetDateTime.class
-        );
+        OffsetDateTime updatedAt = accountDAO.getUpdated(acc1.getId());
         assertTrue(beforeUpdate.isBefore(updatedAt));
+    }
+
+    @Test
+    public void testUpdateUpdated()
+    {
+        Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        OffsetDateTime newUpdated = OffsetDateTime.now().plusDays(1);
+        accountDAO.updateUpdated(newUpdated, account.getId());
+        assertTrue(accountDAO.getUpdated(account.getId()).isEqual(newUpdated));
     }
 
 }

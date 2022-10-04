@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -102,6 +103,16 @@ public class AccountDAO
         + "WHERE account.updated >= :from "
         + "AND account.updated < NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' "
         + "AND account.id = player_character.account_id";
+
+    private static final String UPDATE_UPDATED =
+        "UPDATE account "
+        + "SET updated = :updated "
+        + "WHERE id IN(:ids)";
+
+    private static final String FIND_UPDATED_BY_ID =
+        "SELECT updated "
+        + "FROM account "
+        + "WHERE id = :id";
 
     private static final String REMOVE_EMPTY_ACCOUNTS =
         "DELETE FROM account a "
@@ -224,6 +235,25 @@ public class AccountDAO
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("from", from);
         return template.update(ANONYMIZE_EXPIRED_ACCOUNTS, params);
     }
+
+    public int updateUpdated(OffsetDateTime updated, Long... ids)
+    {
+        if(ids.length == 0) return 0;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("ids", Set.of(ids))
+            .addValue("updated", updated);
+        return template.update(UPDATE_UPDATED, params);
+    }
+
+    //for tests
+    public OffsetDateTime getUpdated(Long id)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("id", id);
+        return template.queryForObject(FIND_UPDATED_BY_ID, params, OffsetDateTime.class);
+    }
+
 
     public Optional<Account> find(Partition partition, String battleTag)
     {

@@ -566,4 +566,15 @@ public class PlayerCharacterDAOIT
         );
     }
 
+    @Test
+    public void testUpdateUpdated()
+    {
+        Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#1"));
+        OffsetDateTime newUpdated = OffsetDateTime.now().plusDays(1);
+        playerCharacterDAO.updateUpdated(newUpdated, char1.getId());
+        assertTrue(playerCharacterDAO.getUpdated(char1.getId()).isEqual(newUpdated));
+    }
+
 }

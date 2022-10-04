@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -276,6 +277,16 @@ public class PlayerCharacterDAO
         + "WHERE updated >= :from "
         + "AND updated < NOW() - INTERVAL '" + BlizzardPrivacyService.DATA_TTL.toDays() + " days' ";
 
+    private static final String UPDATE_UPDATED =
+        "UPDATE player_character "
+        + "SET updated = :updated "
+        + "WHERE id IN(:ids)";
+
+    private static final String FIND_UPDATED_BY_ID =
+        "SELECT updated "
+        + "FROM player_character "
+        + "WHERE id = :id";
+
     private static final String FIND_PRO_PLAYER_CHARACTER_IDS =
         "SELECT player_character.id FROM player_character "
         + "INNER JOIN account ON player_character.account_id = account.id "
@@ -500,6 +511,24 @@ public class PlayerCharacterDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("from", from);
         return template.update(ANONYMIZE_EXPIRED_CHARACTERS, params);
+    }
+
+    public int updateUpdated(OffsetDateTime updated, Long... ids)
+    {
+        if(ids.length == 0) return 0;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("ids", Set.of(ids))
+            .addValue("updated", updated);
+        return template.update(UPDATE_UPDATED, params);
+    }
+
+    //for tests
+    public OffsetDateTime getUpdated(Long id)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("id", id);
+        return template.queryForObject(FIND_UPDATED_BY_ID, params, OffsetDateTime.class);
     }
 
     private MapSqlParameterSource createParameterSource(PlayerCharacter character)
