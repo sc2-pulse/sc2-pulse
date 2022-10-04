@@ -500,29 +500,7 @@
             <h2>Personal</h2>
             <div class="login-anonymous">
                 <h3>Log in</h3>
-                <ul class="d-flex flex-center-wrap-gap list-unstyled">
-                    <li>
-                        <a class="btn btn-outline-primary" href="#" th:href="@{/oauth2/authorization/sc2-lg-eu}">BattleNet EU</a>
-                    </li>
-                    <li>
-                        <a class="btn btn-outline-primary" href="#" th:href="@{/oauth2/authorization/sc2-lg-us}">BattleNet US</a>
-                    </li>
-                    <li>
-                        <a class="btn btn-outline-primary" href="#" th:href="@{/oauth2/authorization/sc2-lg-kr}">BattleNet KR</a>
-                    </li>
-                    <li>
-                        <a class="btn btn-outline-primary" href="#" th:href="@{/oauth2/authorization/sc2-lg-cn}">BattleNet CN</a>
-                    </li>
-                </ul>
-                <ul class="d-inline-block">
-                    <li>Easy access to your stats</li>
-                    <li>Create a personal ladder out of your favourite players</li>
-                    <li>Link and share 3rd party services</li>
-                </ul>
-                <div class="text-danger font-weight-bold" th:if="${param.oauthError != null}">
-                    The authentication attempt failed. It can happen sometimes when Blizzard asks you to accept updated terms.
-                    Please retry the auth.
-                </div>
+                <div th:replace="~{fragments/main-section :: login}"></div>
             </div>
             <div class="login-user d-none">
                 <nav>
