@@ -7,7 +7,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -260,7 +260,7 @@ public class TeamStateDAO
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("mainQueueType", conversionService.convert(TeamState.MAIN_QUEUE_TYPE, Integer.class))
-            .addValue("teamIds", teamIds.stream().distinct().collect(Collectors.toList()))
+            .addValue("teamIds", Set.copyOf(teamIds))
             .addValue("timestamp", timestamp);
         return template.update(TAKE_TEAM_SNAPSHOT, params);
     }
