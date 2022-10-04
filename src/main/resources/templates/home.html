@@ -586,6 +586,7 @@
                             data-view-title="Personal characters"
                     >
                         <div th:replace="~{fragments/table :: player-search('personal-characters-table', 'Your characters', '')}"></div>
+                        <p th:replace="~{fragments/section :: missing-characters-message}"></p>
                     </section>
                     <section id="personal-account" class="tab-pane fade" data-view-title="Personal account">
                         <h3>Account</h3>

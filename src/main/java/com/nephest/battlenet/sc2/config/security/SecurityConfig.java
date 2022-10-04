@@ -52,6 +52,7 @@ extends WebSecurityConfigurerAdapter
                 .mvcMatchers("/admin/**").hasRole(SC2PulseAuthority.ADMIN.getName())
                 .mvcMatchers("/api/character/report/vote/**").hasRole(SC2PulseAuthority.MODERATOR.getName())
                 .mvcMatchers("/api/my/**").authenticated()
+                .mvcMatchers("/data/battle-net").fullyAuthenticated()
             .and().logout()
                 .logoutSuccessUrl("/?#stats")
             .and().oauth2Login()

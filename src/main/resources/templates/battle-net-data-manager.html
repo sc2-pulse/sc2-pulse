@@ -1,0 +1,149 @@
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, ~{::#main-script-block}, true)}">
+<head>
+    <title>BattleNet data manager - SC2 Pulse</title>
+    <meta name="description" content="Manage how your BattleNet data is used in SC2 Pulse. Import your BattleNet data to fix Blizzard API bugs, or remove it to become anonymous."/>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: content(~{::section})}">
+    <section id="privacy">
+        <h2>BattleNet data manager</h2>
+        <section>
+            <h3>Data loaded from your BattleNet profile</h3>
+            <section>
+                <h4>BattleTag</h4>
+                <p th:text="${blizzardOidcUser.getAccount().getBattleTag()}"></p>
+            </section>
+            <section>
+                <h4>Characters</h4>
+                <ul class="d-inline-block">
+                    <li th:each="character : ${blizzardCharacters}"
+                        th:text="|${character.region.getName()}, ${character.name}|"
+                    >
+                    </li>
+                </ul>
+            </section>
+        </section>
+        <nav>
+            <ul id="battle-net-data-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                <li class="nav-item">
+                    <a
+                            id="battle-net-data-import-tab"
+                            class="nav-link active"
+                            data-toggle="pill"
+                            data-target="#battle-net-data-import"
+                            href="#battle-net-data-import"
+                            role="tab"
+                            aria-controls="battle-net-data-import"
+                            aria-selected="true"
+                    >
+                        Import
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a
+                            id="battle-net-data-delete-tab"
+                            class="nav-link"
+                            data-toggle="pill"
+                            data-target="#battle-net-data-delete"
+                            href="#battle-net-data-delete"
+                            role="tab"
+                            aria-controls="battle-net-data-delete"
+                            aria-selected="false"
+                    >
+                        Delete
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="tab-content">
+            <section
+                id="battle-net-data-import"
+                class="tab-pane fade show active"
+                data-view-name="battle-net-data-import"
+                data-view-title="Import BattleNet data"
+            >
+                <h3>Import data</h3>
+                <p>Importing your BattleNet data is useful when the Blizzard API is broken and
+                    some of your data is missing from SC2 Pulse.</p>
+                <section>
+                    <h4>Import effects</h4>
+                    <ul>
+                        <li>Your BattleTag and in-game name will be updated.</li>
+                        <li>Your characters will be linked to your BattleTag.</li>
+                    </ul>
+                </section>
+                <p><strong>By importing your BattleNet data, you are giving this website permission to publicly display
+                your BattleTag and in-game character name until Blizzard API is fully operational, at which point
+                the main <a href="https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use" target="_blank" rel="noopener">Blizzard ToS</a>
+                    will be used instead.</strong></p>
+                <form
+                        th:action="@{''}"
+                        method="post"
+                        class="confirmation"
+                        data-confirmation-text="IMPORT"
+                        data-confirmation-description="Import BattleNet data"
+                        data-confirmation-action-name="Import"
+                        data-confirmation-action-class="btn-success"
+                >
+                    <input type="hidden" name="action" th:value="${T(com.nephest.battlenet.sc2.web.controller.BlizzardDataController.Action).IMPORT}" />
+                    <button type="submit" class="btn btn-success">Import</button>
+                </form>
+            </section>
+            <section
+                    id="battle-net-data-delete"
+                    class="tab-pane fade"
+                    data-view-name="battle-net-data-delete"
+                    data-view-title="Delete BattleNet data"
+            >
+                <h3>Delete data</h3>
+                <section>
+                    <h4>Eligible data</h4>
+                    <ul class="d-inline-block">
+                        <li>BattleTag</li>
+                        <li>In-game name</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>Ineligible data</h4>
+                    <ul>
+                        <li>Ladders, MMR history. In accordance with <a href="https://www.blizzard.com/en-us/legal/a2989b50-5f16-43b1-abec-2ae17cc09dd6/blizzard-developer-api-terms-of-use" target="_blank" rel="noopener">Blizzard ToS</a>
+                            and <a href="https://us.forums.blizzard.com/en/blizzard/t/data-protection-notice-and-faq/609/2" target="_blank" rel="noopener">ToS FAQ(section 15)</a>,
+                            leaderboards(i.e. ladders) are considered public and will not be removed.</li>
+                        <li>Match history. You can disable your match history in Blizzard Account settings(3rd party access)</li>
+                    </ul>
+                </section>
+                <section>
+                    <h4>Removal effects</h4>
+                    <ul>
+                        <li>Your BattleTag and in-game name will be completely removed from the website and all DB snapshots within 30 days.</li>
+                        <li>Your SC2 Pulse profile won't be searchable by your BattleTag or in-game name, but it will be searchable by
+                            direct URL or starcraft2.com profile link.</li>
+                        <li>SC2 Pulse will continue to track your ranked performance, but it won't update your name and BattleTag.</li>
+                        <li>You can import your data later if you change your mind.</li>
+                    </ul>
+                </section>
+                <form th:action="@{''}"
+                      method="post"
+                      class="confirmation"
+                      data-confirmation-text="DELETE"
+                      data-confirmation-description="Delete BattleNet data"
+                      data-confirmation-action-name="Delete"
+                      data-confirmation-action-class="btn-danger"
+                >
+                    <input type="hidden" name="action" th:value="${T(com.nephest.battlenet.sc2.web.controller.BlizzardDataController.Action).DELETE}" />
+                    <button type="submit" class="btn btn-danger">Delete</button>
+                </form>
+            </section>
+        </div>
+        <div th:replace="~{fragments/app :: modal-essential}"></div>
+    </section>
+</div>
+<script id="main-script-block">SC2Restful.start(START_MODE.ESSENTIAL);</script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _, true)}">
+<head>
+    <title>Action queue - SC2 Pulse</title>
+    <meta name="description" content="Action queue"/>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: content(~{::section})}">
+    <section>
+        <h2>Action queue</h2>
+        <p>Your action is queued. It will be completed within <span id="action-duration" th:text="${actionDuration}"></span>
+        depending on server load.</p>
+    </section>
+</div>
+</body>
+</html>

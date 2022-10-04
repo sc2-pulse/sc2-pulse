@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.config.security.SecurityBeanConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
 import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.web.controller.AdminController;
+import com.nephest.battlenet.sc2.web.controller.BlizzardDataController;
 import com.nephest.battlenet.sc2.web.controller.PersonalController;
 import com.nephest.battlenet.sc2.web.controller.StatusController;
 import com.nephest.battlenet.sc2.web.controller.TeamController;
@@ -20,6 +21,7 @@ import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.ClanService;
 import com.nephest.battlenet.sc2.web.service.MatchService;
+import com.nephest.battlenet.sc2.web.service.PersonalService;
 import com.nephest.battlenet.sc2.web.service.SC2WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.StatusService;
@@ -43,6 +45,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SpringDocConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardSC2API.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardPrivacyService.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = PersonalService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatsService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ClanService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SC2WebServiceUtil.class),
@@ -54,6 +57,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TeamController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TokenErrorController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = PersonalController.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardDataController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class),
         @ComponentScan.Filter(type = FilterType.ANNOTATION, value = Discord.class)
