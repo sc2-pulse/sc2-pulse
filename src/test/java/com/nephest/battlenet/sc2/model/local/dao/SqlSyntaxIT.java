@@ -425,7 +425,7 @@ public class SqlSyntaxIT
         assertEquals(account2, accs.get(1));
 
         assertEquals(2, playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now()));
-        template.execute("UPDATE player_character SET updated = NOW() + INTERVAL '1 day' WHERE id = 1");
+        playerCharacterDAO.updateUpdated(OffsetDateTime.now().plusDays(1), 1L);
         assertEquals(1, playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now()));
     }
 

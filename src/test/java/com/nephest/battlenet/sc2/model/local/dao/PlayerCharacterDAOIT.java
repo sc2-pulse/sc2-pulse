@@ -297,11 +297,10 @@ public class PlayerCharacterDAOIT
         assertEquals("name2#123", char1.getName());
         assertEquals("name4#123", char2.getName());
 
-        template.execute
+        playerCharacterDAO.updateUpdated
         (
-            "UPDATE player_character "
-            + "SET updated = NOW() - INTERVAL '" + (BlizzardPrivacyService.DATA_TTL.toDays() + 2) +  " days' "
-            + "WHERE id = 1"
+            OffsetDateTime.now().minus(BlizzardPrivacyService.DATA_TTL.plusDays(2)),
+            1L
         );
         playerCharacterDAO.anonymizeExpiredCharacters(OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
         //character is excluded due to "from' param
@@ -368,23 +367,20 @@ public class PlayerCharacterDAOIT
             )
         );
 
-        OffsetDateTime char4Updated =
-            template.query("SELECT updated FROM player_character WHERE id = " + char4.getId(), DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
+        OffsetDateTime char4Updated = playerCharacterDAO.getUpdated(char4.getId());
         OffsetDateTime minTimeAllowed = OffsetDateTime.now();
         assertEquals(3, playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars));
 
         //character is not updated
         assertEquals("name10#123", playerCharacterDAO.find(Region.EU, 1, 3L).orElseThrow().getName());
-        OffsetDateTime char4UpdatedNew =
-            template.query("SELECT updated FROM player_character WHERE id = " + char4.getId(), DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
+        OffsetDateTime char4UpdatedNew = playerCharacterDAO.getUpdated(char4.getId());
         assertTrue(char4UpdatedNew.isEqual(char4Updated));
 
         //char5 is updated despite being stale because it has the same name prefix
-        OffsetDateTime char5Updated =
-            template.query("SELECT updated FROM player_character WHERE id = " + char5.getId(), DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
+        OffsetDateTime char5Updated = playerCharacterDAO.getUpdated(char5.getId());
         assertTrue(char5Updated.isAfter(minTimeAllowed));
 
-        template.execute("UPDATE player_character SET updated = NOW() WHERE id = " + char4.getId());
+        playerCharacterDAO.updateUpdated(OffsetDateTime.now(), char4.getId());
 
         verifyUpdatedCharacters(minTimeAllowed);
         OffsetDateTime minAccTime =
@@ -396,11 +392,10 @@ public class PlayerCharacterDAOIT
         //character is rebound to another account
         assertEquals(acc3.getId(), playerCharacterDAO.find(Region.EU, 1, 3L).orElseThrow().getAccountId());
 
-        template.execute
+        accountDAO.updateUpdated
         (
-            "UPDATE account "
-            + "SET updated = NOW() - INTERVAL '" + (BlizzardPrivacyService.DATA_TTL.toDays() + 2) + " days' "
-            + "WHERE id = " + acc1.getId()
+            OffsetDateTime.now().minus(BlizzardPrivacyService.DATA_TTL.plusDays(2)),
+            acc1.getId()
         );
         accountDAO.anonymizeExpiredAccounts(OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
         //the account is excluded due to "from" param
