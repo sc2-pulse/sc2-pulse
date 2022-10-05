@@ -4,10 +4,13 @@
 package com.nephest.battlenet.sc2.model.blizzard;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 
 public class BlizzardFullPlayerCharacter
 extends BlizzardPlayerCharacter
+implements PlayerCharacterNaturalId
 {
 
     private Region region;
@@ -25,6 +28,12 @@ extends BlizzardPlayerCharacter
     {
         super(id, realm, name);
         this.region = region;
+    }
+
+    @Override @JsonIgnore
+    public Long getBattlenetId()
+    {
+        return getId();
     }
 
     @JsonAlias("regionId")
