@@ -58,6 +58,19 @@ implements java.io.Serializable, PlayerCharacterNaturalId
         );
     }
 
+    public static PlayerCharacter of(Account account, PlayerCharacterNaturalId naturalId, String name)
+    {
+        return new PlayerCharacter
+        (
+            null,
+            account.getId(),
+            naturalId.getRegion(),
+            naturalId.getBattlenetId(),
+            naturalId.getRealm(),
+            name
+        );
+    }
+
     @Override
     public int hashCode()
     {
