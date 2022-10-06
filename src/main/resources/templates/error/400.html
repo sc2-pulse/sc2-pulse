@@ -1,0 +1,18 @@
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _, false)}">
+<head>
+    <title>400 - Bad Request</title>
+    <meta name="description" content="Malformed URL or invalid request parameters"/>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: error(~{::h1}, ~{::span})}">
+    <h1>400 - BAD REQUEST</h1>
+    <span>Malformed URL or invalid request parameters</span>
+</div>
+</body>
+</html>
