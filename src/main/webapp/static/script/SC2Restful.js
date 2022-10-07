@@ -14,24 +14,34 @@ class SC2Restful
     static start(mode = START_MODE.FULL)
     {
         window.addEventListener("popstate", e=>{HistoryUtil.restoreState(e)});
-        return new Promise
-        (
-            (res, rej)=>
-            {
-                SC2Restful.initAll();
-                Session.restoreState();
-                SC2Restful.enhance(mode);
-                SC2Restful.afterEnhance(mode);
-                ChartUtil.observeChartables();
-                PaginationUtil.createPaginations();
-                ElementUtil.createPlayerStatsCards(document.getElementById("player-stats-container"));
-                HistoryUtil.initActiveTabs();
-                ChartUtil.observeCharts();
-                res();
-            }
-        )
-            .then(e=>Promise.all([Session.getMyInfo(), SeasonUtil.getSeasons()]))
-            .then(o=>{if(o[0] != "reauth") Session.currentStateRestoration = HistoryUtil.restoreState(null);});
+        if(mode == START_MODE.ESSENTIAL) {
+            SC2Restful.initAll();
+            Session.restoreState();
+            SC2Restful.enhance(mode);
+            ChartUtil.observeChartables();
+            HistoryUtil.initActiveTabs();
+            ChartUtil.observeCharts();
+            return Promise.resolve(1);
+        } else {
+            return new Promise
+            (
+                (res, rej)=>
+                {
+                    SC2Restful.initAll();
+                    Session.restoreState();
+                    SC2Restful.enhance(mode);
+                    SC2Restful.afterEnhance(mode);
+                    ChartUtil.observeChartables();
+                    PaginationUtil.createPaginations();
+                    ElementUtil.createPlayerStatsCards(document.getElementById("player-stats-container"));
+                    HistoryUtil.initActiveTabs();
+                    ChartUtil.observeCharts();
+                    res();
+                }
+            )
+                .then(e=>Promise.all([Session.getMyInfo(), SeasonUtil.getSeasons()]))
+                .then(o=>{if(o[0] != "reauth") Session.currentStateRestoration = HistoryUtil.restoreState(null);});
+        }
     }
 
     static initAll()
@@ -67,11 +77,6 @@ class SC2Restful
                 ChartUtil.enhanceBeginAtZeroControls();
                 StatsUtil.updateGamesStatsVisibility();
             case START_MODE.MINIMAL:
-                BootstrapUtil.init();
-                BootstrapUtil.enhanceModals();
-                BootstrapUtil.enhanceCollapsibles();
-                FormUtil.enhanceFormGroups();
-                FormUtil.enhanceFormConfirmations();
                 CharacterUtil.enhanceMmrForm();
                 CharacterUtil.enhanceReportForm();
                 CharacterUtil.updateReportForm();
@@ -80,8 +85,14 @@ class SC2Restful
                 CharacterUtil.enhanceMatchTypeInput();
                 VersusUtil.enhance();
                 FollowUtil.enhanceFollowButtons();
-                BootstrapUtil.enhanceTabs();
                 BufferUtil.enhance();
+            case START_MODE.ESSENTIAL:
+                BootstrapUtil.init();
+                BootstrapUtil.enhanceModals();
+                BootstrapUtil.enhanceCollapsibles();
+                FormUtil.enhanceFormGroups();
+                FormUtil.enhanceFormConfirmations();
+                BootstrapUtil.enhanceTabs();
                 BootstrapUtil.enhanceTooltips();
                 ElementUtil.enhanceFullscreenToggles();
                 ElementUtil.enhanceCopyToClipboard();
