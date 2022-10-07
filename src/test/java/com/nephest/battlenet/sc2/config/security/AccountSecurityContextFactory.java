@@ -4,10 +4,12 @@
 package com.nephest.battlenet.sc2.config.security;
 
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import java.util.List;
+import java.util.Map;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -29,9 +31,14 @@ implements WithSecurityContextFactory<WithBlizzardMockUser>
     @Override
     public SecurityContext createSecurityContext(WithBlizzardMockUser withMockUser)
     {
+        OidcUser oidcUser = mock(OidcUser.class);
+        String subject = String.valueOf(withMockUser.subject());
+        Map<String, Object> subMap = Map.of("sub", subject);
+        when(oidcUser.getAttributes()).thenReturn(subMap);
+        when(oidcUser.getClaims()).thenReturn(subMap);
         OAuth2User principal = new BlizzardOidcUser
         (
-            mock(OidcUser.class),
+            oidcUser,
             new Account(withMockUser.id(), withMockUser.partition(), withMockUser.username()),
             List.of()
         );

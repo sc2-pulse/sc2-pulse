@@ -17,4 +17,6 @@ public @interface WithBlizzardMockUser
     Partition partition();
     String username();
     SC2PulseAuthority[] roles() default {SC2PulseAuthority.USER};
+    long subject() default 1L;
+
 }
