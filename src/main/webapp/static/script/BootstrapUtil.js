@@ -391,7 +391,8 @@ class BootstrapUtil
         modal.querySelector(":scope .description").textContent = description;
         const actionButton = modal.querySelector(":scope .btn-action");
         actionButton.textContent = actionName;
-        actionButton.setAttribute("class", "btn btn-action " + actionButtonClass);
+        actionButton.setAttribute("class", "");
+        actionButton.classList.add("btn", "btn-action", actionButtonClass);
         modal.querySelector(":scope .requirement").textContent = requiredText;
         Session.confirmActionText = requiredText;
         const promise = new Promise((res, rej)=>{
