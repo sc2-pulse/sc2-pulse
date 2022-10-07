@@ -86,4 +86,25 @@ class FormUtil
         }
     }
 
+    static enhanceFormConfirmations()
+    {
+        for(const form of document.querySelectorAll("form.confirmation"))
+            form.addEventListener("submit", FormUtil.confirmFormSubmission)
+    }
+
+    static confirmFormSubmission(evt)
+    {
+        evt.preventDefault();
+        return BootstrapUtil.showConfirmationModal(
+            evt.target.getAttribute("data-confirmation-text"),
+            evt.target.getAttribute("data-confirmation-description"),
+            evt.target.getAttribute("data-confirmation-action-name"),
+            evt.target.getAttribute("data-confirmation-action-class")
+        )
+            .then(confirmed=>{
+                if(confirmed == true) evt.target.submit();
+                return Promise.resolve(confirmed);
+            });
+    }
+
 }

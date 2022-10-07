@@ -71,6 +71,7 @@ class SC2Restful
                 BootstrapUtil.enhanceModals();
                 BootstrapUtil.enhanceCollapsibles();
                 FormUtil.enhanceFormGroups();
+                FormUtil.enhanceFormConfirmations();
                 CharacterUtil.enhanceMmrForm();
                 CharacterUtil.enhanceReportForm();
                 CharacterUtil.updateReportForm();
