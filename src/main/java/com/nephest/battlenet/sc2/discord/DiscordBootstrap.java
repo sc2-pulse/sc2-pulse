@@ -215,115 +215,22 @@ public class DiscordBootstrap
     }
 
     public static void registerCommands
-    (RestClient client, Collection<ApplicationCommandRequest> cmds, Long guild, ApplicationCommand.Type type)
+    (RestClient client, List<ApplicationCommandRequest> cmds, Long guild, ApplicationCommand.Type type)
     {
-        Map<String, ApplicationCommandRequest> commands = cmds.stream()
-            .collect(Collectors.toMap(ApplicationCommandRequest::name, Function.identity()));
         final ApplicationService applicationService = client.getApplicationService();
         final long applicationId = client.getApplicationId().block();
-
-        //These are commands already registered with discord from previous runs of the bot.
-        Map<String, ApplicationCommandData> discordCommands =
-            getDiscordCommands(applicationService, applicationId, guild, type);
-
-        for(ApplicationCommandRequest request : commands.values()){
-            if (!discordCommands.containsKey(request.name()))
-                addCommand(applicationService, request, applicationId, guild);
-        }
-
-        //Check if any commands have been deleted or changed.
-        for (ApplicationCommandData discordCommand : discordCommands.values())
+        Flux<ApplicationCommandData> cmdOverride;
+        if(guild != null)
         {
-            long discordCommandId = Long.parseLong(discordCommand.id());
-            ApplicationCommandRequest command = commands.get(discordCommand.name());
-
-            if (command == null)
-            {
-                //Removed, delete command
-                removeCommand(applicationService, discordCommand, applicationId, guild, discordCommandId);
-                continue; //Skip further processing on this command.
-            }
-
-            //Check if the command has been changed and needs to be updated.
-            if (hasChanged(discordCommand, command))
-                updateCommand(applicationService, command, applicationId, guild, discordCommandId);
-        }
-    }
-
-    private static Map<String, ApplicationCommandData> getDiscordCommands
-    (ApplicationService applicationService, long appId, Long guild, ApplicationCommand.Type type)
-    {
-        Flux<ApplicationCommandData> datas = guild == null
-            ? applicationService.getGlobalApplicationCommands(appId)
-            : applicationService.getGuildApplicationCommands(appId, guild);
-        return datas
-            .filter(c->c.type().toOptional().orElse(ApplicationCommand.Type.UNKNOWN.getValue()).equals(type.getValue()))
-            .collectMap(ApplicationCommandData::name)
-            .block();
-    }
-
-
-    private static void addCommand
-    (ApplicationService applicationService, ApplicationCommandRequest req, long appId, Long guild)
-    {
-        if(guild == null)
-        {
-            applicationService.createGlobalApplicationCommand(appId, req).block();
-            LOG.info("Created global command: {}", req.name());
+            cmdOverride = applicationService
+                .bulkOverwriteGuildApplicationCommand(applicationId, guild, cmds);
         }
         else
         {
-            applicationService.createGuildApplicationCommand(appId, guild, req).block();
-            LOG.info("Created guild {} command: {}", guild, req.name());
+            cmdOverride = applicationService
+                .bulkOverwriteGlobalApplicationCommand(applicationId, cmds);
         }
-    }
-
-    private static void removeCommand
-    (ApplicationService applicationService, ApplicationCommandData cmd, long appId, Long guild, long cmdId)
-    {
-        if(guild == null)
-        {
-            applicationService.deleteGlobalApplicationCommand(appId, cmdId).block();
-            LOG.info("Deleted global command: {}",  cmd.name());
-        }
-        else
-        {
-            applicationService.deleteGuildApplicationCommand(appId, guild, cmdId).block();
-            LOG.info("Deleted guild {} command: {}", guild, cmd.name());
-        }
-    }
-
-    private static void updateCommand
-    (ApplicationService applicationService, ApplicationCommandRequest req, long appId, Long guild, long cmdId)
-    {
-        if(guild == null)
-        {
-            applicationService.modifyGlobalApplicationCommand(appId, cmdId, req).block();
-            LOG.info("Updated global command: {}", req.name());
-        }
-        else
-        {
-            applicationService.modifyGuildApplicationCommand(appId, guild, cmdId, req).block();
-            LOG.info("Updated guild {} command: {}", guild, req.name());
-        }
-    }
-
-    private static boolean hasChanged(ApplicationCommandData discordCommand, ApplicationCommandRequest command)
-    {
-        // Compare types
-        if (!discordCommand.type().toOptional().orElse(1).equals(command.type().toOptional().orElse(1))) return true;
-
-        //Check if description has changed.
-        if (!discordCommand.description().equals(command.description().toOptional().orElse(""))) return true;
-
-        //Check if default permissions have changed
-        boolean discordCommandDefaultPermission = discordCommand.defaultPermission().toOptional().orElse(true);
-        boolean commandDefaultPermission = command.defaultPermission().toOptional().orElse(true);
-
-        if (discordCommandDefaultPermission != commandDefaultPermission) return true;
-
-        //Check and return if options have changed.
-        return !discordCommand.options().equals(command.options());
+        cmdOverride.blockLast();
     }
 
     @SafeVarargs

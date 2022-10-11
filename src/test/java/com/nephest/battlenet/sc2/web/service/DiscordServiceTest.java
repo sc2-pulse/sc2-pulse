@@ -99,7 +99,8 @@ public class DiscordServiceTest
 
         //web batches
         when(api.getUsers(any())).thenAnswer(inv->
-            Flux.fromIterable((Iterable<Long>) inv.getArguments()[0])
+            Flux.fromIterable(inv.getArgument(0))
+                .map(f->(Long) f)
                 .map(l->new DiscordUser(l, "name" + l, l.intValue())));
 
         discordService.update();
