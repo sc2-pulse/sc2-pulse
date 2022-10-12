@@ -135,7 +135,7 @@ public class DiscordBootstrap
         registerCommands(handlers, ChatInputInteractionEvent.class, ApplicationCommand.Type.CHAT_INPUT, client, guild, true);
         registerCommands(userInteractionHandlers, UserInteractionEvent.class, ApplicationCommand.Type.USER, client, guild, false);
         registerAutoCompleteHandlers(autoCompleteHandlers, client);
-        client.on(ReconnectEvent.class, (e)->updatePresence(client));
+        client.on(ReconnectEvent.class, (e)->updatePresence(e.getClient())).subscribe();
         updatePresence(client).subscribe();
         client.on(EmojisUpdateEvent.class, guildEmojiStore::removeGuildEmojis).subscribe();
         return client;
