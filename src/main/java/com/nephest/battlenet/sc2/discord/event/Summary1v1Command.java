@@ -102,8 +102,8 @@ public class Summary1v1Command
         if(summaries.isEmpty()) return null;
 
         StringBuilder description = new StringBuilder()
-            .append("**1v1 Summary**\n")
-            .append(generateDescription(name, depth, maxLines, region, race)).append("\n\n");
+            .append("**1v1 Summary**\n");
+        appendDescription(description, name, depth, maxLines, region, race).append("\n\n");
         int gamesDigits = summaries.stream()
             .mapToInt(PlayerCharacterSummary::getGames)
             .map(MiscUtil::stringLength)
@@ -137,10 +137,9 @@ public class Summary1v1Command
         return evt.createFollowup().withContent(description.toString());
     }
 
-    private static String generateDescription(String name, long depth, int lines, Region region, Race race)
+    private static StringBuilder appendDescription
+    (StringBuilder sb, String name, long depth, int lines, Region region, Race race)
     {
-        StringBuilder sb = new StringBuilder();
-
         sb.append("*");
         sb.append(name).append(", ").append(depth).append(" days, Top ").append(lines);
         if(region != null) sb.append(", ").append(region.getName());
@@ -149,7 +148,7 @@ public class Summary1v1Command
 
         sb.append( "\n**`Games`** | **last**/*avg*/max MMR");
 
-        return sb.toString();
+        return sb;
     }
 
     private static Predicate<LadderDistinctCharacter> generateCharacterFilter(LadderCharacterDAO.SearchType searchType, Region region)
