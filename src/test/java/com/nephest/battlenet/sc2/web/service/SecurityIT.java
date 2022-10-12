@@ -58,6 +58,21 @@ public class SecurityIT
 
 
     @ParameterizedTest
+    @CsvSource
+    ({
+        "/verify/discord, false",
+    })
+    public void testNotAuthenticatedSecurity(String path, boolean allowed)
+    throws Exception
+    {
+        mvc.perform
+        (
+            get(path)
+                .with(csrf().asHeader())
+        ).andExpect(allowed ? status().isOk() : status().isUnauthorized());
+    }
+
+    @ParameterizedTest
     @ValueSource(strings = {"/admin", "/sba"})
     @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER})
     public void testUserSecurity(String path) throws Exception
