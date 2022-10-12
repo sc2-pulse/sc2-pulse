@@ -63,7 +63,15 @@ public class Summary1v1CommandTest
         stub();
 
         Summary1v1Command cmd = new Summary1v1Command(ladderCharacterDAO, summaryDAO, discordBootstrap);
-        cmd.handle(evt, Region.EU, Race.TERRAN, 100, "emptyTerm", "term");
+        cmd.handle
+        (
+            evt,
+            "Additional description",
+            Region.EU,
+            Race.TERRAN,
+            100,
+            "emptyTerm", "term"
+        );
 
         verify(summaryDAO).find(any(), depthCaptor.capture(), eq(Race.TERRAN));
         //verify correct depth, 10 seconds to run the test just in case
@@ -75,6 +83,7 @@ public class Summary1v1CommandTest
         //verify output
         StringBuilder sb = new StringBuilder()
             .append("**1v1 Summary**\n")
+            .append("Additional description\n")
             .append("*term, 100 days, Top 5, EU, Terran*\n**`Games`** | **last**/*avg*/max MMR\n\n");
         for(int i = 3; i > -1; i--)
         {

@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Mono;
 
@@ -63,22 +64,49 @@ public class Summary1v1Command
         this.discordBootstrap = discordBootstrap;
     }
 
-    public Mono<Message> handle(ApplicationCommandInteractionEvent evt, Region region, Race race, long depth, String... names)
+    public Mono<Message> handle
+    (
+        ApplicationCommandInteractionEvent evt,
+        @Nullable String additionalDescription,
+        Region region,
+        Race race,
+        long depth,
+        String... names
+    )
     {
         if(names.length == 0) return DiscordBootstrap.notFoundFollowup(evt);
 
         for(String name : names)
         {
             if(name == null || name.isBlank()) continue;
-            Mono<Message> msg = handle(evt, name, region, race, depth);
+            Mono<Message> msg = handle(evt, name, region, race, depth, additionalDescription);
             if(msg != null) return msg;
         }
 
         return DiscordBootstrap.notFoundFollowup(evt);
     }
 
+    public Mono<Message> handle
+    (
+        ApplicationCommandInteractionEvent evt,
+        Region region,
+        Race race,
+        long depth,
+        String... names
+    )
+    {
+        return handle(evt, null, region, race, depth, names);
+    }
+
     private Mono<Message> handle
-    (ApplicationCommandInteractionEvent evt, String name, Region region, Race race, long depth)
+    (
+        ApplicationCommandInteractionEvent evt,
+        String name,
+        Region region,
+        Race race,
+        long depth,
+        @Nullable String additionalDescription
+    )
     {
         LadderCharacterDAO.SearchType searchType = LadderCharacterDAO.SearchType.from(name);
         int maxLines = MAX_LINES.getOrDefault(searchType, DiscordBootstrap.DEFAULT_LINES);
@@ -103,6 +131,7 @@ public class Summary1v1Command
 
         StringBuilder description = new StringBuilder()
             .append("**1v1 Summary**\n");
+        if(additionalDescription != null) description.append(additionalDescription).append("\n");
         appendDescription(description, name, depth, maxLines, region, race).append("\n\n");
         int gamesDigits = summaries.stream()
             .mapToInt(PlayerCharacterSummary::getGames)
