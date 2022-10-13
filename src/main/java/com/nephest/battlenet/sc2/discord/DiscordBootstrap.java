@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
+import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.common.util.Snowflake;
 import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
@@ -70,8 +71,6 @@ public class DiscordBootstrap
     public static final int MESSAGE_LENGTH_MAX = 2000;
     public static final String SC2_GAME_NAME = "StarCraft II";
     public static final String SC2_REVEALED_TAG = "revealed";
-    public static final String CHARACTER_URL_TEMPLATE =
-        "https://www.nephest.com/sc2/?type=character&id=%1$s&m=1#player-stats-mmr";
     public static final String UNEXPECTED_ERROR_MESSAGE =
         "Unexpected error occurred. Please report this bug, links are in the bot profile";
     public static final Color DEFAULT_COLOR = Color.of(0, 123, 255);
@@ -85,6 +84,7 @@ public class DiscordBootstrap
 
     private final Map<Race, String> raceEmojis;
     private final Map<BaseLeague.LeagueType, String> leagueEmojis;
+    private final String characterUrlTemplate;
     private final GuildEmojiStore guildEmojiStore;
     private final UpdateService updateService;
 
@@ -94,14 +94,21 @@ public class DiscordBootstrap
         @Value("#{${discord.race.emoji:{:}}}") Map<Race, String> raceEmojis,
         @Value("#{${discord.league.emoji:{:}}}") Map<BaseLeague.LeagueType, String> leagueEmojis,
         GuildEmojiStore guildEmojiStore,
-        UpdateService updateService
-
+        UpdateService updateService,
+        WebContextUtil webContextUtil
     )
     {
         this.raceEmojis = raceEmojis;
         this.leagueEmojis = leagueEmojis;
+        characterUrlTemplate = webContextUtil.getPublicUrl()
+            + "?type=character&id=%1$s&m=1#player-stats-mmr";
         this.guildEmojiStore = guildEmojiStore;
         this.updateService = updateService;
+    }
+
+    public String getCharacterUrlTemplate()
+    {
+        return characterUrlTemplate;
     }
 
     public String getRaceEmojiOrName(InteractionCreateEvent evt, Race race)
@@ -279,10 +286,10 @@ public class DiscordBootstrap
             : Mono.just(evt.getResolvedUser().getUsername());
     }
 
-    public static String generateCharacterURL(LadderTeamMember member)
+    public String generateCharacterURL(LadderTeamMember member)
     {
         return "[" + generateFullName(member, true) + "](<"
-            + String.format(CHARACTER_URL_TEMPLATE, member.getCharacter().getId()) + ">)";
+            + String.format(getCharacterUrlTemplate(), member.getCharacter().getId()) + ">)";
     }
 
     public static String generateFullName(LadderTeamMember member, boolean boldName)

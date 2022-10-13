@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.spec.InteractionFollowupCreateMono;
@@ -78,8 +79,7 @@ public class Summary1v1CommandTest
         for(int i = 3; i > -1; i--)
         {
             sb.append(String.format(
-                "[**[proTeam%1$s]proName%1$s** | [clan%1$s]name | tag#%1$s | " + DiscordBootstrap.SC2_REVEALED_TAG + "]" //unmasked name
-                    + "(<https://www.nephest.com/sc2/?type=character&id=%1$s&m=1#player-stats-mmr>)\n" //web link
+                "url%1$s\n" //web link
                     + DiscordBootstrap.REGION_EMOJIS.get(Region.EU) + " diamond terran" //region, league, race
                     + " | **`%4$s`** | " //games
                     + "**%1$s**/*%2$s*/%3$s\n\n", //last, avg, max mmr
@@ -122,6 +122,8 @@ public class Summary1v1CommandTest
         when(summaryDAO.find(eq(new Long[]{0L, 1L, 2L, 3L, 4L}), any(), eq(Race.TERRAN))).thenReturn(summaries);
         when(discordBootstrap.getLeagueEmojiOrName(evt, BaseLeague.LeagueType.DIAMOND)).thenReturn("diamond");
         when(discordBootstrap.getRaceEmojiOrName(evt, Race.TERRAN)).thenReturn("terran");
+        when(discordBootstrap.generateCharacterURL(any()))
+            .thenAnswer(inv->"url" + inv.getArgument(0, LadderTeamMember.class).getAccount().getId());
         when(evt.createFollowup()).thenReturn(followup);
     }
 

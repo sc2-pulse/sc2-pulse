@@ -112,7 +112,7 @@ public class Summary1v1Command
         for(PlayerCharacterSummary summary : summaries)
         {
             LadderTeamMember member = characters.get(summary.getPlayerCharacterId());
-            description.append(DiscordBootstrap.generateCharacterURL(member))
+            description.append(discordBootstrap.generateCharacterURL(member))
                 .append("\n")
                 .append(DiscordBootstrap.REGION_EMOJIS.get(member.getCharacter().getRegion()))
                 .append(" ").append(discordBootstrap.getLeagueEmojiOrName(evt, summary.getLeagueTypeLast()))

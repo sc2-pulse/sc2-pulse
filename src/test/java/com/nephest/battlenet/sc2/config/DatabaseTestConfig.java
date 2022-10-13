@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.config.security.DiscordOauth2UserService;
 import com.nephest.battlenet.sc2.config.security.SecurityBeanConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
 import com.nephest.battlenet.sc2.discord.Discord;
+import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.web.controller.AdminController;
 import com.nephest.battlenet.sc2.web.controller.BlizzardDataController;
 import com.nephest.battlenet.sc2.web.controller.PersonalController;
@@ -26,6 +27,7 @@ import com.nephest.battlenet.sc2.web.service.PersonalService;
 import com.nephest.battlenet.sc2.web.service.SC2WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.StatusService;
+import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
@@ -43,6 +45,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SecurityConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SecurityBeanConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DiscordOauth2UserService.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DiscordBootstrap.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SpringDocConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardOidcUserService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardSC2API.class),
@@ -51,6 +54,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatsService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ClanService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SC2WebServiceUtil.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = WebContextUtil.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatusService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AlternativeLadderService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = MatchService.class),
