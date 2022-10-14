@@ -6,7 +6,9 @@ package com.nephest.battlenet.sc2.discord.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +27,7 @@ import discord4j.core.spec.InteractionFollowupCreateMono;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -57,12 +60,21 @@ public class Summary1v1CommandTest
     @Captor
     private ArgumentCaptor<OffsetDateTime> depthCaptor;
 
+    private Summary1v1Command cmd;
+
+    @BeforeEach
+    public void beforeEach()
+    {
+        when(evt.createFollowup()).thenReturn(followup);
+        when(followup.withContent(anyString())).thenReturn(mock(InteractionFollowupCreateMono.class));
+        cmd = new Summary1v1Command(ladderCharacterDAO, summaryDAO, discordBootstrap);
+    }
+
     @Test
     public void test()
     {
         stub();
 
-        Summary1v1Command cmd = new Summary1v1Command(ladderCharacterDAO, summaryDAO, discordBootstrap);
         cmd.handle
         (
             evt,
@@ -133,7 +145,31 @@ public class Summary1v1CommandTest
         when(discordBootstrap.getRaceEmojiOrName(evt, Race.TERRAN)).thenReturn("terran");
         when(discordBootstrap.generateCharacterURL(any()))
             .thenAnswer(inv->"url" + inv.getArgument(0, LadderTeamMember.class).getAccount().getId());
-        when(evt.createFollowup()).thenReturn(followup);
+    }
+
+    @Test
+    public void whenNotFound_thenShowCustomMessage()
+    {
+        when(ladderCharacterDAO.findDistinctCharacters(any())).thenReturn(List.of());
+
+        cmd.handle
+        (
+            evt,
+            "Additional description",
+            Region.EU,
+            Race.TERRAN,
+            120,
+            "name1", "name2"
+        );
+        verify(followup).withContent(contentCaptor.capture());
+        String expectedResult =
+            "**1v1 Summary**\n"
+            + "Additional description\n"
+            + "*name1, name2, 120 days, Top 5, EU, Terran*\n"
+            + "**`Games`** | **last**/*avg*/max MMR\n\n"
+
+            + "**Not found**";
+        assertEquals(expectedResult, contentCaptor.getValue());
     }
 
 }

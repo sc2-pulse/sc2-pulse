@@ -74,7 +74,7 @@ public class Summary1v1Command
         String... names
     )
     {
-        if(names.length == 0) return DiscordBootstrap.notFoundFollowup(evt);
+        if(names.length == 0) return notFound(evt, additionalDescription, region, race, depth, names);
 
         for(String name : names)
         {
@@ -83,7 +83,7 @@ public class Summary1v1Command
             if(msg != null) return msg;
         }
 
-        return DiscordBootstrap.notFoundFollowup(evt);
+        return notFound(evt, additionalDescription, region, race, depth, names);
     }
 
     public Mono<Message> handle
@@ -203,6 +203,32 @@ public class Summary1v1Command
         if(searchType != LadderCharacterDAO.SearchType.BATTLE_TAG) characterFilter = characterFilter
             .and(c->c.getPreviousStats() != null || c.getCurrentStats() != null);
         return characterFilter;
+    }
+
+    public static Mono<Message> notFound
+    (
+        ApplicationCommandInteractionEvent evt,
+        @Nullable String additionalDescription,
+        Region region,
+        Race race,
+        long depth,
+        String... names
+    )
+    {
+        String notFound = appendHeader
+        (
+            new StringBuilder(),
+            String.join(", ", names),
+            depth,
+            DiscordBootstrap.DEFAULT_LINES,
+            region,
+            race,
+            additionalDescription
+        )
+            .append("\n\n")
+            .append("**Not found**")
+            .toString();
+        return evt.createFollowup().withContent(notFound);
     }
 
 }
