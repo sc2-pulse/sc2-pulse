@@ -10,11 +10,12 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.discord.event.UserCommandTest;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
-import discord4j.core.object.command.Interaction;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.User;
 import java.util.Optional;
@@ -25,6 +26,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import reactor.core.publisher.Mono;
 
 @ExtendWith(MockitoExtension.class)
@@ -38,10 +41,10 @@ public class Summary1v1UserCommandTest
     private Summary1v1Command cmdd;
 
     @Mock
-    private User user;
+    private WebContextUtil webContextUtil;
 
     @Mock
-    private Interaction interaction;
+    private User user;
 
     @Mock
     private UserInteractionEvent evt;
@@ -51,24 +54,55 @@ public class Summary1v1UserCommandTest
     @BeforeEach
     public void beforeEach()
     {
-        cmd = new Summary1v1UserCommand(accountDAO, cmdd);
+        cmd = new Summary1v1UserCommand(accountDAO, cmdd, webContextUtil);
     }
 
-    @Test
-    public void testHandle()
+    @CsvSource
+    ({
+        "321, 1, true, ':white_check_mark: Verified'",
+        "321, 321, true, ':white_check_mark: Verified'",
+
+        "321, 1, false, ':grey_question: Unverified, searching by discord username'",
+        "321, 321, false, ':grey_question: Unverified, searching by discord username"
+            + "([verify your account](<publicUrl/verify/discord>))'"
+    })
+    @ParameterizedTest
+    @MockitoSettings(strictness = Strictness.LENIENT)
+    public void testHandle
+    (
+        long resolvedUserId,
+        long interactionUserId,
+        boolean verified,
+        String additionalDescription
+    )
     {
-        when(user.getId()).thenReturn(Snowflake.of(321L));
+        when(webContextUtil.getPublicUrl()).thenReturn("publicUrl/");
+        cmd = new Summary1v1UserCommand(accountDAO, cmdd, webContextUtil);
+        UserCommandTest.stubUserInteractionUsers(evt, resolvedUserId, interactionUserId);
         Member member = mock(Member.class);
         when(member.getDisplayName()).thenReturn("displayName123");
-        when(user.getUsername()).thenReturn("name123");
-        when(user.asMember(any())).thenReturn(Mono.just(member));
-        when(interaction.getGuildId()).thenReturn(Optional.of(Snowflake.of(1L)));
-        when(evt.getResolvedUser()).thenReturn(user);
-        when(evt.getInteraction()).thenReturn(interaction);
-        when(accountDAO.findByDiscordUserId(321L)).thenReturn(Optional.empty());
+        User resolvedUser = evt.getResolvedUser();
+        when(resolvedUser.getUsername()).thenReturn("name123");
+        when(resolvedUser.asMember(any())).thenReturn(Mono.just(member));
+        when(evt.getInteraction().getGuildId()).thenReturn(Optional.of(Snowflake.of(1L)));
+
+        when(accountDAO.findByDiscordUserId(resolvedUserId)).thenReturn
+        (
+            verified
+                ? Optional.of(new Account(resolvedUserId, Partition.GLOBAL, "tag#1"))
+                : Optional.empty()
+        );
 
         cmd.handle(evt);
-        verify(cmdd).handle(evt, null, null, Summary1v1Command.DEFAULT_DEPTH, "displayName123", "name123");
+        verify(cmdd).handle
+        (
+            evt,
+            additionalDescription,
+            null,
+            null,
+            Summary1v1Command.DEFAULT_DEPTH,
+            verified ? new String[]{"tag#1"} : new String[]{"displayName123", "name123"}
+        );
     }
 
     @Test
@@ -80,7 +114,15 @@ public class Summary1v1UserCommandTest
             .thenReturn(Optional.of(new Account(1L, Partition.GLOBAL, "tag#1")));
 
         cmd.handle(evt);
-        verify(cmdd).handle(evt, null, null, Summary1v1Command.DEFAULT_DEPTH, "tag#1");
+        verify(cmdd).handle
+        (
+            evt,
+            ":white_check_mark: Verified",
+            null,
+            null,
+            Summary1v1Command.DEFAULT_DEPTH,
+            "tag#1"
+        );
     }
 
 

@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
 import discord4j.core.object.command.ApplicationCommand;
 import discord4j.core.object.entity.Message;
@@ -24,6 +25,10 @@ implements UserCommand
 {
 
     public static final Pattern USER_NAME_SANITIZER = Pattern.compile("[^\\p{L}\\p{N}]");
+    public static final String VERIFIED_ACCOUNT_DESCRIPTION = ":white_check_mark: Verified";
+    public static final String UNVERIFIED_ACCOUNT_DESCRIPTION =
+        ":grey_question: Unverified, searching by discord username";
+    private final String unverifiedAccountVerifyDescription;
 
     private final AccountDAO accountDAO;
     private final Summary1v1Command summary1v1Command;
@@ -32,11 +37,14 @@ implements UserCommand
     public Summary1v1UserCommand
     (
         AccountDAO accountDAO,
-        Summary1v1Command summary1v1Command
+        Summary1v1Command summary1v1Command,
+        WebContextUtil webContextUtil
     )
     {
         this.accountDAO = accountDAO;
         this.summary1v1Command = summary1v1Command;
+        this.unverifiedAccountVerifyDescription = UNVERIFIED_ACCOUNT_DESCRIPTION
+            + "([verify your account](<" + webContextUtil.getPublicUrl() + "verify/discord>))";
     }
 
     @Override
@@ -63,6 +71,7 @@ implements UserCommand
             return summary1v1Command.handle
             (
                 evt,
+                VERIFIED_ACCOUNT_DESCRIPTION,
                 null,
                 null,
                 Summary1v1Command.DEFAULT_DEPTH,
@@ -76,7 +85,17 @@ implements UserCommand
             String[] names = displayName.equals(name)
                 ? new String[]{displayName}
                 : new String[]{displayName, name};
-            return summary1v1Command.handle(evt, null, null, Summary1v1Command.DEFAULT_DEPTH, names);
+            boolean selfCommand = evt.getResolvedUser().getId().asLong()
+                == evt.getInteraction().getUser().getId().asLong();
+            return summary1v1Command.handle
+            (
+                evt,
+                selfCommand ? unverifiedAccountVerifyDescription : UNVERIFIED_ACCOUNT_DESCRIPTION,
+                null,
+                null,
+                Summary1v1Command.DEFAULT_DEPTH,
+                names
+            );
         }
     }
 
