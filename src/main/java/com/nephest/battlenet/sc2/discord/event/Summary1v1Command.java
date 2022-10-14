@@ -129,10 +129,9 @@ public class Summary1v1Command
             .collect(Collectors.toList());
         if(summaries.isEmpty()) return null;
 
-        StringBuilder description = new StringBuilder()
-            .append("**1v1 Summary**\n");
-        if(additionalDescription != null) description.append(additionalDescription).append("\n");
-        appendDescription(description, name, depth, maxLines, region, race).append("\n\n");
+        StringBuilder description = new StringBuilder();
+        appendHeader(description, name, depth, maxLines, region, race, additionalDescription)
+            .append("\n\n");
         int gamesDigits = summaries.stream()
             .mapToInt(PlayerCharacterSummary::getGames)
             .map(MiscUtil::stringLength)
@@ -164,6 +163,23 @@ public class Summary1v1Command
             description.setLength(DiscordBootstrap.MESSAGE_LENGTH_MAX);
 
         return evt.createFollowup().withContent(description.toString());
+    }
+
+    public static StringBuilder appendHeader
+    (
+        StringBuilder sb,
+        String name,
+        long depth,
+        int lines,
+        Region region,
+        Race race,
+        @Nullable String additionalDescription
+    )
+    {
+        sb.append("**1v1 Summary**\n");
+        if(additionalDescription != null) sb.append(additionalDescription).append("\n");
+        appendDescription(sb, name, depth, lines, region, race);
+        return sb;
     }
 
     private static StringBuilder appendDescription
