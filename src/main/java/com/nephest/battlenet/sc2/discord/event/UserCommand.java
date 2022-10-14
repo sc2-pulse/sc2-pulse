@@ -9,6 +9,12 @@ public interface UserCommand
 extends DiscordApplicationCommand<UserInteractionEvent>
 {
 
+    static boolean isInvokedOnSelf(UserInteractionEvent evt)
+    {
+        return evt.getResolvedUser().getId().asLong()
+            == evt.getInteraction().getUser().getId().asLong();
+    }
+
     @Override
     default boolean isEphemeral()
     {
