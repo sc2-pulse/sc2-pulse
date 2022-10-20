@@ -424,7 +424,7 @@
                             </section>
                             <section id="revealed-report">
                                 <ul class="d-inline-block">
-                                    <li>Is your BattleTag missing or invalid? <a th:href="@{/data/battle-net}">Import your BattleNet profile</a> to fix it.</li>
+                                    <li th:insert="~{/fragments/section :: missing-battle-tag-message}"></li>
                                     <li>Dou you know which pro player plays on this account? Please
                                         <a href="https://nephest.com/#contacts" target="_blank" rel="noopener">contact me</a>.
                                     </li>
