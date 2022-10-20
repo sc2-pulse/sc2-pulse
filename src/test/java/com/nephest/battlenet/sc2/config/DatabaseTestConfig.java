@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.Startup;
 import com.nephest.battlenet.sc2.config.mvc.TokenErrorController;
 import com.nephest.battlenet.sc2.config.openapi.SpringDocConfig;
+import com.nephest.battlenet.sc2.config.security.BlizzardOidcUserService;
 import com.nephest.battlenet.sc2.config.security.DiscordOauth2UserService;
 import com.nephest.battlenet.sc2.config.security.SecurityBeanConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
@@ -43,6 +44,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SecurityBeanConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DiscordOauth2UserService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SpringDocConfig.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardOidcUserService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardSC2API.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardPrivacyService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = PersonalService.class),
