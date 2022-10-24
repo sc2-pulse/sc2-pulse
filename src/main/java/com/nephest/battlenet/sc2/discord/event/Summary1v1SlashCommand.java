@@ -125,4 +125,10 @@ implements SlashCommand, AutoComplete
             .collect(Collectors.toList());
     }
 
+    @Override
+    public boolean supportsMetaOptions()
+    {
+        return true;
+    }
+
 }

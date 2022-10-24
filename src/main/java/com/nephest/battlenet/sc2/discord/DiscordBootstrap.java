@@ -148,8 +148,8 @@ public class DiscordBootstrap
             .login()
             .block();
 
-        registerCommands(handlers, ChatInputInteractionEvent.class, ApplicationCommand.Type.CHAT_INPUT, client, guild, true);
-        registerCommands(userInteractionHandlers, UserInteractionEvent.class, ApplicationCommand.Type.USER, client, guild, false);
+        registerCommands(handlers, ChatInputInteractionEvent.class, ApplicationCommand.Type.CHAT_INPUT, client, guild);
+        registerCommands(userInteractionHandlers, UserInteractionEvent.class, ApplicationCommand.Type.USER, client, guild);
         registerAutoCompleteHandlers(autoCompleteHandlers, client);
         client.on(ReconnectEvent.class, (e)->updatePresence(e.getClient())).subscribe();
         updatePresence(client).subscribe();
@@ -180,12 +180,11 @@ public class DiscordBootstrap
         Class<T> clazz,
         discord4j.core.object.command.ApplicationCommand.Type type,
         GatewayDiscordClient client,
-        Long guild,
-        boolean metaOptions
+        Long guild
     )
     {
         List<ApplicationCommandRequest> reqs = handlers.stream()
-            .map(c->metaOptions ? appendMetaOptions(c.generateCommandRequest()).build() : c.generateCommandRequest().build())
+            .map(c->c.supportsMetaOptions() ? appendMetaOptions(c.generateCommandRequest()).build() : c.generateCommandRequest().build())
             .collect(Collectors.toList());
         registerCommands(client.getRestClient(), reqs, guild, type);
 

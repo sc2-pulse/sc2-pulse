@@ -18,4 +18,6 @@ extends NamedCommand
 
     boolean isEphemeral();
 
+    boolean supportsMetaOptions();
+
 }

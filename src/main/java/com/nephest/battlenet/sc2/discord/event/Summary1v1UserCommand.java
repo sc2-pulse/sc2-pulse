@@ -98,6 +98,12 @@ implements UserCommand
         }
     }
 
+    @Override
+    public boolean supportsMetaOptions()
+    {
+        return false;
+    }
+
     public static String sanitizeName(String name)
     {
         String[] split = USER_NAME_SANITIZER.split(name.trim());
