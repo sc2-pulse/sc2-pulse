@@ -4,25 +4,57 @@
 package com.nephest.battlenet.sc2.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import com.nephest.battlenet.sc2.util.MiscUtil;
+import java.util.Map;
+import java.util.Set;
 
 public enum Region
-implements Identifiable
+implements Identifiable, MultiAliasName
 {
 
-    US(1, "NA", "https://us.api.blizzard.com/", "https://starcraft2.com/en-us/api/"),
-    EU(2, "EU", "https://eu.api.blizzard.com/", "https://starcraft2.com/en-gb/api/"),
-    KR(3, "KR", "https://kr.api.blizzard.com/", "https://starcraft2.com/ko-kr/api/"),
-    CN(5, "CN", "https://gateway.battlenet.com.cn/", null);
+    US
+    (
+        1,
+        "NA",
+        Set.of("US", "United States", "America", "Americas", "North America"),
+        "https://us.api.blizzard.com/", "https://starcraft2.com/en-us/api/"
+    ),
+    EU
+    (
+        2,
+        "EU",
+        Set.of("Europe"),
+        "https://eu.api.blizzard.com/", "https://starcraft2.com/en-gb/api/"
+    ),
+    KR
+    (
+        3,
+        "KR",
+        Set.of("Korea", "South Korea", "TW", "Taiwan", "Asia"),
+        "https://kr.api.blizzard.com/", "https://starcraft2.com/ko-kr/api/"
+    ),
+    CN
+    (
+        5,
+        "CN",
+        Set.of("China"),
+        "https://gateway.battlenet.com.cn/", null
+    );
+
+    public static final Map<Region, Set<String>> ALL_NAMES_MAP =
+        MiscUtil.generateAllNamesMap(Region.class);
 
     private final int id;
     private final String name;
+    private final Set<String> additionalNames;
     private final String baseUrl;
     private final String baseWebUrl;
 
-    Region(int id, String name, String baseUrl, String baseWebUrl)
+    Region(int id, String name, Set<String> additionalNames, String baseUrl, String baseWebUrl)
     {
         this.id = id;
         this.name = name;
+        this.additionalNames = additionalNames;
         this.baseUrl = baseUrl;
         this.baseWebUrl = baseWebUrl;
     }
@@ -57,9 +89,16 @@ implements Identifiable
         return id;
     }
 
+    @Override
     public String getName()
     {
         return name;
+    }
+
+    @Override
+    public Set<String> getAdditionalNames()
+    {
+        return additionalNames;
     }
 
     public String getBaseUrl()

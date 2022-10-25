@@ -3,12 +3,20 @@
 
 package com.nephest.battlenet.sc2.util;
 
+import com.nephest.battlenet.sc2.model.MultiAliasName;
 import java.time.Duration;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -85,6 +93,39 @@ public final class MiscUtil
 
         return n<100000?n<100?n<10?1:2:n<1000?3:n<10000?4:5:
             n<10000000?n<1000000?6:7:n<100000000?8: n<1000000000?9:10;
+    }
+
+    public static <T extends MultiAliasName> List<T> findByAnyName
+    (
+        Map<T, Set<String>> nameMap,
+        String name
+    )
+    {
+        String nameLower = name.toLowerCase();
+        return nameMap.entrySet().stream()
+            .filter(e->e.getValue().contains(nameLower))
+            .map(Map.Entry::getKey)
+            .collect(Collectors.toList());
+    }
+
+    public static <T extends Enum<T> & MultiAliasName>
+    Map<T, Set<String>> generateAllNamesMap(Class<T> clazz)
+    {
+        return Collections.unmodifiableMap
+        (
+            Arrays.stream(clazz.getEnumConstants()).collect
+            (
+                Collectors.toMap
+                (
+                    Function.identity(),
+                    t->t.getAllNames()
+                        .map(String::toLowerCase)
+                        .collect(Collectors.toUnmodifiableSet()),
+                    (l, r)->{throw new IllegalStateException("Unexpected merge call");},
+                    ()->new EnumMap<>(clazz)
+                )
+            )
+        );
     }
 
 }
