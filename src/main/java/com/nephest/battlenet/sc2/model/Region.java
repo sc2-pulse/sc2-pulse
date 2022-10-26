@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model;
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 public enum Region
@@ -61,10 +62,15 @@ implements Identifiable, MultiAliasName
 
     public static Region from(String name)
     {
-        for(Region region : Region.values())
-            if(region.getName().equalsIgnoreCase(name)) return region;
+        return optionalFrom(name).orElseThrow();
+    }
 
-        throw new IllegalArgumentException("Invalid name: " + name);
+    public static Optional<Region> optionalFrom(String name)
+    {
+        String lowerName = name.toLowerCase();
+        for(Region region : Region.values())
+            if(region.getName().equalsIgnoreCase(lowerName)) return Optional.of(region);
+        return Optional.empty();
     }
 
     public static Region from(int id)

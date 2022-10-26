@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class LeagueTypeTest
@@ -57,6 +58,23 @@ public class LeagueTypeTest
     public void testFindByNameOrAdditionalName(String name, List<BaseLeague.LeagueType> expectedResult)
     {
         assertEquals(expectedResult, MiscUtil.findByAnyName(BaseLeague.LeagueType.ALL_NAMES_MAP, name));
+    }
+
+    @CsvSource
+    ({
+        "bronze, BRONZE",
+        "Silver, SILVER",
+        "golD, GOLD",
+        "PLATINUM, PLATINUM",
+        "diaMond, DIAMOND",
+        "masteR, MASTER",
+        "grandmaster, GRANDMASTER"
+    })
+    @ParameterizedTest
+    public void testFromName(String name, BaseLeague.LeagueType expectedResult)
+    {
+        assertEquals(BaseLeague.LeagueType.optionalFrom(name).get(), expectedResult);
+        assertEquals(BaseLeague.LeagueType.from(name), expectedResult);
     }
 
 }

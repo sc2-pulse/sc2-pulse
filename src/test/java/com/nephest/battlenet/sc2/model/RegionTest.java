@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 
 public class RegionTest
@@ -45,6 +46,20 @@ public class RegionTest
     public void testFindByNameOrAdditionalName(String name, List<Region> expectedResult)
     {
         assertEquals(expectedResult, MiscUtil.findByAnyName(Region.ALL_NAMES_MAP, name));
+    }
+
+    @CsvSource
+    ({
+        "EU, EU",
+        "Na, US",
+        "kr, KR",
+        "cN, CN"
+    })
+    @ParameterizedTest
+    public void testFromName(String name, Region expectedResult)
+    {
+        assertEquals(expectedResult, Region.optionalFrom(name).get());
+        assertEquals(expectedResult, Region.from(name));
     }
 
 }

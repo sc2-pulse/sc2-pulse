@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
+import java.util.Optional;
 
 public enum Race
 implements Identifiable
@@ -25,11 +26,15 @@ implements Identifiable
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     public static Race from(String name)
     {
+        return optionalFrom(name).orElseThrow();
+    }
+
+    public static Optional<Race> optionalFrom(String name)
+    {
+        String lowerName = name.toLowerCase();
         for(Race race : Race.values())
-        {
-            if(race.getName().equalsIgnoreCase(name)) return race;
-        }
-        throw new IllegalArgumentException("Invalid name");
+            if(race.getName().equalsIgnoreCase(lowerName)) return Optional.of(race);
+        return Optional.empty();
     }
 
     public static Race from(int id)

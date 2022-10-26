@@ -8,22 +8,21 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
-public class TeamFormatTest
+public class RaceTest
 {
 
     @CsvSource
     ({
-        "1v1, _1V1",
-        "2V2, _2V2",
-        "3v3, _3V3",
-        "4v4, _4V4",
-        "ArChon, ARCHON"
+        "terraN, TERRAN",
+        "proToss, PROTOSS",
+        "Zerg, ZERG",
+        "RANDOM, RANDOM"
     })
     @ParameterizedTest
-    public void testFromName(String name, TeamFormat expected)
+    public void testFromName(String name, Race expectedResult)
     {
-        assertEquals(expected, TeamFormat.optionalFrom(name).get());
-        assertEquals(expected, TeamFormat.from(name));
+        assertEquals(expectedResult, Race.optionalFrom(name).get());
+        assertEquals(expectedResult, Race.from(name));
     }
 
 }

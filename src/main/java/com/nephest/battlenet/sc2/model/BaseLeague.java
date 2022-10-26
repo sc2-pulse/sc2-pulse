@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import javax.validation.constraints.NotNull;
 
@@ -51,11 +52,15 @@ public class BaseLeague
 
         public static LeagueType from(String name)
         {
+            return optionalFrom(name).orElseThrow();
+        }
+
+        public static Optional<LeagueType> optionalFrom(String name)
+        {
+            String lowerName = name.toLowerCase();
             for (LeagueType type : LeagueType.values())
-            {
-                if (type.getName().equalsIgnoreCase(name)) return type;
-            }
-            throw new IllegalArgumentException("Invalid name");
+                if (type.getName().equalsIgnoreCase(lowerName)) return Optional.of(type);
+            return Optional.empty();
         }
 
         @Override

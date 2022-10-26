@@ -1,7 +1,9 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
+
+import java.util.Optional;
 
 public enum TeamFormat
 {
@@ -23,10 +25,15 @@ public enum TeamFormat
 
     public static TeamFormat from(String name)
     {
-        for(TeamFormat format : TeamFormat.values())
-            if(format.getName().equalsIgnoreCase(name)) return format;
+        return optionalFrom(name).orElseThrow();
+    }
 
-        throw new IllegalArgumentException("Invalid name");
+    public static Optional<TeamFormat> optionalFrom(String name)
+    {
+        String lowerName = name.toLowerCase();
+        for(TeamFormat format : TeamFormat.values())
+            if(format.getName().equalsIgnoreCase(lowerName)) return Optional.of(format);
+        return Optional.empty();
     }
 
     public int getMemberCount(TeamType teamType)

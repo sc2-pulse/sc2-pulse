@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
+import java.util.Optional;
 
 public enum TeamType
 implements Identifiable
@@ -33,10 +34,15 @@ implements Identifiable
 
     public static TeamType from(String name)
     {
-        for(TeamType type : TeamType.values())
-            if(type.getName().equalsIgnoreCase(name)) return type;
+        return optionalFrom(name).orElseThrow();
+    }
 
-        throw new IllegalArgumentException("Invalid name");
+    public static Optional<TeamType> optionalFrom(String name)
+    {
+        String lowerName = name.toLowerCase();
+        for(TeamType type : TeamType.values())
+            if(type.getName().equalsIgnoreCase(lowerName)) return Optional.of(type);
+        return Optional.empty();
     }
 
     @Override
