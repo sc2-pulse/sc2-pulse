@@ -9,11 +9,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.discord.event.UserCommandTest;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
 import discord4j.core.object.entity.Member;
@@ -41,7 +41,7 @@ public class Summary1v1UserCommandTest
     private Summary1v1Command cmdd;
 
     @Mock
-    private WebContextUtil webContextUtil;
+    private DiscordBootstrap discordBootstrap;
 
     @Mock
     private User user;
@@ -54,7 +54,7 @@ public class Summary1v1UserCommandTest
     @BeforeEach
     public void beforeEach()
     {
-        cmd = new Summary1v1UserCommand(accountDAO, cmdd, webContextUtil);
+        cmd = new Summary1v1UserCommand(accountDAO, cmdd, discordBootstrap);
     }
 
     @CsvSource
@@ -64,7 +64,7 @@ public class Summary1v1UserCommandTest
 
         "321, 1, false, ':grey_question: Unverified, searching by discord username'",
         "321, 321, false, ':grey_question: Unverified, searching by discord username"
-            + "([verify your account](<publicUrl/verify/discord>))'"
+            + "(publicUrl/verify)'"
     })
     @ParameterizedTest
     @MockitoSettings(strictness = Strictness.LENIENT)
@@ -76,8 +76,8 @@ public class Summary1v1UserCommandTest
         String additionalDescription
     )
     {
-        when(webContextUtil.getPublicUrl()).thenReturn("publicUrl/");
-        cmd = new Summary1v1UserCommand(accountDAO, cmdd, webContextUtil);
+        when(discordBootstrap.getAccountVerificationLink()).thenReturn("publicUrl/verify");
+        cmd = new Summary1v1UserCommand(accountDAO, cmdd, discordBootstrap);
         UserCommandTest.stubUserInteractionUsers(evt, resolvedUserId, interactionUserId);
         Member member = mock(Member.class);
         when(member.getDisplayName()).thenReturn("displayName123");

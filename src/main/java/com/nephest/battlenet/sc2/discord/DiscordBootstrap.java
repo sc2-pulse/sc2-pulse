@@ -85,6 +85,7 @@ public class DiscordBootstrap
     private final Map<Race, String> raceEmojis;
     private final Map<BaseLeague.LeagueType, String> leagueEmojis;
     private final String characterUrlTemplate;
+    private final String accountVerificationLink;
     private final GuildEmojiStore guildEmojiStore;
     private final UpdateService updateService;
 
@@ -102,6 +103,10 @@ public class DiscordBootstrap
         this.leagueEmojis = leagueEmojis;
         characterUrlTemplate = webContextUtil.getPublicUrl()
             + "?type=character&id=%1$s&m=1#player-stats-mmr";
+        this.accountVerificationLink =
+            "[verify your account](<"
+            + webContextUtil.getPublicUrl()
+            + "verify/discord>)";
         this.guildEmojiStore = guildEmojiStore;
         this.updateService = updateService;
     }
@@ -290,6 +295,11 @@ public class DiscordBootstrap
     {
         return "[" + generateFullName(member, true) + "](<"
             + String.format(getCharacterUrlTemplate(), member.getCharacter().getId()) + ">)";
+    }
+
+    public String getAccountVerificationLink()
+    {
+        return accountVerificationLink;
     }
 
     public static String generateFullName(LadderTeamMember member, boolean boldName)

@@ -7,7 +7,6 @@ import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
 import discord4j.core.object.command.ApplicationCommand;
 import discord4j.core.object.entity.Message;
@@ -38,13 +37,13 @@ implements UserCommand
     (
         AccountDAO accountDAO,
         Summary1v1Command summary1v1Command,
-        WebContextUtil webContextUtil
+        DiscordBootstrap discordBootstrap
     )
     {
         this.accountDAO = accountDAO;
         this.summary1v1Command = summary1v1Command;
         this.unverifiedAccountVerifyDescription = UNVERIFIED_ACCOUNT_DESCRIPTION
-            + "([verify your account](<" + webContextUtil.getPublicUrl() + "verify/discord>))";
+            + "(" + discordBootstrap.getAccountVerificationLink() + ")";
     }
 
     @Override
