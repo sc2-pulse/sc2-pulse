@@ -86,6 +86,7 @@ public class DiscordBootstrap
     private final Map<BaseLeague.LeagueType, String> leagueEmojis;
     private final String characterUrlTemplate;
     private final String accountVerificationLink;
+    private final String importBattleNetDataUrl;
     private final GuildEmojiStore guildEmojiStore;
     private final UpdateService updateService;
 
@@ -107,6 +108,7 @@ public class DiscordBootstrap
             "[verify your account](<"
             + webContextUtil.getPublicUrl()
             + "verify/discord>)";
+        this.importBattleNetDataUrl = webContextUtil.getPublicUrl() + "data/battle-net";
         this.guildEmojiStore = guildEmojiStore;
         this.updateService = updateService;
     }
@@ -300,6 +302,11 @@ public class DiscordBootstrap
     public String getAccountVerificationLink()
     {
         return accountVerificationLink;
+    }
+
+    public String getImportBattleNetDataUrl()
+    {
+        return importBattleNetDataUrl;
     }
 
     public static String generateFullName(LadderTeamMember member, boolean boldName)
