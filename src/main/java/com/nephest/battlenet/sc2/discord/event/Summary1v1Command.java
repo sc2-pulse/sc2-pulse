@@ -140,18 +140,7 @@ public class Summary1v1Command
         for(PlayerCharacterSummary summary : summaries)
         {
             LadderTeamMember member = characters.get(summary.getPlayerCharacterId());
-            description.append(discordBootstrap.generateCharacterURL(member))
-                .append("\n")
-                .append(DiscordBootstrap.REGION_EMOJIS.get(member.getCharacter().getRegion()))
-                .append(" ").append(discordBootstrap.getLeagueEmojiOrName(evt, summary.getLeagueTypeLast()))
-                .append(" ").append(discordBootstrap.getRaceEmojiOrName(evt, summary.getRace()))
-                .append(" | **`")
-                .append(String.format("%" + gamesDigits + "d", summary.getGames()))
-                .append("`** | **")
-                .append(summary.getRatingLast()).append("**")
-                .append("/*").append(summary.getRatingAvg())
-                .append("*/").append(summary.getRatingMax())
-                .append("\n\n");
+            appendSummary(description, summary, member, discordBootstrap, evt, gamesDigits);
             if(description.length() + CONTENT_LENGTH_OFFSET > DiscordBootstrap.MESSAGE_LENGTH_MAX)
             {
                 if(description.length() + MESSAGE_WAS_TRIMMED.length() <= DiscordBootstrap.MESSAGE_LENGTH_MAX)
@@ -163,6 +152,31 @@ public class Summary1v1Command
             description.setLength(DiscordBootstrap.MESSAGE_LENGTH_MAX);
 
         return evt.createFollowup().withContent(description.toString());
+    }
+
+    public static StringBuilder appendSummary
+    (
+        StringBuilder sb,
+        PlayerCharacterSummary summary,
+        LadderTeamMember member,
+        DiscordBootstrap discordBootstrap,
+        ApplicationCommandInteractionEvent evt,
+        long gamesDigits
+    )
+    {
+
+        return sb.append(discordBootstrap.generateCharacterURL(member))
+            .append("\n")
+            .append(DiscordBootstrap.REGION_EMOJIS.get(member.getCharacter().getRegion()))
+            .append(" ").append(discordBootstrap.getLeagueEmojiOrName(evt, summary.getLeagueTypeLast()))
+            .append(" ").append(discordBootstrap.getRaceEmojiOrName(evt, summary.getRace()))
+            .append(" | **`")
+            .append(String.format("%" + gamesDigits + "d", summary.getGames()))
+            .append("`** | **")
+            .append(summary.getRatingLast()).append("**")
+            .append("/*").append(summary.getRatingAvg())
+            .append("*/").append(summary.getRatingMax())
+            .append("\n\n");
     }
 
     public static StringBuilder appendHeader
