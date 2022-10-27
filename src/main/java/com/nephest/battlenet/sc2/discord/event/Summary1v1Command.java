@@ -140,7 +140,8 @@ public class Summary1v1Command
         for(PlayerCharacterSummary summary : summaries)
         {
             LadderTeamMember member = characters.get(summary.getPlayerCharacterId());
-            appendSummary(description, summary, member, discordBootstrap, evt, gamesDigits);
+            appendSummary(description, summary, member, discordBootstrap, evt, gamesDigits)
+                .append("\n\n");
             if(description.length() + CONTENT_LENGTH_OFFSET > DiscordBootstrap.MESSAGE_LENGTH_MAX)
             {
                 if(description.length() + MESSAGE_WAS_TRIMMED.length() <= DiscordBootstrap.MESSAGE_LENGTH_MAX)
@@ -175,8 +176,7 @@ public class Summary1v1Command
             .append("`** | **")
             .append(summary.getRatingLast()).append("**")
             .append("/*").append(summary.getRatingAvg())
-            .append("*/").append(summary.getRatingMax())
-            .append("\n\n");
+            .append("*/").append(summary.getRatingMax());
     }
 
     public static StringBuilder appendHeader
