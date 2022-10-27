@@ -149,8 +149,7 @@ public class Summary1v1Command
                 break;
             }
         }
-        if(description.length() > DiscordBootstrap.MESSAGE_LENGTH_MAX)
-            description.setLength(DiscordBootstrap.MESSAGE_LENGTH_MAX);
+        DiscordBootstrap.trimIfLong(description);
 
         return evt.createFollowup().withContent(description.toString());
     }

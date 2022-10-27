@@ -396,4 +396,14 @@ public class DiscordBootstrap
                 .build());
     }
 
+    public static boolean trimIfLong(StringBuilder sb)
+    {
+        if(sb.length() > DiscordBootstrap.MESSAGE_LENGTH_MAX)
+        {
+            sb.setLength(DiscordBootstrap.MESSAGE_LENGTH_MAX);
+            return true;
+        }
+        return false;
+    }
+
 }

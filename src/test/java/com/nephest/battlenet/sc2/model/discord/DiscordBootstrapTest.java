@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.discord;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -34,6 +35,8 @@ import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -127,6 +130,23 @@ public class DiscordBootstrapTest
         assertEquals(2, registeredRequests.size());
         assertTrue(registeredRequests.stream().anyMatch(r->r.name().equals("slash")));
         assertTrue(registeredRequests.stream().anyMatch(r->r.name().equals("user")));
+    }
+
+    @Test
+    public void ifLongMessage_thenTrim()
+    {
+        StringBuilder sb = new StringBuilder(" ".repeat(DiscordBootstrap.MESSAGE_LENGTH_MAX + 1));
+        assertTrue(DiscordBootstrap.trimIfLong(sb));
+        assertEquals(DiscordBootstrap.MESSAGE_LENGTH_MAX, sb.length());
+    }
+
+    @ValueSource(ints = {DiscordBootstrap.MESSAGE_LENGTH_MAX, DiscordBootstrap.MESSAGE_LENGTH_MAX - 1})
+    @ParameterizedTest
+    public void ifShortMessage_thenDoNothing(int length)
+    {
+        StringBuilder sb = new StringBuilder(" ".repeat(length));
+        assertFalse(DiscordBootstrap.trimIfLong(sb));
+        assertEquals(length, sb.length());
     }
 
 }
