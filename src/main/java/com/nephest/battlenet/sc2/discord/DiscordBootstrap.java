@@ -25,7 +25,6 @@ import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.interaction.InteractionCreateEvent;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
 import discord4j.core.event.domain.lifecycle.ReconnectEvent;
-import discord4j.core.object.command.ApplicationCommand;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.command.ApplicationCommandOption;
@@ -50,6 +49,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -147,14 +147,30 @@ public class DiscordBootstrap
             .build()
             .login()
             .block();
+        load(handlers, userInteractionHandlers, autoCompleteHandlers, guildEmojiStore, client, guild);
+        return client;
+    }
 
-        registerCommands(handlers, ChatInputInteractionEvent.class, ApplicationCommand.Type.CHAT_INPUT, client, guild);
-        registerCommands(userInteractionHandlers, UserInteractionEvent.class, ApplicationCommand.Type.USER, client, guild);
+    public static void load
+    (
+        List<SlashCommand> handlers,
+        List<UserCommand> userInteractionHandlers,
+        List<AutoComplete> autoCompleteHandlers,
+        GuildEmojiStore guildEmojiStore,
+        GatewayDiscordClient client,
+        Long guild
+    )
+    {
+        List<DiscordApplicationCommand<? extends ApplicationCommandInteractionEvent>> allHandlers =
+            Stream.concat(handlers.stream(), userInteractionHandlers.stream())
+                .collect(Collectors.toList());
+        registerCommands(allHandlers, client, guild);
+        registerHandlers(handlers, ChatInputInteractionEvent.class, client);
+        registerHandlers(userInteractionHandlers, UserInteractionEvent.class, client);
         registerAutoCompleteHandlers(autoCompleteHandlers, client);
         client.on(ReconnectEvent.class, (e)->updatePresence(e.getClient())).subscribe();
         updatePresence(client).subscribe();
         client.on(EmojisUpdateEvent.class, guildEmojiStore::removeGuildEmojis).subscribe();
-        return client;
     }
 
     private static Mono<Void> updatePresence(GatewayDiscordClient client)
@@ -174,11 +190,9 @@ public class DiscordBootstrap
         ).subscribe();
     }
 
-    private static <T extends ApplicationCommandInteractionEvent> void registerCommands
+    private static void registerCommands
     (
-        List<? extends DiscordApplicationCommand<T>> handlers,
-        Class<T> clazz,
-        discord4j.core.object.command.ApplicationCommand.Type type,
+        Collection<? extends DiscordApplicationCommand<? extends ApplicationCommandInteractionEvent>> handlers,
         GatewayDiscordClient client,
         Long guild
     )
@@ -186,14 +200,20 @@ public class DiscordBootstrap
         List<ApplicationCommandRequest> reqs = handlers.stream()
             .map(c->c.supportsMetaOptions() ? appendMetaOptions(c.generateCommandRequest()).build() : c.generateCommandRequest().build())
             .collect(Collectors.toList());
-        registerCommands(client.getRestClient(), reqs, guild, type);
+        registerCommands(client.getRestClient(), reqs, guild);
+    }
 
+    private static <T extends ApplicationCommandInteractionEvent> void registerHandlers
+    (
+        Collection<? extends DiscordApplicationCommand<T>> handlers,
+        Class<T> clazz,
+        GatewayDiscordClient client
+    )
+    {
         Map<String, DiscordApplicationCommand<T>> handlerMap = handlers.stream()
             .collect(Collectors.toMap(DiscordApplicationCommand::getCommandName, Function.identity()));
         client.on(clazz, evt->handle(handlerMap, evt)).subscribe();
     }
-
-
 
     private static <T extends ApplicationCommandInteractionEvent> Mono<Message> handle
     (Map<String, DiscordApplicationCommand<T>> handlerMap, T evt)
@@ -230,7 +250,7 @@ public class DiscordBootstrap
     }
 
     public static void registerCommands
-    (RestClient client, List<ApplicationCommandRequest> cmds, Long guild, ApplicationCommand.Type type)
+    (RestClient client, List<ApplicationCommandRequest> cmds, Long guild)
     {
         final ApplicationService applicationService = client.getApplicationService();
         final long applicationId = client.getApplicationId().block();
