@@ -88,6 +88,7 @@ spring.security.oauth2.client.registration.sc2-lg-kr.client-secret = {client_sec
 spring.security.oauth2.client.registration.sc2-lg-cn.client-id = {client_id}
 spring.security.oauth2.client.registration.sc2-lg-cn.client-secret = {client_secret}
 discord.token={token}
+discord.bot.invite.url={discord_bot_invite_url}
 spring.security.oauth2.client.registration.discord-lg.client-id={client_id}
 spring.security.oauth2.client.registration.discord-lg.client-secret={client_secret}
 twitch.client-id={client_id}
