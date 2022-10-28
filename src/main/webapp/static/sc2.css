@@ -1002,6 +1002,11 @@ body.modal-open.modal-open-no-popup
         max-width: 720px;
     }
 
+    .section-cascade section
+    {
+        margin-left: 1.5rem;
+    }
+
 }
 
 @media (min-width: 992px) {
