@@ -28,8 +28,10 @@ import discord4j.core.event.domain.lifecycle.ReconnectEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.command.ApplicationCommandOption;
+import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.PartialMember;
 import discord4j.core.object.presence.ClientActivity;
 import discord4j.core.object.presence.ClientPresence;
 import discord4j.core.spec.EmbedCreateSpec;
@@ -42,6 +44,8 @@ import discord4j.rest.RestClient;
 import discord4j.rest.http.client.ClientException;
 import discord4j.rest.service.ApplicationService;
 import discord4j.rest.util.Color;
+import discord4j.rest.util.Permission;
+import discord4j.rest.util.PermissionSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -404,6 +408,23 @@ public class DiscordBootstrap
             return true;
         }
         return false;
+    }
+
+    public static Mono<PermissionSet> getSelfPermissions(Mono<Guild> guild)
+    {
+        return guild
+            .flatMap(Guild::getSelfMember)
+            .flatMap(PartialMember::getBasePermissions);
+    }
+
+    public static Mono<Boolean> haveSelfPermissions
+    (
+        Mono<Guild> guild,
+        Collection<? extends Permission> requiredPermissions
+    )
+    {
+        return getSelfPermissions(guild)
+            .map(p->p.containsAll(requiredPermissions));
     }
 
 }

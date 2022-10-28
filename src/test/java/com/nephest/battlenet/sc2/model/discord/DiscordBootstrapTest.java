@@ -26,16 +26,23 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
 import discord4j.discordjson.json.ApplicationCommandRequest;
 import discord4j.discordjson.json.ImmutableApplicationCommandRequest;
 import discord4j.rest.RestClient;
 import discord4j.rest.service.ApplicationService;
+import discord4j.rest.util.Permission;
+import discord4j.rest.util.PermissionSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -147,6 +154,46 @@ public class DiscordBootstrapTest
         StringBuilder sb = new StringBuilder(" ".repeat(length));
         assertFalse(DiscordBootstrap.trimIfLong(sb));
         assertEquals(length, sb.length());
+    }
+
+    public static Stream<Arguments> testHaveSelfPermissions()
+    {
+        return Stream.of
+        (
+            Arguments.of
+            (
+                new Permission[]{Permission.ADD_REACTIONS, Permission.ATTACH_FILES},
+                List.of(Permission.ADD_REACTIONS, Permission.ATTACH_FILES),
+                true
+            ),
+            Arguments.of
+            (
+                new Permission[]{Permission.ADD_REACTIONS},
+                List.of(Permission.ADD_REACTIONS, Permission.ATTACH_FILES),
+                false
+            )
+        );
+    }
+
+    @MethodSource
+    @ParameterizedTest
+    public void testHaveSelfPermissions
+    (
+        Permission[] permissions,
+        List<Permission> requiredPermissions,
+        boolean expectedResult
+    )
+    {
+        Guild guild = mock(Guild.class);
+        Member member = mock(Member.class);
+        when(member.getBasePermissions()).thenReturn(Mono.just(PermissionSet.of(permissions)));
+        when(guild.getSelfMember()).thenReturn(Mono.just(member));
+
+        assertEquals
+        (
+            expectedResult,
+            DiscordBootstrap.haveSelfPermissions(Mono.just(guild), requiredPermissions).block()
+        );
     }
 
 }
