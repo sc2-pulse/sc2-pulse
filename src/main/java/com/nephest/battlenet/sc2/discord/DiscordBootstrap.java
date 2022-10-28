@@ -91,6 +91,7 @@ public class DiscordBootstrap
     private final String characterUrlTemplate;
     private final String accountVerificationLink;
     private final String importBattleNetDataLink;
+    private final String discordBotPageUrl;
     private final GuildEmojiStore guildEmojiStore;
     private final UpdateService updateService;
 
@@ -116,6 +117,7 @@ public class DiscordBootstrap
             "[import your BattleNet profile](<"
             + webContextUtil.getPublicUrl()
             + "data/battle-net>)";
+        this.discordBotPageUrl = webContextUtil.getPublicUrl() + "discord/bot";
         this.guildEmojiStore = guildEmojiStore;
         this.updateService = updateService;
     }
@@ -333,6 +335,11 @@ public class DiscordBootstrap
     public String getImportBattleNetDataLink()
     {
         return importBattleNetDataLink;
+    }
+
+    public String getDiscordBotPageUrl()
+    {
+        return discordBotPageUrl;
     }
 
     public static String generateFullName(LadderTeamMember member, boolean boldName)

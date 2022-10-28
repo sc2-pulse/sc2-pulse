@@ -1,0 +1,60 @@
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _, true)}">
+<head>
+    <title>Discord Bot - SC2 Pulse</title>
+    <meta name="description" content="Discord bot commands, descriptions, links, arguments, and FAQ."/>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: content(~{::section})}">
+    <section class="text-left">
+        <h2>Discord Bot</h2>
+        <p>SC2 Pulse provides a discord bot for StarCraft2.
+            <a href="https://discord.com/api/oauth2/authorize?client_id=908047161994915901&permissions=264192&scope=bot%20applications.commands" target="_blank" rel="nofollow noopener">Invite the bot to your discord server</a>.
+        </p>
+        <div class="section-cascade">
+            <section id="slash-commands">
+                <h3>Slash commands</h3>
+                <p>Type <code>/</code> in the chat box to see available slash commands.</p>
+                <section id="slash-1v1-summary">
+                    <h4><a href="#slash-1v1-summary">1v1-summary</a></h4>
+                    <p>Shows MMR(last, average, and max), games played, race, region, and league.</p>
+                    <dl>
+                        <dt>name</dt>
+                        <dd>The search uses the same rules as the regular player search on the website which means you can
+                        search by name, BattleTag#1234, [clanTag], or starcraft2.com profile link.</dd>
+                    </dl>
+                </section>
+            </section>
+            <section id="user-commands">
+                <h3>User commands</h3>
+                <p>Click on a user->apps to see available user commands.</p>
+                <section id="user-1v1-summary">
+                    <h4><a href="#user-1v1-summary">1v1-summary</a></h4>
+                    <p>
+                        The bot will try to find user's stats by searching in the following order:
+                    </p>
+                    <ul>
+                        <li>BattleTag(if the user has linked their Discord account to their SC2 Pulse account)</li>
+                        <li>Server username(trimmed)</li>
+                        <li>Discord username(trimmed)</li>
+                    </ul>
+                </section>
+            </section>
+        </div>
+        <section id="faq">
+            <h3>FAQ</h3>
+            <dl>
+                <dt>My users can't use the bot</dt>
+                <dd>Make sure your users have a permission to use application commands(server config). Also make sure
+                that required commands are enabled in the integration config(click on the bot->manage integration)</dd>
+            </dl>
+        </section>
+    </section>
+</div>
+</body>
+</html>
