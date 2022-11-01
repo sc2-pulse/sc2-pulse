@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.discord.GuildEmojiStore;
+import com.nephest.battlenet.sc2.discord.GuildRoleStore;
 import com.nephest.battlenet.sc2.discord.event.SlashCommand;
 import com.nephest.battlenet.sc2.discord.event.UserCommand;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -118,6 +119,7 @@ public class DiscordBootstrapTest
         when(applicationService.bulkOverwriteGlobalApplicationCommand(eq(3L), any()))
             .thenReturn(Flux.empty());
         when(restClient.getApplicationService()).thenReturn(applicationService);
+        GuildRoleStore guildRoleStore = mock(GuildRoleStore.class);
 
         DiscordBootstrap.load
         (
@@ -125,6 +127,7 @@ public class DiscordBootstrapTest
             List.of(userCommand),
             List.of(),
             guildEmojiStore,
+            guildRoleStore,
             client,
             null
         );

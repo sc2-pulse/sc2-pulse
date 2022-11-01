@@ -25,6 +25,9 @@ import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.event.domain.interaction.InteractionCreateEvent;
 import discord4j.core.event.domain.interaction.UserInteractionEvent;
 import discord4j.core.event.domain.lifecycle.ReconnectEvent;
+import discord4j.core.event.domain.role.RoleCreateEvent;
+import discord4j.core.event.domain.role.RoleDeleteEvent;
+import discord4j.core.event.domain.role.RoleUpdateEvent;
 import discord4j.core.object.command.ApplicationCommandInteractionOption;
 import discord4j.core.object.command.ApplicationCommandInteractionOptionValue;
 import discord4j.core.object.command.ApplicationCommandOption;
@@ -145,6 +148,7 @@ public class DiscordBootstrap
         List<UserCommand> userInteractionHandlers,
         List<AutoComplete> autoCompleteHandlers,
         GuildEmojiStore guildEmojiStore,
+        GuildRoleStore guildRoleStore,
         String token,
         Long guild
     )
@@ -153,7 +157,16 @@ public class DiscordBootstrap
             .build()
             .login()
             .block();
-        load(handlers, userInteractionHandlers, autoCompleteHandlers, guildEmojiStore, client, guild);
+        load
+        (
+            handlers,
+            userInteractionHandlers,
+            autoCompleteHandlers,
+            guildEmojiStore,
+            guildRoleStore,
+            client,
+            guild
+        );
         return client;
     }
 
@@ -163,6 +176,7 @@ public class DiscordBootstrap
         List<UserCommand> userInteractionHandlers,
         List<AutoComplete> autoCompleteHandlers,
         GuildEmojiStore guildEmojiStore,
+        GuildRoleStore guildRoleStore,
         GatewayDiscordClient client,
         Long guild
     )
@@ -177,6 +191,9 @@ public class DiscordBootstrap
         client.on(ReconnectEvent.class, (e)->updatePresence(e.getClient())).subscribe();
         updatePresence(client).subscribe();
         client.on(EmojisUpdateEvent.class, guildEmojiStore::removeGuildEmojis).subscribe();
+        client.on(RoleCreateEvent.class, guildRoleStore::removeRoles).subscribe();
+        client.on(RoleUpdateEvent.class, guildRoleStore::removeRoles).subscribe();
+        client.on(RoleDeleteEvent.class, guildRoleStore::removeRoles).subscribe();
     }
 
     private static Mono<Void> updatePresence(GatewayDiscordClient client)
