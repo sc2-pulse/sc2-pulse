@@ -29,6 +29,67 @@
                         search by name, BattleTag#1234, [clanTag], or starcraft2.com profile link.</dd>
                     </dl>
                 </section>
+                <section id="slash-roles">
+                    <h4><a href="#slash-roles">roles</a></h4>
+                    <p>Assigns discord roles based on your ranked 1v1 stats. It's like reaction roles, but instead of
+                    reactions your roles are based on your actual in-game stats.</p>
+                    <p>Required permissions(for the bot): <code th:text="${T(com.nephest.battlenet.sc2.discord.event.RolesSlashCommand).REQUIRED_PERMISSIONS.![name].stream.collect(@formatUtil.joining(', '))}"></code></p>
+                    <section>
+                        <h5>Supported roles</h5>
+                        <p>Role names are case insensitive</p>
+                        <section>
+                            <h6>Region</h6>
+                            <table class="table table-hover table-sm c-table-simple">
+                                <thead>
+                                    <tr>
+                                        <th>Region</th>
+                                        <th>Supported roles</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="region : ${T(com.nephest.battlenet.sc2.model.Region).values()}">
+                                        <th scope="row" th:text="${region.getName()}"></th>
+                                        <td class="text-left cell-main" th:text="${T(java.util.stream.Stream).concat(T(java.util.stream.Stream).of(region.getName()), region.getAdditionalNames().stream()).collect(@formatUtil.joining(', '))}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                        <section>
+                            <h6>League</h6>
+                            <table class="table table-hover table-sm c-table-simple">
+                                <thead>
+                                <tr>
+                                    <th>League</th>
+                                    <th>Supported roles</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="league : ${T(com.nephest.battlenet.sc2.model.BaseLeague.LeagueType).values()}">
+                                        <th scope="row" th:text="${league.getName()}"></th>
+                                        <td class="text-left cell-main" th:text="${T(java.util.stream.Stream).concat(T(java.util.stream.Stream).of(league.getName()), league.getAdditionalNames().stream()).collect(@formatUtil.joining(', '))}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                        <section>
+                            <h6>Race</h6>
+                            <table class="table table-hover table-sm c-table-simple">
+                                <thead>
+                                <tr>
+                                    <th>Race</th>
+                                    <th>Supported roles</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                    <tr th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}">
+                                        <th scope="row" th:text="${race.getName()}"></th>
+                                        <td class="text-left cell-main" th:text="${race.getName()}"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    </section>
+                </section>
             </section>
             <section id="user-commands">
                 <h3>User commands</h3>
