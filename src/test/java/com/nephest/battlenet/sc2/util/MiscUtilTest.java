@@ -4,14 +4,21 @@
 package com.nephest.battlenet.sc2.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.function.Function;
+import org.apache.commons.lang3.Range;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class MiscUtilTest
 {
+
+    public static final Function<Long, Long> SUBTRACTOR = l->l-1;
 
     @CsvSource
     ({
@@ -52,6 +59,39 @@ public class MiscUtilTest
     public void testStringLength(int i, int expectedLength)
     {
         assertEquals(expectedLength, MiscUtil.stringLength(i));
+    }
+
+    @Test
+    public void testParseLongRangeExcludingTo()
+    {
+        Range<Long> range = MiscUtil.parseRange("1 -    100", Long::parseLong, SUBTRACTOR, false);
+        assertEquals(1, range.getMinimum());
+        assertEquals(99, range.getMaximum());
+    }
+
+    @CsvSource
+    ({
+        "'1       -    100', 1, 100",
+        "'-100--1', -100, -1",
+        "'-1-100', -1, 100"
+    })
+    @ParameterizedTest
+    public void testParseLongRangeIncludingTo(String input, long expectedFrom, long expectedTo)
+    {
+        Range<Long> range = MiscUtil.parseRange(input, Long::parseLong, SUBTRACTOR, true);
+        assertEquals(expectedFrom, range.getMinimum());
+        assertEquals(expectedTo, range.getMaximum());
+    }
+
+    @ValueSource(strings = {"1 100", "1-a", "-1", ".-1", "1-0", "-1 2", "1-2-3"})
+    @ParameterizedTest
+    public void whenInvalidInput_thenThrowRuntimeException(String input)
+    {
+        assertThrows
+        (
+            RuntimeException.class,
+            ()->MiscUtil.parseRange(input, Long::parseLong, SUBTRACTOR, true)
+        );
     }
 
 

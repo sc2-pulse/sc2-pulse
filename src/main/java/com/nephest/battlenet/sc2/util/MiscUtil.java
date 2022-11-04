@@ -17,6 +17,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.Range;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -93,6 +94,33 @@ public final class MiscUtil
 
         return n<100000?n<100?n<10?1:2:n<1000?3:n<10000?4:5:
             n<10000000?n<1000000?6:7:n<100000000?8: n<1000000000?9:10;
+    }
+
+    public static <T extends Number & Comparable<T>> Range<T> parseRange
+    (
+        String str,
+        Function<String, T> parser,
+        Function<T, T> subtractor,
+        boolean includingTo
+    )
+    {
+        if(!str.contains("-") || str.length() < 3)
+            throw new IllegalArgumentException("Invalid range format, "
+                + "- not found or input is too short");
+
+        str = str.replaceAll(" ", "");
+        if(str.length() < 3) throw new IllegalArgumentException("Input is too short");
+
+        int ix = str.indexOf("-");
+        if(ix == 0) ix = str.indexOf("-", 1);
+        if(ix == -1) throw new IllegalArgumentException("Invalid range");
+
+        T from = parser.apply(str.substring(0, ix));
+        T to = parser.apply(str.substring(ix + 1));
+        if(!includingTo) to = subtractor.apply(to);
+        if(from.compareTo(to) > 0)
+            throw new IllegalArgumentException("Min value must be <= than max value");
+        return Range.between(from, to);
     }
 
     public static <T extends MultiAliasName> List<T> findByAnyName
