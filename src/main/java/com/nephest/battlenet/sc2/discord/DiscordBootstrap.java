@@ -73,7 +73,6 @@ public class DiscordBootstrap
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscordBootstrap.class);
 
-    public static final boolean DEFAULT_EPHEMERAL = false;
     public static final int DEFAULT_LINES = 5;
     public static final int MESSAGE_LENGTH_MAX = 2000;
     public static final String SC2_GAME_NAME = "StarCraft II";
@@ -319,15 +318,10 @@ public class DiscordBootstrap
 
     public static boolean getEphemeral(ApplicationCommandInteractionEvent evt, DiscordApplicationCommand<?> cmd)
     {
-        if(evt instanceof ChatInputInteractionEvent)
-        {
-            return getArgument((ChatInputInteractionEvent) evt, "ephemeral",
-                ApplicationCommandInteractionOptionValue::asBoolean, DiscordBootstrap.DEFAULT_EPHEMERAL);
-        }
-        else
-        {
-            return cmd.isEphemeral();
-        }
+        return cmd.supportsMetaOptions()
+            ? getArgument((ChatInputInteractionEvent) evt, "ephemeral",
+                ApplicationCommandInteractionOptionValue::asBoolean, cmd.isEphemeral())
+            : cmd.isEphemeral();
     }
 
     public static Mono<String> getTargetDisplayNameOrName(UserInteractionEvent evt)
