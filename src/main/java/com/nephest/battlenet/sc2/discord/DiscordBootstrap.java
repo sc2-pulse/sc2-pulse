@@ -131,14 +131,18 @@ public class DiscordBootstrap
 
     public String getRaceEmojiOrName(InteractionCreateEvent evt, Race race)
     {
-        return guildEmojiStore.getGuildRaceEmoji(guildEmojiStore.getGuildEmojis(evt), race)
-            .orElse(raceEmojis.getOrDefault(race, race.getName()));
+        return evt.getInteraction().getGuildId().isPresent()
+            ? guildEmojiStore.getGuildRaceEmoji(guildEmojiStore.getGuildEmojis(evt), race)
+                .orElse(raceEmojis.getOrDefault(race, race.getName()))
+            : raceEmojis.getOrDefault(race, race.getName());
     }
 
     public String getLeagueEmojiOrName(InteractionCreateEvent evt, BaseLeague.LeagueType league)
     {
-        return guildEmojiStore.getGuildLeagueEmoji(guildEmojiStore.getGuildEmojis(evt), league)
-            .orElse(leagueEmojis.getOrDefault(league, league.getName()));
+        return evt.getInteraction().getGuildId().isPresent()
+            ? guildEmojiStore.getGuildLeagueEmoji(guildEmojiStore.getGuildEmojis(evt), league)
+                .orElse(leagueEmojis.getOrDefault(league, league.getName()))
+            : leagueEmojis.getOrDefault(league, league.getName());
     }
 
     public static GatewayDiscordClient load

@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
@@ -18,7 +19,9 @@ import com.nephest.battlenet.sc2.discord.GuildEmojiStore;
 import com.nephest.battlenet.sc2.discord.GuildRoleStore;
 import com.nephest.battlenet.sc2.discord.event.SlashCommand;
 import com.nephest.battlenet.sc2.discord.event.UserCommand;
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
@@ -27,6 +30,8 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
+import discord4j.core.object.command.Interaction;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.discordjson.json.ApplicationCommandRequest;
@@ -37,6 +42,7 @@ import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -197,6 +203,23 @@ public class DiscordBootstrapTest
             expectedResult,
             DiscordBootstrap.haveSelfPermissions(Mono.just(guild), requiredPermissions).block()
         );
+    }
+
+    @Test
+    public void whenNotInGuildContext_thenDontUseGuildStores()
+    {
+        Interaction interaction = mock(Interaction.class);
+        when(interaction.getGuildId()).thenReturn(Optional.empty());
+        ApplicationCommandInteractionEvent evt = mock(ApplicationCommandInteractionEvent.class);
+        when(evt.getInteraction()).thenReturn(interaction);
+
+        assertEquals(Race.TERRAN.getName(), discordBootstrap.getRaceEmojiOrName(evt, Race.TERRAN));
+        assertEquals
+        (
+            BaseLeague.LeagueType.BRONZE.getName(),
+            discordBootstrap.getLeagueEmojiOrName(evt, BaseLeague.LeagueType.BRONZE)
+        );
+        verifyNoInteractions(guildEmojiStore);
     }
 
 }
