@@ -78,7 +78,6 @@ implements SlashCommand
         return ImmutableApplicationCommandRequest.builder()
             .name(CMD_NAME)
             .description("Get discord roles based on your ranked 1v1 stats")
-            .defaultPermission(false)
             .dmPermission(false);
     }
 
