@@ -61,7 +61,12 @@ CREATE TABLE "account_role"
     "account_id" BIGINT NOT NULL,
     "role" SMALLINT NOT NULL,
 
-    PRIMARY KEY ("account_id", "role")
+    PRIMARY KEY ("account_id", "role"),
+
+    CONSTRAINT "fk_account_role_account_id"
+        FOREIGN KEY ("account_id")
+        REFERENCES "account"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 CREATE TABLE "discord_user"
