@@ -32,7 +32,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(classes = {AllTestConfig.class})
-@ActiveProfiles({"default", "prod"})
+@ActiveProfiles({"default", "prod", "test"})
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class SecurityIT

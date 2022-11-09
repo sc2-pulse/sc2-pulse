@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.config.security;
 
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
@@ -12,7 +13,7 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
-import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -28,11 +29,8 @@ extends WebSecurityConfigurerAdapter
     @Autowired
     private RegistrationDelegatingOauth2UserService registrationDelegatingOauth2UserService;
 
-    @Autowired
-    private PersistentTokenRepository persistentTokenRepository;
-
-    @Autowired
-    private ConcurrentPersistentTokenBasedRememberMeService concurrentPersistentTokenBasedRememberMeService;
+    @Autowired @Qualifier("concurrentPersistentTokenBasedRememberMeService")
+    private RememberMeServices rememberMeServices;
 
     @Override
     public void configure(HttpSecurity http)
@@ -65,8 +63,7 @@ extends WebSecurityConfigurerAdapter
                 .failureUrl("/login?oauthError=1")
                 .userInfoEndpoint().userService(registrationDelegatingOauth2UserService)
             .and().and().rememberMe()
-                .rememberMeServices(concurrentPersistentTokenBasedRememberMeService)
-                .key(concurrentPersistentTokenBasedRememberMeService.getKey());
+                .rememberMeServices(rememberMeServices);
     }
 
 }

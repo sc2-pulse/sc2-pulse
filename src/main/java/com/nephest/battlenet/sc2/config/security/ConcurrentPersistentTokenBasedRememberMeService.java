@@ -3,139 +3,82 @@
 
 package com.nephest.battlenet.sc2.config.security;
 
-import java.time.Instant;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.Map;
-import javax.servlet.http.Cookie;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.RememberMeServices;
-import org.springframework.security.web.authentication.logout.LogoutHandler;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.core.env.Environment;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuples;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
+import org.springframework.stereotype.Service;
 
-/*
-    This class synchronizes concurrent auto logins and reuses the authentication object for subsequent calls,
-    which prevents remember me token invalidation when serving multiple API calls concurrently.
+/**
+ * Synchronized wrapper for token based remember me services. Implementation is split between this
+ * class and {@link ConcurrentAutoLoginCookieProcessor} because some methods in
+ * {@link org.springframework.security.web.authentication.rememberme.AbstractRememberMeServices}
+ * are final which makes it impossible to wrap it into Spring proxies.
  */
-
+@Service
 public class ConcurrentPersistentTokenBasedRememberMeService
-implements RememberMeServices, LogoutHandler
+extends PersistentTokenBasedRememberMeServices
+implements AutoLoginCookieProcessor
 {
 
-    public static final int AUTH_CACHE_TTL_SECONDS = 60;
+    public static final String REMEMBER_ME_KEY_PROPERTY_NAME = "security.remember-me.token.key";
 
-    private final Object AUTH_CACHE_LOCK = new Object();
+    private final AutoLoginCookieProcessor concurrentCookieProcessor;
 
-    private final Map<String, Tuple2<Authentication, Instant>> AUTH_CACHE = new HashMap<>();
-
-    private boolean autoClean = true;
-
-    private final PersistentTokenBasedRememberMeServices persistentTokenBasedRememberMeServices;
-
+    @Autowired
     public ConcurrentPersistentTokenBasedRememberMeService
-    (PersistentTokenBasedRememberMeServices persistentTokenBasedRememberMeServices)
-    {
-        this.persistentTokenBasedRememberMeServices = persistentTokenBasedRememberMeServices;
-    }
-
-    @Override
-    public Authentication autoLogin
-    (javax.servlet.http.HttpServletRequest request, javax.servlet.http.HttpServletResponse response)
-    {
-        synchronized (AUTH_CACHE_LOCK)
-        {
-            String cookie = request.getCookies() == null ? null : Arrays.stream(request.getCookies())
-                .filter(c->c.getName().equals(SecurityConfig.REMEMBER_ME_COOKIE_NAME))
-                .map(Cookie::getValue)
-                .findFirst()
-                .orElse(null);
-            if(cookie == null) return newAuth(request, response, null);
-
-            if(isAutoClean()) removeExpired();
-            Tuple2<Authentication, Instant> authentication = AUTH_CACHE.get(cookie);
-            if (authentication != null && authentication.getT2().isAfter(Instant.now().minusSeconds(AUTH_CACHE_TTL_SECONDS)))
-                return authentication.getT1();
-
-            return newAuth(request, response, cookie);
-        }
-    }
-
-    @Override
-    public void loginFail(HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse)
-    {
-        persistentTokenBasedRememberMeServices.loginFail(httpServletRequest, httpServletResponse);
-    }
-
-    @Override
-    public void loginSuccess
-    (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication)
-    {
-        persistentTokenBasedRememberMeServices.loginSuccess(httpServletRequest, httpServletResponse, authentication);
-    }
-
-    @Override
-    public void logout
-    (HttpServletRequest httpServletRequest, HttpServletResponse httpServletResponse, Authentication authentication)
-    {
-        persistentTokenBasedRememberMeServices.logout(httpServletRequest, httpServletResponse, authentication);
-    }
-
-    private Authentication newAuth
     (
-        HttpServletRequest request,
-        HttpServletResponse response,
-        String oldCookie
+        @Value("${" + REMEMBER_ME_KEY_PROPERTY_NAME + ":dev}") String key,
+        UserDetailsService userDetailsService,
+        PersistentTokenRepository tokenRepository,
+        Environment environment,
+        @Lazy @Qualifier("concurrentAutoLoginCookieProcessor") AutoLoginCookieProcessor concurrentCookieProcessor
     )
     {
-        CookieAwareHttpServletResponse cookieResponse = new CookieAwareHttpServletResponse(response);
-        Authentication newAuth = persistentTokenBasedRememberMeServices.autoLogin(request, cookieResponse);
-        if(newAuth == null) return null;
-
-        if(oldCookie != null) AUTH_CACHE.put(oldCookie, Tuples.of(newAuth, Instant.now()));
-        cacheAuthentication(cookieResponse, newAuth);
-        return newAuth;
+        super(key, userDetailsService, tokenRepository);
+        Set<String> activeProfiles = Set.of(environment.getActiveProfiles());
+        if
+        (
+            !activeProfiles.contains("test")
+            && activeProfiles.contains("prod")
+            && key.equals("dev")
+        )
+            throw new IllegalStateException("Static key(" + REMEMBER_ME_KEY_PROPERTY_NAME + ") "
+                + "must be provided when prod profile is active");
+        this.concurrentCookieProcessor = concurrentCookieProcessor;
+        setAlwaysRemember(true);
+        setTokenValiditySeconds((int) SecurityConfig.REMEMBER_ME_DURATION.toSeconds());
+        setCookieName(SecurityConfig.REMEMBER_ME_COOKIE_NAME);
     }
 
-    private void cacheAuthentication(CookieAwareHttpServletResponse cookieResponse, Authentication authentication)
+    @Override
+    public UserDetails processAutoLoginCookie
+    (
+        String[] cookieTokens,
+        HttpServletRequest request,
+        HttpServletResponse response
+    )
     {
-        String newCookie = cookieResponse.getCookies().stream()
-            .filter(c->c.getName().equals(SecurityConfig.REMEMBER_ME_COOKIE_NAME))
-            .map(Cookie::getValue)
-            .findFirst()
-            .orElseThrow();
-        AUTH_CACHE.put(newCookie, Tuples.of(authentication, Instant.now()));
+        return concurrentCookieProcessor.doProcessAutoLoginCookie(cookieTokens, request, response);
     }
 
-    public boolean isAutoClean()
+    @Override
+    public UserDetails doProcessAutoLoginCookie
+    (
+        String[] cookieTokens,
+        HttpServletRequest request,
+        HttpServletResponse response
+    )
     {
-        return autoClean;
-    }
-
-    public void setAutoClean(boolean autoClean)
-    {
-        this.autoClean = autoClean;
-    }
-
-    public String getKey()
-    {
-        return persistentTokenBasedRememberMeServices.getKey();
-    }
-
-    public void removeExpired()
-    {
-        synchronized (AUTH_CACHE_LOCK)
-        {
-            Instant to = Instant.now().minusSeconds(AUTH_CACHE_TTL_SECONDS);
-            String[] expired = AUTH_CACHE.entrySet().stream()
-                .filter(e->e.getValue().getT2().isBefore(to))
-                .map(Map.Entry::getKey)
-                .toArray(String[]::new);
-            for(String key : expired) AUTH_CACHE.remove(key);
-        }
+        return super.processAutoLoginCookie(cookieTokens, request, response);
     }
 
 }

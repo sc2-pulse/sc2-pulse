@@ -781,6 +781,15 @@ CREATE TABLE "persistent_logins"
 
 CREATE INDEX "ix_persistent_logins_username" ON "persistent_logins"("username");
 
+CREATE TABLE "authentication_request"
+(
+    "name" TEXT NOT NULL,
+    "created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+
+    PRIMARY KEY ("name")
+);
+CREATE INDEX "ix_authentication_request_created" ON "authentication_request"("created");
+
 CREATE TYPE player_character_summary AS
 (
     player_character_id BIGINT,
