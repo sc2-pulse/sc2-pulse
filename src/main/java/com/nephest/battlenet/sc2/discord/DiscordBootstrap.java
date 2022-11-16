@@ -322,7 +322,7 @@ public class DiscordBootstrap
 
     public static boolean getEphemeral(ApplicationCommandInteractionEvent evt, DiscordApplicationCommand<?> cmd)
     {
-        return cmd.supportsMetaOptions()
+        return cmd.supportsMetaOptions() && evt instanceof ChatInputInteractionEvent
             ? getArgument((ChatInputInteractionEvent) evt, "ephemeral",
                 ApplicationCommandInteractionOptionValue::asBoolean, cmd.isEphemeral())
             : cmd.isEphemeral();
