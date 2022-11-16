@@ -21,4 +21,10 @@ extends DiscordApplicationCommand<UserInteractionEvent>
         return true;
     }
 
+    @Override
+    default boolean supportsMetaOptions()
+    {
+        return false;
+    }
+
 }
