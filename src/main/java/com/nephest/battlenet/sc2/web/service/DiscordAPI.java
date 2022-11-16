@@ -42,8 +42,8 @@ public class DiscordAPI
     public static final String DEFAULT_CLIENT_REGISTRATION_ID = "discord-lg";
     public static final String BASE_URL = "https://discord.com/api";
     public static final Duration REQUEST_SLOT_REFRESH_TIME = Duration.ofMillis(1100);
-    public static final int DEFAULT_REQUESTS_PER_SECOND = 10;
-    public static final int MAX_REQUESTS_PER_SECOND = 10;
+    public static final int DEFAULT_REQUESTS_PER_SECOND = 5;
+    public static final int MAX_REQUESTS_PER_SECOND = 5;
     public static final String RATE_LIMIT_HEADER_PREFIX = "X-RateLimit-";
     public static final String RATE_LIMIT_LIMIT_HEADER = RATE_LIMIT_HEADER_PREFIX + "Limit";
     public static final RetrySpec RETRY_WHEN_TOO_MANY_REQUESTS = RetrySpec
