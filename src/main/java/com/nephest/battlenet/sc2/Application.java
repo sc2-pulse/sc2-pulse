@@ -26,7 +26,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.sql.DataSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
@@ -39,12 +38,9 @@ import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.http.client.reactive.ClientHttpConnector;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @SpringBootApplication
@@ -75,18 +71,6 @@ extends SpringBootServletInitializer
     public static void main(String[] args)
     {
         SpringApplication.run(Application.class, args);
-    }
-
-    @Bean
-    public PlatformTransactionManager txManager(DataSource dataSource)
-    {
-        return new DataSourceTransactionManager(dataSource);
-    }
-
-    @Bean
-    public NamedParameterJdbcTemplate sc2StatsNamedTemplate(DataSource dataSource)
-    {
-        return new NamedParameterJdbcTemplate(dataSource);
     }
 
     @Bean

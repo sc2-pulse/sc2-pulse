@@ -23,32 +23,16 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import javax.sql.DataSource;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
-import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
-import org.springframework.jdbc.datasource.DataSourceTransactionManager;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
-import org.springframework.transaction.PlatformTransactionManager;
 
 public class CoreTestConfig
 {
 
     public static final Duration IO_TIMEOUT = Duration.ofMillis(500);
-
-    @Bean
-    public PlatformTransactionManager txManager(DataSource dataSource)
-    {
-        return new DataSourceTransactionManager(dataSource);
-    }
-
-    @Bean
-    public NamedParameterJdbcTemplate sc2StatsNamedTemplate(DataSource dataSource)
-    {
-        return new NamedParameterJdbcTemplate(dataSource);
-    }
 
     @Bean
     public ConversionService sc2StatsConversionService()
