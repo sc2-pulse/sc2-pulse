@@ -32,6 +32,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -181,6 +182,12 @@ public class TeamDAO
         + "UNION "
         + "SELECT * FROM inserted";
     private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
+
+    private static final String FIND_BY_REGION_AND_SEASON =
+        "SELECT " + STD_SELECT
+        + "FROM team "
+        + "WHERE region = :region "
+        + "AND season = :season";
 
     public static final String FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE =
         "SELECT %1$s "
@@ -435,6 +442,14 @@ public class TeamDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
         return Optional.ofNullable(template.query(FIND_BY_ID_QUERY, params, getStdExtractor()));
+    }
+
+    public Stream<Team> find(Region region, int season)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("season", season);
+        return template.queryForStream(FIND_BY_REGION_AND_SEASON, params, STD_ROW_MAPPER);
     }
 
     /**
