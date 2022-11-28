@@ -34,6 +34,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.FastTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
@@ -139,6 +140,7 @@ public class StatsService
     private LeagueTierDAO leagueTierDao;
     private DivisionDAO divisionDao;
     private TeamDAO teamDao;
+    private FastTeamDAO fastTeamDAO;
     private TeamStateDAO teamStateDAO;
     private AccountDAO accountDao;
     private PlayerCharacterDAO playerCharacterDao;
@@ -167,6 +169,7 @@ public class StatsService
         LeagueTierDAO leagueTierDao,
         DivisionDAO divisionDao,
         TeamDAO teamDao,
+        FastTeamDAO fastTeamDAO,
         TeamStateDAO teamStateDAO,
         AccountDAO accountDao,
         PlayerCharacterDAO playerCharacterDao,
@@ -191,6 +194,7 @@ public class StatsService
         this.leagueTierDao = leagueTierDao;
         this.divisionDao = divisionDao;
         this.teamDao = teamDao;
+        this.fastTeamDAO = fastTeamDAO;
         this.teamStateDAO = teamStateDAO;
         this.accountDao = accountDao;
         this.playerCharacterDao = playerCharacterDao;
@@ -414,10 +418,14 @@ public class StatsService
     {
         if(!isAlternativeUpdate(season.getRegion(), currentSeason))
         {
+            fastTeamDAO.remove(season.getRegion());
+            LOG.debug("Cleared FastTeamDAO for {}", season.getRegion());
             updateLeagues(bSeason, season, queues, leagues, currentSeason, updateContext);
         }
         else
         {
+            fastTeamDAO.load(season.getRegion(), season.getBattlenetId());
+            LOG.debug("Loaded teams into FastTeamDAO for {}", season);
             if(queues.length < QueueType.getTypes(VERSION).size())
             {
                 alternativeLadderService.updateThenSmartDiscoverSeason(season, queues, leagues);

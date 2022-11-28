@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.FastTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
@@ -77,6 +78,9 @@ public class StatsServiceTest
 
     @Mock
     private DivisionDAO divisionDao;
+
+    @Mock
+    private FastTeamDAO fastTeamDAO;
 
     @Mock
     private TeamDAO teamDao;
@@ -140,6 +144,7 @@ public class StatsServiceTest
             leagueTierDao,
             divisionDao,
             teamDao,
+            fastTeamDAO,
             teamStateDAO,
             accountDao,
             playerCharacterDao,

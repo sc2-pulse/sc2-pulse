@@ -32,6 +32,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.FastTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
@@ -119,6 +120,7 @@ public class AlternativeLadderService
     private final LeagueDAO leagueDao;
     private final LeagueTierDAO leagueTierDao;
     private final DivisionDAO divisionDao;
+    private final FastTeamDAO fastTeamDAO;
     private final TeamDAO teamDao;
     private final TeamStateDAO teamStateDAO;
     private final AccountDAO accountDAO;
@@ -143,6 +145,7 @@ public class AlternativeLadderService
         LeagueDAO leagueDao,
         LeagueTierDAO leagueTierDao,
         DivisionDAO divisionDao,
+        FastTeamDAO fastTeamDAO,
         TeamDAO teamDao,
         TeamStateDAO teamStateDAO,
         AccountDAO accountDAO,
@@ -162,6 +165,7 @@ public class AlternativeLadderService
         this.leagueDao = leagueDao;
         this.leagueTierDao = leagueTierDao;
         this.divisionDao = divisionDao;
+        this.fastTeamDAO = fastTeamDAO;
         this.teamDao = teamDao;
         this.teamStateDAO = teamStateDAO;
         this.accountDAO = accountDAO;
@@ -436,7 +440,9 @@ public class AlternativeLadderService
                 )
             )
             .collect(Collectors.toList());
-        teamDao.merge(validTeams.stream().map(Tuple2::getT1).toArray(Team[]::new));
+        Team[] changedTeams = fastTeamDAO
+            .merge(validTeams.stream().map(Tuple2::getT1).toArray(Team[]::new));
+        teamDao.merge(changedTeams);
         validTeams.stream()
             .filter(t->t.getT1().getId() != null)
             .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, members));
@@ -444,7 +450,12 @@ public class AlternativeLadderService
         savePlayerCharacters(characters);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
         StatsService.saveClans(clanDAO, clanMemberDAO, clans);
-        LOG.debug("Ladder saved: {} {} {}", id.getT1(), id.getT3(), ladder.getLeague());
+        LOG.debug
+        (
+            "Ladder saved: {} {} {}({}/{} teams)",
+            id.getT1(), id.getT3(), ladder.getLeague(),
+            changedTeams.length, validTeams.size()
+        );
     }
 
     private void extractTeamData
