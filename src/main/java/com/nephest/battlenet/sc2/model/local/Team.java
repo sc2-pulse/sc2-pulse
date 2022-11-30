@@ -101,6 +101,35 @@ implements java.io.Serializable
         );
     }
 
+    public static Team uid
+    (
+        QueueType queueType,
+        Region region,
+        BigInteger legacyId,
+        Integer season
+    )
+    {
+        return new Team
+        (
+            null,
+            season,
+            region,
+            new BaseLeague
+            (
+                null,
+                queueType,
+                null
+            ),
+            null,
+            legacyId,
+            null,
+            null,
+            null, null, null,
+            null
+        );
+    }
+
+
     @Override
     public int hashCode()
     {

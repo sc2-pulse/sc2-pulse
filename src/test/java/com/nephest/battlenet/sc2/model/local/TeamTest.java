@@ -5,6 +5,8 @@ package com.nephest.battlenet.sc2.model.local;
 
 import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.FIRST;
 import static com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType.SECOND;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -40,6 +42,21 @@ public class TeamTest
         };
 
         TestUtil.testUniqueness(team, equalTeam, (Object[]) notEqualTeams);
+    }
+
+    @Test
+    public void testUid()
+    {
+        assertEquals
+        (
+            Team.uid(QueueType.LOTV_1V1, Region.EU, BigInteger.TEN, 1),
+            Team.uid(QueueType.LOTV_1V1, Region.EU, BigInteger.TEN, 1)
+        );
+        assertNotEquals
+        (
+            Team.uid(QueueType.LOTV_1V1, Region.EU, BigInteger.TEN, 1),
+            Team.uid(QueueType.LOTV_1V1, Region.EU, BigInteger.TEN, 2)
+        );
     }
 
 }
