@@ -80,6 +80,7 @@ public class ProPlayerService
         LOG.info("Updated pro players");
     }
 
+    @Deprecated
     protected void updateRevealed()
     {
         ByteBuffer idBuffer = ByteBuffer.allocate(Long.BYTES);

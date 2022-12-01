@@ -117,7 +117,7 @@ public class ProPlayerServiceIT
         }
     }
 
-    @Test
+    @Test @SuppressWarnings("deprecation")
     public void testUpdate()
     throws IOException
     {
@@ -134,7 +134,7 @@ public class ProPlayerServiceIT
             .setBody(objectMapper.writeValueAsString(createAligulacProPlayers2())));
 
         proPlayerService.setAligulacBatchSize(1); //test batching
-        proPlayerService.updateRevealed(); //disabled atm, test anyway
+        proPlayerService.updateRevealed(); //deprecated
         proPlayerService.update();
 
         LadderTeamMember member1 = ladderCharacterDAO.findDistinctCharacters("battletag#10").get(0).getMembers();
