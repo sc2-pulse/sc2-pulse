@@ -223,13 +223,13 @@ public class SeasonDAO
             .collect(Collectors.toList());
     }
 
-    @Cacheable(cacheNames="search-season-last")
+    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
     public Integer getMaxBattlenetId()
     {
         return template.query(FIND_MAX_BATTLENET_ID_QUERY, DAOUtils.INT_EXTRACTOR);
     }
 
-    @Cacheable(cacheNames="search-season-last")
+    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
     public Integer getMaxBattlenetId(Region region)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()

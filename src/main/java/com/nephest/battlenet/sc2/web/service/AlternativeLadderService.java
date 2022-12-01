@@ -594,7 +594,7 @@ public class AlternativeLadderService
         return divisionDao.merge(new Division(null, tier.getId(), battlenetId));
     }
 
-    @Cacheable(cacheNames = "ladder-skeleton")
+    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
     public LeagueTier createLeagueTier(Season season, BaseLeague bLeague)
     {
         return leagueTierDao.findByLadder(

@@ -261,18 +261,7 @@ public class StatsService
         return forcedAlternativeUpdateInstants;
     }
 
-    @CacheEvict
-    (
-        cacheNames=
-        {
-            "search-seasons", "search-season-last",
-            "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle",
-            "search-ladder-league-bounds", "search-ladder-season",
-            "search-ladder-stats-queue",
-            "ladder-skeleton"
-        },
-        allEntries=true
-    )
+    @CacheEvict(cacheNames="fqdn-ladder-scan", allEntries=true)
     public void updateAll(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         long start = System.currentTimeMillis();
@@ -289,18 +278,7 @@ public class StatsService
         LOG.info("Updated all after {} seconds", seconds);
     }
 
-    @CacheEvict
-    (
-        cacheNames=
-        {
-            "search-seasons", "search-season-last",
-            "search-ladder", "search-ladder-stats", "search-ladder-stats-bundle",
-            "search-ladder-league-bounds", "search-ladder-season",
-            "search-ladder-stats-queue",
-            "ladder-skeleton"
-        },
-        allEntries=true
-    )
+    @CacheEvict(cacheNames="fqdn-ladder-scan", allEntries=true)
     public void updateCurrent
     (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
     {

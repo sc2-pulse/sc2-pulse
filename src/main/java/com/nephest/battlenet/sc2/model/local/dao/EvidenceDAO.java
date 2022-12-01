@@ -4,6 +4,9 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.Evidence;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Optional;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,10 +21,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Optional;
 
 @Repository
 public class EvidenceDAO
@@ -234,11 +233,7 @@ public class EvidenceDAO
         return Math.max((getActiveModCount() / 2) + 1, 2);
     }
 
-    @CacheEvict
-    (
-        cacheNames={"evidence-required-votes"},
-        allEntries=true
-    )
+    @CacheEvict(cacheNames="evidence-required-votes", allEntries=true)
     public void evictRequiredVotesCache(){}
 
     public int updateStatus(OffsetDateTime from)

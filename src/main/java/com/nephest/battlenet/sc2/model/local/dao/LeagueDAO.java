@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
+import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -17,8 +18,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public class LeagueDAO
@@ -126,7 +125,7 @@ public class LeagueDAO
         return league;
     }
 
-    @Cacheable(cacheNames = "ladder-skeleton")
+    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
     public League merge(League league)
     {
         MapSqlParameterSource params = createParameterSource(league);

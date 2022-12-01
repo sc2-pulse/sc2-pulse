@@ -1,9 +1,13 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueStats;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
@@ -15,6 +19,11 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderLeagueStats;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
+import java.util.EnumMap;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -24,8 +33,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.*;
 
 @Repository
 public class LadderStatsDAO
@@ -141,11 +148,7 @@ public class LadderStatsDAO
         this.seasonDAO = seasonDAO;
     }
 
-    @Cacheable
-    (
-        cacheNames="search-ladder-league-bounds",
-        condition="#a0 eq #root.target.seasonDAO.maxBattlenetId"
-    )
+    @Cacheable(cacheNames="fqdn-ladder-scan", condition="#a0 eq #root.target.seasonDAO.maxBattlenetId")
     public Map<Region, Map<BaseLeague.LeagueType, Map<BaseLeagueTier.LeagueTierType, Integer[]>>> findLeagueBounds
     (
         int season,
@@ -176,7 +179,7 @@ public class LadderStatsDAO
     }
 
 
-    @Cacheable(cacheNames="search-ladder-stats")
+    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
     public Map<Integer, MergedLadderSearchStatsResult> findStats
     (
         Set<Region> regions,
@@ -195,7 +198,7 @@ public class LadderStatsDAO
         return result;
     }
 
-    @Cacheable(cacheNames="search-ladder-stats-bundle")
+    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
     public Map<QueueType, Map<TeamType, Map<Integer, MergedLadderSearchStatsResult>>> findStats()
     {
         Set<Region> regions = Set.of(Region.values());
@@ -214,7 +217,7 @@ public class LadderStatsDAO
         return result;
     }
 
-    @Cacheable(cacheNames="search-ladder-stats-queue")
+    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
     public List<QueueStats> findQueueStats(QueueType queueType, TeamType teamType)
     {
         return queueStatsDAO.findQueueStats(queueType, teamType);
