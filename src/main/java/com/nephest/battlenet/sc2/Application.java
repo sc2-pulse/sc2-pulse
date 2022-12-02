@@ -18,7 +18,9 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
 import com.nephest.battlenet.sc2.config.filter.AverageSessionCacheFilter;
 import com.nephest.battlenet.sc2.config.filter.MaintenanceFilter;
+import com.nephest.battlenet.sc2.config.filter.SeasonCacheFilter;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -26,6 +28,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
@@ -134,6 +137,17 @@ extends SpringBootServletInitializer
 
         registrationBean.setFilter(new AverageSessionCacheFilter());
         registrationBean.addUrlPatterns("/api/ladder/stats/*");
+
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<SeasonCacheFilter> seasonCacheFilter(@Autowired SeasonDAO seasonDAO)
+    {
+        FilterRegistrationBean<SeasonCacheFilter> registrationBean = new FilterRegistrationBean<>();
+
+        registrationBean.setFilter(new SeasonCacheFilter(seasonDAO));
+        registrationBean.addUrlPatterns("/api/season/list", "/api/season/list/all");
 
         return registrationBean;
     }

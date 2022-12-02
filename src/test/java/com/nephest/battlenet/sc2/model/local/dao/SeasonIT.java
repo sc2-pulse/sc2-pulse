@@ -83,4 +83,29 @@ public class SeasonIT
         assertEquals(1, seasonDAO.getMaxBattlenetId(Region.US));
     }
 
+    @Test
+    public void testFindByLastBattlenetId()
+    {
+        List<Season> seasons = seasonDAO.findListByBattlenetId(1);
+        assertEquals(Region.values().length, seasons.size());
+        assertTrue(seasons.stream().allMatch(s->s.getBattlenetId() == 1));
+    }
+
+    @Test
+    public void testFindAllSeasons()
+    {
+        List<Season> seasons = seasonDAO.findListByBattlenetId(null);
+        assertEquals(Region.values().length + 1, seasons.size());
+        assertEquals
+        (
+            Region.values().length,
+            seasons.stream().filter(s->s.getBattlenetId() == 1).count()
+        );
+        assertEquals
+        (
+            1,
+            seasons.stream().filter(s->s.getBattlenetId() == 2).count()
+        );
+    }
+
 }

@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Season;
+import java.sql.Types;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
@@ -19,6 +20,7 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -91,6 +93,11 @@ public class SeasonDAO
         + "FROM season "
         + "WHERE region=:region "
         + "ORDER BY battlenet_id DESC";
+
+    private static final String FIND_LIST_BY_BATTLENET_ID =
+        "SELECT " + STD_SELECT
+        + "FROM season "
+        + "WHERE :battlenetId IS NULL OR season.battlenet_id = :battlenetId";
 
     private static final String FIND_LIST_BY_FIRST_BATTELENET_ID =
         "SELECT DISTINCT ON (battlenet_id) "
@@ -221,6 +228,14 @@ public class SeasonDAO
             .map(Season::getBattlenetId)
             .distinct()
             .collect(Collectors.toList());
+    }
+
+    @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
+    public List<Season> findListByBattlenetId(@Nullable Integer battlenetId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("battlenetId", battlenetId, Types.INTEGER);
+        return template.query(FIND_LIST_BY_BATTLENET_ID, params, STD_ROW_MAPPER);
     }
 
     @Cacheable(cacheNames = "fqdn-ladder-scan", keyGenerator = "fqdnSimpleKeyGenerator")
