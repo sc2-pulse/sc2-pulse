@@ -495,11 +495,12 @@ class CharacterUtil
 
     static convertTeamToTeamSnapshot(t, lastSeasonTeamSnapshotDates, seasonLastOnly)
     {
-        if(seasonLastOnly) return CharacterUtil.createTeamSnapshot(t, Session.currentSeasonsMap.get(t.season)[0].end);
+        const season = Session.currentSeasonsMap.get(t.region).get(t.season)[0];
+        if(seasonLastOnly) return CharacterUtil.createTeamSnapshot(t, season.end);
 
-        const date = (lastSeasonTeamSnapshotDates.get(t.season + 1) || Session.currentSeasonsMap.get(t.season + 1))
+        const date = (lastSeasonTeamSnapshotDates.get(t.season + 1) || Session.currentSeasonsMap.get(t.region).get(t.season + 1))
             ? ((lastSeasonTeamSnapshotDates.get(t.season) ? new Date(lastSeasonTeamSnapshotDates.get(t.season).getTime() + 1000)  : null)
-                || new Date(Session.currentSeasonsMap.get(t.season)[0].end.getTime() - CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS))
+                || new Date(season.end.getTime() - CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS))
             : new Date();
         return CharacterUtil.createTeamSnapshot(t, date);
     }

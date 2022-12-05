@@ -310,6 +310,7 @@ Session.isSilent = false;
 Session.currentRequests = 0;
 Session.currentSeasons = null;
 Session.currentSeasonsMap = null;
+Session.currentSeasonsIdMap = null;
 Session.currentSeason = null;
 Session.currentTeamFormat = null;
 Session.currentTeamType = null;

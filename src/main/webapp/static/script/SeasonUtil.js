@@ -6,7 +6,12 @@ class SeasonUtil
 
     static seasonIdTranslator(id)
     {
-        const season = Session.currentSeasons.filter((s)=>s.battlenetId == id)[0];
+        const season = Session.currentSeasonsIdMap.get(parseInt(id))[0];
+        return SeasonUtil.seasonTranslator(season);
+    }
+
+    static seasonTranslator(season)
+    {
         const seasonEnd = season.end;
         const endDate = seasonEnd.getTime() - Date.now() > 0 ? new Date() : seasonEnd;
         return `${season.year} season ${season.number} (${season.battlenetId}) (${Util.MONTH_DATE_FORMAT.format(endDate)})`;
@@ -16,7 +21,7 @@ class SeasonUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return Session.beforeRequest()
-            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/seasons"))
+            .then(n=>fetch(ROOT_CONTEXT_PATH + "api/season/list/all"))
             .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{SeasonUtil.updateSeasons(json); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
             .catch(error => Session.onPersonalException(error));
@@ -24,14 +29,18 @@ class SeasonUtil
 
     static updateSeasons(seasons)
     {
-        Session.currentSeasons = seasons;
-        Session.currentSeasonsMap = Util.groupBy(seasons, s=>s.battlenetId);
+        const regionMap = Util.groupBy(seasons, s=>s.region);
+        Session.currentSeasons = Array.from(regionMap.values()).reduce((max, cur)=>max.length > cur.length ? max : cur);
+        const seasonMap = new Map();
+        Array.from(regionMap.entries()).forEach(e=>seasonMap.set(e[0], Util.groupBy(e[1], s=>s.battlenetId)));
+        Session.currentSeasonsMap = seasonMap;
+        Session.currentSeasonsIdMap = Array.from(seasonMap.values()).reduce((max, cur)=>max.length > cur.length ? max : cur);
         for(const season of seasons) SeasonUtil.updateSeasonMeta(season);
-        SeasonUtil.updateSeasonsTabs(seasons);
+        SeasonUtil.updateSeasonsTabs(Session.currentSeasons);
         for(const seasonPicker of document.querySelectorAll(".season-picker"))
         {
             ElementUtil.removeChildren(seasonPicker);
-            for(const season of seasons)
+            for(const season of Session.currentSeasons)
             {
                 const option = document.createElement("option");
                 option.setAttribute("label", season.descriptiveName);
@@ -49,7 +58,7 @@ class SeasonUtil
 
     static updateSeasonDescription(season)
     {
-        season.descriptiveName = SeasonUtil.seasonIdTranslator(season.battlenetId);
+        season.descriptiveName = SeasonUtil.seasonTranslator(season);
     }
 
     static updateSeasonDates(season)
