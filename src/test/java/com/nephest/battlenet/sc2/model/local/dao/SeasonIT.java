@@ -12,6 +12,8 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
@@ -96,16 +98,17 @@ public class SeasonIT
     {
         List<Season> seasons = seasonDAO.findListByBattlenetId(null);
         assertEquals(Region.values().length + 1, seasons.size());
-        assertEquals
-        (
-            Region.values().length,
-            seasons.stream().filter(s->s.getBattlenetId() == 1).count()
-        );
-        assertEquals
-        (
-            1,
-            seasons.stream().filter(s->s.getBattlenetId() == 2).count()
-        );
+        verifySeason(seasons.get(0), Region.EU, 2);
+        Arrays.stream(Region.values())
+            .map(Region::ordinal)
+            .sorted(Comparator.reverseOrder())
+            .forEach(i->verifySeason(seasons.get(seasons.size() - i - 1), Region.values()[i], 1));
+    }
+
+    private void verifySeason(Season season, Region region, int battlenetId)
+    {
+        assertEquals(region, season.getRegion());
+        assertEquals(battlenetId, season.getBattlenetId());
     }
 
 }

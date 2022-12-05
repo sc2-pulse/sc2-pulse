@@ -97,7 +97,8 @@ public class SeasonDAO
     private static final String FIND_LIST_BY_BATTLENET_ID =
         "SELECT " + STD_SELECT
         + "FROM season "
-        + "WHERE :battlenetId IS NULL OR season.battlenet_id = :battlenetId";
+        + "WHERE :battlenetId IS NULL OR season.battlenet_id = :battlenetId "
+        + "ORDER BY battlenet_id DESC, region DESC";
 
     private static final String FIND_LIST_BY_FIRST_BATTELENET_ID =
         "SELECT DISTINCT ON (battlenet_id) "
