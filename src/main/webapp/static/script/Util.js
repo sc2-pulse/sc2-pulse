@@ -119,6 +119,16 @@ class Util
 
     static encodeSpace(s){ return encodeURIComponent(s).replace(/%20/g,'+'); }
 
+    static kebabCaseToCamelCase(str)
+    {
+        return str.toLowerCase().replace(/([-][a-z])/g, group=>group.toUpperCase().replace('-', ''));
+    }
+
+    static camelCaseToKebabCase(str)
+    {
+        return str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs)=>(ofs ? "-" : "") + $.toLowerCase());
+    }
+
     static calculateRank(searchResult, i)
     {
         return (searchResult.meta.page - 1) * searchResult.meta.perPage + i + 1;
