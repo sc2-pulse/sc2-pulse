@@ -41,7 +41,7 @@ class CharacterUtil
                 const searchStd = json;
                 searchStd.result = json.teams;
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, searchStd);
-                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, id);
+                Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, json.linkedDistinctCharacters.map(c=>c.members.character).find(c=>c.id == id));
                 Model.DATA.get(VIEW.CHARACTER).set("reports", json.reports)
                 res(json);
              }));
@@ -93,7 +93,7 @@ class CharacterUtil
     static updateCharacterReportsModel()
     {
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)}`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id}`))
             .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.CHARACTER).set("reports", json);
@@ -128,7 +128,7 @@ class CharacterUtil
 
     static updateCharacterTeamsView()
     {
-        const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        const id = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id;
         const searchResult = {result: Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).teams};
         CharacterUtil.updateCharacterInfo(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH), id);
         CharacterUtil.updateCharacterTeamsSection(searchResult);
@@ -875,7 +875,7 @@ class CharacterUtil
         const tabNav = tab.closest(".nav-item");
         const pane = document.querySelector("#player-stats-matches");
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
-        const characterId = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        const characterId = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id;
         const matches = commonCharacter.matches;
 
         tabNav.classList.remove("d-none");
@@ -977,7 +977,7 @@ class CharacterUtil
         const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
         const lastMatch = commonCharacter.matches[commonCharacter.matches.length - 1];
         CharacterUtil.loadNextMatchesModel(
-            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR),
+            Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id,
             lastMatch.match.date, lastMatch.match.type, lastMatch.map.id
         ).then(json => new Promise((res, rej)=>{
             if(json.result.length > 0) CharacterUtil.updateCharacterMatchesView();
@@ -1112,7 +1112,7 @@ class CharacterUtil
     {
         const prev = ElementUtil.INPUT_TIMEOUTS.get(evt.target.id);
         if(prev != null)  window.clearTimeout(prev);
-        ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(e=>CharacterUtil.updateCharacter(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)), ElementUtil.INPUT_TIMEOUT));
+        ElementUtil.INPUT_TIMEOUTS.set(evt.target.id, window.setTimeout(e=>CharacterUtil.updateCharacter(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id), ElementUtil.INPUT_TIMEOUT));
     }
 
     static enhanceMatchTypeInput()
@@ -1122,7 +1122,7 @@ class CharacterUtil
         ctl.addEventListener("change", e=>window.setTimeout(e=>{
             const data = Model.DATA.get(VIEW.CHARACTER);
             if(!data || !data.get(VIEW_DATA.VAR)) return;
-            CharacterUtil.updateCharacter(data.get(VIEW_DATA.VAR));
+            CharacterUtil.updateCharacter(data.get(VIEW_DATA.VAR).id);
         }, 1));
     }
 
@@ -1342,7 +1342,7 @@ class CharacterUtil
         document.querySelector("#report-character-form").addEventListener("submit", e=>{
             e.preventDefault();
             const fd = new FormData(document.querySelector("#report-character-form"));
-            fd.set("playerCharacterId", Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR));
+            fd.set("playerCharacterId", Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id);
             Util.setGeneratingStatus(STATUS.BEGIN);
             CharacterUtil.reportCharacter(fd)
                 .then(e => Util.setGeneratingStatus(STATUS.SUCCESS))
@@ -1357,7 +1357,7 @@ class CharacterUtil
         for(const team of BufferUtil.teamBuffer.buffer.values()) {
             team.members.forEach(m=>
             {
-                if(m.character.id == Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)) return;
+                if(m.character.id == Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id) return;
 
                 const unmasked = Util.unmaskName(m);
                 const option = document.createElement("option");
