@@ -9,33 +9,25 @@ class ChartUtil
 
     static createChart(chartable)
     {
-        const config = {};
-        config["type"] = chartable.getAttribute("data-chart-type");
+        const config = ChartUtil.collectChartConfig(chartable);
         config["group"] = chartable.getAttribute("data-chart-group") || "global";
-        config["stacked"] = chartable.getAttribute("data-chart-stacked");
-        config["maintainAspectRatio"] = chartable.getAttribute("data-chart-maintain-aspect-ratio");
-        config["title"] = chartable.getAttribute("data-chart-title");
-        config["xTitle"] = chartable.getAttribute("data-chart-x-title");
-        config["yTitle"] = chartable.getAttribute("data-chart-y-title");
-        config["yReversed"] = chartable.getAttribute("data-chart-y-reversed");
-        config["legendDisplay"] = chartable.getAttribute("data-chart-legend-display");
-        config["yMin"] = chartable.getAttribute("data-chart-y-min");
-        config["yMax"] = chartable.getAttribute("data-chart-y-max");
-        config["tooltipPercentage"] = chartable.getAttribute("data-chart-tooltip-percentage");
-        config["tooltipSort"] = chartable.getAttribute("data-chart-tooltip-sort");
-        config["tooltipTableCount"] = chartable.getAttribute("data-chart-tooltip-table-count");
-        config["performance"] = chartable.getAttribute("data-chart-performance");
-        config["pointRadius"] = chartable.getAttribute("data-chart-point-radius");
-        config["xType"] = chartable.getAttribute("data-chart-x-type");
-        config["xTimeUnit"] = chartable.getAttribute("data-chart-x-time-unit");
         config["beginAtZero"] = chartable.getAttribute("data-chart-begin-at-zero")
             || (localStorage.getItem("chart-begin-at-zero") === "false" ? false : "true");
         config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
         config["chartable"] = chartable.id;
-        if (!Util.isMobile()) config["zoom"] = chartable.getAttribute("data-chart-zoom");
+        if (Util.isMobile()) config["zoom"] = null;
         config["data"] = ChartUtil.collectChartJSData(chartable);
 
         ChartUtil.CHARTS.set(chartable.id, ChartUtil.createGenericChart(config));
+    }
+
+    static collectChartConfig(chartable)
+    {
+        const config = {};
+        for(const attr of chartable.attributes)
+            if(attr.name.startsWith("data-chart-"))
+                config[Util.kebabCaseToCamelCase(attr.name.substring(11))] = attr.value;
+        return config;
     }
 
     static createGenericChart(config)
@@ -1096,7 +1088,7 @@ class ChartUtil
         }
         else
         {
-            document.getElementById(chartable).setAttribute(name, value);
+            document.getElementById(chartable).setAttribute("data-chart-" + Util.camelCaseToKebabCase(name), value);
         }
     }
 
