@@ -1073,6 +1073,11 @@ class ChartUtil
         document.querySelector("#chart-begin-at-zero").addEventListener("click", e=>window.setTimeout(ChartUtil.updateBeginAtZero, 1));
     }
 
+    static updateChartFromCtlGroup(evt)
+    {
+        window.setTimeout(e=>ChartUtil.CHARTS.get(evt.target.closest(".chart-input-group").getAttribute("data-chartable")).update(), 1);
+    }
+
     static init()
     {
         if(Util.isMobile() && !localStorage.getItem("chart-tooltip-position"))

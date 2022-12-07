@@ -126,7 +126,7 @@
         </div>
     </div>
 </div>
-<form th:fragment="form-mmr-history (id, full)">
+<form th:fragment="form-mmr-history (id, full)" class="chart-input-group" th:data-chart-group-id="${id}" th:data-chartable="|${id}-table|">
     <div class="form-row">
         <div class="form-group col">
             <label th:for="|${id}-y-axis|" class="text-nowrap">Y axis</label>
