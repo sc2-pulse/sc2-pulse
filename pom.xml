@@ -244,6 +244,12 @@
 
     <dependency>
         <groupId>org.webjars.npm</groupId>
+        <artifactId>chartjs-plugin-annotation</artifactId>
+        <version>2.1.0</version>
+    </dependency>
+
+    <dependency>
+        <groupId>org.webjars.npm</groupId>
         <artifactId>chartjs-adapter-luxon</artifactId>
         <version>1.0.0</version>
     </dependency>
