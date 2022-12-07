@@ -75,6 +75,7 @@ class SC2Restful
                 Session.enhanceCsrfForms();
                 ChartUtil.enhanceHeightControls();
                 ChartUtil.enhanceBeginAtZeroControls();
+                ChartUtil.enhanceMmrAnnotationControls();
                 StatsUtil.updateGamesStatsVisibility();
             case START_MODE.MINIMAL:
                 CharacterUtil.enhanceMmrForm();

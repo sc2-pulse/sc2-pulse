@@ -186,8 +186,30 @@
         <label th:for="|${id}-x-type|" class="text-nowrap form-check-label">Time axis</label>
     </div>
     <div class="form-check form-check-inline mb-3">
+        <input th:id="|${id}-seasons|"
+               class="form-check-input serializable seasons-ctl"
+               type="checkbox"
+               checked="checked"
+               th:data-state-link-id="|${id}-x-type|"
+               data-state-link-values="1"
+        />
+        <label th:for="|${id}-seasons|" class="text-nowrap form-check-label mr-1">Seasons</label>
+        <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon" title="Time axis required" data-toggle="tooltip"/>
+    </div>
+    <div class="form-check form-check-inline mb-3">
         <input th:id="|${id}-leagues|" class="form-check-input serializable" type="checkbox" checked="checked"/>
         <label th:for="|${id}-leagues|" class="text-nowrap form-check-label">Leagues</label>
+    </div>
+    <div class="form-check form-check-inline mb-3">
+        <input th:id="|${id}-tier-thresholds|"
+               class="form-check-input serializable tier-thresholds-ctl"
+               type="checkbox"
+               checked="checked"
+               th:data-state-link-id="|${id}-y-axis|"
+               data-state-link-values="percent-global,percent-region"
+        />
+        <label th:for="|${id}-tier-thresholds|" class="text-nowrap form-check-label mr-1">Tier thresholds</label>
+        <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon" title="Only available for &quot;Top% Global&quot; and &quot;Top% Region&quot; Y axis types" data-toggle="tooltip"/>
     </div>
     <div class="form-check form-check-inline mb-3">
         <input th:id="|${id}-zoom|" class="form-check-input serializable chart-zoom-toggle" type="checkbox"

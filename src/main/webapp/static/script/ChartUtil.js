@@ -15,6 +15,7 @@ class ChartUtil
             || (localStorage.getItem("chart-begin-at-zero") === "false" ? false : "true");
         config["ctx"] = document.getElementById(chartable.getAttribute("data-chart-id")).getContext("2d");
         config["chartable"] = chartable.id;
+        config["id"] = chartable.id.substring(0, chartable.id.length - 6);
         if (Util.isMobile()) config["zoom"] = null;
         config["data"] = ChartUtil.collectChartJSData(chartable);
 
@@ -207,7 +208,13 @@ class ChartUtil
                                 pinch:{enabled: false}
                             },
                             limits: {x: {}, y: {}}
-                        }}
+                        }},
+                        ...(config.customAnnotations) && {
+                            annotation: {
+                                clip: true,
+                                annotations: ChartUtil.createCustomAnnotationsCallback
+                            }
+                        }
                     },
                     elements: {line: {tension: config.performance === "fast" ? false : 0.4}},
                     datasets:
@@ -653,7 +660,7 @@ class ChartUtil
             }
             if (config.type === "lineVCursor" || config.type === "line")
             {
-                data.datasets[i]["borderWidth"] = config.performance == "fast" ? 1.25 : 2;
+                data.datasets[i]["borderWidth"] = ChartUtil.getLineBorderWidth(config);
                 data.datasets[i]["pointRadius"] = config.performance == "fast"
                     ? ChartUtil.drawOnlyImagePoints
                     : (config.pointRadius != null ? parseFloat(config.pointRadius) : 0.01);
@@ -694,6 +701,13 @@ class ChartUtil
                 }
             }
         }
+    }
+
+    static getLineBorderWidth(config)
+    {
+        return config.performance == "fast"
+           ? ChartUtil.THIN_LINE_BORDER_WIDTH
+           : ChartUtil.LINE_BORDER_WIDTH;
     }
 
     static createPattern(width, height, primaryLength, secondaryLength, primaryColor, secondaryColor)
@@ -1078,6 +1092,117 @@ class ChartUtil
         window.setTimeout(e=>ChartUtil.CHARTS.get(evt.target.closest(".chart-input-group").getAttribute("data-chartable")).update(), 1);
     }
 
+    static enhanceMmrAnnotationControls()
+    {
+        document.querySelectorAll(".tier-thresholds-ctl").forEach(c=>c.addEventListener("change", ChartUtil.updateChartFromCtlGroup));
+        document.querySelectorAll(".seasons-ctl").forEach(c=>c.addEventListener("change", ChartUtil.updateChartFromCtlGroup));
+    }
+
+    static isTierThresholdApplicable(yAxis)
+    {
+        return yAxis == "percent-global" || yAxis == "percent-region";
+    }
+
+    static createCustomAnnotationsCallback(context)
+    {
+        return context.chart.customConfig ? ChartUtil.createCustomAnnotations(context.chart.customConfig) : {};
+    }
+
+    static createCustomAnnotations(config)
+    {
+        switch(config.customAnnotations)
+        {
+            case "mmr-meta":
+                return ChartUtil.createMmrMetaAnnotations(config);
+        }
+        return {};
+    }
+
+    static createMmrMetaAnnotations(config)
+    {
+        const annotations = {};
+        const chart = ChartUtil.CHARTS.get(config.chartable);
+        if(localStorage.getItem(config.id + "-tier-thresholds") != "false"
+            && ChartUtil.isTierThresholdApplicable(localStorage.getItem(config.id + "-y-axis"))) {
+                if(!ChartUtil.TIER_ANNOTATIONS) ChartUtil.TIER_ANNOTATIONS = ChartUtil.addTierAnnotations({});
+                Object.entries(ChartUtil.TIER_ANNOTATIONS).forEach(e=>annotations[e[0]] = e[1]);
+                config.data.datasets.forEach(ds=>ds["borderWidth"] = ChartUtil.THICK_LINE_BORDER_WIDTH);
+                if(chart) chart.options.scales.y.grid.display = false;
+        } else {
+            const borderWidth = ChartUtil.getLineBorderWidth(config);
+            config.data.datasets.forEach(ds=>ds["borderWidth"] = borderWidth);
+            if(chart) chart.options.scales.y.grid.display = true;
+        }
+        if(localStorage.getItem(config.id + "-seasons") != "false" && localStorage.getItem(config.id + "-x-type") != "false") {
+            const region = config.region || "EU";
+            let seasonAnnotations = ChartUtil.SEASON_ANNOTATIONS.get(region);
+            if(!seasonAnnotations || Object.keys(seasonAnnotations).length != Session.currentSeasonsMap.get(region).length)
+                ChartUtil.SEASON_ANNOTATIONS.set(region, ChartUtil.addSeasonAnnotations({}, Array.from(Session.currentSeasonsMap.get(region).values()).map(s=>s[0]), config));
+            seasonAnnotations = ChartUtil.SEASON_ANNOTATIONS.get(region);
+            const position = ChartUtil.getSeasonAnnotationPosition(ChartUtil.CHARTS.get(config.chartable));
+            Object.values(seasonAnnotations).forEach(s=>s.label.position = position);
+            Object.entries(seasonAnnotations).forEach(e=>annotations[e[0]] = e[1]);
+        }
+        return annotations;
+    }
+
+    static addTierAnnotations(annotations)
+    {
+        for(const tier of Object.values(TIER_RANGE)) {
+            const name = tier.league.name.charAt(0).toLowerCase() + (tier.tierType + 1);
+            annotations[name] = {
+                type: "line",
+                yMin: tier.bottomThreshold,
+                yMax: tier.bottomThreshold,
+                borderColor: Util.changeFullRgbaAlpha(SC2Restful.COLORS.get(tier.league.name), "0.4"),
+                borderWidth: 2,
+                adjustScaleRange: false,
+                drawTime: "beforeDatasetsDraw",
+                label: {
+                    content: name,
+                    display: true,
+                    position: "center",
+                    backgroundColor: Util.changeFullRgbaAlpha(SC2Restful.COLORS.get(tier.league.name), "0.75"),
+                    padding: 3,
+                    font: {weight: "normal"},
+                    drawTime: "afterDatasetsDraw",
+                }
+            }
+        }
+        return annotations;
+    }
+
+    static getSeasonAnnotationPosition(chart)
+    {
+        return chart ? chart.options.scales.y.reverse ? "end" : "start" : "start";
+    }
+
+    static addSeasonAnnotations(annotations, seasons, config)
+    {
+        const position = ChartUtil.getSeasonAnnotationPosition(ChartUtil.CHARTS.get(config.chartable));
+        for(const season of seasons) {
+            const name = "s" + season.battlenetId;
+            annotations[name] = {
+                type: "line",
+                xMin: season.start,
+                xMax: season.start,
+                borderColor: "rgba(127, 127, 127, 0.5)",
+                borderWidth: 1,
+                adjustScaleRange: false,
+                drawTime: "beforeDatasetsDraw",
+                label: {
+                    content: name,
+                    display: true,
+                    position: position,
+                    padding: 3,
+                    font: {weight: "normal"},
+                    drawTime: "afterDatasetsDraw"
+                }
+            }
+        }
+        return annotations;
+    }
+
     static init()
     {
         if(Util.isMobile() && !localStorage.getItem("chart-tooltip-position"))
@@ -1124,9 +1249,14 @@ ChartUtil.ASPECT_RATIO = 2.5;
 ChartUtil.LOW_HEIGHT_REM = 8.5;
 ChartUtil.MEDIUM_HEIGHT_REM = 13.8;
 ChartUtil.HIGH_HEIGHT_REM = 17.1;
+ChartUtil.THICK_LINE_BORDER_WIDTH = 3;
+ChartUtil.LINE_BORDER_WIDTH = 2;
+ChartUtil.THIN_LINE_BORDER_WIDTH = 1.25;
 ChartUtil.DEFAULT_GROUP_CONFIG = new Map([
     ["mmr", {tooltipLayout: "vertical"}]
 ]);
+ChartUtil.TIER_ANNOTATIONS = null;
+ChartUtil.SEASON_ANNOTATIONS = new Map();
 
 class ChartLineVCursor extends Chart.LineController
 {

@@ -409,6 +409,7 @@ class CharacterUtil
 
     static updateCharacterMmrHistoryView()
     {
+        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
         const queueFilterSelect = document.getElementById("mmr-queue-filter");
         const queue = EnumUtil.enumOfFullName(queueFilterSelect.options[queueFilterSelect.selectedIndex].value, TEAM_FORMAT);
         const queueFilter = queue.code;
@@ -451,6 +452,7 @@ class CharacterUtil
             for(const history of histories) data[dateTime][history.race] = mmrYValueGetter(history);
         }
         ChartUtil.CHART_RAW_DATA.set("mmr-table", {rawData: rawData, additionalDataGetter: CharacterUtil.getAdditionalMmrHistoryData});
+        ChartUtil.setCustomConfigOption("mmr-table", "region", character.region);
         TableUtil.updateVirtualColRowTable
         (
             document.getElementById("mmr-table"),

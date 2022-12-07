@@ -476,7 +476,11 @@ class TeamUtil
         const mmrYValueGetter = CharacterUtil.mmrYValueGetter(yAxis);
         const xAxisType = document.getElementById("team-mmr-x-type").checked ? "time" : "category";
         const showLeagues = document.getElementById("team-mmr-leagues").checked;
-        TeamUtil.updateTeamsTable(document.querySelector("#team-mmr-teams-table"), Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH));
+        const teams = Model.DATA.get(VIEW.TEAM_MMR).get(VIEW_DATA.SEARCH);
+        const region = teams.result.length > 0
+            ? teams.result[0].members[0].character.region
+            : "EU";
+        TeamUtil.updateTeamsTable(document.querySelector("#team-mmr-teams-table"), teams);
         let transformedData = [];
         let curEntry = 0;
         const headers = [];
@@ -512,6 +516,7 @@ class TeamUtil
             for(const history of histories) data[dateTime][history.group.name] = mmrYValueGetter(history);
         }
         ChartUtil.CHART_RAW_DATA.set("team-mmr-table", {rawData: rawData, additionalDataGetter: TeamUtil.getAdditionalMmrHistoryData});
+        ChartUtil.setCustomConfigOption("team-mmr-table", "region", region);
         TableUtil.updateVirtualColRowTable
         (
             document.getElementById("team-mmr-table"),
