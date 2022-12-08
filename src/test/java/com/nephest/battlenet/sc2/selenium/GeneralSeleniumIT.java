@@ -167,20 +167,28 @@ public class GeneralSeleniumIT
 
     private void testUI(WebDriver driver)
     {
-        int port = webServerAppCtxt.getWebServer().getPort();
-        WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_MILLIS / 1000);
-        String root = "http://localhost:" + port;
-        getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
-        testVersus(driver, wait);
-        testLadderUI(driver, wait);
-        testOnline(driver, wait);
-        testSearch(driver, wait);
-        testSettings(driver, wait);
-        testMmrHistory(driver, wait);
-        checkJsErrors();
-        getAndWaitAndCheckJsErrors(driver, wait, root + "/about", "#about");
-        getAndWaitAndCheckJsErrors(driver, wait, root + "/privacy-policy", "#privacy");
-        getAndWaitAndCheckJsErrors(driver, wait, root + "/status", "#status");
+        try
+        {
+            int port = webServerAppCtxt.getWebServer().getPort();
+            WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_MILLIS / 1000);
+            String root = "http://localhost:" + port;
+            getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
+            testVersus(driver, wait);
+            testLadderUI(driver, wait);
+            testOnline(driver, wait);
+            testSearch(driver, wait);
+            testSettings(driver, wait);
+            testMmrHistory(driver, wait);
+            checkJsErrors();
+            getAndWaitAndCheckJsErrors(driver, wait, root + "/about", "#about");
+            getAndWaitAndCheckJsErrors(driver, wait, root + "/privacy-policy", "#privacy");
+            getAndWaitAndCheckJsErrors(driver, wait, root + "/status", "#status");
+        }
+        catch(Exception ex)
+        {
+            failed = true;
+            fail(ex);
+        }
     }
 
     private static void testLadderUI(WebDriver driver, WebDriverWait wait)
