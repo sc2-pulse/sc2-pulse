@@ -185,6 +185,10 @@ SC2Restful.IMAGES = new Map
     ["master", ElementUtil.createImage("league/", "master", "icon-chart table-image table-image-square", SC2Restful.REM)],
     ["grandmaster", ElementUtil.createImage("league/", "grandmaster", "icon-chart table-image table-image-square", SC2Restful.REM)],
 
+    ["tier-1", ElementUtil.createImage("league/", "tier-1", "icon-chart table-image table-image-square", SC2Restful.REM, SC2Restful.REM)],
+    ["tier-2", ElementUtil.createImage("league/", "tier-2", "icon-chart table-image table-image-square", SC2Restful.REM, SC2Restful.REM)],
+    ["tier-3", ElementUtil.createImage("league/", "tier-3", "icon-chart table-image table-image-square", SC2Restful.REM, SC2Restful.REM)],
+
     ["terran", ElementUtil.createImage("race/", "terran", "icon-chart table-image table-image-square", SC2Restful.REM)],
     ["protoss", ElementUtil.createImage("race/", "protoss", "icon-chart table-image table-image-square", SC2Restful.REM)],
     ["zerg", ElementUtil.createImage("race/", "zerg", "icon-chart table-image table-image-square", SC2Restful.REM)],
