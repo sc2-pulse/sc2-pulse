@@ -476,6 +476,35 @@ class ElementUtil
             });
     }
 
+    static createProgressBar(val, min = 0, max = 100)
+    {
+        const progressPercent = Util.calculateProgress(min, max, val);
+        const container = document.createElement("div");
+        container.classList.add("progress");
+        container.setAttribute("data-toggle", "tooltip");
+        container.setAttribute("title",
+            "range: " + Util.DECIMAL_FORMAT.format(min)
+            + "-" + Util.DECIMAL_FORMAT.format(max)
+            + ", val: " + Util.DECIMAL_FORMAT.format(val)
+            + ", progress: " + Util.DECIMAL_FORMAT.format(progressPercent) + "%");
+        const progress = ElementUtil.createElement
+        (
+            "div",
+            null,
+            "progress-bar",
+            null,
+            [
+                ["role", "progressbar"],
+                ["style", "width: " + progressPercent + "%;"],
+                ["aria-valuenow", val],
+                ["aria-valuemin", min],
+                ["aria-valuemax", max]
+            ]
+        );
+        container.appendChild(progress);
+        return container;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();

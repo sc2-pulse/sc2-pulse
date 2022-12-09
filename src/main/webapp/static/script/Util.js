@@ -104,6 +104,11 @@ class Util
         return Math.round((val / allVal) * 100);
     }
 
+    static calculateProgress(min, max, val)
+    {
+        return (Math.abs(val - min) / Math.abs(max - min)) * 100;
+    }
+
     static hasNonZeroValues(values)
     {
         for (let i = 0; i < values.length; i++)
