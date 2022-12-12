@@ -293,11 +293,11 @@
                                     <span class="fullscreen-toggle align-middle" data-target="player-stats-mmr"></span></h3>
 
                                 <div id="mmr-history-info-panel" class="flex-col-adaptive adaptive-border-color-splitter">
-                                <div class="border-splitter-right adaptive-border-color-splitter">
+                                <div id="mmr-history-ctl">
                                 <div><div id="mmr-history-filters"></div><div id="mmr-history-games-avg-mmr"></div></div>
                                 <div th:replace="~{fragments/section:: form-mmr-history('mmr', true)}"></div>
                                 </div>
-                                <div class="table-responsive">
+                                <div id="mmr-summary-table-container" class="table-responsive">
                                     <table id="mmr-summary-table" class="table inline-table table-sm table-hover">
                                         <thead>
                                         <tr>
@@ -306,6 +306,20 @@
                                             <th scope="col">Last MMR</th>
                                             <th scope="col">Avg MMR</th>
                                             <th scope="col">Max MMR</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                                <div class="table-responsive flex-grow-1">
+                                    <table id="mmr-tier-progress-table" class="table table-sm table-hover">
+                                        <thead>
+                                        <tr>
+                                            <th scope="col"><br/>Race</th>
+                                            <th scope="col"
+                                                class="hoverable"
+                                                title="Tier progress based on regional rank/top% and official tier thresholds for LotV"
+                                                data-toggle="tooltip"><br/>Progress</th>
                                         </tr>
                                         </thead>
                                         <tbody></tbody>

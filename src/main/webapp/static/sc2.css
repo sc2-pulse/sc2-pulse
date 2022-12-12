@@ -259,9 +259,24 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     border-bottom: solid 2px;
 }
 
-#mmr-summary-table
+#mmr-history-ctl
+{
+    flex-basis: 40rem;
+}
+
+#mmr-summary-table-container
+{
+    flex-basis: min-content;
+}
+
+#mmr-summary-table, #mmr-tier-progress-table
 {
     font-size: 0.8rem;
+}
+
+.tier-progress
+{
+    min-width: 4rem;
 }
 
 .flex-list li
@@ -275,6 +290,11 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     align-items: center;
     justify-content: center;
     flex-wrap: wrap;
+}
+
+.gap-tiny
+{
+    gap: 0.3em;
 }
 
 .table
@@ -1013,6 +1033,9 @@ body.modal-open.modal-open-no-popup
 {
     display: flex;
     flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 1em;
 }
 
 .flex-col-adaptive .table-responsive
@@ -1103,16 +1126,6 @@ body.modal-open.modal-open-no-popup
 }
 
 @media (max-width: 576px) {
-    .flex-col-adaptive
-    {
-        flex-direction: column;
-    }
-
-    .flex-col-adaptive .table-responsive
-    {
-        overflow-x: auto;
-        width: 100%;
-    }
 
     .flex-col-adaptive > .border-splitter-left
     {

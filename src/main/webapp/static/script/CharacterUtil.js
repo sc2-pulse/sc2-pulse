@@ -472,7 +472,9 @@ class CharacterUtil
             + (depth ? ", starting from " + Util.DATE_TIME_FORMAT.format(new Date(depthStartTimestamp)) : "")
             + (excludeEnd > 0 ? ", excluding range " + excludeStart + "-" + excludeEnd : "") + ", "
               + mmrHistory.length  + " entries)";
-        CharacterUtil.updateGamesAndAverageMmrTable(document.querySelector("#mmr-summary-table"), mmrHistory);
+        const gamesMmr = CharacterUtil.getGamesAndAverageMmrSortedArray(mmrHistory);
+        CharacterUtil.updateTierProgressTable(document.querySelector("#mmr-tier-progress-table"), gamesMmr);
+        CharacterUtil.updateGamesAndAverageMmrTable(document.querySelector("#mmr-summary-table"), gamesMmr);
     }
     
     static mmrYValueGetter(mode)
@@ -538,14 +540,19 @@ class CharacterUtil
         tableData.pointStyles = pointStyles;
     }
 
-    static updateGamesAndAverageMmrTable(table, mmrHistory)
+    static getGamesAndAverageMmrSortedArray(mmrHistory)
     {
-        const tbody = table.querySelector(":scope tbody");
         const gamesMmr = CharacterUtil.getGamesAndAverageMmr(mmrHistory);
-        ElementUtil.removeChildren(tbody);
         const entries = Object.entries(gamesMmr);
         entries.sort((a, b)=>b[1].maximumMmr - a[1].maximumMmr);
-        for(const [race, stats] of entries)
+        return entries;
+    }
+
+    static updateGamesAndAverageMmrTable(table, gamesMmr)
+    {
+        const tbody = table.querySelector(":scope tbody");
+        ElementUtil.removeChildren(tbody);
+        for(const [race, stats] of gamesMmr)
         {
             const tr = tbody.insertRow();
             const raceImage = SC2Restful.IMAGES.get(race.toLowerCase());
@@ -560,6 +567,58 @@ class CharacterUtil
             tr.insertCell().textContent = stats.averageMmr;
             tr.insertCell().textContent = stats.maximumMmr;
         }
+    }
+
+    static updateTierProgressTable(table, gamesMmr)
+    {
+        const tbody = table.querySelector(":scope tbody");
+        ElementUtil.removeChildren(tbody);
+        for(const [race, stats] of gamesMmr)
+        {
+            const progress = CharacterUtil.createTierProgress(stats.lastTeamState);
+            if(!progress) continue;
+
+            const tr = tbody.insertRow();
+            const raceImage = SC2Restful.IMAGES.get(race.toLowerCase());
+            const raceCell = tr.insertCell();
+            if(raceImage) {
+                raceCell.appendChild(raceImage.cloneNode());
+            } else {
+                raceCell.textContent = race;
+            }
+            TableUtil.insertCell(tr, "cell-main").appendChild(progress);
+        }
+    }
+
+    static createTierProgress(teamState)
+    {
+        if(!teamState.teamState.regionTeamCount || !teamState.teamState.regionRank) return null;
+        const tierRange = TeamUtil.getRegionLeagueRange(teamState.teamState);
+        let min, max, cur, nextTierRange;
+        if(tierRange.league == LEAGUE.GRANDMASTER) {
+            nextTierRange = {league: LEAGUE.GRANDMASTER, tierType: 0};
+            min = 200;
+            max = 1;
+            cur = teamState.teamState.regionRank;
+        } else {
+            nextTierRange = tierRange.league == LEAGUE.MASTER && tierRange.tierType == 0
+                ? {league: LEAGUE.GRANDMASTER, tierType: 0}
+                : TIER_RANGE[tierRange.order - 1];
+            min = tierRange.bottomThreshold;
+            max = nextTierRange ? nextTierRange.bottomThreshold : 0;
+            cur = (teamState.teamState.regionRank / teamState.teamState.regionTeamCount) * 100;
+        }
+        const progressBar = ElementUtil.createProgressBar(cur, min, max);
+        progressBar.classList.add("tier-progress", "flex-grow-1");
+        progressBar.querySelector(":scope .progress-bar").classList.add("bg-" + tierRange.league.name.toLowerCase());
+        const container = document.createElement("div");
+        container.classList.add("text-nowrap", "d-flex", "gap-tiny");
+        container.appendChild(SC2Restful.IMAGES.get(tierRange.league.name.toLowerCase()).cloneNode());
+        container.appendChild(SC2Restful.IMAGES.get("tier-" + (tierRange.tierType + 1)).cloneNode());
+        container.appendChild(progressBar);
+        container.appendChild(SC2Restful.IMAGES.get(nextTierRange.league.name.toLowerCase()).cloneNode());
+        container.appendChild(SC2Restful.IMAGES.get("tier-" + (nextTierRange.tierType + 1)).cloneNode());
+        return container;
     }
     
     static getGamesAndAverageMmrString(mmrHistory)
@@ -600,7 +659,8 @@ class CharacterUtil
             const sum = mmr.reduce((a, b) => a + b, 0);
             const avg = (sum / mmr.length) || 0;
             const max = mmr.reduce((a, b) => Math.max(a, b));
-            result[race] = {games : games, lastMmr: last, averageMmr: Math.round(avg), maximumMmr: max};
+            const lastTeamState = histories[histories.length - 1];
+            result[race] = {games : games, lastMmr: last, averageMmr: Math.round(avg), maximumMmr: max, lastTeamState: lastTeamState};
         }
         return result;
     }
