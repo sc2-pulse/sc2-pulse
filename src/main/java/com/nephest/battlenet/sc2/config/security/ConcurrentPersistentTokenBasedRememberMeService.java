@@ -19,7 +19,7 @@ import org.springframework.stereotype.Service;
 
 /**
  * Synchronized wrapper for token based remember me services. Implementation is split between this
- * class and {@link ConcurrentAutoLoginCookieProcessor} because some methods in
+ * class and {@link CachedAutoLoginCookieProcessor} because some methods in
  * {@link org.springframework.security.web.authentication.rememberme.AbstractRememberMeServices}
  * are final which makes it impossible to wrap it into Spring proxies.
  */
@@ -40,7 +40,7 @@ implements AutoLoginCookieProcessor
         UserDetailsService userDetailsService,
         PersistentTokenRepository tokenRepository,
         Environment environment,
-        @Lazy @Qualifier("concurrentAutoLoginCookieProcessor") AutoLoginCookieProcessor concurrentCookieProcessor
+        @Lazy @Qualifier("cachedAutoLoginCookieProcessor") AutoLoginCookieProcessor concurrentCookieProcessor
     )
     {
         super(key, userDetailsService, tokenRepository);
@@ -60,7 +60,7 @@ implements AutoLoginCookieProcessor
     }
 
     @Override
-    public UserDetails processAutoLoginCookie
+    public synchronized UserDetails processAutoLoginCookie
     (
         String[] cookieTokens,
         HttpServletRequest request,

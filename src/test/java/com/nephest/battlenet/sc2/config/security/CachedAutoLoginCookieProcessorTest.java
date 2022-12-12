@@ -34,7 +34,7 @@ import org.springframework.security.web.authentication.rememberme.PersistentReme
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
 
 @ExtendWith(MockitoExtension.class)
-public class ConcurrentAutoLoginCookieProcessorTest
+public class CachedAutoLoginCookieProcessorTest
 {
 
     @Mock
@@ -49,12 +49,12 @@ public class ConcurrentAutoLoginCookieProcessorTest
     @Mock
     private AuthenticationRequestDAO authenticationRequestDAO;
 
-    private ConcurrentAutoLoginCookieProcessor processor;
+    private CachedAutoLoginCookieProcessor processor;
 
     @BeforeEach
     public void beforeEach()
     {
-        processor = new ConcurrentAutoLoginCookieProcessor
+        processor = new CachedAutoLoginCookieProcessor
         (
             realProcessor,
             userDetailsService,

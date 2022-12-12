@@ -41,12 +41,12 @@ import org.springframework.transaction.annotation.Transactional;
     </p>
  */
 @Service @Lazy
-public class ConcurrentAutoLoginCookieProcessor
+public class CachedAutoLoginCookieProcessor
 implements AutoLoginCookieProcessor
 {
 
     private static final Logger LOG = LoggerFactory
-        .getLogger(ConcurrentAutoLoginCookieProcessor.class);
+        .getLogger(CachedAutoLoginCookieProcessor.class);
 
     public static final Duration AUTH_CACHE_TTL = Duration.ofSeconds(60);
 
@@ -54,12 +54,10 @@ implements AutoLoginCookieProcessor
     private final UserDetailsService userDetailsService;
     private final PersistentTokenRepository persistentTokenRepository;
     private final AuthenticationRequestDAO authenticationRequestDAO;
-
-    private final Object AUTH_CACHE_LOCK = new Object();
     private boolean autoClean = true;
 
     @Autowired
-    public ConcurrentAutoLoginCookieProcessor
+    public CachedAutoLoginCookieProcessor
     (
         @Qualifier("concurrentPersistentTokenBasedRememberMeService") AutoLoginCookieProcessor realProcessor,
         UserDetailsService userDetailsService,
@@ -86,31 +84,28 @@ implements AutoLoginCookieProcessor
         if(cookieTokens.length != 2)
             return realProcessor.doProcessAutoLoginCookie(cookieTokens, request, response);
 
-        synchronized (AUTH_CACHE_LOCK)
+        if(isAutoClean()) removeExpired();
+
+        String series = cookieTokens[0];
+        String authRequest = series + cookieTokens[1];
+        if(authenticationRequestDAO.exists(authRequest, AUTH_CACHE_TTL))
         {
-            if(isAutoClean()) removeExpired();
+            PersistentRememberMeToken token = persistentTokenRepository
+                .getTokenForSeries(series);
+            if (token == null) throw new RememberMeAuthenticationException
+                ("No persistent token found for series id: " + series);
 
-            String series = cookieTokens[0];
-            String authRequest = series + cookieTokens[1];
-            if(authenticationRequestDAO.exists(authRequest, AUTH_CACHE_TTL))
-            {
-                PersistentRememberMeToken token = persistentTokenRepository
-                    .getTokenForSeries(series);
-                if (token == null) throw new RememberMeAuthenticationException
-                    ("No persistent token found for series id: " + series);
+            LOG.debug("Used authentication cache for user {}, series {}",
+                token.getUsername(), series);
+            return userDetailsService.loadUserByUsername(token.getUsername());
+        }
+        else
+        {
+            UserDetails userDetails = realProcessor.doProcessAutoLoginCookie(cookieTokens, request, response);
+            if(userDetails == null) throw new IllegalStateException("Unexpected null value");
 
-                LOG.debug("Used authentication cache for user {}, series {}",
-                    token.getUsername(), series);
-                return userDetailsService.loadUserByUsername(token.getUsername());
-            }
-            else
-            {
-                UserDetails userDetails = realProcessor.doProcessAutoLoginCookie(cookieTokens, request, response);
-                if(userDetails == null) throw new IllegalStateException("Unexpected null value");
-
-                createAuthenticationRequest(authRequest);
-                return userDetails;
-            }
+            createAuthenticationRequest(authRequest);
+            return userDetails;
         }
     }
 
@@ -131,10 +126,7 @@ implements AutoLoginCookieProcessor
 
     public void removeExpired()
     {
-        synchronized (AUTH_CACHE_LOCK)
-        {
-            authenticationRequestDAO.removeExpired();
-        }
+        authenticationRequestDAO.removeExpired();
     }
 
 }
