@@ -728,6 +728,41 @@ body.theme-dark .page-item.disabled:not(.active) .page-link
     background-color: rgba(255, 0, 0, 0.06);
 }
 
+.bg-bronze
+{
+    background-color: rgba(185, 113, 45, 1);
+}
+
+.bg-silver
+{
+    background-color: rgba(115, 115, 115, 1);
+}
+
+.bg-gold
+{
+    background-color: rgba(255, 215, 0, 1);
+}
+
+.bg-platinum
+{
+    background-color: rgba(165, 164, 163, 1);
+}
+
+.bg-diamond
+{
+    background-color: rgba(13, 69, 148, 1);
+}
+
+.bg-master
+{
+    background-color: rgba(0, 177, 251, 1);
+}
+
+.bg-grandmaster
+{
+    background-color: rgba(239, 62, 0, 1);
+}
+
 .card-equal
 {
     min-width: initial;
