@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Copyright (C) 2020 Oleksandr Masniuk and contributors -->
-<!-- SPDX-License-Identifier: MIT -->
+<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
 <svg xmlns="http://www.w3.org/2000/svg"
     xmlns:xlink="http://www.w3.org/1999/xlink"
@@ -10,8 +10,8 @@
 >
     <desc>Starcraft2 League Tier 3</desc>
     <defs>
-        <polyline id="line1" points="0,0 8,0" stroke-width="1px" stroke="#d73545" fill="none"/>
-        <polyline id="line2" points="0,0 0,6" stroke-width="1px" stroke="#d73545" fill="none"/>
+        <polyline id="line1" points="0,0 8,0" stroke-width="1px" stroke="#28a745" fill="none"/>
+        <polyline id="line2" points="0,0 0,6" stroke-width="1px" stroke="#28a745" fill="none"/>
     </defs>
     <use xlink:href="#line1"/>
     <use xlink:href="#line1" y="6"/>
