@@ -602,10 +602,10 @@ class CharacterUtil
             cur = teamState.teamState.regionRank;
         } else {
             nextTierRange = tierRange.league == LEAGUE.MASTER && tierRange.tierType == 0
-                ? {league: LEAGUE.GRANDMASTER, tierType: 0}
+                ? {league: LEAGUE.GRANDMASTER, tierType: 0, bottomThreshold: 0}
                 : TIER_RANGE[tierRange.order - 1];
             min = tierRange.bottomThreshold;
-            max = nextTierRange ? nextTierRange.bottomThreshold : 0;
+            max = nextTierRange.bottomThreshold;
             cur = (teamState.teamState.regionRank / teamState.teamState.regionTeamCount) * 100;
         }
         const progressBar = ElementUtil.createProgressBar(cur, min, max);
