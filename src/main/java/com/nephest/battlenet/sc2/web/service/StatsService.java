@@ -106,7 +106,12 @@ public class StatsService
     public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 2;
     public static final int LADDER_BATCH_SIZE = 100;
     public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(2);
-    public static final int PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD = 3;
+    /*
+        Disable partial updates because alternative ladder service should be fast enough
+        now. Might want to reactivate it later if anything goes wrong, so leaving this note just in
+        case.
+     */
+    public static final int PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD = Integer.MAX_VALUE;
     public static final int PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE = 2;
     public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_LEAGUE_TYPES =
         EnumSet.allOf(BaseLeague.LeagueType.class);
