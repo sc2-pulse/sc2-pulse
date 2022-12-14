@@ -16,11 +16,7 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToRegionConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
-import com.nephest.battlenet.sc2.config.filter.AverageSessionCacheFilter;
-import com.nephest.battlenet.sc2.config.filter.MaintenanceFilter;
-import com.nephest.battlenet.sc2.config.filter.SeasonCacheFilter;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -28,15 +24,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
-import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.support.SpringBootServletInitializer;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Profile;
 import org.springframework.context.annotation.PropertySource;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
@@ -129,36 +122,6 @@ extends SpringBootServletInitializer
             new SynchronousQueue<>(),
             new CustomizableThreadFactory(WEB_THREAD_POOL_NAME)
         );
-    }
-
-    @Bean
-    public FilterRegistrationBean<AverageSessionCacheFilter> sessionWebCacheFilter(){
-        FilterRegistrationBean<AverageSessionCacheFilter> registrationBean = new FilterRegistrationBean<>();
-
-        registrationBean.setFilter(new AverageSessionCacheFilter());
-        registrationBean.addUrlPatterns("/api/ladder/stats/*");
-
-        return registrationBean;
-    }
-
-    @Bean
-    public FilterRegistrationBean<SeasonCacheFilter> seasonCacheFilter(@Autowired SeasonDAO seasonDAO)
-    {
-        FilterRegistrationBean<SeasonCacheFilter> registrationBean = new FilterRegistrationBean<>();
-
-        registrationBean.setFilter(new SeasonCacheFilter(seasonDAO));
-        registrationBean.addUrlPatterns("/api/season/list", "/api/season/list/all");
-
-        return registrationBean;
-    }
-
-    @Bean @Profile("maintenance")
-    public FilterRegistrationBean<MaintenanceFilter> maintenanceFilterRegistration()
-    {
-        FilterRegistrationBean<MaintenanceFilter> reg = new FilterRegistrationBean<>();
-        reg.setFilter(new MaintenanceFilter());
-        reg.addUrlPatterns("/*");
-        return reg;
     }
 
 }
