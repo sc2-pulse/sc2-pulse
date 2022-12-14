@@ -23,7 +23,7 @@
                         <th scope="col">Health</th>
                         <th scope="col">Request cap</th>
                         <th scope="col">Flags</th>
-                        <th scope="col">Estimated refresh time (minutes)</th>
+                        <th scope="col">Estimated refresh duration</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -47,7 +47,7 @@
                                     <span th:class="|text-capitalize font-weight-bold ${flag.getLevel().getCssClass()}|" th:text="${flag.getName()}"></span>
                                 </th:block>
                             </td>
-                            <td  th:text="${statusEntry.getValue().refreshDuration.toMinutes()}"></td>
+                            <td th:text="${statusEntry.getValue().getRefreshDuration()}"></td>
                         </tr>
                     </th:block>
                 </tbody>
