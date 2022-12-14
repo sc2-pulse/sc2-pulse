@@ -23,7 +23,7 @@ implements Filter
         HttpServletResponse hresp = (HttpServletResponse) resp;
         if(!isSecure(hresp))
         {
-            hresp.setHeader("Cache-Control", NoCacheFilter.NO_CACHE_HEADER);
+            NoCacheFilter.NO_CACHE_HEADERS.forEach(hresp::setHeader);
         }
         else
         {

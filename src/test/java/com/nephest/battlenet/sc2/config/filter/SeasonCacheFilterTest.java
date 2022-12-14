@@ -58,7 +58,7 @@ public class SeasonCacheFilterTest
         when(seasonDAO.findListByBattlenetId(any())).thenReturn(seasons);
 
         filter.doFilter(null, response, filterChain);
-        verify(response).setHeader("Cache-Control", NoCacheFilter.NO_CACHE_HEADER);
+        NoCacheFilter.NO_CACHE_HEADERS.forEach((key, value)->verify(response).setHeader(key, value));
     }
 
     @Test
@@ -72,7 +72,7 @@ public class SeasonCacheFilterTest
         when(seasonDAO.findListByBattlenetId(any())).thenReturn(seasons);
 
         filter.doFilter(null, response, filterChain);
-        verify(response).setHeader("Cache-Control", NoCacheFilter.NO_CACHE_HEADER);
+        NoCacheFilter.NO_CACHE_HEADERS.forEach((key, value)->verify(response).setHeader(key, value));
     }
 
     @Test

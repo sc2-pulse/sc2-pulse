@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.config.filter.NoCacheFilter;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.io.File;
 import java.net.URLEncoder;
@@ -37,9 +38,7 @@ public class DownloadsController
         HttpHeaders headers = new HttpHeaders();
         headers.add(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename="
             + URLEncoder.encode(file.getName(), StandardCharsets.UTF_8));
-        headers.add("Cache-Control", "no-cache, no-store, must-revalidate");
-        headers.add("Pragma", "no-cache");
-        headers.add("Expires", "0");
+        NoCacheFilter.NO_CACHE_HEADERS.forEach(headers::add);
 
         return ResponseEntity.ok()
             .headers(headers)

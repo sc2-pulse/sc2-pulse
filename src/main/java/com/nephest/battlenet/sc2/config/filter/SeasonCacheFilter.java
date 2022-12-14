@@ -17,6 +17,7 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
 
 public class SeasonCacheFilter
 implements Filter
@@ -34,7 +35,16 @@ implements Filter
     throws java.io.IOException, ServletException
     {
         HttpServletResponse hresp = (HttpServletResponse) resp;
-        hresp.setHeader("Cache-Control", getCacheHeader());
+        String cacheHeader = getCacheHeader();
+        if(cacheHeader != null)
+        {
+            hresp.setHeader(HttpHeaders.CACHE_CONTROL, cacheHeader);
+        }
+        else
+        {
+            NoCacheFilter.NO_CACHE_HEADERS.forEach(hresp::setHeader);
+        }
+
         chain.doFilter(req, resp);
     }
 
@@ -57,11 +67,11 @@ implements Filter
                 ? "private, "
                     + "max-age=" + cacheDuration.toSeconds() + ", "
                     + "must-revalidate"
-                : NoCacheFilter.NO_CACHE_HEADER;
+                : null;
         }
         else
         {
-            cacheHeader = NoCacheFilter.NO_CACHE_HEADER;
+            cacheHeader = null;
         }
 
         return cacheHeader;

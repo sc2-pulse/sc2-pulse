@@ -23,7 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 /**
  * Base class for cache filters. Sets cache headers only when it is safe to do so,
- * {@link NoCacheFilter#NO_CACHE_HEADER} is used otherwise. Insecure responses are responses that
+ * {@link NoCacheFilter#NO_CACHE_HEADERS} is used otherwise. Insecure responses are responses that
  * can lead to side effect when cached, such as protected resources, headers, and so on.
  */
 @ExtendWith(MockitoExtension.class)
@@ -73,7 +73,7 @@ public class AbstractSecureCacheFilterTest
         when(response.getHeader("Set-Cookie")).thenReturn("cookie");
         assertFalse(filter.isSecure(response));
         filter.doFilter(request, response, filterChain);
-        verify(response).setHeader("Cache-Control", NoCacheFilter.NO_CACHE_HEADER);
+        NoCacheFilter.NO_CACHE_HEADERS.forEach((key, value)->verify(response).setHeader(key, value));
         assertFalse(cacheWasSet);
     }
 
