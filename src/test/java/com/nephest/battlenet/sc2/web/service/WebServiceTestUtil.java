@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.test.web.servlet.MockMvc;
@@ -56,7 +57,7 @@ public class WebServiceTestUtil
     private static void testRetryingOnErrorCodes(Mono<?> mono, String body, MockWebServer server, int count)
     {
         for(int i = 0; i < count; i++) server.enqueue(new MockResponse().setResponseCode(500));
-        server.enqueue(new MockResponse().setHeader("Content-Type", "application/json").setBody(body));
+        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json").setBody(body));
 
         StepVerifier.create(mono)
             .expectNextCount(1)
@@ -66,8 +67,8 @@ public class WebServiceTestUtil
     private static void testRetryingOnMalformedBody(Mono<?> mono, String body, MockWebServer server, int count)
     {
         for(int i = 0; i < count; i++)
-            server.enqueue(new MockResponse().setHeader("Content-Type", "application/json").setBody("dadsdcz"));
-        server.enqueue(new MockResponse().setHeader("Content-Type", "application/json").setBody(body));
+            server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json").setBody("dadsdcz"));
+        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json").setBody(body));
 
         StepVerifier.create(mono)
             .expectNextCount(1)
@@ -78,11 +79,11 @@ public class WebServiceTestUtil
     {
         System.out.println("Testing socket timeouts, might take some time...");
         MockResponse dr = new MockResponse()
-            .setHeader("Content-Type", "application/json")
+            .setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
             .setBodyDelay(OPERATION_DURATION.toMillis() + 1000 , TimeUnit.MILLISECONDS)
             .setBody(body);
         for(int i = 0; i < count; i++) server.enqueue(dr);
-        server.enqueue(new MockResponse().setHeader("Content-Type", "application/json").setBody(body));
+        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json").setBody(body));
 
         StepVerifier.create(mono)
             .expectNextCount(1)

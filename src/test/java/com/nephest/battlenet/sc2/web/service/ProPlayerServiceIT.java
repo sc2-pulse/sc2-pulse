@@ -44,6 +44,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 
@@ -126,11 +127,11 @@ public class ProPlayerServiceIT
         revealedAPI.setWebClient(revealedAPI.getWebClient().mutate().baseUrl(server.url("/").uri().toString()).build());
         aligulacAPI.setWebClient(aligulacAPI.getWebClient().mutate().baseUrl(server.url("/").uri().toString()).build());
 
-        server.enqueue(new MockResponse().setHeader("Content-Type", "application/json")
+        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
             .setBody(objectMapper.writeValueAsString(createRevealedProPlayers())));
-        server.enqueue(new MockResponse().setHeader("Content-Type", "application/json")
+        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
             .setBody(objectMapper.writeValueAsString(createAligulacProPlayers1())));
-        server.enqueue(new MockResponse().setHeader("Content-Type", "application/json")
+        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
             .setBody(objectMapper.writeValueAsString(createAligulacProPlayers2())));
 
         proPlayerService.setAligulacBatchSize(1); //test batching

@@ -20,6 +20,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 
 /**
  * Base class for cache filters. Sets cache headers only when it is safe to do so,
@@ -70,7 +71,7 @@ public class AbstractSecureCacheFilterTest
     public void whenCookiesAreEncountered_thenDontCache()
     throws ServletException, IOException
     {
-        when(response.getHeader("Set-Cookie")).thenReturn("cookie");
+        when(response.getHeader(HttpHeaders.SET_COOKIE)).thenReturn("cookie");
         assertFalse(filter.isSecure(response));
         filter.doFilter(request, response, filterChain);
         NoCacheFilter.NO_CACHE_HEADERS.forEach((key, value)->verify(response).setHeader(key, value));

@@ -12,6 +12,7 @@ import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpHeaders;
 
 @Order(-1) //pre-security order
 public class AverageSessionCacheFilter
@@ -28,7 +29,7 @@ implements Filter
     throws java.io.IOException, ServletException
     {
         HttpServletResponse hresp = (HttpServletResponse) resp;
-        hresp.setHeader("Cache-Control", HEADER_VALUE);
+        hresp.setHeader(HttpHeaders.CACHE_CONTROL, HEADER_VALUE);
         chain.doFilter(req, resp);
     }
 

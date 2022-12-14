@@ -9,12 +9,11 @@ import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.http.HttpHeaders;
 
 public abstract class AbstractSecureCacheFilter
 implements Filter
 {
-
-    private static final String TARGET_HEADER = "Set-Cookie";
 
     @Override
     public void doFilter(ServletRequest req, ServletResponse resp, FilterChain chain)
@@ -34,7 +33,7 @@ implements Filter
 
     public boolean isSecure(HttpServletResponse resp)
     {
-        return resp.getHeader(TARGET_HEADER) == null;
+        return resp.getHeader(HttpHeaders.SET_COOKIE) == null;
     }
 
     public abstract void setCache(HttpServletResponse resp);

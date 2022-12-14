@@ -27,6 +27,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.http.HttpHeaders;
 
 @ExtendWith(MockitoExtension.class)
 public class SeasonCacheFilterTest
@@ -90,7 +91,7 @@ public class SeasonCacheFilterTest
         filter.doFilter(null, response, filterChain);
 
         ArgumentCaptor<String> headerCaptor = ArgumentCaptor.forClass(String.class);
-        verify(response).setHeader(eq("Cache-Control"), headerCaptor.capture());
+        verify(response).setHeader(eq(HttpHeaders.CACHE_CONTROL), headerCaptor.capture());
         String header = headerCaptor.getValue();
         String durationStr = header
             .substring(header.indexOf("=") + 1, header.indexOf(",", header.indexOf("=")));
