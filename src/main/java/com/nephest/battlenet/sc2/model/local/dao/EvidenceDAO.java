@@ -88,6 +88,12 @@ public class EvidenceDAO
         + "ORDER BY created DESC";
     private static final String GET_BY_ID = "SELECT " + STD_SELECT + " FROM evidence WHERE id = :id";
     private static final String GET_BY_ID_HIDE_DENIED = GET_BY_ID + " AND " + VISIBLE_AND;
+    private static final String GET_BY_ID_CURSOR =
+        "SELECT " + STD_SELECT
+        + "FROM evidence "
+        + "WHERE id > :idCursor "
+        + "ORDER BY id ASC "
+        + "LIMIT :limit";
     private static final String GET_BY_REPORT_IDS =
         "SELECT " + STD_SELECT
         + "FROM evidence "
@@ -210,6 +216,14 @@ public class EvidenceDAO
             .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
             .addValue("id", id);
         return Optional.ofNullable(template.query(hideDenied ? GET_BY_ID_HIDE_DENIED : GET_BY_ID, params, STD_EXTRACTOR));
+    }
+
+    public List<Evidence> findByIdCursor(int idCursor, int limit)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("idCursor", idCursor)
+            .addValue("limit", limit);
+        return template.query(GET_BY_ID_CURSOR, params, STD_ROW_MAPPER);
     }
 
     public List<Evidence> findByReportIds(boolean hideDenied, Integer... reportIds)

@@ -1,9 +1,12 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Objects;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -11,10 +14,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Objects;
 
 @Repository
 public class PlayerCharacterReportDAO
@@ -55,6 +54,13 @@ public class PlayerCharacterReportDAO
 
     private static final String GET_ALL_QUERY =
         "SELECT " + STD_SELECT + " FROM player_character_report";
+
+    private static final String FIND_BY_ID_CURSOR =
+        "SELECT " + STD_SELECT
+        + "FROM player_character_report "
+        + "WHERE id > :idCursor "
+        + "ORDER BY id ASC "
+        + "LIMIT :limit";
 
     private static final String UPDATE_STATUS_QUERY =
         "WITH recent_reports AS ("
@@ -134,6 +140,14 @@ public class PlayerCharacterReportDAO
     public List<PlayerCharacterReport> getAll()
     {
         return template.query(GET_ALL_QUERY, STD_ROW_MAPPER);
+    }
+
+    public List<PlayerCharacterReport> findByIdCursor(int idCursor, int limit)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("idCursor", idCursor)
+            .addValue("limit", limit);
+        return template.query(FIND_BY_ID_CURSOR, params, STD_ROW_MAPPER);
     }
 
     public int updateStatus(OffsetDateTime from)
