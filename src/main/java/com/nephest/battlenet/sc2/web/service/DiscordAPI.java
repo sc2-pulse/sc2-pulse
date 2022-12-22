@@ -12,6 +12,8 @@ import com.nephest.battlenet.sc2.model.discord.DiscordConnection;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import discord4j.common.util.Snowflake;
+import discord4j.core.object.entity.Message;
+import discord4j.core.object.entity.User;
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -150,6 +152,23 @@ public class DiscordAPI
     {
         return getFlux(DiscordConnection.class, "/users/@me/connections")
             .delaySubscription(rateLimiter.requestSlot());
+    }
+
+    /**
+     * Use this method with care. Discord and users do not like unsolicited DMs. Send DM only
+     * to users who subscribed to them or for important events like security related messages.
+     *
+     * @param dm DM text
+     * @param ids Discord ids of recipients
+     * @return Flux of sent messages
+     */
+    public Flux<Message> sendDM(String dm, Long... ids)
+    {
+        return Flux.fromArray(ids)
+            .map(Snowflake::of)
+            .flatMap(discordClient.getClient()::getUserById)
+            .flatMap(User::getPrivateChannel)
+            .flatMap(c->c.createMessage(dm));
     }
 
 }
