@@ -32,6 +32,7 @@ import com.nephest.battlenet.sc2.web.service.TwitchService;
 import com.nephest.battlenet.sc2.web.service.UpdateContext;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.service.VarService;
+import com.nephest.battlenet.sc2.web.service.notification.NotificationService;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -146,6 +147,9 @@ public class Cron
     @Autowired
     private BlizzardPrivacyService blizzardPrivacyService;
 
+    @Autowired
+    private NotificationService notificationService;
+
     private final AtomicBoolean updatingLadders = new AtomicBoolean(false);
 
     @PostConstruct
@@ -234,6 +238,18 @@ public class Cron
     public void updateBackgroundServices()
     {
         updateDiscordTask.runIfAvailable();
+    }
+
+    @Scheduled(cron="0 0/10 * * * *")
+    public void sendNotifications()
+    {
+        webExecutorService.submit(()->{
+            int notificationsRemoved = notificationService.removeExpired();
+            if(notificationsRemoved > 0) LOG.info("Removed {} expired notifications", notificationsRemoved);
+
+            int notificationsSent = notificationService.sendNotifications();
+            if(notificationsSent > 0) LOG.info("Sent {} notifications", notificationsSent);
+        });
     }
 
     private void nonStopUpdate()
