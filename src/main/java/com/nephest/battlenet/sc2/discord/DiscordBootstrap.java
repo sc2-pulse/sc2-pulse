@@ -109,8 +109,7 @@ public class DiscordBootstrap
     {
         this.raceEmojis = raceEmojis;
         this.leagueEmojis = leagueEmojis;
-        characterUrlTemplate = webContextUtil.getPublicUrl()
-            + "?type=character&id=%1$s&m=1#player-stats-mmr";
+        characterUrlTemplate = webContextUtil.getCharacterUrlTemplate() + "#player-stats-mmr";
         this.accountVerificationLink =
             "[verify your account](<"
             + webContextUtil.getPublicUrl()

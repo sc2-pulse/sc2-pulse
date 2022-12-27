@@ -14,7 +14,7 @@ import org.springframework.stereotype.Component;
 public class WebContextUtil
 {
 
-    private final String publicUrl;
+    private final String publicUrl, characterUrlTemplate;
 
     @Autowired
     public WebContextUtil(Environment env, ServletContext ctx)
@@ -34,6 +34,7 @@ public class WebContextUtil
                 + ":" + port
                 + (ctx.getContextPath().isEmpty() ? "/" : ctx.getContextPath());
         }
+        characterUrlTemplate = getPublicUrl() + "?type=character&id=%1$s&m=1";
     }
 
     /**
@@ -55,6 +56,11 @@ public class WebContextUtil
     public String getPublicUrl()
     {
         return publicUrl;
+    }
+
+    public String getCharacterUrlTemplate()
+    {
+        return characterUrlTemplate;
     }
 
 }

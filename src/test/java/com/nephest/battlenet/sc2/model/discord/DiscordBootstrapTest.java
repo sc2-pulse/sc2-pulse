@@ -76,6 +76,7 @@ public class DiscordBootstrapTest
     public void beforeEach()
     {
         when(webContextUtil.getPublicUrl()).thenReturn("publicUrl");
+        when(webContextUtil.getCharacterUrlTemplate()).thenReturn("characterUrlTemplate");
         discordBootstrap = new DiscordBootstrap
         (
             Map.of(),
@@ -91,7 +92,7 @@ public class DiscordBootstrapTest
     {
         String expected = "[**[proTeam1]proName1** | [clan1]name | tag#1 | "
             + DiscordBootstrap.SC2_REVEALED_TAG + "]"
-            + "(<publicUrl?type=character&id=1&m=1#player-stats-mmr>)";
+            + "(<characterUrlTemplate#player-stats-mmr>)";
         LadderTeamMember member = new LadderTeamMember
         (
             new Account(2L, Partition.GLOBAL, "tag#1"),
