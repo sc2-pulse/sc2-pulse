@@ -1,13 +1,18 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static java.util.stream.Collectors.groupingBy;
+
+import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Evidence;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterReportDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidence;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidenceVote;
@@ -16,19 +21,30 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderEvidenceVoteDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterReportDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamMemberDAO;
+import com.nephest.battlenet.sc2.util.MarkdownUtil;
+import com.nephest.battlenet.sc2.web.service.notification.NotificationService;
+import com.nephest.battlenet.sc2.web.util.WebContextUtil;
+import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.OffsetDateTime;
-import java.util.*;
-import java.util.stream.Collectors;
-
-import static java.util.stream.Collectors.groupingBy;
-
 @Service
 public class PlayerCharacterReportService
 {
+
+    public static final Set<SC2PulseAuthority> NOTIFICATION_ROLES = Set.of
+    (
+        SC2PulseAuthority.ADMIN,
+        SC2PulseAuthority.MODERATOR
+    );
 
     public static final int EVIDENCE_PER_DAY = 10;
     public static final int CONFIRMED_EVIDENCE_MAX = 3;
@@ -39,6 +55,9 @@ public class PlayerCharacterReportService
     private final LadderPlayerCharacterReportDAO ladderPlayerCharacterReportDAO;
     private final LadderTeamMemberDAO ladderTeamMemberDAO;
     private final AccountDAO accountDAO;
+    private final PlayerCharacterDAO playerCharacterDAO;
+    private final NotificationService notificationService;
+    private final String characterUrlTemplate;
 
     @Autowired
     public PlayerCharacterReportService
@@ -48,7 +67,10 @@ public class PlayerCharacterReportService
         LadderEvidenceVoteDAO ladderEvidenceVoteDAO,
         LadderPlayerCharacterReportDAO ladderPlayerCharacterReportDAO,
         LadderTeamMemberDAO ladderTeamMemberDAO,
-        AccountDAO accountDAO
+        AccountDAO accountDAO,
+        PlayerCharacterDAO playerCharacterDAO,
+        NotificationService notificationService,
+        WebContextUtil webContextUtil
     )
     {
         this.playerCharacterReportDAO = playerCharacterReportDAO;
@@ -57,6 +79,9 @@ public class PlayerCharacterReportService
         this.ladderPlayerCharacterReportDAO = ladderPlayerCharacterReportDAO;
         this.ladderTeamMemberDAO = ladderTeamMemberDAO;
         this.accountDAO = accountDAO;
+        this.playerCharacterDAO = playerCharacterDAO;
+        this.notificationService = notificationService;
+        this.characterUrlTemplate = webContextUtil.getCharacterUrlTemplate() + "#player-stats-player";
     }
 
     @Transactional
@@ -81,9 +106,76 @@ public class PlayerCharacterReportService
         ));
         if(evidenceDAO.getConfirmedCount(report.getId()) >= CONFIRMED_EVIDENCE_MAX) return -3;
 
-        return evidenceDAO.create(new Evidence(
+        Evidence evidenceObj = evidenceDAO.create(new Evidence(
             null, report.getId(), reporterId, reporterIp, evidence, null, OffsetDateTime.now(), OffsetDateTime.now()
-        )).getId();
+        ));
+        enqueueNotifications(report, evidenceObj);
+        return evidenceObj.getId();
+    }
+
+    private void enqueueNotifications(PlayerCharacterReport report, Evidence evidence)
+    {
+        Set<Long> notificationRecipientIds = NOTIFICATION_ROLES.stream()
+            .map(accountDAO::findByRole)
+            .flatMap(List::stream)
+            .map(Account::getId)
+            .collect(Collectors.toSet());
+        PlayerCharacter accusedPlayer1 =
+            playerCharacterDAO.find(report.getPlayerCharacterId()).get(0);
+        PlayerCharacter accusedPlayer2 = report.getAdditionalPlayerCharacterId() != null
+            ? playerCharacterDAO.find(report.getAdditionalPlayerCharacterId()).get(0)
+            : null;
+        notificationRecipientIds.add(accusedPlayer1.getAccountId());
+        if(accusedPlayer2 != null) notificationRecipientIds.add(accusedPlayer2.getAccountId());
+        if(evidence.getReporterAccountId() != null)
+            notificationRecipientIds.add(evidence.getReporterAccountId());
+
+        String msg = renderReportNotification(report, evidence, accusedPlayer1, accusedPlayer2);
+
+        notificationService.enqueueNotifications(msg, notificationRecipientIds.toArray(Long[]::new));
+    }
+
+    private String renderReportNotification
+    (
+        PlayerCharacterReport report,
+        Evidence evidence,
+        PlayerCharacter accusedPlayer1,
+        PlayerCharacter accusedPlayer2
+    )
+    {
+        StringBuilder sb = new StringBuilder("**New player report received**\n");
+
+        sb.append("**Reporter:** ");
+        if(evidence.getReporterAccountId() != null)
+        {
+            Account reporter = accountDAO.findByIds(evidence.getReporterAccountId()).get(0);
+            sb.append("BattleTag: ")
+                .append(reporter.getBattleTag())
+                .append("\n");
+        }
+        else
+        {
+            sb.append("anonymous\n");
+        }
+
+        sb.append("**Accused player:** ")
+            .append(MarkdownUtil.renderLink(accusedPlayer1,
+                String.format(characterUrlTemplate, accusedPlayer1.getId())))
+            .append("\n");
+        if(accusedPlayer2 != null)
+        {
+            sb.append("**Accused player2:** ")
+                .append(MarkdownUtil.renderLink(accusedPlayer2,
+                    String.format(characterUrlTemplate, accusedPlayer2.getId())))
+                .append("\n");
+        }
+        sb.append("**Accusations:** ").append(report.getType()).append("\n");
+        sb.append("**Evidence:** ")
+            .append(evidence.getDescription()).append("\n\n");
+        sb.append("*You received this notification because you are a moderator, accused player, "
+            + "or original reporter*\n");
+
+        return sb.toString();
     }
 
     public List<LadderPlayerCharacterReport> findReports()

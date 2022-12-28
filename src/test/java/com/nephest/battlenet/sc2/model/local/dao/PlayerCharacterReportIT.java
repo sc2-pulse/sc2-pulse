@@ -32,6 +32,7 @@ import com.nephest.battlenet.sc2.model.local.Evidence;
 import com.nephest.battlenet.sc2.model.local.EvidenceVote;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
+import com.nephest.battlenet.sc2.model.local.Notification;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
@@ -59,6 +60,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -137,6 +139,9 @@ public class PlayerCharacterReportIT
     private PopulationStateDAO populationStateDAO;
 
     @Autowired
+    private NotificationDAO notificationDAO;
+
+    @Autowired
     private SeasonGenerator seasonGenerator;
 
     @Autowired
@@ -155,6 +160,7 @@ public class PlayerCharacterReportIT
     (
         @Autowired DataSource dataSource,
         @Autowired AccountDAO accountDAO,
+        @Autowired AccountRoleDAO accountRoleDAO,
         @Autowired WebApplicationContext webApplicationContext,
         @Autowired CacheManager cacheManager,
         @Autowired SeasonGenerator seasonGenerator
@@ -175,6 +181,8 @@ public class PlayerCharacterReportIT
                 List.of(QueueType.LOTV_1V1),
                 TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST, 10
             );
+            accountRoleDAO.addRoles(10L, SC2PulseAuthority.ADMIN);
+            accountRoleDAO.addRoles(11L, SC2PulseAuthority.MODERATOR);
             mvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
@@ -234,6 +242,19 @@ public class PlayerCharacterReportIT
         )
         .andExpect(status().isOk())
         .andReturn();
+        verifyAndClearNotifications
+        (
+            "**New player report received**\n"
+            + "**Reporter:** BattleTag: refaccount#123\n"
+            + "**Accused player:** [character#0](http://127.0.1.1:0/?type=character&id=1&m=1#player-stats-player)\n"
+            + "**Accusations:** CHEATER\n"
+            + "**Evidence:** evidence text\n"
+            + "\n"
+            + "*You received this notification because you are a moderator, accused player, or original reporter*\n",
+            account.getId(), //reporter
+            2L, //accused player
+            10L, 11L //moderators and admins
+        );
 
         mvc.perform
         (
@@ -247,6 +268,21 @@ public class PlayerCharacterReportIT
         )
         .andExpect(status().isOk())
         .andReturn();
+        verifyAndClearNotifications
+        (
+            "**New player report received**\n"
+            + "**Reporter:** BattleTag: refaccount#123\n"
+            + "**Accused player:** [character#0](http://127.0.1.1:0/?type=character&id=1&m=1#player-stats-player)\n"
+            + "**Accused player2:** [character#10](http://127.0.1.1:0/?type=character&id=2&m=1#player-stats-player)\n"
+            + "**Accusations:** LINK\n"
+            + "**Evidence:** evidence text link\n"
+            + "\n"
+            + "*You received this notification because you are a moderator, accused player, or original reporter*\n",
+            account.getId(), //reporter
+            2L, //accused player
+            3L, //accused player 2
+            10L, 11L //moderators and admins
+        );
 
         mvc.perform
         (
@@ -803,6 +839,28 @@ public class PlayerCharacterReportIT
         assertEquals("evidence text link", evidence3_1.getEvidence().getDescription());
         assertEquals(expectedStatus[3], evidence3_1.getEvidence().getStatus());
         assertEquals(account, evidence3_1.getReporterAccount());
+    }
+
+    private List<Notification> verifyNotifications(String msg, Long... ids)
+    {
+        List<Notification> notifications = notificationDAO.findAll();
+        assertEquals(ids.length, notifications.size());
+        notifications.sort(Comparator.comparing(Notification::getAccountId));
+        for(int i = 0; i < ids.length; i++)
+        {
+            Notification notification = notifications.get(i);
+            assertEquals(ids[i], notification.getAccountId());
+            assertEquals(msg, notification.getMessage());
+        }
+        return notifications;
+    }
+
+    private void verifyAndClearNotifications(String msg, Long... ids)
+    {
+        Set<Long> notificationIds = verifyNotifications(msg, ids).stream()
+            .map(Notification::getId)
+            .collect(Collectors.toSet());
+        notificationDAO.removeByIds(notificationIds);
     }
 
     private LadderPlayerCharacterReport[] getReports()
