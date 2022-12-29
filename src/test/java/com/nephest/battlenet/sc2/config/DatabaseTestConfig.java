@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.Startup;
-import com.nephest.battlenet.sc2.config.mvc.TokenErrorController;
 import com.nephest.battlenet.sc2.config.openapi.SpringDocConfig;
 import com.nephest.battlenet.sc2.config.security.BlizzardOidcUserService;
 import com.nephest.battlenet.sc2.config.security.ConcurrentPersistentTokenBasedRememberMeService;
@@ -14,11 +13,6 @@ import com.nephest.battlenet.sc2.config.security.SecurityBeanConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
 import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
-import com.nephest.battlenet.sc2.web.controller.AdminController;
-import com.nephest.battlenet.sc2.web.controller.BlizzardDataController;
-import com.nephest.battlenet.sc2.web.controller.PersonalController;
-import com.nephest.battlenet.sc2.web.controller.StatusController;
-import com.nephest.battlenet.sc2.web.controller.TeamController;
 import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
@@ -33,6 +27,7 @@ import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
+import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 @EnableTransactionManagement
@@ -60,15 +55,10 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatusService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AlternativeLadderService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = MatchService.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatusController.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AdminController.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TeamController.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = TokenErrorController.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = PersonalController.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardDataController.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class),
-        @ComponentScan.Filter(type = FilterType.ANNOTATION, value = Discord.class)
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, value = Discord.class),
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, value = Controller.class)
     }
 )
 @Import(CoreTestConfig.class)
