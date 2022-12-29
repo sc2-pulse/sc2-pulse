@@ -431,6 +431,13 @@ public class DiscordBootstrap
         return false;
     }
 
+    public static String trimIfLong(String str)
+    {
+        return str.length() > DiscordBootstrap.MESSAGE_LENGTH_MAX
+            ? str.substring(0, DiscordBootstrap.MESSAGE_LENGTH_MAX)
+            : str;
+    }
+
     public static Mono<PermissionSet> getSelfPermissions(Mono<Guild> guild)
     {
         return guild

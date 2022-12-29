@@ -157,6 +157,13 @@ public class DiscordBootstrapTest
         assertEquals(DiscordBootstrap.MESSAGE_LENGTH_MAX, sb.length());
     }
 
+    @Test
+    public void ifLongString_thenTrim()
+    {
+        String longString = " ".repeat(DiscordBootstrap.MESSAGE_LENGTH_MAX + 1);
+        assertEquals(DiscordBootstrap.MESSAGE_LENGTH_MAX, DiscordBootstrap.trimIfLong(longString).length());
+    }
+
     @ValueSource(ints = {DiscordBootstrap.MESSAGE_LENGTH_MAX, DiscordBootstrap.MESSAGE_LENGTH_MAX - 1})
     @ParameterizedTest
     public void ifShortMessage_thenDoNothing(int length)
