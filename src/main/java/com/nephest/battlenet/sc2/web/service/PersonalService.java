@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -43,6 +44,14 @@ public class PersonalService
                     .collectList().block()
                 : new ArrayList<BlizzardFullPlayerCharacter>())
             .orElse(List.of());
+    }
+
+    /**
+     * A getter to mask static access for tests.
+     */
+    public Authentication getAuthentication()
+    {
+        return SecurityContextHolder.getContext().getAuthentication();
     }
 
 }

@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
+import com.nephest.battlenet.sc2.web.service.PersonalService;
 import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -28,18 +29,18 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
         new DefaultOAuth2UserService();
     private final AccountRoleDAO accountRoleDAO;
     private final DiscordService discordService;
-    private final LocalAuthenticationGetter localAuthenticationGetter;
+    private final PersonalService personalService;
 
     public DiscordOauth2UserService
     (
         AccountRoleDAO accountRoleDAO,
         DiscordService discordService,
-        LocalAuthenticationGetter localAuthenticationGetter
+        PersonalService personalService
     )
     {
         this.accountRoleDAO = accountRoleDAO;
         this.discordService = discordService;
-        this.localAuthenticationGetter = localAuthenticationGetter;
+        this.personalService = personalService;
     }
 
     @Override
@@ -53,7 +54,7 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
     {
         OAuth2User user = service.loadUser(userRequest);
         DiscordUser discordUser = from(user);
-        Authentication authentication = localAuthenticationGetter.getAuthentication();
+        Authentication authentication = personalService.getAuthentication();
         if(authentication == null) throw new IllegalStateException("Authentication not found");
 
         AccountUser accountUser = (AccountUser) authentication.getPrincipal();
