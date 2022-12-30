@@ -1391,7 +1391,7 @@ class CharacterUtil
             .forEach(v=>{
                 const tr = tbody.insertRow();
                 tr.insertCell().textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(v.vote.updated));
-                tr.insertCell().textContent = v.voterAccount.battleTag;
+                tr.insertCell().textContent = v.voterAccount ? v.voterAccount.battleTag : "Anonymous";
             });
         return votersTable;
     }

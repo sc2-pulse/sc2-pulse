@@ -1,11 +1,10 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2022 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
 
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.EvidenceVote;
-
 import javax.validation.constraints.NotNull;
 
 public class LadderEvidenceVote
@@ -14,8 +13,7 @@ public class LadderEvidenceVote
     @NotNull
     private final EvidenceVote vote;
 
-    @NotNull
-    private final Account voterAccount;
+    private Account voterAccount;
 
     public LadderEvidenceVote(EvidenceVote vote, Account voterAccount)
     {
@@ -31,6 +29,11 @@ public class LadderEvidenceVote
     public Account getVoterAccount()
     {
         return voterAccount;
+    }
+
+    public void setVoterAccount(Account voterAccount)
+    {
+        this.voterAccount = voterAccount;
     }
 
 }

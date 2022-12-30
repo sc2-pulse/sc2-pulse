@@ -60,14 +60,15 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -155,8 +156,8 @@ public class PlayerCharacterReportIT
     private static Account account;
     private static MockMvc mvc;
 
-    @BeforeAll
-    public static void beforeAll
+    @BeforeEach
+    public void beforeEach
     (
         @Autowired DataSource dataSource,
         @Autowired AccountDAO accountDAO,
@@ -191,8 +192,8 @@ public class PlayerCharacterReportIT
         }
     }
 
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
+    @AfterEach
+    public void afterEach(@Autowired DataSource dataSource)
     throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
@@ -839,6 +840,16 @@ public class PlayerCharacterReportIT
         assertEquals("evidence text link", evidence3_1.getEvidence().getDescription());
         assertEquals(expectedStatus[3], evidence3_1.getEvidence().getStatus());
         assertEquals(account, evidence3_1.getReporterAccount());
+
+        Arrays.stream(reports)
+            .map(LadderPlayerCharacterReport::getEvidence)
+            .flatMap(Collection::stream)
+            .map(LadderEvidence::getVotes)
+            .flatMap(Collection::stream)
+            .forEach(v->{
+                assertNotNull(v.getVote().getVoterAccountId());
+                assertNotNull(v.getVoterAccount());
+            });
     }
 
     private List<Notification> verifyNotifications(String msg, Long... ids)
@@ -923,6 +934,39 @@ public class PlayerCharacterReportIT
         nonNullIpCount =
             template.query("SELECT COUNT(*) FROM evidence WHERE reporter_ip IS NOT NULL", DAOUtils.INT_EXTRACTOR);
         assertEquals(0, nonNullIpCount);
+    }
+
+    @Test
+    public void whenNotInSecureRole_thenRemoveSensitiveData()
+    throws Exception
+    {
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+                .param("playerCharacterId", "5")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence text")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        evidenceVoteDAO.merge(new EvidenceVote(1, OffsetDateTime.now(), 10L, true, OffsetDateTime.now()));
+        LadderEvidenceVote voteAll = getReports()[0].getEvidence().get(0).getVotes().get(0);
+        assertNull(voteAll.getVoterAccount());
+        assertNull(voteAll.getVote().getVoterAccountId());
+
+        LadderEvidenceVote voteById = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, LadderPlayerCharacterReport[].class,
+            "/api/character/report/list/5"
+        )
+            [0]
+            .getEvidence().get(0)
+            .getVotes().get(0);
+        assertNull(voteById.getVoterAccount());
+        assertNull(voteById.getVote().getVoterAccountId());
     }
 
 }

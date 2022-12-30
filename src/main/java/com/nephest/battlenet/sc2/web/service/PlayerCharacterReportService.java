@@ -33,6 +33,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +47,14 @@ public class PlayerCharacterReportService
         SC2PulseAuthority.ADMIN,
         SC2PulseAuthority.MODERATOR
     );
+    public static final Set<SC2PulseAuthority> SECURE_ROLES = Set.of
+    (
+        SC2PulseAuthority.ADMIN,
+        SC2PulseAuthority.MODERATOR
+    );
+    public static final Set<String> SECURE_ROLE_NAMES = SECURE_ROLES.stream()
+        .map(SC2PulseAuthority::getAuthority)
+        .collect(Collectors.toSet());
 
     public static final int EVIDENCE_PER_DAY = 10;
     public static final int CONFIRMED_EVIDENCE_MAX = 3;
@@ -57,6 +67,7 @@ public class PlayerCharacterReportService
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final NotificationService notificationService;
+    private final PersonalService personalService;
     private final String characterUrlTemplate;
 
     @Autowired
@@ -70,6 +81,7 @@ public class PlayerCharacterReportService
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDAO,
         NotificationService notificationService,
+        PersonalService personalService,
         WebContextUtil webContextUtil
     )
     {
@@ -81,6 +93,7 @@ public class PlayerCharacterReportService
         this.accountDAO = accountDAO;
         this.playerCharacterDAO = playerCharacterDAO;
         this.notificationService = notificationService;
+        this.personalService = personalService;
         this.characterUrlTemplate = webContextUtil.getCharacterUrlTemplate() + "#player-stats-player";
     }
 
@@ -178,6 +191,31 @@ public class PlayerCharacterReportService
         return sb.toString();
     }
 
+    public static List<LadderPlayerCharacterReport> clearSensitiveData
+    (List<LadderPlayerCharacterReport> reports, Authentication authentication)
+    {
+        if
+        (
+            authentication.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .anyMatch(SECURE_ROLE_NAMES::contains)
+        ) return reports;
+
+        reports.stream()
+            .map(LadderPlayerCharacterReport::getEvidence)
+            .flatMap(Collection::stream)
+            .map(LadderEvidence::getVotes)
+            .flatMap(Collection::stream)
+            .forEach(PlayerCharacterReportService::clearSensitiveData);
+        return reports;
+    }
+
+    public static void clearSensitiveData(LadderEvidenceVote vote)
+    {
+        vote.getVote().setVoterAccountId(null);
+        vote.setVoterAccount(null);
+    }
+
     public List<LadderPlayerCharacterReport> findReports()
     {
         List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findAll();
@@ -204,7 +242,7 @@ public class PlayerCharacterReportService
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
         reports.sort(comparator.reversed());
-        return reports;
+        return clearSensitiveData(reports, personalService.getAuthentication());
     }
 
     public List<LadderPlayerCharacterReport> findReportsByCharacterId(long characterId)
@@ -235,7 +273,7 @@ public class PlayerCharacterReportService
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
         reports.sort(comparator.reversed());
-        return reports;
+        return clearSensitiveData(reports, personalService.getAuthentication());
     }
 
     private Map<Long, List<Account>> getReporters(Map<Integer, List<Evidence>> evidences)
