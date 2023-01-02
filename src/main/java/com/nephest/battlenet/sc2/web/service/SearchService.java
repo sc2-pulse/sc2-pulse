@@ -1,15 +1,21 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -22,10 +28,14 @@ public class SearchService
     public static final String CLAN_END_DELIMITER = "]";
     public static final String CLAN_SEARCH_FORMAT = CLAN_START_DELIMITER + "%1$s" + CLAN_END_DELIMITER;
     public static final String BATTLE_TAG_MARKER = "#";
+    public static final String GAME_LINK_PREFIX = "battlenet://starcraft/profile/";
 
     private final PlayerCharacterDAO playerCharacterDAO;
     private final AccountDAO accountDAO;
     private final ClanDAO clanDAO;
+    private final LadderCharacterDAO ladderCharacterDAO;
+    private final SC2ArcadeAPI arcadeAPI;
+    private final ConversionService conversionService;
 
     public enum SearchType
     {
@@ -49,11 +59,22 @@ public class SearchService
     }
 
     @Autowired
-    public SearchService(PlayerCharacterDAO playerCharacterDAO, AccountDAO accountDAO, ClanDAO clanDAO)
+    public SearchService
+    (
+        PlayerCharacterDAO playerCharacterDAO,
+        AccountDAO accountDAO,
+        ClanDAO clanDAO,
+        LadderCharacterDAO ladderCharacterDAO,
+        SC2ArcadeAPI arcadeAPI,
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+    )
     {
         this.playerCharacterDAO = playerCharacterDAO;
         this.accountDAO = accountDAO;
         this.clanDAO = clanDAO;
+        this.ladderCharacterDAO = ladderCharacterDAO;
+        this.arcadeAPI = arcadeAPI;
+        this.conversionService = conversionService;
     }
 
     public List<String> suggest(String term, int limit)
@@ -86,6 +107,29 @@ public class SearchService
                 return true;
             default:
                 return term.length() >= MIN_CHARACTER_NAME_LENGTH;
+        }
+    }
+
+    public List<LadderDistinctCharacter> findDistinctCharacters(String term)
+    {
+        if(term.startsWith(GAME_LINK_PREFIX))
+        {
+            String[] split = term.split("/");
+            if(split.length < 2) throw new IllegalArgumentException("Invalid profile link");
+
+            Region region = conversionService.convert(Integer.parseInt(split[split.length - 2]), Region.class);
+            long gameId = Long.reverseBytes(Long.parseUnsignedLong(split[split.length - 1]));
+            BlizzardFullPlayerCharacter character =
+                WebServiceUtil.getOnErrorLogAndSkipMono(arcadeAPI.findByRegionAndGameId(region, gameId))
+                    .block();
+
+            return character != null
+                ? ladderCharacterDAO.findDistinctCharacters(character.generateProfileSuffix())
+                : List.of();
+        }
+        else
+        {
+            return ladderCharacterDAO.findDistinctCharacters(term);
         }
     }
 
