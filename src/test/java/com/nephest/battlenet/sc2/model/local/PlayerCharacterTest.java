@@ -1,7 +1,9 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.util.TestUtil;
@@ -24,6 +26,13 @@ public class PlayerCharacterTest
         };
 
         TestUtil.testUniqueness(character, equalsCharacter, (Object[]) notEqualCharacters);
+    }
+
+    @Test
+    public void testGenerateProfileSuffix()
+    {
+        PlayerCharacter character = new PlayerCharacter(1L, 2L, Region.EU, 3L, 4, "name#1");
+        assertEquals("/2/4/3", character.generateProfileSuffix());
     }
 
 }
