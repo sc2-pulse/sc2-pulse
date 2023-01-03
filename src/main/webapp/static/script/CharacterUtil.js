@@ -178,6 +178,8 @@ class CharacterUtil
         CharacterUtil.updateCharacterInfoName(commonCharacter, member);
         const region = EnumUtil.enumOfName(character.region, REGION);
         const profileLinkElement = document.getElementById("link-sc2");
+        const profileSuffix = `/${region.code}/${character.realm}/${character.battlenetId}`;
+        document.getElementById("link-sc2arcade").setAttribute("href", "https://sc2arcade.com/profile" + profileSuffix + "/lobbies-history");
         if(region == REGION.CN)
         {
             //the upstream site is not supporting the CN region.
@@ -185,8 +187,7 @@ class CharacterUtil
         }
         else
         {
-            const profileLink = `https://starcraft2.com/profile/${region.code}/${character.realm}/${character.battlenetId}`;
-            profileLinkElement.setAttribute("href", profileLink);
+            profileLinkElement.setAttribute("href", "https://starcraft2.com/profile" + profileSuffix);
             profileLinkElement.parentElement.classList.remove("d-none");
         }
         if(Util.isFakeBattleTag(account.battleTag)) {
