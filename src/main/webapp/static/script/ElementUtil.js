@@ -411,10 +411,10 @@ class ElementUtil
     {
         const cheaterFlag = document.createElement(collapsible ? "button" : "span");
         cheaterFlag.classList.add("player-flag", "player-flag-cheater");
-        cheaterFlag.textContent = "CHEATER";
+        cheaterFlag.textContent = "SUSPICIOUS";
         cheaterFlag.title="This player or one of their linked characters has a confirmed evidence of cheating.";
         if(collapsible) {
-            cheaterFlag.classList.add("btn", "btn-outline-danger");
+            cheaterFlag.classList.add("btn", "btn-outline-warning");
             ElementUtil.addPlayerReportFlagAttributes(cheaterFlag);
         }
         return cheaterFlag;
