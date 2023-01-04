@@ -309,7 +309,7 @@ class CharacterUtil
         if(commonCharacter.linkedDistinctCharacters
             .flatMap(dc=>dc.members)
             .find(m=>m.confirmedCheaterReportId)
-        ) additionalContainer.appendChild(ElementUtil.createCheaterFlag());
+        ) additionalContainer.appendChild(ElementUtil.createCheaterFlag(true));
         if(member.proNickname) additionalContainer.appendChild(ElementUtil.createProFlag());
     }
 
@@ -1228,6 +1228,8 @@ class CharacterUtil
         }
         reportsContainer.classList.remove("d-none");
         CharacterUtil.updateCharacterReportsTable(tbody, reports);
+        if(!reports.some(r=>r.report.status) && !document.querySelector("#player-info-additional-container .player-flag-reported"))
+            document.querySelector("#player-info-additional-container").appendChild(ElementUtil.createReportedFlag());
     }
 
     static updateAllCharacterReportsView()
@@ -1456,10 +1458,11 @@ class CharacterUtil
                 return Session.verifyJsonResponse(resp);
             })
             .then(e=>CharacterUtil.updateCharacterReportsModel())
-            .then(json=>BootstrapUtil.showTab("player-stats-player-tab"))
             .then(e=>new Promise((res, rej)=>{
                 $("#report-character-modal").modal('hide');
                 CharacterUtil.updateCharacterReportsView();
+                $("#character-reports").collapse('show');
+                window.setTimeout(e=>Util.scrollIntoViewById("character-reports"), 500);
                 res();
             }));
     }

@@ -708,6 +708,11 @@ body.theme-light .adaptive-border-color-splitter
     border: rgba(220, 53, 69, 0.6) solid 0.1em;
 }
 
+.player-flag-reported
+{
+     border: rgba(23, 163, 184, 0.6) solid 0.1em;
+}
+
 .collapsing
 {
     transition: none;

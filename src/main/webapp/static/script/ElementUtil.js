@@ -407,13 +407,36 @@ class ElementUtil
         if(changed) input.dispatchEvent(new Event("change"));
     }
 
-    static createCheaterFlag()
+    static createCheaterFlag(collapsible = false)
     {
-        const cheaterFlag = document.createElement("span");
+        const cheaterFlag = document.createElement(collapsible ? "button" : "span");
         cheaterFlag.classList.add("player-flag", "player-flag-cheater");
         cheaterFlag.textContent = "CHEATER";
-        cheaterFlag.title="This player has a confirmed evidence of cheating. See 'Player' and 'Characters' tabs for more info.";
+        cheaterFlag.title="This player or one of their linked characters has a confirmed evidence of cheating.";
+        if(collapsible) {
+            cheaterFlag.classList.add("btn", "btn-outline-danger");
+            ElementUtil.addPlayerReportFlagAttributes(cheaterFlag);
+        }
         return cheaterFlag;
+    }
+
+    static createReportedFlag()
+    {
+        const flag = document.createElement("button");
+        flag.classList.add("player-flag", "player-flag-reported", "btn", "btn-outline-info");
+        flag.textContent = "REPORTED";
+        flag.title="This player has been reported, but report has not yet been confirmed by the moderators";
+        ElementUtil.addPlayerReportFlagAttributes(flag);
+        return flag;
+    }
+
+    static addPlayerReportFlagAttributes(flag)
+    {
+        flag.setAttribute("data-toggle", "collapse");
+        flag.setAttribute("data-target", "#character-reports");
+        flag.setAttribute("aria-expanded", "false");
+        flag.setAttribute("aria-controls", "character-reports");
+        return flag;
     }
 
     static createProFlag()
