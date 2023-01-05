@@ -34,7 +34,7 @@ class SeasonUtil
         const seasonMap = new Map();
         Array.from(regionMap.entries()).forEach(e=>seasonMap.set(e[0], Util.groupBy(e[1], s=>s.battlenetId)));
         Session.currentSeasonsMap = seasonMap;
-        Session.currentSeasonsIdMap = Array.from(seasonMap.values()).reduce((max, cur)=>max.length > cur.length ? max : cur);
+        Session.currentSeasonsIdMap = Array.from(seasonMap.values()).reduce((max, cur)=>max.size > cur.size ? max : cur);
         for(const season of seasons) SeasonUtil.updateSeasonMeta(season);
         SeasonUtil.updateSeasonsTabs(Session.currentSeasons);
         for(const seasonPicker of document.querySelectorAll(".season-picker"))
