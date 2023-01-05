@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.filter;
@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -80,12 +81,12 @@ public class SeasonCacheFilterTest
     public void whenCacheDurationIsPositive_thenCache()
     throws ServletException, IOException
     {
+        LocalDate start = LocalDate.now();
+        LocalDate end = start.plusDays(30);
         List<Season> seasons = Arrays.stream(Region.values())
-            .map(r->new Season(null, 1, r, 2020, 1,
-                LocalDate.now(), LocalDate.now().plusMonths(10)))
+            .map(r->new Season(null, 1, r, 2020, 1, start, start.plusMonths(10)))
             .collect(Collectors.toList());
-        seasons.set(0, new Season(null, 1, Region.US, 2020, 1,
-            LocalDate.now(), LocalDate.now().plusDays(30)));
+        seasons.set(0, new Season(null, 1, Region.US, 2020, 1, start, end));
         when(seasonDAO.findListByBattlenetId(any())).thenReturn(seasons);
 
         filter.doFilter(null, response, filterChain);
@@ -96,8 +97,8 @@ public class SeasonCacheFilterTest
         String durationStr = header
             .substring(header.indexOf("=") + 1, header.indexOf(",", header.indexOf("=")));
         Duration duration = Duration.ofSeconds(Long.parseLong(durationStr));
-        //min end datetime at start of the day is used
-        assertTrue(duration.compareTo(Duration.ofDays(29)) > 0);
+        //min end datetime at start of the day is used, -10 to offset test duration
+        assertTrue(duration.compareTo(Duration.between(LocalDateTime.now(), end.atStartOfDay()).minusSeconds(10)) > 0);
     }
 
 }
