@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
@@ -151,7 +152,14 @@ public class CharacterController
             ladderMatchDAO.findMatchesByCharacterId(
                 id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
             ladderTeamStateDAO.find(id),
-            reportService.findReportsByCharacterId(id)
+            reportService.findReportsByCharacterIds
+            (
+                linkedCharacters.stream()
+                    .map(LadderDistinctCharacter::getMembers)
+                    .map(LadderTeamMember::getCharacter)
+                    .map(PlayerCharacter::getId)
+                    .toArray(Long[]::new)
+            )
         );
     }
 
@@ -187,7 +195,14 @@ public class CharacterController
             ladderMatchDAO.findMatchesByCharacterId(
                 id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
             ladderTeamStateDAO.find(id, from),
-            reportService.findReportsByCharacterId(id)
+            reportService.findReportsByCharacterIds
+            (
+                linkedCharacters.stream()
+                    .map(LadderDistinctCharacter::getMembers)
+                    .map(LadderTeamMember::getCharacter)
+                    .map(PlayerCharacter::getId)
+                    .toArray(Long[]::new)
+            )
         );
     }
 

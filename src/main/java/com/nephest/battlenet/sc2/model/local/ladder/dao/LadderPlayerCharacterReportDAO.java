@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterReportDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -59,9 +60,9 @@ public class LadderPlayerCharacterReportDAO
             + "OR player_character_report.status = true "
             + "OR player_character_report.status_change_timestamp >= :from");
 
-    private static final String FIND_REPORTS_BY_CHARACTER_ID =
+    private static final String FIND_REPORTS_BY_CHARACTER_IDS =
         String.format(FIND_REPORTS_TEMPLATE,
-            "WHERE player_character_report.player_character_id = :characterId "
+            "WHERE player_character_report.player_character_id IN(:characterIds) "
             + "AND "
             + "("
                 + "player_character_report.status IS NULL "
@@ -108,14 +109,16 @@ public class LadderPlayerCharacterReportDAO
         return template.query(FIND_REPORTS, params, STD_MAPPER);
     }
 
-    public List<LadderPlayerCharacterReport> findByCharacterId(long characterId)
+    public List<LadderPlayerCharacterReport> findByCharacterIds(Long... characterIds)
     {
+        if(characterIds.length == 0) return List.of();
+
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("characterId", characterId)
+            .addValue("characterIds",  Arrays.asList(characterIds))
             .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_REPORTS_DAYS))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template.query(FIND_REPORTS_BY_CHARACTER_ID, params, STD_MAPPER);
+        return template.query(FIND_REPORTS_BY_CHARACTER_IDS, params, STD_MAPPER);
     }
 
 }

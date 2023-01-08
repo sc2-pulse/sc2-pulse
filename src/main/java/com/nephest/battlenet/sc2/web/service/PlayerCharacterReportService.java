@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -241,13 +241,13 @@ public class PlayerCharacterReportService
                 if(r.getReport().getAdditionalPlayerCharacterId() != null)
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
-        reports.sort(comparator.reversed());
+        if(!reports.isEmpty()) reports.sort(comparator.reversed());
         return clearSensitiveData(reports, personalService.getAuthentication());
     }
 
-    public List<LadderPlayerCharacterReport> findReportsByCharacterId(long characterId)
+    public List<LadderPlayerCharacterReport> findReportsByCharacterIds(Long... characterIds)
     {
-        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findByCharacterId(characterId);
+        List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findByCharacterIds(characterIds);
         Map<Long, List<LadderTeamMember>> additionalMembers = ladderTeamMemberDAO.findByCharacterIds(reports.stream()
             .map(r->r.getReport().getAdditionalPlayerCharacterId())
             .filter(Objects::nonNull)
@@ -272,7 +272,7 @@ public class PlayerCharacterReportService
                 if(r.getReport().getAdditionalPlayerCharacterId() != null)
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
-        reports.sort(comparator.reversed());
+        if(!reports.isEmpty()) reports.sort(comparator.reversed());
         return clearSensitiveData(reports, personalService.getAuthentication());
     }
 

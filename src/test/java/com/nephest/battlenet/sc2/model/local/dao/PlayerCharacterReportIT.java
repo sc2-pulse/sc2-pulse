@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -46,6 +46,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
@@ -967,6 +968,70 @@ public class PlayerCharacterReportIT
             .getVotes().get(0);
         assertNull(voteById.getVoterAccount());
         assertNull(voteById.getVote().getVoterAccountId());
+    }
+
+    @Test
+    public void testFindLinkedReports()
+    throws Exception
+    {
+        //link characters
+        template.update("UPDATE player_character SET account_id = 2 WHERE id = 2");
+        playerCharacterStatsDAO.mergeCalculate();
+
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+                .param("playerCharacterId", "1")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence1")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+                .param("playerCharacterId", "2")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence2")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        verifyLinkedReports
+        (
+            WebServiceTestUtil.getObject
+            (
+                mvc, objectMapper, LadderPlayerCharacterReport[].class,
+                "/api/character/report/list/1,2"
+            )
+        );
+        verifyLinkedReports
+        (
+            WebServiceTestUtil.getObject
+            (
+                mvc, objectMapper, CommonCharacter.class,
+                "/api/character/1/common"
+            )
+                .getReports()
+                .toArray(LadderPlayerCharacterReport[]::new)
+        );
+    }
+
+    private void verifyLinkedReports(LadderPlayerCharacterReport[] reports)
+    {
+        assertEquals(2, reports.length);
+        LadderPlayerCharacterReport report1 = reports[0];
+        assertEquals(2L, report1.getReport().getPlayerCharacterId());
+        assertEquals("evidence2", report1.getEvidence().get(0).getEvidence().getDescription());
+
+        LadderPlayerCharacterReport report2 = reports[1];
+        assertEquals(1L, report2.getReport().getPlayerCharacterId());
+        assertEquals("evidence1", report2.getEvidence().get(0).getEvidence().getDescription());
     }
 
 }

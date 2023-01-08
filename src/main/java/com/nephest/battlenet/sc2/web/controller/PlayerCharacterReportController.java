@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -54,9 +54,9 @@ public class PlayerCharacterReportController
     }
 
     @GetMapping("/list/{id}")
-    public List<LadderPlayerCharacterReport> findReportsByCharacterId(@PathVariable("id") long id)
+    public List<LadderPlayerCharacterReport> findReportsByCharacterIds(@PathVariable("id") Long[] ids)
     {
-        return reportService.findReportsByCharacterId(id);
+        return reportService.findReportsByCharacterIds(ids);
     }
 
     @PostMapping("/new")

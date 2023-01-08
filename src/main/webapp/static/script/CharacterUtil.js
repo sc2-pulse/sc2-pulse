@@ -93,7 +93,7 @@ class CharacterUtil
     static updateCharacterReportsModel()
     {
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id}`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedDistinctCharacters.map(c=>c.members.character.id).join(",")}`))
             .then(Session.verifyJsonResponse)
             .then(json => new Promise((res, rej)=>{
                 Model.DATA.get(VIEW.CHARACTER).set("reports", json);
