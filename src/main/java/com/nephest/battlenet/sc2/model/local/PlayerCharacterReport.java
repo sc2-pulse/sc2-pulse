@@ -1,13 +1,12 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.Identifiable;
-
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public class PlayerCharacterReport
 implements java.io.Serializable
@@ -55,6 +54,9 @@ implements java.io.Serializable
     private Boolean status;
 
     @NotNull
+    private Boolean restrictions;
+
+    @NotNull
     private OffsetDateTime statusChangeDateTime;
 
     public PlayerCharacterReport(){}
@@ -66,6 +68,7 @@ implements java.io.Serializable
         Long additionalPlayerCharacterId,
         PlayerCharacterReportType type,
         Boolean status,
+        Boolean restrictions,
         OffsetDateTime statusChangeDateTime
     )
     {
@@ -74,6 +77,7 @@ implements java.io.Serializable
         this.additionalPlayerCharacterId = additionalPlayerCharacterId;
         this.type = type;
         this.status = status;
+        this.restrictions = restrictions;
         this.statusChangeDateTime = statusChangeDateTime;
     }
 
@@ -155,6 +159,16 @@ implements java.io.Serializable
     public void setStatus(Boolean status)
     {
         this.status = status;
+    }
+
+    public Boolean getRestrictions()
+    {
+        return restrictions;
+    }
+
+    public void setRestrictions(Boolean restrictions)
+    {
+        this.restrictions = restrictions;
     }
 
     public OffsetDateTime getStatusChangeDateTime()

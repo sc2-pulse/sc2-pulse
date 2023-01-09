@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -8,7 +8,6 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.BaseLocalTeamMember;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-
 import javax.validation.constraints.NotNull;
 
 @JsonInclude(JsonInclude.Include.NON_NULL)
@@ -29,7 +28,7 @@ implements java.io.Serializable
 
     private final String proNickname;
     private final String proTeam;
-    private final Integer confirmedCheaterReportId;
+    private final Boolean restrictions;
 
     public LadderTeamMember
     (
@@ -38,7 +37,7 @@ implements java.io.Serializable
         Clan clan,
         String proNickname,
         String proTeam,
-        Integer confirmedCheaterReportId,
+        Boolean restrictions,
         Integer terranGamesPlayed,
         Integer protossGamesPlayed,
         Integer zergGamesPlayed,
@@ -51,7 +50,7 @@ implements java.io.Serializable
         this.clan = clan;
         this.proNickname = proNickname;
         this.proTeam = proTeam;
-        this.confirmedCheaterReportId = confirmedCheaterReportId;
+        this.restrictions = restrictions;
     }
 
     public PlayerCharacter getCharacter()
@@ -79,9 +78,9 @@ implements java.io.Serializable
         return proTeam;
     }
 
-    public Integer getConfirmedCheaterReportId()
+    public Boolean getRestrictions()
     {
-        return confirmedCheaterReportId;
+        return restrictions;
     }
 
 }

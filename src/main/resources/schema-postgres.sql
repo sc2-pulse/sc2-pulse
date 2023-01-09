@@ -698,6 +698,7 @@ CREATE TABLE "player_character_report"
     "additional_player_character_id" BIGINT,
     "type" SMALLINT NOT NULL,
     "status" BOOLEAN,
+    "restrictions" BOOLEAN NOT NULL DEFAULT false,
     "status_change_timestamp" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 
     PRIMARY KEY("id"),

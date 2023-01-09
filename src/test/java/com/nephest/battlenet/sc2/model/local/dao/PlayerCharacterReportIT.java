@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -384,14 +385,14 @@ public class PlayerCharacterReportIT
             TeamType.ARRANGED,
             0, 99999, 0, 1
         );
-        assertNull(teamNoFlag.getResult().get(9).getMembers().get(0).getConfirmedCheaterReportId());
+        assertNull(teamNoFlag.getResult().get(9).getMembers().get(0).getRestrictions());
         List<LadderDistinctCharacter> linkedCharactersNoFlag = ladderCharacterDAO
             .findLinkedDistinctCharactersByCharacterId(1L);
         //verify linked characters
         LadderDistinctCharacter cheaterCharacterNoFlag = linkedCharactersNoFlag.stream()
             .filter(c->c.getMembers().getCharacter().getId() == 1L)
             .findFirst().orElseThrow();
-        assertNull(cheaterCharacterNoFlag.getMembers().getConfirmedCheaterReportId());
+        assertNull(cheaterCharacterNoFlag.getMembers().getRestrictions());
         assertEquals(1, linkedCharactersNoFlag.size());
 
         //another mod votes
@@ -438,8 +439,8 @@ public class PlayerCharacterReportIT
             TeamType.ARRANGED,
             0, 99999, 0, 1
         );
-        assertNull(teams.getResult().get(0).getMembers().get(0).getConfirmedCheaterReportId());
-        assertEquals(reports[0].getReport().getId(), teams.getResult().get(9).getMembers().get(0).getConfirmedCheaterReportId());
+        assertNull(teams.getResult().get(0).getMembers().get(0).getRestrictions());
+        assertFalse(teams.getResult().get(9).getMembers().get(0).getRestrictions());
         //verify cheater flag for matches
         LadderMatch ladderMatch = ladderMatchDAO.findMatchesByCharacterId
         (
@@ -453,11 +454,11 @@ public class PlayerCharacterReportIT
         ladderMatch.getParticipants().stream()
             .filter(p->p.getParticipant().getPlayerCharacterId() != 1L)
             .flatMap(p->p.getTeam().getMembers().stream())
-            .forEach(m->assertNull(m.getConfirmedCheaterReportId()));
+            .forEach(m->assertNull(m.getRestrictions()));
         ladderMatch.getParticipants().stream()
             .filter(p->p.getParticipant().getPlayerCharacterId() == 1L)
             .flatMap(p->p.getTeam().getMembers().stream())
-            .forEach(m->assertEquals(reportsFinal[0].getReport().getId(), m.getConfirmedCheaterReportId()));
+            .forEach(m->assertFalse(m.getRestrictions()));
 
         List<LadderDistinctCharacter> linkedCharacters = ladderCharacterDAO
             .findLinkedDistinctCharactersByCharacterId(1L);
@@ -465,7 +466,7 @@ public class PlayerCharacterReportIT
         LadderDistinctCharacter cheaterCharacter = linkedCharacters.stream()
             .filter(c->c.getMembers().getCharacter().getId() == 1L)
             .findFirst().orElseThrow();
-        assertEquals(reports[0].getReport().getId(), cheaterCharacter.getMembers().getConfirmedCheaterReportId());
+        assertFalse(cheaterCharacter.getMembers().getRestrictions());
         assertEquals(3, linkedCharacters.size());
         assertEquals(3, linkedCharacters.get(0).getMembers().getCharacter().getId());
         assertEquals(2, linkedCharacters.get(1).getMembers().getCharacter().getId());
@@ -546,7 +547,7 @@ public class PlayerCharacterReportIT
         OffsetDateTime oldTime = start.minusDays(EvidenceDAO.ACTIVE_MOD_THRESHOLD_DAYS + 1);
         PlayerCharacterReport oldReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 5L, null,
-            PlayerCharacterReport.PlayerCharacterReportType.CHEATER, null, oldTime));
+            PlayerCharacterReport.PlayerCharacterReportType.CHEATER, null, false, oldTime));
         Evidence oldEvidence = evidenceDAO.create(new Evidence(
             null, oldReport.getId(), null, localhost, "old evidence", null, oldTime, oldTime));
         evidenceVoteDAO.merge(new EvidenceVote(
@@ -564,7 +565,7 @@ public class PlayerCharacterReportIT
         OffsetDateTime veryOldTime = oldTime.minusDays(1);
         PlayerCharacterReport veryOldReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 6L, null,
-            PlayerCharacterReport.PlayerCharacterReportType.CHEATER, null, veryOldTime));
+            PlayerCharacterReport.PlayerCharacterReportType.CHEATER, null, false, veryOldTime));
         Evidence veryOldEvidence = evidenceDAO.create(new Evidence(
             null, veryOldReport.getId(), null, localhost, "very old evidence", null, veryOldTime, veryOldTime));
         evidenceVoteDAO.merge(new EvidenceVote(
@@ -679,10 +680,12 @@ public class PlayerCharacterReportIT
         long evidenceCountEnd = Arrays.stream(reports).flatMap(r->r.getEvidence().stream()).count();
         PlayerCharacterReport expiredReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
-            false, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            false, false,
+            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         PlayerCharacterReport expiredConfirmedReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 9L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
-            true, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            true, false,
+            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         Evidence expiredEvidence = evidenceDAO.create(
             new Evidence(null, expiredReport.getId(), null, localhost, "description asda",
             false, OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),OffsetDateTime.now()));
@@ -714,6 +717,7 @@ public class PlayerCharacterReportIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("12344"), 1, 10L, 10, 0, 0, 0
         ))[0];
+        template.update("UPDATE player_character_report SET restrictions = true");
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
@@ -918,7 +922,8 @@ public class PlayerCharacterReportIT
         byte[] privateIp = InetAddress.getByName("192.168.1.2").getAddress();
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
-            false, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            false, false,
+            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         Evidence evidence = evidenceDAO.create(new Evidence(
             null, report.getId(), null, privateIp, "description asda",false,
             OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,OffsetDateTime.now()));
@@ -1032,6 +1037,76 @@ public class PlayerCharacterReportIT
         LadderPlayerCharacterReport report2 = reports[1];
         assertEquals(1L, report2.getReport().getPlayerCharacterId());
         assertEquals("evidence1", report2.getEvidence().get(0).getEvidence().getDescription());
+    }
+
+    @Test
+    public void whenRestrictionsFlagIsFalse_thenNoRestrictionsApplied()
+    throws Exception
+    {
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+                .param("playerCharacterId", "1")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence1")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+                .param("playerCharacterId", "2")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence2")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        //confirm all reports
+        template.update("UPDATE player_character_report SET status = true");
+        //only the first report has restriction applied to it
+        template.update("UPDATE player_character_report SET restrictions = true WHERE id = 1");
+
+        leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
+        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
+        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
+        teamStateDAO.takeSnapshot(LongStream.range(1, 12).boxed().collect(Collectors.toList()));
+
+        //2 confirmed reports, but only one of them is a cheater due to restrictions flag
+        List<Long> cheaterTeams = teamDAO.findCheaterTeamIds(SeasonGenerator.DEFAULT_SEASON_ID);
+        assertEquals(1, cheaterTeams.size());
+        assertEquals(1L, cheaterTeams.get(0));
+
+        //restrictions were applied
+        Team cheaterTeam = teamDAO.findById(1L).orElseThrow();
+        assertNull(cheaterTeam.getGlobalRank());
+        assertNull(cheaterTeam.getRegionRank());
+        assertNull(cheaterTeam.getLeagueRank());
+
+        LadderTeamState cheaterTeamState = ladderTeamStateDAO.find(1L).get(1);
+        assertNull(cheaterTeamState.getPopulationState().getGlobalTeamCount());
+        assertNull(cheaterTeamState.getPopulationState().getRegionTeamCount());
+        assertNull(cheaterTeamState.getPopulationState().getLeagueTeamCount());
+        assertNull(cheaterTeamState.getTeamState().getGlobalRank());
+        assertNull(cheaterTeamState.getTeamState().getRegionRank());
+        assertNull(cheaterTeamState.getTeamState().getLeagueRank());
+
+        //no restrictions
+        Team nonCheaterTeam = teamDAO.findById(2L).orElseThrow();
+        assertNotNull(nonCheaterTeam.getGlobalRank());
+        assertNotNull(nonCheaterTeam.getRegionRank());
+        assertNotNull(nonCheaterTeam.getLeagueRank());
+
+        LadderTeamState nonCheaterTeamState = ladderTeamStateDAO.find(2L).get(1);
+        assertEquals(9, nonCheaterTeamState.getPopulationState().getGlobalTeamCount());
+        assertEquals(9, nonCheaterTeamState.getPopulationState().getRegionTeamCount());
+        assertEquals(9, nonCheaterTeamState.getPopulationState().getLeagueTeamCount());
+        assertEquals(9, nonCheaterTeamState.getTeamState().getGlobalRank());
+        assertEquals(9, nonCheaterTeamState.getTeamState().getRegionRank());
+        assertEquals(9, nonCheaterTeamState.getTeamState().getLeagueRank());
     }
 
 }

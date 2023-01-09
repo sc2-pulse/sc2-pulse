@@ -53,7 +53,7 @@ class TeamUtil
 
     static isCheaterTeam(team)
     {
-        return team.members.find(m=>m.confirmedCheaterReportId);
+        return team.members.find(m=>m.restrictions == true);
     }
 
     static createDynamicPopoverContent(parent)
@@ -239,7 +239,7 @@ class TeamUtil
         container.classList.add("player-link-container");
         if(appendRaces) container.appendChild(TeamUtil.createRacesElem(member));
         container.appendChild(TeamUtil.createNameElem(member));
-        if(member.confirmedCheaterReportId) container.appendChild(ElementUtil.createCheaterFlag());
+        if(member.restrictions != null) container.appendChild(ElementUtil.createCheaterFlag(member.restrictions ? CHEATER_FLAG.CHEATER : CHEATER_FLAG.SUSPICIOUS, false));
         if(member.proNickname) container.appendChild(ElementUtil.createProFlag());
         playerLink.appendChild(container);
         return playerLink

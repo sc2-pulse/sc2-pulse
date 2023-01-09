@@ -306,10 +306,16 @@ class CharacterUtil
         additionalNameElem.textContent = charNameAdditional;
         const additionalContainer = document.querySelector("#player-info-additional-container");
         additionalContainer.querySelectorAll(":scope .player-flag").forEach(f=>f.remove());
-        if(commonCharacter.linkedDistinctCharacters
+        const cheaterFlag = commonCharacter.linkedDistinctCharacters
             .flatMap(dc=>dc.members)
-            .find(m=>m.confirmedCheaterReportId)
-        ) additionalContainer.appendChild(ElementUtil.createCheaterFlag(true));
+            .find(m=>m.restrictions == true)
+                ? CHEATER_FLAG.CHEATER
+                : commonCharacter.linkedDistinctCharacters
+                  .flatMap(dc=>dc.members)
+                  .find(m=>m.restrictions == false)
+                    ? CHEATER_FLAG.SUSPICIOUS
+                    : null;
+        if(cheaterFlag) additionalContainer.appendChild(ElementUtil.createCheaterFlag(cheaterFlag, true));
         if(member.proNickname) additionalContainer.appendChild(ElementUtil.createProFlag());
     }
 
@@ -1229,7 +1235,7 @@ class CharacterUtil
         reportsContainer.classList.remove("d-none");
         CharacterUtil.updateCharacterReportsTable(tbody, reports);
         if(!reports.some(r=>r.report.status) && !document.querySelector("#player-info-additional-container .player-flag-reported"))
-            document.querySelector("#player-info-additional-container").appendChild(ElementUtil.createReportedFlag());
+            document.querySelector("#player-info-additional-container").appendChild(ElementUtil.createCheaterFlag(CHEATER_FLAG.REPORTED, true));
     }
 
     static updateAllCharacterReportsView()

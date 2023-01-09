@@ -181,3 +181,10 @@ const CLAN_CURSOR = Object.freeze
         order: 4
     }
 });
+
+const CHEATER_FLAG = Object.freeze
+({
+  REPORTED: {name: "reported", description: "This player has been reported, but report has not yet been confirmed by the moderators", cssClass: "info", order: 1},
+  SUSPICIOUS: {name: "suspicious", description: "This player or one of their linked characters has a confirmed evidence of suspicious activity.", cssClass: "warning", order: 2},
+  CHEATER: {name: "cheater", description: "This player or one of their linked characters has a confirmed evidence of cheating.", cssClass: "danger", order: 3}
+});

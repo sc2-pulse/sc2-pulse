@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -27,6 +27,7 @@ public class PlayerCharacterReportDAO
         + "player_character_report.additional_player_character_id AS \"player_character_report.additional_player_character_id\", "
         + "player_character_report.type AS \"player_character_report.type\", "
         + "player_character_report.status AS \"player_character_report.status\", "
+        + "player_character_report.restrictions AS \"player_character_report.restrictions\", "
         + "player_character_report.status_change_timestamp AS \"player_character_report.status_change_timestamp\" ";
 
     private static final String MERGE_QUERY =
@@ -117,6 +118,7 @@ public class PlayerCharacterReportDAO
             conversionService.convert(rs.getInt("player_character_report.type"),
                 PlayerCharacterReport.PlayerCharacterReportType.class),
             DAOUtils.getBoolean(rs, "player_character_report.status"),
+            rs.getBoolean("player_character_report.restrictions"),
             rs.getObject("player_character_report.status_change_timestamp", OffsetDateTime.class)
         );
     }
@@ -169,6 +171,7 @@ public class PlayerCharacterReportDAO
             .addValue("additionalPlayerCharacterId", report.getAdditionalPlayerCharacterId())
             .addValue("type", conversionService.convert(report.getType(), Integer.class))
             .addValue("status", report.getStatus())
+            .addValue("restrictions", report.getRestrictions())
             .addValue("statusChangeTimestamp", report.getStatusChangeDateTime());
     }
 

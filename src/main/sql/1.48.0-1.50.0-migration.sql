@@ -12,3 +12,6 @@ CREATE TABLE "notification"
         REFERENCES "account"("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+ALTER TABLE "player_character_report"
+    ADD COLUMN "restrictions" BOOLEAN NOT NULL DEFAULT false;

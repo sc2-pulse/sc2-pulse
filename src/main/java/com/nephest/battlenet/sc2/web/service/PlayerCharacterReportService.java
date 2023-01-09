@@ -115,6 +115,7 @@ public class PlayerCharacterReportService
             additionalId,
             type,
             null,
+            false,
             OffsetDateTime.now()
         ));
         if(evidenceDAO.getConfirmedCount(report.getId()) >= CONFIRMED_EVIDENCE_MAX) return -3;

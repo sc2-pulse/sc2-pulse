@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -7,7 +7,6 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-
 import javax.validation.constraints.NotNull;
 
 public class LadderDistinctCharacter
@@ -40,7 +39,7 @@ public class LadderDistinctCharacter
         Clan clan,
         String proNickname,
         String proTeam,
-        Integer confirmedCheaterReportId,
+        Boolean restrictions,
         Integer terranGamesPlayed,
         Integer protossGamesPlayed,
         Integer zergGamesPlayed,
@@ -60,7 +59,7 @@ public class LadderDistinctCharacter
             clan,
             proNickname,
             proTeam,
-            confirmedCheaterReportId,
+            restrictions,
             terranGamesPlayed,
             protossGamesPlayed,
             zergGamesPlayed,

@@ -38,7 +38,7 @@ public class LadderPlayerCharacterReportDAO
         + ClanDAO.STD_SELECT + ", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\", "
-        + "confirmed_cheater_report.id AS \"confirmed_cheater_report.id\" "
+        + "confirmed_cheater_report.restrictions AS \"confirmed_cheater_report.restrictions\" "
         + "FROM player_character_report "
         + "INNER JOIN player_character ON player_character_report.player_character_id = player_character.id "
         + "INNER JOIN account ON player_character.account_id = account.id "

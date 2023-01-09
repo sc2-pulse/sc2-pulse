@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -80,13 +80,16 @@ public class PlayerCharacterReportDBIT
     {
         PlayerCharacterReport report1 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
-            false, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            false, false,
+            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         PlayerCharacterReport report2 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 2L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
-            false, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            false, false,
+            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         PlayerCharacterReport report3 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 3L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
-            false, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            false, false,
+            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
 
         List<PlayerCharacterReport> reports = playerCharacterReportDAO.findByIdCursor(1, 2);
         assertEquals(2, reports.size());
@@ -101,7 +104,8 @@ public class PlayerCharacterReportDBIT
         byte[] localhost = InetAddress.getByName("127.0.0.1").getAddress();
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
-            false, OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            false, false,
+            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         Evidence evidence1 = evidenceDAO.create(new Evidence(
             null, report.getId(), null, localhost, "description asda",false,
             OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,OffsetDateTime.now()));

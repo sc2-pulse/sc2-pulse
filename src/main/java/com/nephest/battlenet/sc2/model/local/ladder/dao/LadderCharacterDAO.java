@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -98,7 +98,7 @@ public class LadderCharacterDAO
     + "SELECT "
     + "pro_player.nickname AS \"pro_player.nickname\", "
     + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\","
-    + "confirmed_cheater_report.id AS \"confirmed_cheater_report.id\", "
+    + "confirmed_cheater_report.restrictions AS \"confirmed_cheater_report.restrictions\", "
     + AccountDAO.STD_SELECT + ", "
     + PlayerCharacterDAO.STD_SELECT + ", "
     + ClanDAO.STD_SELECT + ", "
@@ -300,7 +300,7 @@ public class LadderCharacterDAO
                 clan,
                 rs.getString("pro_player.nickname"),
                 rs.getString("pro_player.team"),
-                DAOUtils.getInteger(rs, "confirmed_cheater_report.id"),
+                DAOUtils.getBoolean(rs, "confirmed_cheater_report.restrictions"),
                 race == Race.TERRAN ? gamesPlayed : null,
                 race == Race.PROTOSS ? gamesPlayed : null,
                 race == Race.ZERG ? gamesPlayed : null,

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -197,6 +197,7 @@ public class TeamDAO
         + "ON team_member.player_character_id = confirmed_cheater_report.player_character_id "
         + "AND confirmed_cheater_report.type = :cheaterReportType "
         + "AND confirmed_cheater_report.status = true "
+        + "AND confirmed_cheater_report.restrictions = true "
         + "WHERE team.season IN(:seasons)";
 
     private static final String FIND_CHEATER_TEAM_IDS_BY_SEASON_QUERY =
