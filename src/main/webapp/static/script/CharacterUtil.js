@@ -953,7 +953,7 @@ class CharacterUtil
             (data)=>Number.isInteger(data) ? data == characterId : data.member.character.id == characterId,
             localStorage.getItem("matches-historical-mmr") != "false"
         );
-        Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.TEAMS, {result: result.teams});
+        Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.TEAMS, {result: commonCharacter.teams ? commonCharacter.teams.concat(result.teams) : result.teams});
         if(result.validMatches.length >= MATCH_BATCH_SIZE) {
             document.querySelector("#load-more-matches").classList.remove("d-none");
         }
