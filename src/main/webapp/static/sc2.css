@@ -28,6 +28,11 @@ body
     text-align: center;
 }
 
+.readable-text-block
+{
+    min-width: 20em;
+}
+
 table, ul, dl
 {
     text-align: initial;

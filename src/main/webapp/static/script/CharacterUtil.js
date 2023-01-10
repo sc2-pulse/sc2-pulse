@@ -1287,7 +1287,7 @@ class CharacterUtil
                 CharacterUtil.appendStatusCell(tr, evidence.evidence.status);
 
                 const evidenceDescription = tr.insertCell();
-                evidenceDescription.classList.add("cell-main", "text-break");
+                evidenceDescription.classList.add("cell-main", "text-break", "readable-text-block", "text-left");
                 evidenceDescription.textContent = evidence.evidence.description;
 
                 const reporter = tr.insertCell()
