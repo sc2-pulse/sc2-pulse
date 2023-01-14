@@ -23,6 +23,7 @@ import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
@@ -53,6 +54,7 @@ public class TeamDAO
 {
 
     private  static final Logger LOG = LoggerFactory.getLogger(TeamDAO.class);
+    public static final Duration VALID_LADDER_RESET_DURATION = Duration.ofMinutes(9);
 
     public static final String STD_SELECT =
         "team.id AS \"team.id\", "
@@ -136,14 +138,35 @@ public class TeamDAO
                 + "season, region, league_type, queue_type, team_type, "
                 + "rating, points, wins, losses, ties, tier_type "
             + ") "
-            + "WHERE team.queue_type = v.queue_type "
-            + "AND team.region = v.region "
-            + "AND team.legacy_id = v.legacy_id "
-            + "AND team.season = v.season "
+            + "INNER JOIN team t ON "
+                + "t.queue_type = v.queue_type "
+                + "AND t.region = v.region "
+                + "AND t.legacy_id = v.legacy_id "
+                + "AND t.season = v.season "
+            + "LEFT JOIN LATERAL"
+            + "("
+                + "SELECT timestamp, games "
+                + "FROM team_state "
+                + "WHERE team_state.team_id = t.id "
+                + "ORDER BY team_state.timestamp DESC "
+                + "LIMIT 1 "
+            + ") previous_state ON true "
+            + "WHERE "
+            + "team.id = t.id "
             + "AND "
             + "("
                 + "team.division_id != v.division_id OR "
                 + "(team.wins + team.losses + team.ties) != (v.wins + v.losses + v.ties) "
+            + ") "
+            //check if there is a ladder reset and if it's valid, 9 minutes per game
+            + "AND "
+            + "("
+                + "(v.wins + v.losses + v.ties) >= previous_state.games " //check reset
+                //check validity
+                + "OR previous_state.timestamp IS NULL "
+                + "OR v.wins + v.losses + v.ties <= "
+                    + "EXTRACT(epoch FROM NOW() - previous_state.timestamp) /  "
+                    + VALID_LADDER_RESET_DURATION.toSeconds()
             + ") "
             + "RETURNING " + STD_SELECT
         + "), "
