@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -28,7 +29,8 @@ public class SearchService
     public static final String CLAN_END_DELIMITER = "]";
     public static final String CLAN_SEARCH_FORMAT = CLAN_START_DELIMITER + "%1$s" + CLAN_END_DELIMITER;
     public static final String BATTLE_TAG_MARKER = "#";
-    public static final String GAME_LINK_PREFIX = "battlenet://starcraft/profile/";
+    public static final Pattern GAME_LINK_PATTERN =
+        Pattern.compile("^battlenet:+//starcraft/profile/.*");
 
     private final PlayerCharacterDAO playerCharacterDAO;
     private final AccountDAO accountDAO;
@@ -112,7 +114,7 @@ public class SearchService
 
     public List<LadderDistinctCharacter> findDistinctCharacters(String term)
     {
-        if(term.startsWith(GAME_LINK_PREFIX))
+        if(GAME_LINK_PATTERN.matcher(term).matches())
         {
             String[] split = term.split("/");
             if(split.length < 2) throw new IllegalArgumentException("Invalid profile link");

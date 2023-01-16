@@ -19,10 +19,10 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.ConversionService;
@@ -92,17 +92,28 @@ public class SearchServiceTest
         assertEquals(expectedResult, SearchService.extractClanTag(term));
     }
 
-    @Test
-    public void whenArcadeApiThrowsException_thenReturnEmptyList()
+
+    @ValueSource(strings =
+    {
+        "battlenet://starcraft/profile/2/10",
+        "battlenet:://starcraft/profile/2/10"
+    })
+    @ParameterizedTest
+    public void whenArcadeApiThrowsException_thenReturnEmptyList(String link)
     {
         when(sc2ArcadeAPI.findByRegionAndGameId(any(), anyLong()))
             .thenReturn(Mono.error(new IllegalStateException("test exception")));
-        assertTrue(searchService.findDistinctCharacters("battlenet://starcraft/profile/2/10")
+        assertTrue(searchService.findDistinctCharacters(link)
             .isEmpty());
     }
 
-    @Test
-    public void whenSearchByGameLink_thenTranslateToRegularProfileViaArcadeAPI()
+    @ValueSource(strings =
+    {
+        "battlenet://starcraft/profile/2/9223372036854775808",
+        "battlenet:://starcraft/profile/2/9223372036854775808"
+    })
+    @ParameterizedTest
+    public void whenSearchByGameLink_thenTranslateToRegularProfileViaArcadeAPI(String link)
     {
         when(conversionService.convert(2, Region.class)).thenReturn(Region.EU);
         when(sc2ArcadeAPI.findByRegionAndGameId(Region.EU, 128L)) //reversed unsigned long
@@ -112,7 +123,7 @@ public class SearchServiceTest
         when(ladderCharacterDAO.findDistinctCharacters("/2/5/1")).thenReturn(characters);
 
         //unsigned long test
-        assertEquals(characters, searchService.findDistinctCharacters("battlenet://starcraft/profile/2/9223372036854775808"));
+        assertEquals(characters, searchService.findDistinctCharacters(link));
     }
 
 }
