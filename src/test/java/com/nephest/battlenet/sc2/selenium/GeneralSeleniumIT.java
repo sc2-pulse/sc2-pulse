@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.selenium;
@@ -38,6 +38,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -170,7 +171,7 @@ public class GeneralSeleniumIT
         try
         {
             int port = webServerAppCtxt.getWebServer().getPort();
-            WebDriverWait wait = new WebDriverWait(driver, TIMEOUT_MILLIS / 1000);
+            WebDriverWait wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
             String root = "http://localhost:" + port;
             getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
             testVersus(driver, wait);

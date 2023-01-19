@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -8,14 +8,15 @@ import static org.springframework.security.config.Customizer.withDefaults;
 import de.codecentric.boot.admin.server.config.EnableAdminServer;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpMethod;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -26,15 +27,14 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 @EnableAdminServer
 @Order(99)
 public class AdminSecurityConfig
-extends WebSecurityConfigurerAdapter
 {
 
     //sba user security
-    @Override
-    public void configure(HttpSecurity http)
+    @Bean
+    public SecurityFilterChain adminFilterChain(HttpSecurity http)
     throws Exception
     {
-        http
+        return http
             .mvcMatcher("/sba/**")
             .csrf()
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
@@ -49,7 +49,8 @@ extends WebSecurityConfigurerAdapter
                 .mvcMatchers("/sba/actuator/**").hasRole(SC2PulseAuthority.ACTUATOR.getName())
                 .mvcMatchers("/sba/**").hasRole(SC2PulseAuthority.SERVER_WATCHER.getName())
                 .anyRequest().denyAll()
-            .and().httpBasic(withDefaults());
+            .and().httpBasic(withDefaults())
+            .build();
     }
 
     @Autowired
