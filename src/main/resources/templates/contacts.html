@@ -1,0 +1,79 @@
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, _, true)}">
+<head>
+    <title>Contacts - SC2 Pulse</title>
+    <meta name="description" content="Contacts"/>
+</head>
+<body>
+<div th:replace="~{fragments/generic :: content(~{::section})}">
+    <section id="contacts">
+        <h2>Contacts</h2>
+        <table class="table">
+            <tbody>
+                <tr th:if="${@environment.getProperty('contacts.discord.server') != null}">
+                    <th scope="row" class="social-media"><img th:src="@{/static/icon/logo/discord.svg}" alt="Discord support server"/></th>
+                    <td class="text-left cell-main">
+                        <a
+                            th:href="${@environment.getProperty('contacts.discord.server')}"
+                            rel="noopener"
+                            target="_blank"
+                        >
+                            Discord support server
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${@environment.getProperty('contacts.twitter') != null}">
+                    <th scope="row" class="social-media"><img th:src="@{/static/icon/logo/twitter.svg}" alt="Twitter"/></th>
+                    <td class="text-left cell-main">
+                        <a
+                                th:href="${@environment.getProperty('contacts.twitter')}"
+                                th:text="${@environment.getProperty('contacts.twitter').substring(@environment.getProperty('contacts.twitter').lastIndexOf('/') + 1)}"
+                                rel="noopener"
+                                target="_blank"
+                        >
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${@environment.getProperty('contacts.github') != null}">
+                    <th scope="row" class="social-media"><img th:src="@{/static/icon/logo/github.svg}" alt="Github"/></th>
+                    <td class="text-left cell-main">
+                        <a
+                                th:href="${@environment.getProperty('contacts.github')}"
+                                th:text="${@environment.getProperty('contacts.github').substring(@environment.getProperty('contacts.github').lastIndexOf('/') + 1)}"
+                                rel="noopener"
+                                target="_blank"
+                        >
+                        </a>
+                    </td>
+                </tr>
+                <tr th:if="${@environment.getProperty('contacts.email') != null}">
+                    <th scope="row" class="social-media"><img th:src="@{/static/icon/misc/mail.svg}" alt="Email"/></th>
+                    <td class="text-left cell-main">
+                        <a
+                                sec:authorize="isAuthenticated()"
+                                th:href="|mailto:${@environment.getProperty('contacts.email')}|"
+                                th:text="${@environment.getProperty('contacts.email')}"
+                                rel="noopener"
+                                target="_blank"
+                        >
+                        </a>
+                        <a
+                                sec:authorize="!isAuthenticated()"
+                                th:href="@{/login}"
+                        >
+                            Log in to reveal the email.
+                        </a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </section>
+</div>
+</body>
+</html>

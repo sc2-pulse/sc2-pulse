@@ -162,6 +162,10 @@ To ensure that the potential violation is a minor one, the following rules are a
 * `com.nephest.battlenet.sc2.mmr.history.main.length` 1v1 mmr history length in days, 180 by default.
 * `com.nephest.battlenet.sc2.mmr.history.secondary.length` team mmr history length in days, 180 by default.
 * `com.nephest.battlenet.sc2.ladder.regions` set of regions that will be updated, currently active regions by default.
+* `contacts.email`
+* `contacts.discord.server`
+* `contacts.twitter`
+* `contacts.github`
 ## Contributing
 Want to make a bug report/feature request? Any contributions are welcome, see [CONTRIBUTING](CONTRIBUTING.md) for 
 more information.

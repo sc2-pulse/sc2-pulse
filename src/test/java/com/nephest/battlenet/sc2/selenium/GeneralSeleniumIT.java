@@ -184,6 +184,7 @@ public class GeneralSeleniumIT
             getAndWaitAndCheckJsErrors(driver, wait, root + "/about", "#about");
             getAndWaitAndCheckJsErrors(driver, wait, root + "/privacy-policy", "#privacy");
             getAndWaitAndCheckJsErrors(driver, wait, root + "/status", "#status");
+            getAndWaitAndCheckJsErrors(driver, wait, root + "/contacts", "#contacts");
         }
         catch(Exception ex)
         {

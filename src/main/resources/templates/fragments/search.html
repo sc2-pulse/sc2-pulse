@@ -170,7 +170,7 @@
     >
         <header>
             <h2>Twitch VOD search</h2>
-            <p>Please <a href="https://nephest.com/#contacts" target="_blank" rel="noopener">contact me</a> if you are
+            <p>Please <a th:href="@{/contacts}">contact me</a> if you are
             a streamer and want your VoDs to be indexed by this search, or if you want to report a sub-only VoD.</p>
             <form id="form-search-vod" th:with="maxDuration=${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).DURATION_MAX},
                 maxMmr=${T(com.nephest.battlenet.sc2.model.BaseTeam).MAX_RATING}"
