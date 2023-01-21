@@ -76,6 +76,8 @@ extends StandardDAO
     private static final String FIND_ALIGULAC_LIST = "SELECT " + STD_SELECT
         + "FROM pro_player WHERE aligulac_id IS NOT NULL";
 
+    private static final String FIND_ALL = "SELECT " + STD_SELECT + " FROM pro_player ORDER BY id";
+
     private static final String LINK_TWITCH_USERS = "UPDATE pro_player "
         + "SET twitch_user_id = twitch_user.id "
         + "FROM pro_player pp "
@@ -164,6 +166,11 @@ extends StandardDAO
     public List<ProPlayer> findAligulacList()
     {
         return template.query(FIND_ALIGULAC_LIST, getStdRowMapper());
+    }
+
+    public List<ProPlayer> findAll()
+    {
+        return template.query(FIND_ALL, getStdRowMapper());
     }
 
     public int linkTwitchUsers()
