@@ -84,6 +84,7 @@ class SC2Restful
                 CharacterUtil.enhanceMatchesHistoricalMmrInput();
                 CharacterUtil.enhanceLoadMoreMatchesInput();
                 CharacterUtil.enhanceMatchTypeInput();
+                RevealUtil.enhanceCtl();
                 VersusUtil.enhance();
                 FollowUtil.enhanceFollowButtons();
                 BufferUtil.enhance();

@@ -19,6 +19,8 @@ implements java.io.Serializable
     @NotNull
     private Long accountId;
 
+    private Long revealerAccountId;
+
     @NotNull
     private OffsetDateTime updated = OffsetDateTime.now();
 
@@ -36,6 +38,22 @@ implements java.io.Serializable
     {
         this.proPlayerId = proPlayerId;
         this.accountId = accountId;
+        this.updated = updated;
+        this.isProtected = isProtected;
+    }
+
+    public ProPlayerAccount
+    (
+        Long proPlayerId,
+        Long accountId,
+        Long revealerAccountId,
+        OffsetDateTime updated,
+        Boolean isProtected
+    )
+    {
+        this.proPlayerId = proPlayerId;
+        this.accountId = accountId;
+        this.revealerAccountId = revealerAccountId;
         this.updated = updated;
         this.isProtected = isProtected;
     }
@@ -84,6 +102,16 @@ implements java.io.Serializable
     public void setAccountId(Long accountId)
     {
         this.accountId = accountId;
+    }
+
+    public Long getRevealerAccountId()
+    {
+        return revealerAccountId;
+    }
+
+    public void setRevealerAccountId(Long revealerAccountId)
+    {
+        this.revealerAccountId = revealerAccountId;
     }
 
     public OffsetDateTime getUpdated()

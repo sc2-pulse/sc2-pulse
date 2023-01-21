@@ -49,6 +49,7 @@ public class SecurityConfig
             .and().authorizeRequests()
                 .mvcMatchers("/admin/**").hasRole(SC2PulseAuthority.ADMIN.getName())
                 .mvcMatchers("/api/character/report/vote/**").hasRole(SC2PulseAuthority.MODERATOR.getName())
+                .mvcMatchers("/api/reveal/**").hasRole(SC2PulseAuthority.REVEALER.getName())
                 .mvcMatchers
                 (
                     "/api/my/**",

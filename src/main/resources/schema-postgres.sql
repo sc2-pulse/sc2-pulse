@@ -514,6 +514,7 @@ CREATE TABLE "pro_player_account"
 (
     "pro_player_id" BIGINT NOT NULL,
     "account_id" BIGINT NOT NULL,
+    "revealer_account_id" BIGINT,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     "protected" BOOLEAN,
 
@@ -526,7 +527,11 @@ CREATE TABLE "pro_player_account"
     CONSTRAINT "fk_pro_player_account_account_id"
         FOREIGN KEY ("account_id")
         REFERENCES "account"("id")
-        ON DELETE CASCADE ON UPDATE CASCADE
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_pro_player_account_revealer_account_id"
+        FOREIGN KEY ("revealer_account_id")
+        REFERENCES "account"("id")
+        ON DELETE SET NULL ON UPDATE CASCADE
 
 );
 

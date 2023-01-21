@@ -23,16 +23,18 @@ extends StandardDAO
     public static final String STD_SELECT =
         "pro_player_account.pro_player_id AS \"pro_player_account.pro_player_id\", "
         + "pro_player_account.account_id AS \"pro_player_account.account_id\", "
+        + "pro_player_account.revealer_account_id AS \"pro_player_account.revealer_account_id\", "
         + "pro_player_account.updated AS \"pro_player_account.updated\", "
         + "pro_player_account.protected AS \"pro_player_account.protected\" ";
 
     private static RowMapper<ProPlayerAccount> STD_ROW_MAPPER;
 
     private static final String CREATE_QUERY =
-        "INSERT INTO pro_player_account (pro_player_id, account_id, updated, protected) "
-        + "VALUES (:proPlayerId, :accountId, :updated, :protected)";
+        "INSERT INTO pro_player_account (pro_player_id, account_id, revealer_account_id, updated, protected) "
+        + "VALUES (:proPlayerId, :accountId, :revealerAccountId, :updated, :protected)";
     private static final String MERGE_CLAUSE =
         "ON CONFLICT(account_id) DO UPDATE SET "
+        + "revealer_account_id=excluded.revealer_account_id, "
         + "pro_player_id=excluded.pro_player_id, "
         + "updated=excluded.updated, "
         + "protected = excluded.protected ";
@@ -83,6 +85,7 @@ extends StandardDAO
         (
             rs.getLong("pro_player_account.pro_player_id"),
             rs.getLong("pro_player_account.account_id"),
+            DAOUtils.getLong(rs, "pro_player_account.revealer_account_id"),
             rs.getObject("pro_player_account.updated", OffsetDateTime.class),
             rs.getBoolean("pro_player_account.protected")
         );
@@ -98,6 +101,7 @@ extends StandardDAO
         return new MapSqlParameterSource()
             .addValue("proPlayerId", proPlayerAccount.getProPlayerId())
             .addValue("accountId", proPlayerAccount.getAccountId())
+            .addValue("revealerAccountId", proPlayerAccount.getRevealerAccountId())
             .addValue("updated", proPlayerAccount.getUpdated())
             .addValue("protected", proPlayerAccount.isProtected() ? true : null);
     }

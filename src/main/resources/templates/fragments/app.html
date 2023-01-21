@@ -2,7 +2,10 @@
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security"
+>
 <head>
     <title>App</title>
 </head>
@@ -143,6 +146,61 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- Modal reveal player -->
+    <div
+            sec:authorize="hasRole('ROLE_REVEALER')"
+            class="modal fade c-no-history"
+            id="modal-reveal-player"
+            tabindex="-1"
+            role="dialog"
+            aria-labelledby="modal-reveal-player-title"
+            aria-hidden="true"
+    >
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2 class="modal-title" id="modal-reveal-player-title">Reveal</h2>
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+                </div>
+                <div class="modal-body text-left">
+                    <form id="modal-reveal-player-form">
+                        <div class="form-group">
+                            <label for="modal-reveal-player-input">Player search</label>
+                            <input
+                                    id="modal-reveal-player-input"
+                                    class="form-control filtered-input-filter"
+                                    type="search"
+                                    data-filtered-input-group="#modal-reveal-player-players"
+                                    autocomplete="off"
+                            />
+                        </div>
+                        <div id="modal-reveal-player-players" class="filtered-input-group">
+                            <div class="form-check mb-3 d-none filtered-input-container" th:each="player : ${@proPlayerDAO.findAll()}">
+                                <input
+                                        th:id="|reveal-player-${player.id}|"
+                                        type="radio"
+                                        name="player"
+                                        th:value="${player.id}"
+                                />
+                                <label
+                                        class="form-check-label"
+                                        th:for="|reveal-player-${player.id}|"
+                                        th:text="|${player.nickname}${!player.name.isEmpty() ? ', ' + player.name : ''}${player.country != null ? ' ' + T(com.nephest.battlenet.sc2.util.MiscUtil).countryCodeToEmoji(player.country) : ''}|"
+                                >
+                                </label>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" form="modal-reveal-player-form" class="btn btn-action"></button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
@@ -467,6 +525,15 @@
                 <div class="modal-footer">
                     <button id="follow-button" type="button" class="btn btn-primary d-none">Follow</button>
                     <button id="unfollow-button" type="button" class="btn btn-primary d-none">Unfollow</button>
+                    <button
+                            sec:authorize="hasRole('ROLE_REVEALER')"
+                            class="btn btn-info"
+                            type="button"
+                            data-toggle="modal"
+                            data-target="#modal-reveal-player"
+                    >
+                        Reveal
+                    </button>
                     <button class="btn btn-danger" type="button" id="report-character-toggle" data-toggle="modal" data-target="#report-character-modal">Report</button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
