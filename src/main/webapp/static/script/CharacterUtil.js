@@ -223,7 +223,7 @@ class CharacterUtil
         CharacterUtil.setProPlayerField("#pro-player-name", "td", proPlayer.proPlayer.name);
         CharacterUtil.setProPlayerField("#pro-player-birthday", "td", proPlayer.proPlayer.birthday != null
             ? Util.DATE_FORMAT.format(Util.parseIsoDate(proPlayer.proPlayer.birthday)) : null);
-        CharacterUtil.setProPlayerField("#pro-player-country", "td", proPlayer.proPlayer.country);
+        CharacterUtil.setProPlayerField("#pro-player-country", "td", proPlayer.proPlayer.country ? Util.countryCodeToEmoji(proPlayer.proPlayer.country) : "");
         CharacterUtil.setProPlayerField("#pro-player-earnings", "td", proPlayer.proPlayer.earnings != null
             ? "$" + Util.NUMBER_FORMAT.format(proPlayer.proPlayer.earnings) : null);
         if(proPlayer.proTeam != null)
