@@ -346,6 +346,12 @@ class Util
             && rect.y <= y && y <= rect.y + rect.height;
     }
 
+    static countryCodeToEmoji(iso)
+    {
+        const codePoints = [...iso].map(c=>c.codePointAt() + 127397);
+        return String.fromCodePoint(...codePoints);
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =

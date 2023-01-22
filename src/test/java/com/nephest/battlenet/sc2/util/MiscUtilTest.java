@@ -94,5 +94,26 @@ public class MiscUtilTest
         );
     }
 
+    @CsvSource
+    ({
+        "'us', '\uD83C\uDDFA\uD83C\uDDF8'",
+        "'UK', '\uD83C\uDDEC\uD83C\uDDE7'",
+    })
+    @ParameterizedTest
+    public void testCountryCodeToEmoji(String in, String out)
+    {
+        assertEquals(out, MiscUtil.countryCodeToEmoji(in));
+    }
+
+    @ValueSource(strings = {"", "USA"})
+    @ParameterizedTest
+    public void whenInvalidCountryCodeInput_thenThrowRuntimeException(String input)
+    {
+        assertThrows
+        (
+            RuntimeException.class,
+            ()->MiscUtil.countryCodeToEmoji(input)
+        );
+    }
 
 }

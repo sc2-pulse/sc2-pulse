@@ -156,4 +156,22 @@ public final class MiscUtil
         );
     }
 
+    /**
+     *
+     * @param code ISO 3166-1 alpha-2 country code
+     * @return country flag emoji
+     */
+    public static String countryCodeToEmoji(String code)
+    {
+        if(code == null || code.length() != 2)
+            throw new IllegalArgumentException("Invalid code: " + code);
+
+        code = code.toUpperCase();
+        if (code.equals("UK")) code = "GB";
+        StringBuilder sb = new StringBuilder();
+        // offset between uppercase ASCII and regional indicator symbols
+        for (int i = 0; i < code.length(); i++) sb.appendCodePoint(code.charAt(i) + 127397);
+        return sb.toString();
+    }
+
 }
