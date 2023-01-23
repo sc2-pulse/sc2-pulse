@@ -136,4 +136,33 @@ class FormUtil
             });
     }
 
+    static enhanceFormInputGroupFilters()
+    {
+        document.querySelectorAll(".filtered-input-filter").forEach(i=>i.addEventListener("input", FormUtil.onFormInputGroupFilter));
+    }
+
+    static onFormInputGroupFilter(evt)
+    {
+        FormUtil.filterFormInputGroup(evt.target);
+    }
+
+    static filterFormInputGroup(filterInput)
+    {
+        const term = filterInput.value.toLowerCase();
+        document.querySelectorAll(filterInput.getAttribute("data-filtered-input-group")).forEach(group=>{
+            let validOptionCount = 0;
+            group.querySelectorAll(":scope .filtered-input-container").forEach(container=>{
+                if(term.length > 0 && container.querySelector(":scope label").textContent.toLowerCase().includes(term)) {
+                  container.classList.remove("d-none");
+                  validOptionCount++;
+                } else {
+                  container.classList.add("d-none");
+                }
+            });
+            const firstContainer = group.querySelector(":scope .filtered-input-container:not(.d-none)");
+            if(firstContainer) firstContainer.querySelector(":scope input").checked = true;
+            group.setAttribute("data-valid-option-count", validOptionCount);
+        });
+    }
+
 }
