@@ -74,7 +74,7 @@ import reactor.util.function.Tuples;
 public class BlizzardSC2APIIT
 {
 
-    public static final int RETRY_COUNT = 2;
+    public static final int RETRY_COUNT = 1;
     public static final String VALID_SEASON = "{\"seasonId\": 1, \"year\": 2010, \"number\": 1}";
     public static final String VALID_LEAGUE = "{\"type\": 0, \"queueType\": 201, \"teamType\": 0, \"tier\": []}";
     public static final String VALID_LADDER = "{\"team\": []}";

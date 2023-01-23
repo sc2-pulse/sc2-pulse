@@ -44,7 +44,7 @@ public class WebServiceUtil
 
     private WebServiceUtil(){}
 
-    public static final int RETRY_COUNT = 2;
+    public static final int RETRY_COUNT = 1;
     public static final Duration CONNECT_TIMEOUT = Duration.ofMillis(10000);
     public static final Duration IO_TIMEOUT = Duration.ofMillis(30000);
     public static final RetrySpec RETRY = RetrySpec
