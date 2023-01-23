@@ -36,6 +36,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -321,6 +322,42 @@ public class BlizzardSC2APIIT
         .andReturn();
 
         assertEquals(Region.US, api.getRegion(Region.US));
+    }
+
+    @Test
+    @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
+    public void testSetTimeout(@Autowired WebApplicationContext webApplicationContext)
+    throws Exception
+    {
+        MockMvc mvc = MockMvcBuilders
+            .webAppContextSetup(webApplicationContext)
+            .apply(springSecurity())
+            .alwaysDo(print())
+            .build();
+
+        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.EU));
+        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.US));
+        mvc.perform
+        (
+            post("/admin/blizzard/api/timeout/EU/1000")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        assertEquals(Duration.ofMillis(1000), api.getTimeout(Region.EU));
+        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.US));
+
+        mvc.perform
+        (
+            delete("/admin/blizzard/api/timeout/EU")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.EU));
+        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.US));
     }
 
     @Test

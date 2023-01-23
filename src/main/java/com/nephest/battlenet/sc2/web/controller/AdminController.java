@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.SupporterService;
 import io.swagger.v3.oas.annotations.Hidden;
+import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -141,5 +142,23 @@ public class AdminController
     {
         cron.setShouldUpdateLadder(updateLadder);
     }
+
+    @PostMapping("/blizzard/api/timeout/{region}/{timeout}")
+    public void setTimeout
+    (
+        @PathVariable("region") Region region,
+        @PathVariable("timeout") int timeout
+    )
+    {
+        sc2API.setTimeout(region, Duration.ofMillis(timeout));
+    }
+
+    @DeleteMapping("/blizzard/api/timeout/{region}")
+    public void removeTimeout(@PathVariable("region") Region region)
+    {
+        sc2API.setTimeout(region, null);
+    }
+
+
 
 }

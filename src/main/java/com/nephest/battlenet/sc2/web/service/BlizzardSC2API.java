@@ -92,6 +92,7 @@ extends BaseAPI
     public static final double RETRY_ERROR_RATE_THRESHOLD = 40.0;
     public static final double FORCE_REGION_ERROR_RATE_THRESHOLD = 40.0;
     public static final Duration AUTO_FORCE_REGION_MAX_DURATION = Duration.ofDays(7);
+    public static final Duration SHORT_IO_TIMEOUT = Duration.ofSeconds(20);
     /*
         This data is mainly used in ladder discovery process when starting with an empty DB. The values should be
         manually updated when a new season begins.
@@ -110,6 +111,7 @@ extends BaseAPI
     private final Map<Region, InstantVar> forceRegionInstants = new EnumMap<>(Region.class);
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
+    private final Map<Region, Duration> clientTimeouts = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
     private final Map<Region, APIHealthMonitor> healthMonitors = new EnumMap<>(Region.class);
     private final ReactorRateLimiter webRateLimiter = new ReactorRateLimiter();
@@ -127,7 +129,11 @@ extends BaseAPI
         this.objectMapper = objectMapper;
         this.varDAO = varDAO;
         init();
-        for(Region r : Region.values()) rateLimiters.put(r, new ReactorRateLimiter());
+        for(Region r : Region.values())
+        {
+            rateLimiters.put(r, new ReactorRateLimiter());
+            clientTimeouts.put(r, WebServiceUtil.IO_TIMEOUT);
+        }
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME).doOnNext(i->refreshReactorSlots()).subscribe();
         initErrorRates(varDAO);
         Flux.interval(MiscUtil.untilNextHour(LocalDateTime.now()), ERROR_RATE_FRAME).doOnNext(i->{
@@ -366,6 +372,35 @@ extends BaseAPI
     {
         healthMonitors.values().forEach(APIHealthMonitor::save);
         webHealthMonitors.values().forEach(APIHealthMonitor::save);
+    }
+
+    private void autoTimeout()
+    {
+        for(Region region : Region.values())
+        {
+            Duration timeout = getErrorRate(region, false) < RETRY_ERROR_RATE_THRESHOLD
+                ? WebServiceUtil.IO_TIMEOUT
+                : SHORT_IO_TIMEOUT;
+            setTimeout(region, timeout);
+        }
+    }
+
+    public void setTimeout(Region region, Duration timeout)
+    {
+        timeout = timeout != null ? timeout : WebServiceUtil.IO_TIMEOUT;
+        if(clientTimeouts.get(region).equals(timeout)) return;
+
+        WebClient client = clients.get(region).mutate()
+            .clientConnector(WebServiceUtil.getClientHttpConnector(WebServiceUtil.CONNECT_TIMEOUT, timeout))
+            .build();
+        clients.put(region, client);
+        clientTimeouts.put(region, timeout);
+        LOG.info("Changed {} web client timeout: {}", region, timeout);
+    }
+
+    public Duration getTimeout(Region region)
+    {
+        return clientTimeouts.get(region);
     }
     
     private RetrySpec getRetry(Region region, RetrySpec wanted, boolean web)

@@ -72,7 +72,16 @@ public class WebServiceUtil
 
     public static ClientHttpConnector getClientHttpConnector()
     {
-        return new ReactorClientHttpConnector(getHttpClient(CONNECT_TIMEOUT, IO_TIMEOUT));
+        return getClientHttpConnector(CONNECT_TIMEOUT, IO_TIMEOUT);
+    }
+
+    public static ClientHttpConnector getClientHttpConnector
+    (
+        Duration connectTimeout,
+        Duration ioTimeout
+    )
+    {
+        return new ReactorClientHttpConnector(getHttpClient(connectTimeout, ioTimeout));
     }
 
     public static WebClient.Builder getWebClientBuilder
