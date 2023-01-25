@@ -56,6 +56,11 @@ public class StatusService
 
     public void update()
     {
+        players = postgreSQLUtils.getApproximateCount("account");
+        Long teams = postgreSQLUtils.getApproximateCount("team");
+        Long teamStates = postgreSQLUtils.getApproximateCount("team_state");
+        teamSnapshots = teams == null ? 0 : teams + teamStates;
+        matches = postgreSQLUtils.getApproximateCount("match");
         for(Map.Entry<Region, Status> entry : statusMap.entrySet())
         {
             Region region = entry.getKey();
@@ -66,11 +71,6 @@ public class StatusService
             updateWebFlag(region, status);
             updateOperationalFlag(region, status);
             updateDuration(region, status);
-            players = postgreSQLUtils.getApproximateCount("account");
-            Long teams = postgreSQLUtils.getApproximateCount("team");
-            Long teamStates = postgreSQLUtils.getApproximateCount("team_state");
-            teamSnapshots = teams == null ? 0 : teams + teamStates;
-            matches = postgreSQLUtils.getApproximateCount("match");
         }
     }
 
