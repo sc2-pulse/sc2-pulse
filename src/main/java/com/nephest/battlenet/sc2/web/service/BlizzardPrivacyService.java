@@ -87,6 +87,7 @@ public class BlizzardPrivacyService
     private final Predicate<BlizzardTeamMember> teamMemberPredicate;
     private final Predicate<BlizzardProfileTeamMember> profileTeamMemberPredicate;
     private final Predicate<BlizzardLegacyProfile> legacyProfilePredicate;
+    private final GlobalContext globalContext;
     private LongVar lastUpdatedSeason;
     private LongVar lastUpdatedCharacterId;
     private InstantVar lastUpdatedSeasonInstant;
@@ -109,7 +110,8 @@ public class BlizzardPrivacyService
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         @Qualifier("webExecutorService") ExecutorService webExecutorService,
         Validator validator,
-        SC2WebServiceUtil sc2WebServiceUtil
+        SC2WebServiceUtil sc2WebServiceUtil,
+        GlobalContext globalContext
     )
     {
         this.api = api;
@@ -124,6 +126,7 @@ public class BlizzardPrivacyService
         this.profileTeamMemberPredicate = DAOUtils.beanValidationPredicate(validator);
         this.legacyProfilePredicate = DAOUtils.beanValidationPredicate(validator);
         this.sc2WebServiceUtil = sc2WebServiceUtil;
+        this.globalContext = globalContext;
         initVars(varDAO);
     }
 
@@ -212,7 +215,7 @@ public class BlizzardPrivacyService
         boolean current = seasonDAO.getMaxBattlenetId().equals(season);
 
         List<Future<?>> dbTasks = new ArrayList<>();
-        for(Region region : Region.values())
+        for(Region region : globalContext.getActiveRegions())
         {
             if(!statsService.isAlternativeUpdate(region, current))
             {
@@ -349,7 +352,8 @@ public class BlizzardPrivacyService
 
     private int getCharacterBatchSize()
     {
-        int characterCount = playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now().minus(CHARACTER_UPDATED_MAX));
+        int characterCount = playerCharacterDAO
+            .countByUpdatedMax(OffsetDateTime.now().minus(CHARACTER_UPDATED_MAX), globalContext.getActiveRegions());
         return characterCount / CHARACTER_UPDATES_PER_TTL;
     }
 
@@ -366,6 +370,7 @@ public class BlizzardPrivacyService
         (
             OffsetDateTime.now().minus(CHARACTER_UPDATED_MAX),
             lastUpdatedCharacterId.getValue(),
+            globalContext.getActiveRegions(),
             batchSize
         );
         if(batch.isEmpty())

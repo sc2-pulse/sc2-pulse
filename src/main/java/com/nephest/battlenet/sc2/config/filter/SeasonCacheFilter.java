@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -24,10 +25,12 @@ implements Filter
 {
 
     private final SeasonDAO seasonDAO;
+    private final Set<Region> activeRegions;
 
-    public SeasonCacheFilter(SeasonDAO seasonDAO)
+    public SeasonCacheFilter(SeasonDAO seasonDAO, Set<Region> activeRegions)
     {
         this.seasonDAO = seasonDAO;
+        this.activeRegions = activeRegions;
     }
 
     @Override
@@ -52,7 +55,7 @@ implements Filter
     {
         List<Season> currentSeasons = seasonDAO.findListByBattlenetId(seasonDAO.getMaxBattlenetId());
         String cacheHeader;
-        if(currentSeasons.size() == Region.values().length)
+        if(currentSeasons.size() >= activeRegions.size())
         {
             Duration cacheDuration = Duration.between
             (

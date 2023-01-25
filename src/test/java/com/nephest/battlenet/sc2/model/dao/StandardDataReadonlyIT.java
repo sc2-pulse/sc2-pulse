@@ -35,6 +35,7 @@ import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
@@ -238,17 +239,28 @@ public class StandardDataReadonlyIT
     public void testFinderByUpdatedAndIdMax()
     {
         OffsetDateTime now = OffsetDateTime.now();
-        assertTrue(playerCharacterDAO.find(now.minusYears(1), Long.MAX_VALUE, 2).isEmpty());
+        assertTrue(playerCharacterDAO
+            .find(now.minusYears(1), Long.MAX_VALUE, Set.of(), 2).isEmpty());
 
-        List<PlayerCharacter> batch1 = playerCharacterDAO.find(now, Long.MAX_VALUE, 2);
+        List<PlayerCharacter> batch1 = playerCharacterDAO.find(now, Long.MAX_VALUE, Set.of(), 2);
         assertEquals(2, batch1.size());
         assertEquals(4480, batch1.get(0).getId());
         assertEquals(4479, batch1.get(1).getId());
 
-        List<PlayerCharacter> batch2 = playerCharacterDAO.find(now, batch1.get(1).getId(), 2);
+        List<PlayerCharacter> batch2 = playerCharacterDAO.find(now, batch1.get(1).getId(), Set.of(), 2);
         assertEquals(2, batch2.size());
         assertEquals(4478, batch2.get(0).getId());
         assertEquals(4477, batch2.get(1).getId());
+    }
+
+    @Test
+    public void testFinderByUpdatedAndIdMaxRegionFilter()
+    {
+        List<PlayerCharacter> regionFilterBatch = playerCharacterDAO
+            .find(OffsetDateTime.now(), Long.MAX_VALUE, Set.of(Region.EU), 2);
+        assertEquals(2, regionFilterBatch.size());
+        assertEquals(4460, regionFilterBatch.get(0).getId());
+        assertEquals(4459, regionFilterBatch.get(1).getId());
     }
 
     @Test

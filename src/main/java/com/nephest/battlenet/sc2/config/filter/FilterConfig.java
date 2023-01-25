@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.config.filter;
 
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.web.service.GlobalContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -27,11 +28,14 @@ public class FilterConfig
 
     @Bean
     public FilterRegistrationBean<SeasonCacheFilter> seasonCacheFilter
-    (@Autowired SeasonDAO seasonDAO)
+    (
+        @Autowired SeasonDAO seasonDAO,
+        @Autowired GlobalContext globalContext
+    )
     {
         FilterRegistrationBean<SeasonCacheFilter> registrationBean = new FilterRegistrationBean<>();
 
-        registrationBean.setFilter(new SeasonCacheFilter(seasonDAO));
+        registrationBean.setFilter(new SeasonCacheFilter(seasonDAO, globalContext.getActiveRegions()));
         registrationBean.addUrlPatterns("/api/season/list", "/api/season/list/all");
 
         return registrationBean;

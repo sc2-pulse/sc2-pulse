@@ -378,6 +378,7 @@ public class PlayerCharacterDAO
         + "FROM player_character "
         + "WHERE updated < :updatedMax "
         + "AND id < :idMax "
+        + "AND (array_length(:regions::smallint[], 1) IS NULL OR region = ANY(:regions)) "
         + "ORDER BY id DESC "
         + "LIMIT :limit";
 
@@ -413,7 +414,10 @@ public class PlayerCharacterDAO
         + "LIMIT :limit";
 
     private static final String COUNT_BY_UPDATED_MAX =
-        "SELECT COUNT(*) FROM player_character WHERE updated <= :updatedMax";
+        "SELECT COUNT(*) "
+        + "FROM player_character "
+        + "WHERE updated <= :updatedMax "
+        + "AND (array_length(:regions::smallint[], 1) IS NULL OR region = ANY(:regions)) ";
 
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
     private static ResultSetExtractor<PlayerCharacter> STD_EXTRACTOR;
@@ -646,11 +650,23 @@ public class PlayerCharacterDAO
         return Optional.ofNullable(template.query(FIND_BY_REGION_AND_REALM_AND_BATTLENET_ID, params, getStdExtractor()));
     }
 
-    public List<PlayerCharacter> find(OffsetDateTime updatedMax, Long idMax, int limit)
+    public List<PlayerCharacter> find
+    (
+        OffsetDateTime updatedMax,
+        Long idMax,
+        Set<Region> regions,
+        int limit
+    )
     {
+        Integer[] regionIds = regions.isEmpty()
+            ? null
+            : regions.stream()
+                .map(r->conversionService.convert(r, Integer.class))
+                .toArray(Integer[]::new);
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("updatedMax", updatedMax)
             .addValue("idMax", idMax)
+            .addValue("regions", regionIds)
             .addValue("limit", limit);
         return template.query(FIND_BY_UPDATED_AND_ID_MAX_EXCLUDED, params, getStdRowMapper());
     }
@@ -678,10 +694,16 @@ public class PlayerCharacterDAO
         return template.query(FIND_INACTIVE_CLAN_MEMBERS, params, STD_ROW_MAPPER);
     }
 
-    public int countByUpdatedMax(OffsetDateTime updatedMax)
+    public int countByUpdatedMax(OffsetDateTime updatedMax, Set<Region> regions)
     {
+        Integer[] regionIds = regions.isEmpty()
+            ? null
+            : regions.stream()
+                .map(r->conversionService.convert(r, Integer.class))
+                .toArray(Integer[]::new);
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("updatedMax", updatedMax);
+            .addValue("updatedMax", updatedMax)
+            .addValue("regions", regionIds);
         return template.query(COUNT_BY_UPDATED_MAX, params, DAOUtils.INT_EXTRACTOR);
     }
 

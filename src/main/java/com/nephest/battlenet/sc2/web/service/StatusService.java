@@ -5,12 +5,12 @@ package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.Duration;
+import java.util.Collection;
 import java.util.EnumMap;
 import java.util.Map;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class StatusService
@@ -35,7 +35,8 @@ public class StatusService
         StatsService statsService,
         AlternativeLadderService alternativeLadderService,
         MatchService matchService,
-        PostgreSQLUtils postgreSQLUtils
+        PostgreSQLUtils postgreSQLUtils,
+        GlobalContext globalContext
     )
     {
         this.updateService = updateService;
@@ -44,12 +45,12 @@ public class StatusService
         this.alternativeLadderService = alternativeLadderService;
         this.matchService = matchService;
         this.postgreSQLUtils = postgreSQLUtils;
-        init();
+        init(globalContext.getActiveRegions());
     }
 
-    private void init()
+    private void init(Collection<? extends Region> regionsToUpdate)
     {
-        for(Region region : Region.values()) statusMap.put(region, new Status());
+        for(Region region : regionsToUpdate) statusMap.put(region, new Status());
         update();
     }
 

@@ -310,7 +310,7 @@ public class BlizzardSC2APIIT
         .andReturn();
 
         assertEquals(Region.EU, api.getRegion(Region.US));
-        assertEquals(Region.CN, api.getRegion(Region.CN));
+        assertEquals(Region.KR, api.getRegion(Region.KR));
 
         mvc.perform
         (

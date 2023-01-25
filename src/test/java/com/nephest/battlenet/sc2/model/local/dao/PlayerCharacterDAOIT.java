@@ -41,6 +41,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -614,6 +615,29 @@ public class PlayerCharacterDAOIT
 
         playerCharacterDAO.updateAnonymousFlag(pc.getId(), false);
         assertFalse(playerCharacterDAO.getAnonymousFlag(pc.getId()));
+    }
+
+    @Test
+    public void testFindByUpdatedMax()
+    {
+        Account acc = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter pc1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
+        PlayerCharacter pc2 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 2L, 1, "name#2"));
+        PlayerCharacter pc3 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.US, 3L, 1, "name#3"));
+        PlayerCharacter pc4 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.US, 4L, 1, "name#4"));
+
+        assertEquals(4, playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now(), Set.of()));
+        assertEquals(2, playerCharacterDAO
+            .countByUpdatedMax(OffsetDateTime.now(), Set.of(Region.EU)));
+        assertEquals(1, playerCharacterDAO
+            .updateUpdated(OffsetDateTime.now().plusDays(1), pc1.getId()));
+        assertEquals(3, playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now(), Set.of()));
+        assertEquals(1, playerCharacterDAO
+            .countByUpdatedMax(OffsetDateTime.now(), Set.of(Region.EU)));
     }
 
 }

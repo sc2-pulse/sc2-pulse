@@ -46,6 +46,8 @@ public class BlizzardSC2APITest
     @Mock
     private VarDAO varDAO;
 
+    GlobalContext globalContext;
+
     private BlizzardSC2API api;
 
     private AutoCloseable mocks;
@@ -54,7 +56,8 @@ public class BlizzardSC2APITest
     public void beforeEach()
     {
         mocks = MockitoAnnotations.openMocks(this);
-        api = new BlizzardSC2API(objectMapper, oAuth2AuthorizedClientManager, varDAO);
+        globalContext = new GlobalContext(Set.of(Region.values()));
+        api = new BlizzardSC2API(objectMapper, oAuth2AuthorizedClientManager, varDAO, globalContext);
     }
 
     @AfterEach

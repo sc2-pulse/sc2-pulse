@@ -16,8 +16,8 @@ import java.io.IOException;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
@@ -45,10 +45,12 @@ public class SeasonCacheFilterTest
 
     private SeasonCacheFilter filter;
 
+    private final Set<Region> activeRegions = Set.of(Region.EU, Region.US, Region.KR);
+
     @BeforeEach
     public void beforeEach()
     {
-        filter = new SeasonCacheFilter(seasonDAO);
+        filter = new SeasonCacheFilter(seasonDAO, activeRegions);
     }
 
     @Test
@@ -67,7 +69,7 @@ public class SeasonCacheFilterTest
     public void whenCacheDurationIsNegative_thenDontCache()
     throws ServletException, IOException
     {
-        List<Season> seasons = Arrays.stream(Region.values())
+        List<Season> seasons = activeRegions.stream()
             .map(r->new Season(null, 1, r, 2020, 1,
                 LocalDate.now().minusMonths(2), LocalDate.now().minusMonths(1)))
             .collect(Collectors.toList());
@@ -83,7 +85,7 @@ public class SeasonCacheFilterTest
     {
         LocalDate start = LocalDate.now();
         LocalDate end = start.plusDays(30);
-        List<Season> seasons = Arrays.stream(Region.values())
+        List<Season> seasons = activeRegions.stream()
             .map(r->new Season(null, 1, r, 2020, 1, start, start.plusMonths(10)))
             .collect(Collectors.toList());
         seasons.set(0, new Season(null, 1, Region.US, 2020, 1, start, end));

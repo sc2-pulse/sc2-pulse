@@ -47,6 +47,7 @@ import java.math.BigInteger;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -113,6 +114,8 @@ public class BlizzardPrivacyServiceTest
 
     private AutoCloseable mocks;
 
+    private GlobalContext globalContext;
+
     @BeforeEach
     public void beforeEach()
     {
@@ -121,6 +124,7 @@ public class BlizzardPrivacyServiceTest
             r.run();
             return CompletableFuture.completedFuture(null);
         });
+        globalContext = new GlobalContext(Set.of(Region.EU, Region.US, Region.KR));
         privacyService = new BlizzardPrivacyService
         (
             api,
@@ -133,7 +137,8 @@ public class BlizzardPrivacyServiceTest
             executor,
             executor,
             validator,
-            sc2WebServiceUtil
+            sc2WebServiceUtil,
+            globalContext
         );
     }
 
@@ -200,7 +205,7 @@ public class BlizzardPrivacyServiceTest
     throws ExecutionException, InterruptedException
     {
         privacyService.getLastUpdatedCharacterId().setValue(10L);
-        when(playerCharacterDAO.countByUpdatedMax(any())).thenReturn(0);
+        when(playerCharacterDAO.countByUpdatedMax(any(), any())).thenReturn(0);
         privacyService.update();
         //reset id cursor due to empty batch size
         assertEquals(Long.MAX_VALUE, privacyService.getLastUpdatedCharacterId().getValue());
@@ -209,10 +214,10 @@ public class BlizzardPrivacyServiceTest
         privacyService.getLastUpdatedCharacterInstant()
             .setValue(Instant.now().minus(BlizzardPrivacyService.CHARACTER_UPDATE_TIME_FRAME).minusSeconds(1));
 
-        when(playerCharacterDAO.countByUpdatedMax(any())).thenReturn(9999);
+        when(playerCharacterDAO.countByUpdatedMax(any(), any())).thenReturn(9999);
         privacyService.getLastUpdatedCharacterId().setValue(100L);
         List<PlayerCharacter> chars = List.of(new PlayerCharacter());
-        when(playerCharacterDAO.find(any(), eq(100L), eq(9999 / BlizzardPrivacyService.CHARACTER_UPDATES_PER_TTL)))
+        when(playerCharacterDAO.find(any(), eq(100L), any(), eq(9999 / BlizzardPrivacyService.CHARACTER_UPDATES_PER_TTL)))
             .thenReturn(chars);
         BlizzardLegacyProfile profile1 = new BlizzardLegacyProfile(1L, 2, "name", "clanTag", null);
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 2, "name");
@@ -235,8 +240,8 @@ public class BlizzardPrivacyServiceTest
     throws ExecutionException, InterruptedException
     {
         privacyService.getLastUpdatedCharacterId().setValue(10L);
-        when(playerCharacterDAO.countByUpdatedMax(any())).thenReturn(9999);
-        when(playerCharacterDAO.find(any(), any(), anyInt())).thenReturn(List.of());
+        when(playerCharacterDAO.countByUpdatedMax(any(), any())).thenReturn(9999);
+        when(playerCharacterDAO.find(any(), any(), any(), anyInt())).thenReturn(List.of());
         privacyService.update();
         //reset id cursor due to empty batch
         assertEquals(Long.MAX_VALUE, privacyService.getLastUpdatedCharacterId().getValue());
@@ -278,7 +283,8 @@ public class BlizzardPrivacyServiceTest
         );
         OngoingStubbing<Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>>> stub =
             when(api.getProfileLadders(any(), any(), anyBoolean())).thenReturn(ladders);
-        for(int i = 1; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
+        for(int i = 1; i < globalContext.getActiveRegions().size(); i++)
+            stub = stub.thenReturn(Flux.empty());
         privacyService.update();
 
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
@@ -339,7 +345,8 @@ public class BlizzardPrivacyServiceTest
     {
         OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>>
             stub = when(api.getLadders(any(), eq(-1L), isNull())).thenReturn(createLadder());
-        for(int i = 0; i < Region.values().length; i++) stub = stub.thenReturn(Flux.empty());
+        for(int i = 0; i < globalContext.getActiveRegions().size(); i++)
+            stub = stub.thenReturn(Flux.empty());
     }
 
     private Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>

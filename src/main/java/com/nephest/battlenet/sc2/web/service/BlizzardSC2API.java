@@ -117,25 +117,32 @@ extends BaseAPI
     private final ReactorRateLimiter webRateLimiter = new ReactorRateLimiter();
     private final Map<Region, APIHealthMonitor> webHealthMonitors = new EnumMap<>(Region.class);
     private final VarDAO varDAO;
+    private final GlobalContext globalContext;
 
     @Value("${com.nephest.battlenet.sc2.api.force.region.auto:#{'false'}}")
     private boolean autoForceRegion = false;
 
     @Autowired
     public BlizzardSC2API
-    (ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager, VarDAO varDAO)
+    (
+        ObjectMapper objectMapper,
+        OAuth2AuthorizedClientManager auth2AuthorizedClientManager,
+        VarDAO varDAO,
+        GlobalContext globalContext
+    )
     {
-        initWebClient(objectMapper, auth2AuthorizedClientManager);
+        this.globalContext = globalContext;
+        initWebClient(objectMapper, auth2AuthorizedClientManager, globalContext.getActiveRegions());
         this.objectMapper = objectMapper;
         this.varDAO = varDAO;
-        init();
-        for(Region r : Region.values())
+        init(globalContext.getActiveRegions());
+        for(Region r : globalContext.getActiveRegions())
         {
             rateLimiters.put(r, new ReactorRateLimiter());
             clientTimeouts.put(r, WebServiceUtil.IO_TIMEOUT);
         }
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME).doOnNext(i->refreshReactorSlots()).subscribe();
-        initErrorRates(varDAO);
+        initErrorRates(varDAO, globalContext.getActiveRegions());
         Flux.interval(MiscUtil.untilNextHour(LocalDateTime.now()), ERROR_RATE_FRAME).doOnNext(i->{
             calculateErrorRates();
             if(autoForceRegion) autoForceRegion();
@@ -153,26 +160,26 @@ extends BaseAPI
         }
     }
 
-    private void initErrorRates(VarDAO varDAO)
+    private void initErrorRates(VarDAO varDAO, Set<Region> activeRegions)
     {
-        for(Region r : Region.values())
+        for(Region r : activeRegions)
         {
             healthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api"));
             webHealthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api.web"));
         }
     }
 
-    private void init()
+    private void init(Set<Region> activeRegions)
     {
-        initForceRegion();
+        initForceRegion(activeRegions);
     }
 
-    private void initForceRegion()
+    private void initForceRegion(Set<Region> activeRegions)
     {
         //catch exceptions to allow service autowiring for tests
         try
         {
-            for(Region region : Region.values())
+            for(Region region : activeRegions)
             {
                 forceRegions.put(region, new Var<>
                     (
@@ -206,7 +213,7 @@ extends BaseAPI
     protected void autoForceRegion()
     {
         if(!isAutoForceRegion()) return;
-        for(Region region : Region.values())
+        for(Region region : globalContext.getActiveRegions())
         {
             if(forceRegions.get(region).getValue() != null)
             {
@@ -286,7 +293,7 @@ extends BaseAPI
     @Override
     protected void setWebClient(WebClient client)
     {
-        for(Region region : Region.values()) clients.put(region, client);
+        clients.replaceAll((r, v) -> client);
     }
 
     @Override
@@ -300,9 +307,14 @@ extends BaseAPI
         return clients.get(region);
     }
 
-    private void initWebClient(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
+    private void initWebClient
+    (
+        ObjectMapper objectMapper,
+        OAuth2AuthorizedClientManager auth2AuthorizedClientManager,
+        Set<Region> activeRegions
+    )
     {
-        for(Region region : Region.values())
+        for(Region region : activeRegions)
         {
             ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
@@ -376,7 +388,7 @@ extends BaseAPI
 
     private void autoTimeout()
     {
-        for(Region region : Region.values())
+        for(Region region : globalContext.getActiveRegions())
         {
             Duration timeout = getErrorRate(region, false) < RETRY_ERROR_RATE_THRESHOLD
                 ? WebServiceUtil.IO_TIMEOUT

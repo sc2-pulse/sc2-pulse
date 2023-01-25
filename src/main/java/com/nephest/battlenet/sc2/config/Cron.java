@@ -23,6 +23,7 @@ import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.ClanService;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
+import com.nephest.battlenet.sc2.web.service.GlobalContext;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
@@ -80,6 +81,9 @@ public class Cron
     private InstantVar mapStatsInstant;
     private UpdateContext matchUpdateContext;
     private boolean updateLadder = true;
+
+    @Autowired
+    private GlobalContext globalContext;
 
     @Autowired
     private BlizzardSC2API sc2API;
@@ -203,7 +207,7 @@ public class Cron
     public static OffsetDateTime getNextCharacterReportUpdateTime()
     {
         OffsetDateTime dt = OffsetDateTime.now().withHour(5).withMinute(0).withSecond(0).withNano(0);
-        if(dt.compareTo(OffsetDateTime.now()) < 0) dt = dt.plusDays(1);
+        if(dt.isBefore(OffsetDateTime.now())) dt = dt.plusDays(1);
         return dt;
     }
 
@@ -356,7 +360,8 @@ public class Cron
     private void doUpdateSeasons()
     {
         List<Future<?>> tasks = new ArrayList<>();
-        for(Region region : Region.values()) tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
+        for(Region region : globalContext.getActiveRegions())
+            tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
 
         MiscUtil.awaitAndThrowException(tasks, true, true);
         statsService.afterCurrentSeasonUpdate(updateService.getUpdateContext(null), false);
@@ -365,7 +370,7 @@ public class Cron
             if (shouldUpdateMatches())
             {
                 UpdateContext muc = matchUpdateContext == null ? updateService.getUpdateContext(null) : matchUpdateContext;
-                for(Region region : Region.values())
+                for(Region region : globalContext.getActiveRegions())
                     tasks.add(webExecutorService.submit(()->matchService.update(muc, region)));
                 MiscUtil.awaitAndThrowException(tasks, true, true);
                 matchService.updateMeta(muc);
