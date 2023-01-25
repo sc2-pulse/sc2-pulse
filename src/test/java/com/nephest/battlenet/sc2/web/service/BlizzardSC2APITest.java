@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -118,6 +119,45 @@ public class BlizzardSC2APITest
         //normal ladder, conditional pasrsing is in effect
         verify(spy).getFilteredLadder(region, id, seconds);
         verifyNoMoreInteractions(spy);
+    }
+
+    @Test
+    public void whenRedirectingToHealthyRegion_thenRedirect()
+    {
+        Region targetRegion = Region.KR;
+        api.setForceRegion(targetRegion);
+        assertEquals(BlizzardSC2API.DEFAULT_REGION_REDIRECTS.get(targetRegion), api.getForceRegion(targetRegion));
+    }
+
+    @Test
+    public void whenRedirectingToBrokenRegion_thenPickHealthyRegionInstead()
+    {
+        Region expectedResult = null;
+        Region targetRegion = Region.KR;
+        for(Region region : Region.values())
+        {
+            APIHealthMonitor monitor = api.getHealthMonitor(region, false);
+            for(int i = 0; i < 100; i++) monitor.addRequest();
+            if(expectedResult == null && region != BlizzardSC2API.DEFAULT_REGION_REDIRECTS.get(targetRegion))
+            {
+                //healthy API, should be picked
+                expectedResult = region;
+                //add error to signalize that it's an active region
+                monitor.addError();
+            }
+            else
+            {
+                //broken API
+                for(int i = 0; i < BlizzardSC2API.FORCE_REGION_ERROR_RATE_THRESHOLD + 1; i++)
+                    monitor.addError();
+            }
+            monitor.update();
+        }
+        api.setForceRegion(targetRegion);
+        //default region is ignored because it's broken
+        assertNotEquals(BlizzardSC2API.DEFAULT_REGION_REDIRECTS.get(targetRegion), api.getForceRegion(targetRegion));
+        //healthy region is picked instead
+        assertEquals(expectedResult, api.getForceRegion(targetRegion));
     }
 
 

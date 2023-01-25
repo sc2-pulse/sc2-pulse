@@ -105,6 +105,13 @@ extends BaseAPI
         Region.KR, 77775L,
         Region.CN, 67627L
     );
+    public static final Map<Region, Region> DEFAULT_REGION_REDIRECTS = Map.of
+    (
+        Region.US, Region.KR,
+        Region.EU, Region.KR,
+        Region.KR, Region.US,
+        Region.CN, Region.CN
+    );
 
     private String regionUri;
     private final Map<Region, Var<Region>> forceRegions = new EnumMap<>(Region.class);
@@ -241,9 +248,18 @@ extends BaseAPI
         }
     }
 
-    public static Region getDefaultForceRegion(Region region)
+    public Region getDefaultOrHealthyForceRegion(Region region)
     {
-        return region == Region.US || region == Region.EU ? Region.KR : Region.CN;
+        Region defaultRegion = DEFAULT_REGION_REDIRECTS.get(region);
+        if(getErrorRate(region, false) <= FORCE_REGION_ERROR_RATE_THRESHOLD) return defaultRegion;
+
+        for(Map.Entry<Region, APIHealthMonitor> entry : healthMonitors.entrySet())
+            if(entry.getKey() != region
+                && entry.getValue().getErrorRate() > 0
+                && entry.getValue().getErrorRate() <= FORCE_REGION_ERROR_RATE_THRESHOLD)
+                    return entry.getKey();
+
+        return defaultRegion;
     }
 
     protected APIHealthMonitor getHealthMonitor(Region region, boolean web)
@@ -342,7 +358,7 @@ extends BaseAPI
 
     public void setForceRegion(Region target)
     {
-        setForceRegion(target, getDefaultForceRegion(target));
+        setForceRegion(target, getDefaultOrHealthyForceRegion(target));
     }
 
     public void setForceRegion(Region target, Region force)
