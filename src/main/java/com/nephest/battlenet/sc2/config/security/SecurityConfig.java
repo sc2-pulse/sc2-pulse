@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.RememberMeServices;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
@@ -31,6 +32,9 @@ public class SecurityConfig
 
     @Autowired @Qualifier("concurrentPersistentTokenBasedRememberMeService")
     private RememberMeServices rememberMeServices;
+
+    @Autowired @Qualifier("updateDataAuthenticationSuccessHandler")
+    private AuthenticationSuccessHandler authenticationSuccessHandler;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http)
@@ -60,7 +64,7 @@ public class SecurityConfig
                 .logoutSuccessUrl("/?#stats")
             .and().oauth2Login()
                 .loginPage("/login")
-                .defaultSuccessUrl("/?#personal-characters")
+                .successHandler(authenticationSuccessHandler)
                 .failureUrl("/login?oauthError=1")
                 .userInfoEndpoint().userService(registrationDelegatingOauth2UserService)
             .and().and().rememberMe()

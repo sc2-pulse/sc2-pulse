@@ -26,17 +26,25 @@ import com.nephest.battlenet.sc2.model.discord.DiscordIdentity;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.DiscordUserMeta;
+import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDiscordUserDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
+import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import javax.sql.DataSource;
@@ -77,6 +85,9 @@ public class DiscordIT
 
     @Autowired
     private DiscordService discordService;
+
+    @Autowired
+    private DivisionDAO divisionDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -306,6 +317,107 @@ public class DiscordIT
 
         assertEquals(acc1, accountDAO.findByDiscordUserId(1L).get());
         assertTrue(accountDAO.findByDiscordUserId(2L).isEmpty());
+    }
+
+    @Test
+    public void testFindMainTeam()
+    {
+        final TeamType TEAM_TYPE = TeamType.ARRANGED;
+        final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
+        Region region = Region.EU;
+        Season season1 = new Season(null, 1, region, 2020, 1,
+            LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));
+        Season season2 = new Season(null, 2, region, 2020, 2,
+            LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1));
+        //generate some useless noise
+        seasonGenerator.generateSeason
+        (
+            List.of(season1, season2),
+            List.of(BaseLeague.LeagueType.values()),
+            List.of(QueueType.LOTV_1V1, QueueType.LOTV_4V4),
+            TEAM_TYPE,
+            TIER_TYPE,
+            1
+        );
+        Division bronze1 = divisionDAO.findListByLadder(season1.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE, TIER_TYPE).get(0);
+        Division gold2 = divisionDAO.findListByLadder(season2.getBattlenetId(), region, BaseLeague.LeagueType.GOLD, QueueType.LOTV_4V4, TEAM_TYPE, TIER_TYPE).get(0);
+
+        Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "refacc#123"));
+        //all linked characters should be checked
+        PlayerCharacter[] characters = new PlayerCharacter[3];
+        for(int i = 0; i < characters.length; i++)
+            characters[i] = playerCharacterDAO.merge(new PlayerCharacter(
+                null, account.getId(), Region.values()[i], 10000L + i, 1, "refchar#123"));
+
+        //the last 1v1 team with the highest mmr, should be picked despite having lower MMR than
+        //in the previous season
+        Team team1 = seasonGenerator.createTeam
+        (
+            season2, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1,
+            BigInteger.valueOf(10000L), 1L, 1, 2, 3, 4, characters[2]
+        );
+        //current season 1v1, should be skipped despite being a GM, only MMR matters
+        Team team2 = seasonGenerator.createTeam
+        (
+            season2, new BaseLeague(BaseLeague.LeagueType.GRANDMASTER, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1,
+            BigInteger.valueOf(10001L), 0L, 1, 2, 3, 4, characters[1]
+        );
+        //not a 1v1 team, should be skipped
+        Team team3 = seasonGenerator.createTeam
+        (
+            season2, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, bronze1,
+            BigInteger.valueOf(10002L), 2L, 1, 2, 3, 4, characters[0]
+        );
+        //1v1 team from the previous season, should be skipped despite high mmr
+        Team team4 = seasonGenerator.createTeam
+        (
+            season1, new BaseLeague(BaseLeague.LeagueType.GOLD, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, gold2,
+            BigInteger.valueOf(10003L), 3L, 1, 2, 3, 4, characters[0]
+        );
+
+        assertEquals(team1, discordService.findMainTeam(account.getId()).get());
+    }
+
+    @Test
+    public void whenTeamIsTooOld_thenIgnoreIt()
+    {
+        final TeamType TEAM_TYPE = TeamType.ARRANGED;
+        final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
+        int targetSeasonOffset = 2;
+        LocalDate start = LocalDate.now().minusYears(5);
+        List<Season> seasons = new ArrayList<>();
+        for(int i = 0; i <= targetSeasonOffset + 1; i++)
+            seasons.add(new Season(null, i, Region.EU, 2020, i, start.plusMonths(i), start.plusMonths(i + 1)));
+        seasonGenerator.generateSeason
+        (
+            seasons,
+            List.of(BaseLeague.LeagueType.values()),
+            List.of(QueueType.LOTV_1V1, QueueType.LOTV_4V4),
+            TEAM_TYPE,
+            TIER_TYPE,
+            1
+        );
+
+        Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "refacc#123"));
+        PlayerCharacter character = playerCharacterDAO.merge(new PlayerCharacter(
+            null, account.getId(), Region.EU, 10000L, 1, "refchar#123"));
+        Season oldSeason = seasons.get(0);
+        Division bronze1 = divisionDAO.findListByLadder
+        (
+            oldSeason.getBattlenetId(),
+            Region.EU,
+            BaseLeague.LeagueType.BRONZE,
+            QueueType.LOTV_4V4,
+            TEAM_TYPE, TIER_TYPE
+        ).get(0);
+
+        Team team1 = seasonGenerator.createTeam
+        (
+            oldSeason, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE, bronze1,
+            BigInteger.valueOf(10000L), 1L, 1, 2, 3, 4, character
+        );
+
+        assertTrue(discordService.findMainTeam(account.getId()).isEmpty());
     }
 
     private static void assertDeepEquals(DiscordIdentity user1, DiscordIdentity user2)
