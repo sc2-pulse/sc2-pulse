@@ -27,15 +27,23 @@ import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.Instant;
 import java.util.concurrent.ExecutorService;
+import javax.sql.DataSource;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cache.CacheManager;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.validation.Validator;
+import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
@@ -56,8 +64,22 @@ public class StatsServiceIT
     private ExecutorService dbExecutorService;
 
     @BeforeEach
-    public void beforeEach(@Autowired Validator validator)
+    public void beforeEach
+    (
+        @Autowired DataSource dataSource,
+        @Autowired WebApplicationContext webApplicationContext,
+        @Autowired CacheManager cacheManager,
+        @Autowired Validator validator
+    )
+    throws SQLException
     {
+        try(Connection connection = dataSource.getConnection())
+        {
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+        }
+        cacheManager.getCacheNames()
+            .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         teamDAO = mock(TeamDAO.class);
         statsService = new StatsService
         (
@@ -87,6 +109,16 @@ public class StatsServiceIT
         );
         StatsService nss = mock(StatsService.class);
         statsService.setNestedService(nss);
+    }
+
+    @AfterAll
+    public static void afterAll(@Autowired DataSource dataSource)
+    throws SQLException
+    {
+        try(Connection connection = dataSource.getConnection())
+        {
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
+        }
     }
 
     @Test

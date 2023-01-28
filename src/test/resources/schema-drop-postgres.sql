@@ -4,6 +4,7 @@ DROP FUNCTION IF EXISTS "get_top_percentage_league_lotv" CASCADE;
 DROP TABLE IF EXISTS "notification" CASCADE;
 DROP TABLE IF EXISTS "authentication_request" CASCADE;
 DROP TABLE IF EXISTS "persistent_logins" CASCADE;
+DROP TABLE IF EXISTS "oauth2_authorized_client" CASCADE;
 DROP TABLE IF EXISTS "evidence_vote" CASCADE;
 DROP TABLE IF EXISTS "evidence" CASCADE;
 DROP TABLE IF EXISTS "player_character_report" CASCADE;
