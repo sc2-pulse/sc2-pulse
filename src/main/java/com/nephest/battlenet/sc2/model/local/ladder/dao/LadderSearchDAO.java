@@ -134,7 +134,7 @@ public class LadderSearchDAO
     private static final String FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY =
         String.format(FIND_TEAM_MEMBERS_ANCHOR_FORMAT, "ASC", ">");
 
-    private static final String FIND_CARACTER_TEAM_MEMBERS_QUERY =
+    private static final String FIND_CHARACTER_TEAM_MEMBERS_TEMPLATE =
         "WITH team_filtered AS "
         + "( "
             + "SELECT "
@@ -144,6 +144,9 @@ public class LadderSearchDAO
             + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
             + "WHERE "
             + "player_character.id=:playerCharacterId "
+            + "AND (array_length(:seasons::smallint[], 1) IS NULL OR season = ANY(:seasons)) "
+            + "AND (array_length(:queues::smallint[], 1) IS NULL OR queue_type = ANY(:queues)) "
+            + "%1$s"
         + ") "
         + "SELECT "
         + FIND_TEAM_MEMBERS_BASE
@@ -169,6 +172,19 @@ public class LadderSearchDAO
         + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
         + "team.rating DESC, team.id ASC, "
         + "player_character.id ASC ";
+
+    private static final String FIND_CHARACTER_TEAM_MEMBERS_QUERY =
+        String.format(FIND_CHARACTER_TEAM_MEMBERS_TEMPLATE, "");
+
+    private static final String FIND_CHARACTER_TEAM_MEMBERS_LIMIT_QUERY =
+        String.format
+        (
+            FIND_CHARACTER_TEAM_MEMBERS_TEMPLATE,
+            "ORDER BY team.season DESC, "
+            + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
+            + "team.rating DESC, team.id ASC "
+            + "LIMIT :limit"
+        );
 
     private static final String FIND_LEGACY_TEAM_MEMBERS =
         "SELECT "
@@ -393,14 +409,35 @@ public class LadderSearchDAO
         return seasonDAO.findListByFirstBattlenetId();
     }
 
-    public List<LadderTeam> findCharacterTeams(long id)
+    public List<LadderTeam> findCharacterTeams
+    (
+        long id,
+        Set<Integer> seasons,
+        Set<QueueType> queues,
+        Integer limit
+    )
     {
+        Integer[] queueIds = queues.isEmpty()
+            ? null
+            : queues.stream()
+                .map(q->conversionService.convert(q, Integer.class))
+                .toArray(Integer[]::new);
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterId", id)
+            .addValue("seasons", seasons.isEmpty() ? null : seasons.toArray(Integer[]::new))
+            .addValue("queues", queueIds)
+            .addValue("limit", limit)
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
-        return template
-            .query(FIND_CARACTER_TEAM_MEMBERS_QUERY, params, LADDER_TEAMS_EXTRACTOR);
+        String query = limit != null
+            ? FIND_CHARACTER_TEAM_MEMBERS_LIMIT_QUERY
+            : FIND_CHARACTER_TEAM_MEMBERS_QUERY;
+        return template.query(query, params, LADDER_TEAMS_EXTRACTOR);
+    }
+
+    public List<LadderTeam> findCharacterTeams(long id)
+    {
+        return findCharacterTeams(id, Set.of(), Set.of(), null);
     }
 
     public List<LadderTeam> findFollowingTeams
