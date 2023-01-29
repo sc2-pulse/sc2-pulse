@@ -640,4 +640,23 @@ public class PlayerCharacterDAOIT
             .countByUpdatedMax(OffsetDateTime.now(), Set.of(Region.EU)));
     }
 
+    @Test
+    public void testFindByAccountId()
+    {
+        Account acc = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        Account acc2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#2"));
+        PlayerCharacter pc1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
+        PlayerCharacter pc2 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 2L, 1, "name#2"));
+        PlayerCharacter pc3 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc2.getId(), Region.US, 3L, 1, "name#3"));
+
+        List<PlayerCharacter> characters = playerCharacterDAO.findByAccountId(acc.getId());
+        assertEquals(2, characters.size());
+        characters.sort(Comparator.comparing(PlayerCharacter::getId));
+        assertEquals(pc1, characters.get(0));
+        assertEquals(pc2, characters.get(1));
+    }
+
 }

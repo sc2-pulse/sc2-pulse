@@ -404,6 +404,11 @@ public class PlayerCharacterDAO
         + "FROM player_character "
         + "WHERE id IN(:ids)";
 
+    private static final String FIND_BY_ACCOUNT_ID =
+        "SELECT " + STD_SELECT
+        + "FROM player_character "
+        + "WHERE account_id = :accountId";
+
     private static final String FIND_INACTIVE_CLAN_MEMBERS =
         "SELECT " + STD_SELECT
         + "FROM clan_member "
@@ -678,6 +683,13 @@ public class PlayerCharacterDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("ids", List.of(ids));
         return template.query(FIND_BY_IDS, params, getStdRowMapper());
+    }
+
+    public List<PlayerCharacter> findByAccountId(Long accountId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("accountId", accountId);
+        return template.query(FIND_BY_ACCOUNT_ID, params, getStdRowMapper());
     }
 
     public List<PlayerCharacter> findInactiveClanMembers
