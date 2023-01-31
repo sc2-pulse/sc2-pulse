@@ -169,8 +169,7 @@ public class LadderSearchDAO
             + "AND confirmed_cheater_report.status = true "
 
         + "ORDER BY team.season DESC, "
-        + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
-        + "team.rating DESC, team.id ASC, "
+        + "team.queue_type ASC, team.team_type ASC, team.rating DESC, team.id ASC, "
         + "player_character.id ASC ";
 
     private static final String FIND_CHARACTER_TEAM_MEMBERS_QUERY =
@@ -181,8 +180,7 @@ public class LadderSearchDAO
         (
             FIND_CHARACTER_TEAM_MEMBERS_TEMPLATE,
             "ORDER BY team.season DESC, "
-            + "team.queue_type ASC, team.team_type ASC, team.league_type DESC, "
-            + "team.rating DESC, team.id ASC "
+            + "team.queue_type ASC, team.team_type ASC, team.rating DESC, team.id ASC "
             + "LIMIT :limit"
         );
 
