@@ -34,6 +34,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Service;
@@ -63,11 +64,14 @@ public class DiscordService
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final LadderSearchDAO ladderSearchDAO;
-    private final DiscordAPI discordAPI;
+    private DiscordAPI discordAPI;
     private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
     private final PulseConnectionParameters pulseConnectionParameters;
     private final ExecutorService dbExecutorService;
     private final ConversionService conversionService;
+
+    @Autowired @Lazy
+    private DiscordService discordService;
 
     @Autowired
     public DiscordService
@@ -98,6 +102,26 @@ public class DiscordService
         this.conversionService = conversionService;
     }
 
+    protected DiscordAPI getDiscordAPI()
+    {
+        return discordAPI;
+    }
+
+    protected void setDiscordAPI(DiscordAPI discordAPI)
+    {
+        this.discordAPI = discordAPI;
+    }
+
+    protected DiscordService getDiscordService()
+    {
+        return discordService;
+    }
+
+    protected void setDiscordService(DiscordService discordService)
+    {
+        this.discordService = discordService;
+    }
+
     /**
      * Remove existing connections and link the ids afterwards within the same transaction.
      *
@@ -118,8 +142,14 @@ public class DiscordService
         linkAccountToDiscordUser(accountId, discordUser.getId());
     }
 
-    @Transactional
     public void unlinkAccountFromDiscordUser(Long accountId, Long discordUserId)
+    {
+        dropRoles(accountId).block();
+        discordService.unlinkAccountFromDiscordUserDB(accountId, discordUserId);
+    }
+
+    @Transactional
+    public void unlinkAccountFromDiscordUserDB(Long accountId, Long discordUserId)
     {
         accountDiscordUserDAO.remove(accountId, discordUserId);
         oAuth2AuthorizedClientService

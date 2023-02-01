@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
+import com.nephest.battlenet.sc2.web.service.DiscordIT;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;

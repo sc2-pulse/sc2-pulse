@@ -1,12 +1,17 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-package com.nephest.battlenet.sc2.model.discord.dao;
+package com.nephest.battlenet.sc2.web.service;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -16,6 +21,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.discord.connection.ApplicationRoleConnection;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -24,6 +30,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.discord.DiscordIdentity;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
+import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.DiscordUserMeta;
 import com.nephest.battlenet.sc2.model.local.Division;
@@ -38,9 +45,6 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
-import com.nephest.battlenet.sc2.web.service.DiscordAPI;
-import com.nephest.battlenet.sc2.web.service.DiscordService;
-import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -52,8 +56,10 @@ import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.cache.CacheManager;
@@ -71,6 +77,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import reactor.core.publisher.Mono;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -115,6 +122,8 @@ public class DiscordIT
 
     public static final String BATTLE_TAG = "battletag#0";
 
+    private static DiscordAPI originalAPI;
+
     @BeforeEach
     public void beforeEach
     (
@@ -137,12 +146,26 @@ public class DiscordIT
             .apply(springSecurity())
             .alwaysDo(print())
             .build();
+
+        DiscordAPI mockAPI = mock(DiscordAPI.class);
+        discordService.setDiscordAPI(mockAPI);
+    }
+
+    @BeforeAll
+    public static void beforeAll(@Autowired DiscordService discordService)
+    {
+        originalAPI = discordService.getDiscordAPI();
     }
 
     @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
+    public static void afterAll
+    (
+        @Autowired DataSource dataSource,
+        @Autowired DiscordService discordService
+    )
     throws SQLException
     {
+        discordService.setDiscordAPI(originalAPI);
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
@@ -213,6 +236,8 @@ public class DiscordIT
         assertNotNull(oAuth2AuthorizedClientService.loadAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1"));
 
         //second links is removed, no linked chars
+        doReturn(Mono.empty())
+            .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
         mvc.perform
         (
             post("/api/my/discord/unlink")
@@ -223,6 +248,16 @@ public class DiscordIT
         verifyLinkedDiscordUser(1L, null);
         verifyLinkedDiscordUser(2L, null);
         assertNull(oAuth2AuthorizedClientService.loadAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1"));
+
+        //roles are dropped
+        ArgumentCaptor<ApplicationRoleConnection> connectionArgumentCaptor =
+            ArgumentCaptor.forClass(ApplicationRoleConnection.class);
+        verify(discordService.getDiscordAPI())
+            .updateConnectionMetaData(eq("1"), connectionArgumentCaptor.capture());
+        ApplicationRoleConnection connection = connectionArgumentCaptor.getValue();
+        assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
+        assertEquals(BATTLE_TAG, connection.getPlatformUsername());
+        assertNull(connection.getMetadata());
     }
 
     private void verifyLinkedDiscordUser(Long characterId, DiscordUser discordUser)
