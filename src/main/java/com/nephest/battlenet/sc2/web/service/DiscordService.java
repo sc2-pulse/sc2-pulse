@@ -35,6 +35,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
@@ -63,6 +64,7 @@ public class DiscordService
     private final PlayerCharacterDAO playerCharacterDAO;
     private final LadderSearchDAO ladderSearchDAO;
     private final DiscordAPI discordAPI;
+    private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
     private final PulseConnectionParameters pulseConnectionParameters;
     private final ExecutorService dbExecutorService;
     private final ConversionService conversionService;
@@ -77,6 +79,7 @@ public class DiscordService
         PlayerCharacterDAO playerCharacterDAO,
         LadderSearchDAO ladderSearchDAO,
         DiscordAPI discordAPI,
+        OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
         PulseConnectionParameters pulseConnectionParameters,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService
@@ -90,6 +93,7 @@ public class DiscordService
         this.ladderSearchDAO = ladderSearchDAO;
         this.pulseConnectionParameters = pulseConnectionParameters;
         this.discordAPI = discordAPI;
+        this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
         this.dbExecutorService = dbExecutorService;
         this.conversionService = conversionService;
     }
@@ -114,9 +118,12 @@ public class DiscordService
         linkAccountToDiscordUser(accountId, discordUser.getId());
     }
 
+    @Transactional
     public void unlinkAccountFromDiscordUser(Long accountId, Long discordUserId)
     {
         accountDiscordUserDAO.remove(accountId, discordUserId);
+        oAuth2AuthorizedClientService
+            .removeAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, String.valueOf(accountId));
     }
 
     public void setVisibility(Long accountId, boolean isVisible)

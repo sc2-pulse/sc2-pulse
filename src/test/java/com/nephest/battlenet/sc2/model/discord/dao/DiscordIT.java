@@ -38,15 +38,18 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
+import com.nephest.battlenet.sc2.web.service.DiscordAPI;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -57,6 +60,13 @@ import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -88,6 +98,12 @@ public class DiscordIT
 
     @Autowired
     private DivisionDAO divisionDAO;
+
+    @Autowired
+    private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
+
+    @Autowired
+    private ClientRegistrationRepository clientRegistrationRepository;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -138,6 +154,7 @@ public class DiscordIT
     public void testChain()
     throws Exception
     {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         seasonGenerator.generateDefaultSeason
         (
             List.of(Region.EU),
@@ -173,6 +190,28 @@ public class DiscordIT
         verifyLinkedDiscordUser(1L, discordUser);
         verifyLinkedDiscordUser(2L, null);
 
+        //simulate oauth authorization, should be removed when unlinking the discord account
+        OAuth2AuthorizedClient client = new OAuth2AuthorizedClient
+        (
+            clientRegistrationRepository.findByRegistrationId(DiscordAPI.USER_CLIENT_REGISTRATION_ID),
+            "1",
+            new OAuth2AccessToken
+            (
+                OAuth2AccessToken.TokenType.BEARER,
+                "token",
+                Instant.now(),
+                Instant.now().plusSeconds(99999),
+                Set.of("test")
+            ),
+            new OAuth2RefreshToken
+            (
+                "token",
+                Instant.now()
+            )
+        );
+        oAuth2AuthorizedClientService.saveAuthorizedClient(client, authentication);
+        assertNotNull(oAuth2AuthorizedClientService.loadAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1"));
+
         //second links is removed, no linked chars
         mvc.perform
         (
@@ -183,6 +222,7 @@ public class DiscordIT
             .andExpect(status().isOk());
         verifyLinkedDiscordUser(1L, null);
         verifyLinkedDiscordUser(2L, null);
+        assertNull(oAuth2AuthorizedClientService.loadAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1"));
     }
 
     private void verifyLinkedDiscordUser(Long characterId, DiscordUser discordUser)

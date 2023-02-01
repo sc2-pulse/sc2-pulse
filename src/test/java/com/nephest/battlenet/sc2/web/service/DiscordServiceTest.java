@@ -50,6 +50,7 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import reactor.core.publisher.Flux;
 
 @ExtendWith(MockitoExtension.class)
@@ -78,6 +79,9 @@ public class DiscordServiceTest
     private DiscordAPI api;
 
     @Mock
+    private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
+
+    @Mock
     private ExecutorService executor;
 
     @Mock
@@ -97,6 +101,7 @@ public class DiscordServiceTest
             playerCharacterDAO,
             ladderSearchDAO,
             api,
+            oAuth2AuthorizedClientService,
             new PulseConnectionParameters(conversionService),
             executor,
             conversionService
