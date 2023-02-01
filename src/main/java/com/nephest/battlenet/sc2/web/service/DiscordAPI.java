@@ -46,6 +46,7 @@ import reactor.util.retry.RetrySpec;
 @Service
 @Discord
 public class DiscordAPI
+extends BaseAPI
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(DiscordAPI.class);
@@ -65,7 +66,6 @@ public class DiscordAPI
 
     private final SpringDiscordClient discordClient;
     private final OAuth2AuthorizedClientService auth2AuthorizedClientService;
-    private WebClient client;
     private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
     private final AtomicInteger requestsPerSecond = new AtomicInteger(DEFAULT_REQUESTS_PER_SECOND);
     private final String applicationId;
@@ -95,10 +95,11 @@ public class DiscordAPI
     {
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
-        client = WebServiceUtil.getWebClientBuilder(objectMapper, 5 * 1024, ALL)
+        WebClient client = WebServiceUtil.getWebClientBuilder(objectMapper, 5 * 1024, ALL)
             .apply(oauth2Client.oauth2Configuration())
             .baseUrl(BASE_URL)
             .build();
+        setWebClient(client);
     }
 
     public SpringDiscordClient getDiscordClient()
@@ -131,7 +132,7 @@ public class DiscordAPI
 
     private <T> Mono<T> getMono(Class<T> clazz, String uri, Object... params)
     {
-        return client
+        return getWebClient()
             .get()
             .uri(uri, params)
             .attributes(clientRegistrationId(USER_CLIENT_REGISTRATION_ID))
@@ -143,7 +144,7 @@ public class DiscordAPI
 
     private <T> Flux<T> getFlux(Class<T> clazz, String uri, Object... params)
     {
-        return client
+        return getWebClient()
             .get()
             .uri(uri, params)
             .attributes(clientRegistrationId(USER_CLIENT_REGISTRATION_ID))
@@ -197,7 +198,7 @@ public class DiscordAPI
 
     public Mono<Void> updateConnectionMetaData(List<ConnectionMetaData> data)
     {
-        return client
+        return getWebClient()
             .put()
             .uri("/applications/{applicationId}/role-connections/metadata", applicationId)
             .contentType(MediaType.APPLICATION_JSON)
@@ -220,7 +221,7 @@ public class DiscordAPI
         if(oAuth2AuthorizedClient == null) return Mono
             .error(new IllegalStateException("OAuth2AuthorizedClient not found for user " + principalName));
 
-        return client
+        return getWebClient()
             .put()
             .uri("/users/@me/applications/{application.id}/role-connection", applicationId)
             .contentType(MediaType.APPLICATION_JSON)
