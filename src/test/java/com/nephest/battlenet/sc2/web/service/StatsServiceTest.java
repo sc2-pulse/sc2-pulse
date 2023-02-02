@@ -40,6 +40,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -127,6 +128,9 @@ public class StatsServiceTest
     private final ExecutorService dbExecutorService = Executors.newSingleThreadExecutor();
 
     @Mock
+    private EventService eventService;
+
+    @Mock
     private Validator validator;
     
     @Mock
@@ -159,7 +163,8 @@ public class StatsServiceTest
             sc2WebServiceUtil,
             conversionService,
             validator,
-            dbExecutorService
+            dbExecutorService,
+            eventService
         );
         ss.setNestedService(nss);
     }

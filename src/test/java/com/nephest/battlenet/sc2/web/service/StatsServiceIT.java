@@ -105,7 +105,8 @@ public class StatsServiceIT
             null,
             null,
             validator,
-            dbExecutorService
+            dbExecutorService,
+            null
         );
         StatsService nss = mock(StatsService.class);
         statsService.setNestedService(nss);

@@ -47,6 +47,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
 import java.time.Instant;
@@ -160,6 +161,7 @@ public class StatsService
     private SC2WebServiceUtil sc2WebServiceUtil;
     private ConversionService conversionService;
     private ExecutorService dbExecutorService;
+    private EventService eventService;
     private Predicate<BlizzardTeam> teamValidationPredicate;
 
     public StatsService(){}
@@ -189,7 +191,8 @@ public class StatsService
         SC2WebServiceUtil sc2WebServiceUtil,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
-        @Qualifier("dbExecutorService") ExecutorService dbExecutorService
+        @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
+        EventService eventService
     )
     {
         this.alternativeLadderService = alternativeLadderService;
@@ -214,6 +217,7 @@ public class StatsService
         this.sc2WebServiceUtil = sc2WebServiceUtil;
         this.conversionService = conversionService;
         this.dbExecutorService = dbExecutorService;
+        this.eventService = eventService;
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         for(Region r : Region.values())
         {
@@ -573,6 +577,9 @@ public class StatsService
             });
         saveMembersConcurrently(members);
         saveClans(clanDAO, clanMemberDAO, clans);
+        members.stream()
+            .map(Tuple3::getT2)
+            .forEach(eventService::createLadderCharacterActivityEvent);
     }
 
     //cross field validation
