@@ -45,6 +45,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
+import com.nephest.battlenet.sc2.service.EventService;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -56,6 +57,7 @@ import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -78,6 +80,8 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple3;
+import reactor.util.function.Tuples;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -111,6 +115,9 @@ public class DiscordIT
 
     @Autowired
     private ClientRegistrationRepository clientRegistrationRepository;
+
+    @Autowired
+    private EventService eventService;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -397,6 +404,33 @@ public class DiscordIT
     @Test
     public void testFindMainTeam()
     {
+        Tuple3<Account, PlayerCharacter[], Team> main = stubMainTeam();
+        assertEquals(main.getT3(), discordService.findMainTeam(main.getT1().getId()).get());
+    }
+
+    @Test
+    public void whenLadderCharacterActivityEventReceived_thenUpdateRoles()
+    {
+        Tuple3<Account, PlayerCharacter[], Team> main = stubMainTeam();
+        eventService.createLadderCharacterActivityEvent(main.getT2()[0]);
+
+        ArgumentCaptor<ApplicationRoleConnection> captor =
+            ArgumentCaptor.forClass(ApplicationRoleConnection.class);
+        verify(discordService.getDiscordAPI())
+            .updateConnectionMetaData(eq(String.valueOf(main.getT1().getId())), captor.capture());
+        ApplicationRoleConnection connection = captor.getValue();
+        assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
+        assertEquals(main.getT1().getBattleTag(), connection.getPlatformUsername());
+        Assertions.assertNotNull(connection.getMetadata());
+        assertEquals("2", connection.getMetadata().get("region"));
+        assertEquals("4", connection.getMetadata().get("race"));
+        assertEquals("0", connection.getMetadata().get("league"));
+        assertEquals("1", connection.getMetadata().get("rating_from"));
+        assertEquals("1", connection.getMetadata().get("rating_to"));
+    }
+
+    private Tuple3<Account, PlayerCharacter[], Team> stubMainTeam()
+    {
         final TeamType TEAM_TYPE = TeamType.ARRANGED;
         final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
         Region region = Region.EU;
@@ -450,7 +484,7 @@ public class DiscordIT
             BigInteger.valueOf(10003L), 3L, 1, 2, 3, 4, characters[0]
         );
 
-        assertEquals(team1, discordService.findMainTeam(account.getId()).get());
+        return Tuples.of(account, characters, team1);
     }
 
     @Test

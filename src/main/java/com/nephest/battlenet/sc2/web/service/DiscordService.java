@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -84,6 +85,7 @@ public class DiscordService
         LadderSearchDAO ladderSearchDAO,
         DiscordAPI discordAPI,
         OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
+        EventService eventService,
         PulseConnectionParameters pulseConnectionParameters,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService
@@ -100,6 +102,7 @@ public class DiscordService
         this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
         this.dbExecutorService = dbExecutorService;
         this.conversionService = conversionService;
+        eventService.getLadderCharacterActivityEvent().subscribe(c->updateRoles(c.getAccountId()));
     }
 
     protected DiscordAPI getDiscordAPI()

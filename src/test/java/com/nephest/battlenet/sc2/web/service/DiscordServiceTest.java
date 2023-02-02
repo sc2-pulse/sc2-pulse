@@ -35,6 +35,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.service.EventService;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
@@ -85,6 +86,9 @@ public class DiscordServiceTest
     private ExecutorService executor;
 
     @Mock
+    private EventService eventService;
+
+    @Mock
     private ConversionService conversionService;
 
     private DiscordService discordService;
@@ -92,6 +96,7 @@ public class DiscordServiceTest
     @BeforeEach
     public void beforeEach()
     {
+        when(eventService.getLadderCharacterActivityEvent()).thenReturn(Flux.empty());
         discordService = new DiscordService
         (
             discordUserDAO,
@@ -102,6 +107,7 @@ public class DiscordServiceTest
             ladderSearchDAO,
             api,
             oAuth2AuthorizedClientService,
+            eventService,
             new PulseConnectionParameters(conversionService),
             executor,
             conversionService
