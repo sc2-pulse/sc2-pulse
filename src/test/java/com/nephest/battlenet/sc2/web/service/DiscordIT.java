@@ -56,6 +56,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -413,6 +414,11 @@ public class DiscordIT
     public void whenLadderCharacterActivityEventReceived_thenUpdateRoles()
     {
         Tuple3<Account, PlayerCharacter[], Team> main = stubMainTeam();
+        AtomicBoolean apiWasCalled = new AtomicBoolean(false);
+        doReturn(Mono.create(sink->{
+            apiWasCalled.set(true);
+            sink.success();
+        })).when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
         DiscordUser discordUser = discordUserDAO.merge(new DiscordUser(1L, "name", 1))[0];
         accountDiscordUserDAO.create(new AccountDiscordUser(main.getT1().getId(), discordUser.getId()));
         eventService.createLadderCharacterActivityEvent(main.getT2()[0]);
@@ -430,6 +436,7 @@ public class DiscordIT
         assertEquals("0", connection.getMetadata().get("league"));
         assertEquals("1", connection.getMetadata().get("rating_from"));
         assertEquals("1", connection.getMetadata().get("rating_to"));
+        assertTrue(apiWasCalled.get());
     }
 
     private Tuple3<Account, PlayerCharacter[], Team> stubMainTeam()

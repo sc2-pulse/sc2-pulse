@@ -102,7 +102,8 @@ public class DiscordService
         this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
         this.dbExecutorService = dbExecutorService;
         this.conversionService = conversionService;
-        eventService.getLadderCharacterActivityEvent().subscribe(c->updateRoles(c.getAccountId()));
+        eventService.getLadderCharacterActivityEvent()
+            .subscribe(c->updateRoles(c.getAccountId()).subscribe());
     }
 
     protected DiscordAPI getDiscordAPI()
