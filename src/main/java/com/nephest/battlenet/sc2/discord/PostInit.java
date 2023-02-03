@@ -9,6 +9,8 @@ import com.nephest.battlenet.sc2.discord.event.AutoComplete;
 import com.nephest.battlenet.sc2.discord.event.SlashCommand;
 import com.nephest.battlenet.sc2.discord.event.UserCommand;
 import com.nephest.battlenet.sc2.web.service.DiscordAPI;
+import discord4j.core.event.domain.guild.GuildCreateEvent;
+import discord4j.core.event.domain.guild.GuildDeleteEvent;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,6 +55,10 @@ public class PostInit
 
     private void init(DiscordAPI discordAPI, PulseConnectionParameters connectionParameters)
     {
+        discordAPI.getDiscordClient().getClient()
+            .on(GuildCreateEvent.class, discordAPI::botGuildsChanged).subscribe();
+        discordAPI.getDiscordClient().getClient()
+            .on(GuildDeleteEvent.class, discordAPI::botGuildsChanged).subscribe();
         List<ConnectionMetaData> connectionMetaData = connectionParameters
             .getParameters()
             .values()

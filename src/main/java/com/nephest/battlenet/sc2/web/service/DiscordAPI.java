@@ -9,6 +9,7 @@ import static org.springframework.security.oauth2.client.web.reactive.function.c
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.discord.Discord;
+import com.nephest.battlenet.sc2.discord.GuildWrapper;
 import com.nephest.battlenet.sc2.discord.SpringDiscordClient;
 import com.nephest.battlenet.sc2.discord.connection.ApplicationRoleConnection;
 import com.nephest.battlenet.sc2.discord.connection.ConnectionMetaData;
@@ -16,16 +17,23 @@ import com.nephest.battlenet.sc2.model.discord.DiscordConnection;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import discord4j.common.util.Snowflake;
+import discord4j.core.event.domain.guild.GuildEvent;
+import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.User;
 import java.time.Duration;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
@@ -229,6 +237,38 @@ extends BaseAPI
             .bodyValue(connection)
             .accept(ALL)
             .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, Void.class))
+            .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+            .delaySubscription(rateLimiter.requestSlot());
+    }
+
+    @Cacheable(cacheNames = "discord-bot-guilds")
+    public Map<Long, Guild> getBotGuilds()
+    {
+        return discordClient.getClient()
+            .getGuilds()
+            .toStream()
+            .collect(Collectors.toUnmodifiableMap(g->g.getId().asLong(), Function.identity()));
+    }
+
+    @CacheEvict(cacheNames = "discord-bot-guilds", allEntries = true)
+    public Mono<Void> botGuildsChanged(GuildEvent evt)
+    {
+        return Mono.empty();
+    }
+
+    public <T extends GuildWrapper> Flux<T> getGuilds(String principalName, Class<T> clazz)
+    {
+        OAuth2AuthorizedClient oAuth2AuthorizedClient = auth2AuthorizedClientService
+            .loadAuthorizedClient(USER_CLIENT_REGISTRATION_ID, principalName);
+        if(oAuth2AuthorizedClient == null) return Flux
+            .error(new IllegalStateException("OAuth2AuthorizedClient not found for user " + principalName));
+
+        return getWebClient()
+            .get()
+            .uri("/users/@me/guilds")
+            .attributes(oauth2AuthorizedClient(oAuth2AuthorizedClient))
+            .accept(ALL)
+            .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
             .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
             .delaySubscription(rateLimiter.requestSlot());
     }
