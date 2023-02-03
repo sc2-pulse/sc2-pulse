@@ -13,6 +13,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
@@ -39,6 +40,7 @@ import com.nephest.battlenet.sc2.service.EventService;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
@@ -189,6 +191,7 @@ public class DiscordServiceTest
     @Test
     public void whenNoMainTeam_thenDropRoles()
     {
+        when(accountDiscordUserDAO.findAccountIds()).thenReturn(Set.of(1L));
         DiscordService spy = Mockito.spy(discordService);
         when(spy.findMainTeam(any())).thenReturn(Optional.empty());
         String tag = "tag#123";
@@ -211,6 +214,7 @@ public class DiscordServiceTest
         when(conversionService.convert(Region.KR, Integer.class)).thenReturn(3);
         when(conversionService.convert(BaseLeague.LeagueType.DIAMOND, Integer.class)).thenReturn(4);
         when(conversionService.convert(Race.PROTOSS, Integer.class)).thenReturn(2);
+        when(accountDiscordUserDAO.findAccountIds()).thenReturn(Set.of(1L));
         DiscordService spy = Mockito.spy(discordService);
         String tag = "tag#123";
         LadderTeam team = new LadderTeam
@@ -261,6 +265,14 @@ public class DiscordServiceTest
         assertEquals("4", connection.getMetadata().get("league"));
         assertEquals("1234", connection.getMetadata().get("rating_from"));
         assertEquals("1234", connection.getMetadata().get("rating_to"));
+    }
+
+    @Test
+    public void whenDiscordUserNotBound_thenDontUpdateRoles()
+    {
+        when(accountDiscordUserDAO.findAccountIds()).thenReturn(Set.of());
+        discordService.updateRoles(1L);
+        verifyNoInteractions(api);
     }
 
 }

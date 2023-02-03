@@ -413,6 +413,8 @@ public class DiscordIT
     public void whenLadderCharacterActivityEventReceived_thenUpdateRoles()
     {
         Tuple3<Account, PlayerCharacter[], Team> main = stubMainTeam();
+        DiscordUser discordUser = discordUserDAO.merge(new DiscordUser(1L, "name", 1))[0];
+        accountDiscordUserDAO.create(new AccountDiscordUser(main.getT1().getId(), discordUser.getId()));
         eventService.createLadderCharacterActivityEvent(main.getT2()[0]);
 
         ArgumentCaptor<ApplicationRoleConnection> captor =

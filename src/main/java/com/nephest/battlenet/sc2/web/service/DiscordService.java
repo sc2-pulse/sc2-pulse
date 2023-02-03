@@ -223,6 +223,8 @@ public class DiscordService
 
     public Mono<Void> updateRoles(Long accountId)
     {
+        if(!accountDiscordUserDAO.findAccountIds().contains(accountId)) return Mono.empty();
+
         LadderTeam mainTeam = findMainTeam(accountId).orElse(null);
         if(mainTeam == null) return dropRoles(accountId);
 
