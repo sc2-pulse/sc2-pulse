@@ -6,10 +6,15 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.DiscordUserMeta;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -28,6 +33,8 @@ public class AccountDiscordUserDAO
         "SELECT public "
         + "FROM account_discord_user "
         + "WHERE discord_user_id = :discordUserId";
+
+    private static final String FIND_ACCOUNT_IDS = "SELECT account_id FROM account_discord_user";
 
     private static final String DELETE_BY_ACCOUNT_ID_OR_DISCORD_USER_ID =
         "DELETE FROM account_discord_user "
@@ -60,6 +67,7 @@ public class AccountDiscordUserDAO
         this.template = template;
     }
 
+    @CacheEvict(allEntries = true, cacheNames = "discord-account-ids")
     public int[] create(AccountDiscordUser... users)
     {
         if(users.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
@@ -84,6 +92,14 @@ public class AccountDiscordUserDAO
         return Optional.ofNullable(template.query(FIND_META_BY_ID, params, META_EXTRACTOR));
     }
 
+    @Cacheable(cacheNames = "discord-account-ids")
+    public Set<Long> findAccountIds()
+    {
+        return template.queryForStream(FIND_ACCOUNT_IDS, Map.of(), DAOUtils.LONG_MAPPER)
+            .collect(Collectors.toSet());
+    }
+
+    @CacheEvict(allEntries = true, cacheNames = "discord-account-ids")
     public int remove(Long accountId, Long discordUserId)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()

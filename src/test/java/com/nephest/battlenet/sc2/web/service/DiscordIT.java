@@ -32,6 +32,7 @@ import com.nephest.battlenet.sc2.model.discord.DiscordIdentity;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.DiscordUserMeta;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -528,6 +529,35 @@ public class DiscordIT
 
         assertTrue(discordService.findMainTeam(account.getId()).isEmpty());
     }
+
+    @Test
+    public void testFindAccountIds()
+    {
+        Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "refacc", 3);
+        DiscordUser[] discordUsers = discordUserDAO.merge
+        (
+            new DiscordUser(1L, "name", 1),
+            new DiscordUser(2L, "name", 2),
+            new DiscordUser(3L, "name", 3)
+        );
+        assertTrue(accountDiscordUserDAO.findAccountIds().isEmpty());
+
+        accountDiscordUserDAO.create
+        (
+            new AccountDiscordUser(accounts[0].getId(), discordUsers[0].getId()),
+            new AccountDiscordUser(accounts[1].getId(), discordUsers[1].getId())
+        );
+        Set<Long> accountIds1 = accountDiscordUserDAO.findAccountIds();
+        assertEquals(2, accountIds1.size());
+        assertTrue(accountIds1.contains(accounts[0].getId()));
+        assertTrue(accountIds1.contains(accounts[1].getId()));
+
+        accountDiscordUserDAO.remove(accounts[0].getId(), discordUsers[0].getId());
+        Set<Long> accountIds2 = accountDiscordUserDAO.findAccountIds();
+        assertEquals(1, accountIds2.size());
+        assertTrue(accountIds2.contains(accounts[1].getId()));
+    }
+
 
     private static void assertDeepEquals(DiscordIdentity user1, DiscordIdentity user2)
     {
