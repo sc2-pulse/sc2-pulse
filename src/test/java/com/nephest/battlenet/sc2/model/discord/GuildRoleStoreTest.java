@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.discord;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -50,7 +51,9 @@ public class GuildRoleStoreTest
             new Role(client, roleBuilder().id(2L).name("broNze").build(), guildId),
             new Role(client, roleBuilder().id(3L).name("metal").build(), guildId),
             new Role(client, roleBuilder().id(4L).name("TERRAN").build(), guildId),
-            new Role(client, roleBuilder().id(5L).name("1-100MMR").build(), guildId)
+            new Role(client, roleBuilder().id(5L).name("1-100MMR").build(), guildId),
+            //managed roles should be skipped
+            new Role(client, roleBuilder().id(6L).name("diamond").managed(true).build(), guildId)
         );
         ApplicationCommandInteractionEvent evt = mock(ApplicationCommandInteractionEvent.class);
         Interaction interaction = mock(Interaction.class);
@@ -78,6 +81,7 @@ public class GuildRoleStoreTest
             .get(0).getId().asLong());
         assertEquals(3L, leagueMappings.get(BaseLeague.LeagueType.PLATINUM)
             .get(0).getId().asLong());
+        assertNull(leagueMappings.get(BaseLeague.LeagueType.DIAMOND));
 
         assertEquals(1, mappings.getRaceMappings().getMappings().size());
         assertEquals(4L, mappings.getRaceMappings().getMappings()
@@ -102,7 +106,7 @@ public class GuildRoleStoreTest
             .permissions(1L)
             .mentionable(true)
             .position(1)
-            .managed(true);
+            .managed(false);
     }
 
     public static RoleData roleData(long id, String name)
