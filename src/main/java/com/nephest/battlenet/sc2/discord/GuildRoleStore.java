@@ -57,8 +57,8 @@ public class GuildRoleStore
             .getGuild()
             .flatMapMany(Guild::getRoles)
             .filter(r->!r.isManaged())
-            .toStream()
-            .collect(Collectors.toList());
+            .collectList()
+            .block();
         return getRoleMappings(roles);
     }
 
@@ -68,8 +68,8 @@ public class GuildRoleStore
         List<Role> roles = guild
             .getRoles()
             .filter(r->!r.isManaged())
-            .toStream()
-            .collect(Collectors.toList());
+            .collectList()
+            .block();
         return getRoleMappings(roles);
     }
 

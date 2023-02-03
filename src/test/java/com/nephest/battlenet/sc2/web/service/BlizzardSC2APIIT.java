@@ -43,7 +43,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -394,9 +393,10 @@ public class BlizzardSC2APIIT
     @Test
     public void testFetchPlayerCharacters()
     {
-        List<BlizzardFullPlayerCharacter> chars = api.getPlayerCharacters(Region.EU, 123595611L)
-            .toStream()
-            .collect(Collectors.toList());
+        List<BlizzardFullPlayerCharacter> chars = api
+            .getPlayerCharacters(Region.EU, 123595611L)
+            .collectList()
+            .block();
         assertEquals(3, chars.size());
         chars.sort(Comparator.comparing(BlizzardFullPlayerCharacter::getRegion));
         verifyPlayerCharacter(chars.get(0), Region.US, 1, 5109270);
