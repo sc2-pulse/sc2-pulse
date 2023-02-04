@@ -16,7 +16,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.common.util.Snowflake;
-import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.EmojisUpdateEvent;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
@@ -142,34 +141,6 @@ public class DiscordBootstrap
             ? guildEmojiStore.getGuildLeagueEmoji(guildEmojiStore.getGuildEmojis(evt), league)
                 .orElse(leagueEmojis.getOrDefault(league, league.getName()))
             : leagueEmojis.getOrDefault(league, league.getName());
-    }
-
-    public static GatewayDiscordClient load
-    (
-        List<SlashCommand> handlers,
-        List<UserCommand> userInteractionHandlers,
-        List<AutoComplete> autoCompleteHandlers,
-        GuildEmojiStore guildEmojiStore,
-        GuildRoleStore guildRoleStore,
-        String token,
-        Long guild
-    )
-    {
-        GatewayDiscordClient client = DiscordClientBuilder.create(token)
-            .build()
-            .login()
-            .block();
-        load
-        (
-            handlers,
-            userInteractionHandlers,
-            autoCompleteHandlers,
-            guildEmojiStore,
-            guildRoleStore,
-            client,
-            guild
-        );
-        return client;
     }
 
     public static void load

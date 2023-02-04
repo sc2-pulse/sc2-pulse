@@ -3,13 +3,11 @@
 
 package com.nephest.battlenet.sc2.discord;
 
-import com.nephest.battlenet.sc2.discord.event.AutoComplete;
-import com.nephest.battlenet.sc2.discord.event.SlashCommand;
-import com.nephest.battlenet.sc2.discord.event.UserCommand;
+import discord4j.core.DiscordClientBuilder;
 import discord4j.core.GatewayDiscordClient;
 import java.time.Duration;
-import java.util.List;
 import javax.annotation.PreDestroy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -22,27 +20,13 @@ public class SpringDiscordClient
 
     private final GatewayDiscordClient client;
 
-    public SpringDiscordClient
-    (
-        List<SlashCommand> handlers,
-        List<UserCommand> userInteractionHandlers,
-        List<AutoComplete> autoCompleteHandlers,
-        GuildEmojiStore guildEmojiStore,
-        GuildRoleStore guildRoleStore,
-        @Value("${discord.token:}") String token,
-        @Value("${discord.guild:}") Long guild
-    )
+    @Autowired
+    public SpringDiscordClient(@Value("${discord.token:}") String token)
     {
-        this.client = DiscordBootstrap.load
-        (
-            handlers,
-            userInteractionHandlers,
-            autoCompleteHandlers,
-            guildEmojiStore,
-            guildRoleStore,
-            token,
-            guild
-        );
+        this.client = DiscordClientBuilder.create(token)
+            .build()
+            .login()
+            .block();
     }
 
     @PreDestroy
