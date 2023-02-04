@@ -41,6 +41,8 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 @Service
 @Discord
@@ -226,24 +228,31 @@ public class DiscordService
     {
         if(!accountDiscordUserDAO.findAccountIds().contains(accountId)) return Mono.empty();
 
-        LadderTeam mainTeam = findMainTeam(accountId).orElse(null);
-        if(mainTeam == null) return dropRoles(accountId);
-
-        LadderTeamMember member = mainTeam.getMembers().stream()
-            .filter(m->Objects.equals(m.getAccount().getId(), accountId))
-            .findFirst()
-            .orElseThrow();
+        Tuple2<LadderTeam, LadderTeamMember> mainTuple = findMainTuple(accountId);
+        if(mainTuple == null) return dropRoles(accountId);
 
         ApplicationRoleConnection roleConnection = ApplicationRoleConnection.from
         (
-            mainTeam,
-            member.getAccount().getBattleTag(),
-            member.getFavoriteRace(),
+            mainTuple.getT1(),
+            mainTuple.getT2().getAccount().getBattleTag(),
+            mainTuple.getT2().getFavoriteRace(),
             pulseConnectionParameters.getParameters(),
             conversionService
         );
 
         return discordAPI.updateConnectionMetaData(String.valueOf(accountId), roleConnection);
+    }
+
+    public Tuple2<LadderTeam, LadderTeamMember> findMainTuple(Long accountId)
+    {
+        LadderTeam mainTeam = findMainTeam(accountId).orElse(null);
+        if(mainTeam == null) return null;
+
+        LadderTeamMember member = mainTeam.getMembers().stream()
+            .filter(m->Objects.equals(m.getAccount().getId(), accountId))
+            .findFirst()
+            .orElseThrow();
+        return Tuples.of(mainTeam, member);
     }
 
     private Mono<Void> dropRoles(Long accountId)
