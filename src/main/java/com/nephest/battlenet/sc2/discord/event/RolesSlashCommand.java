@@ -10,18 +10,16 @@ import com.nephest.battlenet.sc2.discord.PulseMappings;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.util.MiscUtil;
+import com.nephest.battlenet.sc2.web.service.DiscordService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.Role;
 import discord4j.discordjson.json.ImmutableApplicationCommandRequest;
 import discord4j.rest.util.Permission;
-import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +27,13 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 @Discord
 @Component
@@ -42,30 +43,28 @@ implements SlashCommand
 
     public static final String CMD_NAME = "roles";
     public static final String DELIMITER = ", ";
+    public static final String UPDATE_REASON = "Updated roles based on the last ranked ladder stats";
     private final String supportedRolesLink;
     public static final List<Permission> REQUIRED_PERMISSIONS = List.of(Permission.MANAGE_ROLES);
 
     private final AccountDAO accountDAO;
-    private final LadderCharacterDAO ladderCharacterDAO;
-    private final PlayerCharacterSummaryDAO playerCharacterSummaryDAO;
     private final GuildRoleStore guildRoleStore;
     private final DiscordBootstrap discordBootstrap;
+    private final DiscordService discordService;
 
     @Autowired
     public RolesSlashCommand
     (
         AccountDAO accountDAO,
-        LadderCharacterDAO ladderCharacterDAO,
-        PlayerCharacterSummaryDAO playerCharacterSummaryDAO,
         GuildRoleStore guildRoleStore,
-        DiscordBootstrap discordBootstrap
+        DiscordBootstrap discordBootstrap,
+        DiscordService discordService
     )
     {
         this.accountDAO = accountDAO;
-        this.ladderCharacterDAO = ladderCharacterDAO;
-        this.playerCharacterSummaryDAO = playerCharacterSummaryDAO;
         this.guildRoleStore = guildRoleStore;
         this.discordBootstrap = discordBootstrap;
+        this.discordService = discordService;
         supportedRolesLink =
             "[supported roles](<"
             + discordBootstrap.getDiscordBotPageUrl()
@@ -111,51 +110,60 @@ implements SlashCommand
             return evt.createFollowup().withContent(response.toString());
         }
 
-        Map<Long, LadderTeamMember> characters = ladderCharacterDAO
-            .findDistinctCharacters(account.getBattleTag())
-            .stream()
-            .collect(Collectors.toMap(c->c.getMembers().getCharacter().getId(), LadderDistinctCharacter::getMembers));
-        if(characters.isEmpty())
-            return evt.createFollowup()
-                .withContent(appendStatsNotFoundMessage(response).toString());
+        Tuple2<LadderTeam, LadderTeamMember> mainTuple = discordService
+            .findMainTuple(account.getId());
 
-        PlayerCharacterSummary topSummary = playerCharacterSummaryDAO
-            .find
-            (
-                characters.keySet().toArray(Long[]::new),
-                OffsetDateTime.now().minusDays(Summary1v1Command.DEFAULT_DEPTH),
-                Race.EMPTY_RACE_ARRAY
-            ).stream()
-            .min(Summary1v1Command.DEFAULT_COMPARATOR)
-            .orElse(null);
-        if(topSummary == null)
-            return evt.createFollowup()
-                .withContent(appendStatsNotFoundMessage(response).toString());
-        LadderTeamMember topMember = characters.get(topSummary.getPlayerCharacterId());
-        Summary1v1Command.appendHeader
+        Triple<LadderTeam, Set<Role>, Flux<Void>> operations = updateRoles
         (
-            response,
-            account.getBattleTag(),
-            Summary1v1Command.DEFAULT_DEPTH,
-            1,
-            null, null, null
-        ).append("\n");
-        Summary1v1Command.appendSummary(response, topSummary, topMember, discordBootstrap, evt, 1)
-            .append("\n\n");
+            mainTuple != null ? mainTuple.getT1() : null,
+            mainTuple != null ? mainTuple.getT2().getFavoriteRace() : null,
+            mapping,
+            evt.getInteraction().getMember().orElseThrow()
+        );
+        operations.getRight().blockLast();
 
-        Member member = evt.getInteraction().getMember().orElseThrow();
+        if(mainTuple == null)
+        {
+            appendStatsNotFoundMessage(response);
+        }
+        else
+        {
+            appendMainTeamHeader(response, account.getBattleTag());
+            LadderTeam mainTeam = mainTuple.getT1();
+            int games = mainTeam.getWins() + mainTeam.getLosses() + mainTeam.getTies();
+            response.append(discordBootstrap.render(mainTeam, evt, MiscUtil.stringLength(games)));
+        }
+        response.append("\n\n");
+        String assignedRolesString = operations.getMiddle().stream()
+            .map(Role::getMention)
+            .collect(Collectors.joining(DELIMITER));
+        response.append("**Roles assigned**: ").append(assignedRolesString);
+
+        DiscordBootstrap.trimIfLong(response);
+        return evt.createFollowup().withContent(response.toString());
+    }
+
+    public Triple<LadderTeam, Set<Role>, Flux<Void>> updateRoles
+    (
+        LadderTeam mainTeam,
+        Race mainRace,
+        PulseMappings<Role> mapping,
+        Member member,
+        String reason
+    )
+    {
         Set<Role> currentRoles = member.getRoles().toStream().collect(Collectors.toSet());
 
-        Set<Role> assignedRoles = Stream.of
+        Set<Role> assignedRoles = mainTeam == null ? Set.of() : Stream.of
         (
             mapping.getRegionMappings().getMappings()
-                .getOrDefault(topMember.getCharacter().getRegion(), List.of()).stream(),
+                .getOrDefault(mainTeam.getRegion(), List.of()).stream(),
             mapping.getLeagueMappings().getMappings()
-                .getOrDefault(topSummary.getLeagueTypeLast(), List.of()).stream(),
+                .getOrDefault(mainTeam.getLeagueType(), List.of()).stream(),
             mapping.getRaceMappings().getMappings()
-                .getOrDefault(topSummary.getRace(), List.of()).stream(),
+                .getOrDefault(mainRace, List.of()).stream(),
             mapping.getRatingMappings().getMappings().entrySet().stream()
-                .filter(e->e.getKey().contains(topSummary.getRatingLast()))
+                .filter(e->e.getKey().contains(mainTeam.getRating().intValue()))
                 .map(Map.Entry::getValue)
                 .flatMap(Collection::stream)
         )
@@ -173,28 +181,31 @@ implements SlashCommand
         Stream<Mono<Void>> roleOperations = Stream.concat
         (
             removedRoles.stream().map(role->
-                member.removeRole(role.getId(), "/" + CMD_NAME + " slash command")),
+                member.removeRole(role.getId(), reason)),
             addedRoles.stream().map(role->
-                member.addRole(role.getId(), "/" + CMD_NAME + " slash command"))
+                member.addRole(role.getId(), reason))
         );
-        Flux.fromStream(roleOperations)
-            .flatMap(Function.identity())
-            .blockLast();
+        Flux<Void> operations =  Flux.fromStream(roleOperations)
+            .flatMap(Function.identity());
+        return new ImmutableTriple<>(mainTeam, assignedRoles, operations);
+    }
 
-        String assignedRolesString = assignedRoles.stream()
-            .map(Role::getMention)
-            .collect(Collectors.joining(DELIMITER));
-        response.append("**Roles assigned**: ").append(assignedRolesString);
-
-        DiscordBootstrap.trimIfLong(response);
-        return evt.createFollowup().withContent(response.toString());
+    public Triple<LadderTeam, Set<Role>, Flux<Void>> updateRoles
+    (
+        LadderTeam mainTeam,
+        Race mainRace,
+        PulseMappings<Role> mapping,
+        Member member
+    )
+    {
+        return updateRoles(mainTeam, mainRace, mapping, member, UPDATE_REASON);
     }
 
     private StringBuilder appendStatsNotFoundMessage(StringBuilder sb)
     {
         return sb.append("Ranked 1v1 stats not found. Have you played a ranked game over the last ")
-            .append(Summary1v1Command.DEFAULT_DEPTH)
-            .append(" days? If yes, then try to ")
+            .append(DiscordService.MAIN_TEAM_SEASON_DEPTH)
+            .append(" seasons? If yes, then try to ")
             .append(discordBootstrap.getImportBattleNetDataLink())
             .append(" to fix it.");
     }
@@ -216,6 +227,15 @@ implements SlashCommand
         if(!mapping.getRatingMappings().getMappings().isEmpty())
             sb.append("**MMR**: ").append(mapping.getRatingMappings()).append("\n");
 
+        return sb;
+    }
+
+    private StringBuilder appendMainTeamHeader(StringBuilder sb, String name)
+    {
+        sb.append("**Main team**\n")
+            .append("*").append(name).append(", ").append(DiscordService.MAIN_TEAM_SEASON_DEPTH)
+                .append(" last seasons*\n")
+            .append("`Games` | MMR\n");
         return sb;
     }
 

@@ -6,7 +6,6 @@ package com.nephest.battlenet.sc2.model.discord.event;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.mock;
@@ -19,21 +18,20 @@ import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
 import com.nephest.battlenet.sc2.discord.GuildRoleStore;
 import com.nephest.battlenet.sc2.discord.PulseMappings;
 import com.nephest.battlenet.sc2.discord.event.RolesSlashCommand;
-import com.nephest.battlenet.sc2.discord.event.Summary1v1Command;
 import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.discord.GuildRoleStoreTest;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
-import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.web.service.DiscordService;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -45,8 +43,7 @@ import discord4j.core.object.entity.User;
 import discord4j.core.spec.InteractionFollowupCreateMono;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
-import java.time.OffsetDateTime;
-import java.util.Arrays;
+import java.math.BigInteger;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
@@ -63,6 +60,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuples;
 
 @ExtendWith(MockitoExtension.class)
 public class RolesSlashCommandTest
@@ -74,16 +72,13 @@ public class RolesSlashCommandTest
     private AccountDAO accountDAO;
 
     @Mock
-    private LadderCharacterDAO ladderCharacterDAO;
-
-    @Mock
-    private PlayerCharacterSummaryDAO playerCharacterSummaryDAO;
-
-    @Mock
     private GuildRoleStore guildRoleStore;
 
     @Mock
     private DiscordBootstrap discordBootstrap;
+
+    @Mock
+    private DiscordService discordService;
 
     @Mock
     private ChatInputInteractionEvent evt;
@@ -113,10 +108,9 @@ public class RolesSlashCommandTest
         cmd = new RolesSlashCommand
         (
             accountDAO,
-            ladderCharacterDAO,
-            playerCharacterSummaryDAO,
             guildRoleStore,
-            discordBootstrap
+            discordBootstrap,
+            discordService
         );
         stubInteraction();
     }
@@ -231,115 +225,7 @@ public class RolesSlashCommandTest
         Account account = new Account(987L, Partition.GLOBAL, "tag#1");
         when(accountDAO.findByDiscordUserId(userId)).thenReturn(Optional.of(account));
 
-        //check characters
-        when(ladderCharacterDAO.findDistinctCharacters(account.getBattleTag()))
-            .thenReturn(List.of());
         when(discordBootstrap.getImportBattleNetDataLink()).thenReturn("importDataLink");
-
-        cmd.handle(evt).onErrorComplete().block();
-
-        verify(followup, atLeastOnce()).withContent(responseCaptor.capture());
-        expectedResponse = rolesHeader
-            + "\n"
-            + "Ranked 1v1 stats not found. Have you played a ranked game over the last 120 days? "
-            + "If yes, then try to importDataLink to fix it.";
-        assertEquals(expectedResponse, responseCaptor.getValue());
-
-        List<LadderDistinctCharacter> characters = List.of
-        (
-            new LadderDistinctCharacter
-            (
-                BaseLeague.LeagueType.BRONZE,
-                1,
-                account,
-                new PlayerCharacter(456L, account.getId(), Region.EU, 1L, 1, "name#1"),
-                null, null, null, null,
-                1, 1, 1, 1, 1,
-                new LadderPlayerSearchStats(1, 1, 1),
-                new LadderPlayerSearchStats(1, 1, 1)
-            ),
-            new LadderDistinctCharacter
-            (
-                BaseLeague.LeagueType.BRONZE,
-                1,
-                account,
-                new PlayerCharacter(457L, account.getId(), Region.US, 1L, 1, "name#1"),
-                null, null, null, null,
-                1, 1, 1, 1, 1,
-                new LadderPlayerSearchStats(1, 1, 1),
-                new LadderPlayerSearchStats(1, 1, 1)
-            )
-        );
-        when(ladderCharacterDAO.findDistinctCharacters(account.getBattleTag()))
-            .thenReturn(characters);
-
-        //check stats
-        when(playerCharacterSummaryDAO.find
-            (
-                argThat(ids->{
-                    if(ids == null) return true;
-                    Arrays.sort(ids);
-                    return Arrays.equals(ids, new Long[]{456L, 457L});
-                }),
-                argThat
-                    (
-                        odt->odt == null
-                            || OffsetDateTime.now()
-                            .minusDays(Summary1v1Command.DEFAULT_DEPTH)
-                            .plusMinutes(1)
-                            .isAfter(odt)
-                    ),
-                any()
-            ))
-            .thenReturn(List.of());
-
-        cmd.handle(evt).onErrorComplete().block();
-
-        verify(followup, atLeastOnce()).withContent(responseCaptor.capture());
-        expectedResponse = rolesHeader
-            + "\n"
-            + "Ranked 1v1 stats not found. Have you played a ranked game over the last 120 days? "
-            + "If yes, then try to importDataLink to fix it.";
-        assertEquals(expectedResponse, responseCaptor.getValue());
-
-        List<PlayerCharacterSummary> summaries = List.of
-        (
-            new PlayerCharacterSummary
-            (
-                456L, Race.TERRAN, 123, 1, 1, 10,
-                BaseLeague.LeagueType.BRONZE, 1
-            ),
-            new PlayerCharacterSummary
-            (
-                457L, Race.TERRAN, 1, 1, 1, 9,
-                BaseLeague.LeagueType.SILVER, 1
-            ),
-            new PlayerCharacterSummary
-            (
-                457L, Race.ZERG, 1, 1, 1, 9,
-                BaseLeague.LeagueType.SILVER, 1
-            )
-        );
-        when(playerCharacterSummaryDAO.find
-            (
-                argThat(ids->{
-                    if(ids == null) return true;
-                    Arrays.sort(ids);
-                    return Arrays.equals(ids, new Long[]{456L, 457L});
-                }),
-                argThat
-                (
-                    odt->odt == null
-                        || OffsetDateTime.now()
-                            .minusDays(Summary1v1Command.DEFAULT_DEPTH)
-                            .plusMinutes(1)
-                            .isAfter(odt)
-                ),
-                any())
-            )
-            .thenReturn(summaries);
-
-        //check stats
         Member callerMember = mock(Member.class);
         when(interaction.getMember()).thenReturn(Optional.of(callerMember));
         Flux<Role> currentRoles = Flux.just
@@ -354,28 +240,76 @@ public class RolesSlashCommandTest
         when(callerMember.getRoles()).thenReturn(currentRoles);
         when(callerMember.addRole(any(), anyString())).thenReturn(Mono.empty());
         when(callerMember.removeRole(any(), anyString())).thenReturn(Mono.empty());
-        when(discordBootstrap.getLeagueEmojiOrName(evt, BaseLeague.LeagueType.BRONZE)).thenReturn("bronze");
-        when(discordBootstrap.getRaceEmojiOrName(evt, Race.TERRAN)).thenReturn("terran");
-        when(discordBootstrap.generateCharacterURL(any()))
-            .thenAnswer(inv->"url" + inv.getArgument(0, LadderTeamMember.class).getCharacter().getId());
 
         cmd.handle(evt).onErrorComplete().block();
 
         verify(followup, atLeastOnce()).withContent(responseCaptor.capture());
         expectedResponse = rolesHeader
             + "\n"
-            + "**1v1 Summary**\n"
-            + "*tag#1, 120 days, Top 1*\n"
-            + "**`Games`** | **last**/*avg*/max MMR\n"
-            + "url456\n"
-            + "\uD83C\uDDEA\uD83C\uDDFA bronze terran | **`123`** | **10**/*1*/1\n"
+            + "Ranked 1v1 stats not found. Have you played a ranked game over the last 2 seasons? "
+            + "If yes, then try to importDataLink to fix it.\n"
+            + "\n"
+            + "**Roles assigned**: ";
+        String reason = "Updated roles based on the last ranked ladder stats";
+        assertEquals(expectedResponse, responseCaptor.getValue());
+        ArgumentCaptor<Snowflake> removedRolesCaptor = ArgumentCaptor.forClass(Snowflake.class);
+        verify(callerMember, times(5))
+            .removeRole(removedRolesCaptor.capture(), eq(reason));
+        List<Snowflake> droppedRoles = removedRolesCaptor.getAllValues();
+        assertEquals(5, droppedRoles.size());
+        droppedRoles.sort(Comparator.comparing(Snowflake::asLong));
+        assertEquals(1L, droppedRoles.get(0).asLong());
+        assertEquals(4L, droppedRoles.get(1).asLong());
+        assertEquals(5L, droppedRoles.get(2).asLong());
+        assertEquals(6L, droppedRoles.get(3).asLong());
+        assertEquals(9L, droppedRoles.get(4).asLong());
+
+
+        LadderTeamMember mainMember = new LadderTeamMember
+        (
+            new Account(987L, Partition.GLOBAL, "tag#1"),
+            new PlayerCharacter(1L, 987L, Region.EU, 1L, 1, "name#1"),
+            null,
+            null,
+            null,
+            false,
+            2, 1, 1, 1
+        );
+        LadderTeam mainTeam = new LadderTeam
+        (
+            1L, 1, Region.EU,
+            new BaseLeague
+            (
+                BaseLeague.LeagueType.BRONZE,
+                QueueType.LOTV_1V1,
+                TeamType.ARRANGED
+            ),
+            BaseLeagueTier.LeagueTierType.FIRST,
+            BigInteger.ONE,
+            1,
+            10L,
+            120, 2, 1, 2,
+            List.of(mainMember),
+            null
+        );
+        when(discordService.findMainTuple(987L)).thenReturn(Tuples.of(mainTeam, mainMember));
+        when(discordBootstrap.render(mainTeam, evt, 3)).thenReturn("teamRender");
+
+        cmd.handle(evt).onErrorComplete().block();
+
+        verify(followup, atLeastOnce()).withContent(responseCaptor.capture());
+        expectedResponse = rolesHeader
+            + "\n"
+            + "**Main team**\n"
+            + "*tag#1, 2 last seasons*\n"
+            + "`Games` | MMR\n"
+            + "teamRender\n"
             + "\n"
             + "**Roles assigned**: <@&2>, <@&3>, <@&4>, <@&6>, <@&7>, <@&8>";
         assertEquals(expectedResponse, responseCaptor.getValue());
         ArgumentCaptor<Snowflake> addedRolesCaptor = ArgumentCaptor.forClass(Snowflake.class);
-        ArgumentCaptor<Snowflake> removedRolesCaptor = ArgumentCaptor.forClass(Snowflake.class);
         verify(callerMember, times(4))
-            .addRole(addedRolesCaptor.capture(), eq("/roles slash command"));
+            .addRole(addedRolesCaptor.capture(), eq(reason));
         List<Snowflake> addedRoles = addedRolesCaptor.getAllValues();
         assertEquals(4, addedRoles.size());
         addedRoles.sort(Comparator.comparing(Snowflake::asLong));
@@ -384,9 +318,10 @@ public class RolesSlashCommandTest
         assertEquals(7L, addedRoles.get(2).asLong());
         assertEquals(8L, addedRoles.get(3).asLong());
 
-        verify(callerMember, times(3))
-            .removeRole(removedRolesCaptor.capture(), eq("/roles slash command"));
-        List<Snowflake> removedRoles = removedRolesCaptor.getAllValues();
+        verify(callerMember, times(8))
+            .removeRole(removedRolesCaptor.capture(), eq(reason));
+        List<Snowflake> removedRoles = removedRolesCaptor.getAllValues()
+            .subList(10, removedRolesCaptor.getAllValues().size());
         assertEquals(3, removedRoles.size());
         removedRoles.sort(Comparator.comparing(Snowflake::asLong));
         assertEquals(1L, removedRoles.get(0).asLong());
