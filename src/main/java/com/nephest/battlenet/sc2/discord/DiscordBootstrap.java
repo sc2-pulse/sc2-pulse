@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
@@ -310,6 +311,25 @@ public class DiscordBootstrap
     {
         return "[" + generateFullName(member, true) + "](<"
             + String.format(getCharacterUrlTemplate(), member.getCharacter().getId()) + ">)";
+    }
+
+    public String generateRaceCharacterURL(LadderTeamMember member, InteractionCreateEvent evt)
+    {
+        return getRaceEmojiOrName(evt, member.getFavoriteRace())
+            + " " + generateCharacterURL(member);
+    }
+
+    public String render(LadderTeam team, InteractionCreateEvent evt, long gamesDigits)
+    {
+        String members = team.getMembers().stream()
+            .map(m->generateRaceCharacterURL(m, evt))
+            .collect(Collectors.joining(", "));
+        return members + "\n"
+            + REGION_EMOJIS.get(team.getRegion())
+            + " " + getLeagueEmojiOrName(evt, team.getLeagueType())
+            + " `"
+            + String.format("%" + gamesDigits + "d", (team.getWins() + team.getLosses() + team.getTies()))
+            + "` " + team.getRating();
     }
 
     public String getAccountVerificationLink()

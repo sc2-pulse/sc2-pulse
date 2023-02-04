@@ -20,17 +20,22 @@ import com.nephest.battlenet.sc2.discord.GuildRoleStore;
 import com.nephest.battlenet.sc2.discord.event.SlashCommand;
 import com.nephest.battlenet.sc2.discord.event.UserCommand;
 import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
+import discord4j.core.event.domain.interaction.InteractionCreateEvent;
 import discord4j.core.object.command.Interaction;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
@@ -40,6 +45,7 @@ import discord4j.rest.RestClient;
 import discord4j.rest.service.ApplicationService;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
+import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -103,6 +109,85 @@ public class DiscordBootstrapTest
             1, 1, 1, 1
         );
         assertEquals(expected, discordBootstrap.generateCharacterURL(member));
+    }
+
+    private InteractionCreateEvent stubEmptyGuildEvent()
+    {
+        Interaction interaction = mock(Interaction.class);
+        when(interaction.getGuildId()).thenReturn(Optional.empty());
+        InteractionCreateEvent evt = mock(InteractionCreateEvent.class);
+        when(evt.getInteraction()).thenReturn(interaction);
+        return evt;
+    }
+
+    @Test
+    public void testGenerateRaceCharacterURL()
+    {
+        String expected = "Protoss [**[proTeam1]proName1** | [clan1]name | tag#1 | "
+            + DiscordBootstrap.SC2_REVEALED_TAG + "]"
+            + "(<characterUrlTemplate#player-stats-mmr>)";
+        LadderTeamMember member = new LadderTeamMember
+        (
+            new Account(2L, Partition.GLOBAL, "tag#1"),
+            new PlayerCharacter(1L, 2L, Region.EU, 2L, 2, "name#1"),
+            new Clan(2, "clan1", Region.EU, "clanName"),
+            "proName1", "proTeam1",
+            null,
+            1, 2, 1, 1
+        );
+        InteractionCreateEvent evt = stubEmptyGuildEvent();
+        assertEquals(expected, discordBootstrap.generateRaceCharacterURL(member, evt));
+    }
+
+    @Test
+    public void testRenderLadderTeam()
+    {
+        String expected = "Terran [**name** | tag#2](<characterUrlTemplate#player-stats-mmr>), "
+            + "Protoss [**[proTeam1]proName1** | [clan1]name | tag#1 | "
+            + DiscordBootstrap.SC2_REVEALED_TAG + "]"
+            + "(<characterUrlTemplate#player-stats-mmr>)\n"
+            + "\uD83C\uDDEA\uD83C\uDDFA bronze ` 123` 10";
+        LadderTeam team = new LadderTeam
+        (
+            1L, 1, Region.EU,
+            new BaseLeague
+            (
+                BaseLeague.LeagueType.BRONZE,
+                QueueType.LOTV_2V2,
+                TeamType.ARRANGED
+            ),
+            BaseLeagueTier.LeagueTierType.FIRST,
+            BigInteger.ONE,
+            1,
+            10L,
+            120, 1, 2, 2,
+            List.of
+            (
+                new LadderTeamMember
+                (
+                    new Account(987L, Partition.GLOBAL, "tag#2"),
+                    new PlayerCharacter(2L, 987L, Region.EU, 2L, 1, "name#2"),
+                    null,
+                    null,
+                    null,
+                    false,
+                    2, 1, 1, 1
+                ),
+                new LadderTeamMember
+                (
+                    new Account(2L, Partition.GLOBAL, "tag#1"),
+                    new PlayerCharacter(1L, 2L, Region.EU, 2L, 2, "name#1"),
+                    new Clan(2, "clan1", Region.EU, "clanName"),
+                    "proName1", "proTeam1",
+                    null,
+                    1, 2, 1, 1
+                )
+            ),
+            null
+        );
+
+        InteractionCreateEvent evt = stubEmptyGuildEvent();
+        assertEquals(expected, discordBootstrap.render(team, evt, 4));
     }
 
     @SuppressWarnings("unchecked")
