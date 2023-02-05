@@ -47,6 +47,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
 import com.nephest.battlenet.sc2.service.EventService;
+import com.nephest.battlenet.sc2.web.util.MonoUtil;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -82,6 +83,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
@@ -245,7 +247,8 @@ public class DiscordIT
         assertNotNull(oAuth2AuthorizedClientService.loadAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1"));
 
         //second links is removed, no linked chars
-        doReturn(Mono.empty())
+        Tuple2<Mono<Void>, AtomicBoolean> mono = MonoUtil.verifiableMono();
+        doReturn(mono.getT1())
             .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
         mvc.perform
         (
@@ -267,6 +270,7 @@ public class DiscordIT
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
         assertEquals(BATTLE_TAG, connection.getPlatformUsername());
         assertNull(connection.getMetadata());
+        assertTrue(mono.getT2().get());
     }
 
     private void verifyLinkedDiscordUser(Long characterId, DiscordUser discordUser)
@@ -414,11 +418,9 @@ public class DiscordIT
     public void whenLadderCharacterActivityEventReceived_thenUpdateRoles()
     {
         Tuple3<Account, PlayerCharacter[], Team> main = stubMainTeam();
-        AtomicBoolean apiWasCalled = new AtomicBoolean(false);
-        doReturn(Mono.create(sink->{
-            apiWasCalled.set(true);
-            sink.success();
-        })).when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
+        Tuple2<Mono<Void>, AtomicBoolean> mono = MonoUtil.verifiableMono();
+        doReturn(mono.getT1())
+            .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
         DiscordUser discordUser = discordUserDAO.merge(new DiscordUser(1L, "name", 1))[0];
         accountDiscordUserDAO.create(new AccountDiscordUser(main.getT1().getId(), discordUser.getId()));
         eventService.createLadderCharacterActivityEvent(main.getT2()[0]);
@@ -436,7 +438,7 @@ public class DiscordIT
         assertEquals("0", connection.getMetadata().get("league"));
         assertEquals("1", connection.getMetadata().get("rating_from"));
         assertEquals("1", connection.getMetadata().get("rating_to"));
-        assertTrue(apiWasCalled.get());
+        assertTrue(mono.getT2().get());
     }
 
     private Tuple3<Account, PlayerCharacter[], Team> stubMainTeam()
