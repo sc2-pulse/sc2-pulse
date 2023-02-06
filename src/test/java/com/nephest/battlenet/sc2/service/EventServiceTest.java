@@ -18,7 +18,7 @@ public class EventServiceTest
     @BeforeEach
     public void beforeEach()
     {
-        eventService = new EventService();
+        eventService = new EventService(2);
     }
 
     @Test

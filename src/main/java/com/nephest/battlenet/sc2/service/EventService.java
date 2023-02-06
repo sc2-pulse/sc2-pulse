@@ -4,31 +4,35 @@
 package com.nephest.battlenet.sc2.service;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.util.ProgrammaticFlux;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 @Service
 public class EventService
 {
 
-    private static final Logger LOG = LoggerFactory.getLogger(EventService.class);
+    public static final Sinks.EmitFailureHandler DEFAULT_FAILURE_HANDLER =
+        Sinks.EmitFailureHandler.FAIL_FAST;
 
-    private final ProgrammaticFlux<PlayerCharacter> ladderCharacterActivityEvent;
+    private final Sinks.Many<PlayerCharacter> ladderCharacterActivityEvent;
 
     @Autowired
-    public EventService()
+    public EventService
+    (
+        @Value("${com.nephest.battlenet.sc2.event.buffer:#{'5000'}}") int buffer
+    )
     {
-        ladderCharacterActivityEvent =
-            new ProgrammaticFlux<>(c->LOG.trace("Ladder character activity event: {}", c));
+        ladderCharacterActivityEvent = Sinks.unsafe()
+            .many().multicast().onBackpressureBuffer(buffer);
     }
 
-    public void createLadderCharacterActivityEvent(PlayerCharacter playerCharacter)
+    public synchronized void createLadderCharacterActivityEvent(PlayerCharacter... playerCharacters)
     {
-        ladderCharacterActivityEvent.getSink().next(playerCharacter);
+        for(PlayerCharacter playerCharacter : playerCharacters)
+            ladderCharacterActivityEvent.emitNext(playerCharacter, DEFAULT_FAILURE_HANDLER);
     }
 
     /**
@@ -39,7 +43,7 @@ public class EventService
      */
     public Flux<PlayerCharacter> getLadderCharacterActivityEvent()
     {
-        return ladderCharacterActivityEvent.getFlux();
+        return ladderCharacterActivityEvent.asFlux();
     }
 
 
