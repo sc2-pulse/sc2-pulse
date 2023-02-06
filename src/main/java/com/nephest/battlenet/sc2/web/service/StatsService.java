@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -138,6 +138,8 @@ public class StatsService
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
     private final ConcurrentLinkedQueue<Long> pendingTeams = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<PlayerCharacter> pendingCharacters =
+        new ConcurrentLinkedQueue<>();
 
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
@@ -348,6 +350,23 @@ public class StatsService
                 ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
                 : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH)
         );
+        processPendingCharacters(pendingCharacters, eventService);
+    }
+
+    public static void processPendingCharacters
+    (
+        Collection<PlayerCharacter> pendingCharacters,
+        EventService eventService
+    )
+    {
+        if(pendingCharacters.isEmpty()) return;
+
+        PlayerCharacter[] characters = pendingCharacters.stream()
+            .distinct()
+            .toArray(PlayerCharacter[]::new);
+        eventService.createLadderCharacterActivityEvent(characters);
+        pendingCharacters.clear();
+        LOG.info("Created {} character ladder activity events", characters.length);
     }
 
     private void updateSeasonStats
@@ -577,9 +596,7 @@ public class StatsService
             });
         saveMembersConcurrently(members);
         saveClans(clanDAO, clanMemberDAO, clans);
-        members.stream()
-            .map(Tuple3::getT2)
-            .forEach(eventService::createLadderCharacterActivityEvent);
+        pendingCharacters.addAll(members.stream().map(Tuple3::getT2).collect(Collectors.toList()));
     }
 
     //cross field validation

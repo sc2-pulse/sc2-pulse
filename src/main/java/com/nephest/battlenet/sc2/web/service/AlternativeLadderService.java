@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -113,6 +113,8 @@ public class AlternativeLadderService
     private CollectionVar<Set<Region>, Region> discoveryWebRegions;
 
     private final ConcurrentLinkedQueue<Long> pendingTeams = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<PlayerCharacter> pendingCharacters
+        = new ConcurrentLinkedQueue<>();
 
     @Autowired @Lazy
     private AlternativeLadderService alternativeLadderService;
@@ -454,7 +456,7 @@ public class AlternativeLadderService
         savePlayerCharacters(characters);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
         StatsService.saveClans(clanDAO, clanMemberDAO, clans);
-        characters.forEach(eventService::createLadderCharacterActivityEvent);
+        pendingCharacters.addAll(characters);
         LOG.debug
         (
             "Ladder saved: {} {} {}({}/{} teams)",
@@ -634,6 +636,7 @@ public class AlternativeLadderService
             teamStateDAO.takeSnapshot(new ArrayList<>(new HashSet<>(pendingTeams)))
         );
         pendingTeams.clear();
+        StatsService.processPendingCharacters(pendingCharacters, eventService);
     }
 
 }
