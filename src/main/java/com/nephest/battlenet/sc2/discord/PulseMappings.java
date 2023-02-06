@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -22,6 +22,9 @@ import org.apache.commons.lang3.Range;
 public class PulseMappings<T>
 {
 
+    private static final PulseMappings<Object> EMPTY_MAPPINGS =
+        new PulseMappings<>(Map.of(), Map.of(), Map.of(), Map.of(), Object::toString, "");
+
     private final PulseMapping<Region, T> regionMappings;
     private final PulseMapping<BaseLeague.LeagueType, T> leagueMappings;
     private final PulseMapping<Race, T> raceMappings;
@@ -43,6 +46,13 @@ public class PulseMappings<T>
         this.raceMappings = new PulseMapping<>(raceMappings, toString, delimiter);
         this.ratingMappings = new PulseMapping<>(ratingMappings, toString, delimiter);
         values = valuesStream().collect(Collectors.toUnmodifiableSet());
+    }
+
+
+    @SuppressWarnings("unchecked")
+    public static <T> PulseMappings<T> empty()
+    {
+        return (PulseMappings<T>) EMPTY_MAPPINGS;
     }
 
     public PulseMapping<Region, T> getRegionMappings()

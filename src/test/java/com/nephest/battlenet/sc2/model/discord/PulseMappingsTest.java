@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord;
@@ -87,6 +87,14 @@ public class PulseMappingsTest
         );
         assertThrows(UnsupportedOperationException.class, ()->mappings.getValues().add(1));
         assertThrows(UnsupportedOperationException.class, ()->mappings.getValues().remove(1));
+    }
+
+    @Test
+    public void testEmptyConstructor()
+    {
+        PulseMappings<Integer> emptyMappings = PulseMappings.empty();
+        assertTrue(emptyMappings.isEmpty());
+        assertEquals("", emptyMappings.getRatingMappings().getString());
     }
 
 }
