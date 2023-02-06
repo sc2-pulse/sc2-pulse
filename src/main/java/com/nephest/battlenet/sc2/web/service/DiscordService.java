@@ -70,6 +70,7 @@ public class DiscordService
         .thenComparing(LadderTeam::getQueueType)
         .thenComparing(Comparator.comparingLong(LadderTeam::getRating).reversed())
         .thenComparing(LadderTeam::getId);
+    public static final String DROP_ROLES_REASON = "User has unlinked their Discord account";
 
     private final DiscordUserDAO discordUserDAO;
     private final AccountDiscordUserDAO accountDiscordUserDAO;
@@ -177,7 +178,7 @@ public class DiscordService
 
     public void unlinkAccountFromDiscordUser(Long accountId, Long discordUserId)
     {
-        dropRoles(accountId).blockLast();
+        dropRoles(accountId, DROP_ROLES_REASON).blockLast();
         discordService.unlinkAccountFromDiscordUserDB(accountId, discordUserId);
     }
 
@@ -253,15 +254,15 @@ public class DiscordService
 
     public Flux<Void> updateRoles(Long accountId)
     {
-        return updateRoles(accountId, false);
+        return updateRoles(accountId, false, null);
     }
 
-    private Flux<Void> dropRoles(Long accountId)
+    private Flux<Void> dropRoles(Long accountId, String reason)
     {
-        return updateRoles(accountId, true);
+        return updateRoles(accountId, true, reason);
     }
 
-    private Flux<Void> updateRoles(Long accountId, boolean drop)
+    private Flux<Void> updateRoles(Long accountId, boolean drop, String reason)
     {
         if(!accountDiscordUserDAO.findAccountIds().contains(accountId)) return Flux.empty();
 
@@ -300,7 +301,8 @@ public class DiscordService
                         mainTuple != null ? mainTuple.getT1() : null,
                         mainTuple != null ? mainTuple.getT2().getFavoriteRace() : null,
                         t.getT2(),
-                        t.getT1()
+                        t.getT1(),
+                        reason != null ? reason : RolesSlashCommand.UPDATE_REASON
                     ).getRight()
                 )
         ).subscribeOn(Schedulers.boundedElastic());
