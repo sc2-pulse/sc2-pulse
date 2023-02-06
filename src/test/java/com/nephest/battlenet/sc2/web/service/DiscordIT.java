@@ -12,6 +12,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -82,6 +83,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
@@ -250,6 +252,7 @@ public class DiscordIT
         Tuple2<Mono<Void>, AtomicBoolean> mono = MonoUtil.verifiableMono();
         doReturn(mono.getT1())
             .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
+        stubNoManagedGuilds();
         mvc.perform
         (
             post("/api/my/discord/unlink")
@@ -423,6 +426,7 @@ public class DiscordIT
             .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
         DiscordUser discordUser = discordUserDAO.merge(new DiscordUser(1L, "name", 1))[0];
         accountDiscordUserDAO.create(new AccountDiscordUser(main.getT1().getId(), discordUser.getId()));
+        stubNoManagedGuilds();
         eventService.createLadderCharacterActivityEvent(main.getT2()[0]);
 
         ArgumentCaptor<ApplicationRoleConnection> captor =
@@ -439,6 +443,12 @@ public class DiscordIT
         assertEquals("1", connection.getMetadata().get("rating_from"));
         assertEquals("1", connection.getMetadata().get("rating_to"));
         assertTrue(mono.getT2().get());
+    }
+
+    private void stubNoManagedGuilds()
+    {
+        when(discordService.getDiscordAPI().getGuilds(any(), any()))
+            .thenReturn(Flux.empty());
     }
 
     private Tuple3<Account, PlayerCharacter[], Team> stubMainTeam()

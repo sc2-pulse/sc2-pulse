@@ -4,8 +4,13 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.discord.Discord;
+import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
+import com.nephest.battlenet.sc2.discord.GuildRoleStore;
+import com.nephest.battlenet.sc2.discord.IdentifiableEntity;
+import com.nephest.battlenet.sc2.discord.PulseMappings;
 import com.nephest.battlenet.sc2.discord.connection.ApplicationRoleConnection;
 import com.nephest.battlenet.sc2.discord.connection.PulseConnectionParameters;
+import com.nephest.battlenet.sc2.discord.event.RolesSlashCommand;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
@@ -21,6 +26,10 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import discord4j.common.util.Snowflake;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Role;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -40,6 +49,7 @@ import org.springframework.core.convert.ConversionService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
@@ -69,6 +79,7 @@ public class DiscordService
     private final PlayerCharacterDAO playerCharacterDAO;
     private final LadderSearchDAO ladderSearchDAO;
     private DiscordAPI discordAPI;
+    private final GuildRoleStore guildRoleStore;
     private final OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
     private final PulseConnectionParameters pulseConnectionParameters;
     private final ExecutorService dbExecutorService;
@@ -76,6 +87,9 @@ public class DiscordService
 
     @Autowired @Lazy
     private DiscordService discordService;
+
+    @Autowired @Lazy
+    private RolesSlashCommand rolesSlashCommand;
 
     @Autowired
     public DiscordService
@@ -87,6 +101,7 @@ public class DiscordService
         PlayerCharacterDAO playerCharacterDAO,
         LadderSearchDAO ladderSearchDAO,
         DiscordAPI discordAPI,
+        GuildRoleStore guildRoleStore,
         OAuth2AuthorizedClientService oAuth2AuthorizedClientService,
         EventService eventService,
         PulseConnectionParameters pulseConnectionParameters,
@@ -102,6 +117,7 @@ public class DiscordService
         this.ladderSearchDAO = ladderSearchDAO;
         this.pulseConnectionParameters = pulseConnectionParameters;
         this.discordAPI = discordAPI;
+        this.guildRoleStore = guildRoleStore;
         this.oAuth2AuthorizedClientService = oAuth2AuthorizedClientService;
         this.dbExecutorService = dbExecutorService;
         this.conversionService = conversionService;
@@ -130,6 +146,16 @@ public class DiscordService
         this.discordService = discordService;
     }
 
+    protected RolesSlashCommand getRolesSlashCommand()
+    {
+        return rolesSlashCommand;
+    }
+
+    protected void setRolesSlashCommand(RolesSlashCommand rolesSlashCommand)
+    {
+        this.rolesSlashCommand = rolesSlashCommand;
+    }
+
     /**
      * Remove existing connections and link the ids afterwards within the same transaction.
      *
@@ -152,7 +178,7 @@ public class DiscordService
 
     public void unlinkAccountFromDiscordUser(Long accountId, Long discordUserId)
     {
-        dropRoles(accountId).block();
+        dropRoles(accountId).blockLast();
         discordService.unlinkAccountFromDiscordUserDB(accountId, discordUserId);
     }
 
@@ -226,9 +252,9 @@ public class DiscordService
             .min(MAIN_TEAM_COMPARATOR);
     }
 
-    public Mono<Void> updateRoles(Long accountId)
+    public Flux<Void> updateRoles(Long accountId)
     {
-        if(!accountDiscordUserDAO.findAccountIds().contains(accountId)) return Mono.empty();
+        if(!accountDiscordUserDAO.findAccountIds().contains(accountId)) return Flux.empty();
 
         Tuple2<LadderTeam, LadderTeamMember> mainTuple = findMainTuple(accountId);
         if(mainTuple == null) return dropRoles(accountId);
@@ -242,7 +268,24 @@ public class DiscordService
             conversionService
         );
 
-        return discordAPI.updateConnectionMetaData(String.valueOf(accountId), roleConnection);
+        String principalName = String.valueOf(accountId);
+        Long discordUserId = discordUserDAO.findByAccountId(accountId, false).orElseThrow().getId();
+        return Flux.concat
+        (
+            discordAPI.updateConnectionMetaData(principalName, roleConnection),
+            getManagedRoleGuilds(principalName)
+                .flatMap(guild->getMemberMappings(guild, discordUserId))
+                .flatMap
+                (
+                    t->rolesSlashCommand.updateRoles
+                    (
+                        mainTuple.getT1(),
+                        mainTuple.getT2().getFavoriteRace(),
+                        t.getT2(),
+                        t.getT1()
+                    ).getRight()
+                )
+        );
     }
 
     public Tuple2<LadderTeam, LadderTeamMember> findMainTuple(Long accountId)
@@ -257,13 +300,37 @@ public class DiscordService
         return Tuples.of(mainTeam, member);
     }
 
-    private Mono<Void> dropRoles(Long accountId)
+    private Flux<Void> dropRoles(Long accountId)
     {
         Account account = accountDAO.findByIds(accountId).get(0);
+        String principalName = String.valueOf(accountId);
         ApplicationRoleConnection roleConnection = ApplicationRoleConnection
             .empty(account.getBattleTag());
+        Long discordUserId = discordUserDAO.findByAccountId(accountId, false).orElseThrow().getId();
 
-        return discordAPI.updateConnectionMetaData(String.valueOf(accountId), roleConnection);
+        return Flux.concat
+        (
+            discordAPI.updateConnectionMetaData(principalName, roleConnection),
+            getManagedRoleGuilds(principalName)
+                .flatMap(guild->getMemberMappings(guild, discordUserId))
+                .flatMap(t->rolesSlashCommand.updateRoles(null, null, t.getT2(), t.getT1()).getRight())
+        );
+    }
+
+    public Flux<Guild> getManagedRoleGuilds(String principalName)
+    {
+        return discordAPI.getGuilds(principalName, IdentifiableEntity.class)
+            .map(IdentifiableEntity::getId)
+            .filter(discordAPI.getBotGuilds().keySet()::contains)
+            .flatMap(id->discordAPI.getDiscordClient().getClient().getGuildById(Snowflake.of(id)))
+            .filterWhen(guild->DiscordBootstrap.haveSelfPermissions(guild, RolesSlashCommand.REQUIRED_PERMISSIONS))
+            .filterWhen(guild->guildRoleStore.getRoleMappings(guild).map(mappings->!mappings.isEmpty()));
+    }
+
+    private Mono<Tuple2<Member, PulseMappings<Role>>> getMemberMappings(Guild guild, long memberId)
+    {
+        return guild.getMemberById(Snowflake.of(memberId))
+            .zipWith(guildRoleStore.getRoleMappings(guild));
     }
 
 }

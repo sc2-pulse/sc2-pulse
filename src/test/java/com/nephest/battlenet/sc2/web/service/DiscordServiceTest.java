@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -8,17 +8,26 @@ import static com.nephest.battlenet.sc2.web.service.DiscordService.USER_UPDATE_B
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
 
+import com.nephest.battlenet.sc2.discord.GuildRoleStore;
+import com.nephest.battlenet.sc2.discord.IdentifiableEntity;
+import com.nephest.battlenet.sc2.discord.PulseMappings;
+import com.nephest.battlenet.sc2.discord.SpringDiscordClient;
 import com.nephest.battlenet.sc2.discord.connection.ApplicationRoleConnection;
 import com.nephest.battlenet.sc2.discord.connection.PulseConnectionParameters;
+import com.nephest.battlenet.sc2.discord.event.RolesSlashCommand;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -37,24 +46,43 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.service.EventService;
+import com.nephest.battlenet.sc2.web.util.MonoUtil;
+import discord4j.common.util.Snowflake;
+import discord4j.core.GatewayDiscordClient;
+import discord4j.core.object.entity.Guild;
+import discord4j.core.object.entity.Member;
+import discord4j.core.object.entity.Role;
+import discord4j.rest.util.Permission;
+import discord4j.rest.util.PermissionSet;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.mockito.junit.jupiter.MockitoSettings;
+import org.mockito.quality.Strictness;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
 @ExtendWith(MockitoExtension.class)
 public class DiscordServiceTest
@@ -82,6 +110,9 @@ public class DiscordServiceTest
     private DiscordAPI api;
 
     @Mock
+    private GuildRoleStore guildRoleStore;
+
+    @Mock
     private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
 
     @Mock
@@ -92,6 +123,9 @@ public class DiscordServiceTest
 
     @Mock
     private ConversionService conversionService;
+
+    @Mock
+    private RolesSlashCommand rolesSlashCommand;
 
     private DiscordService discordService;
 
@@ -108,12 +142,14 @@ public class DiscordServiceTest
             playerCharacterDAO,
             ladderSearchDAO,
             api,
+            guildRoleStore,
             oAuth2AuthorizedClientService,
             eventService,
             new PulseConnectionParameters(conversionService),
             executor,
             conversionService
         );
+        discordService.setRolesSlashCommand(rolesSlashCommand);
     }
 
     public void stubExecutor()
@@ -197,15 +233,44 @@ public class DiscordServiceTest
         String tag = "tag#123";
         Account account = new Account(1L, Partition.GLOBAL, tag);
         when(accountDAO.findByIds(1L)).thenReturn(List.of(account));
+        PulseMappings<Role> roleMappings = PulseMappings.empty();
+        Tuple2<Guild, Member> member1 = stubRoleMember(roleMappings);
+        Tuple2<Guild, Member> member2 = stubRoleMember(roleMappings);
+        doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds("1");
+        Tuple2<Mono<Void>, AtomicBoolean> rolesMono = MonoUtil.verifiableMono();
+        when(rolesSlashCommand.updateRoles(any(), any(), any(), any(), any()))
+            .thenReturn(new ImmutableTriple<>(null, Set.of(), rolesMono.getT1().flux()));
+        doReturn(Mono.empty()).when(api).updateConnectionMetaData(any(), any());
         ArgumentCaptor<ApplicationRoleConnection> connectionArgumentCaptor =
             ArgumentCaptor.forClass(ApplicationRoleConnection.class);
 
-        spy.updateRoles(1L);
+        spy.updateRoles(1L).blockLast();
+
+        //Application connection metadata is dropped
         verify(api).updateConnectionMetaData(eq("1"), connectionArgumentCaptor.capture());
         ApplicationRoleConnection connection = connectionArgumentCaptor.getValue();
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
         assertEquals(tag, connection.getPlatformUsername());
         assertNull(connection.getMetadata());
+
+        //members in all guilds are dropped
+        verify(rolesSlashCommand).updateRoles
+        (
+            null,
+            null,
+            roleMappings,
+            member1.getT2(),
+            "Updated roles based on the last ranked ladder stats"
+        );
+        verify(rolesSlashCommand).updateRoles
+        (
+            null,
+            null,
+            roleMappings,
+            member2.getT2(),
+            "Updated roles based on the last ranked ladder stats"
+        );
+        assertTrue(rolesMono.getT2().get());
     }
 
     @Test
@@ -251,10 +316,20 @@ public class DiscordServiceTest
         );
 
         when(spy.findMainTeam(any())).thenReturn(Optional.of(team));
+        PulseMappings<Role> roleMappings = PulseMappings.empty();
+        Tuple2<Guild, Member> member1 = stubRoleMember(roleMappings);
+        Tuple2<Guild, Member> member2 = stubRoleMember(roleMappings);
+        doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds("1");
+        Tuple2<Mono<Void>, AtomicBoolean> rolesMono = MonoUtil.verifiableMono();
+        when(rolesSlashCommand.updateRoles(any(), any(), any(), any(), any()))
+            .thenReturn(new ImmutableTriple<>(team, Set.of(), rolesMono.getT1().flux()));
+        doReturn(Mono.empty()).when(api).updateConnectionMetaData(any(), any());
         ArgumentCaptor<ApplicationRoleConnection> connectionArgumentCaptor =
             ArgumentCaptor.forClass(ApplicationRoleConnection.class);
 
-        spy.updateRoles(1L);
+        spy.updateRoles(1L).blockLast();
+
+        //Application connection metadata is updated
         verify(api).updateConnectionMetaData(eq("1"), connectionArgumentCaptor.capture());
         ApplicationRoleConnection connection = connectionArgumentCaptor.getValue();
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
@@ -265,6 +340,36 @@ public class DiscordServiceTest
         assertEquals("4", connection.getMetadata().get("league"));
         assertEquals("1234", connection.getMetadata().get("rating_from"));
         assertEquals("1234", connection.getMetadata().get("rating_to"));
+
+        //members in all guilds are updated
+        verify(rolesSlashCommand).updateRoles
+        (
+            team,
+            Race.PROTOSS,
+            roleMappings,
+            member1.getT2(),
+            "Updated roles based on the last ranked ladder stats"
+        );
+        verify(rolesSlashCommand).updateRoles
+        (
+            team,
+            Race.PROTOSS,
+            roleMappings,
+            member2.getT2(),
+            "Updated roles based on the last ranked ladder stats"
+        );
+        assertTrue(rolesMono.getT2().get());
+    }
+
+    private Tuple2<Guild, Member> stubRoleMember(PulseMappings<Role> roleMappings)
+    {
+        Member member1 = mock(Member.class);
+        Guild guild1 = mock(Guild.class);
+        when(discordUserDAO.findByAccountId(1L, false))
+            .thenReturn(Optional.of(new DiscordUser(123L, "name", 1)));
+        when(guild1.getMemberById(argThat(s->s.asLong() == 123L))).thenReturn(Mono.just(member1));
+        when(guildRoleStore.getRoleMappings(guild1)).thenReturn(Mono.just(roleMappings));
+        return Tuples.of(guild1, member1);
     }
 
     @Test
@@ -274,5 +379,64 @@ public class DiscordServiceTest
         discordService.updateRoles(1L);
         verifyNoInteractions(api);
     }
+
+    @CsvSource
+    ({
+        "true, true, true, true",
+        "true, true, false, false",
+        "true, false, false, false",
+        "false, false, false, false",
+        "false, false, true, false",
+        "false, true, false, false"
+    })
+    @ParameterizedTest
+    @MockitoSettings(strictness = Strictness.LENIENT)
+    public void testGetManagedRoleGuilds
+    (
+        boolean managedByBot,
+        boolean hasPermissions,
+        boolean hasRoles,
+        boolean expectedResult
+    )
+    {
+        Guild guild = mock(Guild.class);
+        long guildID = 10L;
+        when(guild.getId()).thenReturn(Snowflake.of(guildID));
+        when(api.getGuilds("1", IdentifiableEntity.class))
+            .thenReturn(Flux.just(new IdentifiableEntity(guildID)));
+
+        when(api.getBotGuilds()).thenReturn(Map.of(managedByBot ? guildID : guildID  + 1, guild));
+        GatewayDiscordClient client = mockClient();
+        when(client.getGuildById(Snowflake.of(guildID))).thenReturn(Mono.just(guild));
+
+        Member self = mock(Member.class);
+        when(self.getBasePermissions())
+            .thenReturn(Mono.just(PermissionSet.of(hasPermissions ? Permission.MANAGE_ROLES : Permission.EMBED_LINKS)));
+        when(guild.getSelfMember()).thenReturn(Mono.just(self));
+
+        Role role = mock(Role.class);
+        PulseMappings<Role> mappings = hasRoles
+            ?
+                new PulseMappings<>
+                (
+                    Map.of(Region.EU, List.of(role)),
+                    Map.of(), Map.of(), Map.of(), Objects::toString, ""
+                )
+            : PulseMappings.empty();
+        when(guildRoleStore.getRoleMappings(guild)).thenReturn(Mono.just(mappings));
+
+        Guild result = discordService.getManagedRoleGuilds("1").blockLast();
+        assertEquals(expectedResult, result != null);
+    }
+
+    private GatewayDiscordClient mockClient()
+    {
+        GatewayDiscordClient client = mock(GatewayDiscordClient.class);
+        SpringDiscordClient springClient = mock(SpringDiscordClient.class);
+        when(api.getDiscordClient()).thenReturn(springClient);
+        when(springClient.getClient()).thenReturn(client);
+        return client;
+    }
+
 
 }

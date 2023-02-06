@@ -60,7 +60,7 @@ extends SavedRequestAwareAuthenticationSuccessHandler
 
     private void updateDiscordOauth2Data(AccountOauth2User<? extends OAuth2User> user)
     {
-        discordService.updateRoles(user.getAccount().getId()).block();
+        discordService.updateRoles(user.getAccount().getId()).blockLast();
     }
 
 }
