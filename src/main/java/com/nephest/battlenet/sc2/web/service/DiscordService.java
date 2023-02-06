@@ -14,7 +14,6 @@ import com.nephest.battlenet.sc2.discord.event.RolesSlashCommand;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
-import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
@@ -254,38 +253,57 @@ public class DiscordService
 
     public Flux<Void> updateRoles(Long accountId)
     {
+        return updateRoles(accountId, false);
+    }
+
+    private Flux<Void> dropRoles(Long accountId)
+    {
+        return updateRoles(accountId, true);
+    }
+
+    private Flux<Void> updateRoles(Long accountId, boolean drop)
+    {
         if(!accountDiscordUserDAO.findAccountIds().contains(accountId)) return Flux.empty();
 
-        Tuple2<LadderTeam, LadderTeamMember> mainTuple = findMainTuple(accountId);
-        if(mainTuple == null) return dropRoles(accountId);
-
-        ApplicationRoleConnection roleConnection = ApplicationRoleConnection.from
-        (
-            mainTuple.getT1(),
-            mainTuple.getT2().getAccount().getBattleTag(),
-            mainTuple.getT2().getFavoriteRace(),
-            pulseConnectionParameters.getParameters(),
-            conversionService
-        );
+        Tuple2<LadderTeam, LadderTeamMember> mainTuple = drop ? null : findMainTuple(accountId);
+        ApplicationRoleConnection roleConnection = mainTuple != null
+            ? 
+                ApplicationRoleConnection.from
+                (
+                    mainTuple.getT1(),
+                    mainTuple.getT2().getAccount().getBattleTag(),
+                    mainTuple.getT2().getFavoriteRace(),
+                    pulseConnectionParameters.getParameters(),
+                    conversionService
+                )
+            : ApplicationRoleConnection.empty(accountDAO.findByIds(accountId).get(0).getBattleTag());
 
         String principalName = String.valueOf(accountId);
-        Long discordUserId = discordUserDAO.findByAccountId(accountId, false).orElseThrow().getId();
         return Flux.concat
         (
             discordAPI.updateConnectionMetaData(principalName, roleConnection),
             getManagedRoleGuilds(principalName)
-                .flatMap(guild->getMemberMappings(guild, discordUserId))
+                .flatMap
+                (
+                    guild->getMemberMappings
+                    (
+                        guild,
+                        discordUserDAO.findByAccountId(accountId, false)
+                            .orElseThrow()
+                            .getId()
+                    )
+                )
                 .flatMap
                 (
                     t->rolesSlashCommand.updateRoles
                     (
-                        mainTuple.getT1(),
-                        mainTuple.getT2().getFavoriteRace(),
+                        mainTuple != null ? mainTuple.getT1() : null,
+                        mainTuple != null ? mainTuple.getT2().getFavoriteRace() : null,
                         t.getT2(),
                         t.getT1()
                     ).getRight()
                 )
-        );
+        ).subscribeOn(Schedulers.boundedElastic());
     }
 
     public Tuple2<LadderTeam, LadderTeamMember> findMainTuple(Long accountId)
@@ -298,23 +316,6 @@ public class DiscordService
             .findFirst()
             .orElseThrow();
         return Tuples.of(mainTeam, member);
-    }
-
-    private Flux<Void> dropRoles(Long accountId)
-    {
-        Account account = accountDAO.findByIds(accountId).get(0);
-        String principalName = String.valueOf(accountId);
-        ApplicationRoleConnection roleConnection = ApplicationRoleConnection
-            .empty(account.getBattleTag());
-        Long discordUserId = discordUserDAO.findByAccountId(accountId, false).orElseThrow().getId();
-
-        return Flux.concat
-        (
-            discordAPI.updateConnectionMetaData(principalName, roleConnection),
-            getManagedRoleGuilds(principalName)
-                .flatMap(guild->getMemberMappings(guild, discordUserId))
-                .flatMap(t->rolesSlashCommand.updateRoles(null, null, t.getT2(), t.getT1()).getRight())
-        );
     }
 
     public Flux<Guild> getManagedRoleGuilds(String principalName)
