@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -41,6 +41,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -105,6 +106,7 @@ public class DiscordService
         this.dbExecutorService = dbExecutorService;
         this.conversionService = conversionService;
         eventService.getLadderCharacterActivityEvent()
+            .subscribeOn(Schedulers.boundedElastic())
             .subscribe(c->updateRoles(c.getAccountId()).subscribe());
     }
 
