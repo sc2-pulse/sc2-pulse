@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -83,7 +83,8 @@ implements SlashCommand
     @Override
     public Mono<Message> handle(ChatInputInteractionEvent evt)
     {
-        return DiscordBootstrap.haveSelfPermissions(evt.getInteraction().getGuild(), REQUIRED_PERMISSIONS)
+        return evt.getInteraction().getGuild()
+            .flatMap(guild->DiscordBootstrap.haveSelfPermissions(guild, REQUIRED_PERMISSIONS))
             .flatMap(havePermissions->!havePermissions
                 ? evt.createFollowup().withContent("Role management is disabled."
                     + " Grant the bot \""
@@ -95,7 +96,7 @@ implements SlashCommand
 
     private Mono<Message> handleWithPermissions(ChatInputInteractionEvent evt)
     {
-        PulseMappings<Role> mapping = guildRoleStore.getRoleMappings(evt);
+        PulseMappings<Role> mapping = guildRoleStore.getRoleMappings(evt).block();
         if(mapping.isEmpty()) return evt.createFollowup()
             .withContent(supportedRolesLink + " not found");
 

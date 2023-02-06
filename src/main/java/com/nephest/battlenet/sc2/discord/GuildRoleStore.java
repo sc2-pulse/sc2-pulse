@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -13,6 +13,7 @@ import discord4j.core.event.domain.role.RoleDeleteEvent;
 import discord4j.core.event.domain.role.RoleUpdateEvent;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Role;
+import java.time.Duration;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -50,27 +51,23 @@ public class GuildRoleStore
         new PulseMappings<>(Map.of(), Map.of(), Map.of(), Map.of(), Role::getName, DELIMITER);
 
     @Cacheable(cacheNames = "discord-guild-roles", key="#evt.getInteraction().getGuildId().get()?.asLong()")
-    public PulseMappings<Role> getRoleMappings(ApplicationCommandInteractionEvent evt)
+    public Mono<PulseMappings<Role>> getRoleMappings(ApplicationCommandInteractionEvent evt)
     {
-        List<Role> roles = evt
+        return evt
             .getInteraction()
             .getGuild()
-            .flatMapMany(Guild::getRoles)
-            .filter(r->!r.isManaged())
-            .collectList()
-            .block();
-        return getRoleMappings(roles);
+            .flatMap(this::getRoleMappings);
     }
 
     @Cacheable(cacheNames = "discord-guild-roles", key="#guild.getId().asLong()")
-    public PulseMappings<Role> getRoleMappings(Guild guild)
+    public Mono<PulseMappings<Role>> getRoleMappings(Guild guild)
     {
-        List<Role> roles = guild
+        return guild
             .getRoles()
             .filter(r->!r.isManaged())
             .collectList()
-            .block();
-        return getRoleMappings(roles);
+            .map(GuildRoleStore::getRoleMappings)
+            .cache((m)->DiscordBootstrap.CACHE_DURATION, (t)->Duration.ZERO, ()->DiscordBootstrap.CACHE_DURATION);
     }
 
     @CacheEvict(cacheNames = "discord-guild-roles", key="#evt.getGuildId().asLong()")

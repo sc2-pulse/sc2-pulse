@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -49,6 +49,7 @@ import discord4j.rest.service.ApplicationService;
 import discord4j.rest.util.Color;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -75,6 +76,7 @@ public class DiscordBootstrap
 
     public static final int DEFAULT_LINES = 5;
     public static final int MESSAGE_LENGTH_MAX = 2000;
+    public static final Duration CACHE_DURATION = Duration.ofHours(1);
     public static final String SC2_GAME_NAME = "StarCraft II";
     public static final String SC2_REVEALED_TAG = "revealed";
     public static final String UNEXPECTED_ERROR_MESSAGE =
@@ -429,16 +431,16 @@ public class DiscordBootstrap
             : str;
     }
 
-    public static Mono<PermissionSet> getSelfPermissions(Mono<Guild> guild)
+    public static Mono<PermissionSet> getSelfPermissions(Guild guild)
     {
         return guild
-            .flatMap(Guild::getSelfMember)
+            .getSelfMember()
             .flatMap(PartialMember::getBasePermissions);
     }
 
     public static Mono<Boolean> haveSelfPermissions
     (
-        Mono<Guild> guild,
+        Guild guild,
         Collection<? extends Permission> requiredPermissions
     )
     {

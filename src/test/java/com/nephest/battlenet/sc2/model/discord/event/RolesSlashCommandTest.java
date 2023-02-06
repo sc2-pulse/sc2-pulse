@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord.event;
@@ -141,7 +141,7 @@ public class RolesSlashCommandTest
         when(selfMember.getBasePermissions()).thenReturn(Mono.just(PermissionSet.of(permissions)));
 
         //check mappings
-        when(guildRoleStore.getRoleMappings(evt)).thenReturn(GuildRoleStore.EMPTY_MAPPING);
+        when(guildRoleStore.getRoleMappings(evt)).thenReturn(Mono.just(GuildRoleStore.EMPTY_MAPPING));
 
         cmd.handle(evt).onErrorComplete().block();
 
@@ -199,7 +199,7 @@ public class RolesSlashCommandTest
             Role::getMention,
             ", "
         );
-        when(guildRoleStore.getRoleMappings(evt)).thenReturn(mappings);
+        when(guildRoleStore.getRoleMappings(evt)).thenReturn(Mono.just(mappings));
 
         //check account
         long userId = 123L;

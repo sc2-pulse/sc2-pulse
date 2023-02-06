@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord;
@@ -62,7 +62,7 @@ public class GuildRoleStoreTest
         when(interaction.getGuild()).thenReturn(Mono.just(guild));
         when(guild.getRoles()).thenReturn(roles);
 
-        PulseMappings<Role> mappings = store.getRoleMappings(evt);
+        PulseMappings<Role> mappings = store.getRoleMappings(evt).block();
         assertFalse(mappings.isEmpty());
         assertEquals(1, mappings.getRegionMappings().getMappings().size());
         assertEquals(1L, mappings.getRegionMappings().getMappings()
