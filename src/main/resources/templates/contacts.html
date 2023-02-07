@@ -14,11 +14,11 @@
 <div th:replace="~{fragments/generic :: content(~{::section})}">
     <section id="contacts">
         <h2>Contacts</h2>
-        <table class="table">
+        <table class="table inline-table">
             <tbody>
                 <tr th:if="${@environment.getProperty('contacts.discord.server') != null}">
                     <th scope="row" class="social-media"><img th:src="@{/static/icon/logo/discord.svg}" alt="Discord support server"/></th>
-                    <td class="text-left cell-main">
+                    <td class="text-left">
                         <a
                             th:href="${@environment.getProperty('contacts.discord.server')}"
                             rel="noopener"
@@ -30,7 +30,7 @@
                 </tr>
                 <tr th:if="${@environment.getProperty('contacts.twitter') != null}">
                     <th scope="row" class="social-media"><img th:src="@{/static/icon/logo/twitter.svg}" alt="Twitter"/></th>
-                    <td class="text-left cell-main">
+                    <td class="text-left">
                         <a
                                 th:href="${@environment.getProperty('contacts.twitter')}"
                                 th:text="${@environment.getProperty('contacts.twitter').substring(@environment.getProperty('contacts.twitter').lastIndexOf('/') + 1)}"
@@ -42,7 +42,7 @@
                 </tr>
                 <tr th:if="${@environment.getProperty('contacts.github') != null}">
                     <th scope="row" class="social-media"><img th:src="@{/static/icon/logo/github.svg}" alt="Github"/></th>
-                    <td class="text-left cell-main">
+                    <td class="text-left">
                         <a
                                 th:href="${@environment.getProperty('contacts.github')}"
                                 th:text="${@environment.getProperty('contacts.github').substring(@environment.getProperty('contacts.github').lastIndexOf('/') + 1)}"
@@ -54,7 +54,7 @@
                 </tr>
                 <tr th:if="${@environment.getProperty('contacts.email') != null}">
                     <th scope="row" class="social-media"><img th:src="@{/static/icon/misc/mail.svg}" alt="Email"/></th>
-                    <td class="text-left cell-main">
+                    <td class="text-left">
                         <a
                                 sec:authorize="isAuthenticated()"
                                 th:href="|mailto:${@environment.getProperty('contacts.email')}|"
