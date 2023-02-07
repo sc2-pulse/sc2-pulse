@@ -80,9 +80,25 @@ h3
     font-size: 1.2rem;
 }
 
-h4
+h4, h5, h6
 {
     font-size: 1.0rem;
+}
+
+.text-content h1,
+.text-content h2,
+.text-content h3,
+.text-content h4,
+.text-content h5,
+.text-content h6
+{
+    font-weight: bold;
+    margin: 1em 0;
+}
+
+.text-content section
+{
+    margin-bottom: 3em;
 }
 
 #stats h4
