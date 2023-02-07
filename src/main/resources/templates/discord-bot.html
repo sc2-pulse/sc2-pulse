@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -11,17 +11,18 @@
 </head>
 <body>
 <div th:replace="~{fragments/generic :: content(~{::section})}">
-    <section class="text-left">
+    <section class="text-left text-content">
         <h2>Discord Bot</h2>
         <p>SC2 Pulse provides a discord bot for StarCraft2.
             <a th:href="@{/discord/bot/invite}" target="_blank" rel="nofollow noopener">Invite the bot to your discord server</a>.
+            Used in <span th:text="${@discordAPI.getBotGuilds()?.size()}"></span> servers.
         </p>
-        <div class="section-cascade">
+        <div>
             <section id="slash-commands">
                 <h3>Slash commands</h3>
                 <p>Type <code>/</code> in the chat box to see available slash commands.</p>
                 <section id="slash-1v1-summary">
-                    <h4><a href="#slash-1v1-summary">1v1-summary</a></h4>
+                    <h4><a href="#slash-1v1-summary">/1v1-summary</a></h4>
                     <p>Shows MMR(last, average, and max), games played, race, region, and league.</p>
                     <dl>
                         <dt>name</dt>
@@ -30,84 +31,9 @@
                     </dl>
                 </section>
                 <section id="slash-roles">
-                    <h4><a href="#slash-roles">roles</a></h4>
-                    <p>Assigns discord roles based on your ranked 1v1 stats. It's like reaction roles, but instead of
-                    reactions your roles are based on your actual in-game stats.</p>
+                    <h4><a href="#slash-roles">/roles</a></h4>
+                    <p>Triggers <a href="#auto-roles">auto role assignment</a></p>
                     <p>Required permissions(for the bot): <code th:text="${T(com.nephest.battlenet.sc2.discord.event.RolesSlashCommand).REQUIRED_PERMISSIONS.![name].stream.collect(@formatUtil.joining(', '))}"></code></p>
-                    <section>
-                        <h5>Supported roles</h5>
-                        <p>Role names are case insensitive</p>
-                        <section>
-                            <h6>Region</h6>
-                            <table class="table table-hover table-sm c-table-simple">
-                                <thead>
-                                    <tr>
-                                        <th>Region</th>
-                                        <th>Supported roles</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="region : ${T(com.nephest.battlenet.sc2.model.Region).values()}">
-                                        <th scope="row" th:text="${region.getName()}"></th>
-                                        <td class="text-left cell-main" th:text="${T(java.util.stream.Stream).concat(T(java.util.stream.Stream).of(region.getName()), region.getAdditionalNames().stream()).collect(@formatUtil.joining(', '))}"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </section>
-                        <section>
-                            <h6>League</h6>
-                            <table class="table table-hover table-sm c-table-simple">
-                                <thead>
-                                <tr>
-                                    <th>League</th>
-                                    <th>Supported roles</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="league : ${T(com.nephest.battlenet.sc2.model.BaseLeague.LeagueType).values()}">
-                                        <th scope="row" th:text="${league.getName()}"></th>
-                                        <td class="text-left cell-main" th:text="${T(java.util.stream.Stream).concat(T(java.util.stream.Stream).of(league.getName()), league.getAdditionalNames().stream()).collect(@formatUtil.joining(', '))}"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </section>
-                        <section>
-                            <h6>Race</h6>
-                            <table class="table table-hover table-sm c-table-simple">
-                                <thead>
-                                <tr>
-                                    <th>Race</th>
-                                    <th>Supported roles</th>
-                                </tr>
-                                </thead>
-                                <tbody>
-                                    <tr th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}">
-                                        <th scope="row" th:text="${race.getName()}"></th>
-                                        <td class="text-left cell-main" th:text="${race.getName()}"></td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </section>
-                        <section>
-                            <h6>Range</h6>
-                            <p>Some parameters support integer ranges as role names. Format:
-                                <code>from(included)-to(excluded) suffix</code>. Role example: 4000-5500 mmr.</p>
-                            <table class="table table-hover table-sm c-table-simple">
-                                <thead>
-                                    <tr>
-                                        <th scope="col">Parameter</th>
-                                        <th scope="col">Suffix</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <th scope="row">Current rating</th>
-                                        <td class="text-left cell-main">mmr</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </section>
-                    </section>
                 </section>
             </section>
             <section id="user-commands">
@@ -123,6 +49,121 @@
                         <li>Server username(trimmed)</li>
                         <li>Discord username(trimmed)</li>
                     </ul>
+                </section>
+            </section>
+            <section id="role-management">
+                <h3>Role management</h3>
+                <p>
+                    The bot supports several types of role management. The Assigned roles are based on the user's main team. The
+                    main team is picked from <code th:text="${T(com.nephest.battlenet.sc2.web.service.DiscordService).MAIN_TEAM_QUEUE_TYPES.![name].stream.collect(@formatUtil.joining(', '))}"></code>
+                    queue types, last <span th:text="${T(com.nephest.battlenet.sc2.web.service.DiscordService).MAIN_TEAM_SEASON_DEPTH}"></span> seasons.
+                    Sorting order: season(desc)->queue type(asc)->mmr(desc)->id(asc). The first team that matches is used
+                    as the main team.
+                </p>
+                <section id="linked-roles">
+                    <h4>Linked roles</h4>
+                    <p>
+                        The bot provides an Application Connection that can be used in
+                        <a
+                                href="https://discord.com/blog/connected-accounts-functionality-boost-linked-roles"
+                                rel="noopener"
+                                target="_blank"
+                        >Linked Roles</a>.
+                        Bear in mind that Linked Roles can't be auto assigned, users have to manually opt-in for a role.
+                    </p>
+                </section>
+                <section id="auto-roles">
+                    <h4>Auto roles</h4>
+                    <p>An alternative method that supports auto assignment. Only the
+                        <a href="#supported-roles">pre-defined role names</a> are supported. Users have to
+                        <a th:href="@{/verify/discord}">link their discord account</a>.
+                    </p>
+                    <p>Required permissions(for the bot): <code th:text="${T(com.nephest.battlenet.sc2.discord.event.RolesSlashCommand).REQUIRED_PERMISSIONS.![name].stream.collect(@formatUtil.joining(', '))}"></code></p>
+                    <p>Execute the <a href="#slash-roles">/roles</a> command to make sure the server is configured correctly.</p>
+                    <section>
+                        <h5>Triggers</h5>
+                        <p>The roles will be updated for a user when:</p>
+                        <ul>
+                            <li>A new ladder data is detected(i.e. the user has finished a ranked match)</li>
+                            <li>The user links their Discord account</li>
+                            <li>The user unlinks their Discord account. The roles will be dropped in this case.</li>
+                            <li>The user executes the <a href="#slash-roles">/roles</a> slash command</li>
+                        </ul>
+                    </section>
+                    <section id="supported-roles">
+                        <h5>Supported roles</h5>
+                        <p>Role names are case insensitive</p>
+                        <section>
+                            <h6>Region</h6>
+                            <table class="table table-hover table-sm c-table-simple">
+                                <thead>
+                                <tr>
+                                    <th>Region</th>
+                                    <th>Supported roles</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="region : ${T(com.nephest.battlenet.sc2.model.Region).values()}">
+                                    <th scope="row" th:text="${region.getName()}"></th>
+                                    <td class="text-left cell-main" th:text="${T(java.util.stream.Stream).concat(T(java.util.stream.Stream).of(region.getName()), region.getAdditionalNames().stream()).collect(@formatUtil.joining(', '))}"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                        <section>
+                            <h6>League</h6>
+                            <table class="table table-hover table-sm c-table-simple">
+                                <thead>
+                                <tr>
+                                    <th>League</th>
+                                    <th>Supported roles</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="league : ${T(com.nephest.battlenet.sc2.model.BaseLeague.LeagueType).values()}">
+                                    <th scope="row" th:text="${league.getName()}"></th>
+                                    <td class="text-left cell-main" th:text="${T(java.util.stream.Stream).concat(T(java.util.stream.Stream).of(league.getName()), league.getAdditionalNames().stream()).collect(@formatUtil.joining(', '))}"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                        <section>
+                            <h6>Race</h6>
+                            <table class="table table-hover table-sm c-table-simple">
+                                <thead>
+                                <tr>
+                                    <th>Race</th>
+                                    <th>Supported roles</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}">
+                                    <th scope="row" th:text="${race.getName()}"></th>
+                                    <td class="text-left cell-main" th:text="${race.getName()}"></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                        <section>
+                            <h6>Range</h6>
+                            <p>Some parameters support integer ranges as role names. Format:
+                                <code>from(included)-to(excluded) suffix</code>. Role example: 4000-5500 mmr.</p>
+                            <table class="table table-hover table-sm c-table-simple">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Parameter</th>
+                                    <th scope="col">Suffix</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr>
+                                    <th scope="row">Current rating</th>
+                                    <td class="text-left cell-main">mmr</td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </section>
+                    </section>
                 </section>
             </section>
         </div>
