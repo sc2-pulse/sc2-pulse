@@ -675,6 +675,23 @@ body.theme-light .adaptive-border-color-splitter
   text-align: center;
 }
 
+.link-tile
+{
+    padding: 1em;
+    border-radius: 1em;
+}
+
+.link-tile:hover
+{
+    text-decoration: none;
+    background-color: rgba(0, 0, 0, 0.1);
+}
+
+.link-tile .logo
+{
+    width: 4em;
+}
+
 .copy-to-clipboard
 {
     cursor: copy;
