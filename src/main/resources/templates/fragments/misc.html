@@ -1,0 +1,21 @@
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Pulse</title>
+</head>
+<body>
+<a th:fragment="discord-bot-tile" th:href="@{/discord/bot}" class="d-inline-block link-tile">
+    <img src="#" th:src="@{/static/icon/logo/discord.svg}" alt="Discord Logo" class="logo">
+    <div class="mb-2">Discord bot</div>
+    <div class="d-inline-flex flex-column flex-center-wrap-gap text-secondary gap-tiny mb-0">
+        <div>1v1 stats</div>
+        <div>Role management</div>
+        <div>Used in <span th:text="${@discordAPI.getBotGuilds()?.size()}"></span> servers</div>
+    </div>
+</a>
+</body>
+</html>
