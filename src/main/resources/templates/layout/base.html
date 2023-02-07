@@ -47,18 +47,9 @@
       th:class="|theme-${uiTheme}|">
     <div class="d-flex">
     <div id="section-side-left" class="section-side">
-        <div id="dd-desktop-left-container" th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')
-                and showAds == true
-                and @environment.getProperty('com.nephest.battlenet.sc2.google.ads.desktop.left.id') != null
-                and !#authorization.expression('hasRole(''ROLE_SUPPORTER'')')}">
-            <div id="dd-desktop-left" class="dd-block mt-5" >
+        <div class="sponsor-desktop-side-container" th:if="${showAds == true}">
+            <div id="dd-desktop-left" class="dd-block sponsor-desktop-side mt-5" >
                 <!-- desktop-left -->
-                <ins class="adsbygoogle dd-skyscraper"
-                     th:data-ad-client="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.id')}"
-                     th:data-ad-slot="${@environment.getProperty('com.nephest.battlenet.sc2.google.ads.desktop.left.id')}"></ins>
-                <script>
-                     (adsbygoogle = window.adsbygoogle || []).push({});
-                </script>
             </div>
         </div>
     </div>
@@ -88,6 +79,9 @@
         </div>
     </div>
     <footer>
+        <div class="container sponsor-mobile-container"
+             th:if="${showAds == true}">
+        </div>
         <div class="container text-secondary">
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/about}" class="text-secondary">About</a></span>
             <span class="c-divider d-inline-block mb-3 text-nowrap"><a th:href="@{/status}" class="text-secondary">Status</a></span>
