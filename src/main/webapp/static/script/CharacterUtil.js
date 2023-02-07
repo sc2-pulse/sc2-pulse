@@ -609,7 +609,7 @@ class CharacterUtil
             cur = teamState.teamState.regionRank;
         } else {
             nextTierRange = tierRange.league == LEAGUE.MASTER && tierRange.tierType == 0
-                ? {league: LEAGUE.GRANDMASTER, tierType: 0, bottomThreshold: 0}
+                ? CharacterUtil.getGrandmasterTierRange(teamState.teamState.regionTeamCount)
                 : TIER_RANGE[tierRange.order - 1];
             min = tierRange.bottomThreshold;
             max = nextTierRange.bottomThreshold;
@@ -626,6 +626,15 @@ class CharacterUtil
         container.appendChild(SC2Restful.IMAGES.get(nextTierRange.league.name.toLowerCase()).cloneNode());
         container.appendChild(SC2Restful.IMAGES.get("tier-" + (nextTierRange.tierType + 1)).cloneNode());
         return container;
+    }
+
+    static getGrandmasterTierRange(regionTeamCount)
+    {
+        return {
+            league: LEAGUE.GRANDMASTER,
+            tierType: 0,
+            bottomThreshold: (200 / regionTeamCount) * 100
+        };
     }
     
     static getGamesAndAverageMmrString(mmrHistory)
