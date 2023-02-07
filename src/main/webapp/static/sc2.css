@@ -33,6 +33,11 @@ body
     min-width: 20em;
 }
 
+textarea.readable
+{
+    min-height: 12em;
+}
+
 table, ul, dl
 {
     text-align: initial;
