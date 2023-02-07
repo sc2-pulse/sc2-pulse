@@ -384,7 +384,7 @@ class StatsUtil
                 {
                     const td = document.createElement("td");
                     if(league === LEAGUE.GRANDMASTER) {
-                        td.textContent = "Top 200";
+                        td.textContent = "Top " + SC2Restful.GM_COUNT;
                     }
                     else if
                     (

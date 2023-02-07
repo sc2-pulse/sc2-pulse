@@ -604,7 +604,7 @@ class CharacterUtil
         let min, max, cur, nextTierRange;
         if(tierRange.league == LEAGUE.GRANDMASTER) {
             nextTierRange = {league: LEAGUE.GRANDMASTER, tierType: 0};
-            min = 200;
+            min = SC2Restful.GM_COUNT;
             max = 1;
             cur = teamState.teamState.regionRank;
         } else {
@@ -633,7 +633,7 @@ class CharacterUtil
         return {
             league: LEAGUE.GRANDMASTER,
             tierType: 0,
-            bottomThreshold: (200 / regionTeamCount) * 100
+            bottomThreshold: (SC2Restful.GM_COUNT / regionTeamCount) * 100
         };
     }
     

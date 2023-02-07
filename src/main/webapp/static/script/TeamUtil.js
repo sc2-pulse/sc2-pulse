@@ -203,7 +203,7 @@ class TeamUtil
 
     static getRegionLeagueRange(team)
     {
-        if(team.regionRank <= 200) return {league: LEAGUE.GRANDMASTER, tierType: 0};
+        if(team.regionRank <= SC2Restful.GM_COUNT) return {league: LEAGUE.GRANDMASTER, tierType: 0};
 
         const regionTopPercent = (team.regionRank / team.regionTeamCount) * 100;
         return Object.values(TIER_RANGE).find(r=>regionTopPercent <= r.bottomThreshold);
@@ -211,7 +211,7 @@ class TeamUtil
 
     static getGlobalLeagueRange(team)
     {
-        if(team.globalRank <= Object.values(REGION).length * 200) return {league: LEAGUE.GRANDMASTER, tierType: 0};
+        if(team.globalRank <= Object.values(REGION).length * SC2Restful.GM_COUNT) return {league: LEAGUE.GRANDMASTER, tierType: 0};
 
         const globalTopPercent = (team.globalRank / team.globalTeamCount) * 100;
         return Object.values(TIER_RANGE).find(r=>globalTopPercent <= r.bottomThreshold);

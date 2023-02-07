@@ -174,6 +174,7 @@ SC2Restful.SITE_NAME = "SC2 Pulse";
 SC2Restful.MMR_HISTORY_START_DATE = new Date("2021-01-19T00:00:00");
 SC2Restful.MMR_HISTORY_DAYS_MAX = 90;
 SC2Restful.REDIRECT_PAGE_TIMEOUT_MILLIS = 3500;
+SC2Restful.GM_COUNT = 200;
 
 SC2Restful.REM = parseInt(getComputedStyle(document.documentElement).fontSize);
 
