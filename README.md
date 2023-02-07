@@ -164,6 +164,7 @@ To ensure that the potential violation is a minor one, the following rules are a
 * `com.nephest.battlenet.sc2.ladder.regions` set of regions that will be updated, currently active regions by default.
 * `contacts.email`
 * `contacts.discord.server`
+* `contacts.discord.server.name`
 * `contacts.twitter`
 * `contacts.github`
 ## Contributing

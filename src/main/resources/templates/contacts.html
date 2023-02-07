@@ -21,10 +21,11 @@
                     <td class="text-left">
                         <a
                             th:href="${@environment.getProperty('contacts.discord.server')}"
+                            th:text="${#strings.defaultString(@environment.getProperty('contacts.discord.server.name'), 'Discord server')}"
                             rel="noopener"
                             target="_blank"
                         >
-                            Discord support server
+                            Discord server
                         </a>
                     </td>
                 </tr>
