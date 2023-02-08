@@ -456,9 +456,11 @@ public class DiscordIT
         final TeamType TEAM_TYPE = TeamType.ARRANGED;
         final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
         Region region = Region.EU;
-        Season season1 = new Season(null, 1, region, 2020, 1,
+        int curSeason = 1000;
+        int lastValidSeason = curSeason - DiscordService.MAIN_TEAM_SEASON_DEPTH + 1;
+        Season season1 = new Season(null, lastValidSeason, region, 2020, 1,
             LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));
-        Season season2 = new Season(null, 2, region, 2020, 2,
+        Season season2 = new Season(null, curSeason, region, 2020, 2,
             LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1));
         //generate some useless noise
         seasonGenerator.generateSeason
@@ -514,10 +516,10 @@ public class DiscordIT
     {
         final TeamType TEAM_TYPE = TeamType.ARRANGED;
         final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
-        int targetSeasonOffset = 2;
+        int targetSeasonOffset = DiscordService.MAIN_TEAM_SEASON_DEPTH;
         LocalDate start = LocalDate.now().minusYears(5);
         List<Season> seasons = new ArrayList<>();
-        for(int i = 0; i <= targetSeasonOffset + 1; i++)
+        for(int i = 0; i <= targetSeasonOffset; i++)
             seasons.add(new Season(null, i, Region.EU, 2020, i, start.plusMonths(i), start.plusMonths(i + 1)));
         seasonGenerator.generateSeason
         (

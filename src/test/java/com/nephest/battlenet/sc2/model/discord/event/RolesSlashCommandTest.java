@@ -246,7 +246,8 @@ public class RolesSlashCommandTest
         verify(followup, atLeastOnce()).withContent(responseCaptor.capture());
         expectedResponse = rolesHeader
             + "\n"
-            + "Ranked 1v1 stats not found. Have you played a ranked game over the last 2 seasons? "
+            + "Ranked 1v1 stats not found. Have you played a ranked game over the last "
+                 + DiscordService.MAIN_TEAM_SEASON_DEPTH +  " seasons? "
             + "If yes, then try to importDataLink to fix it.\n"
             + "\n"
             + "**Roles assigned**: ";
@@ -301,7 +302,7 @@ public class RolesSlashCommandTest
         expectedResponse = rolesHeader
             + "\n"
             + "**Main team**\n"
-            + "*tag#1, 2 last seasons*\n"
+            + "*tag#1, " + DiscordService.MAIN_TEAM_SEASON_DEPTH + " last seasons*\n"
             + "`Games` | MMR\n"
             + "teamRender\n"
             + "\n"

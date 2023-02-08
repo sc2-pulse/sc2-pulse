@@ -63,7 +63,7 @@ public class DiscordService
 
     public static final int DB_CURSOR_BATCH_SIZE = 1000;
     public static final int USER_UPDATE_BATCH_SIZE = 200;
-    public static final int MAIN_TEAM_SEASON_DEPTH = 2;
+    public static final int MAIN_TEAM_SEASON_DEPTH = 3;
     public static final Set<QueueType> MAIN_TEAM_QUEUE_TYPES = Set.of(QueueType.LOTV_1V1);
     public static final Comparator<LadderTeam> MAIN_TEAM_COMPARATOR = Comparator
         .comparing(LadderTeam::getSeason).reversed()
@@ -243,7 +243,7 @@ public class DiscordService
 
         int curSeason = seasonDAO.getMaxBattlenetId();
         Set<Integer> seasons = IntStream
-            .rangeClosed(curSeason - MAIN_TEAM_SEASON_DEPTH, curSeason)
+            .rangeClosed(curSeason - MAIN_TEAM_SEASON_DEPTH + 1, curSeason)
             .boxed()
             .collect(Collectors.toSet());
         return characters.stream()
