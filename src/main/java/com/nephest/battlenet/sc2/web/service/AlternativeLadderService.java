@@ -531,11 +531,8 @@ public class AlternativeLadderService
     {
         clans.add(extractClan(playerCharacter, bMember));
 
-        if(!playerCharacter.getName().equals(bMember.getName()))
-        {
-            playerCharacter.setName(bMember.getName());
-            characters.add(playerCharacter);
-        }
+        playerCharacter.setName(bMember.getName());
+        characters.add(playerCharacter);
 
         TeamMember member = new TeamMember(team.getId(), playerCharacter.getId(), null, null, null, null);
         if(bMember.getFavoriteRace() != null)
