@@ -93,14 +93,14 @@ public final class PulseConnectionParameters
                     ConnectionMetaData.Type.INTEGER_GREATER_THAN_OR_EQUAL,
                     PulseConnectionParameter.RATING.getName().toLowerCase() + "_from",
                     "MMR from",
-                    "MMR starting from(including)"
+                    "MMR starting from(inclusive)"
                 ),
                 new ConnectionMetaData
                 (
                     ConnectionMetaData.Type.INTEGER_LESS_THAN_OR_EQUAL,
                     PulseConnectionParameter.RATING.getName().toLowerCase() + "_to",
                     "MMR to",
-                    "MMR to(including)"
+                    "MMR up to(inclusive)"
                 )
             )
         );
