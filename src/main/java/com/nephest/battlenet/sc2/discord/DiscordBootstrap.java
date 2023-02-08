@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import discord4j.core.event.domain.guild.EmojisUpdateEvent;
+import discord4j.core.event.domain.guild.MemberUpdateEvent;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.event.domain.interaction.ChatInputAutoCompleteEvent;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
@@ -35,6 +36,7 @@ import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Member;
 import discord4j.core.object.entity.Message;
 import discord4j.core.object.entity.PartialMember;
+import discord4j.core.object.entity.Role;
 import discord4j.core.object.presence.ClientActivity;
 import discord4j.core.object.presence.ClientPresence;
 import discord4j.core.spec.EmbedCreateSpec;
@@ -170,6 +172,7 @@ public class DiscordBootstrap
         client.on(RoleCreateEvent.class, guildRoleStore::removeRoles).subscribe();
         client.on(RoleUpdateEvent.class, guildRoleStore::removeRoles).subscribe();
         client.on(RoleDeleteEvent.class, guildRoleStore::removeRoles).subscribe();
+        client.on(MemberUpdateEvent.class, guildRoleStore::removeRoles).subscribe();
     }
 
     private static Mono<Void> updatePresence(GatewayDiscordClient client)
@@ -446,6 +449,21 @@ public class DiscordBootstrap
     {
         return getSelfPermissions(guild)
             .map(p->p.containsAll(requiredPermissions));
+    }
+
+    public static Mono<Integer> getHighestRolePosition
+    (
+        Guild guild,
+        Collection<? extends Permission> requiredPermissions
+    )
+    {
+        return haveSelfPermissions(guild, requiredPermissions)
+            .flatMap(havePermissions->havePermissions
+                ? guild.getSelfMember()
+                    .flatMap(PartialMember::getHighestRole)
+                    .flatMap(Role::getPosition)
+                : Mono.just(Integer.MIN_VALUE)
+            );
     }
 
 }

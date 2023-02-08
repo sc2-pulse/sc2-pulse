@@ -78,7 +78,12 @@
                         <a href="#supported-roles">pre-defined role names</a> are supported. Users have to
                         <a th:href="@{/verify/discord}">link their discord account</a>.
                     </p>
-                    <p>Required permissions(for the bot): <code th:text="${T(com.nephest.battlenet.sc2.discord.event.RolesSlashCommand).REQUIRED_PERMISSIONS.![name].stream.collect(@formatUtil.joining(', '))}"></code></p>
+                    <p>
+                        <strong>
+                            Required permissions(for the bot): <code th:text="${T(com.nephest.battlenet.sc2.discord.event.RolesSlashCommand).REQUIRED_PERMISSIONS.![name].stream.collect(@formatUtil.joining(', '))}"></code>.
+                            Make sure the bot role is above managed roles in the list of roles(server settings).
+                        </strong>
+                    </p>
                     <p>Execute the <a href="#slash-roles">/roles</a> command to make sure the server is configured correctly.</p>
                     <section>
                         <h5>Triggers</h5>

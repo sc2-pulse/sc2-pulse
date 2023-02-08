@@ -96,9 +96,12 @@ implements SlashCommand
 
     private Mono<Message> handleWithPermissions(ChatInputInteractionEvent evt)
     {
-        PulseMappings<Role> mapping = guildRoleStore.getRoleMappings(evt).block();
+        PulseMappings<Role> mapping = guildRoleStore.getManagedRoleMappings(evt).block();
         if(mapping.isEmpty()) return evt.createFollowup()
-            .withContent(supportedRolesLink + " not found");
+            .withContent(supportedRolesLink + " not found\n"
+                + "Add supported roles and make sure the bot role is above managed roles in the list of "
+                + "roles(server settings)"
+            );
 
         StringBuilder response = appendHeader(new StringBuilder(), mapping).append("\n");
 

@@ -7,12 +7,14 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import discord4j.core.event.domain.guild.MemberUpdateEvent;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.event.domain.role.RoleCreateEvent;
 import discord4j.core.event.domain.role.RoleDeleteEvent;
 import discord4j.core.event.domain.role.RoleUpdateEvent;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Role;
+import discord4j.rest.util.Permission;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.EnumMap;
@@ -36,6 +38,7 @@ public class GuildRoleStore
 
     public static final String DELIMITER = ", ";
     public static final Function<Integer, Integer> INTEGER_SUBTRACTOR = i->i-1;
+    public static final List<Permission> MANAGE_ROLE_PERMISSIONS = List.of(Permission.MANAGE_ROLES);
 
     private static final Function<Role, List<Region>> REGION_MAPPER =
         role->MiscUtil.findByAnyName(Region.ALL_NAMES_MAP, role.getName());
@@ -70,20 +73,69 @@ public class GuildRoleStore
             .cache((m)->DiscordBootstrap.CACHE_DURATION, (t)->Duration.ZERO, ()->DiscordBootstrap.CACHE_DURATION);
     }
 
-    @CacheEvict(cacheNames = "discord-guild-roles", key="#evt.getGuildId().asLong()")
+    @Cacheable(cacheNames = "discord-guild-managed-roles", key="#evt.getInteraction().getGuildId().get()?.asLong()")
+    public Mono<PulseMappings<Role>> getManagedRoleMappings(ApplicationCommandInteractionEvent evt)
+    {
+        return evt
+            .getInteraction()
+            .getGuild()
+            .flatMap(this::getManagedRoleMappings);
+    }
+
+    @Cacheable(cacheNames = "discord-guild-managed-roles", key="#guild.getId().asLong()")
+    public Mono<PulseMappings<Role>> getManagedRoleMappings(Guild guild)
+    {
+        return DiscordBootstrap.getHighestRolePosition(guild, MANAGE_ROLE_PERMISSIONS)
+            .flatMapMany
+            (
+                topRole->guild
+                    .getRoles()
+                    .filter(r->!r.isManaged())
+                    .filterWhen(r->r.getPosition().map(p->p < topRole))
+            )
+            .collectList()
+            .map(GuildRoleStore::getRoleMappings)
+            .defaultIfEmpty(PulseMappings.empty())
+            .cache((m)->DiscordBootstrap.CACHE_DURATION, (t)->Duration.ZERO, ()->DiscordBootstrap.CACHE_DURATION);
+    }
+
+    @CacheEvict
+    (
+        cacheNames = {"discord-guild-roles", "discord-guild-managed-roles"},
+        key="#evt.getGuildId().asLong()"
+    )
     public Mono<Void> removeRoles(RoleCreateEvent evt)
     {
         return Mono.empty();
     }
 
-    @CacheEvict(cacheNames = "discord-guild-roles", key="#evt.getGuildId().asLong()")
+    @CacheEvict
+    (
+        cacheNames = {"discord-guild-roles", "discord-guild-managed-roles"},
+        key="#evt.getGuildId().asLong()"
+    )
     public Mono<Void> removeRoles(RoleDeleteEvent evt)
     {
         return Mono.empty();
     }
 
-    @CacheEvict(cacheNames = "discord-guild-roles", key="#evt.getCurrent().getGuildId().asLong()")
+    @CacheEvict
+    (
+        cacheNames = {"discord-guild-roles", "discord-guild-managed-roles"},
+        key="#evt.getCurrent().getGuildId().asLong()"
+    )
     public Mono<Void> removeRoles(RoleUpdateEvent evt)
+    {
+        return Mono.empty();
+    }
+
+    @CacheEvict
+    (
+        cacheNames = {"discord-guild-managed-roles"},
+        key="#evt.getGuildId().asLong()",
+        condition = "#a0.getMemberId().equals(#a0.getClient().getSelfId())"
+    )
+    public Mono<Void> removeRoles(MemberUpdateEvent evt)
     {
         return Mono.empty();
     }

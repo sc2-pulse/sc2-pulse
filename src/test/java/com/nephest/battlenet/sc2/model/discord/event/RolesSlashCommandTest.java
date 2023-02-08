@@ -141,12 +141,15 @@ public class RolesSlashCommandTest
         when(selfMember.getBasePermissions()).thenReturn(Mono.just(PermissionSet.of(permissions)));
 
         //check mappings
-        when(guildRoleStore.getRoleMappings(evt)).thenReturn(Mono.just(GuildRoleStore.EMPTY_MAPPING));
+        when(guildRoleStore.getManagedRoleMappings(evt))
+            .thenReturn(Mono.just(GuildRoleStore.EMPTY_MAPPING));
 
         cmd.handle(evt).onErrorComplete().block();
 
         verify(followup, atLeastOnce()).withContent(responseCaptor.capture());
-        expectedResponse = "[supported roles](<" + BOT_PAGE + "#slash-roles>) not found";
+        expectedResponse = "[supported roles](<" + BOT_PAGE + "#slash-roles>) not found\n"
+            + "Add supported roles and make sure the bot role is above managed roles in the list of "
+            + "roles(server settings)";
         assertEquals(expectedResponse, responseCaptor.getValue());
 
         GatewayDiscordClient client = mock(GatewayDiscordClient.class);
@@ -199,7 +202,7 @@ public class RolesSlashCommandTest
             Role::getMention,
             ", "
         );
-        when(guildRoleStore.getRoleMappings(evt)).thenReturn(Mono.just(mappings));
+        when(guildRoleStore.getManagedRoleMappings(evt)).thenReturn(Mono.just(mappings));
 
         //check account
         long userId = 123L;
