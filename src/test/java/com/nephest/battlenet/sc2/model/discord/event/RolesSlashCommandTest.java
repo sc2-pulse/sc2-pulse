@@ -302,7 +302,7 @@ public class RolesSlashCommandTest
         expectedResponse = rolesHeader
             + "\n"
             + "**Main team**\n"
-            + "*tag#1, " + DiscordService.MAIN_TEAM_SEASON_DEPTH + " last seasons*\n"
+            + "*tag#1, last " + DiscordService.MAIN_TEAM_SEASON_DEPTH + " seasons*\n"
             + "`Games` | MMR\n"
             + "teamRender\n"
             + "\n"

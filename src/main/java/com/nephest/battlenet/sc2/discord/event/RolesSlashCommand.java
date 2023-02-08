@@ -234,8 +234,8 @@ implements SlashCommand
     private StringBuilder appendMainTeamHeader(StringBuilder sb, String name)
     {
         sb.append("**Main team**\n")
-            .append("*").append(name).append(", ").append(DiscordService.MAIN_TEAM_SEASON_DEPTH)
-                .append(" last seasons*\n")
+            .append("*").append(name).append(", last ").append(DiscordService.MAIN_TEAM_SEASON_DEPTH)
+                .append(" seasons*\n")
             .append("`Games` | MMR\n");
         return sb;
     }
