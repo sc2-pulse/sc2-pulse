@@ -457,6 +457,12 @@ public class AlternativeLadderService
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
         StatsService.saveClans(clanDAO, clanMemberDAO, clans);
         pendingCharacters.addAll(characters);
+        pendingCharacters.addAll
+        (
+            newTeams.stream()
+                .map(AlternativeTeamData::getCharacter)
+                .collect(Collectors.toList())
+        );
         LOG.debug
         (
             "Ladder saved: {} {} {}({}/{} teams)",
