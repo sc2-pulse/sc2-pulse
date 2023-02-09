@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -35,6 +35,9 @@ public class AccountDiscordUserDAO
         + "WHERE discord_user_id = :discordUserId";
 
     private static final String FIND_ACCOUNT_IDS = "SELECT account_id FROM account_discord_user";
+
+    private static final String EXISTS_BY_ACCOUNT_ID =
+        "SELECT 1 FROM account_discord_user WHERE account_id = :accountId";
 
     private static final String DELETE_BY_ACCOUNT_ID_OR_DISCORD_USER_ID =
         "DELETE FROM account_discord_user "
@@ -97,6 +100,14 @@ public class AccountDiscordUserDAO
     {
         return template.queryForStream(FIND_ACCOUNT_IDS, Map.of(), DAOUtils.LONG_MAPPER)
             .collect(Collectors.toSet());
+    }
+
+    public boolean existsByAccountId(long accountId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("accountId", accountId);
+        Integer exists = template.query(EXISTS_BY_ACCOUNT_ID, params, DAOUtils.INT_EXTRACTOR);
+        return exists != null;
     }
 
     @CacheEvict(allEntries = true, cacheNames = "discord-account-ids")

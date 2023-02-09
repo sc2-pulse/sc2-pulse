@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -579,6 +580,23 @@ public class DiscordIT
         Set<Long> accountIds2 = accountDiscordUserDAO.findAccountIds();
         assertEquals(1, accountIds2.size());
         assertTrue(accountIds2.contains(accounts[1].getId()));
+    }
+
+    @Test
+    public void testExistsByAccountId()
+    {
+        Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "refacc", 2);
+        DiscordUser[] discordUsers = discordUserDAO.merge
+        (
+            new DiscordUser(10L, "name", 1),
+            new DiscordUser(11L, "name", 2)
+        );
+        accountDiscordUserDAO.create
+        (
+            new AccountDiscordUser(accounts[0].getId(), discordUsers[0].getId())
+        );
+        assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[0].getId()));
+        assertFalse(accountDiscordUserDAO.existsByAccountId(accounts[1].getId()));
     }
 
 
