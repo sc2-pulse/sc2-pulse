@@ -327,13 +327,13 @@ public class DiscordService
             .filter(discordAPI.getBotGuilds().keySet()::contains)
             .flatMap(id->discordAPI.getDiscordClient().getClient().getGuildById(Snowflake.of(id)))
             .filterWhen(guild->DiscordBootstrap.haveSelfPermissions(guild, RolesSlashCommand.REQUIRED_PERMISSIONS))
-            .filterWhen(guild->guildRoleStore.getRoleMappings(guild).map(mappings->!mappings.isEmpty()));
+            .filterWhen(guild->guildRoleStore.getManagedRoleMappings(guild).map(mappings->!mappings.isEmpty()));
     }
 
     private Mono<Tuple2<Member, PulseMappings<Role>>> getMemberMappings(Guild guild, long memberId)
     {
         return guild.getMemberById(Snowflake.of(memberId))
-            .zipWith(guildRoleStore.getRoleMappings(guild));
+            .zipWith(guildRoleStore.getManagedRoleMappings(guild));
     }
 
 }

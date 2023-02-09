@@ -368,7 +368,7 @@ public class DiscordServiceTest
         when(discordUserDAO.findByAccountId(1L, false))
             .thenReturn(Optional.of(new DiscordUser(123L, "name", 1)));
         when(guild1.getMemberById(argThat(s->s.asLong() == 123L))).thenReturn(Mono.just(member1));
-        when(guildRoleStore.getRoleMappings(guild1)).thenReturn(Mono.just(roleMappings));
+        when(guildRoleStore.getManagedRoleMappings(guild1)).thenReturn(Mono.just(roleMappings));
         return Tuples.of(guild1, member1);
     }
 
@@ -423,7 +423,7 @@ public class DiscordServiceTest
                     Map.of(), Map.of(), Map.of(), Objects::toString, ""
                 )
             : PulseMappings.empty();
-        when(guildRoleStore.getRoleMappings(guild)).thenReturn(Mono.just(mappings));
+        when(guildRoleStore.getManagedRoleMappings(guild)).thenReturn(Mono.just(mappings));
 
         Guild result = discordService.getManagedRoleGuilds("1").blockLast();
         assertEquals(expectedResult, result != null);
