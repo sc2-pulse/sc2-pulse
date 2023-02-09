@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -140,25 +140,32 @@ extends BaseAPI
 
     private <T> Mono<T> getMono(Class<T> clazz, String uri, Object... params)
     {
-        return getWebClient()
-            .get()
-            .uri(uri, params)
-            .attributes(clientRegistrationId(USER_CLIENT_REGISTRATION_ID))
-            .accept(ALL)
-            .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, clazz))
-            .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        return discordClient.getGlobalRateLimiter().withLimiter
+        (
+            getWebClient()
+                .get()
+                .uri(uri, params)
+                .attributes(clientRegistrationId(USER_CLIENT_REGISTRATION_ID))
+                .accept(ALL)
+                .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, clazz))
+                .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        )
+            .next()
             .delaySubscription(rateLimiter.requestSlot());
     }
 
     private <T> Flux<T> getFlux(Class<T> clazz, String uri, Object... params)
     {
-        return getWebClient()
-            .get()
-            .uri(uri, params)
-            .attributes(clientRegistrationId(USER_CLIENT_REGISTRATION_ID))
-            .accept(ALL)
-            .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
-            .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        return discordClient.getGlobalRateLimiter().withLimiter
+        (
+            getWebClient()
+                .get()
+                .uri(uri, params)
+                .attributes(clientRegistrationId(USER_CLIENT_REGISTRATION_ID))
+                .accept(ALL)
+                .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
+                .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        )
             .delaySubscription(rateLimiter.requestSlot());
     }
 
@@ -206,15 +213,19 @@ extends BaseAPI
 
     public Mono<Void> updateConnectionMetaData(List<ConnectionMetaData> data)
     {
-        return getWebClient()
-            .put()
-            .uri("/applications/{applicationId}/role-connections/metadata", applicationId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .bodyValue(data)
-            .accept(ALL)
-            .header("Authorization", "Bot " + token)
-            .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, Void.class))
-            .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        return discordClient.getGlobalRateLimiter().withLimiter
+        (
+            getWebClient()
+                .put()
+                .uri("/applications/{applicationId}/role-connections/metadata", applicationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .bodyValue(data)
+                .accept(ALL)
+                .header("Authorization", "Bot " + token)
+                .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, Void.class))
+                .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        )
+            .next()
             .delaySubscription(rateLimiter.requestSlot());
     }
 
@@ -229,15 +240,19 @@ extends BaseAPI
         if(oAuth2AuthorizedClient == null) return Mono
             .error(new IllegalStateException("OAuth2AuthorizedClient not found for user " + principalName));
 
-        return getWebClient()
-            .put()
-            .uri("/users/@me/applications/{application.id}/role-connection", applicationId)
-            .contentType(MediaType.APPLICATION_JSON)
-            .attributes(oauth2AuthorizedClient(oAuth2AuthorizedClient))
-            .bodyValue(connection)
-            .accept(ALL)
-            .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, Void.class))
-            .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        return discordClient.getGlobalRateLimiter().withLimiter
+        (
+            getWebClient()
+                .put()
+                .uri("/users/@me/applications/{application.id}/role-connection", applicationId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .attributes(oauth2AuthorizedClient(oAuth2AuthorizedClient))
+                .bodyValue(connection)
+                .accept(ALL)
+                .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, Void.class))
+                .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        )
+            .next()
             .delaySubscription(rateLimiter.requestSlot());
     }
 
@@ -263,13 +278,16 @@ extends BaseAPI
         if(oAuth2AuthorizedClient == null) return Flux
             .error(new IllegalStateException("OAuth2AuthorizedClient not found for user " + principalName));
 
-        return getWebClient()
-            .get()
-            .uri("/users/@me/guilds")
-            .attributes(oauth2AuthorizedClient(oAuth2AuthorizedClient))
-            .accept(ALL)
-            .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
-            .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        return discordClient.getGlobalRateLimiter().withLimiter
+        (
+            getWebClient()
+                .get()
+                .uri("/users/@me/guilds")
+                .attributes(oauth2AuthorizedClient(oAuth2AuthorizedClient))
+                .accept(ALL)
+                .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
+                .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        )
             .delaySubscription(rateLimiter.requestSlot());
     }
 
