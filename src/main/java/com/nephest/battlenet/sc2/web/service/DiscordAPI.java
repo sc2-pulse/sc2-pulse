@@ -60,7 +60,7 @@ extends BaseAPI
     private static final Logger LOG = LoggerFactory.getLogger(DiscordAPI.class);
 
     public static final String USER_CLIENT_REGISTRATION_ID = "discord-lg";
-    public static final String BASE_URL = "https://discord.com/api";
+    public static final String BASE_URL = "https://discord.com/api/v10";
     public static final Duration REQUEST_SLOT_REFRESH_TIME = Duration.ofMillis(1100);
     public static final int DEFAULT_REQUESTS_PER_SECOND = 5;
     public static final int MAX_REQUESTS_PER_SECOND = 5;
