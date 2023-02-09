@@ -227,7 +227,7 @@ public class DiscordServiceTest
     @Test
     public void whenNoMainTeam_thenDropRoles()
     {
-        when(accountDiscordUserDAO.findAccountIds()).thenReturn(Set.of(1L));
+        when(accountDiscordUserDAO.existsByAccountId(1L)).thenReturn(true);
         DiscordService spy = Mockito.spy(discordService);
         when(spy.findMainTeam(any())).thenReturn(Optional.empty());
         String tag = "tag#123";
@@ -279,7 +279,7 @@ public class DiscordServiceTest
         when(conversionService.convert(Region.KR, Integer.class)).thenReturn(3);
         when(conversionService.convert(BaseLeague.LeagueType.DIAMOND, Integer.class)).thenReturn(4);
         when(conversionService.convert(Race.PROTOSS, Integer.class)).thenReturn(2);
-        when(accountDiscordUserDAO.findAccountIds()).thenReturn(Set.of(1L));
+        when(accountDiscordUserDAO.existsByAccountId(1L)).thenReturn(true);
         DiscordService spy = Mockito.spy(discordService);
         String tag = "tag#123";
         LadderTeam team = new LadderTeam
@@ -375,7 +375,7 @@ public class DiscordServiceTest
     @Test
     public void whenDiscordUserNotBound_thenDontUpdateRoles()
     {
-        when(accountDiscordUserDAO.findAccountIds()).thenReturn(Set.of());
+        when(accountDiscordUserDAO.existsByAccountId(1L)).thenReturn(false);
         discordService.updateRoles(1L);
         verifyNoInteractions(api);
     }

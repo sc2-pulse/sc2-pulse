@@ -264,7 +264,7 @@ public class DiscordService
 
     private Flux<Void> updateRoles(Long accountId, boolean drop, String reason)
     {
-        if(!accountDiscordUserDAO.findAccountIds().contains(accountId)) return Flux.empty();
+        if(!accountDiscordUserDAO.existsByAccountId(accountId)) return Flux.empty();
 
         Tuple2<LadderTeam, LadderTeamMember> mainTuple = drop ? null : findMainTuple(accountId);
         ApplicationRoleConnection roleConnection = mainTuple != null

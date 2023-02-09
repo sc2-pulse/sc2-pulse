@@ -13,8 +13,6 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.cache.annotation.CacheEvict;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -70,7 +68,6 @@ public class AccountDiscordUserDAO
         this.template = template;
     }
 
-    @CacheEvict(allEntries = true, cacheNames = "discord-account-ids")
     public int[] create(AccountDiscordUser... users)
     {
         if(users.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
@@ -95,7 +92,6 @@ public class AccountDiscordUserDAO
         return Optional.ofNullable(template.query(FIND_META_BY_ID, params, META_EXTRACTOR));
     }
 
-    @Cacheable(cacheNames = "discord-account-ids")
     public Set<Long> findAccountIds()
     {
         return template.queryForStream(FIND_ACCOUNT_IDS, Map.of(), DAOUtils.LONG_MAPPER)
@@ -110,7 +106,6 @@ public class AccountDiscordUserDAO
         return exists != null;
     }
 
-    @CacheEvict(allEntries = true, cacheNames = "discord-account-ids")
     public int remove(Long accountId, Long discordUserId)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
