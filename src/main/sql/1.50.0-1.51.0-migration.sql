@@ -20,3 +20,8 @@ CREATE TABLE oauth2_authorized_client
 
     PRIMARY KEY (client_registration_id, principal_name)
 );
+
+ALTER TABLE "pro_player"
+    DROP COLUMN "revealed_id",
+    ADD CONSTRAINT "uq_pro_player_aligulac_id"
+        UNIQUE("aligulac_id");

@@ -126,9 +126,9 @@ public class RevealControllerIT
 
         ProPlayer[] players = new ProPlayer[]
         {
-            new ProPlayer(null, new byte[]{0x1}, "tag1", "name1"),
-            new ProPlayer(null, new byte[]{0x2}, "tag2", "name2"),
-            new ProPlayer(null, new byte[]{0x3}, "tag3", "name3"),
+            new ProPlayer(null, 1L, "tag1", "name1"),
+            new ProPlayer(null, 2L, "tag2", "name2"),
+            new ProPlayer(null, 3L, "tag3", "name3"),
         };
         proPlayerDAO.mergeWithoutIds(players);
 

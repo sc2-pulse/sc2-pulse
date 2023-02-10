@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -191,7 +191,7 @@ public class MatchIT
         Account acc8 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#8"));
         Account acc9 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#9"));
         Account acc10 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#10"));
-        ProPlayer proPlayer = new ProPlayer(null, new byte[]{0x1, 0x1}, "proNickname", "proName");
+        ProPlayer proPlayer = new ProPlayer(null, 1L, "proNickname", "proName");
         proPlayerDAO.merge(proPlayer);
 
         //data should be updated

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -183,8 +183,8 @@ public class LadderSearchIndependentIT
         Account acc = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount#123"));
         Account acc2 = accountDAO.create(new Account(null, Partition.GLOBAL, "refaccount2#123"));
         //the names should be updated
-        proPlayerDAO.merge(new ProPlayer(null, new byte[]{0x1, 0x2}, "refnickname_remove", "pro name_remove"));
-        ProPlayer proPlayer = new ProPlayer(null, new byte[]{0x1, 0x2}, "refnickname", "pro name");
+        proPlayerDAO.merge(new ProPlayer(null, 1L, "refnickname_remove", "pro name_remove"));
+        ProPlayer proPlayer = new ProPlayer(null, 1L, "refnickname", "pro name");
         proPlayerDAO.merge(proPlayer);
         proPlayerAccountDAO.link(proPlayer.getId(), acc.getBattleTag(), acc2.getBattleTag());
         Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];

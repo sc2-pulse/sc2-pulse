@@ -486,7 +486,7 @@ public class PlayerCharacterDAOIT
         DiscordUser discordUser = discordUserDAO
             .merge(new DiscordUser((long) num, "name" + num, num))[0];
         ProPlayer proPlayer = proPlayerDAO
-            .merge(new ProPlayer(null, new byte[(byte) num], "proTag" + num, "proName" + num));
+            .merge(new ProPlayer(null, (long) num, "proTag" + num, "proName" + num));
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag" + num));
         PlayerCharacter char1 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, (long) num, num, "name" + num));

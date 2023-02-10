@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -62,9 +62,9 @@ public class SocialMediaLinkIT
     public void testFindByTypes()
     {
         ProPlayer proPlayer1 = proPlayerDAO
-            .merge(new ProPlayer(null, new byte[]{0x1}, "nick", "name"));
+            .merge(new ProPlayer(null, 1L, "nick", "name"));
         ProPlayer proPlayer2 = proPlayerDAO
-            .merge(new ProPlayer(null, new byte[]{0x2}, "nick2", "name2"));
+            .merge(new ProPlayer(null, 2L, "nick2", "name2"));
         socialMediaLinkDAO.merge
         (
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url1"),
@@ -81,7 +81,7 @@ public class SocialMediaLinkIT
     public void testProtection()
     {
         ProPlayer proPlayer1 = proPlayerDAO
-            .merge(new ProPlayer(null, new byte[]{0x1}, "nick", "name"));
+            .merge(new ProPlayer(null, 1L, "nick", "name"));
         socialMediaLinkDAO.merge
         (
             true,

@@ -467,7 +467,6 @@ CREATE INDEX "ix_twitch_video_twitch_user_id_begin_end" ON "twitch_video"("twitc
 CREATE TABLE "pro_player"
 (
     "id" BIGSERIAL,
-    "revealed_id" bytea NOT NULL,
     "aligulac_id" BIGINT,
     "twitch_user_id" BIGINT,
     "nickname" TEXT NOT NULL,
@@ -480,8 +479,8 @@ CREATE TABLE "pro_player"
 
     PRIMARY KEY ("id"),
 
-    CONSTRAINT "uq_pro_player_revealed_id"
-        UNIQUE("revealed_id"),
+    CONSTRAINT "uq_pro_player_aligulac_id"
+        UNIQUE("aligulac_id"),
 
     CONSTRAINT "fk_pro_player_twitch_user_id"
         FOREIGN KEY ("twitch_user_id")

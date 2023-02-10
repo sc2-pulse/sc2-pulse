@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -26,7 +26,6 @@ extends StandardDAO
 
     public static final String STD_SELECT =
         "pro_player.id AS \"pro_player.id\", "
-        + "pro_player.revealed_id AS \"pro_player.revealed_id\", "
         + "pro_player.aligulac_id AS \"pro_player.aligulac_id\", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "pro_player.name AS \"pro_player.name\", "
@@ -35,11 +34,11 @@ extends StandardDAO
         + "pro_player.earnings AS \"pro_player.earnings\", "
         + "pro_player.updated AS \"pro_player.updated\" ";
     private static final String CREATE_QUERY =
-        "INSERT INTO pro_player (revealed_id, aligulac_id, nickname, name, country, birthday, earnings, updated) "
-        + "VALUES (:revealedId, :aligulacId, :nickname, :name, :country, :birthday, :earnings, :updated)";
+        "INSERT INTO pro_player (aligulac_id, nickname, name, country, birthday, earnings, updated) "
+        + "VALUES (:aligulacId, :nickname, :name, :country, :birthday, :earnings, :updated)";
     private static final String MERGE_QUERY =
         "WITH "
-        + "vals AS (VALUES(:revealedId, :aligulacId, :nickname, :name, :country, :birthday, :earnings, :updated)), "
+        + "vals AS (VALUES(:aligulacId, :nickname, :name, :country, :birthday, :earnings, :updated)), "
         + "updated AS "
         + "("
             + "UPDATE pro_player "
@@ -51,16 +50,16 @@ extends StandardDAO
             + "birthday=v.birthday, "
             + "earnings=v.earnings, "
             + "updated=v.updated "
-            + "FROM vals v (revealed_id, aligulac_id, nickname, name, country, birthday, earnings, updated) "
-            + "WHERE pro_player.revealed_id = v.revealed_id "
+            + "FROM vals v (aligulac_id, nickname, name, country, birthday, earnings, updated) "
+            + "WHERE pro_player.aligulac_id = v.aligulac_id "
             + "RETURNING id "
         + "), "
         + "inserted AS "
         + "("
-            + "INSERT INTO pro_player (revealed_id, aligulac_id, nickname, name, country, birthday, earnings, updated) "
+            + "INSERT INTO pro_player (aligulac_id, nickname, name, country, birthday, earnings, updated) "
             + "SELECT * FROM vals "
             + "WHERE NOT EXISTS(SELECT 1 FROM updated) "
-            + "ON CONFLICT(revealed_id) DO UPDATE SET "
+            + "ON CONFLICT(aligulac_id) DO UPDATE SET "
             + "aligulac_id=excluded.aligulac_id,"
             + "name=excluded.name,"
             + "nickname=excluded.nickname,"
@@ -105,22 +104,17 @@ extends StandardDAO
 
     private static void initMappers()
     {
-        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num)->
-        {
-            ProPlayer p = new ProPlayer
-            (
-                rs.getLong("pro_player.id"),
-                rs.getBytes("pro_player.revealed_id"),
-                rs.getString("pro_player.nickname"),
-                rs.getString("pro_player.name")
-            );
-            p.setAligulacId(rs.getLong("pro_player.aligulac_id"));
-            p.setCountry(rs.getString("pro_player.country"));
-            p.setBirthday(rs.getObject("pro_player.birthday", LocalDate.class));
-            p.setEarnings(rs.getInt("pro_player.earnings"));
-            p.setUpdated(rs.getObject("pro_player.updated", OffsetDateTime.class));
-            return p;
-        };
+        if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, num)-> new ProPlayer
+        (
+            rs.getLong("pro_player.id"),
+            DAOUtils.getLong(rs, "pro_player.aligulac_id"),
+            rs.getString("pro_player.nickname"),
+            rs.getString("pro_player.name"),
+            rs.getString("pro_player.country"),
+            rs.getObject("pro_player.birthday", LocalDate.class),
+            rs.getInt("pro_player.earnings"),
+            rs.getObject("pro_player.updated", OffsetDateTime.class)
+        );
     }
 
     public static RowMapper<ProPlayer> getStdRowMapper()
@@ -131,7 +125,6 @@ extends StandardDAO
     private MapSqlParameterSource createParameterSource(ProPlayer proPlayer)
     {
         return new MapSqlParameterSource()
-            .addValue("revealedId", proPlayer.getRevealedId())
             .addValue("aligulacId", proPlayer.getAligulacId(), Types.BIGINT)
             .addValue("nickname", proPlayer.getNickname())
             .addValue("name", proPlayer.getName())

@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -6,12 +6,10 @@ package com.nephest.battlenet.sc2.model.local;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
-import org.springframework.security.crypto.codec.Hex;
-
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
+import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public class ProPlayer
 implements java.io.Serializable
@@ -20,14 +18,6 @@ implements java.io.Serializable
     private static final long serialVersionUID = 1L;
 
     private Long id;
-
-    /*
-        sc2revealed data treats multi-region players as distinct entities. Using aligulac id as revealed id
-        to merge multi-region players in single entity. This still allows multi-region players to exist if
-        they do not have an aligulac link.
-     */
-    @NotNull
-    private byte[] revealedId;
 
     private Long aligulacId;
 
@@ -46,15 +36,38 @@ implements java.io.Serializable
     @NotNull
     private OffsetDateTime updated = OffsetDateTime.now();
 
+    public ProPlayer()
+    {
+    }
+
+    public ProPlayer(Long id, Long aligulacId, String nickname, String name)
+    {
+        this.id = id;
+        this.aligulacId = aligulacId;
+        this.nickname = nickname;
+        this.name = name;
+    }
+
     public ProPlayer
     (
-        Long id, @NotNull byte[] revealedId, @NotNull String nickname, @NotNull String name
+        Long id,
+        Long aligulacId,
+        String nickname,
+        String name,
+        String country,
+        LocalDate birthday,
+        Integer earnings,
+        OffsetDateTime updated
     )
     {
         this.id = id;
-        this.revealedId = revealedId;
+        this.aligulacId = aligulacId;
         this.nickname = nickname;
         this.name = name;
+        this.country = country;
+        this.birthday = birthday;
+        this.earnings = earnings;
+        this.updated = updated;
     }
 
     @Override
@@ -63,13 +76,13 @@ implements java.io.Serializable
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ProPlayer proPlayer = (ProPlayer) o;
-        return Arrays.equals(revealedId, proPlayer.revealedId);
+        return Objects.equals(aligulacId, proPlayer.aligulacId);
     }
 
     @Override
     public int hashCode()
     {
-        return Arrays.hashCode(revealedId);
+        return Objects.hash(aligulacId);
     }
 
     @Override
@@ -79,7 +92,7 @@ implements java.io.Serializable
         (
             "%s[%s]",
             ProPlayer.class.getSimpleName(),
-            Arrays.toString(revealedId)
+            aligulacId
         );
     }
 
@@ -88,17 +101,19 @@ implements java.io.Serializable
         if(revealedProPlayer.getFirstName() == null || revealedProPlayer.getFirstName().isEmpty())
             throw new IllegalArgumentException("Only identified pro players are allowed");
 
-        ProPlayer proPlayer = new ProPlayer
-        (
-            null, Hex.decode(revealedProPlayer.get_id()), revealedProPlayer.getPlayer(),
-            (revealedProPlayer.getFirstName()
-                + (revealedProPlayer.getLastName() != null ? " " + revealedProPlayer.getLastName() : ""))
-        );
         Long aligulacId = revealedProPlayer.getSocialMedia().entrySet().stream()
             .filter(e->e.getKey() == SocialMedia.ALIGULAC)
             .map(e->SocialMedia.getAligulacIdFromUrl(e.getValue()))
-            .findFirst().orElse(null);
-        proPlayer.setAligulacId(aligulacId);
+            .findFirst()
+            .orElseThrow();
+        ProPlayer proPlayer = new ProPlayer
+        (
+            null,
+            aligulacId,
+            revealedProPlayer.getPlayer(),
+            (revealedProPlayer.getFirstName()
+                + (revealedProPlayer.getLastName() != null ? " " + revealedProPlayer.getLastName() : ""))
+        );
         proPlayer.setCountry(revealedProPlayer.getNationality().get("iso2"));
         return proPlayer;
     }
@@ -121,16 +136,6 @@ implements java.io.Serializable
     public void setId(Long id)
     {
         this.id = id;
-    }
-
-    public byte[] getRevealedId()
-    {
-        return revealedId;
-    }
-
-    public void setRevealedId(byte[] revealedId)
-    {
-        this.revealedId = revealedId;
     }
 
     public Long getAligulacId()

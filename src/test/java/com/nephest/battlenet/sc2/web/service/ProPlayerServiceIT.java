@@ -1,9 +1,8 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
-import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -28,7 +27,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedPlayers;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -148,12 +146,6 @@ public class ProPlayerServiceIT
         //skip character id link
         assertNull(ladderProPlayerDAO.getProPlayerByCharacterId(2L).getProPlayer());
         LadderProPlayer ladderProPlayer = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
-        //replaced by aligulac id
-        assertArrayEquals
-        (
-            ByteBuffer.allocate(Long.BYTES).putLong(123321L).array(),
-            ladderProPlayer.getProPlayer().getRevealedId()
-        );
         assertEquals(123321L, ladderProPlayer.getProPlayer().getAligulacId());
         assertEquals("Aligulac Romanized Name2", ladderProPlayer.getProPlayer().getName());
         assertEquals("Aligulac nickname2", ladderProPlayer.getProPlayer().getNickname());

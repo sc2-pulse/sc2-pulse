@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -14,7 +14,6 @@ import com.nephest.battlenet.sc2.model.local.dao.ProTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProTeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
-import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -83,7 +82,6 @@ public class ProPlayerService
     @Deprecated
     protected void updateRevealed()
     {
-        ByteBuffer idBuffer = ByteBuffer.allocate(Long.BYTES);
         for(RevealedProPlayer revealedProPlayer : sc2RevealedAPI.getPlayers().block().getPlayers())
         {
             //save only identified players
@@ -91,24 +89,12 @@ public class ProPlayerService
 
             ProPlayer proPlayer = ProPlayer.of(revealedProPlayer);
             SocialMediaLink[] links = SocialMediaLink.of(proPlayer, revealedProPlayer);
-            /*
-                sc2revealed data treats multi-region players as distinct entities. Using aligulac id as revealed id
-                to merge multi-region players in single entity. This still allows multi-region players to exist if
-                they do not have an aligulac link.
-             */
-            if(proPlayer.getAligulacId() != null)
-            {
-                byte[] id = idBuffer.putLong(proPlayer.getAligulacId()).array();
-                proPlayer.setRevealedId(id);
-                idBuffer.flip();
-            }
 
             proPlayerDAO.merge(proPlayer);
             for(SocialMediaLink link : links) link.setProPlayerId(proPlayer.getId());
             socialMediaLinkDAO.merge(true, links);
             proPlayerAccountDAO.link(proPlayer.getId(), revealedProPlayer.getBnetTags());
         }
-        idBuffer.clear();
     }
 
     private void updateAligulac()

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.twitch;
@@ -147,9 +147,9 @@ public class TwitchIT
         twitchUserDAO.merge(user);
 
         ProPlayer proPlayer1 =
-            proPlayerDAO.merge(new ProPlayer(null, new byte[0x1], "nick1", "name1"));
+            proPlayerDAO.merge(new ProPlayer(null, 1L, "nick1", "name1"));
         ProPlayer proPlayer2 =
-            proPlayerDAO.merge(new ProPlayer(null, new byte[0x2], "nic2", "name2"));
+            proPlayerDAO.merge(new ProPlayer(null, 2L, "nic2", "name2"));
         socialMediaLinkDAO.merge
         (
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "http://twitch.tv/tuser1"),
