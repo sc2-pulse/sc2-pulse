@@ -205,7 +205,7 @@ public class ProPlayerServiceIT
         AligulacProPlayer[] players = new AligulacProPlayer[1];
         players[0] = new AligulacProPlayer
         (
-            "Aligulac Name1", "Aligulac Romanized Name1", "Aligulac nickname1",
+            "Aligulac Name1", "Aligulac Romanized Name1", "Aligulac nickname1", "Lpname1",
             LocalDate.of(2020, 1, 1),
             "KR",
             1,
@@ -219,7 +219,7 @@ public class ProPlayerServiceIT
         AligulacProPlayer[] players = new AligulacProPlayer[1];
         players[0] = new AligulacProPlayer
         (
-            "Aligulac Name2", "Aligulac Romanized Name2", "Aligulac nickname2",
+            "Aligulac Name2", "Aligulac Romanized Name2", "Aligulac nickname2", "Lpname2",
             LocalDate.of(2020, 1, 2),
             "EU",
             2,

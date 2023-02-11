@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.aligulac;
 
+import com.fasterxml.jackson.annotation.JsonAlias;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import java.time.LocalDate;
@@ -19,6 +20,9 @@ public class AligulacProPlayer
 
     private String tag;
 
+    @JsonAlias("lp_name")
+    private String liquipediaName;
+
     private LocalDate birthday;
 
     private String country;
@@ -34,6 +38,7 @@ public class AligulacProPlayer
         String name,
         String romanizedName,
         String tag,
+        String liquipediaName,
         LocalDate birthday,
         String country,
         Integer totalEarnings,
@@ -43,6 +48,7 @@ public class AligulacProPlayer
         this.name = name;
         this.romanizedName = romanizedName;
         this.tag = tag;
+        this.liquipediaName = liquipediaName;
         this.birthday = birthday;
         this.country = country;
         this.totalEarnings = totalEarnings;
@@ -82,6 +88,16 @@ public class AligulacProPlayer
     public void setTag(String tag)
     {
         this.tag = tag;
+    }
+
+    public String getLiquipediaName()
+    {
+        return liquipediaName;
+    }
+
+    public void setLiquipediaName(String liquipediaName)
+    {
+        this.liquipediaName = liquipediaName;
     }
 
     public LocalDate getBirthday()
