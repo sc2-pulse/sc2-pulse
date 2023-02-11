@@ -3,7 +3,9 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
+import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProTeam;
 import com.nephest.battlenet.sc2.model.local.ProTeamMember;
@@ -17,10 +19,16 @@ import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +39,11 @@ public class ProPlayerService
 
     private static final Logger LOG = LoggerFactory.getLogger(ProPlayerService.class);
 
+    public static final Pattern ALIGULAC_PROFILE_PATTERN =
+        Pattern.compile("^https?://aligulac.com/players/([0-9]+).*$");
+    public static final String ALIGULAC_PROFILE_PREFIX = "http://aligulac.com/players/";
+    public static final String LIQUIPEDIA_PROFILE_PREFIX = "https://liquipedia.net/starcraft2/";
+
     private final ProPlayerDAO proPlayerDAO;
     private final ProTeamDAO proTeamDAO;
     private final ProTeamMemberDAO proTeamMemberDAO;
@@ -39,9 +52,12 @@ public class ProPlayerService
 
     private final SC2RevealedAPI sc2RevealedAPI;
 
-    private final AligulacAPI aligulacAPI;
+    private AligulacAPI aligulacAPI;
 
     private int aligulacBatchSize = 100;
+
+    @Autowired @Lazy
+    private ProPlayerService proPlayerService;
 
     @Autowired
     public ProPlayerService
@@ -61,6 +77,26 @@ public class ProPlayerService
         this.socialMediaLinkDAO = socialMediaLinkDAO;
         this.proPlayerAccountDAO = proPlayerAccountDAO;
         this.sc2RevealedAPI = sc2RevealedAPI;
+        this.aligulacAPI = aligulacAPI;
+    }
+
+    protected ProPlayerService getProPlayerService()
+    {
+        return proPlayerService;
+    }
+
+    protected void setProPlayerService(ProPlayerService proPlayerService)
+    {
+        this.proPlayerService = proPlayerService;
+    }
+
+    protected AligulacAPI getAligulacAPI()
+    {
+        return aligulacAPI;
+    }
+
+    protected void setAligulacAPI(AligulacAPI aligulacAPI)
+    {
         this.aligulacAPI = aligulacAPI;
     }
 
@@ -146,6 +182,88 @@ public class ProPlayerService
     {
         if(aligulacBatchSize < 1) throw new IllegalArgumentException("Only positive values allowed");
         this.aligulacBatchSize = aligulacBatchSize;
+    }
+
+    public Optional<ProPlayer> importProfile(String url)
+    {
+        Long aligulacId = getAligulacProfileId(url);
+        AligulacProPlayerRoot root = aligulacAPI.getPlayers(aligulacId).block();
+        if(root == null || root.getObjects().length == 0) return Optional.empty();
+
+        Triple<ProPlayer, List<SocialMediaLink>, ProTeam> proPlayerData =
+            extractProPlayerData(root.getObjects()[0]);
+        proPlayerService.importProfile
+        (
+            proPlayerData.getLeft(),
+            proPlayerData.getRight(),
+            proPlayerData.getMiddle().toArray(SocialMediaLink[]::new)
+        );
+        return Optional.of(proPlayerData.getLeft());
+    }
+
+    public static Triple<ProPlayer, List<SocialMediaLink>, ProTeam> extractProPlayerData
+    (AligulacProPlayer aligulacProPlayer)
+    {
+        ProPlayer proPlayer = new ProPlayer();
+        proPlayer.setAligulacId(aligulacProPlayer.getId());
+        ProPlayer.update(proPlayer, aligulacProPlayer);
+
+        return new ImmutableTriple<>
+        (
+            proPlayer,
+            extractLinks(proPlayer, aligulacProPlayer),
+            ProTeam.of(aligulacProPlayer)
+        );
+    }
+
+    public static List<SocialMediaLink> extractLinks
+    (
+        ProPlayer proPlayer,
+        AligulacProPlayer aligulacProPlayer
+    )
+    {
+        List<SocialMediaLink> links = new ArrayList<>(2);
+        links.add(new SocialMediaLink
+        (
+            proPlayer.getId(),
+            SocialMedia.ALIGULAC,
+            trimAligulacProfileLink(ALIGULAC_PROFILE_PREFIX + aligulacProPlayer.getId())
+        ));
+        if(aligulacProPlayer.getLiquipediaName() != null)
+            links.add(new SocialMediaLink
+            (
+                proPlayer.getId(),
+                SocialMedia.LIQUIPEDIA,
+                LIQUIPEDIA_PROFILE_PREFIX + aligulacProPlayer.getLiquipediaName()
+            ));
+        return links;
+    }
+
+    @Transactional
+    public void importProfile(ProPlayer proPlayer, ProTeam proTeam, SocialMediaLink... links)
+    {
+        proPlayerDAO.merge(proPlayer);
+        for(SocialMediaLink link : links) link.setProPlayerId(proPlayer.getId());
+        socialMediaLinkDAO.merge(false, links);
+        if(proTeam != null)
+        {
+            proTeamDAO.merge(proTeam);
+            proTeamMemberDAO.merge(new ProTeamMember(proTeam.getId(), proPlayer.getId()));
+        }
+    }
+
+    public static long getAligulacProfileId(String url)
+    {
+        Matcher matcher = ProPlayerService.ALIGULAC_PROFILE_PATTERN.matcher(url);
+        if(!matcher.matches()) throw new IllegalArgumentException("Invalid url: " + url) ;
+
+        return Long.parseLong(matcher.group(1));
+    }
+
+    public static String trimAligulacProfileLink(String url)
+    {
+        int pos = url.indexOf("-");
+        return pos > 0 ? url.substring(0, pos) : url;
     }
 
 }

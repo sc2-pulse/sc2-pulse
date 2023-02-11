@@ -8,16 +8,19 @@ import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
+import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @Hidden
@@ -31,6 +34,9 @@ public class RevealController
 
     @Autowired
     private ProPlayerAccountDAO proPlayerAccountDAO;
+
+    @Autowired
+    private ProPlayerService proPlayerService;
 
     @GetMapping("/players")
     public List<ProPlayer> getPlayers()
@@ -65,6 +71,14 @@ public class RevealController
     )
     {
         proPlayerAccountDAO.unlink(proPlayerId, accountId);
+    }
+
+    @PostMapping("/import")
+    public ResponseEntity<ProPlayer> importProfile(@RequestParam("url") String url)
+    {
+        return proPlayerService.importProfile(url.trim())
+            .map(ResponseEntity::ok)
+            .orElseGet(()->ResponseEntity.notFound().build());
     }
 
 }

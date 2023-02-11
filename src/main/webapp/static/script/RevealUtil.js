@@ -10,7 +10,8 @@ class RevealUtil
         if(modal) {
             $(modal).on("show.bs.modal", RevealUtil.onModalShow);
             document.querySelector("#modal-reveal-player-input").addEventListener("input", e=>window.setTimeout(RevealUtil.onFilterChange, 1));
-            document.querySelector("#modal-reveal-player-form").addEventListener("submit", RevealUtil.onFormSubmit);
+            document.querySelector("#modal-reveal-player-form").addEventListener("submit", RevealUtil.onReveal);
+            document.querySelector("#modal-reveal-import-player-form").addEventListener("submit", RevealUtil.onImportProfile);
         }
     }
 
@@ -18,7 +19,7 @@ class RevealUtil
     {
         const currentCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
         const form = document.querySelector("#modal-reveal-player-form");
-        const submitCtl = document.querySelector('#modal-reveal-player button[type="submit"]');
+        const submitCtl = document.querySelector('#modal-reveal-player button[form="modal-reveal-player-form"][type="submit"]');
         const filterInput = document.querySelector("#modal-reveal-player-input");
         if(!currentCharacter.proPlayer.proPlayer) {
             filterInput.disabled = false;
@@ -50,11 +51,11 @@ class RevealUtil
 
     static onFilterChange()
     {
-        document.querySelector('#modal-reveal-player button[type="submit"]').disabled
+        document.querySelector('#modal-reveal-player button[form="modal-reveal-player-form"][type="submit"]').disabled
             = document.querySelector("#modal-reveal-player-players").getAttribute("data-valid-option-count") == 0;
     }
 
-    static onFormSubmit(evt)
+    static onReveal(evt)
     {
         evt.preventDefault();
         const method = evt.target.getAttribute("data-reveal-mode") == "reveal" ? "POST" : "DELETE";
@@ -64,7 +65,7 @@ class RevealUtil
         return RevealUtil.reveal(character.accountId, proPlayerId, method)
             .then(e=>CharacterUtil.updateCharacter(character.id))
             .then(e=>BootstrapUtil.hideActiveModal())
-            .then(e=>BootstrapUtil.showTab("player-stats-player-tab"))
+            .then(e=>BootstrapUtil.showTab("player-stats-player-tab"));
     }
 
     static reveal(accountId, proPlayerId, method)
@@ -75,6 +76,53 @@ class RevealUtil
             .then(Session.verifyResponse)
             .then(o=>new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
             .catch(error=>Session.onPersonalException(error));
+    }
+
+    static onImportProfile(evt)
+    {
+        evt.preventDefault();
+        const fd = new FormData(evt.target);
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        return RevealUtil.importProfile(fd.get("url"))
+            .then(proPlayer=>new Promise((res, rej)=>{
+                RevealUtil.renderAndSelectProPlayer(proPlayer, document.querySelector("#modal-reveal-player-players"));
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+                res();
+            }))
+            .catch(error=>Session.onPersonalException(error));
+    }
+
+    static importProfile(url)
+    {
+        const fd = new FormData();
+        fd.set("url", url);
+        return Session.beforeRequest()
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/reveal/import`, Util.addCsrfHeader({method: 'POST', body: fd})))
+            .then(Session.verifyJsonResponse);
+    }
+
+    static renderProPlayerInputGroup(proPlayer)
+    {
+        const inputGroup = ElementUtil.createFilteredInputGroup("reveal-player-" + proPlayer.id, "player", proPlayer.id);
+        inputGroup.querySelector(":scope label").textContent = RevealUtil.renderProPlayer(proPlayer);
+        return inputGroup;
+    }
+
+    static renderProPlayer(player)
+    {
+        return `${player.nickname}${player.name ? ', ' + player.name : ''}${player.country ? ' ' + Util.countryCodeToEmoji(player.country) : ''}`;
+    }
+
+    static renderAndSelectProPlayer(proPlayer, inputGroup)
+    {
+        if(!inputGroup.querySelector(':scope input[value="' + proPlayer.id + '"]'))
+            inputGroup.appendChild(RevealUtil.renderProPlayerInputGroup(proPlayer));
+        const proPlayerRender = RevealUtil.renderProPlayer(proPlayer);
+        document.querySelectorAll('input[data-filtered-input-group="#' + inputGroup.id + '"]').forEach(filter=>{
+                if(filter.disabled) return;
+                filter.value = proPlayerRender;
+                filter.dispatchEvent(new Event('input', { 'bubbles': true }));
+        });
     }
 
 }

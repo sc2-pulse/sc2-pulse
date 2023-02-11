@@ -170,16 +170,31 @@
                     </button>
                 </div>
                 <div class="modal-body text-left">
+                    <form id="modal-reveal-import-player-form" class="form-inline flex-center-wrap-gap">
+                        <input
+                                class="form-control flex-grow-1 flex-basis-content"
+                                type="text"
+                                name="url"
+                                pattern="^https?://aligulac.com/players/[0-9]+.*$"
+                                required="required"
+                                title="http://aligulac.com/players/id(-name/)(optional)"
+                                placeholder="Aligulac profile URL"
+                                autocomplete="off"
+                        />
+                        <button type="submit" form="modal-reveal-import-player-form" class="btn btn-info">Import</button>
+                    </form>
+                    <div class="c-divider-hr"></div>
                     <form id="modal-reveal-player-form">
-                        <div class="form-group">
-                            <label for="modal-reveal-player-input">Player search</label>
+                        <div class="form-group d-flex flex-grow-1 flex-center-wrap-gap">
                             <input
                                     id="modal-reveal-player-input"
-                                    class="form-control filtered-input-filter"
+                                    class="form-control filtered-input-filter flex-grow-1 flex-basis-content"
                                     type="search"
                                     data-filtered-input-group="#modal-reveal-player-players"
                                     autocomplete="off"
+                                    placeholder="Player search"
                             />
+                            <button type="submit" form="modal-reveal-player-form" class="btn btn-action"></button>
                         </div>
                         <div id="modal-reveal-player-players" class="filtered-input-group">
                             <div class="form-check mb-3 d-none filtered-input-container" th:each="player : ${@proPlayerDAO.findAll()}">
@@ -198,9 +213,10 @@
                             </div>
                         </div>
                     </form>
+
+
                 </div>
                 <div class="modal-footer">
-                    <button type="submit" form="modal-reveal-player-form" class="btn btn-action"></button>
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
                 </div>
             </div>
