@@ -14,6 +14,8 @@ public class AligulacProPlayer
 
     private static final AligulacProTeamRoot[] EMPTY_PRO_TEAM_ROOT_ARRAY = new AligulacProTeamRoot[0];
 
+    private Long id;
+
     private String name;
 
     private String romanizedName;
@@ -35,6 +37,7 @@ public class AligulacProPlayer
 
     public AligulacProPlayer
     (
+        Long id,
         String name,
         String romanizedName,
         String tag,
@@ -45,6 +48,7 @@ public class AligulacProPlayer
         AligulacProTeamRoot[] currentTeams
     )
     {
+        this.id = id;
         this.name = name;
         this.romanizedName = romanizedName;
         this.tag = tag;
@@ -53,6 +57,16 @@ public class AligulacProPlayer
         this.country = country;
         this.totalEarnings = totalEarnings;
         this.currentTeams = currentTeams;
+    }
+
+    public Long getId()
+    {
+        return id;
+    }
+
+    public void setId(Long id)
+    {
+        this.id = id;
     }
 
     public String getName()
