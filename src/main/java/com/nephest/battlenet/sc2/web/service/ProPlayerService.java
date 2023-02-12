@@ -100,11 +100,6 @@ public class ProPlayerService
         this.aligulacAPI = aligulacAPI;
     }
 
-    @CacheEvict(cacheNames={"pro-player-characters"}, allEntries=true)
-    @Transactional
-    (
-        propagation = Propagation.REQUIRES_NEW
-    )
     public void update()
     {
         updateAligulac();
@@ -140,7 +135,6 @@ public class ProPlayerService
         List<ProPlayer> originalProPlayers = proPlayerDAO.findAligulacList();
         long[] ids = new long[getAligulacBatchSize()];
         ProPlayer[] proPlayers = new ProPlayer[getAligulacBatchSize()];
-        ArrayList<ProTeamMember> members = new ArrayList<>();
 
         for(ProPlayer proPlayer : originalProPlayers)
         {
@@ -150,27 +144,42 @@ public class ProPlayerService
             if(ix == getAligulacBatchSize() || total == originalProPlayers.size())
             {
                 AligulacProPlayer[] aligulacProPlayers = aligulacAPI.getPlayers(Arrays.copyOf(ids, ix)).block().getObjects();
-                //aligulac returns players in the same order they were requested
-                for(int i = 0; i < aligulacProPlayers.length; i++)
-                {
-                    ProPlayer.update(proPlayers[i], aligulacProPlayers[i]);
-                    ProTeam proTeam = ProTeam.of(aligulacProPlayers[i]);
-                    if(proTeam != null)
-                    {
-                        ProTeamMember member = new ProTeamMember
-                        (
-                            proTeamDAO.merge(proTeam).getId(),
-                            proPlayers[i].getId()
-                        );
-                        members.add(member);
-                    }
-                }
-                proPlayerDAO.mergeWithoutIds(Arrays.copyOf(proPlayers, ix));
-                proTeamMemberDAO.merge(members.toArray(new ProTeamMember[0]));
-                members.clear();
+                proPlayerService.updateAligulac(proPlayers, aligulacProPlayers, ix);
                 ix = 0;
             }
         }
+    }
+
+    @CacheEvict(cacheNames={"pro-player-characters"}, allEntries=true)
+    @Transactional
+    (
+        propagation = Propagation.REQUIRES_NEW
+    )
+    public void updateAligulac
+    (
+        ProPlayer[] proPlayers,
+        AligulacProPlayer[] aligulacProPlayers,
+        int ix
+    )
+    {
+        ArrayList<ProTeamMember> members = new ArrayList<>();
+        //aligulac returns players in the same order they were requested
+        for(int i = 0; i < aligulacProPlayers.length; i++)
+        {
+            ProPlayer.update(proPlayers[i], aligulacProPlayers[i]);
+            ProTeam proTeam = ProTeam.of(aligulacProPlayers[i]);
+            if(proTeam != null)
+            {
+                ProTeamMember member = new ProTeamMember
+                (
+                    proTeamDAO.merge(proTeam).getId(),
+                    proPlayers[i].getId()
+                );
+                members.add(member);
+            }
+        }
+        proPlayerDAO.mergeWithoutIds(Arrays.copyOf(proPlayers, ix));
+        proTeamMemberDAO.merge(members.toArray(new ProTeamMember[0]));
     }
 
     public int getAligulacBatchSize()
