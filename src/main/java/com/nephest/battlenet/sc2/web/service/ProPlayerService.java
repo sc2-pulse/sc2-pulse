@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -151,6 +153,7 @@ public class ProPlayerService
     }
 
     @CacheEvict(cacheNames={"pro-player-characters"}, allEntries=true)
+    @Retryable(backoff = @Backoff(100L))
     @Transactional
     (
         propagation = Propagation.REQUIRES_NEW
@@ -163,6 +166,7 @@ public class ProPlayerService
     )
     {
         ArrayList<ProTeamMember> members = new ArrayList<>();
+        ArrayList<SocialMediaLink> links = new ArrayList<>(aligulacProPlayers.length * 2);
         //aligulac returns players in the same order they were requested
         for(int i = 0; i < aligulacProPlayers.length; i++)
         {
@@ -177,9 +181,11 @@ public class ProPlayerService
                 );
                 members.add(member);
             }
+            links.addAll(extractLinks(proPlayers[i], aligulacProPlayers[i]));
         }
         proPlayerDAO.mergeWithoutIds(Arrays.copyOf(proPlayers, ix));
         proTeamMemberDAO.merge(members.toArray(new ProTeamMember[0]));
+        socialMediaLinkDAO.merge(false, links.toArray(SocialMediaLink[]::new));
     }
 
     public int getAligulacBatchSize()
@@ -248,6 +254,7 @@ public class ProPlayerService
         return links;
     }
 
+    @Retryable(backoff = @Backoff(delay = 2000L, maxDelay = 5000L))
     @Transactional
     public void importProfile(ProPlayer proPlayer, ProTeam proTeam, SocialMediaLink... links)
     {

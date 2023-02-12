@@ -155,12 +155,14 @@ public class ProPlayerServiceIT
         assertEquals("EU", ladderProPlayer.getProPlayer().getCountry());
         assertEquals(LocalDate.of(2020, 1, 2), ladderProPlayer.getProPlayer().getBirthday());
         assertEquals(2, ladderProPlayer.getProPlayer().getEarnings());
-        assertEquals(2, ladderProPlayer.getLinks().size());
+        assertEquals(3, ladderProPlayer.getLinks().size());
         ladderProPlayer.getLinks().sort((a,b)->Comparator.comparing(SocialMedia::getId).compare(a.getType(), b.getType()));
         assertEquals(SocialMedia.ALIGULAC, ladderProPlayer.getLinks().get(0).getType());
-        assertEquals("http://aliculac.com/123321-something", ladderProPlayer.getLinks().get(0).getUrl());
+        assertEquals("http://aligulac.com/players/123321", ladderProPlayer.getLinks().get(0).getUrl());
         assertEquals(SocialMedia.TWITCH, ladderProPlayer.getLinks().get(1).getType());
         assertEquals("https://twitch.tv/serral", ladderProPlayer.getLinks().get(1).getUrl());
+        assertEquals(SocialMedia.LIQUIPEDIA, ladderProPlayer.getLinks().get(2).getType());
+        assertEquals("https://liquipedia.net/starcraft2/Lpname2", ladderProPlayer.getLinks().get(2).getUrl());
     }
 
     private RevealedPlayers createRevealedProPlayers()
@@ -220,7 +222,7 @@ public class ProPlayerServiceIT
         AligulacProPlayer[] players = new AligulacProPlayer[1];
         players[0] = new AligulacProPlayer
         (
-            2L,
+            123321L,
             "Aligulac Name2", "Aligulac Romanized Name2", "Aligulac nickname2", "Lpname2",
             LocalDate.of(2020, 1, 2),
             "EU",
