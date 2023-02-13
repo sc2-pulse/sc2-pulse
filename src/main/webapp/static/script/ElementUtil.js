@@ -518,6 +518,25 @@ class ElementUtil
         return container;
     }
 
+    static createFilteredInputGroup(id, name, value)
+    {
+        const container = document.createElement("div");
+        container.classList.add("form-check", "mb-3", "d-none", "filtered-input-container");
+        container.innerHTML =
+        `<input
+            id="${id}"
+            type="radio"
+            name="${name}"
+            value="${value}"
+        />
+        <label
+            class="form-check-label"
+            for="${id}"
+        >
+        </label>`;
+        return container;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
