@@ -85,7 +85,7 @@
                     <p class="description"></p>
                     <p>Type "<span class="requirement"></span>" to confirm the action.</p>
                     <form id="modal-confirmation-form">
-                        <input id="modal-confirmation-input" class="form-control" type="text" autocomplete="off"/>
+                        <input id="modal-confirmation-input" class="form-control" type="text" autocomplete="off" autofocus="autofocus"/>
                     </form>
                 </div>
                 <div class="modal-footer">
@@ -139,7 +139,8 @@
                                         name="evidence"
                                         th:maxlength="${T(com.nephest.battlenet.sc2.model.local.Evidence).MAX_LENGTH}"
                                         minLength="10"
-                                        required="required"></textarea>
+                                        required="required"
+                                        autofocus="autofocus"></textarea>
                             </div>
                             <button type="submit" class="btn btn-primary">Report</button>
                         </form>
@@ -192,6 +193,7 @@
                                     type="search"
                                     data-filtered-input-group="#modal-reveal-player-players"
                                     autocomplete="off"
+                                    autofocus="autofocus"
                                     placeholder="Player search"
                             />
                             <button type="submit" form="modal-reveal-player-form" class="btn btn-action"></button>

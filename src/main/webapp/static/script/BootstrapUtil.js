@@ -306,6 +306,7 @@ class BootstrapUtil
             }
         }
         modal.querySelectorAll(":scope nav").forEach(BootstrapUtil.deactivateInvalidTabs);
+        ElementUtil.autofocus(modal);
         ElementUtil.resolveElementPromise(modal.id);
     }
 

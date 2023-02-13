@@ -537,6 +537,14 @@ class ElementUtil
         return container;
     }
 
+    static autofocus(container, focusOnMobile = false)
+    {
+        if(!focusOnMobile && Util.isMobile()) return;
+
+        const autofocus = container.querySelector(":scope *[autofocus]");
+        if(autofocus) autofocus.focus();
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
