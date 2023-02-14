@@ -408,7 +408,7 @@ class PersonalUtil
                 null,
                 "btn btn-outline-success",
                 "Link",
-                [["href", ROOT_CONTEXT_PATH + "oauth2/authorization/discord-lg"]]
+                [["href", ROOT_CONTEXT_PATH + "verify/discord"]]
             ));
         } else {
             tr.querySelector(":scope .account-connection-name").textContent =
