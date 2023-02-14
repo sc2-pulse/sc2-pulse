@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -400,7 +400,6 @@ public class SqlSyntaxIT
         leagueStatsDAO.calculateForSeason(40);
         leagueStatsDAO.mergeCalculateForSeason(40);
 
-        proPlayerAccountDAO.removeExpired();
         proPlayerDAO.removeExpired();
         proTeamDAO.removeExpired();
         proTeamMemberDAO.removeExpired();

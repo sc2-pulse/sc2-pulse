@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -17,7 +17,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class ProPlayerAccountDAO
-extends StandardDAO
 {
 
     public static final String STD_SELECT =
@@ -73,7 +72,6 @@ extends StandardDAO
         @Qualifier("sc2StatsConversionService") ConversionService conversionService
     )
     {
-        super(template, "pro_player_account", "30 DAYS");
         this.template = template;
         this.conversionService = conversionService;
         initMappers();
