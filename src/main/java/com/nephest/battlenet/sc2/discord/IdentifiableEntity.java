@@ -3,12 +3,15 @@
 
 package com.nephest.battlenet.sc2.discord;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.nephest.battlenet.sc2.config.convert.jackson.StringToUnsignedLongConverter;
 import com.nephest.battlenet.sc2.model.IdentifiableLong;
 
 public class IdentifiableEntity
 implements IdentifiableLong, GuildWrapper
 {
 
+    @JsonDeserialize(converter = StringToUnsignedLongConverter.class)
     private Long id;
 
     public IdentifiableEntity()
