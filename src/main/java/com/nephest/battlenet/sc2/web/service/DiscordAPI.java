@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.discord.connection.ApplicationRoleConnection;
 import com.nephest.battlenet.sc2.discord.connection.ConnectionMetaData;
 import com.nephest.battlenet.sc2.model.discord.DiscordConnection;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.guild.GuildEvent;
@@ -40,6 +41,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -76,6 +78,7 @@ extends BaseAPI
     private final OAuth2AuthorizedClientService auth2AuthorizedClientService;
     private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
     private final AtomicInteger requestsPerSecond = new AtomicInteger(DEFAULT_REQUESTS_PER_SECOND);
+    private final Validator validator;
     private final String applicationId;
     private final String token;
 
@@ -86,6 +89,7 @@ extends BaseAPI
         ObjectMapper objectMapper,
         OAuth2AuthorizedClientManager auth2AuthorizedClientManager,
         OAuth2AuthorizedClientService auth2AuthorizedClientService,
+        Validator validator,
         @Value("${spring.security.oauth2.client.registration.discord-lg.client-id}") String applicationId,
         @Value("${discord.token}") String token
     )
@@ -95,6 +99,7 @@ extends BaseAPI
         initWebClient(objectMapper, auth2AuthorizedClientManager);
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME)
             .doOnNext(i->rateLimiter.refreshSlots(requestsPerSecond.get())).subscribe();
+        this.validator = validator;
         this.applicationId = applicationId;
         this.token = token;
     }
@@ -286,6 +291,7 @@ extends BaseAPI
                 .attributes(oauth2AuthorizedClient(oAuth2AuthorizedClient))
                 .accept(ALL)
                 .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
+                .filter(DAOUtils.beanValidationPredicate(validator))
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
             .delaySubscription(rateLimiter.requestSlot());
