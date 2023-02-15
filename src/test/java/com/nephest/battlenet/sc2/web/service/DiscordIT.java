@@ -53,7 +53,6 @@ import com.nephest.battlenet.sc2.web.util.MonoUtil;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -78,8 +77,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
-import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -228,23 +225,10 @@ public class DiscordIT
         verifyLinkedDiscordUser(2L, null);
 
         //simulate oauth authorization, should be removed when unlinking the discord account
-        OAuth2AuthorizedClient client = new OAuth2AuthorizedClient
+        OAuth2AuthorizedClient client = WebServiceTestUtil.createOAuth2AuthorizedClient
         (
             clientRegistrationRepository.findByRegistrationId(DiscordAPI.USER_CLIENT_REGISTRATION_ID),
-            "1",
-            new OAuth2AccessToken
-            (
-                OAuth2AccessToken.TokenType.BEARER,
-                "token",
-                Instant.now(),
-                Instant.now().plusSeconds(99999),
-                Set.of("test")
-            ),
-            new OAuth2RefreshToken
-            (
-                "token",
-                Instant.now()
-            )
+            "1"
         );
         oAuth2AuthorizedClientService.saveAuthorizedClient(client, authentication);
         assertNotNull(oAuth2AuthorizedClientService.loadAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1"));

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -13,12 +13,18 @@ import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
+import org.springframework.security.oauth2.client.registration.ClientRegistration;
+import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
@@ -144,6 +150,32 @@ public class WebServiceTestUtil
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), clazz);
+    }
+
+    public static OAuth2AuthorizedClient createOAuth2AuthorizedClient
+    (
+        ClientRegistration clientRegistration,
+        String principalName
+    )
+    {
+        return new OAuth2AuthorizedClient
+        (
+            clientRegistration,
+            principalName,
+            new OAuth2AccessToken
+            (
+                OAuth2AccessToken.TokenType.BEARER,
+                "token",
+                Instant.now(),
+                Instant.now().plusSeconds(99999),
+                Set.of("test")
+            ),
+            new OAuth2RefreshToken
+            (
+                "token",
+                Instant.now()
+            )
+        );
     }
 
 }
