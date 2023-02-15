@@ -233,6 +233,7 @@ public class DiscordService
             .flatMap(id->updateRoles(id, RoleUpdateMode.REVOKE))
             .blockLast();
         discordService.unlinkUsers(accountIds);
+        LOG.info("Cleared {} discord users without a corresponding oauth2 client", accountIds.size());
     }
 
     @Transactional
