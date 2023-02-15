@@ -23,6 +23,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
+import com.nephest.battlenet.sc2.discord.SpringDiscordClient;
 import com.nephest.battlenet.sc2.discord.connection.ApplicationRoleConnection;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
@@ -50,6 +51,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.web.util.MonoUtil;
+import discord4j.core.GatewayDiscordClient;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -238,6 +240,7 @@ public class DiscordIT
         doReturn(mono.getT1())
             .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
         stubNoManagedGuilds();
+        when(stubGatewayClient(discordService.getDiscordAPI()).getGuilds()).thenReturn(Flux.empty());
         mvc.perform
         (
             post("/api/my/discord/unlink")
@@ -606,14 +609,25 @@ public class DiscordIT
             String.valueOf(accounts[0].getId())
         );
         oAuth2AuthorizedClientService.saveAuthorizedClient(client, authentication);
+        stubNoManagedGuilds();
+        when(stubGatewayClient(discordService.getDiscordAPI()).getGuilds()).thenReturn(Flux.empty());
 
         assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[0].getId()));
         assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[1].getId()));
-        discordService.unlinkUsersWithoutOauth2Permissions();
+        discordService.dropRolesAndUnlinkUsersWithoutOauth2Permissions();
         //discord user link with oauth2 client is left untouched
         assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[0].getId()));
         //discord user link without oauth2 client is removed
         assertFalse(accountDiscordUserDAO.existsByAccountId(accounts[1].getId()));
+    }
+
+    public static GatewayDiscordClient stubGatewayClient(DiscordAPI api)
+    {
+        SpringDiscordClient springDiscordClient = mock(SpringDiscordClient.class);
+        GatewayDiscordClient gatewayDiscordClient = mock(GatewayDiscordClient.class);
+        when(api.getDiscordClient()).thenReturn(springDiscordClient);
+        when(springDiscordClient.getClient()).thenReturn(gatewayDiscordClient);
+        return gatewayDiscordClient;
     }
 
 

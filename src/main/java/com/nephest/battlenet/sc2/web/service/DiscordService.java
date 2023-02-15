@@ -40,6 +40,7 @@ import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -72,7 +73,6 @@ public class DiscordService
         .thenComparing(LadderTeam::getQueueType)
         .thenComparing(Comparator.comparingLong(LadderTeam::getRating).reversed())
         .thenComparing(LadderTeam::getId);
-    public static final String DROP_ROLES_REASON = "User has unlinked their Discord account";
 
     private final DiscordUserDAO discordUserDAO;
     private final AccountDiscordUserDAO accountDiscordUserDAO;
@@ -92,6 +92,26 @@ public class DiscordService
 
     @Autowired @Lazy
     private RolesSlashCommand rolesSlashCommand;
+
+    public enum RoleUpdateMode
+    {
+        UPDATE(RolesSlashCommand.UPDATE_REASON),
+        DROP("User has unlinked their Discord account"),
+        REVOKE("User has revoked their Discord permissions");
+
+        private final String reason;
+
+        RoleUpdateMode(String reason)
+        {
+            this.reason = reason;
+        }
+
+        public String getReason()
+        {
+            return reason;
+        }
+
+    }
 
     @Autowired
     public DiscordService
@@ -180,7 +200,7 @@ public class DiscordService
 
     public void unlinkAccountFromDiscordUser(Long accountId, Long discordUserId)
     {
-        dropRoles(accountId, DROP_ROLES_REASON).blockLast();
+        dropRoles(accountId).blockLast();
         discordService.unlinkAccountFromDiscordUserDB(accountId, discordUserId);
     }
 
@@ -192,16 +212,33 @@ public class DiscordService
             .removeAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, String.valueOf(accountId));
     }
 
-    @Transactional
-    public void unlinkUsersWithoutOauth2Permissions()
+    public Set<Long> getUsersWithoutOauth2Permissions()
     {
-        accountDiscordUserDAO.findAccountIds().stream()
+        return accountDiscordUserDAO.findAccountIds().stream()
             .map(id->new ImmutablePair<Long, OAuth2AuthorizedClient>(
                 id,
                 oAuth2AuthorizedClientService.loadAuthorizedClient(
                     DiscordAPI.USER_CLIENT_REGISTRATION_ID, String.valueOf(id))))
             .filter(pair->pair.getRight() == null)
-            .forEach(pair->accountDiscordUserDAO.remove(pair.getLeft(), null));
+            .map(Pair::getKey)
+            .collect(Collectors.toSet());
+    }
+
+    public void dropRolesAndUnlinkUsersWithoutOauth2Permissions()
+    {
+        Set<Long> accountIds = getUsersWithoutOauth2Permissions();
+        if(accountIds.isEmpty()) return;
+
+        Flux.fromIterable(accountIds)
+            .flatMap(id->updateRoles(id, RoleUpdateMode.REVOKE))
+            .blockLast();
+        discordService.unlinkUsers(accountIds);
+    }
+
+    @Transactional
+    public void unlinkUsers(Set<Long> accountIds)
+    {
+        accountIds.forEach(id->accountDiscordUserDAO.remove(id, null));
     }
 
     public void setVisibility(Long accountId, boolean isVisible)
@@ -211,7 +248,7 @@ public class DiscordService
 
     public void update()
     {
-        discordService.unlinkUsersWithoutOauth2Permissions();
+        dropRolesAndUnlinkUsersWithoutOauth2Permissions();
         removeUsersWithNoAccountLinked();
         updateUsersFromAPI();
     }
@@ -269,19 +306,25 @@ public class DiscordService
 
     public Flux<Void> updateRoles(Long accountId)
     {
-        return updateRoles(accountId, false, null);
+        return updateRoles(accountId, RoleUpdateMode.UPDATE);
     }
 
-    private Flux<Void> dropRoles(Long accountId, String reason)
+    private Flux<Void> dropRoles(Long accountId)
     {
-        return updateRoles(accountId, true, reason);
+        return updateRoles(accountId, RoleUpdateMode.DROP);
     }
 
-    private Flux<Void> updateRoles(Long accountId, boolean drop, String reason)
+    protected Flux<Void> updateRoles(Long accountId, RoleUpdateMode mode)
     {
         if(!accountDiscordUserDAO.existsByAccountId(accountId)) return Flux.empty();
 
-        Tuple2<LadderTeam, LadderTeamMember> mainTuple = drop ? null : findMainTuple(accountId);
+        //user tries to drop revoked connection, revoke it instead
+        RoleUpdateMode finalMode = isDroppingRevokedConnection(accountId, mode)
+            ? RoleUpdateMode.REVOKE
+            : mode;
+        Tuple2<LadderTeam, LadderTeamMember> mainTuple = finalMode != RoleUpdateMode.UPDATE
+            ? null
+            : findMainTuple(accountId);
         ApplicationRoleConnection roleConnection = mainTuple != null
             ? 
                 ApplicationRoleConnection.from
@@ -297,8 +340,19 @@ public class DiscordService
         String principalName = String.valueOf(accountId);
         return Flux.concat
         (
-            discordAPI.updateConnectionMetaData(principalName, roleConnection),
+            finalMode != RoleUpdateMode.REVOKE
+                ? discordAPI.updateConnectionMetaData(principalName, roleConnection)
+                : Flux.empty(),
             getManagedRoleGuilds(principalName)
+                .onErrorResume
+                (
+                    t->finalMode != RoleUpdateMode.UPDATE
+                        && t.getMessage().startsWith("OAuth2AuthorizedClient not found")
+                            ? getManagedRoleGuilds(discordAPI.getDiscordClient().getClient()
+                                .getGuilds()
+                                .map(g->new IdentifiableEntity(g.getId().asLong())))
+                            : Flux.empty()
+                )
                 .flatMap
                 (
                     guild->getMemberMappings
@@ -317,10 +371,20 @@ public class DiscordService
                         mainTuple != null ? mainTuple.getT2().getFavoriteRace() : null,
                         t.getT2(),
                         t.getT1(),
-                        reason != null ? reason : RolesSlashCommand.UPDATE_REASON
+                        finalMode.getReason()
                     ).getRight()
                 )
         ).subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private boolean isDroppingRevokedConnection(Long accountId, RoleUpdateMode mode)
+    {
+        return mode == RoleUpdateMode.DROP
+            && oAuth2AuthorizedClientService.loadAuthorizedClient
+            (
+                DiscordAPI.USER_CLIENT_REGISTRATION_ID,
+                String.valueOf(accountId)
+            ) == null;
     }
 
     public Tuple2<LadderTeam, LadderTeamMember> findMainTuple(Long accountId)
@@ -337,7 +401,12 @@ public class DiscordService
 
     public Flux<Guild> getManagedRoleGuilds(String principalName)
     {
-        return discordAPI.getGuilds(principalName, IdentifiableEntity.class)
+        return getManagedRoleGuilds(discordAPI.getGuilds(principalName, IdentifiableEntity.class));
+    }
+
+    public Flux<Guild> getManagedRoleGuilds(Flux<? extends IdentifiableEntity> guilds)
+    {
+        return guilds
             .map(IdentifiableEntity::getId)
             .filter(discordAPI.getBotGuilds().keySet()::contains)
             .flatMap(id->discordAPI.getDiscordClient().getClient().getGuildById(Snowflake.of(id)))
