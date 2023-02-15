@@ -291,7 +291,17 @@ extends BaseAPI
                 .attributes(oauth2AuthorizedClient(oAuth2AuthorizedClient))
                 .accept(ALL)
                 .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
-                .filter(DAOUtils.beanValidationPredicate(validator))
+                /*
+                    Spring returns invalid beans when it drops the oauth2 client. Throw exception
+                    to indicate that oauth2 client was dropped.
+                 */
+                .flatMap
+                (
+                    g->DAOUtils.beanValidationPredicate(validator).test(g)
+                        ? Mono.just(g)
+                        : Mono.error(new IllegalStateException(
+                            "OAuth2AuthorizedClient not found for user " + principalName))
+                )
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
             .delaySubscription(rateLimiter.requestSlot());
