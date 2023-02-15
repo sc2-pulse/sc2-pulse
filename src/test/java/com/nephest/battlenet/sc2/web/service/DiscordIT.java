@@ -583,6 +583,39 @@ public class DiscordIT
         assertFalse(accountDiscordUserDAO.existsByAccountId(accounts[1].getId()));
     }
 
+    @Test
+    @WithBlizzardMockUser(partition = Partition.GLOBAL, username = BATTLE_TAG)
+    public void testRemoveWithoutOauth2Permissions()
+    {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "refacc", 2);
+        DiscordUser[] discordUsers = discordUserDAO.merge
+        (
+            new DiscordUser(10L, "name", 1),
+            new DiscordUser(11L, "name", 2)
+        );
+        accountDiscordUserDAO.create
+        (
+            new AccountDiscordUser(accounts[0].getId(), discordUsers[0].getId()),
+            new AccountDiscordUser(accounts[1].getId(), discordUsers[1].getId())
+        );
+        OAuth2AuthorizedClient client = WebServiceTestUtil.createOAuth2AuthorizedClient
+        (
+            clientRegistrationRepository
+                .findByRegistrationId(DiscordAPI.USER_CLIENT_REGISTRATION_ID),
+            String.valueOf(accounts[0].getId())
+        );
+        oAuth2AuthorizedClientService.saveAuthorizedClient(client, authentication);
+
+        assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[0].getId()));
+        assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[1].getId()));
+        discordService.unlinkUsersWithoutOauth2Permissions();
+        //discord user link with oauth2 client is left untouched
+        assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[0].getId()));
+        //discord user link without oauth2 client is removed
+        assertFalse(accountDiscordUserDAO.existsByAccountId(accounts[1].getId()));
+    }
+
 
     private static void assertDeepEquals(DiscordIdentity user1, DiscordIdentity user2)
     {

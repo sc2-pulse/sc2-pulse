@@ -39,12 +39,14 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -190,6 +192,18 @@ public class DiscordService
             .removeAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, String.valueOf(accountId));
     }
 
+    @Transactional
+    public void unlinkUsersWithoutOauth2Permissions()
+    {
+        accountDiscordUserDAO.findAccountIds().stream()
+            .map(id->new ImmutablePair<Long, OAuth2AuthorizedClient>(
+                id,
+                oAuth2AuthorizedClientService.loadAuthorizedClient(
+                    DiscordAPI.USER_CLIENT_REGISTRATION_ID, String.valueOf(id))))
+            .filter(pair->pair.getRight() == null)
+            .forEach(pair->accountDiscordUserDAO.remove(pair.getLeft(), null));
+    }
+
     public void setVisibility(Long accountId, boolean isVisible)
     {
         accountDiscordUserDAO.updatePublicFlag(accountId, isVisible);
@@ -197,6 +211,7 @@ public class DiscordService
 
     public void update()
     {
+        discordService.unlinkUsersWithoutOauth2Permissions();
         removeUsersWithNoAccountLinked();
         updateUsersFromAPI();
     }

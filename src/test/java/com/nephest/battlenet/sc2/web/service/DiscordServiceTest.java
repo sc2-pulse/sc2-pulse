@@ -149,6 +149,7 @@ public class DiscordServiceTest
             executor,
             conversionService
         );
+        discordService.setDiscordService(discordService);
         discordService.setRolesSlashCommand(rolesSlashCommand);
     }
 
