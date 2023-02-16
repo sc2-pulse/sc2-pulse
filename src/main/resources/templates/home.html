@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -620,7 +620,10 @@
                                             <tr id="account-connection-discord">
                                                 <td><img src="/static/icon/logo/discord.svg" th:src="@{/static/icon/logo/discord.svg}" alt="discord" title="discord" class="table-image-md"></td>
                                                 <td class="dynamic account-connection-name"></td>
-                                                <td>Discord user commands will use your BattleTag instead of Discord username</td>
+                                                <td>
+                                                    Acquisition of <a th:href="@{/discord/bot#role-management}">linked roles and auto roles</a>.
+                                                    Discord user commands will use your BattleTag instead of Discord username.
+                                                </td>
                                                 <td class="dynamic account-connection-public"></td>
                                                 <td class="dynamic account-connection-action"></td>
                                             </tr>
