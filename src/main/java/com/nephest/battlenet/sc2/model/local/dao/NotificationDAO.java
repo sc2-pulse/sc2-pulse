@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -45,7 +45,7 @@ extends StandardDAO
     @Autowired
     public NotificationDAO(@Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template)
     {
-        super(template, "notification", "created", "5 DAYS");
+        super(template, "notification", "created", "6 HOURS");
     }
 
     public int[] create(String message, Long... recipientAccountIds)

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -117,7 +117,7 @@ public class NotificationIT
         );
 
         assertEquals(1, template.update(
-            "UPDATE notification SET created = NOW() - INTERVAL '5 days' WHERE id = 1"));
+            "UPDATE notification SET created = NOW() - INTERVAL '6 hours' WHERE id = 1"));
         assertEquals(1, notificationDAO.removeExpired());
         List<Notification> notifications = notificationDAO.findAll();
         assertEquals(1, notifications.size());
