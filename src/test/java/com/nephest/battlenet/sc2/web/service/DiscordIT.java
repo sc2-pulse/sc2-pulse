@@ -614,7 +614,7 @@ public class DiscordIT
 
         assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[0].getId()));
         assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[1].getId()));
-        discordService.dropRolesAndUnlinkUsersWithoutOauth2Permissions();
+        discordService.updateRolesAndUnlinkUsersWithoutOauth2Permissions();
         //discord user link with oauth2 client is left untouched
         assertTrue(accountDiscordUserDAO.existsByAccountId(accounts[0].getId()));
         //discord user link without oauth2 client is removed

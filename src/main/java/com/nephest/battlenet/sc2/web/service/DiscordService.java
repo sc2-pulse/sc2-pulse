@@ -224,7 +224,7 @@ public class DiscordService
             .collect(Collectors.toSet());
     }
 
-    public void dropRolesAndUnlinkUsersWithoutOauth2Permissions()
+    public void updateRolesAndUnlinkUsersWithoutOauth2Permissions()
     {
         Set<Long> accountIds = getUsersWithoutOauth2Permissions();
         if(accountIds.isEmpty()) return;
@@ -249,7 +249,7 @@ public class DiscordService
 
     public void update()
     {
-        dropRolesAndUnlinkUsersWithoutOauth2Permissions();
+        updateRolesAndUnlinkUsersWithoutOauth2Permissions();
         removeUsersWithNoAccountLinked();
         updateUsersFromAPI();
     }
@@ -323,6 +323,8 @@ public class DiscordService
         RoleUpdateMode finalMode = isDroppingRevokedConnection(accountId, mode)
             ? RoleUpdateMode.REVOKE
             : mode;
+        if(finalMode == RoleUpdateMode.REVOKE) return Flux.empty();
+
         Tuple2<LadderTeam, LadderTeamMember> mainTuple = finalMode != RoleUpdateMode.UPDATE
             ? null
             : findMainTuple(accountId);
@@ -341,18 +343,13 @@ public class DiscordService
         String principalName = String.valueOf(accountId);
         return Flux.concat
         (
-            finalMode != RoleUpdateMode.REVOKE
-                ? discordAPI.updateConnectionMetaData(principalName, roleConnection)
-                : Flux.empty(),
+            discordAPI.updateConnectionMetaData(principalName, roleConnection),
             getManagedRoleGuilds(principalName)
                 .onErrorResume
                 (
                     t->finalMode != RoleUpdateMode.UPDATE
-                        && t.getMessage().startsWith("OAuth2AuthorizedClient not found")
-                            ? getManagedRoleGuilds(discordAPI.getDiscordClient().getClient()
-                                .getGuilds()
-                                .map(g->new IdentifiableEntity(g.getId().asLong())))
-                            : Flux.empty()
+                        && t.getMessage().startsWith("OAuth2AuthorizedClient not found"),
+                    t->Flux.empty()
                 )
                 .flatMap
                 (

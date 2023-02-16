@@ -74,7 +74,6 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
-import org.mockito.ArgumentMatchers;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -281,7 +280,7 @@ public class DiscordServiceTest
     public void whenNoOauth2Client_thenRevokeRolesAndUnlink()
     {
         when(accountDiscordUserDAO.findAccountIds()).thenReturn(Set.of(1L));
-        verifyRevokeRoles(DiscordService::dropRolesAndUnlinkUsersWithoutOauth2Permissions);
+        verifyRevokeRoles(DiscordService::updateRolesAndUnlinkUsersWithoutOauth2Permissions);
         verify(accountDiscordUserDAO).remove(1L, null);
     }
 
@@ -295,50 +294,10 @@ public class DiscordServiceTest
     {
         DiscordService spy = Mockito.spy(discordService);
         when(accountDiscordUserDAO.existsByAccountId(1L)).thenReturn(true);
-        String tag = "tag#123";
-        Account account = new Account(1L, Partition.GLOBAL, tag);
-        when(accountDAO.findByIds(1L)).thenReturn(List.of(account));
-        PulseMappings<Role> roleMappings = PulseMappings.empty();
-        Tuple2<Guild, Member> member1 = stubRoleMember(roleMappings);
-        Tuple2<Guild, Member> member2 = stubRoleMember(roleMappings);
-
-        //should survive oauth2 exception and check all servers instead
-        doReturn(Flux.error(new IllegalStateException("OAuth2AuthorizedClient not found")))
-            .when(spy).getManagedRoleGuilds("1");
-        when(member1.getT1().getId()).thenReturn(Snowflake.of(1L));
-        when(member2.getT1().getId()).thenReturn(Snowflake.of(2L));
-        Flux<Guild> guilds = Flux.just(member1.getT1(), member2.getT1());
-        when(DiscordIT.stubGatewayClient(api).getGuilds()).thenReturn(guilds);
-        doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy)
-            .getManagedRoleGuilds(ArgumentMatchers.<Flux<IdentifiableEntity>>argThat(ids->{
-                List<Long> idList = ids.map(IdentifiableEntity::getId).collectList().block();
-                return idList.containsAll(List.of(1L, 2L));
-            }));
-        Tuple2<Mono<Void>, AtomicBoolean> rolesMono = MonoUtil.verifiableMono();
-        when(rolesSlashCommand.updateRoles(any(), any(), any(), any(), any()))
-            .thenReturn(new ImmutableTriple<>(null, Set.of(), rolesMono.getT1().flux()));
-
         consumer.accept(spy);
-        //Application connection metadata is already dropped when revoking, skip it
+        //Don't update roles when revoking
         verify(api, never()).updateConnectionMetaData(any());
-        //members in all guilds are dropped
-        verify(rolesSlashCommand).updateRoles
-        (
-            null,
-            null,
-            roleMappings,
-            member1.getT2(),
-            "User has revoked their Discord permissions"
-        );
-        verify(rolesSlashCommand).updateRoles
-        (
-            null,
-            null,
-            roleMappings,
-            member2.getT2(),
-            "User has revoked their Discord permissions"
-        );
-        assertTrue(rolesMono.getT2().get());
+        verifyNoInteractions(rolesSlashCommand);
     }
 
     @Test
