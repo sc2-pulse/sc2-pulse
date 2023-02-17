@@ -209,7 +209,7 @@
                                 <label
                                         class="form-check-label"
                                         th:for="|reveal-player-${player.id}|"
-                                        th:text="|${player.nickname}${!player.name.isEmpty() ? ', ' + player.name : ''}${player.country != null ? ' ' + T(com.nephest.battlenet.sc2.util.MiscUtil).countryCodeToEmoji(player.country) : ''}|"
+                                        th:text="|${player.nickname}${player.name != null ? ', ' + player.name : ''}${player.country != null ? ' ' + T(com.nephest.battlenet.sc2.util.MiscUtil).countryCodeToEmoji(player.country) : ''}|"
                                 >
                                 </label>
                             </div>

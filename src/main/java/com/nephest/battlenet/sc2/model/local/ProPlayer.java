@@ -24,7 +24,6 @@ implements java.io.Serializable
     @NotNull
     private String nickname;
 
-    @NotNull
     private String name;
 
     private String country;

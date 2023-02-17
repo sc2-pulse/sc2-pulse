@@ -25,3 +25,7 @@ ALTER TABLE "pro_player"
     DROP COLUMN "revealed_id",
     ADD CONSTRAINT "uq_pro_player_aligulac_id"
         UNIQUE("aligulac_id");
+
+ALTER TABLE "pro_player"
+    ALTER COLUMN "name" DROP NOT NULL;
+UPDATE "pro_player" SET "name" = NULL WHERE "name" = '';
