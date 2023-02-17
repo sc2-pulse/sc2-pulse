@@ -120,10 +120,10 @@ implements java.io.Serializable
     public static ProPlayer update(ProPlayer proPlayer, AligulacProPlayer aligulacProPlayer)
     {
         proPlayer.setEarnings(aligulacProPlayer.getTotalEarnings());
-        if(aligulacProPlayer.getTag() != null) proPlayer.setNickname(aligulacProPlayer.getTag());
-        if(aligulacProPlayer.getCombinedName() != null) proPlayer.setName(aligulacProPlayer.getCombinedName());
+        proPlayer.setNickname(aligulacProPlayer.getTag());
+        proPlayer.setName(aligulacProPlayer.getCombinedName());
         proPlayer.setBirthday(aligulacProPlayer.getBirthday());
-        if(aligulacProPlayer.getCountry() != null) proPlayer.setCountry(aligulacProPlayer.getCountry());
+        proPlayer.setCountry(aligulacProPlayer.getCountry());
         return proPlayer;
     }
 
