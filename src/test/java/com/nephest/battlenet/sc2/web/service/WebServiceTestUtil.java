@@ -155,7 +155,8 @@ public class WebServiceTestUtil
     public static OAuth2AuthorizedClient createOAuth2AuthorizedClient
     (
         ClientRegistration clientRegistration,
-        String principalName
+        String principalName,
+        boolean expired
     )
     {
         return new OAuth2AuthorizedClient
@@ -166,8 +167,8 @@ public class WebServiceTestUtil
             (
                 OAuth2AccessToken.TokenType.BEARER,
                 "token",
-                Instant.now(),
-                Instant.now().plusSeconds(99999),
+                expired ? Instant.now().minusSeconds(99999) : Instant.now(),
+                expired ? Instant.now().minusSeconds(10000) : Instant.now().plusSeconds(99999),
                 Set.of("test")
             ),
             new OAuth2RefreshToken
@@ -176,6 +177,15 @@ public class WebServiceTestUtil
                 Instant.now()
             )
         );
+    }
+
+    public static OAuth2AuthorizedClient createOAuth2AuthorizedClient
+    (
+        ClientRegistration clientRegistration,
+        String principalName
+    )
+    {
+        return createOAuth2AuthorizedClient(clientRegistration, principalName, false);
     }
 
 }
