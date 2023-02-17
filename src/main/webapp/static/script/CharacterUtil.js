@@ -223,13 +223,10 @@ class CharacterUtil
         CharacterUtil.setProPlayerField("#pro-player-name", "td", proPlayer.proPlayer.name);
         CharacterUtil.setProPlayerField("#pro-player-birthday", "td", proPlayer.proPlayer.birthday != null
             ? Util.DATE_FORMAT.format(Util.parseIsoDate(proPlayer.proPlayer.birthday)) : null);
-        CharacterUtil.setProPlayerField("#pro-player-country", "td", proPlayer.proPlayer.country ? Util.countryCodeToEmoji(proPlayer.proPlayer.country) : "");
+        CharacterUtil.setProPlayerField("#pro-player-country", "td", proPlayer.proPlayer.country ? Util.countryCodeToEmoji(proPlayer.proPlayer.country) : null);
         CharacterUtil.setProPlayerField("#pro-player-earnings", "td", proPlayer.proPlayer.earnings != null
             ? "$" + Util.NUMBER_FORMAT.format(proPlayer.proPlayer.earnings) : null);
-        if(proPlayer.proTeam != null)
-        {
-            CharacterUtil.setProPlayerField("#pro-player-team", "td", proPlayer.proTeam.name);
-        }
+        CharacterUtil.setProPlayerField("#pro-player-team", "td", proPlayer.proTeam ? proPlayer.proTeam.name : null);
         for(const link of proPlayer.links)
         {
             const linkEl = document.querySelector("#link-" + link.type.toLowerCase());
