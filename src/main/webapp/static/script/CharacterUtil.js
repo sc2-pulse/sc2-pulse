@@ -224,7 +224,7 @@ class CharacterUtil
         CharacterUtil.setProPlayerField("#pro-player-birthday", "td", proPlayer.proPlayer.birthday != null
             ? Util.DATE_FORMAT.format(Util.parseIsoDate(proPlayer.proPlayer.birthday)) : null);
         CharacterUtil.setProPlayerField("#pro-player-country", "td", proPlayer.proPlayer.country ? Util.countryCodeToEmoji(proPlayer.proPlayer.country) : null);
-        CharacterUtil.setProPlayerField("#pro-player-earnings", "td", proPlayer.proPlayer.earnings != null
+        CharacterUtil.setProPlayerField("#pro-player-earnings", "td", proPlayer.proPlayer.earnings && proPlayer.proPlayer.earnings > 0
             ? "$" + Util.NUMBER_FORMAT.format(proPlayer.proPlayer.earnings) : null);
         CharacterUtil.setProPlayerField("#pro-player-team", "td", proPlayer.proTeam ? proPlayer.proTeam.name : null);
         for(const link of proPlayer.links)
