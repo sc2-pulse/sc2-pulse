@@ -45,6 +45,7 @@ public class SecurityBeanConfig
             OAuth2AuthorizedClientProviderBuilder.builder()
                 .clientCredentials()
                 .authorizationCode()
+                .refreshToken()
                 .build();
 
         AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
