@@ -39,6 +39,7 @@ import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Validator;
@@ -89,6 +90,7 @@ extends BaseAPI
         ObjectMapper objectMapper,
         OAuth2AuthorizedClientManager auth2AuthorizedClientManager,
         OAuth2AuthorizedClientService auth2AuthorizedClientService,
+        RemoveAuthorizedClientOAuth2AuthorizationFailureHandler failureHandler,
         Validator validator,
         @Value("${spring.security.oauth2.client.registration.discord-lg.client-id}") String applicationId,
         @Value("${discord.token}") String token
@@ -96,7 +98,7 @@ extends BaseAPI
     {
         this.discordClient = discordClient;
         this.auth2AuthorizedClientService = auth2AuthorizedClientService;
-        initWebClient(objectMapper, auth2AuthorizedClientManager);
+        initWebClient(objectMapper, auth2AuthorizedClientManager, failureHandler);
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME)
             .doOnNext(i->rateLimiter.refreshSlots(requestsPerSecond.get())).subscribe();
         this.validator = validator;
@@ -104,10 +106,16 @@ extends BaseAPI
         this.token = token;
     }
 
-    private void initWebClient(ObjectMapper objectMapper, OAuth2AuthorizedClientManager auth2AuthorizedClientManager)
+    private void initWebClient
+    (
+        ObjectMapper objectMapper,
+        OAuth2AuthorizedClientManager auth2AuthorizedClientManager,
+        RemoveAuthorizedClientOAuth2AuthorizationFailureHandler failureHandler
+    )
     {
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
+        oauth2Client.setAuthorizationFailureHandler(failureHandler);
         WebClient client = WebServiceUtil.getWebClientBuilder(objectMapper, 5 * 1024, ALL)
             .apply(oauth2Client.oauth2Configuration())
             .baseUrl(BASE_URL)

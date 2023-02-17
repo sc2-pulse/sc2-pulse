@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -17,6 +17,7 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
+import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.web.authentication.rememberme.JdbcTokenRepositoryImpl;
 import org.springframework.security.web.authentication.rememberme.PersistentTokenRepository;
@@ -75,6 +76,18 @@ public class SecurityBeanConfig
     )
     {
         return new JdbcOAuth2AuthorizedClientService(jdbcOperations, clientRegistrationRepository);
+    }
+
+    @Bean
+    public RemoveAuthorizedClientOAuth2AuthorizationFailureHandler oAuth2FailureHandler
+    (
+        OAuth2AuthorizedClientService oAuth2AuthorizedClientService
+    )
+    {
+        RemoveAuthorizedClientOAuth2AuthorizationFailureHandler.OAuth2AuthorizedClientRemover
+            remover = (clientRegistrationId, principal, attributes)->oAuth2AuthorizedClientService
+                .removeAuthorizedClient(clientRegistrationId, principal.getName());
+        return new RemoveAuthorizedClientOAuth2AuthorizationFailureHandler(remover);
     }
 
 }

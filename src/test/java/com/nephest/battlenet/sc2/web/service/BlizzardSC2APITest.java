@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -30,6 +30,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
@@ -45,6 +46,9 @@ public class BlizzardSC2APITest
     private OAuth2AuthorizedClientManager oAuth2AuthorizedClientManager;
 
     @Mock
+    private RemoveAuthorizedClientOAuth2AuthorizationFailureHandler failureHandler;
+
+    @Mock
     private VarDAO varDAO;
 
     GlobalContext globalContext;
@@ -58,7 +62,14 @@ public class BlizzardSC2APITest
     {
         mocks = MockitoAnnotations.openMocks(this);
         globalContext = new GlobalContext(Set.of(Region.values()));
-        api = new BlizzardSC2API(objectMapper, oAuth2AuthorizedClientManager, varDAO, globalContext);
+        api = new BlizzardSC2API
+        (
+            objectMapper,
+            oAuth2AuthorizedClientManager,
+            failureHandler,
+            varDAO,
+            globalContext
+        );
     }
 
     @AfterEach

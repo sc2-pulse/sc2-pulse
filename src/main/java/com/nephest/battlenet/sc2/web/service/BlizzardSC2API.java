@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -58,6 +58,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -134,12 +135,19 @@ extends BaseAPI
     (
         ObjectMapper objectMapper,
         OAuth2AuthorizedClientManager auth2AuthorizedClientManager,
+        RemoveAuthorizedClientOAuth2AuthorizationFailureHandler failureHandler,
         VarDAO varDAO,
         GlobalContext globalContext
     )
     {
         this.globalContext = globalContext;
-        initWebClient(objectMapper, auth2AuthorizedClientManager, globalContext.getActiveRegions());
+        initWebClient
+        (
+            objectMapper,
+            auth2AuthorizedClientManager,
+            failureHandler,
+            globalContext.getActiveRegions()
+        );
         this.objectMapper = objectMapper;
         this.varDAO = varDAO;
         init(globalContext.getActiveRegions());
@@ -327,6 +335,7 @@ extends BaseAPI
     (
         ObjectMapper objectMapper,
         OAuth2AuthorizedClientManager auth2AuthorizedClientManager,
+        RemoveAuthorizedClientOAuth2AuthorizationFailureHandler failureHandler,
         Set<Region> activeRegions
     )
     {
@@ -335,6 +344,7 @@ extends BaseAPI
             ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
             oauth2Client.setDefaultClientRegistrationId("sc2-sys-" + region.name().toLowerCase());
+            oauth2Client.setAuthorizationFailureHandler(failureHandler);
             //some endpoints return invalid content type headers, ignore the headers and handle all types
             clients.put(region, WebServiceUtil.getWebClientBuilder(objectMapper, 600 * 1024, ALL)
                 .apply(oauth2Client.oauth2Configuration()).build());
