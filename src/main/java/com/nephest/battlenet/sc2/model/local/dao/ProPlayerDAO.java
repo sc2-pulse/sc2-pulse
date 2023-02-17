@@ -112,7 +112,7 @@ extends StandardDAO
             rs.getString("pro_player.name"),
             rs.getString("pro_player.country"),
             rs.getObject("pro_player.birthday", LocalDate.class),
-            rs.getInt("pro_player.earnings"),
+            DAOUtils.getInteger(rs, "pro_player.earnings"),
             rs.getObject("pro_player.updated", OffsetDateTime.class)
         );
     }
