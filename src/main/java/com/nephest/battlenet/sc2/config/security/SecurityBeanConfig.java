@@ -11,11 +11,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.security.oauth2.client.AuthorizationCodeOAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
+import org.springframework.security.oauth2.client.ClientCredentialsOAuth2AuthorizedClientProvider;
+import org.springframework.security.oauth2.client.DelegatingOAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.JdbcOAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
 import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
@@ -42,11 +44,12 @@ public class SecurityBeanConfig
     )
     {
         OAuth2AuthorizedClientProvider authorizedClientProvider =
-            OAuth2AuthorizedClientProviderBuilder.builder()
-                .clientCredentials()
-                .authorizationCode()
-                .refreshToken()
-                .build();
+            new DelegatingOAuth2AuthorizedClientProvider
+            (
+                new ClientCredentialsOAuth2AuthorizedClientProvider(),
+                new AuthorizationCodeOAuth2AuthorizedClientProvider(),
+                new CachedRefreshTokenOAuth2AuthorizedClientProvider()
+            );
 
         AuthorizedClientServiceOAuth2AuthorizedClientManager authorizedClientManager =
             new AuthorizedClientServiceOAuth2AuthorizedClientManager
