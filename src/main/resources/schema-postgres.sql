@@ -470,7 +470,7 @@ CREATE TABLE "pro_player"
     "aligulac_id" BIGINT,
     "twitch_user_id" BIGINT,
     "nickname" TEXT NOT NULL,
-    "name" TEXT NOT NULL,
+    "name" TEXT,
     "country" CHAR(2),
     "team" TEXT,
     "birthday" DATE,

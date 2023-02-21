@@ -127,7 +127,7 @@ extends StandardDAO
         return new MapSqlParameterSource()
             .addValue("aligulacId", proPlayer.getAligulacId(), Types.BIGINT)
             .addValue("nickname", proPlayer.getNickname())
-            .addValue("name", proPlayer.getName())
+            .addValue("name", proPlayer.getName(), Types.VARCHAR)
             .addValue("country", proPlayer.getCountry(), Types.VARCHAR)
             .addValue("birthday", proPlayer.getBirthday(), Types.DATE)
             .addValue("earnings", proPlayer.getEarnings(), Types.INTEGER)
