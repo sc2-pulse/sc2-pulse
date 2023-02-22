@@ -187,15 +187,15 @@ extends BaseAPI
         return getMono(DiscordUser.class, "/users/@me");
     }
 
-    public Mono<DiscordUser> getUser(Long id)
+    public Mono<DiscordUser> getUser(Snowflake id)
     {
         return discordClient.getClient()
-            .getUserById(Snowflake.of(id))
+            .getUserById(id)
             .map(DiscordUser::from)
             .delaySubscription(rateLimiter.requestSlot());
     }
 
-    public Flux<DiscordUser> getUsers(Iterable<? extends Long> ids)
+    public Flux<DiscordUser> getUsers(Iterable<? extends Snowflake> ids)
     {
         return Flux.fromIterable(ids)
             .flatMap(id->WebServiceUtil.getOnErrorLogAndSkipMono(getUser(id)));
@@ -215,10 +215,9 @@ extends BaseAPI
      * @param ids Discord ids of recipients
      * @return Flux of sent messages
      */
-    public Flux<Message> sendDM(String dm, Long... ids)
+    public Flux<Message> sendDM(String dm, Snowflake... ids)
     {
         return Flux.fromArray(ids)
-            .map(Snowflake::of)
             .flatMap(discordClient.getClient()::getUserById)
             .flatMap(User::getPrivateChannel)
             .flatMap(c->c.createMessage(dm));
@@ -270,12 +269,12 @@ extends BaseAPI
     }
 
     @Cacheable(cacheNames = "discord-bot-guilds")
-    public Map<Long, Guild> getBotGuilds()
+    public Map<Snowflake, Guild> getBotGuilds()
     {
         return discordClient.getClient()
             .getGuilds()
             .toStream()
-            .collect(Collectors.toUnmodifiableMap(g->g.getId().asLong(), Function.identity()));
+            .collect(Collectors.toUnmodifiableMap(Guild::getId, Function.identity()));
     }
 
     @CacheEvict(cacheNames = "discord-bot-guilds", allEntries = true)

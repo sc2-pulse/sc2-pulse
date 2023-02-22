@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
+import discord4j.common.util.Snowflake;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -14,7 +15,7 @@ implements DiscordUserMeta
     private Long accountId;
 
     @NotNull
-    private Long discordUserId;
+    private Snowflake discordUserId;
 
     private Boolean isPublic;
 
@@ -22,13 +23,13 @@ implements DiscordUserMeta
     {
     }
 
-    public AccountDiscordUser(Long accountId, Long discordUserId)
+    public AccountDiscordUser(Long accountId, Snowflake discordUserId)
     {
         this.accountId = accountId;
         this.discordUserId = discordUserId;
     }
 
-    public AccountDiscordUser(Long accountId, Long discordUserId, Boolean isPublic)
+    public AccountDiscordUser(Long accountId, Snowflake discordUserId, Boolean isPublic)
     {
         this.accountId = accountId;
         this.discordUserId = discordUserId;
@@ -66,12 +67,12 @@ implements DiscordUserMeta
         this.accountId = accountId;
     }
 
-    public Long getDiscordUserId()
+    public Snowflake getDiscordUserId()
     {
         return discordUserId;
     }
 
-    public void setDiscordUserId(Long discordUserId)
+    public void setDiscordUserId(Snowflake discordUserId)
     {
         this.discordUserId = discordUserId;
     }

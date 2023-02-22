@@ -35,6 +35,7 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
+import discord4j.common.util.Snowflake;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -441,7 +442,7 @@ public class PlayerCharacterDAOIT
             .orElseThrow();
 
         DiscordUser discordUser2 = discordUserDAO.findByAccountId(2L, false).orElseThrow();
-        assertEquals(2L, discordUser2.getId());
+        assertEquals(Snowflake.of(2L), discordUser2.getId());
 
         //admin is untouched because it already exists, moderator is rebound
         List<SC2PulseAuthority> roles = accountRoleDAO.getRoles(1);
@@ -478,13 +479,13 @@ public class PlayerCharacterDAOIT
 
         assertFalse(discordUserDAO.findByAccountId(3L, false).isPresent());
         DiscordUser discordUser3 = discordUserDAO.findByAccountId(4L, false).orElseThrow();
-        assertEquals(3L, discordUser3.getId());
+        assertEquals(Snowflake.of(3L), discordUser3.getId());
     }
 
     private Account stubCharacterChain(int num, boolean bind)
     {
         DiscordUser discordUser = discordUserDAO
-            .merge(new DiscordUser((long) num, "name" + num, num))[0];
+            .merge(new DiscordUser(Snowflake.of(num), "name" + num, num))[0];
         ProPlayer proPlayer = proPlayerDAO
             .merge(new ProPlayer(null, (long) num, "proTag" + num, "proName" + num));
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag" + num));

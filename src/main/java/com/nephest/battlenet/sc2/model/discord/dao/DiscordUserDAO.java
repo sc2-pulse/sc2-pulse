@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord.dao;
 
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import discord4j.common.util.Snowflake;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -96,7 +97,7 @@ public class DiscordUserDAO
 
     public static final RowMapper<DiscordUser> STD_ROW_MAPPER = (rs, i)->new DiscordUser
     (
-        rs.getLong("discord_user.id"),
+        Snowflake.of(rs.getLong("discord_user.id")),
         rs.getString("discord_user.name"),
         rs.getInt("discord_user.discriminator")
     );
@@ -115,12 +116,12 @@ public class DiscordUserDAO
         this.template = template;
     }
 
-    public List<DiscordUser> find(Long... ids)
+    public List<DiscordUser> find(Snowflake... ids)
     {
         if(ids.length == 0) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("ids", List.of(ids));
+            .addValue("ids", Arrays.stream(ids).map(Snowflake::asLong).collect(Collectors.toList()));
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
@@ -132,20 +133,20 @@ public class DiscordUserDAO
         return Optional.ofNullable(template.query(FIND_BY_ACCOUNT_ID, params, STD_EXTRACTOR));
     }
 
-    public List<DiscordUser> findByIdCursor(Long idCursor, int size)
+    public List<DiscordUser> findByIdCursor(Snowflake idCursor, int size)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("idCursor", idCursor)
+            .addValue("idCursor", idCursor.asLong())
             .addValue("limit", size);
         return template.query(FIND_BY_ID_CURSOR, params, STD_ROW_MAPPER);
     }
 
-    public List<Long> findIdsByIdCursor(Long idCursor, int size)
+    public List<Snowflake> findIdsByIdCursor(Snowflake idCursor, int size)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("idCursor", idCursor)
+            .addValue("idCursor", idCursor.asLong())
             .addValue("limit", size);
-        return template.query(FIND_IDS_BY_ID_CURSOR, params, DAOUtils.LONG_MAPPER);
+        return template.query(FIND_IDS_BY_ID_CURSOR, params, DiscordDAOUtil.SNOWFLAKE_MAPPER);
     }
 
     public DiscordUser[] merge(DiscordUser... users)
@@ -156,7 +157,7 @@ public class DiscordUserDAO
             .filter(Objects::nonNull)
             .distinct()
             .map(u->new Object[]{
-                u.getId(),
+                u.getId().asLong(),
                 u.getName(),
                 u.getDiscriminator()
             }).collect(Collectors.toList());

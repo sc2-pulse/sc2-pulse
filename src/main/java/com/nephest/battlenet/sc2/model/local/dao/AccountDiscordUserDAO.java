@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.DiscordUserMeta;
+import discord4j.common.util.Snowflake;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
@@ -79,16 +80,16 @@ public class AccountDiscordUserDAO
             (
                 u->new MapSqlParameterSource()
                     .addValue("accountId", u.getAccountId())
-                    .addValue("discordUserId", u.getDiscordUserId())
+                    .addValue("discordUserId", u.getDiscordUserId().asLong())
             )
             .toArray(MapSqlParameterSource[]::new);
         return template.batchUpdate(CREATE, params);
     }
 
-    public Optional<DiscordUserMeta> findMeta(Long discordUserId)
+    public Optional<DiscordUserMeta> findMeta(Snowflake discordUserId)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("discordUserId", discordUserId);
+            .addValue("discordUserId", discordUserId.asLong());
         return Optional.ofNullable(template.query(FIND_META_BY_ID, params, META_EXTRACTOR));
     }
 
@@ -106,11 +107,11 @@ public class AccountDiscordUserDAO
         return exists != null;
     }
 
-    public int remove(Long accountId, Long discordUserId)
+    public int remove(Long accountId, Snowflake discordUserId)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("accountId", accountId)
-            .addValue("discordUserId", discordUserId);
+            .addValue("discordUserId", discordUserId != null ? discordUserId.asLong() : null);
 
         return template.update(DELETE_BY_ACCOUNT_ID_OR_DISCORD_USER_ID, params);
     }

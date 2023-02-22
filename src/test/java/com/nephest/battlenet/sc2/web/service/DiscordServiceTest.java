@@ -179,31 +179,33 @@ public class DiscordServiceTest
     {
         stubExecutor();
         //1 db batch
-        when(discordUserDAO.findIdsByIdCursor(0L, DB_CURSOR_BATCH_SIZE))
+        when(discordUserDAO.findIdsByIdCursor(Snowflake.of(0L), DB_CURSOR_BATCH_SIZE))
             .thenReturn
             (
                 LongStream.range(0, DB_CURSOR_BATCH_SIZE)
                     .boxed()
+                    .map(Snowflake::of)
                     .collect(Collectors.toList())
             );
         //2 db batch, half
-        when(discordUserDAO.findIdsByIdCursor(DB_CURSOR_BATCH_SIZE - 1L, DB_CURSOR_BATCH_SIZE))
+        when(discordUserDAO.findIdsByIdCursor(Snowflake.of(DB_CURSOR_BATCH_SIZE - 1L), DB_CURSOR_BATCH_SIZE))
             .thenReturn
             (
                 LongStream.range(DB_CURSOR_BATCH_SIZE, DB_CURSOR_BATCH_SIZE + DB_CURSOR_BATCH_SIZE / 2)
                     .boxed()
+                    .map(Snowflake::of)
                     .collect(Collectors.toList())
             );
         //3 db batch, empty
         when(discordUserDAO.findIdsByIdCursor(
-            DB_CURSOR_BATCH_SIZE + DB_CURSOR_BATCH_SIZE / 2 - 1L, DB_CURSOR_BATCH_SIZE))
+                Snowflake.of(DB_CURSOR_BATCH_SIZE + DB_CURSOR_BATCH_SIZE / 2 - 1L), DB_CURSOR_BATCH_SIZE))
                 .thenReturn(List.of());
 
         //web batches
         when(api.getUsers(any())).thenAnswer(inv->
             Flux.fromIterable(inv.getArgument(0))
-                .map(f->(Long) f)
-                .map(l->new DiscordUser(l, "name" + l, l.intValue())));
+                .map(f->(Snowflake) f)
+                .map(id->new DiscordUser(id, "name" + id.asLong(), (int) id.asLong())));
 
         discordService.update();
         verify(discordUserDAO).removeUsersWithNoAccountLinked();
@@ -221,7 +223,7 @@ public class DiscordServiceTest
         for(int i = 0; i < users.size(); i++)
         {
             DiscordUser user = users.get(i);
-            assertEquals(i, user.getId());
+            assertEquals(Snowflake.of(i), user.getId());
             assertEquals("name" + i, user.getName());
             assertEquals(i, user.getDiscriminator());
         }
@@ -393,7 +395,7 @@ public class DiscordServiceTest
         Member member1 = mock(Member.class);
         Guild guild1 = mock(Guild.class);
         when(discordUserDAO.findByAccountId(1L, false))
-            .thenReturn(Optional.of(new DiscordUser(123L, "name", 1)));
+            .thenReturn(Optional.of(new DiscordUser(Snowflake.of(123L), "name", 1)));
         when(guild1.getMemberById(argThat(s->s.asLong() == 123L))).thenReturn(Mono.just(member1));
         when(guildRoleStore.getManagedRoleMappings(guild1)).thenReturn(Mono.just(roleMappings));
         return Tuples.of(guild1, member1);
@@ -427,14 +429,14 @@ public class DiscordServiceTest
     )
     {
         Guild guild = mock(Guild.class);
-        long guildID = 10L;
-        when(guild.getId()).thenReturn(Snowflake.of(guildID));
+        Snowflake guildID = Snowflake.of(10L);
+        when(guild.getId()).thenReturn(guildID);
         when(api.getGuilds("1", IdentifiableEntity.class))
             .thenReturn(Flux.just(new IdentifiableEntity(guildID)));
 
-        when(api.getBotGuilds()).thenReturn(Map.of(managedByBot ? guildID : guildID  + 1, guild));
+        when(api.getBotGuilds()).thenReturn(Map.of(managedByBot ? guildID : Snowflake.of(guildID.asLong()  + 1), guild));
         GatewayDiscordClient client = mockClient();
-        when(client.getGuildById(Snowflake.of(guildID))).thenReturn(Mono.just(guild));
+        when(client.getGuildById(guildID)).thenReturn(Mono.just(guild));
 
         Member self = mock(Member.class);
         when(self.getBasePermissions())

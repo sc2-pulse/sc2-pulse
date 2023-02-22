@@ -185,7 +185,7 @@ public class DiscordService
      * @param discordUserId discordUserId to link with
      */
     @Transactional
-    public void linkAccountToDiscordUser(Long accountId, Long discordUserId)
+    public void linkAccountToDiscordUser(Long accountId, Snowflake discordUserId)
     {
         accountDiscordUserDAO.remove(accountId, discordUserId);
         accountDiscordUserDAO.create(new AccountDiscordUser(accountId, discordUserId));
@@ -198,14 +198,14 @@ public class DiscordService
         linkAccountToDiscordUser(accountId, discordUser.getId());
     }
 
-    public void unlinkAccountFromDiscordUser(Long accountId, Long discordUserId)
+    public void unlinkAccountFromDiscordUser(Long accountId, Snowflake discordUserId)
     {
         dropRoles(accountId).blockLast();
         discordService.unlinkAccountFromDiscordUserDB(accountId, discordUserId);
     }
 
     @Transactional
-    public void unlinkAccountFromDiscordUserDB(Long accountId, Long discordUserId)
+    public void unlinkAccountFromDiscordUserDB(Long accountId, Snowflake discordUserId)
     {
         accountDiscordUserDAO.remove(accountId, discordUserId);
         oAuth2AuthorizedClientService
@@ -262,11 +262,11 @@ public class DiscordService
 
     private int updateUsersFromAPI()
     {
-        long idCursor = 0;
+        Snowflake idCursor = Snowflake.of(0);
         int count = 0;
         while(true)
         {
-            List<Long> toUpdate = discordUserDAO.findIdsByIdCursor(idCursor, DB_CURSOR_BATCH_SIZE);
+            List<Snowflake> toUpdate = discordUserDAO.findIdsByIdCursor(idCursor, DB_CURSOR_BATCH_SIZE);
             if(toUpdate.isEmpty()) break;
 
             List<Future<?>> tasks = new ArrayList<>();
@@ -407,14 +407,18 @@ public class DiscordService
         return guilds
             .map(IdentifiableEntity::getId)
             .filter(discordAPI.getBotGuilds().keySet()::contains)
-            .flatMap(id->discordAPI.getDiscordClient().getClient().getGuildById(Snowflake.of(id)))
+            .flatMap(id->discordAPI.getDiscordClient().getClient().getGuildById(id))
             .filterWhen(guild->DiscordBootstrap.haveSelfPermissions(guild, RolesSlashCommand.REQUIRED_PERMISSIONS))
             .filterWhen(guild->guildRoleStore.getManagedRoleMappings(guild).map(mappings->!mappings.isEmpty()));
     }
 
-    private Mono<Tuple2<Member, PulseMappings<Role>>> getMemberMappings(Guild guild, long memberId)
+    private Mono<Tuple2<Member, PulseMappings<Role>>> getMemberMappings
+    (
+        Guild guild,
+        Snowflake memberId
+    )
     {
-        return guild.getMemberById(Snowflake.of(memberId))
+        return guild.getMemberById(memberId)
             .zipWith(guildRoleStore.getManagedRoleMappings(guild));
     }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.notification;
@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.Notification;
 import com.nephest.battlenet.sc2.web.service.DiscordAPI;
+import discord4j.common.util.Snowflake;
 import discord4j.core.object.entity.Message;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -56,9 +57,9 @@ public class DiscordNotificationServiceTest
     public void whenDiscordUserIsFound_thenSendMessage()
     {
         when(discordUserDAO.findByAccountId(1L, false))
-            .thenReturn(Optional.of(new DiscordUser(2L, "name", 123)));
+            .thenReturn(Optional.of(new DiscordUser(Snowflake.of(2L), "name", 123)));
         Message msg = mock(Message.class);
-        when(discordAPI.sendDM("msg", 2L)).thenReturn(Flux.just(msg));
+        when(discordAPI.sendDM("msg", Snowflake.of(2L))).thenReturn(Flux.just(msg));
 
         Notification notification = new Notification(1L, "msg");
         Notification notificationSent = service.send(notification).block();

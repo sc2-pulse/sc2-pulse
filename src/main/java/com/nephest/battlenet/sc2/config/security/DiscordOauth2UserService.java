@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.PersonalService;
+import discord4j.common.util.Snowflake;
 import java.util.List;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
@@ -68,7 +69,7 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
     {
         return new DiscordUser
         (
-            Long.valueOf(oAuth2User.getAttribute("id")),
+            Snowflake.of((String) oAuth2User.getAttribute("id")),
             oAuth2User.getAttribute("username"),
             Integer.valueOf(oAuth2User.getAttribute("discriminator"))
         );

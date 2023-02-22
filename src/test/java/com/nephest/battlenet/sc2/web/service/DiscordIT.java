@@ -51,6 +51,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.web.util.MonoUtil;
+import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -201,7 +202,7 @@ public class DiscordIT
             1
         );
         playerCharacterStatsDAO.mergeCalculate();
-        DiscordUser discordUser = new DiscordUser(123L, "name", 123);
+        DiscordUser discordUser = new DiscordUser(Snowflake.of(123L), "name", 123);
 
         discordService.linkAccountToNewDiscordUser(2L, discordUser);
         verifyLinkedDiscordUser(1L, null);
@@ -303,7 +304,7 @@ public class DiscordIT
         accountDAO.merge(new Account(null, Partition.GLOBAL, BATTLE_TAG));
         playerCharacterStatsDAO.mergeCalculate();
 
-        DiscordUser discordUser = new DiscordUser(123L, "name", 123);
+        DiscordUser discordUser = new DiscordUser(Snowflake.of(123L), "name", 123);
         discordService.linkAccountToNewDiscordUser(1L, discordUser);
 
         CommonPersonalData data = WebServiceTestUtil
@@ -331,28 +332,28 @@ public class DiscordIT
     public void testUpdateDiscordUser()
     {
         DiscordUser discordUser =
-            discordUserDAO.merge(new DiscordUser(123L, "name123", 123))[0];
-        DiscordUser foundDiscordUser = discordUserDAO.find(123L).get(0);
+            discordUserDAO.merge(new DiscordUser(Snowflake.of(123L), "name123", 123))[0];
+        DiscordUser foundDiscordUser = discordUserDAO.find(Snowflake.of(123L)).get(0);
         assertEquals(discordUser.getId(), foundDiscordUser.getId());
         assertEquals(discordUser.getName(), foundDiscordUser.getName());
         assertEquals(discordUser.getDiscriminator(), foundDiscordUser.getDiscriminator());
 
         discordUserDAO.merge
         (
-            new DiscordUser(123L, "name321", 321),
+            new DiscordUser(Snowflake.of(123L), "name321", 321),
             //new
-            new DiscordUser(456L, "name456", 456),
+            new DiscordUser(Snowflake.of(456L), "name456", 456),
             //new, duplicate, no exception is expected
-            new DiscordUser(567L, "name567", 567),
-            new DiscordUser(567L, "name567", 567)
+            new DiscordUser(Snowflake.of(567L), "name567", 567),
+            new DiscordUser(Snowflake.of(567L), "name567", 567)
         );
 
-        DiscordUser updatedUser = discordUserDAO.find(123L).get(0);
-        assertEquals(123L, updatedUser.getId());
+        DiscordUser updatedUser = discordUserDAO.find(Snowflake.of(123L)).get(0);
+        assertEquals(Snowflake.of(123L), updatedUser.getId());
         assertEquals("name321", updatedUser.getName());
         assertEquals(321, updatedUser.getDiscriminator());
 
-        verifyStdDiscordUser(discordUserDAO.find(567L).get(0), 567);
+        verifyStdDiscordUser(discordUserDAO.find(Snowflake.of(567L)).get(0), 567);
     }
 
     @Test
@@ -363,17 +364,17 @@ public class DiscordIT
 
         DiscordUser[] users = discordUserDAO.merge
         (
-            new DiscordUser(1L, "name1", 1),
-            new DiscordUser(2L, "name2", 2),
-            new DiscordUser(3L, "name3", 3),
-            new DiscordUser(4L, "name4", 4)
+            new DiscordUser(Snowflake.of(1L), "name1", 1),
+            new DiscordUser(Snowflake.of(2L), "name2", 2),
+            new DiscordUser(Snowflake.of(3L), "name3", 3),
+            new DiscordUser(Snowflake.of(4L), "name4", 4)
         );
 
         discordService.linkAccountToDiscordUser(acc1.getId(), users[0].getId());
         discordService.linkAccountToDiscordUser(acc3.getId(), users[2].getId());
 
         assertEquals(2, discordUserDAO.removeUsersWithNoAccountLinked());
-        List<DiscordUser> foundUsers = discordUserDAO.findByIdCursor(0L, 10);
+        List<DiscordUser> foundUsers = discordUserDAO.findByIdCursor(Snowflake.of(0L), 10);
         foundUsers.sort(Comparator.comparing(DiscordUser::getId));
         assertEquals(2, foundUsers.size());
         verifyStdDiscordUser(foundUsers.get(0), 1);
@@ -388,8 +389,8 @@ public class DiscordIT
 
         DiscordUser[] users = discordUserDAO.merge
         (
-            new DiscordUser(1L, "name1", 1),
-            new DiscordUser(2L, "name2", 2)
+            new DiscordUser(Snowflake.of(1L), "name1", 1),
+            new DiscordUser(Snowflake.of(2L), "name2", 2)
         );
 
         discordService.linkAccountToDiscordUser(acc1.getId(), users[0].getId());
@@ -412,7 +413,7 @@ public class DiscordIT
         Tuple2<Mono<Void>, AtomicBoolean> mono = MonoUtil.verifiableMono();
         doReturn(mono.getT1())
             .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
-        DiscordUser discordUser = discordUserDAO.merge(new DiscordUser(1L, "name", 1))[0];
+        DiscordUser discordUser = discordUserDAO.merge(new DiscordUser(Snowflake.of(1L), "name", 1))[0];
         accountDiscordUserDAO.create(new AccountDiscordUser(main.getT1().getId(), discordUser.getId()));
         stubNoManagedGuilds();
         eventService.createLadderCharacterActivityEvent(main.getT2()[0]);
@@ -547,9 +548,9 @@ public class DiscordIT
         Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "refacc", 3);
         DiscordUser[] discordUsers = discordUserDAO.merge
         (
-            new DiscordUser(1L, "name", 1),
-            new DiscordUser(2L, "name", 2),
-            new DiscordUser(3L, "name", 3)
+            new DiscordUser(Snowflake.of(1L), "name", 1),
+            new DiscordUser(Snowflake.of(2L), "name", 2),
+            new DiscordUser(Snowflake.of(3L), "name", 3)
         );
         assertTrue(accountDiscordUserDAO.findAccountIds().isEmpty());
 
@@ -575,8 +576,8 @@ public class DiscordIT
         Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "refacc", 2);
         DiscordUser[] discordUsers = discordUserDAO.merge
         (
-            new DiscordUser(10L, "name", 1),
-            new DiscordUser(11L, "name", 2)
+            new DiscordUser(Snowflake.of(10L), "name", 1),
+            new DiscordUser(Snowflake.of(11L), "name", 2)
         );
         accountDiscordUserDAO.create
         (
@@ -594,8 +595,8 @@ public class DiscordIT
         Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "refacc", 2);
         DiscordUser[] discordUsers = discordUserDAO.merge
         (
-            new DiscordUser(10L, "name", 1),
-            new DiscordUser(11L, "name", 2)
+            new DiscordUser(Snowflake.of(10L), "name", 1),
+            new DiscordUser(Snowflake.of(11L), "name", 2)
         );
         accountDiscordUserDAO.create
         (
@@ -641,7 +642,7 @@ public class DiscordIT
 
     public static void verifyStdDiscordUser(DiscordUser user, int base)
     {
-        assertEquals(base, user.getId());
+        assertEquals(Snowflake.of(base), user.getId());
         assertEquals("name" + base, user.getName());
         assertEquals(base, user.getDiscriminator());
     }
