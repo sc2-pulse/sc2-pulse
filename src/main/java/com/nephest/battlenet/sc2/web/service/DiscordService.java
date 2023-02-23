@@ -200,7 +200,16 @@ public class DiscordService
 
     public void unlinkAccountFromDiscordUser(Long accountId, Snowflake discordUserId)
     {
-        dropRoles(accountId).blockLast();
+        OAuth2AuthorizedClient client = oAuth2AuthorizedClientService.loadAuthorizedClient
+        (
+            DiscordAPI.USER_CLIENT_REGISTRATION_ID,
+            String.valueOf(accountId)
+        );
+        if(client != null)
+        {
+            dropRoles(accountId).blockLast();
+            discordAPI.revokeRefreshToken(String.valueOf(accountId)).blockLast();
+        }
         discordService.unlinkAccountFromDiscordUserDB(accountId, discordUserId);
     }
 

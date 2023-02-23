@@ -240,6 +240,9 @@ public class DiscordIT
         Tuple2<Mono<Void>, AtomicBoolean> mono = MonoUtil.verifiableMono();
         doReturn(mono.getT1())
             .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
+        Tuple2<Mono<Void>, AtomicBoolean> mono2 = MonoUtil.verifiableMono();
+        doReturn(mono2.getT1().flux())
+            .when(discordService.getDiscordAPI()).revokeRefreshToken(any());
         stubNoManagedGuilds();
         when(stubGatewayClient(discordService.getDiscordAPI()).getGuilds()).thenReturn(Flux.empty());
         mvc.perform
@@ -263,6 +266,7 @@ public class DiscordIT
         assertEquals(BATTLE_TAG, connection.getPlatformUsername());
         assertNull(connection.getMetadata());
         assertTrue(mono.getT2().get());
+        assertTrue(mono2.getT2().get());
     }
 
     private void verifyLinkedDiscordUser(Long characterId, DiscordUser discordUser)

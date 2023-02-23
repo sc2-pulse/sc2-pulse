@@ -42,6 +42,8 @@ import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
@@ -309,6 +311,31 @@ extends BaseAPI
                         : Mono.error(new IllegalStateException(
                             "OAuth2AuthorizedClient not found for user " + principalName))
                 )
+                .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
+        )
+            .delaySubscription(rateLimiter.requestSlot());
+    }
+
+    public Flux<Void> revokeRefreshToken(String principalName)
+    {
+        OAuth2AuthorizedClient client = auth2AuthorizedClientService
+            .loadAuthorizedClient(USER_CLIENT_REGISTRATION_ID, principalName);
+        if(client == null) return Flux
+            .error(new IllegalStateException("OAuth2AuthorizedClient not found for user " + principalName));
+
+        MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
+        formData.add("token", client.getRefreshToken().getTokenValue());
+        formData.add("token_type_hint", "refresh_token");
+        formData.add("client_id", client.getClientRegistration().getClientId());
+        formData.add("client_secret", client.getClientRegistration().getClientSecret());
+        return discordClient.getGlobalRateLimiter().withLimiter
+        (
+            getWebClient()
+                .post()
+                .uri("/oauth2/token/revoke")
+                .bodyValue(formData)
+                .accept(ALL)
+                .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, Void.class))
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
             .delaySubscription(rateLimiter.requestSlot());
