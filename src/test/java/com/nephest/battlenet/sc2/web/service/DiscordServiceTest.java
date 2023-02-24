@@ -243,7 +243,7 @@ public class DiscordServiceTest
         Tuple2<Guild, Member> member2 = stubRoleMember(roleMappings);
         OAuth2AuthorizedClient client = WebServiceTestUtil
             .createOAuth2AuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1");
-        when(api.getAuthorizedClient("1")).thenReturn(Optional.of(client));
+        when(api.getAuthorizedClient(1L)).thenReturn(Optional.of(client));
         doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds(client);
         Tuple2<Mono<Void>, AtomicBoolean> rolesMono = MonoUtil.verifiableMono();
         when(rolesSlashCommand.updateRoles(any(), any(), any(), any(), any()))
@@ -351,7 +351,7 @@ public class DiscordServiceTest
         Tuple2<Guild, Member> member2 = stubRoleMember(roleMappings);
         OAuth2AuthorizedClient client = WebServiceTestUtil
             .createOAuth2AuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1");
-        when(api.getAuthorizedClient("1")).thenReturn(Optional.of(client));
+        when(api.getAuthorizedClient(1L)).thenReturn(Optional.of(client));
         doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds(client);
         Tuple2<Mono<Void>, AtomicBoolean> rolesMono = MonoUtil.verifiableMono();
         when(rolesSlashCommand.updateRoles(any(), any(), any(), any(), any()))
@@ -409,7 +409,7 @@ public class DiscordServiceTest
     public void whenDiscordUserNotBound_thenDontUpdateRoles()
     {
         discordService.updateRoles(1L);
-        verify(api).getAuthorizedClient("1");
+        verify(api).getAuthorizedClient(1L);
         verifyNoMoreInteractions(api);
     }
 
@@ -437,7 +437,7 @@ public class DiscordServiceTest
         when(guild.getId()).thenReturn(guildID);
         OAuth2AuthorizedClient oauth2Client = WebServiceTestUtil
             .createOAuth2AuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1");
-        when(api.getAuthorizedClient("1")).thenReturn(Optional.of(oauth2Client));
+        when(api.getAuthorizedClient(1L)).thenReturn(Optional.of(oauth2Client));
         when(api.getGuilds(oauth2Client, IdentifiableEntity.class))
             .thenReturn(Flux.just(new IdentifiableEntity(guildID)));
 

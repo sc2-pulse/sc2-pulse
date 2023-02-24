@@ -246,7 +246,7 @@ public class DiscordIT
             .when(discordService.getDiscordAPI()).revokeRefreshToken(any());
         stubNoManagedGuilds();
         when(stubGatewayClient(discordService.getDiscordAPI()).getGuilds()).thenReturn(Flux.empty());
-        when(discordService.getDiscordAPI().getAuthorizedClient("1"))
+        when(discordService.getDiscordAPI().getAuthorizedClient(1L))
             .thenReturn(Optional.of(client));
         mvc.perform
         (
@@ -425,7 +425,7 @@ public class DiscordIT
             clientRegistrationRepository.findByRegistrationId(DiscordAPI.USER_CLIENT_REGISTRATION_ID),
             String.valueOf(main.getT1().getId())
         );
-        when(discordService.getDiscordAPI().getAuthorizedClient(String.valueOf(main.getT1().getId())))
+        when(discordService.getDiscordAPI().getAuthorizedClient(main.getT1().getId()))
             .thenReturn(Optional.of(client));
         DiscordUser discordUser = discordUserDAO.merge(new DiscordUser(Snowflake.of(1L), "name", 1))[0];
         accountDiscordUserDAO.create(new AccountDiscordUser(main.getT1().getId(), discordUser.getId()));

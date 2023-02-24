@@ -339,10 +339,10 @@ extends BaseAPI
             .delaySubscription(rateLimiter.requestSlot());
     }
 
-    public Optional<OAuth2AuthorizedClient> getAuthorizedClient(String principalName)
+    public Optional<OAuth2AuthorizedClient> getAuthorizedClient(Long accountId)
     {
         OAuth2AuthorizedClient oAuth2AuthorizedClient = auth2AuthorizedClientService
-            .loadAuthorizedClient(USER_CLIENT_REGISTRATION_ID, principalName);
+            .loadAuthorizedClient(USER_CLIENT_REGISTRATION_ID, String.valueOf(accountId));
         return Optional.ofNullable(oAuth2AuthorizedClient);
     }
 

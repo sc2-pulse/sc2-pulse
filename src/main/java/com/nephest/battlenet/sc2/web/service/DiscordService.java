@@ -201,7 +201,7 @@ public class DiscordService
 
     public void unlinkAccountFromDiscordUser(Long accountId, Snowflake discordUserId)
     {
-        discordAPI.getAuthorizedClient(String.valueOf(accountId))
+        discordAPI.getAuthorizedClient(accountId)
             .ifPresent(oAuth2Client -> {
                 dropRoles(oAuth2Client).blockLast();
                 discordAPI.revokeRefreshToken(oAuth2Client).blockLast();
@@ -312,7 +312,7 @@ public class DiscordService
 
     public Flux<Void> updateRoles(Long accountId)
     {
-        return updateRoles(discordAPI.getAuthorizedClient(String.valueOf(accountId)).orElse(null));
+        return updateRoles(discordAPI.getAuthorizedClient(accountId).orElse(null));
     }
 
     private Flux<Void> updateRoles(@Nullable OAuth2AuthorizedClient oAuth2Client)
