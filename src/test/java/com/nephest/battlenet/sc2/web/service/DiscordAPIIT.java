@@ -106,7 +106,7 @@ public class DiscordAPIIT
                     .build()
             );
             server.enqueue(new MockResponse().setResponseCode(401));
-            api.getGuilds("1", IdentifiableEntity.class)
+            api.getGuilds(client, IdentifiableEntity.class)
                 .onErrorComplete()
                 .blockLast();
             assertNull(oAuth2AuthorizedClientService

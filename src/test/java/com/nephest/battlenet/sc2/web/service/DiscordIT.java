@@ -60,6 +60,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sql.DataSource;
@@ -245,6 +246,8 @@ public class DiscordIT
             .when(discordService.getDiscordAPI()).revokeRefreshToken(any());
         stubNoManagedGuilds();
         when(stubGatewayClient(discordService.getDiscordAPI()).getGuilds()).thenReturn(Flux.empty());
+        when(discordService.getDiscordAPI().getAuthorizedClient("1"))
+            .thenReturn(Optional.of(client));
         mvc.perform
         (
             post("/api/my/discord/unlink")
@@ -260,7 +263,7 @@ public class DiscordIT
         ArgumentCaptor<ApplicationRoleConnection> connectionArgumentCaptor =
             ArgumentCaptor.forClass(ApplicationRoleConnection.class);
         verify(discordService.getDiscordAPI())
-            .updateConnectionMetaData(eq("1"), connectionArgumentCaptor.capture());
+            .updateConnectionMetaData(eq(client), connectionArgumentCaptor.capture());
         ApplicationRoleConnection connection = connectionArgumentCaptor.getValue();
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
         assertEquals(BATTLE_TAG, connection.getPlatformUsername());
@@ -417,6 +420,13 @@ public class DiscordIT
         Tuple2<Mono<Void>, AtomicBoolean> mono = MonoUtil.verifiableMono();
         doReturn(mono.getT1())
             .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
+        OAuth2AuthorizedClient client = WebServiceTestUtil.createOAuth2AuthorizedClient
+        (
+            clientRegistrationRepository.findByRegistrationId(DiscordAPI.USER_CLIENT_REGISTRATION_ID),
+            String.valueOf(main.getT1().getId())
+        );
+        when(discordService.getDiscordAPI().getAuthorizedClient(String.valueOf(main.getT1().getId())))
+            .thenReturn(Optional.of(client));
         DiscordUser discordUser = discordUserDAO.merge(new DiscordUser(Snowflake.of(1L), "name", 1))[0];
         accountDiscordUserDAO.create(new AccountDiscordUser(main.getT1().getId(), discordUser.getId()));
         stubNoManagedGuilds();
@@ -425,7 +435,7 @@ public class DiscordIT
         ArgumentCaptor<ApplicationRoleConnection> captor =
             ArgumentCaptor.forClass(ApplicationRoleConnection.class);
         verify(discordService.getDiscordAPI())
-            .updateConnectionMetaData(eq(String.valueOf(main.getT1().getId())), captor.capture());
+            .updateConnectionMetaData(eq(client), captor.capture());
         ApplicationRoleConnection connection = captor.getValue();
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
         assertEquals(main.getT1().getBattleTag(), connection.getPlatformUsername());

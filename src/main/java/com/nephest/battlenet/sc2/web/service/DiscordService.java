@@ -47,6 +47,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.lang.Nullable;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import org.springframework.stereotype.Service;
@@ -200,16 +201,11 @@ public class DiscordService
 
     public void unlinkAccountFromDiscordUser(Long accountId, Snowflake discordUserId)
     {
-        OAuth2AuthorizedClient client = oAuth2AuthorizedClientService.loadAuthorizedClient
-        (
-            DiscordAPI.USER_CLIENT_REGISTRATION_ID,
-            String.valueOf(accountId)
-        );
-        if(client != null)
-        {
-            dropRoles(accountId).blockLast();
-            discordAPI.revokeRefreshToken(String.valueOf(accountId)).blockLast();
-        }
+        discordAPI.getAuthorizedClient(String.valueOf(accountId))
+            .ifPresent(oAuth2Client -> {
+                dropRoles(oAuth2Client).blockLast();
+                discordAPI.revokeRefreshToken(oAuth2Client).blockLast();
+            });
         discordService.unlinkAccountFromDiscordUserDB(accountId, discordUserId);
     }
 
@@ -239,7 +235,7 @@ public class DiscordService
         if(accountIds.isEmpty()) return;
 
         Flux.fromIterable(accountIds)
-            .flatMap(id->updateRoles(id, RoleUpdateMode.REVOKE))
+            .flatMap(id->updateRoles(null, RoleUpdateMode.REVOKE))
             .blockLast();
         discordService.unlinkUsers(accountIds);
         LOG.info("Cleared {} discord users without a corresponding oauth2 client", accountIds.size());
@@ -316,23 +312,33 @@ public class DiscordService
 
     public Flux<Void> updateRoles(Long accountId)
     {
-        return updateRoles(accountId, RoleUpdateMode.UPDATE);
+        return updateRoles(discordAPI.getAuthorizedClient(String.valueOf(accountId)).orElse(null));
     }
 
-    private Flux<Void> dropRoles(Long accountId)
+    private Flux<Void> updateRoles(@Nullable OAuth2AuthorizedClient oAuth2Client)
     {
-        return updateRoles(accountId, RoleUpdateMode.DROP);
+        return updateRoles(oAuth2Client, RoleUpdateMode.UPDATE);
     }
 
-    protected Flux<Void> updateRoles(Long accountId, RoleUpdateMode mode)
+    private Flux<Void> dropRoles(@Nullable OAuth2AuthorizedClient oAuth2Client)
     {
-        if(!accountDiscordUserDAO.existsByAccountId(accountId)) return Flux.empty();
+        return updateRoles(oAuth2Client, RoleUpdateMode.DROP);
+    }
 
+    protected Flux<Void> updateRoles
+    (
+        @Nullable OAuth2AuthorizedClient oAuth2Client,
+        RoleUpdateMode mode
+    )
+    {
         //user tries to drop revoked connection, revoke it instead
-        RoleUpdateMode finalMode = isDroppingRevokedConnection(accountId, mode)
+        RoleUpdateMode finalMode = mode == RoleUpdateMode.DROP && oAuth2Client == null
             ? RoleUpdateMode.REVOKE
             : mode;
         if(finalMode == RoleUpdateMode.REVOKE) return Flux.empty();
+        if(oAuth2Client == null) return
+            Flux.error(new IllegalStateException("Oauth2AuthorizedClient not found"));
+        Long accountId = Long.valueOf(oAuth2Client.getPrincipalName());
 
         Tuple2<LadderTeam, LadderTeamMember> mainTuple = finalMode != RoleUpdateMode.UPDATE
             ? null
@@ -349,11 +355,10 @@ public class DiscordService
                 )
             : ApplicationRoleConnection.empty(accountDAO.findByIds(accountId).get(0).getBattleTag());
 
-        String principalName = String.valueOf(accountId);
         return Flux.concat
         (
-            discordAPI.updateConnectionMetaData(principalName, roleConnection),
-            getManagedRoleGuilds(principalName)
+            discordAPI.updateConnectionMetaData(oAuth2Client, roleConnection),
+            getManagedRoleGuilds(oAuth2Client)
                 .onErrorResume
                 (
                     t->finalMode != RoleUpdateMode.UPDATE
@@ -384,16 +389,6 @@ public class DiscordService
         ).subscribeOn(Schedulers.boundedElastic());
     }
 
-    private boolean isDroppingRevokedConnection(Long accountId, RoleUpdateMode mode)
-    {
-        return mode == RoleUpdateMode.DROP
-            && oAuth2AuthorizedClientService.loadAuthorizedClient
-            (
-                DiscordAPI.USER_CLIENT_REGISTRATION_ID,
-                String.valueOf(accountId)
-            ) == null;
-    }
-
     public Tuple2<LadderTeam, LadderTeamMember> findMainTuple(Long accountId)
     {
         LadderTeam mainTeam = findMainTeam(accountId).orElse(null);
@@ -406,9 +401,9 @@ public class DiscordService
         return Tuples.of(mainTeam, member);
     }
 
-    public Flux<Guild> getManagedRoleGuilds(String principalName)
+    public Flux<Guild> getManagedRoleGuilds(OAuth2AuthorizedClient oAuth2Client)
     {
-        return getManagedRoleGuilds(discordAPI.getGuilds(principalName, IdentifiableEntity.class));
+        return getManagedRoleGuilds(discordAPI.getGuilds(oAuth2Client, IdentifiableEntity.class));
     }
 
     public Flux<Guild> getManagedRoleGuilds(Flux<? extends IdentifiableEntity> guilds)

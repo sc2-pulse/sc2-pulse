@@ -25,6 +25,7 @@ import discord4j.core.object.entity.User;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -245,14 +246,12 @@ extends BaseAPI
 
     public Mono<Void> updateConnectionMetaData
     (
-        String principalName,
+        OAuth2AuthorizedClient oAuth2AuthorizedClient,
         ApplicationRoleConnection connection
     )
     {
-        OAuth2AuthorizedClient oAuth2AuthorizedClient = auth2AuthorizedClientService
-            .loadAuthorizedClient(USER_CLIENT_REGISTRATION_ID, principalName);
         if(oAuth2AuthorizedClient == null) return Mono
-            .error(new IllegalStateException("OAuth2AuthorizedClient not found for user " + principalName));
+            .error(new IllegalStateException("OAuth2AuthorizedClient not found"));
 
         return discordClient.getGlobalRateLimiter().withLimiter
         (
@@ -285,12 +284,14 @@ extends BaseAPI
         return Mono.empty();
     }
 
-    public <T extends GuildWrapper> Flux<T> getGuilds(String principalName, Class<T> clazz)
+    public <T extends GuildWrapper> Flux<T> getGuilds
+    (
+        OAuth2AuthorizedClient oAuth2AuthorizedClient,
+        Class<T> clazz
+    )
     {
-        OAuth2AuthorizedClient oAuth2AuthorizedClient = auth2AuthorizedClientService
-            .loadAuthorizedClient(USER_CLIENT_REGISTRATION_ID, principalName);
         if(oAuth2AuthorizedClient == null) return Flux
-            .error(new IllegalStateException("OAuth2AuthorizedClient not found for user " + principalName));
+            .error(new IllegalStateException("OAuth2AuthorizedClient not found"));
 
         return discordClient.getGlobalRateLimiter().withLimiter
         (
@@ -308,26 +309,23 @@ extends BaseAPI
                 (
                     g->DAOUtils.beanValidationPredicate(validator).test(g)
                         ? Mono.just(g)
-                        : Mono.error(new IllegalStateException(
-                            "OAuth2AuthorizedClient not found for user " + principalName))
+                        : Mono.error(new IllegalStateException("OAuth2AuthorizedClient not found"))
                 )
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
             .delaySubscription(rateLimiter.requestSlot());
     }
 
-    public Flux<Void> revokeRefreshToken(String principalName)
+    public Flux<Void> revokeRefreshToken(OAuth2AuthorizedClient oAuth2AuthorizedClient)
     {
-        OAuth2AuthorizedClient client = auth2AuthorizedClientService
-            .loadAuthorizedClient(USER_CLIENT_REGISTRATION_ID, principalName);
-        if(client == null) return Flux
-            .error(new IllegalStateException("OAuth2AuthorizedClient not found for user " + principalName));
+        if(oAuth2AuthorizedClient == null) return Flux
+            .error(new IllegalStateException("OAuth2AuthorizedClient not found"));
 
         MultiValueMap<String, String> formData = new LinkedMultiValueMap<>();
-        formData.add("token", client.getRefreshToken().getTokenValue());
+        formData.add("token", oAuth2AuthorizedClient.getRefreshToken().getTokenValue());
         formData.add("token_type_hint", "refresh_token");
-        formData.add("client_id", client.getClientRegistration().getClientId());
-        formData.add("client_secret", client.getClientRegistration().getClientSecret());
+        formData.add("client_id", oAuth2AuthorizedClient.getClientRegistration().getClientId());
+        formData.add("client_secret", oAuth2AuthorizedClient.getClientRegistration().getClientSecret());
         return discordClient.getGlobalRateLimiter().withLimiter
         (
             getWebClient()
@@ -339,6 +337,13 @@ extends BaseAPI
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
             .delaySubscription(rateLimiter.requestSlot());
+    }
+
+    public Optional<OAuth2AuthorizedClient> getAuthorizedClient(String principalName)
+    {
+        OAuth2AuthorizedClient oAuth2AuthorizedClient = auth2AuthorizedClientService
+            .loadAuthorizedClient(USER_CLIENT_REGISTRATION_ID, principalName);
+        return Optional.ofNullable(oAuth2AuthorizedClient);
     }
 
 }

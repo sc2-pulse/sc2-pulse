@@ -80,6 +80,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientService;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -232,7 +233,6 @@ public class DiscordServiceTest
     @Test
     public void whenNoMainTeam_thenDropRoles()
     {
-        when(accountDiscordUserDAO.existsByAccountId(1L)).thenReturn(true);
         DiscordService spy = Mockito.spy(discordService);
         when(spy.findMainTeam(any())).thenReturn(Optional.empty());
         String tag = "tag#123";
@@ -241,7 +241,10 @@ public class DiscordServiceTest
         PulseMappings<Role> roleMappings = PulseMappings.empty();
         Tuple2<Guild, Member> member1 = stubRoleMember(roleMappings);
         Tuple2<Guild, Member> member2 = stubRoleMember(roleMappings);
-        doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds("1");
+        OAuth2AuthorizedClient client = WebServiceTestUtil
+            .createOAuth2AuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1");
+        when(api.getAuthorizedClient("1")).thenReturn(Optional.of(client));
+        doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds(client);
         Tuple2<Mono<Void>, AtomicBoolean> rolesMono = MonoUtil.verifiableMono();
         when(rolesSlashCommand.updateRoles(any(), any(), any(), any(), any()))
             .thenReturn(new ImmutableTriple<>(null, Set.of(), rolesMono.getT1().flux()));
@@ -252,7 +255,7 @@ public class DiscordServiceTest
         spy.updateRoles(1L).blockLast();
 
         //Application connection metadata is dropped
-        verify(api).updateConnectionMetaData(eq("1"), connectionArgumentCaptor.capture());
+        verify(api).updateConnectionMetaData(eq(client), connectionArgumentCaptor.capture());
         ApplicationRoleConnection connection = connectionArgumentCaptor.getValue();
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
         assertEquals(tag, connection.getPlatformUsername());
@@ -289,13 +292,12 @@ public class DiscordServiceTest
     @Test
     public void whenDropRevokedClient_thenRevokeInstead()
     {
-        verifyRevokeRoles(ds->ds.updateRoles(1L, DiscordService.RoleUpdateMode.DROP).blockLast());
+        verifyRevokeRoles(ds->ds.updateRoles(null, DiscordService.RoleUpdateMode.DROP).blockLast());
     }
 
     private void verifyRevokeRoles(Consumer<DiscordService> consumer)
     {
         DiscordService spy = Mockito.spy(discordService);
-        when(accountDiscordUserDAO.existsByAccountId(1L)).thenReturn(true);
         consumer.accept(spy);
         //Don't update roles when revoking
         verify(api, never()).updateConnectionMetaData(any());
@@ -308,7 +310,6 @@ public class DiscordServiceTest
         when(conversionService.convert(Region.KR, Integer.class)).thenReturn(3);
         when(conversionService.convert(BaseLeague.LeagueType.DIAMOND, Integer.class)).thenReturn(4);
         when(conversionService.convert(Race.PROTOSS, Integer.class)).thenReturn(2);
-        when(accountDiscordUserDAO.existsByAccountId(1L)).thenReturn(true);
         DiscordService spy = Mockito.spy(discordService);
         String tag = "tag#123";
         LadderTeam team = new LadderTeam
@@ -348,7 +349,10 @@ public class DiscordServiceTest
         PulseMappings<Role> roleMappings = PulseMappings.empty();
         Tuple2<Guild, Member> member1 = stubRoleMember(roleMappings);
         Tuple2<Guild, Member> member2 = stubRoleMember(roleMappings);
-        doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds("1");
+        OAuth2AuthorizedClient client = WebServiceTestUtil
+            .createOAuth2AuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1");
+        when(api.getAuthorizedClient("1")).thenReturn(Optional.of(client));
+        doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds(client);
         Tuple2<Mono<Void>, AtomicBoolean> rolesMono = MonoUtil.verifiableMono();
         when(rolesSlashCommand.updateRoles(any(), any(), any(), any(), any()))
             .thenReturn(new ImmutableTriple<>(team, Set.of(), rolesMono.getT1().flux()));
@@ -359,7 +363,7 @@ public class DiscordServiceTest
         spy.updateRoles(1L).blockLast();
 
         //Application connection metadata is updated
-        verify(api).updateConnectionMetaData(eq("1"), connectionArgumentCaptor.capture());
+        verify(api).updateConnectionMetaData(eq(client), connectionArgumentCaptor.capture());
         ApplicationRoleConnection connection = connectionArgumentCaptor.getValue();
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
         assertEquals(tag, connection.getPlatformUsername());
@@ -404,9 +408,9 @@ public class DiscordServiceTest
     @Test
     public void whenDiscordUserNotBound_thenDontUpdateRoles()
     {
-        when(accountDiscordUserDAO.existsByAccountId(1L)).thenReturn(false);
         discordService.updateRoles(1L);
-        verifyNoInteractions(api);
+        verify(api).getAuthorizedClient("1");
+        verifyNoMoreInteractions(api);
     }
 
     @CsvSource
@@ -431,7 +435,10 @@ public class DiscordServiceTest
         Guild guild = mock(Guild.class);
         Snowflake guildID = Snowflake.of(10L);
         when(guild.getId()).thenReturn(guildID);
-        when(api.getGuilds("1", IdentifiableEntity.class))
+        OAuth2AuthorizedClient oauth2Client = WebServiceTestUtil
+            .createOAuth2AuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1");
+        when(api.getAuthorizedClient("1")).thenReturn(Optional.of(oauth2Client));
+        when(api.getGuilds(oauth2Client, IdentifiableEntity.class))
             .thenReturn(Flux.just(new IdentifiableEntity(guildID)));
 
         when(api.getBotGuilds()).thenReturn(Map.of(managedByBot ? guildID : Snowflake.of(guildID.asLong()  + 1), guild));
@@ -454,7 +461,7 @@ public class DiscordServiceTest
             : PulseMappings.empty();
         when(guildRoleStore.getManagedRoleMappings(guild)).thenReturn(Mono.just(mappings));
 
-        Guild result = discordService.getManagedRoleGuilds("1").blockLast();
+        Guild result = discordService.getManagedRoleGuilds(oauth2Client).blockLast();
         assertEquals(expectedResult, result != null);
     }
 
