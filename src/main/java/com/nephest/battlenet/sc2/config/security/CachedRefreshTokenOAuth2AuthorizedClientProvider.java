@@ -40,11 +40,19 @@ implements OAuth2AuthorizedClientProvider
 
     private final RefreshTokenOAuth2AuthorizedClientProvider realProvider;
 
-    public CachedRefreshTokenOAuth2AuthorizedClientProvider()
+    public CachedRefreshTokenOAuth2AuthorizedClientProvider
+    (
+        RefreshTokenOAuth2AuthorizedClientProvider realProvider
+    )
     {
-        this.realProvider = new RefreshTokenOAuth2AuthorizedClientProvider();
+        this.realProvider = realProvider;
         realProvider.setClock(CLOCK);
         realProvider.setClockSkew(CLOCK_SKEW);
+    }
+
+    public CachedRefreshTokenOAuth2AuthorizedClientProvider()
+    {
+        this(new RefreshTokenOAuth2AuthorizedClientProvider());
     }
 
     /*TODO
