@@ -312,6 +312,7 @@ public class DiscordService
 
     public Flux<Void> updateRoles(Long accountId)
     {
+        if(!accountDiscordUserDAO.findAccountIds().contains(accountId)) return Flux.empty();
         return updateRoles(discordAPI.getAuthorizedClient(accountId).orElse(null));
     }
 
