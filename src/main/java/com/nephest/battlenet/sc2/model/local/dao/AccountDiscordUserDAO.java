@@ -7,11 +7,11 @@ import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.DiscordUserMeta;
 import discord4j.common.util.Snowflake;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.ResultSetExtractor;
@@ -95,8 +95,7 @@ public class AccountDiscordUserDAO
 
     public Set<Long> findAccountIds()
     {
-        return template.queryForStream(FIND_ACCOUNT_IDS, Map.of(), DAOUtils.LONG_MAPPER)
-            .collect(Collectors.toSet());
+        return new HashSet<>(template.query(FIND_ACCOUNT_IDS, Map.of(), DAOUtils.LONG_MAPPER));
     }
 
     public boolean existsByAccountId(long accountId)
