@@ -30,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
+import org.reactivestreams.Publisher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -344,6 +345,13 @@ extends BaseAPI
         OAuth2AuthorizedClient oAuth2AuthorizedClient = auth2AuthorizedClientService
             .loadAuthorizedClient(USER_CLIENT_REGISTRATION_ID, String.valueOf(accountId));
         return Optional.ofNullable(oAuth2AuthorizedClient);
+    }
+
+    public <T> Flux<T> withLimiter(Publisher<T> publisher, boolean localLimiter)
+    {
+        Flux<T> result =  discordClient.getGlobalRateLimiter().withLimiter(publisher);
+        if(localLimiter) result = result.delaySubscription(rateLimiter.requestSlot());
+        return result;
     }
 
 }

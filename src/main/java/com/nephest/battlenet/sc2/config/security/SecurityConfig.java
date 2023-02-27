@@ -12,6 +12,8 @@ import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
+import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
@@ -35,6 +37,9 @@ public class SecurityConfig
 
     @Autowired @Qualifier("updateDataAuthenticationSuccessHandler")
     private AuthenticationSuccessHandler authenticationSuccessHandler;
+
+    @Autowired @Qualifier("rateLimitedOAuth2AuthorizationCodeClient")
+    OAuth2AccessTokenResponseClient<OAuth2AuthorizationCodeGrantRequest> oAuth2AuthorizationCodeClient;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http)
@@ -67,6 +72,7 @@ public class SecurityConfig
                 .successHandler(authenticationSuccessHandler)
                 .failureUrl("/login?oauthError=1")
                 .userInfoEndpoint().userService(registrationDelegatingOauth2UserService)
+                .and().tokenEndpoint().accessTokenResponseClient(oAuth2AuthorizationCodeClient)
             .and().and().rememberMe()
                 .rememberMeServices(rememberMeServices)
             .and().build();

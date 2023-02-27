@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
+import com.nephest.battlenet.sc2.web.service.DiscordAPI;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.PersonalService;
 import discord4j.common.util.Snowflake;
@@ -18,6 +19,7 @@ import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Mono;
 
 @Service @Discord
 public class DiscordOauth2UserService
@@ -30,17 +32,20 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
         new DefaultOAuth2UserService();
     private final AccountRoleDAO accountRoleDAO;
     private final DiscordService discordService;
+    private final DiscordAPI discordAPI;
     private final PersonalService personalService;
 
     public DiscordOauth2UserService
     (
         AccountRoleDAO accountRoleDAO,
         DiscordService discordService,
+        DiscordAPI discordAPI,
         PersonalService personalService
     )
     {
         this.accountRoleDAO = accountRoleDAO;
         this.discordService = discordService;
+        this.discordAPI = discordAPI;
         this.personalService = personalService;
     }
 
@@ -53,7 +58,9 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
     @Override
     public OAuth2User loadUser(OAuth2UserRequest userRequest) throws OAuth2AuthenticationException
     {
-        OAuth2User user = service.loadUser(userRequest);
+        OAuth2User user = discordAPI
+            .withLimiter(Mono.fromCallable(()->service.loadUser(userRequest)), true)
+            .blockLast();
         DiscordUser discordUser = from(user);
         Authentication authentication = personalService.getAuthentication();
         if(authentication == null) throw new IllegalStateException("Authentication not found");
