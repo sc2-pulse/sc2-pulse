@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -24,15 +24,19 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.service.AccountFollowingService;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
+import com.nephest.battlenet.sc2.web.service.SessionService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -70,6 +74,9 @@ public class PersonalController
 
     @Autowired
     private DiscordService discordService;
+
+    @Autowired
+    private SessionService sessionService;
 
     @GetMapping("/common")
     public CommonPersonalData getCommon(@AuthenticationPrincipal AccountUser user)
@@ -196,6 +203,17 @@ public class PersonalController
     )
     {
         discordService.setVisibility(user.getAccount().getId(), isPublic);
+    }
+
+    @GetMapping("/session/synchronize")
+    public void synchronizeSession
+    (
+        @AuthenticationPrincipal UserDetails user,
+        HttpServletRequest request,
+        HttpServletResponse response
+    )
+    {
+        sessionService.setLastRememberMeCookie(user, request, response);
     }
 
 }

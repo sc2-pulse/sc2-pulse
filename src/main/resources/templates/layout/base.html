@@ -207,7 +207,7 @@
     </th:block>
     <script>SC2Restful.baseStart();</script>
     <th:block th:replace="${script}" />
-    <script>Session.refreshTheme();</script>
+    <script>Session.refreshTheme(); Session.scheduleSynchronization();</script>
 </body>
 </html>
 
