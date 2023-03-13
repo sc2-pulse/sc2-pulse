@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -71,8 +71,12 @@ implements AutoLoginCookieProcessor
         this.authenticationRequestDAO = authenticationRequestDAO;
     }
 
-    @Retryable
-    @Transactional(isolation = Isolation.SERIALIZABLE)
+    @Retryable(exclude = {RememberMeAuthenticationException.class})
+    @Transactional
+    (
+        isolation = Isolation.SERIALIZABLE,
+        noRollbackFor = {RememberMeAuthenticationException.class}
+    )
     @Override
     public UserDetails doProcessAutoLoginCookie
     (
