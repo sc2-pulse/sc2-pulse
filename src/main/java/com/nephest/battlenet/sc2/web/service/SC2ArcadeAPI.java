@@ -12,6 +12,8 @@ import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -29,6 +31,9 @@ extends BaseAPI
     private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
     private final ConversionService conversionService;
 
+    @Autowired @Lazy
+    private SC2ArcadeAPI nestedApi;
+
     @Autowired
     public SC2ArcadeAPI
     (
@@ -39,6 +44,16 @@ extends BaseAPI
         this.conversionService = conversionService;
         initClient(objectMapper);
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_DURATION).doOnNext(i->refreshReactorSlots()).subscribe();
+    }
+
+    protected SC2ArcadeAPI getNestedApi()
+    {
+        return nestedApi;
+    }
+
+    protected void setNestedApi(SC2ArcadeAPI nestedApi)
+    {
+        this.nestedApi = nestedApi;
     }
 
     private void initClient(ObjectMapper objectMapper)
@@ -59,6 +74,7 @@ extends BaseAPI
      * @param gameId in-game id, unsigned long, reversed byte order of in-game id
      * @return character
      */
+    @Cacheable(cacheNames = "profile-search-game-id")
     public Mono<BlizzardFullPlayerCharacter> findByRegionAndGameId(Region region, long gameId)
     {
         return getWebClient()
@@ -73,12 +89,19 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardFullPlayerCharacter.class)
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiter.requestSlot());
+            .delaySubscription(rateLimiter.requestSlot())
+            .cache
+            (
+                (m)->
+                    WebServiceUtil.DEFAULT_API_CACHE_DURATION,
+                    (t)->Duration.ZERO,
+                    ()->WebServiceUtil.DEFAULT_API_CACHE_DURATION
+            );
     }
 
     public Mono<BlizzardFullPlayerCharacter> findByRegionAndGameId(Region region, String gameId)
     {
-        return findByRegionAndGameId(region, Long.parseUnsignedLong(gameId));
+        return nestedApi.findByRegionAndGameId(region, Long.parseUnsignedLong(gameId));
     }
 
 }

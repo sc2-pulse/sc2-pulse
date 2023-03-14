@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -41,6 +41,7 @@ public class WebServiceUtil
     public static final Logger LOG = LoggerFactory.getLogger(WebServiceUtil.class);
     public static final String TRACE_EXCEPTION_LOG_TEMPLATE =
         "{} (x-trace-traceid: {}, x-trace-spanid: {}, x-trace-parentspanid: {})";
+    public static final Duration DEFAULT_API_CACHE_DURATION = Duration.ofDays(7);
 
     private WebServiceUtil(){}
 
