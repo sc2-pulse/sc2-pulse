@@ -167,6 +167,7 @@ To ensure that the potential violation is a minor one, the following rules are a
 * `contacts.discord.server.name`
 * `contacts.twitter`
 * `contacts.github`
+* `cache.ttl` TTL(duration) of cache entries, 7 days by default
 ## Contributing
 Want to make a bug report/feature request? Any contributions are welcome, see [CONTRIBUTING](CONTRIBUTING.md) for 
 more information.
