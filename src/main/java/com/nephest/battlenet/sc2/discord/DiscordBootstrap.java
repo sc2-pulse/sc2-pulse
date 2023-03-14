@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
@@ -78,7 +79,7 @@ public class DiscordBootstrap
 
     public static final int DEFAULT_LINES = 5;
     public static final int MESSAGE_LENGTH_MAX = 2000;
-    public static final Duration CACHE_DURATION = Duration.ofHours(1);
+    public static final Duration CACHE_DURATION = WebServiceUtil.DEFAULT_API_CACHE_DURATION;
     public static final String SC2_GAME_NAME = "StarCraft II";
     public static final String SC2_REVEALED_TAG = "revealed";
     public static final String UNEXPECTED_ERROR_MESSAGE =
