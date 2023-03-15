@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
 import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
@@ -82,9 +83,6 @@ extends BaseAPI
     public static final int REQUESTS_PER_SECOND_CAP = 100;
     public static final int REQUESTS_PER_HOUR_CAP = 36000;
     public static final int REQUESTS_PER_SECOND_CAP_WEB = 5;
-    public static final double REQUEST_RATE_MARGIN = 0.1;
-    public static final Duration REQUEST_SLOT_REFRESH_TIME =
-        Duration.ofMillis((long) (1000 * (1.0 + REQUEST_RATE_MARGIN)));
     public static final int DELAY = 1000;
     public static final int FIRST_SEASON = 28;
     public static final int PROFILE_LADDER_RETRY_COUNT = 3;
@@ -156,12 +154,7 @@ extends BaseAPI
             rateLimiters.put(r, new ReactorRateLimiter());
             clientTimeouts.put(r, WebServiceUtil.IO_TIMEOUT);
         }
-        Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME).doOnNext(i->refreshReactorSlots()).subscribe();
         initErrorRates(varDAO, globalContext.getActiveRegions());
-        Flux.interval(MiscUtil.untilNextHour(LocalDateTime.now()), ERROR_RATE_FRAME).doOnNext(i->{
-            calculateErrorRates();
-            if(autoForceRegion) autoForceRegion();
-        }).subscribe();
         Flux.interval(HEALTH_SAVE_FRAME).doOnNext(i->saveHealth()).subscribe();
     }
 
@@ -394,10 +387,18 @@ extends BaseAPI
         return forceRegions.get(region).getValue();
     }
 
-    private void refreshReactorSlots()
+    @Scheduled(cron="* * * * * *")
+    public void refreshReactorSlots()
     {
         rateLimiters.values().forEach(l->l.refreshSlots(REQUESTS_PER_SECOND_CAP));
         webRateLimiter.refreshSlots(REQUESTS_PER_SECOND_CAP_WEB);
+    }
+
+    @Scheduled(cron="0 0 * * * *")
+    public void processErrorRates()
+    {
+        calculateErrorRates();
+        if(autoForceRegion) autoForceRegion();
     }
 
     private void calculateErrorRates()
