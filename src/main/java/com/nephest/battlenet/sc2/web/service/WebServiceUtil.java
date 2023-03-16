@@ -8,11 +8,14 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.CollectionVar;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
+import com.nephest.battlenet.sc2.web.util.RateLimitData;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -20,6 +23,7 @@ import java.util.stream.Collectors;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
@@ -42,6 +46,10 @@ public class WebServiceUtil
     public static final String TRACE_EXCEPTION_LOG_TEMPLATE =
         "{} (x-trace-traceid: {}, x-trace-spanid: {}, x-trace-parentspanid: {})";
     public static final Duration DEFAULT_API_CACHE_DURATION = Duration.ofDays(7);
+    public static final String RATE_LIMIT_LIMIT_HEADER_NAME = "X-RateLimit-Limit";
+    public static final String RATE_LIMIT_REMAINING_HEADER_NAME = "X-RateLimit-Remaining";
+    public static final String RATE_LIMIT_RESET_HEADER_NAME = "X-RateLimit-Reset";
+    public static final long RATE_LIMIT_RESET_TIMESTAMP_THRESHOLD = System.currentTimeMillis();
 
     private WebServiceUtil(){}
 
@@ -213,6 +221,70 @@ public class WebServiceUtil
             LOG.error(ex.getMessage(), ex);
         }
         return setVar;
+    }
+
+    public static String getFirstHeaderValue(HttpHeaders headers, String name)
+    {
+        String value = headers.getFirst(name);
+        Objects.requireNonNull(value);
+        return value;
+    }
+
+    /**
+     * This method uses {@link #RATE_LIMIT_RESET_TIMESTAMP_THRESHOLD} value to determine if the
+     * header value is a timestamp or an offset. If the value is lower than
+     * {@link #RATE_LIMIT_RESET_TIMESTAMP_THRESHOLD}, then it is treated as an offset, in other
+     * cases the value is parsed as a timestamp.
+     *
+     * @param headers headers
+     * @return parsed {@link java.time.Instant}
+     */
+    public static Instant parseResetHeader(HttpHeaders headers, String headerName)
+    {
+        long resetHeader = RateLimitData
+            .parseMillis(WebServiceUtil.getFirstHeaderValue(headers, headerName));
+        return resetHeader >= RATE_LIMIT_RESET_TIMESTAMP_THRESHOLD
+            ? Instant.ofEpochMilli(resetHeader)
+            : parseDateHeader(headers).plusMillis(resetHeader);
+    }
+
+    public static Instant parseResetHeader(HttpHeaders headers)
+    {
+        return parseResetHeader(headers, RATE_LIMIT_RESET_HEADER_NAME);
+    }
+
+    public static Instant parseDateHeader(HttpHeaders headers)
+    {
+        long timestamp = headers.getFirstDate("date");
+        if(timestamp == -1) throw new IllegalArgumentException("Date header not found");
+        return Instant.ofEpochMilli(timestamp);
+    }
+
+    public static RateLimitData parseRateLimit
+    (
+        HttpHeaders headers,
+        String limitHeaderName,
+        String remainingHeaderName,
+        String resetHeaderName
+    )
+    {
+        return new RateLimitData
+        (
+            Integer.parseInt(WebServiceUtil.getFirstHeaderValue(headers, limitHeaderName)),
+            Integer.parseInt(WebServiceUtil.getFirstHeaderValue(headers, remainingHeaderName)),
+            WebServiceUtil.parseResetHeader(headers, resetHeaderName)
+        );
+    }
+
+    public static RateLimitData parseRateLimit(HttpHeaders headers)
+    {
+        return parseRateLimit
+        (
+            headers,
+            RATE_LIMIT_LIMIT_HEADER_NAME,
+            RATE_LIMIT_REMAINING_HEADER_NAME,
+            RATE_LIMIT_RESET_HEADER_NAME
+        );
     }
 
 }
