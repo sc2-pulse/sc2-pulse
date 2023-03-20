@@ -353,6 +353,12 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     font-size: 2em !important;
 }
 
+.dimension-1
+{
+    width: 1em;
+    height: 1em;
+}
+
 .table a
 {
     padding: 0.4em;
@@ -735,6 +741,11 @@ body.theme-light .adaptive-border-color-splitter
     vertical-align: middle;
     margin-left: 0.5rem;
     line-height: 1;
+}
+
+.cursor-pointer
+{
+    cursor: pointer;
 }
 
 .player-flag

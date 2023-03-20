@@ -140,6 +140,9 @@ class CharacterUtil
         return CharacterUtil.updateCharacterModel(id)
             .then(o => CharacterUtil.updateCharacterMatchesView())
             .then(jsons => new Promise((res, rej)=>{
+                CharacterUtil.resetAdditionalLinks();
+                if(document.querySelector("#player-stats-player.active"))
+                    CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id);
                 CharacterUtil.updateCharacterTeamsView();
                 CharacterUtil.updateCharacterStatsView();
                 CharacterUtil.updateCharacterLinkedCharactersView(id);
@@ -150,6 +153,71 @@ class CharacterUtil
                 res();
             }))
             .catch(error => Session.onPersonalException(error));
+    }
+
+    static resetAdditionalLinks()
+    {
+        document.querySelector("#character-links").setAttribute("data-links-loaded", "false");
+        Model.DATA.get(VIEW.CHARACTER).delete("additionalLinks");
+    }
+
+    static enhanceDynamicCharacterData()
+    {
+        $("#player-stats-player-tab").on('shown.bs.tab', e=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id));
+        document.querySelectorAll(".character-additional-links-reload")
+            .forEach(reloadCtl=>reloadCtl.addEventListener("click",e=>{
+                CharacterUtil.resetAdditionalLinks();
+                CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id);
+            }));
+    }
+
+    static updateAdditionalCharacterLinks(id)
+    {
+        document.querySelectorAll("#character-links-section .indicator-loading")
+            .forEach(indicator=>indicator.classList.add("d-none"));
+        const linksContainer = document.querySelector("#character-links");
+        if(linksContainer.getAttribute("data-links-loaded") === "true") return;
+
+        const loadingIndicator = document.querySelector("#character-additional-links-loading-indicator");
+        loadingIndicator.classList.remove("d-none");
+        return CharacterUtil.updateAdditionalCharacterLinksModel(id)
+            .then(e => new Promise((res, rej)=>{
+                CharacterUtil.updateAdditionalCharacterLinksView();
+                linksContainer.setAttribute("data-links-loaded", "true");
+                loadingIndicator.classList.add("d-none");
+                res(e);
+            }))
+            .catch(error => new Promise((res, rej)=>{
+                loadingIndicator.classList.add("d-none");
+                if(!error.message.includes("404")) {
+                    document.querySelector("#character-additional-links-loading-failed").classList.remove("d-none");
+                } else {
+                    linksContainer.setAttribute("data-links-loaded", "true");
+                }
+                res();
+            }));
+    }
+
+    static loadAdditionalCharacterLinks(id)
+    {
+        return Session.beforeRequest()
+           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${encodeURIComponent(id)}/links/additional`))
+           .then(Session.verifyJsonResponse);
+    }
+
+    static updateAdditionalCharacterLinksModel(id)
+    {
+        return CharacterUtil.loadAdditionalCharacterLinks(id)
+            .then(json => new Promise((res, rej)=>{
+                Model.DATA.get(VIEW.CHARACTER).set("additionalLinks", json);
+                res(json);
+            }));
+    }
+
+    static updateAdditionalCharacterLinksView()
+    {
+        const links = Model.DATA.get(VIEW.CHARACTER).get("additionalLinks");
+        if(!links) return;
     }
 
     static updateCharacterInfo(commonCharacter, id)

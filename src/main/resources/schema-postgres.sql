@@ -131,6 +131,22 @@ CREATE INDEX "ix_player_character_battlenet_id" ON "player_character"("battlenet
 CREATE INDEX "ix_player_character_name" ON "player_character"(LOWER("name") text_pattern_ops);
 CREATE INDEX "ix_player_character_updated" ON "player_character"("updated");
 
+CREATE TABLE "player_character_link"
+(
+    "player_character_id" BIGINT NOT NULL,
+    "type" SMALLINT NOT NULL,
+    "url" TEXT NOT NULL,
+
+    PRIMARY KEY("player_character_id", "type"),
+
+    CONSTRAINT "fk_player_character_link_player_character_id"
+        FOREIGN KEY ("player_character_id")
+        REFERENCES "player_character"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE INDEX "ix_player_character_link_type_url" ON "player_character_link"("type", "url");
+
 CREATE TABLE "clan_member"
 (
     "player_character_id" BIGINT NOT NULL,

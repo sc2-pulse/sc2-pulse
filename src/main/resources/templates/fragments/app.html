@@ -452,9 +452,30 @@
                                     </tbody>
                                 </table>
                             </section>
-                            <section>
-                                <h3>Links</h3>
-                                <ul class="list-unstyled text-center">
+                            <section id="character-links-section">
+                                <h3>
+                                    <span class="position-relative">
+                                        <span class="character-additional-links-reload cursor-pointer">Links</span>
+                                        <span
+                                            id="character-additional-links-loading-failed"
+                                            class="indicator-loading text-danger font-weight-bold position-absolute d-none"
+                                            data-toggle="tooltip"
+                                            title="Failed to load additional links"
+                                        >
+                                            ×
+                                        </span>
+                                        <span id="character-additional-links-loading-indicator"
+                                              class="indicator-loading align-self-center spinner-border dimension-1 text-primary align-middle position-absolute d-none"
+                                              role="status"
+                                              aria-hidden="true"
+                                              title="Loading additional links"
+                                              data-toggle="tooltip"
+                                              style="top: 0.3em;"
+                                        >
+                                        </span>
+                                    </span>
+                                </h3>
+                                <ul id="character-links" class="list-unstyled text-center">
                                     <li class="mb-3">
                                         <ul class="d-flex flex-center-wrap-gap list-unstyled">
                                             <li class="pro-player-info">
