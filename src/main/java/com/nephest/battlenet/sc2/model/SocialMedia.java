@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
@@ -7,29 +7,26 @@ public enum SocialMedia
 implements Identifiable
 {
 
-    ALIGULAC(1, "aligulac"),
-    TWITCH(2, "twitch"),
-    LIQUIPEDIA(3, "liquipedia", "liquidpedia"),
-    TWITTER(4, "twitter"),
-    INSTAGRAM(5, "instagram"),
-    DISCORD(6, "discord"),
-    YOUTUBE(7, "youtube"),
-    UNKNOWN(8, "");
+    ALIGULAC(1, "aligulac", null, "http://aligulac.com/players"),
+    TWITCH(2, "twitch", null, "https://www.twitch.tv"),
+    LIQUIPEDIA(3, "liquipedia", "liquidpedia", "https://liquipedia.net/starcraft2"),
+    TWITTER(4, "twitter", null, "https://twitter.com"),
+    INSTAGRAM(5, "instagram", null, "https://www.instagram.com"),
+    DISCORD(6, "discord", null, null),
+    YOUTUBE(7, "youtube", null, "https://www.youtube.com/c"),
+    UNKNOWN(8, "", null, null);
 
     private final int id;
     private final String name;
     private final String revealedName;
+    private final String baseUserUrl;
 
-    SocialMedia(int id, String name, String revealedName)
+    SocialMedia(int id, String name, String revealedName, String baseUserUrl)
     {
         this.id = id;
         this.name = name;
         this.revealedName = revealedName;
-    }
-
-    SocialMedia(int id, String name)
-    {
-        this(id, name, null);
+        this.baseUserUrl = baseUserUrl;
     }
 
     public static SocialMedia from(int id)
@@ -59,6 +56,16 @@ implements Identifiable
         return UNKNOWN;
     }
 
+    public static SocialMedia fromBaseUserUrlPrefix(String url)
+    {
+        if(url == null || url.isBlank()) return UNKNOWN;
+
+        for(SocialMedia media : SocialMedia.values())
+            if(media.getBaseUserUrl() != null && url.startsWith(media.getBaseUserUrl())) return media;
+
+        return UNKNOWN;
+    }
+
     public static long getAligulacIdFromUrl(String url)
     {
         return Long.parseLong(url.replaceFirst(".*/([^/?]+).*", "$1").split("-")[0]);
@@ -78,6 +85,11 @@ implements Identifiable
     public String getRevealedName()
     {
         return revealedName;
+    }
+
+    public String getBaseUserUrl()
+    {
+        return baseUserUrl;
     }
 
 }

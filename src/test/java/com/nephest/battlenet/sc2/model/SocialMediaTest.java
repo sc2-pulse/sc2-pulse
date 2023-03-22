@@ -1,12 +1,12 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class SocialMediaTest
 {
@@ -20,6 +20,19 @@ public class SocialMediaTest
     public void testGetAligulacIdFromUrl(String url, long expectedId)
     {
         assertEquals(expectedId, SocialMedia.getAligulacIdFromUrl(url));
+    }
+
+    @CsvSource
+    ({
+        "http://aligulac.com/players/6306-Gemini/, ALIGULAC",
+        "nonExisting, UNKNOWN",
+        ", UNKNOWN",
+        "'    ', UNKNOWN"
+    })
+    @ParameterizedTest
+    public void testFromBaseUserUrlPrefix(String url, SocialMedia expectedResult)
+    {
+        assertEquals(expectedResult, SocialMedia.fromBaseUserUrlPrefix(url));
     }
 
 }
