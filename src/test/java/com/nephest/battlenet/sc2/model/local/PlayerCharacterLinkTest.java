@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.util.TestUtil;
@@ -38,6 +39,27 @@ public class PlayerCharacterLinkTest
     {
         PlayerCharacterLink link = new PlayerCharacterLink(0L, socialMedia, relativeUrl);
         assertEquals(absoluteUrl, link.getAbsoluteUrl());
+    }
+
+    @CsvSource
+    ({
+        "http://aligulac.com/players/123, 123",
+        "/123, /123",
+        "123, 123",
+        ",",
+        "http://aligulac.com/players/,"
+    })
+    @ParameterizedTest
+    public void testGetRelativeUrl(String absoluteUrl, String expectedResult)
+    {
+        if(expectedResult == null)
+        {
+            assertTrue(()->PlayerCharacterLink.getRelativeUrl(absoluteUrl).isEmpty());
+        }
+        else
+        {
+            assertEquals(expectedResult, PlayerCharacterLink.getRelativeUrl(absoluteUrl).orElseThrow());
+        }
     }
 
 }

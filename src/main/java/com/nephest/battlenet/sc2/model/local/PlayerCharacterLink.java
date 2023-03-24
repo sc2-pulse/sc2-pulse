@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import java.util.Comparator;
 import java.util.Objects;
+import java.util.Optional;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -74,6 +75,18 @@ public class PlayerCharacterLink
     public void setPlayerCharacterId(Long playerCharacterId)
     {
         this.playerCharacterId = playerCharacterId;
+    }
+
+    public static Optional<String> getRelativeUrl(String absoluteUrl)
+    {
+        if(absoluteUrl == null) return Optional.empty();
+
+        SocialMedia type = SocialMedia.fromBaseUserUrlPrefix(absoluteUrl);
+        if(type == SocialMedia.UNKNOWN) return Optional.of(absoluteUrl);
+        if(absoluteUrl.length() < type.getBaseUserUrl().length() + 2) //slash + at least 1 char
+            return Optional.empty();
+
+        return Optional.of(absoluteUrl.substring(type.getBaseUserUrl().length() + 1));
     }
 
     public SocialMedia getType()
