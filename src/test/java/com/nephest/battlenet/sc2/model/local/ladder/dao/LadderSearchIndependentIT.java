@@ -289,16 +289,7 @@ public class LadderSearchIndependentIT
         List<LadderDistinctCharacter> byName = ladderCharacterDAO.findDistinctCharacters("refchar1");
         assertEquals(1, byName.size());
         LadderDistinctCharacter char1 = byName.get(0);
-        assertEquals("refchar1#123", char1.getMembers().getCharacter().getName());
-        assertEquals(BaseLeague.LeagueType.SILVER, char1.getLeagueMax());
-        assertEquals(100, char1.getRatingMax());
-        assertEquals(249, char1.getTotalGamesPlayed());
-        assertEquals(98, char1.getCurrentStats().getRating());
-        assertEquals(149, char1.getCurrentStats().getGamesPlayed());
-        assertNull(char1.getCurrentStats().getRank());
-        assertEquals(100, char1.getPreviousStats().getRating());
-        assertEquals(100, char1.getPreviousStats().getGamesPlayed());
-        assertNull(char1.getPreviousStats().getRank());
+        verifyDistinctChar1(char1);
 
         List<LadderDistinctCharacter> byAccount = ladderCharacterDAO.findDistinctCharactersByAccountId(acc.getId());
         verifyCharacterAccountStats(byAccount);
@@ -312,19 +303,8 @@ public class LadderSearchIndependentIT
         verifyCharacterAccountStats(byClanTag);
         LadderDistinctCharacter byProfileLink = ladderCharacterDAO
             .findDistinctCharacterByProfileLink("https://starcraft2.com/profile/2/1/9998")
-            .orElse(null);
-        assertNotNull(byProfileLink);
-        assertEquals("refaccount#123", byProfileLink.getMembers().getAccount().getBattleTag());
-        assertEquals("refchar1#123", byProfileLink.getMembers().getCharacter().getName());
-        assertEquals(BaseLeague.LeagueType.SILVER, byProfileLink.getLeagueMax());
-        assertEquals(100, byProfileLink.getRatingMax());
-        assertEquals(249, byProfileLink.getTotalGamesPlayed());
-        assertEquals(98, byProfileLink.getCurrentStats().getRating());
-        assertEquals(149, byProfileLink.getCurrentStats().getGamesPlayed());
-        assertNull(byProfileLink.getCurrentStats().getRank());
-        assertEquals(100, byProfileLink.getPreviousStats().getRating());
-        assertEquals(100, byProfileLink.getPreviousStats().getGamesPlayed());
-        assertNull(byProfileLink.getPreviousStats().getRank());
+            .orElseThrow();
+        verifyDistinctChar1(byProfileLink);
 
         LadderDistinctCharacter byId = ladderCharacterDAO
             .findDistinctCharacterByCharacterId(character1.getId())
