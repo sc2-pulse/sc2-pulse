@@ -100,7 +100,7 @@ public class PlayerCharacterLink
     public String getAbsoluteUrl()
     {
         return getType().getBaseUserUrl() != null
-            ? getType().getBaseUserUrl() + getRelativeUrl()
+            ? getType().getBaseUserUrl() + "/" + getRelativeUrl()
             : getRelativeUrl();
     }
 

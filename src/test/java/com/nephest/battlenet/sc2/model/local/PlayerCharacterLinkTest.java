@@ -30,8 +30,8 @@ public class PlayerCharacterLinkTest
 
     @CsvSource
     ({
-        "ALIGULAC, /123, http://aligulac.com/players/123",
-        "UNKNOWN, /123, /123"
+        "ALIGULAC, 123, http://aligulac.com/players/123",
+        "UNKNOWN, 123, 123"
     })
     @ParameterizedTest
     public void testGetAbsoluteUrl(SocialMedia socialMedia, String relativeUrl, String absoluteUrl)
