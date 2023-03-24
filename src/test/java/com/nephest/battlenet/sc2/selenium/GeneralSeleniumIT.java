@@ -239,13 +239,15 @@ public class GeneralSeleniumIT
     {
         clickAndWait(driver, wait, "#search-all-tab", "#search-all.show.active");
 
+        WebElement searchInput = driver.findElement(By.cssSelector("#search-player-name"));
         //player
         clickAndWait(driver, wait, "#search-tab", "#search.show.active");
-        driver.findElement(By.cssSelector("#search-player-name")).sendKeys("character");
+        searchInput.sendKeys("character");
         clickAndWait(driver, wait, "#form-search button[type=\"submit\"]", "#search-result-all:not(.d-none)");
 
+        searchInput.sendKeys(Keys.HOME, Keys.chord(Keys.SHIFT, Keys.END), Keys.BACK_SPACE);
         //find by bnet profile link
-        driver.findElement(By.cssSelector("#search-player-name")).sendKeys("https://starcraft2.com/profile/1/1/10");
+        searchInput.sendKeys("https://starcraft2.com/profile/1/1/10");
         clickAndWait(driver, wait, "#form-search button[type=\"submit\"]", "#search-result-all:not(.d-none) tbody tr");
 
         //clan

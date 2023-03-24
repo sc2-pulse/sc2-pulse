@@ -14,7 +14,8 @@ implements Identifiable
     INSTAGRAM(5, "instagram", null, "https://www.instagram.com"),
     DISCORD(6, "discord", null, null),
     YOUTUBE(7, "youtube", null, "https://www.youtube.com/c"),
-    UNKNOWN(8, "", null, null);
+    UNKNOWN(8, "", null, null),
+    BATTLE_NET(9, "battlenet", null, "battlenet:://starcraft/profile");
 
     private final int id;
     private final String name;
