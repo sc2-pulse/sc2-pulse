@@ -158,6 +158,11 @@ public class LadderCharacterDAO
         "INNER JOIN account ON player_character.account_id = account.id "
         + "WHERE LOWER(account.battle_tag) = LOWER(:battleTag) ", ""
     );
+    private static final String FIND_DISTINCT_CHARACTER_BY_CHARACTER_ID_QUERY = String.format
+    (
+        FIND_DISTINCT_CHARACTER_FORMAT,
+        "WHERE player_character.id = :playerCharacterId ", ""
+    );
     private static final String FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY = String.format
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
@@ -392,6 +397,25 @@ public class LadderCharacterDAO
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return Optional.ofNullable(template.query(FIND_DISTINCT_CHARACTER_BY_PROFILE_LINK_QUERY, params, DISTINCT_CHARACTER_EXTRACTOR));
+    }
+
+    public Optional<LadderDistinctCharacter> findDistinctCharacterByCharacterId(Long playerCharacterId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("playerCharacterId", playerCharacterId)
+            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
+        return Optional.ofNullable
+        (
+            template.query
+            (
+                FIND_DISTINCT_CHARACTER_BY_CHARACTER_ID_QUERY,
+                params,
+                DISTINCT_CHARACTER_EXTRACTOR
+            )
+        );
     }
 
     public List<LadderDistinctCharacter> findDistinctCharactersByClanTag(String clanTag)

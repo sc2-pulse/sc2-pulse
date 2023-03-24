@@ -326,6 +326,11 @@ public class LadderSearchIndependentIT
         assertEquals(100, byProfileLink.getPreviousStats().getGamesPlayed());
         assertNull(byProfileLink.getPreviousStats().getRank());
 
+        LadderDistinctCharacter byId = ladderCharacterDAO
+            .findDistinctCharacterByCharacterId(character1.getId())
+            .orElseThrow();
+        verifyDistinctChar1(byId);
+
         mvc.perform
         (
             get("/api/my/following/characters")
@@ -390,6 +395,21 @@ public class LadderSearchIndependentIT
         List<LadderDistinctCharacter> linkedByAccountNoPro =
             ladderCharacterDAO.findLinkedDistinctCharactersByAccountId(acc.getId());
         verifyCharacterAccountStats(linkedByAccountNoPro);
+    }
+
+    private void verifyDistinctChar1(LadderDistinctCharacter char1)
+    {
+        assertEquals("refaccount#123", char1.getMembers().getAccount().getBattleTag());
+        assertEquals("refchar1#123", char1.getMembers().getCharacter().getName());
+        assertEquals(BaseLeague.LeagueType.SILVER, char1.getLeagueMax());
+        assertEquals(100, char1.getRatingMax());
+        assertEquals(249, char1.getTotalGamesPlayed());
+        assertEquals(98, char1.getCurrentStats().getRating());
+        assertEquals(149, char1.getCurrentStats().getGamesPlayed());
+        assertNull(char1.getCurrentStats().getRank());
+        assertEquals(100, char1.getPreviousStats().getRating());
+        assertEquals(100, char1.getPreviousStats().getGamesPlayed());
+        assertNull(char1.getPreviousStats().getRank());
     }
 
     private void verifyCharacterAccountStats(List<LadderDistinctCharacter> byAccount)
