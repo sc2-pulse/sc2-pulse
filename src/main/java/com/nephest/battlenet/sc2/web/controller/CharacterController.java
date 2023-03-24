@@ -27,7 +27,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.SearchService;
-import com.nephest.battlenet.sc2.web.service.link.ExternalPlayerCharacterLinkService;
+import com.nephest.battlenet.sc2.web.service.external.ExternalPlayerCharacterLinkService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.List;
