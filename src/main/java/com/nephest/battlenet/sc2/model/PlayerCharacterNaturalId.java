@@ -3,8 +3,15 @@
 
 package com.nephest.battlenet.sc2.model;
 
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+
 public interface PlayerCharacterNaturalId
 {
+
+    static PlayerCharacterNaturalId of(Region region, Integer realm, Long battleNetId)
+    {
+        return new PlayerCharacter(null, null, region, battleNetId, realm, null);
+    }
 
     Region getRegion();
 
