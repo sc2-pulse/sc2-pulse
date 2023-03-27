@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -207,7 +207,7 @@ public class ClanMemberIT
         template.update
         (
             "UPDATE clan_member "
-            + "SET updated = NOW() - INTERVAL ' " + ClanMemberDAO.TTL.toDays() +  " days' "
+            + "SET updated = NOW() - INTERVAL ' " + ClanMemberDAO.TTL.toSeconds() +  " seconds' "
             + "WHERE player_character_id = " + char1.getId()
         );
 
