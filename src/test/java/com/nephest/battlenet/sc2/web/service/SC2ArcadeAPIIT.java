@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.arcade.ArcadePlayerCharacter;
 import java.io.IOException;
@@ -61,8 +62,17 @@ public class SC2ArcadeAPIIT
     @Test
     public void testFindByRegionAndGameId()
     {
-        ArcadePlayerCharacter character =
-            api.findByRegionAndGameId(Region.EU, "78294784").block();
+        verifyCharacter(api.findByRegionAndGameId(Region.EU, "78294784").block());
+    }
+
+    @Test
+    public void testCharacterByNaturalId()
+    {
+        verifyCharacter(api.findCharacter(PlayerCharacterNaturalId.of(Region.EU, 1, 2642502L)).block());
+    }
+
+    public void verifyCharacter(ArcadePlayerCharacter character)
+    {
         assertNotNull(character);
         assertEquals(Region.EU, character.getRegion());
         assertEquals(1, character.getRealm());
@@ -93,6 +103,13 @@ public class SC2ArcadeAPIIT
         WebServiceTestUtil.testRetrying
         (
             api.findByRegionAndGameId(Region.EU, "78294784"),
+            validCharacter,
+            server,
+            WebServiceUtil.RETRY_COUNT
+        );
+        WebServiceTestUtil.testRetrying
+        (
+            api.findCharacter(PlayerCharacterNaturalId.of(Region.EU, 1, 2642502L)),
             validCharacter,
             server,
             WebServiceUtil.RETRY_COUNT

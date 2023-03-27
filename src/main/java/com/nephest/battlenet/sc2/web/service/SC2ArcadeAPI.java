@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.web.service;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.arcade.ArcadePlayerCharacter;
 import com.nephest.battlenet.sc2.web.util.RateLimitData;
@@ -86,7 +87,7 @@ extends BaseAPI
      * @param gameId in-game id, unsigned long, reversed byte order of in-game id
      * @return character
      */
-    @Cacheable(cacheNames = "profile-search-game-id")
+    @Cacheable(cacheNames = "arcade-character-search")
     public Mono<ArcadePlayerCharacter> findByRegionAndGameId(Region region, long gameId)
     {
         return getWebClient()
@@ -113,6 +114,30 @@ extends BaseAPI
     public Mono<ArcadePlayerCharacter> findByRegionAndGameId(Region region, String gameId)
     {
         return nestedApi.findByRegionAndGameId(region, Long.parseUnsignedLong(gameId));
+    }
+
+    @Cacheable(cacheNames = "arcade-character-search")
+    public Mono<ArcadePlayerCharacter> findCharacter(PlayerCharacterNaturalId naturalId)
+    {
+        return getWebClient()
+            .get()
+            .uri
+            (
+                "/profiles/{0}/{1}/{2}",
+                conversionService.convert(naturalId.getRegion(), Integer.class),
+                naturalId.getRealm(),
+                naturalId.getBattlenetId()
+            )
+            .accept(APPLICATION_JSON)
+            .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, ArcadePlayerCharacter.class))
+            .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .delaySubscription(rateLimiter.requestSlot())
+            .cache
+            (
+                (m)->WebServiceUtil.DEFAULT_API_CACHE_DURATION,
+                (t)->Duration.ZERO,
+                ()->WebServiceUtil.DEFAULT_API_CACHE_DURATION
+            );
     }
 
 }
