@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
+import com.nephest.battlenet.sc2.model.arcade.ArcadePlayerCharacter;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -61,12 +61,13 @@ public class SC2ArcadeAPIIT
     @Test
     public void testFindByRegionAndGameId()
     {
-        BlizzardFullPlayerCharacter character =
+        ArcadePlayerCharacter character =
             api.findByRegionAndGameId(Region.EU, "78294784").block();
         assertNotNull(character);
         assertEquals(Region.EU, character.getRegion());
         assertEquals(1, character.getRealm());
         assertEquals(2642502, character.getId());
+        assertEquals(78294784, character.getProfileGameId());
         assertEquals("Talv#1", character.getName());
     }
 

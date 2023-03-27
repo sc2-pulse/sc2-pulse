@@ -8,7 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
+import com.nephest.battlenet.sc2.model.arcade.ArcadePlayerCharacter;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeAPI;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -39,8 +39,8 @@ public class ExternalBattleNetCharacterSearchTest
     @Test
     public void testGameIdUnsignedLongParsing()
     {
-        BlizzardFullPlayerCharacter character
-            = new BlizzardFullPlayerCharacter(1L, 5, "name", Region.EU);
+        ArcadePlayerCharacter character
+            = new ArcadePlayerCharacter(1L, 5, "name", Region.EU, 128L);
         when(conversionService.convert(2, Region.class)).thenReturn(Region.EU);
         when(sc2ArcadeAPI.findByRegionAndGameId(Region.EU, 128L)) //reversed unsigned long
             .thenReturn(Mono.just(character));

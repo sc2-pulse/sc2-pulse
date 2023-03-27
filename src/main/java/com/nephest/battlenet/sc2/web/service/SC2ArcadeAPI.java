@@ -7,7 +7,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
+import com.nephest.battlenet.sc2.model.arcade.ArcadePlayerCharacter;
 import com.nephest.battlenet.sc2.web.util.RateLimitData;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import java.time.Duration;
@@ -85,7 +85,7 @@ extends BaseAPI
      * @return character
      */
     @Cacheable(cacheNames = "profile-search-game-id")
-    public Mono<BlizzardFullPlayerCharacter> findByRegionAndGameId(Region region, long gameId)
+    public Mono<ArcadePlayerCharacter> findByRegionAndGameId(Region region, long gameId)
     {
         return getWebClient()
             .get()
@@ -96,7 +96,7 @@ extends BaseAPI
                 Long.toUnsignedString(gameId)
             )
             .accept(APPLICATION_JSON)
-            .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, BlizzardFullPlayerCharacter.class))
+            .exchangeToMono(resp->readRequestRateAndExchangeToMono(resp, ArcadePlayerCharacter.class))
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
             .delaySubscription(rateLimiter.requestSlot())
             .cache
@@ -108,7 +108,7 @@ extends BaseAPI
             );
     }
 
-    public Mono<BlizzardFullPlayerCharacter> findByRegionAndGameId(Region region, String gameId)
+    public Mono<ArcadePlayerCharacter> findByRegionAndGameId(Region region, String gameId)
     {
         return nestedApi.findByRegionAndGameId(region, Long.parseUnsignedLong(gameId));
     }
