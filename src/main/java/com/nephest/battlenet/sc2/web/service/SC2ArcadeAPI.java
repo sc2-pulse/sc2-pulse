@@ -74,7 +74,9 @@ extends BaseAPI
 
     private <T> Mono<T> readRequestRateAndExchangeToMono(ClientResponse response, Class<T> clazz)
     {
-        rateLimiter.update(getRateLimitData(response)).subscribe();
+
+        if(!response.headers().header(WebServiceUtil.RATE_LIMIT_LIMIT_HEADER_NAME).isEmpty())
+            rateLimiter.update(getRateLimitData(response)).subscribe();
         return response.bodyToMono(clazz);
     }
 
