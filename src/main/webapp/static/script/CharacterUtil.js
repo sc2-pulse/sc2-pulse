@@ -189,6 +189,7 @@ class CharacterUtil
             }))
             .catch(error => new Promise((res, rej)=>{
                 loadingIndicator.classList.add("d-none");
+                CharacterUtil.updateAdditionalCharacterLinksView();
                 if(!error.message.includes("404")) {
                     document.querySelector("#character-additional-links-loading-failed").classList.remove("d-none");
                 } else {
@@ -216,8 +217,14 @@ class CharacterUtil
 
     static updateAdditionalCharacterLinksView()
     {
+        const container = document.querySelector("#additional-links-container");
         const links = Model.DATA.get(VIEW.CHARACTER).get("additionalLinks");
-        if(!links) return;
+        if(!links) {
+            container.classList.add("d-none");
+            return;
+        }
+        container.classList.remove("d-none");
+        document.querySelectorAll("#character-links .link-additional").forEach(e=>e.classList.add("d-none"));
 
         links.forEach(CharacterUtil.updateAdditionalLink);
     }
