@@ -77,7 +77,7 @@ extends BaseAPI
 
         if(!response.headers().header(WebServiceUtil.RATE_LIMIT_LIMIT_HEADER_NAME).isEmpty())
             rateLimiter.update(getRateLimitData(response)).subscribe();
-        return response.bodyToMono(clazz);
+        return WebServiceUtil.bodyToMonoErrorOnErrorCode(response, clazz);
     }
 
     /**
