@@ -218,6 +218,24 @@ class CharacterUtil
     {
         const links = Model.DATA.get(VIEW.CHARACTER).get("additionalLinks");
         if(!links) return;
+
+        links.forEach(CharacterUtil.updateAdditionalLink);
+    }
+
+    static updateAdditionalLink(link)
+    {
+        switch(link.type) {
+            case "BATTLE_NET":
+                CharacterUtil.updateBattleNetProfileLink(link);
+                break;
+        }
+    }
+
+    static updateBattleNetProfileLink(link)
+    {
+        const linkElement = document.querySelector("#link-sc2-battle-net");
+        linkElement.classList.remove("d-none");
+        linkElement.querySelector(":scope span").textContent = link.absoluteUrl;
     }
 
     static updateCharacterInfo(commonCharacter, id)

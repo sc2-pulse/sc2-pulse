@@ -207,6 +207,17 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     gap: 1em;
 }
 
+.table-gap-1
+{
+    border-collapse: separate;
+    border-spacing: 0.5em;
+}
+
+.text-break-all
+{
+    word-break: break-all;
+}
+
 #status-generating-fullscreen
 {
     left: 0;

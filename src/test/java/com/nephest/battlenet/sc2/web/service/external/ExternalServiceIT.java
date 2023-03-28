@@ -20,15 +20,18 @@ import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeAPI;
@@ -77,6 +80,9 @@ public class ExternalServiceIT
 
     @Autowired
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
+
+    @Autowired
+    private PlayerCharacterLinkDAO playerCharacterLinkDAO;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -168,11 +174,29 @@ public class ExternalServiceIT
         cacheManager.getCacheNames()
             .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         verifyExternalCharacterSearchByBattleNetProfile();
+        verifyExternalBattleNetLinkResolver();
         /*
-            The API was called once despite 2 searches was run. Previous search results should be
-            persisted in the DB and used when possible to avoid redundant API calls.
+            The API was called once despite several searches was run. Previous search results
+            should be persisted in the DB and used when possible to avoid redundant API calls.
          */
         verify(arcadeAPI, times(1)).findByRegionAndGameId(any(), anyLong());
+    }
+
+    @Test
+    public void testExternalBattleNetLinkResolver() throws Exception
+    {
+        verifyExternalBattleNetLinkResolver();
+        cacheManager.getCacheNames()
+            .forEach(cacheName->cacheManager.getCache(cacheName).clear());
+        verifyExternalBattleNetLinkResolver();
+        verifyExternalCharacterSearchByBattleNetProfile();
+
+        /*
+            The API was called once despite several searches was run. Previous search results
+            should be persisted in the DB and used when possible to avoid redundant API calls.
+         */
+        verifyBattleNetLinkDb();
+        verify(arcadeAPI, times(1)).findCharacter(any());
     }
 
     private void verifyExternalCharacterSearchByBattleNetProfile()
@@ -188,6 +212,32 @@ public class ExternalServiceIT
             .andReturn().getResponse().getContentAsString(), LadderDistinctCharacter[].class);
         assertEquals(1, characterFound.length);
         assertEquals(character, characterFound[0].getMembers().getCharacter());
+    }
+
+    private void verifyExternalBattleNetLinkResolver()
+    throws Exception
+    {
+        PlayerCharacterLink[] links = objectMapper.readValue(mvc.perform
+        (
+            get("/api/character/{id}/links/additional", character.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), PlayerCharacterLink[].class);
+        assertEquals(1, links.length);
+        assertEquals(character.getId(), links[0].getPlayerCharacterId());
+        assertEquals(SocialMedia.BATTLE_NET, links[0].getType());
+        assertEquals("battlenet:://starcraft/profile/2/4771787010354446336", links[0].getAbsoluteUrl());
+    }
+
+    private void verifyBattleNetLinkDb()
+    {
+        List<PlayerCharacterLink> links = playerCharacterLinkDAO.find(character.getId());
+        assertEquals(1, links.size());
+        PlayerCharacterLink link = links.get(0);
+        assertEquals(character.getId(), link.getPlayerCharacterId());
+        assertEquals(SocialMedia.BATTLE_NET, link.getType());
+        assertEquals("battlenet:://starcraft/profile/2/4771787010354446336", link.getAbsoluteUrl());
     }
 
 }
