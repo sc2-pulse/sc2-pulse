@@ -62,4 +62,15 @@ public class PlayerCharacterLinkTest
         }
     }
 
+    @Test
+    public void testSetAbsoluteUrl()
+    {
+        PlayerCharacterLink link = new PlayerCharacterLink(1L, SocialMedia.YOUTUBE, "url1");
+        link.setAbsoluteUrl("http://aligulac.com/players/123");
+        assertEquals(1L, link.getPlayerCharacterId());
+        assertEquals(SocialMedia.ALIGULAC, link.getType());
+        assertEquals("123", link.getRelativeUrl());
+        assertEquals("http://aligulac.com/players/123", link.getAbsoluteUrl());
+    }
+
 }

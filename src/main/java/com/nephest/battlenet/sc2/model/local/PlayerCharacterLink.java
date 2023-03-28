@@ -117,4 +117,10 @@ public class PlayerCharacterLink
             : getRelativeUrl();
     }
 
+    public void setAbsoluteUrl(String url)
+    {
+        this.type = SocialMedia.fromBaseUserUrlPrefix(url);
+        relativeUrl = getRelativeUrl(url).orElseThrow();
+    }
+
 }
