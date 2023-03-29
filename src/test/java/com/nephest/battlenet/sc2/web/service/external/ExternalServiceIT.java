@@ -4,8 +4,10 @@
 package com.nephest.battlenet.sc2.web.service.external;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
@@ -55,6 +57,8 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Mono;
 
 @SpringBootTest(classes = {AllTestConfig.class})
 @TestPropertySource("classpath:application.properties")
@@ -199,6 +203,22 @@ public class ExternalServiceIT
         verify(arcadeAPI, times(1)).findCharacter(any());
     }
 
+    @Test
+    public void whenExternalLinksResolverFails_thenAddFailedType()
+    throws Exception
+    {
+        doReturn(Mono.error(new WebClientResponseException(500, "ISE", null, null, null)))
+            .when(arcadeAPI).findCharacter(any());
+        ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
+        (
+            get("/api/character/{id}/links/additional", character.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().is5xxServerError())
+            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
+        assertTrue(result.getFailedTypes().contains(SocialMedia.BATTLE_NET));
+    }
+
     private void verifyExternalCharacterSearchByBattleNetProfile()
     throws Exception
     {
@@ -217,17 +237,19 @@ public class ExternalServiceIT
     private void verifyExternalBattleNetLinkResolver()
     throws Exception
     {
-        PlayerCharacterLink[] links = objectMapper.readValue(mvc.perform
+        ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
         (
             get("/api/character/{id}/links/additional", character.getId())
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), PlayerCharacterLink[].class);
-        assertEquals(1, links.length);
-        assertEquals(character.getId(), links[0].getPlayerCharacterId());
-        assertEquals(SocialMedia.BATTLE_NET, links[0].getType());
-        assertEquals("battlenet:://starcraft/profile/2/4771787010354446336", links[0].getAbsoluteUrl());
+            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
+        assertTrue(result.getFailedTypes().isEmpty());
+        assertEquals(1, result.getLinks().size());
+        PlayerCharacterLink link = result.getLinks().get(0);
+        assertEquals(character.getId(), link.getPlayerCharacterId());
+        assertEquals(SocialMedia.BATTLE_NET, link.getType());
+        assertEquals("battlenet:://starcraft/profile/2/4771787010354446336", link.getAbsoluteUrl());
     }
 
     private void verifyBattleNetLinkDb()

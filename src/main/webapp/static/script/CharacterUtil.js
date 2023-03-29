@@ -178,23 +178,21 @@ class CharacterUtil
         const linksContainer = document.querySelector("#character-links");
         if(linksContainer.getAttribute("data-links-loaded") === "true") return;
 
-        const loadingIndicator = document.querySelector("#character-additional-links-loading-indicator");
-        loadingIndicator.classList.remove("d-none");
+        ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.BEGIN);
         return CharacterUtil.updateAdditionalCharacterLinksModel(id)
-            .then(e => new Promise((res, rej)=>{
+            .then(linkResult => new Promise((res, rej)=>{
                 CharacterUtil.updateAdditionalCharacterLinksView();
-                linksContainer.setAttribute("data-links-loaded", "true");
-                loadingIndicator.classList.add("d-none");
-                res(e);
+                if(linkResult.failedTypes.length == 0) {
+                    linksContainer.setAttribute("data-links-loaded", "true");
+                    ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.SUCCESS);
+                } else {
+                    ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.ERROR);
+                }
+                res(linkResult);
             }))
             .catch(error => new Promise((res, rej)=>{
-                loadingIndicator.classList.add("d-none");
                 CharacterUtil.updateAdditionalCharacterLinksView();
-                if(!error.message.includes("404")) {
-                    document.querySelector("#character-additional-links-loading-failed").classList.remove("d-none");
-                } else {
-                    linksContainer.setAttribute("data-links-loaded", "true");
-                }
+                ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.ERROR);
                 res();
             }));
     }
@@ -203,7 +201,11 @@ class CharacterUtil
     {
         return Session.beforeRequest()
            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${encodeURIComponent(id)}/links/additional`))
-           .then(Session.verifyJsonResponse);
+           .then(resp=>{
+                Session.verifyResponse(resp, false);
+                if(resp.status == 200 || resp.status == 404 || resp.status == 502) return resp.json()
+                throw new Error(resp.status + " " + resp.statusText);
+            });
     }
 
     static updateAdditionalCharacterLinksModel(id)
@@ -218,15 +220,15 @@ class CharacterUtil
     static updateAdditionalCharacterLinksView()
     {
         const container = document.querySelector("#additional-links-container");
-        const links = Model.DATA.get(VIEW.CHARACTER).get("additionalLinks");
-        if(!links) {
+        const result = Model.DATA.get(VIEW.CHARACTER).get("additionalLinks");
+        if(!result || !result.links || result.links.length == 0) {
             container.classList.add("d-none");
             return;
         }
         container.classList.remove("d-none");
         document.querySelectorAll("#character-links .link-additional").forEach(e=>e.classList.add("d-none"));
 
-        links.forEach(CharacterUtil.updateAdditionalLink);
+        result.links.forEach(CharacterUtil.updateAdditionalLink);
     }
 
     static updateAdditionalLink(link)

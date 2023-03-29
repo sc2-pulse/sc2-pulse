@@ -181,6 +181,16 @@ public class WebServiceUtil
         return getOnErrorLogAndSkipMono(mono, null);
     }
 
+    public static boolean isClientResponseException(Throwable t)
+    {
+        return ExceptionUtils.indexOfThrowable(t, WebClientResponseException.class) > -1;
+    }
+
+    public static boolean isClientResponseNotFound(Throwable t)
+    {
+        return ExceptionUtils.indexOfThrowable(t, WebClientResponseException.NotFound.class) > -1;
+    }
+
     public static void logWebClientException
     (WebClientResponseException wcre, Function<Throwable, LogUtil.LogLevel> logLevelFunction)
     {

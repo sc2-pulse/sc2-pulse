@@ -7,7 +7,6 @@ import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
@@ -27,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.SearchService;
+import com.nephest.battlenet.sc2.web.service.external.ExternalLinkResolveResult;
 import com.nephest.battlenet.sc2.web.service.external.ExternalPlayerCharacterLinkService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
@@ -282,7 +282,7 @@ public class CharacterController
     }
 
     @GetMapping("/{id}/links/additional")
-    public ResponseEntity<List<PlayerCharacterLink>> getAdditionalCharacterLinks
+    public ResponseEntity<ExternalLinkResolveResult> getAdditionalCharacterLinks
     (
         @PathVariable("id") long id
     )
@@ -290,10 +290,19 @@ public class CharacterController
         List<PlayerCharacter> characters = playerCharacterDAO.find(id);
         if(characters.isEmpty()) return ResponseEntity.notFound().build();
 
-        List<PlayerCharacterLink> links = externalPlayerCharacterLinkService.getLinks(characters.get(0));
-        if(links.isEmpty()) return ResponseEntity.notFound().build();
+        ExternalLinkResolveResult result = externalPlayerCharacterLinkService.getLinks(characters.get(0));
+        return ResponseEntity
+            .status(getStatus(result))
+            .body(result);
+    }
 
-        return ResponseEntity.ok(links);
+    private static HttpStatus getStatus(ExternalLinkResolveResult result)
+    {
+        return !result.getFailedTypes().isEmpty()
+            ? HttpStatus.BAD_GATEWAY
+            : result.getLinks().isEmpty()
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.OK;
     }
 
 }
