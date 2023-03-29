@@ -24,15 +24,18 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
@@ -285,6 +288,41 @@ public class WebServiceUtil
             RATE_LIMIT_REMAINING_HEADER_NAME,
             RATE_LIMIT_RESET_HEADER_NAME
         );
+    }
+
+    public static <T> Mono<T> errorOnErrorCode(ClientResponse response, Class<T> clazz)
+    {
+        return response.statusCode().isError()
+            ? response.createException().flatMap(Mono::error)
+            : Mono.empty();
+    }
+
+    public static <T> Mono<T> bodyToMonoErrorOnErrorCode(ClientResponse response, Class<T> clazz)
+    {
+        return errorOnErrorCode(response, clazz)
+            .switchIfEmpty(response.bodyToMono(clazz));
+    }
+
+    public static <T> Flux<T> bodyToFluxErrorOnErrorCode(ClientResponse response, Class<T> clazz)
+    {
+        return errorOnErrorCode(response, clazz)
+            .flux()
+            .switchIfEmpty(response.bodyToFlux(clazz));
+    }
+
+    public static boolean isRestricted(HttpStatus status)
+    {
+        return status.value() == 401 || status.value() == 403;
+    }
+
+    public static boolean isOauth2ClientMissing(Throwable t)
+    {
+        return t.getMessage().startsWith("OAuth2AuthorizedClient not found")
+            ||
+            (
+                t instanceof WebClientResponseException
+                && WebServiceUtil.isRestricted(((WebClientResponseException) t).getStatusCode())
+            );
     }
 
 }

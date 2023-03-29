@@ -360,12 +360,6 @@ public class DiscordService
         (
             discordAPI.updateConnectionMetaData(oAuth2Client, roleConnection),
             getManagedRoleGuilds(oAuth2Client)
-                .onErrorResume
-                (
-                    t->finalMode != RoleUpdateMode.UPDATE
-                        && t.getMessage().startsWith("OAuth2AuthorizedClient not found"),
-                    t->Flux.empty()
-                )
                 .flatMap
                 (
                     guild->getMemberMappings
@@ -387,7 +381,13 @@ public class DiscordService
                         finalMode.getReason()
                     ).getRight()
                 )
-        ).subscribeOn(Schedulers.boundedElastic());
+        )
+        .onErrorResume
+        (
+            t->finalMode != RoleUpdateMode.UPDATE && WebServiceUtil.isOauth2ClientMissing(t),
+            t->Flux.empty()
+        )
+        .subscribeOn(Schedulers.boundedElastic());
     }
 
     public Tuple2<LadderTeam, LadderTeamMember> findMainTuple(Long accountId)

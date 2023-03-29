@@ -15,7 +15,6 @@ import com.nephest.battlenet.sc2.discord.connection.ApplicationRoleConnection;
 import com.nephest.battlenet.sc2.discord.connection.ConnectionMetaData;
 import com.nephest.battlenet.sc2.model.discord.DiscordConnection;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
-import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import discord4j.common.util.Snowflake;
 import discord4j.core.event.domain.guild.GuildEvent;
@@ -46,7 +45,6 @@ import org.springframework.security.oauth2.client.web.reactive.function.client.S
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.validation.Validator;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
@@ -83,7 +81,6 @@ extends BaseAPI
     private final OAuth2AuthorizedClientService auth2AuthorizedClientService;
     private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
     private final AtomicInteger requestsPerSecond = new AtomicInteger(DEFAULT_REQUESTS_PER_SECOND);
-    private final Validator validator;
     private final String applicationId;
     private final String token;
 
@@ -95,7 +92,6 @@ extends BaseAPI
         OAuth2AuthorizedClientManager auth2AuthorizedClientManager,
         OAuth2AuthorizedClientService auth2AuthorizedClientService,
         RemoveAuthorizedClientOAuth2AuthorizationFailureHandler failureHandler,
-        Validator validator,
         @Value("${spring.security.oauth2.client.registration.discord-lg.client-id}") String applicationId,
         @Value("${discord.token}") String token
     )
@@ -105,7 +101,6 @@ extends BaseAPI
         initWebClient(objectMapper, auth2AuthorizedClientManager, failureHandler);
         Flux.interval(Duration.ofSeconds(0), REQUEST_SLOT_REFRESH_TIME)
             .doOnNext(i->rateLimiter.refreshSlots(requestsPerSecond.get())).subscribe();
-        this.validator = validator;
         this.applicationId = applicationId;
         this.token = token;
     }
@@ -146,13 +141,13 @@ extends BaseAPI
     private <T> Mono<T> readRequestRateAndExchangeToMono(ClientResponse response, Class<T> clazz)
     {
         readRequestRate(response);
-        return response.bodyToMono(clazz);
+        return WebServiceUtil.bodyToMonoErrorOnErrorCode(response, clazz);
     }
 
     private <T> Flux<T> readRequestRateAndExchangeToFlux(ClientResponse response, Class<T> clazz)
     {
         readRequestRate(response);
-        return response.bodyToFlux(clazz);
+        return WebServiceUtil.bodyToFluxErrorOnErrorCode(response, clazz);
     }
 
     private <T> Mono<T> getMono(Class<T> clazz, String uri, Object... params)
@@ -302,16 +297,6 @@ extends BaseAPI
                 .attributes(oauth2AuthorizedClient(oAuth2AuthorizedClient))
                 .accept(ALL)
                 .exchangeToFlux(resp->readRequestRateAndExchangeToFlux(resp, clazz))
-                /*
-                    Spring returns invalid beans when it drops the oauth2 client. Throw exception
-                    to indicate that oauth2 client was dropped.
-                 */
-                .flatMap
-                (
-                    g->DAOUtils.beanValidationPredicate(validator).test(g)
-                        ? Mono.just(g)
-                        : Mono.error(new IllegalStateException("OAuth2AuthorizedClient not found"))
-                )
                 .retryWhen(rateLimiter.retryWhen(RETRY_WHEN_TOO_MANY_REQUESTS))
         )
             .delaySubscription(rateLimiter.requestSlot());
