@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -36,7 +36,7 @@ public class FastTeamDAO
 
     private static final Logger LOG = LoggerFactory.getLogger(FastTeamDAO.class);
 
-    private final Map<Team, Team> teams = new HashMap<>();
+    private final Map<Region, Map<Team, Team>> teams = new EnumMap<>(Region.class);
     private final TeamDAO teamDAO;
     private final Map<Region, Integer> loadedSeasons = new EnumMap<>(Region.class);
 
@@ -44,17 +44,17 @@ public class FastTeamDAO
     public FastTeamDAO(TeamDAO teamDAO)
     {
         this.teamDAO = teamDAO;
+        for(Region region : Region.values()) teams.put(region, new HashMap<>());
     }
 
-    public synchronized boolean load(Region region, int season)
+    public boolean load(Region region, int season)
     {
         Integer loadedSeason = loadedSeasons.get(region);
         if(loadedSeason != null && loadedSeason == season) return false;
 
-        remove(region);
         try(Stream<Team> teamStream = teamDAO.find(region, season))
         {
-            teams.putAll(teamStream.collect(Collectors.toMap(Function.identity(), Function.identity())));
+            teams.put(region, teamStream.collect(Collectors.toMap(Function.identity(), Function.identity())));
         }
 
         loadedSeasons.put(region, season);
@@ -62,9 +62,9 @@ public class FastTeamDAO
         return true;
     }
 
-    public synchronized boolean remove(Region region)
+    public void remove(Region region)
     {
-        return teams.keySet().removeIf(t->t.getRegion() == region);
+        teams.get(region).clear();
     }
 
     public Optional<Team> findById
@@ -75,7 +75,7 @@ public class FastTeamDAO
             Integer season
     )
     {
-        return Optional.ofNullable(teams.get(Team.uid(queueType, region, legacyId, season)));
+        return Optional.ofNullable(teams.get(region).get(Team.uid(queueType, region, legacyId, season)));
     }
 
     public Team[] merge(Team... teamsToMerge)
@@ -85,10 +85,11 @@ public class FastTeamDAO
         List<Team> merged = new ArrayList<>();
         for(Team team : teamsToMerge)
         {
-            Team existingTeam = teams.get(team);
+            Map<Team, Team> regionTeams = teams.get(team.getRegion());
+            Team existingTeam = regionTeams.get(team);
             if(existingTeam == null)
             {
-                teams.put(team, team);
+                regionTeams.put(team, team);
                 merged.add(team);
             }
             else if
