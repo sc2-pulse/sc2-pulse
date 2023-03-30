@@ -53,11 +53,17 @@ class Session
     static verifyResponse(resp)
     {
         if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
+
+        Session.verifyResponseVersion(resp);
+        return Promise.resolve(resp);
+    }
+
+    static verifyResponseVersion(resp)
+    {
         const versionHeader = resp.headers.get("X-Application-Version");
         const cacheHeader = resp.headers.get("Cache-Control");
         if((!cacheHeader || cacheHeader.toLowerCase().includes("max-age=0")) && versionHeader && versionHeader != Session.APPLICATION_VERSION)
             throw new Error(Session.INVALID_API_VERSION_CODE + " API version has changed");
-        return Promise.resolve(resp);
     }
 
     static verifyJsonResponse(resp)
