@@ -50,9 +50,9 @@ class Session
             && Session.isAuthenticated();
     }
 
-    static verifyResponse(resp)
+    static verifyResponse(resp, verifyStatus = true)
     {
-        if (!resp.ok) throw new Error(resp.status + " " + resp.statusText);
+        if (verifyStatus && !resp.ok) throw new Error(resp.status + " " + resp.statusText);
 
         Session.verifyResponseVersion(resp);
         return Promise.resolve(resp);
