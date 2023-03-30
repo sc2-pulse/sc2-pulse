@@ -432,14 +432,13 @@ class TeamUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
 
         return TeamUtil.updateTeamMmrModel(searchParams)
-            .then(e=>new Promise((res, rej)=>{
+            .then(e=>{
                 TeamUtil.updateTeamMmrView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + stringParams + "#team-mmr");
                 Session.currentSearchParams = stringParams;
                 if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -451,7 +450,7 @@ class TeamUtil
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 const teams = [];
                 for(const history of Object.values(json)) {
                     teams.push(history.teams[history.teams.length - 1]);
@@ -460,8 +459,8 @@ class TeamUtil
                 teams.sort((a, b)=>b.rating - a.rating);
                 Model.DATA.get(VIEW.TEAM_MMR).set(VIEW_DATA.SEARCH, {result: teams});
                 Model.DATA.get(VIEW.TEAM_MMR).set(VIEW_DATA.VAR, json);
-                res(json);
-            }));
+                return json;
+            });
     }
 
     static updateTeamMmrView()

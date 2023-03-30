@@ -168,7 +168,7 @@ class HistoryUtil
             HistoryUtil.showAnchoredTab(curTab, promises, activateOnly);
             prevTab = curTab;
         }
-        return Promise.all(promises).then(e=>new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}));
+        return Promise.all(promises).then(e=>Util.setGeneratingStatus(STATUS.SUCCESS));
     }
 
     static showAnchoredTab(tab, promises, activateOnly = false)
@@ -219,11 +219,10 @@ class HistoryUtil
                     res();
                 }
             }))
-            .then(e => new Promise((res, rej)=>{
+            .then(e => {
                 HistoryUtil.updateActiveTabs();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
-                res();
-            }));
+            });
 
         const type = params.get("type"); params.delete("type");
         let scrollTo = null;
@@ -300,12 +299,11 @@ class HistoryUtil
 
         return Promise.all(promises)
         .then(e => {const ap = []; for(const lp of lazyPromises) ap.push(lp()); return Promise.all(ap)})
-        .then(e => new Promise((res, rej)=>{
+        .then(e => {
             HistoryUtil.updateActiveTabs();
             Util.setGeneratingStatus(STATUS.SUCCESS);
             if(scrollTo != null) Util.scrollIntoViewById(scrollTo);
-            res();
-        }));
+        });
     }
 
     static callWithArguments(f, params, requiredParamNames)

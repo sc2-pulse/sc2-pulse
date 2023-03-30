@@ -13,7 +13,10 @@ class StatsUtil
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.QUEUE_STATS, json); res(json);}));
+            .then(json => {
+                Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.QUEUE_STATS, json);
+                return json;
+            });
     }
 
     static updateQueueStatsView()
@@ -92,7 +95,10 @@ class StatsUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateQueueStatsModel(formParams)
-            .then(json => new Promise((res, rej)=>{StatsUtil.updateQueueStatsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .then(json => {
+                StatsUtil.updateQueueStatsView();
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -330,7 +336,10 @@ class StatsUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateLadderStatsModel(formParams)
-            .then(json => new Promise((res, rej)=>{StatsUtil.updateLadderStatsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .then(json => {
+                StatsUtil.updateLadderStatsView();
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -340,7 +349,10 @@ class StatsUtil
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LEAGUE_BOUNDS, json); res(json);}));
+            .then(json => {
+                Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LEAGUE_BOUNDS, json);
+                return json;
+            });
     }
 
     static updateLeagueBoundsView()
@@ -413,7 +425,10 @@ class StatsUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateLeagueBoundsModel(formParams)
-            .then(json => new Promise((res, rej)=>{StatsUtil.updateLeagueBoundsView(); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .then(json => {
+                StatsUtil.updateLeagueBoundsView();
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -602,12 +617,11 @@ class StatsUtil
         const urlParams = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).urlParams;
         Util.setGeneratingStatus(STATUS.BEGIN);
         return StatsUtil.updateMapStatsSeasonModel(urlParams, map)
-            .then(json=>new Promise((res, rej)=>{
+            .then(json=>{
                 Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).map = json
                 StatsUtil.updateMapStatsSeasonView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
-                res();
-            }))
+            })
             .catch(e => Util.setGeneratingStatus(STATUS.ERROR, e.message, e));
     }
 

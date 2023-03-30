@@ -21,7 +21,7 @@ class FollowUtil
                     return FollowUtil.getMyFollowing();
                 }
             )
-            .then(o => new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .then(o => Util.setGeneratingStatus(STATUS.SUCCESS))
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -46,7 +46,7 @@ class FollowUtil
                     return FollowUtil.getMyFollowing();
                 }
             )
-            .then(o => new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .then(o => Util.setGeneratingStatus(STATUS.SUCCESS))
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -56,7 +56,10 @@ class FollowUtil
         return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following"))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{Session.currentFollowing = json; Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .then(json => {
+                Session.currentFollowing = json;
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+            })
             .catch(error => Session.onPersonalException(error));
     }
 

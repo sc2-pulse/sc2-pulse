@@ -377,12 +377,14 @@ class PersonalUtil
         return Session.beforeRequest()
             .then(e=>fetch(request))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json.characters);
                 Model.DATA.get(VIEW.FOLLOWING_CHARACTERS).set(VIEW_DATA.SEARCH, json.followingCharacters);
                 Session.currentFollowing = json.accountFollowings;
                 Session.currentRoles = json.roles;
-                PersonalUtil.updateMyAccount(json); Util.setGeneratingStatus(STATUS.SUCCESS); res()}))
+                PersonalUtil.updateMyAccount(json);
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+            })
             .catch(error => Session.onPersonalException(error));
     }
 

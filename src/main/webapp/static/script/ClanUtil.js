@@ -41,27 +41,25 @@ class ClanUtil
 
     static extractModelData(json, params, byTagOrName)
     {
-        return new Promise((res, rej)=>{
-            if(byTagOrName) {
-                Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: PaginationUtil.resultToPagedResult(json), params: params});
-            } else {
-                const empty = json.result.length == 0;
-                if(empty) {
-                    if(params.page == 0 || !Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH)) {
-                        Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: json, params: params});
-                    } else {
-                        const data = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
-                        data.searchResult.empty = true;
-                        data.searchResult.meta.pageDiff = params.pageDiff;
-                    }
-                }
-                else {
-                    json.empty = false;
+        if(byTagOrName) {
+            Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: PaginationUtil.resultToPagedResult(json), params: params});
+        } else {
+            const empty = json.result.length == 0;
+            if(empty) {
+                if(params.page == 0 || !Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH)) {
                     Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: json, params: params});
+                } else {
+                    const data = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
+                    data.searchResult.empty = true;
+                    data.searchResult.meta.pageDiff = params.pageDiff;
                 }
             }
-            res(Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH));
-        });
+            else {
+                json.empty = false;
+                Model.DATA.get(VIEW.CLAN_SEARCH).set(VIEW_DATA.SEARCH, {searchResult: json, params: params});
+            }
+        }
+        return Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH);
     }
 
     static updateClanSearchPaginationConfig(min, max, getter)
@@ -121,7 +119,7 @@ class ClanUtil
         if(!cursor.fullName) cursor = EnumUtil.enumOfFullName(cursor, CLAN_CURSOR);
         Util.setGeneratingStatus(STATUS.BEGIN);
         return ClanUtil.updateClanSearchModel(formParams, cursor, cursorValue, idCursor, page, pageDiff)
-            .then(e => new Promise((res, rej)=>{
+            .then(e => {
                 const executedParams = Model.DATA.get(VIEW.CLAN_SEARCH).get(VIEW_DATA.SEARCH).params;
                 const searchParams = new URLSearchParams(executedParams.formParams);
                 searchParams.append("type", "clan-search");
@@ -137,8 +135,7 @@ class ClanUtil
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 if(!Session.isHistorical) HistoryUtil.pushState({}, document.title, "?" + stringParams + "#search-clan");
                 Session.currentSearchParams = stringParams;
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 

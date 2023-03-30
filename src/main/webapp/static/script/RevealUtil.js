@@ -74,7 +74,7 @@ class RevealUtil
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/reveal/${accountId}/${proPlayerId}`, Util.addCsrfHeader({method: method})))
             .then(Session.verifyResponse)
-            .then(o=>new Promise((res, rej)=>{Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .then(o=>Util.setGeneratingStatus(STATUS.SUCCESS))
             .catch(error=>Session.onPersonalException(error));
     }
 
@@ -84,11 +84,10 @@ class RevealUtil
         const fd = new FormData(evt.target);
         Util.setGeneratingStatus(STATUS.BEGIN);
         return RevealUtil.importProfile(fd.get("url"))
-            .then(proPlayer=>new Promise((res, rej)=>{
+            .then(proPlayer=>{
                 RevealUtil.renderAndSelectProPlayer(proPlayer, document.querySelector("#modal-reveal-player-players"));
                 Util.setGeneratingStatus(STATUS.SUCCESS);
-                res();
-            }))
+            })
             .catch(error=>Session.onPersonalException(error));
     }
 

@@ -23,7 +23,10 @@ class SeasonUtil
         return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/season/list/all"))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{SeasonUtil.updateSeasons(json); Util.setGeneratingStatus(STATUS.SUCCESS); res();}))
+            .then(json => {
+                SeasonUtil.updateSeasons(json);
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -105,14 +108,13 @@ class SeasonUtil
         const params = {params: stringParams};
         Util.setGeneratingStatus(STATUS.BEGIN);
         return SeasonUtil.updateSeasonStateModel(searchParams)
-            .then(e=>new Promise((res, rej)=>{
+            .then(e=>{
                 SeasonUtil.updateSeasonStateView(searchParams);
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + stringParams + "#online");
                 Session.currentSearchParams = stringParams;
                 if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -122,7 +124,10 @@ class SeasonUtil
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{Model.DATA.get(VIEW.ONLINE).set(VIEW_DATA.SEARCH, json); res(json);}));
+            .then(json => {
+                Model.DATA.get(VIEW.ONLINE).set(VIEW_DATA.SEARCH, json);
+                return json;
+            });
     }
 
     static updateSeasonStateView(searchParams)

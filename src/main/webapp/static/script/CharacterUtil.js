@@ -19,11 +19,10 @@ class CharacterUtil
         promises.push(CharacterUtil.updateCharacter(id));
 
         return Promise.all(promises)
-            .then(o=>new Promise((res, rej)=>{
+            .then(o=>{
                 if(!Session.isHistorical) HistoryUtil.pushState({type: "character", id: id}, document.title, "?" + searchParams.toString() + "#player-stats-summary");
                 Session.currentSearchParams = stringParams;
-                res();
-            }))
+            })
             .then(e=>BootstrapUtil.showModal("player-info"));
     }
 
@@ -36,15 +35,15 @@ class CharacterUtil
         const characterPromise = Session.beforeRequest()
             .then(n=>fetch(request).then(Session.verifyJsonResponse));
         return characterPromise
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 json.history = CharacterUtil.expandMmrHistory(json.history);
                 const searchStd = json;
                 searchStd.result = json.teams;
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.SEARCH, searchStd);
                 Model.DATA.get(VIEW.CHARACTER).set(VIEW_DATA.VAR, json.linkedDistinctCharacters.map(c=>c.members.character).find(c=>c.id == id));
                 Model.DATA.get(VIEW.CHARACTER).set("reports", json.reports)
-                res(json);
-             }));
+                return json;
+             });
     }
 
     static expandMmrHistory(history)
@@ -95,10 +94,7 @@ class CharacterUtil
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list/${Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH).linkedDistinctCharacters.map(c=>c.members.character.id).join(",")}`))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{
-                Model.DATA.get(VIEW.CHARACTER).set("reports", json);
-                res();
-            }));
+            .then(json => Model.DATA.get(VIEW.CHARACTER).set("reports", json));
     }
 
     static updateAllCharacterReportsModel()
@@ -106,10 +102,7 @@ class CharacterUtil
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list`))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{
-                Model.DATA.get(VIEW.CHARACTER_REPORTS).set("reports", json);
-                res();
-            }));
+            .then(json => Model.DATA.get(VIEW.CHARACTER_REPORTS).set("reports", json));
     }
 
     static updateAllCharacterReports()
@@ -118,11 +111,10 @@ class CharacterUtil
 
         Util.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updateAllCharacterReportsModel()
-            .then(e=>new Promise((res, rej)=>{
+            .then(e=>{
                 CharacterUtil.updateAllCharacterReportsView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -139,7 +131,7 @@ class CharacterUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updateCharacterModel(id)
             .then(o => CharacterUtil.updateCharacterMatchesView())
-            .then(jsons => new Promise((res, rej)=>{
+            .then(jsons => {
                 CharacterUtil.resetAdditionalLinks();
                 if(document.querySelector("#player-stats-player.active"))
                     CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id);
@@ -150,8 +142,7 @@ class CharacterUtil
                 CharacterUtil.updateCharacterReportsView();
                 for(const link of document.querySelectorAll(".character-link-follow-only[rel~=nofollow]")) link.relList.remove("nofollow");
                 Util.setGeneratingStatus(STATUS.SUCCESS);
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -180,7 +171,7 @@ class CharacterUtil
 
         ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.BEGIN);
         return CharacterUtil.updateAdditionalCharacterLinksModel(id)
-            .then(linkResult => new Promise((res, rej)=>{
+            .then(linkResult => {
                 CharacterUtil.updateAdditionalCharacterLinksView();
                 if(linkResult.failedTypes.length == 0) {
                     linksContainer.setAttribute("data-links-loaded", "true");
@@ -188,13 +179,12 @@ class CharacterUtil
                 } else {
                     ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.ERROR);
                 }
-                res(linkResult);
-            }))
-            .catch(error => new Promise((res, rej)=>{
+                return linkResult;
+            })
+            .catch(error => {
                 CharacterUtil.updateAdditionalCharacterLinksView();
                 ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.ERROR);
-                res();
-            }));
+            });
     }
 
     static loadAdditionalCharacterLinks(id)
@@ -211,10 +201,10 @@ class CharacterUtil
     static updateAdditionalCharacterLinksModel(id)
     {
         return CharacterUtil.loadAdditionalCharacterLinks(id)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 Model.DATA.get(VIEW.CHARACTER).set("additionalLinks", json);
-                res(json);
-            }));
+                return json;
+            });
     }
 
     static updateAdditionalCharacterLinksView()
@@ -1076,11 +1066,11 @@ class CharacterUtil
         return Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.SEARCH, json);
                 Model.DATA.get(VIEW.CHARACTER_SEARCH).set(VIEW_DATA.VAR, name);
-                res(json);
-            }));
+                return json;
+            });
     }
 
     static updateCharacterSearchView()
@@ -1149,12 +1139,11 @@ class CharacterUtil
         CharacterUtil.loadNextMatchesModel(
             Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id,
             lastMatch.match.date, lastMatch.match.type, lastMatch.map.id
-        ).then(json => new Promise((res, rej)=>{
+        ).then(json => {
             if(json.result.length > 0) CharacterUtil.updateCharacterMatchesView();
             if(json.result.length < MATCH_BATCH_SIZE) document.querySelector("#load-more-matches").classList.add("d-none");
             Util.setGeneratingStatus(STATUS.SUCCESS);
-            res();
-         }))
+         })
          .catch(error => Session.onPersonalException(error));
     }
 
@@ -1163,11 +1152,11 @@ class CharacterUtil
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${id}/matches/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1${CharacterUtil.getMatchTypePath()}`))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 const commonCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
                 commonCharacter.matches = commonCharacter.matches.concat(json.result);
-                res(json);
-            }));
+                return json;
+            });
     }
 
     static updateCharacterSearch(name)
@@ -1179,13 +1168,12 @@ class CharacterUtil
         searchParams.append("name", name);
         const stringParams = searchParams.toString();
         return CharacterUtil.updateCharacterSearchModel(name)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 CharacterUtil.updateCharacterSearchView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 if(!Session.isHistorical) HistoryUtil.pushState({type: "search", name: name}, document.title, "?" + searchParams.toString() + "#search");
                 Session.currentSearchParams = stringParams;
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -1199,10 +1187,10 @@ class CharacterUtil
         return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/characters"))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 Model.DATA.get(VIEW.PERSONAL_CHARACTERS).set(VIEW_DATA.SEARCH, json);
-                res(json);
-            }));
+                return json;
+            });
     }
 
     static updatePersonalCharactersView()
@@ -1217,11 +1205,10 @@ class CharacterUtil
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
         return CharacterUtil.updatePersonalCharactersModel()
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 CharacterUtil.updatePersonalCharactersView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -1321,7 +1308,7 @@ class CharacterUtil
         return BootstrapUtil.hideActiveModal("error-generation")
             .then(r=>{Session.isHistorical = false; return CharacterUtil.findCharactersByName();})
             .then(r=>HistoryUtil.showAnchoredTabs())
-            .then(r=>new Promise((res, rej)=>{window.scrollTo(0, 0); res();}));
+            .then(r=>window.scrollTo(0, 0));
     }
 
     static updateCharacterReportsView()
@@ -1565,13 +1552,12 @@ class CharacterUtil
                 return Session.verifyJsonResponse(resp);
             })
             .then(e=>CharacterUtil.updateCharacterReportsModel())
-            .then(e=>new Promise((res, rej)=>{
+            .then(e=>{
                 $("#report-character-modal").modal('hide');
                 CharacterUtil.updateCharacterReportsView();
                 $("#character-reports").collapse('show');
                 window.setTimeout(e=>Util.scrollIntoViewById("character-reports"), 500);
-                res();
-            }));
+            });
     }
 
     static updateReportForm()

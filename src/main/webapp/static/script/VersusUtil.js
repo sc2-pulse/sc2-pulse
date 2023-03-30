@@ -27,15 +27,14 @@ class VersusUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return VersusUtil.updateVersusModel(clans1, teams1, clans2, teams2, types)
             .then(VersusUtil.updateVersusView)
-            .then(e=>new Promise((res, rej)=>{
+            .then(e=>{
                 Util.setGeneratingStatus(STATUS.SUCCESS);
                 const varData = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.VAR);
                 const urlParams = VersusUtil.apiParamsToUrlParams(varData.params);
                 const stringParams = urlParams.toString();
                 HistoryUtil.pushState({}, document.title, "?" + stringParams + "#versus");
                 Session.currentSearchParams = stringParams;
-                res();
-            }))
+            })
             .then(e=>BootstrapUtil.showModal("versus-modal"))
             .catch(error => Session.onPersonalException(error));
     }
@@ -52,7 +51,7 @@ class VersusUtil
         return  Session.beforeRequest()
             .then(n=>fetch(request))
             .then(Session.verifyJsonResponse)
-            .then(json=>new Promise((res, rej)=>{
+            .then(json=>{
                 Model.DATA.get(VIEW.VERSUS).set(VIEW_DATA.SEARCH, json);
                 Model.DATA.get(VIEW.VERSUS).set(VIEW_DATA.VAR, {params: params});
                 VersusUtil.initDynamicViews();
@@ -60,8 +59,8 @@ class VersusUtil
                 Model.DATA.get("versusTeams1").set(VIEW_DATA.TEAMS, {result: json.teamsGroup1});
                 Model.DATA.get("versusClans2").set(VIEW_DATA.SEARCH, {searchResult: {result: json.clansGroup2}});
                 Model.DATA.get("versusTeams2").set(VIEW_DATA.TEAMS, {result: json.teamsGroup2});
-                res(json);
-            }));
+                return json;
+            });
     }
 
     static initDynamicViews()
@@ -144,12 +143,11 @@ class VersusUtil
         const matches = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.SEARCH).matches.result;
         const lastMatch = matches[matches.length - 1];
         VersusUtil.loadNextMatchesModel(lastMatch.match.date, lastMatch.match.type, lastMatch.map.id, Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.VAR).params)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 if(json.result.length > 0) VersusUtil.updateVersusView();
                 if(json.result.length < MATCH_BATCH_SIZE) document.querySelector("#load-more-matches-versus").classList.add("d-none");
                 Util.setGeneratingStatus(STATUS.SUCCESS);
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -158,11 +156,11 @@ class VersusUtil
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/versus/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1/matches?${params.toString()}`))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 const searchResult = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.SEARCH);
                 searchResult.matches.result = searchResult.matches.result.concat(json.result);
-                res(json);
-            }));
+                return json;
+            });
     }
 
     static enhance()

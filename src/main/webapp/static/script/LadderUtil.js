@@ -96,7 +96,7 @@ class LadderUtil
         };
 
         return LadderUtil.updateLadderModel(params, formParams, ratingAnchor, idAnchor, count)
-            .then(e => new Promise((res, rej)=>{
+            .then(e => {
                 const searchParams = new URLSearchParams(e.form);
                 searchParams.append("type", "ladder");
                 for(const [param, val] of Object.entries(params)) if(param != "form") searchParams.append(param, val);
@@ -109,8 +109,7 @@ class LadderUtil
                 Session.currentTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
                 Session.currentTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
                 Session.currentSearchParams = stringParams;
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
@@ -119,7 +118,7 @@ class LadderUtil
         return Session.beforeRequest()
             .then(n=>fetch(ROOT_CONTEXT_PATH + "api/my/following/ladder?" + formParams))
             .then(Session.verifyJsonResponse)
-            .then(json => new Promise((res, rej)=>{
+            .then(json => {
                 const result =
                 {
                     result: json,
@@ -129,8 +128,10 @@ class LadderUtil
                         perPage: json.length,
                         totalCount: json.length
                     }
-                }
-                Model.DATA.get(VIEW.FOLLOWING_LADDER).set(VIEW_DATA.SEARCH, result); res(result);}));
+                };
+                Model.DATA.get(VIEW.FOLLOWING_LADDER).set(VIEW_DATA.SEARCH, result);
+                return result;
+            });
     }
 
     static updateMyLadderView()
@@ -153,7 +154,7 @@ class LadderUtil
         const stringParams = searchParams.toString();
 
         return LadderUtil.updateMyLadderModel(formParams)
-            .then(jsons => new Promise((res, rej)=>{
+            .then(jsons =>{
                 LadderUtil.updateMyLadderView();
                 Util.setGeneratingStatus(STATUS.SUCCESS, null, "following-ladder");
                 if(!Session.isHistorical) HistoryUtil.pushState(params, document.title, "?" + searchParams.toString() + "#personal-following");
@@ -161,8 +162,7 @@ class LadderUtil
                 Session.currentPersonalTeamFormat = EnumUtil.enumOfFullName(searchParams.get("queue"), TEAM_FORMAT);
                 Session.currentPersonalTeamType = EnumUtil.enumOfName(searchParams.get("team-type"), TEAM_TYPE);
                 Session.currentSearchParams = stringParams;
-                res();
-            }))
+            })
             .catch(error => Session.onPersonalException(error));
     }
 
