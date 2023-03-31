@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -180,6 +180,47 @@ public class FastTeamIT
         assertEquals(2, foundTeam2.getWins());
         assertEquals(2, foundTeam2.getWins());
         assertEquals(2, foundTeam2.getWins());
+    }
+
+    @Test
+    public void testReload()
+    {
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.values()),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            2
+        );
+
+        //load
+        assertTrue(fastTeamDAO.load(Region.EU, SeasonGenerator.DEFAULT_SEASON_ID));
+        assertTrue(fastTeamDAO.findById(
+            QueueType.LOTV_1V1,
+            Region.EU,
+            BigInteger.valueOf(1204),
+            SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
+        );
+
+        //remove
+        fastTeamDAO.remove(Region.EU);
+        assertFalse(fastTeamDAO.findById(
+            QueueType.LOTV_1V1,
+            Region.EU,
+            BigInteger.valueOf(1204),
+            SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
+        );
+
+        //load(reload)
+        assertTrue(fastTeamDAO.load(Region.EU, SeasonGenerator.DEFAULT_SEASON_ID));
+        assertTrue(fastTeamDAO.findById(
+            QueueType.LOTV_1V1,
+            Region.EU,
+            BigInteger.valueOf(1204),
+            SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
+        );
     }
 
 }

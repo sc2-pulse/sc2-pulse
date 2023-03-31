@@ -65,6 +65,7 @@ public class FastTeamDAO
     public void remove(Region region)
     {
         teams.get(region).clear();
+        loadedSeasons.remove(region);
     }
 
     public Optional<Team> findById
