@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
@@ -86,7 +86,7 @@ implements Identifiable, MultiAliasName
     @JsonCreator(mode = JsonCreator.Mode.DELEGATING)
     public static Region fromVar(String var)
     {
-        return var.length() > 1 ? Region.valueOf(var) : from(Integer.parseInt(var));
+        return var.length() > 1 ? Region.valueOf(var.toUpperCase()) : from(Integer.parseInt(var));
     }
 
     @Override

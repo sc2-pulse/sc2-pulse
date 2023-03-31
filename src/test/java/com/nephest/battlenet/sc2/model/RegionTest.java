@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
@@ -60,6 +60,21 @@ public class RegionTest
     {
         assertEquals(expectedResult, Region.optionalFrom(name).get());
         assertEquals(expectedResult, Region.from(name));
+    }
+
+    @CsvSource
+    ({
+        "EU, EU",
+        "eu, EU",
+        "2, EU",
+        "US, US",
+        "us, US",
+        "1, US",
+    })
+    @ParameterizedTest
+    public void testFromVar(String var, Region expectedResult)
+    {
+        assertEquals(expectedResult, Region.fromVar(var));
     }
 
 }
