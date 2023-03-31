@@ -63,6 +63,7 @@ You can change the browser by modifying the `selenium.driver` application proper
 The `dev` profile will help you to start the local server. Reload a browser tab to instantly see resource modifications.
 Build project to hotswap(if possible) the new classes.
 
+### Required application properties
 You must set the following application properties:
 ```
 server.port={port}
@@ -90,6 +91,13 @@ twitch.client-secret={client_secret}
 com.nephest.battlenet.sc2.aligulac.api.key={api_key}
 ```
 
+### Optional application properties 
+The server will run without errors if these properties are missing, but the corresponding features will be disabled.
+```
+com.nephest.battlenet.sc2.replaystats.api.key
+```
+
+### Misc
 You can use the ```src/main/resources/application-private.properties``` file (ignored by git, used by config) 
 for private/local application properties
 

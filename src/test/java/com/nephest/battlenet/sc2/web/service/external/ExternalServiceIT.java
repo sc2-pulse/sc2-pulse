@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service.external;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
@@ -50,6 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cache.CacheManager;
+import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -96,6 +98,9 @@ public class ExternalServiceIT
 
     @SpyBean
     private SC2ArcadeAPI arcadeAPI;
+
+    @Autowired
+    private Environment environment;
 
     private MockMvc mvc;
     private PlayerCharacter character;
@@ -178,7 +183,7 @@ public class ExternalServiceIT
         cacheManager.getCacheNames()
             .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         verifyExternalCharacterSearchByBattleNetProfile();
-        verifyExternalBattleNetLinkResolver();
+        verifyExternalLinkResolver();
         /*
             The API was called once despite several searches was run. Previous search results
             should be persisted in the DB and used when possible to avoid redundant API calls.
@@ -187,19 +192,19 @@ public class ExternalServiceIT
     }
 
     @Test
-    public void testExternalBattleNetLinkResolver() throws Exception
+    public void testExternalLinkResolver() throws Exception
     {
-        verifyExternalBattleNetLinkResolver();
+        verifyExternalLinkResolver();
         cacheManager.getCacheNames()
             .forEach(cacheName->cacheManager.getCache(cacheName).clear());
-        verifyExternalBattleNetLinkResolver();
+        verifyExternalLinkResolver();
         verifyExternalCharacterSearchByBattleNetProfile();
 
         /*
             The API was called once despite several searches was run. Previous search results
             should be persisted in the DB and used when possible to avoid redundant API calls.
          */
-        verifyBattleNetLinkDb();
+        verifyDbLinks();
         verify(arcadeAPI, times(1)).findCharacter(any());
     }
 
@@ -234,7 +239,7 @@ public class ExternalServiceIT
         assertEquals(character, characterFound[0].getMembers().getCharacter());
     }
 
-    private void verifyExternalBattleNetLinkResolver()
+    private void verifyExternalLinkResolver()
     throws Exception
     {
         ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
@@ -245,21 +250,55 @@ public class ExternalServiceIT
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
         assertTrue(result.getFailedTypes().isEmpty());
-        assertEquals(1, result.getLinks().size());
-        PlayerCharacterLink link = result.getLinks().get(0);
-        assertEquals(character.getId(), link.getPlayerCharacterId());
-        assertEquals(SocialMedia.BATTLE_NET, link.getType());
-        assertEquals("battlenet:://starcraft/profile/2/4771787010354446336", link.getAbsoluteUrl());
+        verifyLinks(result.getLinks());
     }
 
-    private void verifyBattleNetLinkDb()
+    private void verifyDbLinks()
     {
-        List<PlayerCharacterLink> links = playerCharacterLinkDAO.find(character.getId());
-        assertEquals(1, links.size());
-        PlayerCharacterLink link = links.get(0);
+        verifyLinks(playerCharacterLinkDAO.find(character.getId()));
+    }
+
+    private void verifyLinks(List<PlayerCharacterLink> links)
+    {
+        assertFalse(links.isEmpty());
+        verifyLink
+        (
+            links,
+            SocialMedia.BATTLE_NET,
+            "battlenet:://starcraft/profile/2/4771787010354446336"
+        );
+        if(isReplayStatsEnabled()) verifyLink
+        (
+            links,
+            SocialMedia.REPLAY_STATS,
+            "https://sc2replaystats.com/player/125470"
+        );
+    }
+
+    private PlayerCharacterLink find(List<PlayerCharacterLink> links, SocialMedia type)
+    {
+        return links.stream()
+            .filter(l->l.getType() == type)
+            .findAny()
+            .orElseThrow();
+    }
+
+    private void verifyLink(PlayerCharacterLink link, SocialMedia type, String absoluteUrl)
+    {
         assertEquals(character.getId(), link.getPlayerCharacterId());
-        assertEquals(SocialMedia.BATTLE_NET, link.getType());
-        assertEquals("battlenet:://starcraft/profile/2/4771787010354446336", link.getAbsoluteUrl());
+        assertEquals(type, link.getType());
+        assertEquals(absoluteUrl, link.getAbsoluteUrl());
+    }
+
+    private void verifyLink(List<PlayerCharacterLink> links, SocialMedia type, String absoluteUrl)
+    {
+        verifyLink(find(links, type), type, absoluteUrl);
+    }
+
+
+    private boolean isReplayStatsEnabled()
+    {
+        return environment.getProperty("com.nephest.battlenet.sc2.replaystats.api.key") != null;
     }
 
 }

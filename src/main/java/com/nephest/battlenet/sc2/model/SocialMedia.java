@@ -15,7 +15,8 @@ implements Identifiable
     DISCORD(6, "discord", null, null),
     YOUTUBE(7, "youtube", null, "https://www.youtube.com/c"),
     UNKNOWN(8, "", null, null),
-    BATTLE_NET(9, "battlenet", null, "battlenet:://starcraft/profile");
+    BATTLE_NET(9, "battlenet", null, "battlenet:://starcraft/profile"),
+    REPLAY_STATS(10, "replaystats", null, "https://sc2replaystats.com/player");
 
     private final int id;
     private final String name;

@@ -170,6 +170,7 @@ class CharacterUtil
         if(linksContainer.getAttribute("data-links-loaded") === "true") return;
 
         ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.BEGIN);
+        document.querySelectorAll(".additional-link-container").forEach(e=>e.classList.add("d-none"));
         return CharacterUtil.updateAdditionalCharacterLinksModel(id)
             .then(linkResult => {
                 CharacterUtil.updateAdditionalCharacterLinksView();
@@ -209,13 +210,9 @@ class CharacterUtil
 
     static updateAdditionalCharacterLinksView()
     {
-        const container = document.querySelector("#additional-links-container");
         const result = Model.DATA.get(VIEW.CHARACTER).get("additionalLinks");
-        if(!result || !result.links || result.links.length == 0) {
-            container.classList.add("d-none");
-            return;
-        }
-        container.classList.remove("d-none");
+        document.querySelectorAll(".additional-link-container").forEach(e=>e.classList.add("d-none"));
+        if(!result || !result.links || result.links.length == 0) return;
         document.querySelectorAll("#character-links .link-additional").forEach(e=>e.classList.add("d-none"));
 
         result.links.forEach(CharacterUtil.updateAdditionalLink);
@@ -227,6 +224,9 @@ class CharacterUtil
             case "BATTLE_NET":
                 CharacterUtil.updateBattleNetProfileLink(link);
                 break;
+            case "REPLAY_STATS":
+                CharacterUtil.updateReplayStatsProfileLink(link);
+                break;
         }
     }
 
@@ -235,6 +235,15 @@ class CharacterUtil
         const linkElement = document.querySelector("#link-sc2-battle-net");
         linkElement.classList.remove("d-none");
         linkElement.querySelector(":scope span").textContent = link.absoluteUrl;
+        linkElement.closest(".additional-link-container").classList.remove("d-none");
+    }
+
+    static updateReplayStatsProfileLink(link)
+    {
+        const linkElement = document.querySelector("#link-sc2-replay-stats");
+        linkElement.classList.remove("d-none");
+        linkElement.setAttribute("href", link.absoluteUrl + "?tab=replays");
+        linkElement.closest(".additional-link-container").classList.remove("d-none");
     }
 
     static updateCharacterInfo(commonCharacter, id)

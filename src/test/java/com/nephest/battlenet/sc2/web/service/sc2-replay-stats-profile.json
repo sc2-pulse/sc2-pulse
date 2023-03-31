@@ -1,0 +1,23 @@
+{
+  "players_replays_url": "https:\/\/sc2replaystats.com\/player\/22042?tab=replays",
+  "players_id": 22042,
+  "players_name": "Clem",
+  "battle_net_url": "https:\/\/starcraft2.com\/en-us\/profile\/2\/1\/3141896",
+  "server": "eu",
+  "legacy_link_id": null,
+  "character_link_id": 3141896,
+  "legacy_link_realm": 1,
+  "battle_tag_name": "Clem",
+  "battle_tag_id": 2723,
+  "legacy_battle_tag_name": "LiquidClem",
+  "clan": {
+    "clans_id": 278251,
+    "clan_name": "mlem",
+    "clan_tag": "mlem",
+    "server_url": "eu",
+    "icon_url": null,
+    "decal_url": "http:\/\/EU.depot.battle.net:1119\/511f661f69bf1578b682430e8d777ddff016d9b0174fd3f4526c016559ee7808.clfl",
+    "battle_net_clan_id": 469918
+  },
+  "updated_at": "2023-02-27T14:35:20-07:00"
+}
