@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.SearchService;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.external.ExternalLinkResolveResult;
 import com.nephest.battlenet.sc2.web.service.external.ExternalPlayerCharacterLinkService;
 import io.swagger.v3.oas.annotations.Hidden;
@@ -33,6 +34,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -291,9 +293,10 @@ public class CharacterController
         if(characters.isEmpty()) return ResponseEntity.notFound().build();
 
         ExternalLinkResolveResult result = externalPlayerCharacterLinkService.getLinks(characters.get(0));
-        return ResponseEntity
-            .status(getStatus(result))
-            .body(result);
+        ResponseEntity.BodyBuilder bodyBuilder = ResponseEntity.status(getStatus(result));
+        if(result.getFailedTypes().isEmpty()) bodyBuilder
+            .header(HttpHeaders.CACHE_CONTROL, WebServiceUtil.DEFAULT_CACHE_HEADER);
+        return bodyBuilder.body(result);
     }
 
     private static HttpStatus getStatus(ExternalLinkResolveResult result)

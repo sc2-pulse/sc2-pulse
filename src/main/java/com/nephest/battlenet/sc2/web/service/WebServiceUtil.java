@@ -49,6 +49,8 @@ public class WebServiceUtil
     public static final String TRACE_EXCEPTION_LOG_TEMPLATE =
         "{} (x-trace-traceid: {}, x-trace-spanid: {}, x-trace-parentspanid: {})";
     public static final Duration DEFAULT_API_CACHE_DURATION = Duration.ofDays(7);
+    public static final String DEFAULT_CACHE_HEADER
+        = "private, max-age=604800, stale-while-revalidate=604800"; //7days fresh, 7days revalidate
     public static final String RATE_LIMIT_LIMIT_HEADER_NAME = "X-RateLimit-Limit";
     public static final String RATE_LIMIT_REMAINING_HEADER_NAME = "X-RateLimit-Remaining";
     public static final String RATE_LIMIT_RESET_HEADER_NAME = "X-RateLimit-Reset";

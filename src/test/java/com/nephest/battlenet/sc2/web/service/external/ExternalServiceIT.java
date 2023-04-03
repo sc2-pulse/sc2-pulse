@@ -14,10 +14,12 @@ import static org.mockito.Mockito.verify;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.config.filter.NoCacheFilter;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -38,6 +40,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeAPI;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -53,6 +56,7 @@ import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.cache.CacheManager;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
@@ -220,6 +224,11 @@ public class ExternalServiceIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().is5xxServerError())
+            .andExpect(header().string
+            (
+                HttpHeaders.CACHE_CONTROL,
+                NoCacheFilter.NO_CACHE_HEADERS.get(HttpHeaders.CACHE_CONTROL)
+            ))
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
         assertTrue(result.getFailedTypes().contains(SocialMedia.BATTLE_NET));
     }
@@ -248,6 +257,11 @@ public class ExternalServiceIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
+            .andExpect(header().string
+            (
+                HttpHeaders.CACHE_CONTROL,
+                WebServiceUtil.DEFAULT_CACHE_HEADER
+            ))
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
         assertTrue(result.getFailedTypes().isEmpty());
         verifyLinks(result.getLinks());
