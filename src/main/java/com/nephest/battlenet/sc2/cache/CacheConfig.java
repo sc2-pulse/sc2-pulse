@@ -18,10 +18,15 @@ public class CacheConfig
     @Value("${cache.ttl:#{'P7D'}}")
     private Duration CACHE_TTL;
 
+    @Value("${cache.size:#{'20000'}}")
+    private int CACHE_SIZE;
+
     @Bean
     public Caffeine<Object, Object> caffeineConfig()
     {
-        return Caffeine.newBuilder().expireAfterWrite(CACHE_TTL);
+        return Caffeine.newBuilder()
+            .expireAfterWrite(CACHE_TTL)
+            .maximumSize(CACHE_SIZE);
     }
 
     @Bean
