@@ -21,7 +21,7 @@ public class CacheConfig
     @Bean
     public Caffeine<Object, Object> caffeineConfig()
     {
-        return Caffeine.newBuilder().expireAfterAccess(CACHE_TTL);
+        return Caffeine.newBuilder().expireAfterWrite(CACHE_TTL);
     }
 
     @Bean
