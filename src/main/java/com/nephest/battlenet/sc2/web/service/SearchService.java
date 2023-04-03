@@ -20,6 +20,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -89,6 +90,7 @@ public class SearchService
             ));
     }
 
+    @Cacheable(cacheNames = "character-search-suggestions")
     public List<String> suggest(String term, int limit)
     {
         switch(SearchType.of(term))
@@ -102,6 +104,7 @@ public class SearchService
         }
     }
 
+    @Cacheable(cacheNames = "character-search-suggestions")
     public List<String> suggestIfQuick(String term, int limit)
     {
         return isQuickSearch(term) ? suggest(term, limit) : List.of();
