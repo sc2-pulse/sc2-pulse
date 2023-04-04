@@ -1331,7 +1331,7 @@ class CharacterUtil
         }
         reportsContainer.classList.remove("d-none");
         CharacterUtil.updateCharacterReportsTable(tbody, reports);
-        if(!reports.some(r=>r.report.status) && !document.querySelector("#player-info-additional-container .player-flag-reported"))
+        if(!document.querySelector("#player-info-additional-container .player-flag"))
             document.querySelector("#player-info-additional-container").appendChild(ElementUtil.createCheaterFlag(CHEATER_FLAG.REPORTED, true));
     }
 
