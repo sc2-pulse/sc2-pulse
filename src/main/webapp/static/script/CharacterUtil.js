@@ -1574,7 +1574,7 @@ class CharacterUtil
         const select = document.querySelector("#report-character-type");
         const additionalGroup = document.querySelector("#report-character-additional-group");
         const additionalInput = additionalGroup.querySelector(":scope #report-character-additional");
-        if(select.value == "CHEATER") {
+        if(select.value != "LINK") {
            additionalGroup.classList.add("d-none");
            additionalInput.setAttribute("disabled", "disabled");
         } else {

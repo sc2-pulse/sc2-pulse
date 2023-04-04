@@ -15,7 +15,9 @@ implements java.io.Serializable
     public enum PlayerCharacterReportType
     implements Identifiable
     {
-        CHEATER(1, "Cheater"), LINK(2, "Wintrader account pool");
+        CHEATER(1, "Cheater"),
+        LINK(2, "Wintrader account pool"),
+        GRIEFER(3, "Stream sniper/team killer");
 
         private final int id;
         private final String description;
