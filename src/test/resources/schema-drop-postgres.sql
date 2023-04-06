@@ -25,6 +25,7 @@ DROP TABLE IF EXISTS "league_stats" CASCADE;
 DROP TABLE IF EXISTS "account_following" CASCADE;
 DROP TABLE IF EXISTS "player_character_stats" CASCADE;
 DROP TABLE IF EXISTS "team_member" CASCADE;
+DROP TABLE IF EXISTS "clan_member_event" CASCADE;
 DROP TABLE IF EXISTS "clan_member" CASCADE;
 DROP TABLE IF EXISTS "player_character_link" CASCADE;
 DROP TABLE IF EXISTS "player_character" CASCADE;

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -21,6 +21,7 @@ import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import java.time.Instant;
@@ -51,6 +52,9 @@ public class ClanServiceTest
     private ClanMemberDAO clanMemberDAO;
 
     @Mock
+    private ClanMemberEventDAO clanMemberEventDAO;
+
+    @Mock
     private BlizzardSC2API api;
 
     @Mock
@@ -75,6 +79,7 @@ public class ClanServiceTest
             playerCharacterDAO,
             clanDAO,
             clanMemberDAO,
+            clanMemberEventDAO,
             varDAO,
             api,
             executor,

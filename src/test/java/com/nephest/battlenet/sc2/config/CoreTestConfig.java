@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.config.convert.IdentifiableToIntegerConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToClanMemberEventTypeConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToDecisionConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTierTypeConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTypeConverter;
@@ -50,6 +51,7 @@ public class CoreTestConfig
         service.addConverter(new IntegerToDecisionConverter());
         service.addConverter(new IntegerToSC2PulseAuthority());
         service.addConverter(new IntegerToPlayerCharacterReportTypeConverter());
+        service.addConverter(new IntegerToClanMemberEventTypeConverter());
         return service;
     }
 

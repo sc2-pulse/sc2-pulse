@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -7,12 +7,14 @@ import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLegacyProfile;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
+import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.MiscUtil;
@@ -56,6 +58,7 @@ public class ClanService
     private final PlayerCharacterDAO playerCharacterDAO;
     private final ClanDAO clanDAO;
     private final ClanMemberDAO clanMemberDAO;
+    private final ClanMemberEventDAO clanMemberEventDAO;
     private final BlizzardSC2API api;
     private final ExecutorService dbExecutorService;
     private final ExecutorService webExecutorService;
@@ -78,6 +81,7 @@ public class ClanService
         PlayerCharacterDAO playerCharacterDAO,
         ClanDAO clanDAO,
         ClanMemberDAO clanMemberDAO,
+        ClanMemberEventDAO clanMemberEventDAO,
         VarDAO varDAO,
         BlizzardSC2API api,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
@@ -87,6 +91,7 @@ public class ClanService
         this.playerCharacterDAO = playerCharacterDAO;
         this.clanDAO = clanDAO;
         this.clanMemberDAO = clanMemberDAO;
+        this.clanMemberEventDAO = clanMemberEventDAO;
         this.api = api;
         this.dbExecutorService = dbExecutorService;
         this.webExecutorService = webExecutorService;
@@ -277,7 +282,8 @@ public class ClanService
             .map(this::extractClanMembers)
             .buffer(INACTIVE_CLAN_MEMBER_BATCH_SIZE)
             .toStream()
-            .forEach(profiles->dbTasks.add(dbExecutorService.submit(()->saveClans(profiles))));
+            .forEach(profiles->dbTasks.add(dbExecutorService.submit(()->
+                clanService.saveClans(profiles))));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
         LOG.info("Updated {} inactive clan members", clanMembers.size());
     }
@@ -306,6 +312,7 @@ public class ClanService
         }
     }
 
+    @Transactional
     public void saveClans(Collection<Pair<PlayerCharacter, Clan>> clans)
     {
         if(clans.isEmpty()) return;
@@ -327,6 +334,18 @@ public class ClanService
             .map(PlayerCharacter::getId)
             .toArray(Long[]::new);
         clanMemberDAO.remove(charactersWithNoClan);
+        createClanEvents(clans);
+    }
+
+    private void createClanEvents(Collection<Pair<PlayerCharacter, Clan>> clans)
+    {
+        if(clans.isEmpty()) return;
+
+        ClanMemberEvent[] events = clans.stream()
+            .map(p->ClanMemberEvent.from(p.getKey(), p.getValue()))
+            .toArray(ClanMemberEvent[]::new);
+        clanMemberEventDAO.merge(events);
+        LOG.debug("Created {} clan events", events.length);
     }
 
 }
