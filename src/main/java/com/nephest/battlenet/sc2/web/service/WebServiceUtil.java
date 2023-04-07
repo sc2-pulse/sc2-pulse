@@ -14,6 +14,7 @@ import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
@@ -26,6 +27,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
@@ -335,6 +337,13 @@ public class WebServiceUtil
                 t instanceof WebClientResponseException
                 && WebServiceUtil.isRestricted(((WebClientResponseException) t).getStatusCode())
             );
+    }
+
+    public static <T extends Collection<?>> ResponseEntity<T> notFoundIfEmpty(T collection)
+    {
+        return collection.isEmpty()
+            ? ResponseEntity.notFound().build()
+            : ResponseEntity.ok(collection);
     }
 
 }
