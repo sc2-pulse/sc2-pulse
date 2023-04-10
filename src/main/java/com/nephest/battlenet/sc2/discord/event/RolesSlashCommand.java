@@ -156,8 +156,6 @@ implements SlashCommand
         String reason
     )
     {
-        Set<Role> currentRoles = member.getRoles().toStream().collect(Collectors.toSet());
-
         Set<Role> assignedRoles = mainTeam == null ? Set.of() : Stream.of
         (
             mapping.getRegionMappings().getMappings()
@@ -174,22 +172,19 @@ implements SlashCommand
             .flatMap(Function.identity())
             .collect(Collectors.toSet());
 
-        Set<Role> addedRoles = assignedRoles.stream()
-            .filter(r->!currentRoles.contains(r))
-            .collect(Collectors.toSet());
-
-        Set<Role> removedRoles = currentRoles.stream()
-            .filter(r->mapping.getValues().contains(r) && !assignedRoles.contains(r))
-            .collect(Collectors.toSet());
-
-        Stream<Mono<Void>> roleOperations = Stream.concat
-        (
-            removedRoles.stream().map(role->
-                member.removeRole(role.getId(), reason)),
-            addedRoles.stream().map(role->
-                member.addRole(role.getId(), reason))
-        );
-        Flux<Void> operations =  Flux.fromStream(roleOperations)
+        Flux<Void> operations = member.getRoles()
+            .collect(Collectors.toSet())
+            .flatMapMany(currentRoles->Flux.fromStream(Stream.concat
+            (
+                assignedRoles.stream()
+                    .filter(r->!currentRoles.contains(r))
+                    .distinct()
+                    .map(role->member.addRole(role.getId(), reason)),
+                currentRoles.stream()
+                    .filter(r->mapping.getValues().contains(r) && !assignedRoles.contains(r))
+                    .distinct()
+                    .map(role->member.removeRole(role.getId(), reason))
+            )))
             .flatMap(Function.identity());
         return new ImmutableTriple<>(mainTeam, assignedRoles, operations);
     }
