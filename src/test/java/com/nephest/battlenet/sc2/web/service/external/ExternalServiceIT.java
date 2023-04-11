@@ -216,7 +216,7 @@ public class ExternalServiceIT
     public void whenExternalLinksResolverFails_thenAddFailedType()
     throws Exception
     {
-        Exception ex = WebClientResponseException.NotFound.create(500, "ISE", null, null, null);
+        Exception ex = WebClientResponseException.NotFound.create(404, "ISE", null, null, null);
         doReturn(Mono.error(new RuntimeException(ex)))
             .when(arcadeAPI).findCharacter(any());
         ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
