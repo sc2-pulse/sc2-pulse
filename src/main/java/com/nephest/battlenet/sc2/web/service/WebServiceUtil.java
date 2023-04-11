@@ -185,12 +185,12 @@ public class WebServiceUtil
 
     public static boolean isClientResponseException(Throwable t)
     {
-        return ExceptionUtils.indexOfThrowable(t, WebClientResponseException.class) > -1;
+        return ExceptionUtils.indexOfType(t, WebClientResponseException.class) > -1;
     }
 
     public static boolean isClientResponseNotFound(Throwable t)
     {
-        return ExceptionUtils.indexOfThrowable(t, WebClientResponseException.NotFound.class) > -1;
+        return ExceptionUtils.indexOfType(t, WebClientResponseException.NotFound.class) > -1;
     }
 
     public static void logWebClientException
