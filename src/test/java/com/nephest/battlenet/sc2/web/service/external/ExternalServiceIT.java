@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.arcade.ArcadePlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -46,6 +47,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -232,6 +234,32 @@ public class ExternalServiceIT
             ))
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
         assertTrue(result.getFailedTypes().contains(SocialMedia.BATTLE_NET));
+    }
+
+    @Test
+    public void whenExternalLinkResolverReturnsEmptyResult_thenSkipIt()
+    throws Exception
+    {
+        //char without a battlenet::// link
+        ArcadePlayerCharacter arcadeChar = new ArcadePlayerCharacter(1L, 2, "name#1", Region.EU, null);
+        doReturn(Mono.just(arcadeChar)).when(arcadeAPI).findCharacter(any());
+        ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
+        (
+            get("/api/character/{id}/links/additional", character.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andExpect(header().string
+            (
+                HttpHeaders.CACHE_CONTROL,
+                WebServiceUtil.DEFAULT_CACHE_HEADER
+            ))
+            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
+        Optional<PlayerCharacterLink> bNetLink = result.getLinks().stream()
+            .filter(link->link.getType() == SocialMedia.BATTLE_NET)
+            .findAny();
+        assertTrue(bNetLink.isEmpty());
+        assertTrue(result.getFailedTypes().isEmpty());
     }
 
     @Test

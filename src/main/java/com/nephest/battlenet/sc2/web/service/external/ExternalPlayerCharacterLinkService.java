@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import org.apache.commons.collections4.SetUtils;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,10 +62,10 @@ public class ExternalPlayerCharacterLinkService
         List<PlayerCharacterLink> resolvedLinks = resolveLinks(playerCharacter, missingTypes)
             .collectList()
             .block();
-        Set<SocialMedia> resolvedTypes = resolvedLinks.stream()
+        Set<SocialMedia> failedTypes = resolvedLinks.stream()
+            .filter(link->link.getRelativeUrl() == null)
             .map(PlayerCharacterLink::getType)
             .collect(Collectors.toSet());
-        Set<SocialMedia> failedTypes = SetUtils.difference(missingTypes, resolvedTypes);
 
         List<PlayerCharacterLink> validResolvedLinks = new ArrayList<>(resolvedLinks.size());
         for(PlayerCharacterLink link : resolvedLinks)
@@ -95,16 +94,15 @@ public class ExternalPlayerCharacterLinkService
                         t->
                         {
                             LOG.error(ExceptionUtils.getRootCauseMessage(t));
-                            return WebServiceUtil.isClientResponseNotFound(t)
+                            return !WebServiceUtil.isClientResponseNotFound(t)
                                 ?
-                                    //not found is ok
                                     Mono.just(new PlayerCharacterLink
                                     (
                                         playerCharacter.getId(),
                                         resolver.getSupportedSocialMedia(),
                                         null
                                     ))
-                                : Mono.empty();
+                                : Mono.empty(); //not found is ok
                         }
                     )
                 )
