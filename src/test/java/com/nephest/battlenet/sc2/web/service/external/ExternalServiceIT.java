@@ -216,7 +216,7 @@ public class ExternalServiceIT
     public void whenExternalLinksResolverFails_thenAddFailedType()
     throws Exception
     {
-        Exception ex = WebClientResponseException.NotFound.create(404, "ISE", null, null, null);
+        Exception ex = WebClientResponseException.InternalServerError.create(500, "ISE", null, null, null);
         doReturn(Mono.error(new RuntimeException(ex)))
             .when(arcadeAPI).findCharacter(any());
         ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
@@ -232,6 +232,22 @@ public class ExternalServiceIT
             ))
             .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
         assertTrue(result.getFailedTypes().contains(SocialMedia.BATTLE_NET));
+    }
+
+    @Test
+    public void whenExternalLinksResolverThrowsNotFoundException_thenSkipIt()
+    throws Exception
+    {
+        Exception ex = WebClientResponseException.NotFound.create(404, "ISE", null, null, null);
+        doReturn(Mono.error(new RuntimeException(ex))).when(arcadeAPI).findCharacter(any());
+        ExternalLinkResolveResult result = objectMapper.readValue(mvc.perform
+        (
+            get("/api/character/{id}/links/additional", character.getId())
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), ExternalLinkResolveResult.class);
+        assertTrue(result.getFailedTypes().isEmpty());
     }
 
     private void verifyExternalCharacterSearchByBattleNetProfile()

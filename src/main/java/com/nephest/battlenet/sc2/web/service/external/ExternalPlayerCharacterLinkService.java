@@ -9,13 +9,14 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.SetUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -51,40 +52,40 @@ public class ExternalPlayerCharacterLinkService
     public ExternalLinkResolveResult getLinks(PlayerCharacter playerCharacter)
     {
         List<PlayerCharacterLink> existingLinks = playerCharacterLinkDAO.find(playerCharacter.getId());
-        List<PlayerCharacterLink> missingLinks = getMissingLinks(playerCharacter, existingLinks)
-            .collectList()
-            .block();
-        List<PlayerCharacterLink> resolvedLinks = new ArrayList<>(missingLinks.size());
-        Set<SocialMedia> failedMedia = EnumSet.noneOf(SocialMedia.class);
-        for(PlayerCharacterLink link : missingLinks)
-        {
-            if(link.getRelativeUrl() != null)
-            {
-                resolvedLinks.add(link);
-            }
-            else
-            {
-                failedMedia.add(link.getType());
-            }
-        }
-        saveStaticLinks(resolvedLinks);
-        existingLinks.addAll(resolvedLinks);
-        return new ExternalLinkResolveResult(existingLinks, failedMedia);
-    }
-
-    private Flux<PlayerCharacterLink> getMissingLinks
-    (
-        PlayerCharacter playerCharacter,
-        List<PlayerCharacterLink> existingLinks
-    )
-    {
         Set<SocialMedia> existingTypes = existingLinks.stream()
             .map(PlayerCharacterLink::getType)
             .collect(Collectors.toSet());
+        Set<SocialMedia> missingTypes = resolvers.values().stream()
+            .map(ExternalCharacterLinkResolver::getSupportedSocialMedia)
+            .filter(type->!existingTypes.contains(type))
+            .collect(Collectors.toSet());
+        List<PlayerCharacterLink> resolvedLinks = resolveLinks(playerCharacter, missingTypes)
+            .collectList()
+            .block();
+        Set<SocialMedia> resolvedTypes = resolvedLinks.stream()
+            .map(PlayerCharacterLink::getType)
+            .collect(Collectors.toSet());
+        Set<SocialMedia> failedTypes = SetUtils.difference(missingTypes, resolvedTypes);
+
+        List<PlayerCharacterLink> validResolvedLinks = new ArrayList<>(resolvedLinks.size());
+        for(PlayerCharacterLink link : resolvedLinks)
+            if(link.getRelativeUrl() != null)
+                validResolvedLinks.add(link);
+        saveStaticLinks(validResolvedLinks);
+        existingLinks.addAll(validResolvedLinks);
+        return new ExternalLinkResolveResult(existingLinks, failedTypes);
+    }
+
+    private Flux<PlayerCharacterLink> resolveLinks
+    (
+        PlayerCharacter playerCharacter,
+        Collection<SocialMedia> missingTypes
+    )
+    {
         return Flux.fromStream
         (
             resolvers.values().stream()
-                .filter(resolver->!existingTypes.contains(resolver.getSupportedSocialMedia()))
+                .filter(resolver->missingTypes.contains(resolver.getSupportedSocialMedia()))
                 .map(resolver->resolver
                     .resolveLink(playerCharacter)
                     .onErrorResume
@@ -93,12 +94,16 @@ public class ExternalPlayerCharacterLinkService
                         t->
                         {
                             LOG.error(t.getMessage());
-                            return Mono.just(new PlayerCharacterLink
-                            (
-                                playerCharacter.getId(),
-                                resolver.getSupportedSocialMedia(),
-                                null
-                            ));
+                            return WebServiceUtil.isClientResponseNotFound(t)
+                                ?
+                                    //not found is ok
+                                    Mono.just(new PlayerCharacterLink
+                                    (
+                                        playerCharacter.getId(),
+                                        resolver.getSupportedSocialMedia(),
+                                        null
+                                    ))
+                                : Mono.empty();
                         }
                     )
                 )
