@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.collections4.SetUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -93,7 +94,7 @@ public class ExternalPlayerCharacterLinkService
                         WebServiceUtil::isClientResponseException,
                         t->
                         {
-                            LOG.error(t.getMessage());
+                            LOG.error(ExceptionUtils.getRootCauseMessage(t));
                             return WebServiceUtil.isClientResponseNotFound(t)
                                 ?
                                     //not found is ok
