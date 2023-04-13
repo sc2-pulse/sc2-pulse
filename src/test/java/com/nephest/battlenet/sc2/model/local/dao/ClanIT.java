@@ -3,10 +3,15 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import static com.nephest.battlenet.sc2.model.local.ClanMemberEvent.EventType.JOIN;
+import static com.nephest.battlenet.sc2.web.service.ClanMemberEventIT.verifyEvent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
@@ -15,8 +20,12 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
+import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.web.service.ClanService;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -25,17 +34,22 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(classes = AllTestConfig.class)
+@AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class ClanIT
@@ -51,10 +65,22 @@ public class ClanIT
     private ClanMemberDAO clanMemberDAO;
 
     @Autowired
+    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
+
+    @Autowired
+    private ClanService clanService;
+
+    @Autowired
     private SeasonGenerator seasonGenerator;
 
     @Autowired
     private JdbcTemplate template;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private MockMvc mvc;
 
     @BeforeEach
     public void beforeEach(@Autowired DataSource dataSource)
@@ -227,6 +253,78 @@ public class ClanIT
         assertEquals(3, page2.get(0));
         assertEquals(4, page2.get(1));
         assertEquals(5, page2.get(2));
+    }
+
+    @Test
+    public void testSaveClans()
+    throws Exception
+    {
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.EU),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            10
+        );
+        playerCharacterStatsDAO.mergeCalculate();
+        Clan clan = new Clan(1, "tag123", Region.EU, "name");
+        clanService.saveClans(List.of(
+            new ImmutablePair<>(new PlayerCharacter(1L, 1L, Region.EU, 1L, 1, "name"), clan),
+            new ImmutablePair<>(new PlayerCharacter(2L, 2L, Region.EU, 2L, 2, "name"), clan),
+            new ImmutablePair<>(new PlayerCharacter(3L, 3L, Region.EU, 3L, 3, "name"), clan)
+        ));
+
+        LadderDistinctCharacter[] chars = objectMapper.readValue(mvc.perform
+        (
+            get("/api/character/search")
+                .queryParam("term", "[" + clan.getTag() + "]")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), LadderDistinctCharacter[].class);
+        assertEquals(3, chars.length);
+        assertEquals(3L, chars[0].getMembers().getCharacter().getId());
+        assertEquals(2L, chars[1].getMembers().getCharacter().getId());
+        assertEquals(1L, chars[2].getMembers().getCharacter().getId());
+
+        ClanMemberEvent[] evts = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group/clan/history")
+                .queryParam("clanId", String.valueOf(clan.getId()))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), ClanMemberEvent[].class);
+        assertEquals(3, evts.length);
+        verifyEvent
+        (
+            evts[0],
+            3L,
+            clan.getId(),
+            JOIN,
+            null,
+            null
+        );
+        verifyEvent
+        (
+            evts[1],
+            2L,
+            clan.getId(),
+            JOIN,
+            null,
+            null
+        );
+        verifyEvent
+        (
+            evts[2],
+            1L,
+            clan.getId(),
+            JOIN,
+            null,
+            null
+        );
     }
 
 }
