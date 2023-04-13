@@ -42,7 +42,7 @@ public class ProPlayerService
     private static final Logger LOG = LoggerFactory.getLogger(ProPlayerService.class);
 
     public static final Pattern ALIGULAC_PROFILE_PATTERN =
-        Pattern.compile("^https?://aligulac.com/players/([0-9]+).*$");
+        Pattern.compile("^https?://aligulac.com/players/(\\d+)(-.*)?/?$");
     public static final String ALIGULAC_PROFILE_PREFIX = "http://aligulac.com/players/";
     public static final String LIQUIPEDIA_PROFILE_PREFIX = "https://liquipedia.net/starcraft2/";
 
