@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.web.service;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLegacyProfile;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -19,10 +20,13 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -273,8 +277,7 @@ public class ClanService
             .map(this::extractClanMembers)
             .buffer(INACTIVE_CLAN_MEMBER_BATCH_SIZE)
             .toStream()
-            .forEach(profiles->dbTasks.add(dbExecutorService.submit(
-                ()->StatsService.saveClans(clanDAO, clanMemberDAO, profiles))));
+            .forEach(profiles->dbTasks.add(dbExecutorService.submit(()->saveClans(profiles))));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
         LOG.info("Updated {} inactive clan members", clanMembers.size());
     }
@@ -301,6 +304,29 @@ public class ClanService
             inactiveClanMembersCursor.setValueAndSave(inactiveMembers.get(inactiveMembers.size() - 1).getId());
             inactiveClanMembersUpdated.setValueAndSave(Instant.now());
         }
+    }
+
+    public void saveClans(Collection<Pair<PlayerCharacter, Clan>> clans)
+    {
+        if(clans.isEmpty()) return;
+        List<Pair<PlayerCharacter, Clan>> nonNullClans = clans.stream()
+            .filter(p->p.getValue() != null)
+            .sorted(Map.Entry.comparingByValue(Clan.NATURAL_ID_COMPARATOR))
+            .collect(Collectors.toList());
+
+        clanDAO.merge(nonNullClans.stream().map(Pair::getValue).toArray(Clan[]::new));
+
+        ClanMember[] members = nonNullClans.stream()
+            .map(t->new ClanMember(t.getKey().getId(), t.getValue().getId()))
+            .toArray(ClanMember[]::new);
+        clanMemberDAO.merge(members);
+
+        Long[] charactersWithNoClan = clans.stream()
+            .filter(c->c.getValue() == null)
+            .map(Pair::getKey)
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        clanMemberDAO.remove(charactersWithNoClan);
     }
 
 }

@@ -28,8 +28,6 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.FastTeamDAO;
@@ -128,14 +126,13 @@ public class AlternativeLadderService
     private final TeamStateDAO teamStateDAO;
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDao;
-    private final ClanDAO clanDAO;
-    private final ClanMemberDAO clanMemberDAO;
     private final TeamMemberDAO teamMemberDao;
     private final BlizzardDAO blizzardDAO;
     private final VarDAO varDAO;
     private final SC2WebServiceUtil sc2WebServiceUtil;
     private final ConversionService conversionService;
     private final ExecutorService dbExecutorService;
+    private final ClanService clanService;
     private final EventService eventService;
     private final Predicate<BlizzardProfileTeam> teamValidationPredicate;
 
@@ -154,8 +151,6 @@ public class AlternativeLadderService
         TeamStateDAO teamStateDAO,
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDao,
-        ClanDAO clanDAO,
-        ClanMemberDAO clanMemberDAO,
         TeamMemberDAO teamMemberDao,
         BlizzardDAO blizzardDAO,
         VarDAO varDAO,
@@ -163,6 +158,7 @@ public class AlternativeLadderService
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
+        ClanService clanService,
         EventService eventService
     )
     {
@@ -175,8 +171,6 @@ public class AlternativeLadderService
         this.teamStateDAO = teamStateDAO;
         this.accountDAO = accountDAO;
         this.playerCharacterDao = playerCharacterDao;
-        this.clanDAO = clanDAO;
-        this.clanMemberDAO = clanMemberDAO;
         this.teamMemberDao = teamMemberDao;
         this.blizzardDAO = blizzardDAO;
         this.varDAO = varDAO;
@@ -184,6 +178,7 @@ public class AlternativeLadderService
         this.conversionService = conversionService;
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         this.dbExecutorService = dbExecutorService;
+        this.clanService = clanService;
         this.eventService = eventService;
     }
 
@@ -455,7 +450,7 @@ public class AlternativeLadderService
         saveNewCharacterData(newTeams, members);
         savePlayerCharacters(characters);
         teamMemberDao.merge(members.toArray(TeamMember[]::new));
-        StatsService.saveClans(clanDAO, clanMemberDAO, clans);
+        clanService.saveClans(clans);
         pendingCharacters.addAll(characters);
         pendingCharacters.addAll
         (

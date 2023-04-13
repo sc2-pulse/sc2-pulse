@@ -19,7 +19,6 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
-import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
@@ -30,8 +29,6 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.FastTeamDAO;
@@ -152,8 +149,6 @@ public class StatsService
     private TeamStateDAO teamStateDAO;
     private AccountDAO accountDao;
     private PlayerCharacterDAO playerCharacterDao;
-    private ClanDAO clanDAO;
-    private ClanMemberDAO clanMemberDAO;
     private TeamMemberDAO teamMemberDao;
     private QueueStatsDAO queueStatsDAO;
     private LeagueStatsDAO leagueStatsDao;
@@ -163,6 +158,7 @@ public class StatsService
     private SC2WebServiceUtil sc2WebServiceUtil;
     private ConversionService conversionService;
     private ExecutorService dbExecutorService;
+    private ClanService clanService;
     private EventService eventService;
     private Predicate<BlizzardTeam> teamValidationPredicate;
 
@@ -182,8 +178,6 @@ public class StatsService
         TeamStateDAO teamStateDAO,
         AccountDAO accountDao,
         PlayerCharacterDAO playerCharacterDao,
-        ClanDAO clanDAO,
-        ClanMemberDAO clanMemberDAO,
         TeamMemberDAO teamMemberDao,
         QueueStatsDAO queueStatsDAO,
         LeagueStatsDAO leagueStatsDao,
@@ -194,6 +188,7 @@ public class StatsService
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
+        ClanService clanService,
         EventService eventService
     )
     {
@@ -208,8 +203,6 @@ public class StatsService
         this.teamStateDAO = teamStateDAO;
         this.accountDao = accountDao;
         this.playerCharacterDao = playerCharacterDao;
-        this.clanDAO = clanDAO;
-        this.clanMemberDAO = clanMemberDAO;
         this.teamMemberDao = teamMemberDao;
         this.queueStatsDAO = queueStatsDAO;
         this.leagueStatsDao = leagueStatsDao;
@@ -219,6 +212,7 @@ public class StatsService
         this.sc2WebServiceUtil = sc2WebServiceUtil;
         this.conversionService = conversionService;
         this.dbExecutorService = dbExecutorService;
+        this.clanService = clanService;
         this.eventService = eventService;
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         for(Region r : Region.values())
@@ -595,7 +589,7 @@ public class StatsService
                 if(season.getBattlenetId().equals(curSeason)) pendingTeams.add(t.getT1().getId());
             });
         saveMembersConcurrently(members);
-        saveClans(clanDAO, clanMemberDAO, clans);
+        clanService.saveClans(clans);
         pendingCharacters.addAll(members.stream().map(Tuple3::getT2).collect(Collectors.toList()));
     }
 
@@ -675,29 +669,7 @@ public class StatsService
         if(teamMembers.size() > 0) teamMemberDao.merge(teamMembers.toArray(teamMembers.toArray(new TeamMember[0])));
     }
 
-    public static void saveClans
-    (ClanDAO clanDAO, ClanMemberDAO clanMemberDAO, List<Pair<PlayerCharacter, Clan>> clans)
-    {
-        if(clans.isEmpty()) return;
-        List<Pair<PlayerCharacter, Clan>> nonNullClans = clans.stream()
-            .filter(p->p.getValue() != null)
-            .sorted(Map.Entry.comparingByValue(Clan.NATURAL_ID_COMPARATOR))
-            .collect(Collectors.toList());
 
-        clanDAO.merge(nonNullClans.stream().map(Pair::getValue).toArray(Clan[]::new));
-
-        ClanMember[] members = nonNullClans.stream()
-            .map(t->new ClanMember(t.getKey().getId(), t.getValue().getId()))
-            .toArray(ClanMember[]::new);
-        clanMemberDAO.merge(members);
-
-        Long[] charactersWithNoClan = clans.stream()
-            .filter(c->c.getValue() == null)
-            .map(Pair::getKey)
-            .map(PlayerCharacter::getId)
-            .toArray(Long[]::new);
-        clanMemberDAO.remove(charactersWithNoClan);
-    }
 
     public static List<Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> getLeagueIds
     (

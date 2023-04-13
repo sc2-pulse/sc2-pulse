@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -24,8 +24,6 @@ import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.FastTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueDAO;
@@ -96,10 +94,7 @@ public class StatsServiceTest
     private PlayerCharacterDAO playerCharacterDao;
 
     @Mock
-    private ClanDAO clanDAO;
-
-    @Mock
-    private ClanMemberDAO clanMemberDAO;
+    private ClanService clanService;
 
     @Mock
     private TeamMemberDAO teamMemberDao;
@@ -152,8 +147,6 @@ public class StatsServiceTest
             teamStateDAO,
             accountDao,
             playerCharacterDao,
-            clanDAO,
-            clanMemberDAO,
             teamMemberDao,
             queueStatsDAO,
             leagueStatsDao,
@@ -164,6 +157,7 @@ public class StatsServiceTest
             conversionService,
             validator,
             dbExecutorService,
+            clanService,
             eventService
         );
         ss.setNestedService(nss);
