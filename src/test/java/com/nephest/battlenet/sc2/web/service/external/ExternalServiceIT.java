@@ -55,7 +55,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
@@ -99,9 +98,6 @@ public class ExternalServiceIT
     @Autowired
     private ObjectMapper objectMapper;
 
-    @Autowired
-    private CacheManager cacheManager;
-
     @SpyBean
     private SC2ArcadeAPI arcadeAPI;
 
@@ -124,8 +120,6 @@ public class ExternalServiceIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
-        cacheManager.getCacheNames()
-            .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         mvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
             .apply(springSecurity())
@@ -186,8 +180,6 @@ public class ExternalServiceIT
     throws Exception
     {
         verifyExternalCharacterSearchByBattleNetProfile();
-        cacheManager.getCacheNames()
-            .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         verifyExternalCharacterSearchByBattleNetProfile();
         verifyExternalLinkResolver();
         /*
@@ -201,8 +193,6 @@ public class ExternalServiceIT
     public void testExternalLinkResolver() throws Exception
     {
         verifyExternalLinkResolver();
-        cacheManager.getCacheNames()
-            .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         verifyExternalLinkResolver();
         verifyExternalCharacterSearchByBattleNetProfile();
 

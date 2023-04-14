@@ -58,7 +58,6 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -127,7 +126,6 @@ public class LadderSearchIndependentIT
     public void beforeEach
     (
         @Autowired DataSource dataSource,
-        @Autowired CacheManager cacheManager,
         @Autowired WebApplicationContext webApplicationContext
     )
     throws SQLException
@@ -141,8 +139,6 @@ public class LadderSearchIndependentIT
                 .apply(springSecurity())
                 .alwaysDo(print())
                 .build();
-            cacheManager.getCacheNames()
-                .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         }
     }
 

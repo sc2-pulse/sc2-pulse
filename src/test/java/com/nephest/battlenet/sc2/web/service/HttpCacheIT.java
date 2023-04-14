@@ -36,7 +36,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -71,7 +70,6 @@ public class HttpCacheIT
     (
         @Autowired DataSource dataSource,
         @Autowired WebApplicationContext webApplicationContext,
-        @Autowired CacheManager cacheManager,
         @Autowired SeasonGenerator generator,
         @Autowired LeagueStatsDAO leagueStatsDAO,
         @Autowired PopulationStateDAO populationStateDAO
@@ -82,8 +80,6 @@ public class HttpCacheIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            cacheManager.getCacheNames()
-                .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         }
 
         LocalDate start = LocalDate.now().minusMonths(1);

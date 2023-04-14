@@ -29,7 +29,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.web.authentication.rememberme.PersistentRememberMeToken;
@@ -60,8 +59,7 @@ public class SessionServiceIT
     public static void init
     (
         @Autowired DataSource dataSource,
-        @Autowired WebApplicationContext webApplicationContext,
-        @Autowired CacheManager cacheManager
+        @Autowired WebApplicationContext webApplicationContext
     )
     throws SQLException
     {
@@ -69,8 +67,6 @@ public class SessionServiceIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            cacheManager.getCacheNames()
-                .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         }
         mvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
@@ -83,16 +79,13 @@ public class SessionServiceIT
     public void afterEach
     (
         @Autowired DataSource dataSource,
-        @Autowired WebApplicationContext webApplicationContext,
-        @Autowired CacheManager cacheManager
+        @Autowired WebApplicationContext webApplicationContext
     ) throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            cacheManager.getCacheNames()
-                .forEach(cacheName->cacheManager.getCache(cacheName).clear());
         }
     }
 

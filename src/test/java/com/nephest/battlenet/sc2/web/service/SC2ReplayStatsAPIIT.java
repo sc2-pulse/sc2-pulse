@@ -21,11 +21,9 @@ import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
@@ -66,9 +64,6 @@ public class SC2ReplayStatsAPIIT
     @Autowired
     private SC2ReplayStatsAPI api;
 
-    @Autowired
-    private CacheManager cacheManager;
-
     private static WebClient originalClient;
 
     @BeforeAll
@@ -81,12 +76,6 @@ public class SC2ReplayStatsAPIIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
-    }
-
-    @BeforeEach
-    public void beforeEach()
-    {
-        cacheManager.getCacheNames().forEach(c->cacheManager.getCache(c).clear());
     }
 
     @AfterAll

@@ -30,7 +30,6 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.cache.CacheManager;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -58,7 +57,6 @@ public class SearchServiceIT
     (
         @Autowired DataSource dataSource,
         @Autowired WebApplicationContext webApplicationContext,
-        @Autowired CacheManager cacheManager,
         @Autowired AccountDAO accountDAO,
         @Autowired PlayerCharacterDAO playerCharacterDAO,
         @Autowired ClanDAO clanDAO,
@@ -70,8 +68,6 @@ public class SearchServiceIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            cacheManager.getCacheNames()
-                .forEach(cacheName->cacheManager.getCache(cacheName).clear());
 
             for(int i = 0; i < CharacterController.SEARCH_SUGGESTIONS_SIZE + 1; i++)
                 accountDAO.merge(new Account(null, Partition.GLOBAL, "ab#" + i));
