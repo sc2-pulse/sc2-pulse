@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.web.service;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
+import com.nephest.battlenet.sc2.model.local.LongVar;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProTeam;
 import com.nephest.battlenet.sc2.model.local.ProTeamMember;
@@ -15,13 +17,19 @@ import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProTeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
+import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
@@ -45,6 +53,14 @@ public class ProPlayerService
         Pattern.compile("^https?://aligulac.com/players/(\\d+)(-.*)?/?$");
     public static final String ALIGULAC_PROFILE_PREFIX = "http://aligulac.com/players/";
     public static final String LIQUIPEDIA_PROFILE_PREFIX = "https://liquipedia.net/starcraft2/";
+    public static final Set<SocialMedia> SUPPORTED_SOCIAL_MEDIA = EnumSet.of
+    (
+        SocialMedia.TWITCH,
+        SocialMedia.YOUTUBE,
+        SocialMedia.TWITTER,
+        SocialMedia.DISCORD,
+        SocialMedia.INSTAGRAM
+    );
 
     private final ProPlayerDAO proPlayerDAO;
     private final ProTeamDAO proTeamDAO;
@@ -55,8 +71,12 @@ public class ProPlayerService
     private final SC2RevealedAPI sc2RevealedAPI;
 
     private AligulacAPI aligulacAPI;
+    private final LiquipediaAPI liquipediaAPI;
+
+    private final LongVar linkUpdateIdCursor;
 
     private int aligulacBatchSize = 100;
+    private final int linkBatchSize = 1;
 
     @Autowired @Lazy
     private ProPlayerService proPlayerService;
@@ -70,7 +90,9 @@ public class ProPlayerService
         SocialMediaLinkDAO socialMediaLinkDAO,
         ProPlayerAccountDAO proPlayerAccountDAO,
         SC2RevealedAPI sc2RevealedAPI,
-        AligulacAPI aligulacAPI
+        AligulacAPI aligulacAPI,
+        LiquipediaAPI liquipediaAPI,
+        VarDAO varDAO
     )
     {
         this.proPlayerDAO = proPlayerDAO;
@@ -80,6 +102,17 @@ public class ProPlayerService
         this.proPlayerAccountDAO = proPlayerAccountDAO;
         this.sc2RevealedAPI = sc2RevealedAPI;
         this.aligulacAPI = aligulacAPI;
+        this.liquipediaAPI = liquipediaAPI;
+        linkUpdateIdCursor = new LongVar(varDAO, "player.pro.link.id.cursor", false);
+        try
+        {
+            linkUpdateIdCursor.load();
+            if(linkUpdateIdCursor.getValue() == null) linkUpdateIdCursor.setValueAndSave(0L);
+        }
+        catch (Exception ex)
+        {
+            LOG.error(ex.getMessage(), ex);
+        }
     }
 
     protected ProPlayerService getProPlayerService()
@@ -198,6 +231,16 @@ public class ProPlayerService
         this.aligulacBatchSize = aligulacBatchSize;
     }
 
+    public int getLinkBatchSize()
+    {
+        return linkBatchSize;
+    }
+
+    protected LongVar getLinkUpdateIdCursor()
+    {
+        return linkUpdateIdCursor;
+    }
+
     public Optional<ProPlayer> importProfile(String url)
     {
         Long aligulacId = getAligulacProfileId(url);
@@ -279,6 +322,95 @@ public class ProPlayerService
     {
         int pos = url.indexOf("-");
         return pos > 0 ? url.substring(0, pos) : url;
+    }
+
+    /**
+     * Update social media links of next {@link #linkBatchSize} pro players. This method is not
+     * thread safe.
+     * @param ignoreParsingErrors Log errors and ignore them if true, throw exception if false.
+     * @return number of updated links, -1 if {@code ignoreParsingErrors} is true and exception
+     * was thrown when pulling the links from the liquipedia API.
+     */
+    public int updateSocialMediaLinks(boolean ignoreParsingErrors)
+    {
+        List<SocialMediaLink> links = socialMediaLinkDAO.findByIdCursor
+        (
+            linkUpdateIdCursor.getValue(),
+            SocialMedia.LIQUIPEDIA,
+            linkBatchSize
+        );
+        SocialMediaLink[] pulledLinks = getSocialMediaLinks(links, ignoreParsingErrors);
+        if(pulledLinks != null)
+        {
+            socialMediaLinkDAO.merge(false, pulledLinks);
+            if(pulledLinks.length > 0)
+                LOG.info("Updated {} social media links", pulledLinks.length);
+        }
+        linkUpdateIdCursor.setValueAndSave(links.isEmpty() ? 0 : links.get(links.size() - 1).getProPlayerId());
+        return pulledLinks != null ? pulledLinks.length : -1;
+    }
+
+    public Integer updateSocialMediaLinks()
+    {
+        return updateSocialMediaLinks(true);
+    }
+
+    private SocialMediaLink[] getSocialMediaLinks
+    (
+        Collection<? extends SocialMediaLink> links,
+        boolean ignoreParsingErrors
+    )
+    {
+        SocialMediaLink[] pulledLinks = null;
+        try
+        {
+            pulledLinks = links.stream()
+                .flatMap(this::getSocialMediaLinks)
+                .toArray(SocialMediaLink[]::new);
+        }
+        catch (RuntimeException e)
+        {
+            if(ignoreParsingErrors)
+            {
+                LOG.error(e.getMessage(), e);
+            }
+            else
+            {
+                throw e;
+            }
+        }
+        return pulledLinks;
+    }
+
+    private Stream<SocialMediaLink> getSocialMediaLinks(SocialMediaLink link)
+    {
+        String liquipediaName = PlayerCharacterLink.getRelativeUrl(link.getUrl()).orElse(null);
+        if(liquipediaName == null)
+        {
+            LOG.error
+            (
+                "Invalid liquipedia URL {} for the pro player {}",
+                link.getUrl(),
+                link.getProPlayerId()
+            );
+            return Stream.empty();
+        }
+        return getSocialMediaLinks(link.getProPlayerId(), liquipediaName);
+    }
+
+    private Stream<SocialMediaLink> getSocialMediaLinks(Long proPlayerId, String liquipediaName)
+    {
+        return liquipediaAPI.parsePlayer(liquipediaName)
+            .block()
+            .getLinks()
+            .stream()
+            .map(url->new SocialMediaLink
+            (
+                proPlayerId,
+                SocialMedia.fromBaseUserUrlPrefix(url),
+                url
+            ))
+            .filter(link->SUPPORTED_SOCIAL_MEDIA.contains(link.getType()));
     }
 
 }

@@ -4,10 +4,12 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
@@ -18,8 +20,12 @@ import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProTeam;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProTeamRoot;
+import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
@@ -33,11 +39,12 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
-import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,7 +53,7 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 
-@SpringBootTest(classes = DatabaseTestConfig.class)
+@SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class ProPlayerServiceIT
@@ -55,6 +62,12 @@ public class ProPlayerServiceIT
     public static final QueueType QUEUE_TYPE = QueueType.LOTV_4V4;
     public static final TeamType TEAM_TYPE = TeamType.ARRANGED;
     public static final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
+
+    @Autowired
+    private ProPlayerDAO proPlayerDAO;
+
+    @Autowired
+    private SocialMediaLinkDAO socialMediaLinkDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -80,8 +93,8 @@ public class ProPlayerServiceIT
     @Autowired
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
-    @BeforeAll
-    public static void beforeAll
+    @BeforeEach
+    public void beforeEach
     (
         @Autowired DataSource dataSource,
         @Autowired SeasonGenerator seasonGenerator,
@@ -94,16 +107,6 @@ public class ProPlayerServiceIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
-        seasonGenerator.generateDefaultSeason
-        (
-            List.of(Region.EU),
-            List.of(BaseLeague.LeagueType.values()),
-            List.of(QUEUE_TYPE),
-            TEAM_TYPE,
-            TIER_TYPE,
-            5
-        );
-        playerCharacterStatsDAO.mergeCalculate();
     }
 
     @AfterAll
@@ -120,6 +123,16 @@ public class ProPlayerServiceIT
     public void testUpdate()
     throws IOException
     {
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.EU),
+            List.of(BaseLeague.LeagueType.values()),
+            List.of(QUEUE_TYPE),
+            TEAM_TYPE,
+            TIER_TYPE,
+            5
+        );
+        playerCharacterStatsDAO.mergeCalculate();
         MockWebServer server = new MockWebServer();
         server.start();
         revealedAPI.setWebClient(revealedAPI.getWebClient().mutate().baseUrl(server.url("/").uri().toString()).build());
@@ -230,6 +243,60 @@ public class ProPlayerServiceIT
             new AligulacProTeamRoot[]{new AligulacProTeamRoot(new AligulacProTeam(1L, "currentTeam2", "ct2"))}
         );
         return new AligulacProPlayerRoot(players);
+    }
+
+    @Test
+    public void testUpdateSocialMediaLinks()
+    {
+        ProPlayer proPlayer = proPlayerDAO.merge(new ProPlayer(null, 1L, "tag", "name"));
+        ProPlayer proPlayer2 = proPlayerDAO.merge(new ProPlayer(null, 2L, "tag2", "name2"));
+        socialMediaLinkDAO.merge
+        (
+            false,
+            new SocialMediaLink
+            (
+                proPlayer2.getId(),
+                SocialMedia.LIQUIPEDIA,
+                "https://liquipedia.net/starcraft2/Serral"
+            ),
+            new SocialMediaLink
+            (
+                proPlayer2.getId(),
+                SocialMedia.TWITTER,
+                "oldTwitterLink"
+            )
+        );
+        proPlayerService.getLinkUpdateIdCursor().setValue(0L);
+        assertTrue(proPlayerService.updateSocialMediaLinks() > 0);
+
+        //links were updated
+        List<SocialMediaLink> links = socialMediaLinkDAO.findByTypes(SocialMedia.values());
+        assertTrue(links.size() > 1);
+
+        //at least twitch link was created
+        Optional<SocialMediaLink> twitchLink = links.stream()
+            .filter(l->l.getType() == SocialMedia.TWITCH)
+            .findAny();
+        assertTrue(twitchLink.isPresent());
+
+        //at least twitter link was updated
+        Optional<SocialMediaLink> twitterLink = links.stream()
+            .filter(l->l.getType() == SocialMedia.TWITTER)
+            .findAny();
+        assertTrue(twitterLink.isPresent());
+        assertNotEquals("oldTwitterLink", twitterLink.get().getUrl());
+
+        //aligulac links shouldn't be updated even if they present in the upstream API
+        Optional<SocialMediaLink> aligulacLink = links.stream()
+            .filter(l->l.getType() == SocialMedia.ALIGULAC)
+            .findAny();
+        assertTrue(aligulacLink.isEmpty());
+
+        assertEquals(proPlayer2.getId(), proPlayerService.getLinkUpdateIdCursor().getValue());
+
+        //no more players to update, reset the cursor
+        assertEquals(0, proPlayerService.updateSocialMediaLinks());
+        assertEquals(0, proPlayerService.getLinkUpdateIdCursor().getValue());
     }
 
 }
