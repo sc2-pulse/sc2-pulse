@@ -78,6 +78,45 @@ public class SocialMediaLinkIT
     }
 
     @Test
+    public void testFindByIdCursor()
+    {
+        ProPlayer proPlayer1 = proPlayerDAO
+            .merge(new ProPlayer(null, 1L, "nick", "name"));
+        ProPlayer proPlayer2 = proPlayerDAO
+            .merge(new ProPlayer(null, 2L, "nick2", "name2"));
+        ProPlayer proPlayer3 = proPlayerDAO
+            .merge(new ProPlayer(null, 3L, "nick3", "name3"));
+        ProPlayer proPlayer4 = proPlayerDAO
+            .merge(new ProPlayer(null, 4L, "nick4", "name4"));
+
+        socialMediaLinkDAO.merge
+        (
+            new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url1"),
+            new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url2"),
+            new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "url3"),
+            new SocialMediaLink(proPlayer3.getId(), SocialMedia.TWITCH, "url4"),
+            new SocialMediaLink(proPlayer3.getId(), SocialMedia.ALIGULAC, "url5"),
+            new SocialMediaLink(proPlayer4.getId(), SocialMedia.TWITCH, "url6"),
+            new SocialMediaLink(proPlayer4.getId(), SocialMedia.ALIGULAC, "url7")
+        );
+
+        List<SocialMediaLink> links1 = socialMediaLinkDAO
+            .findByIdCursor(null, SocialMedia.ALIGULAC, 2);
+        assertEquals(2, links1.size());
+        assertEquals("url2", links1.get(0).getUrl());
+        assertEquals("url5", links1.get(1).getUrl());
+
+        List<SocialMediaLink> links2 = socialMediaLinkDAO
+            .findByIdCursor(links1.get(1).getProPlayerId(), SocialMedia.ALIGULAC, 2);
+        assertEquals(1, links2.size());
+        assertEquals("url7", links2.get(0).getUrl());
+
+        List<SocialMediaLink> links3 = socialMediaLinkDAO
+            .findByIdCursor(links2.get(0).getProPlayerId(), SocialMedia.ALIGULAC, 2);
+        assertTrue(links3.isEmpty());
+    }
+
+    @Test
     public void testProtection()
     {
         ProPlayer proPlayer1 = proPlayerDAO

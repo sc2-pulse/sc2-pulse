@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -19,6 +19,7 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -48,6 +49,14 @@ public class SocialMediaLinkDAO
         + "WHERE type = :type";
     private static final String FIND_LIST_BY_TYPES =
         "SELECT " + STD_SELECT + "FROM social_media_link WHERE type IN(:types)";
+
+    private static final String FIND_BY_ID_CURSOR_AND_TYPE =
+        "SELECT " + STD_SELECT
+        + "FROM social_media_link "
+        + "WHERE pro_player_id > :proPlayerIdCursor "
+        + "AND type = :type "
+        + "ORDER BY pro_player_id "
+        + "LIMIT :limit";
 
     private static RowMapper<SocialMediaLink> STD_ROW_MAPPER;
     private static ResultSetExtractor<Map<ProPlayer, SocialMediaLink>> GROUP_FETCH_MAPPER;
@@ -156,6 +165,20 @@ public class SocialMediaLinkDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("types", typeInts);
         return template.query(FIND_LIST_BY_TYPES, params, STD_ROW_MAPPER);
+    }
+
+    public List<SocialMediaLink> findByIdCursor
+    (
+        Long proPlayerIdCursor,
+        SocialMedia type,
+        int limit
+    )
+    {
+        SqlParameterSource params = new MapSqlParameterSource()
+            .addValue("proPlayerIdCursor", proPlayerIdCursor != null ? proPlayerIdCursor : -1L)
+            .addValue("type", conversionService.convert(type, Integer.class))
+            .addValue("limit", limit);
+        return template.query(FIND_BY_ID_CURSOR_AND_TYPE, params, STD_ROW_MAPPER);
     }
 
 }
