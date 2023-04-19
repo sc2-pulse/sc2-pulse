@@ -25,6 +25,21 @@ public class SocialMediaTest
     @CsvSource
     ({
         "http://aligulac.com/players/6306-Gemini/, ALIGULAC",
+        "https://discord.gg/sdfngjsdk, DISCORD",
+        "battlenet:://starcraft/profile/2/4379857489798174891, BATTLE_NET",
+        "nonExisting, UNKNOWN",
+        ", UNKNOWN",
+        "'    ', UNKNOWN"
+    })
+    @ParameterizedTest
+    public void testFromBaseUrlPrefix(String url, SocialMedia expectedResult)
+    {
+        assertEquals(expectedResult, SocialMedia.fromBaseUrlPrefix(url));
+    }
+
+    @CsvSource
+    ({
+        "http://aligulac.com/players/6306-Gemini/, ALIGULAC",
         "nonExisting, UNKNOWN",
         ", UNKNOWN",
         "'    ', UNKNOWN"
