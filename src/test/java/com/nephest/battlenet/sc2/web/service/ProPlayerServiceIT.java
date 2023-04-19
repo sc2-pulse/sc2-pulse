@@ -176,6 +176,14 @@ public class ProPlayerServiceIT
         assertEquals("https://twitch.tv/serral", ladderProPlayer.getLinks().get(1).getUrl());
         assertEquals(SocialMedia.LIQUIPEDIA, ladderProPlayer.getLinks().get(2).getType());
         assertEquals("https://liquipedia.net/starcraft2/Lpname2", ladderProPlayer.getLinks().get(2).getUrl());
+
+        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+            .setBody(objectMapper.writeValueAsString(createAligulacProPlayers1())));
+        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+            .setBody(objectMapper.writeValueAsString(createAligulacProPlayers2NoTeam())));
+        proPlayerService.update();
+        LadderProPlayer ladderProPlayer2 = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
+        assertNull(ladderProPlayer2.getProTeam());
     }
 
     private RevealedPlayers createRevealedProPlayers()
@@ -243,6 +251,13 @@ public class ProPlayerServiceIT
             new AligulacProTeamRoot[]{new AligulacProTeamRoot(new AligulacProTeam(1L, "currentTeam2", "ct2"))}
         );
         return new AligulacProPlayerRoot(players);
+    }
+
+    private AligulacProPlayerRoot createAligulacProPlayers2NoTeam()
+    {
+        AligulacProPlayerRoot root = createAligulacProPlayers2();
+        root.getObjects()[0].setCurrentTeams(new AligulacProTeamRoot[0]);
+        return root;
     }
 
     @Test

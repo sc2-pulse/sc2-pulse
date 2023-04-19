@@ -198,6 +198,7 @@ public class ProPlayerService
     )
     {
         ArrayList<ProTeamMember> members = new ArrayList<>();
+        ArrayList<Long> notMembers = new ArrayList<>();
         ArrayList<SocialMediaLink> links = new ArrayList<>(aligulacProPlayers.length * 2);
         //aligulac returns players in the same order they were requested
         for(int i = 0; i < aligulacProPlayers.length; i++)
@@ -213,10 +214,15 @@ public class ProPlayerService
                 );
                 members.add(member);
             }
+            else
+            {
+                notMembers.add(proPlayers[i].getId());
+            }
             links.addAll(extractLinks(proPlayers[i], aligulacProPlayers[i]));
         }
         proPlayerDAO.mergeWithoutIds(Arrays.copyOf(proPlayers, ix));
         proTeamMemberDAO.merge(members.toArray(new ProTeamMember[0]));
+        proTeamMemberDAO.remove(notMembers.toArray(Long[]::new));
         socialMediaLinkDAO.merge(false, links.toArray(SocialMediaLink[]::new));
     }
 
