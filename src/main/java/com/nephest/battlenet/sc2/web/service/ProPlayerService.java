@@ -138,9 +138,6 @@ public class ProPlayerService
     public void update()
     {
         updateAligulac();
-        proTeamMemberDAO.removeExpired();
-        proTeamDAO.removeExpired();
-        proPlayerDAO.removeExpired();
         LOG.info("Updated pro players");
     }
 

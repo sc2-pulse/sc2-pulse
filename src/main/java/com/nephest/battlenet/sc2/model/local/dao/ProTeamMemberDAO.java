@@ -16,7 +16,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class ProTeamMemberDAO
-extends StandardDAO
 {
 
     private static final String CREATE_QUERY =
@@ -38,7 +37,6 @@ extends StandardDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
-        super(template, "pro_team_member", "7 DAYS");
         this.template = template;
     }
 
@@ -72,7 +70,7 @@ extends StandardDAO
             .collect(Collectors.toSet());
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("proPlayerIds", uniqueIds);
-        return getTemplate().update(REMOVE_BY_PRO_PLAYER_IDS, params);
+        return template.update(REMOVE_BY_PRO_PLAYER_IDS, params);
     }
 
 }

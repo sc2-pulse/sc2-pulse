@@ -400,9 +400,6 @@ public class SqlSyntaxIT
         leagueStatsDAO.calculateForSeason(40);
         leagueStatsDAO.mergeCalculateForSeason(40);
 
-        proPlayerDAO.removeExpired();
-        proTeamDAO.removeExpired();
-        proTeamMemberDAO.removeExpired();
         teamStateDAO.removeExpired();
         persistentLoginDAO.removeExpired();
         twitchVideoDAO.removeExpired();

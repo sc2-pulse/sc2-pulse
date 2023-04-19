@@ -1,9 +1,11 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.ProTeam;
+import java.sql.Types;
+import java.time.OffsetDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
@@ -11,12 +13,8 @@ import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
-import java.sql.Types;
-import java.time.OffsetDateTime;
-
 @Repository
 public class ProTeamDAO
-extends StandardDAO
 {
 
     private static RowMapper<ProTeam> STD_ROW_MAPPER;
@@ -67,7 +65,6 @@ extends StandardDAO
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
-        super(template, "pro_team", "30 DAYS");
         this.template = template;
         initMappers();
     }

@@ -19,7 +19,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class ProPlayerDAO
-extends StandardDAO
 {
 
     private static RowMapper<ProPlayer> STD_ROW_MAPPER;
@@ -96,7 +95,6 @@ extends StandardDAO
         @Qualifier("sc2StatsConversionService") ConversionService conversionService
     )
     {
-        super(template, "pro_player", "30 DAYS");
         this.template = template;
         this.conversionService = conversionService;
         initMappers();
