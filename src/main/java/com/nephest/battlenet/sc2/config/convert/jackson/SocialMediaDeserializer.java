@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.convert.jackson;
@@ -14,7 +14,7 @@ extends KeyDeserializer
     @Override
     public Object deserializeKey(String s, DeserializationContext deserializationContext)
     {
-        return SocialMedia.fromRevealedName(s);
+        return SocialMedia.from(s);
     }
 
 }

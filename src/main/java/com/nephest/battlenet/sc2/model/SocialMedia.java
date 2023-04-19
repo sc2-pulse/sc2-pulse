@@ -7,27 +7,25 @@ public enum SocialMedia
 implements Identifiable
 {
 
-    ALIGULAC(1, "aligulac", null, "http://aligulac.com/players"),
-    TWITCH(2, "twitch", null, "https://www.twitch.tv"),
-    LIQUIPEDIA(3, "liquipedia", "liquidpedia", "https://liquipedia.net/starcraft2"),
-    TWITTER(4, "twitter", null, "https://twitter.com"),
-    INSTAGRAM(5, "instagram", null, "https://www.instagram.com"),
-    DISCORD(6, "discord", null, null),
-    YOUTUBE(7, "youtube", null, "https://www.youtube.com/c"),
-    UNKNOWN(8, "", null, null),
-    BATTLE_NET(9, "battlenet", null, "battlenet:://starcraft/profile"),
-    REPLAY_STATS(10, "replaystats", null, "https://sc2replaystats.com/player");
+    ALIGULAC(1, "aligulac", "http://aligulac.com/players"),
+    TWITCH(2, "twitch", "https://www.twitch.tv"),
+    LIQUIPEDIA(3, "liquipedia", "https://liquipedia.net/starcraft2"),
+    TWITTER(4, "twitter", "https://twitter.com"),
+    INSTAGRAM(5, "instagram", "https://www.instagram.com"),
+    DISCORD(6, "discord", null),
+    YOUTUBE(7, "youtube", "https://www.youtube.com/c"),
+    UNKNOWN(8, "", null),
+    BATTLE_NET(9, "battlenet", "battlenet:://starcraft/profile"),
+    REPLAY_STATS(10, "replaystats", "https://sc2replaystats.com/player");
 
     private final int id;
     private final String name;
-    private final String revealedName;
     private final String baseUserUrl;
 
-    SocialMedia(int id, String name, String revealedName, String baseUserUrl)
+    SocialMedia(int id, String name, String baseUserUrl)
     {
         this.id = id;
         this.name = name;
-        this.revealedName = revealedName;
         this.baseUserUrl = baseUserUrl;
     }
 
@@ -44,16 +42,6 @@ implements Identifiable
         String lowerCaseName = name.toLowerCase();
         for(SocialMedia media : SocialMedia.values())
             if(media.getName().equals(lowerCaseName)) return media;
-
-        return UNKNOWN;
-    }
-
-    public static SocialMedia fromRevealedName(String name)
-    {
-        String lowerCaseName = name.toLowerCase();
-        for(SocialMedia media : SocialMedia.values())
-            if((media.getRevealedName() != null && media.getRevealedName().equals(lowerCaseName))
-                || media.getName().equals(lowerCaseName)) return media;
 
         return UNKNOWN;
     }
@@ -82,11 +70,6 @@ implements Identifiable
     public String getName()
     {
         return name;
-    }
-
-    public String getRevealedName()
-    {
-        return revealedName;
     }
 
     public String getBaseUserUrl()

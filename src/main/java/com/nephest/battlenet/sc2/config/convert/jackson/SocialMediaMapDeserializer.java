@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.convert.jackson;
@@ -8,7 +8,6 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.nephest.battlenet.sc2.model.SocialMedia;
-
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.Iterator;
@@ -43,7 +42,7 @@ extends StdDeserializer<Map<SocialMedia, String>>
             String url = entry.getValue().asText();
             if(url == null || url.isEmpty()) continue;
 
-            result.put(SocialMedia.fromRevealedName(entry.getKey()), url);
+            result.put(SocialMedia.from(entry.getKey()), url);
         }
         return result;
     }
