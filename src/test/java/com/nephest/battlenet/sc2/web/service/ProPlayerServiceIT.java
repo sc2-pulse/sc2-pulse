@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -288,18 +289,10 @@ public class ProPlayerServiceIT
         List<SocialMediaLink> links = socialMediaLinkDAO.findByTypes(SocialMedia.values());
         assertTrue(links.size() > 1);
 
-        //at least twitch link was created
-        Optional<SocialMediaLink> twitchLink = links.stream()
-            .filter(l->l.getType() == SocialMedia.TWITCH)
-            .findAny();
-        assertTrue(twitchLink.isPresent());
-
-        //at least twitter link was updated
-        Optional<SocialMediaLink> twitterLink = links.stream()
-            .filter(l->l.getType() == SocialMedia.TWITTER)
-            .findAny();
-        assertTrue(twitterLink.isPresent());
-        assertNotEquals("oldTwitterLink", twitterLink.get().getUrl());
+        verifyTypePresent(links, SocialMedia.TWITCH);
+        verifyTypePresent(links, SocialMedia.DISCORD);
+        SocialMediaLink twitterLink = verifyTypePresent(links, SocialMedia.TWITTER);
+        assertNotEquals("oldTwitterLink", twitterLink.getUrl());
 
         //aligulac links shouldn't be updated even if they present in the upstream API
         Optional<SocialMediaLink> aligulacLink = links.stream()
@@ -312,6 +305,18 @@ public class ProPlayerServiceIT
         //no more players to update, reset the cursor
         assertEquals(0, proPlayerService.updateSocialMediaLinks());
         assertEquals(0, proPlayerService.getLinkUpdateIdCursor().getValue());
+    }
+
+    private <T extends SocialMediaLink> T verifyTypePresent
+    (
+        Collection<T> links,
+        SocialMedia type)
+    {
+        Optional<T> link = links.stream()
+            .filter(l->l.getType() == type)
+            .findAny();
+        assertTrue(link.isPresent());
+        return link.get();
     }
 
 }

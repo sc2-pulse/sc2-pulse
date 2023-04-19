@@ -410,7 +410,7 @@ public class ProPlayerService
             .map(url->new SocialMediaLink
             (
                 proPlayerId,
-                SocialMedia.fromBaseUserUrlPrefix(url),
+                SocialMedia.fromBaseUrlPrefix(url),
                 url
             ))
             .filter(link->SUPPORTED_SOCIAL_MEDIA.contains(link.getType()));
