@@ -53,6 +53,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.web.reactive.function.client.WebClient;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -134,57 +135,67 @@ public class ProPlayerServiceIT
             5
         );
         playerCharacterStatsDAO.mergeCalculate();
-        MockWebServer server = new MockWebServer();
-        server.start();
-        revealedAPI.setWebClient(revealedAPI.getWebClient().mutate().baseUrl(server.url("/").uri().toString()).build());
-        aligulacAPI.setWebClient(aligulacAPI.getWebClient().mutate().baseUrl(server.url("/").uri().toString()).build());
+        WebClient revealedWebClient = revealedAPI.getWebClient();
+        WebClient aligulacWebClient = aligulacAPI.getWebClient();
+        try(MockWebServer server = new MockWebServer())
+        {
+            server.start();
+            revealedAPI.setWebClient(revealedAPI.getWebClient().mutate().baseUrl(server.url("/").uri().toString()).build());
+            aligulacAPI.setWebClient(aligulacAPI.getWebClient().mutate().baseUrl(server.url("/").uri().toString()).build());
 
-        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-            .setBody(objectMapper.writeValueAsString(createRevealedProPlayers())));
-        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-            .setBody(objectMapper.writeValueAsString(createAligulacProPlayers1())));
-        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-            .setBody(objectMapper.writeValueAsString(createAligulacProPlayers2())));
+            server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                .setBody(objectMapper.writeValueAsString(createRevealedProPlayers())));
+            server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                .setBody(objectMapper.writeValueAsString(createAligulacProPlayers1())));
+            server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                .setBody(objectMapper.writeValueAsString(createAligulacProPlayers2())));
 
-        proPlayerService.setAligulacBatchSize(1); //test batching
-        proPlayerService.updateRevealed(); //deprecated
-        proPlayerService.update();
+            proPlayerService.setAligulacBatchSize(1); //test batching
+            proPlayerService.updateRevealed(); //deprecated
+            proPlayerService.update();
 
-        LadderTeamMember member1 = ladderCharacterDAO.findDistinctCharacters("battletag#10").get(0).getMembers();
-        assertEquals("Aligulac nickname1", member1.getProNickname());
-        assertNull(member1.getProTeam());
-        LadderTeamMember nullMember =ladderCharacterDAO.findDistinctCharacters("battletag#20").get(0).getMembers();
-        assertNull(nullMember.getProNickname());
-        assertNull(nullMember.getProTeam());
+            LadderTeamMember member1 = ladderCharacterDAO.findDistinctCharacters("battletag#10").get(0).getMembers();
+            assertEquals("Aligulac nickname1", member1.getProNickname());
+            assertNull(member1.getProTeam());
+            LadderTeamMember nullMember =ladderCharacterDAO.findDistinctCharacters("battletag#20").get(0).getMembers();
+            assertNull(nullMember.getProNickname());
+            assertNull(nullMember.getProTeam());
 
-        //skip character id link
-        assertNull(ladderProPlayerDAO.getProPlayerByCharacterId(2L).getProPlayer());
-        LadderProPlayer ladderProPlayer = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
-        assertEquals(123321L, ladderProPlayer.getProPlayer().getAligulacId());
-        assertEquals("Aligulac Romanized Name2", ladderProPlayer.getProPlayer().getName());
-        assertEquals("Aligulac nickname2", ladderProPlayer.getProPlayer().getNickname());
-        //even though revealed team is null, it is updated from the aligulac
-        assertEquals("currentTeam2", ladderProPlayer.getProTeam().getName());
-        assertEquals("ct2", ladderProPlayer.getProTeam().getShortName());
-        assertEquals("EU", ladderProPlayer.getProPlayer().getCountry());
-        assertEquals(LocalDate.of(2020, 1, 2), ladderProPlayer.getProPlayer().getBirthday());
-        assertEquals(2, ladderProPlayer.getProPlayer().getEarnings());
-        assertEquals(3, ladderProPlayer.getLinks().size());
-        ladderProPlayer.getLinks().sort((a,b)->Comparator.comparing(SocialMedia::getId).compare(a.getType(), b.getType()));
-        assertEquals(SocialMedia.ALIGULAC, ladderProPlayer.getLinks().get(0).getType());
-        assertEquals("http://aligulac.com/players/123321", ladderProPlayer.getLinks().get(0).getUrl());
-        assertEquals(SocialMedia.TWITCH, ladderProPlayer.getLinks().get(1).getType());
-        assertEquals("https://twitch.tv/serral", ladderProPlayer.getLinks().get(1).getUrl());
-        assertEquals(SocialMedia.LIQUIPEDIA, ladderProPlayer.getLinks().get(2).getType());
-        assertEquals("https://liquipedia.net/starcraft2/Lpname2", ladderProPlayer.getLinks().get(2).getUrl());
+            //skip character id link
+            assertNull(ladderProPlayerDAO.getProPlayerByCharacterId(2L).getProPlayer());
+            LadderProPlayer ladderProPlayer = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
+            assertEquals(123321L, ladderProPlayer.getProPlayer().getAligulacId());
+            assertEquals("Aligulac Romanized Name2", ladderProPlayer.getProPlayer().getName());
+            assertEquals("Aligulac nickname2", ladderProPlayer.getProPlayer().getNickname());
+            //even though revealed team is null, it is updated from the aligulac
+            assertEquals("currentTeam2", ladderProPlayer.getProTeam().getName());
+            assertEquals("ct2", ladderProPlayer.getProTeam().getShortName());
+            assertEquals("EU", ladderProPlayer.getProPlayer().getCountry());
+            assertEquals(LocalDate.of(2020, 1, 2), ladderProPlayer.getProPlayer().getBirthday());
+            assertEquals(2, ladderProPlayer.getProPlayer().getEarnings());
+            assertEquals(3, ladderProPlayer.getLinks().size());
+            ladderProPlayer.getLinks().sort((a,b)->Comparator.comparing(SocialMedia::getId).compare(a.getType(), b.getType()));
+            assertEquals(SocialMedia.ALIGULAC, ladderProPlayer.getLinks().get(0).getType());
+            assertEquals("http://aligulac.com/players/123321", ladderProPlayer.getLinks().get(0).getUrl());
+            assertEquals(SocialMedia.TWITCH, ladderProPlayer.getLinks().get(1).getType());
+            assertEquals("https://twitch.tv/serral", ladderProPlayer.getLinks().get(1).getUrl());
+            assertEquals(SocialMedia.LIQUIPEDIA, ladderProPlayer.getLinks().get(2).getType());
+            assertEquals("https://liquipedia.net/starcraft2/Lpname2", ladderProPlayer.getLinks().get(2).getUrl());
 
-        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-            .setBody(objectMapper.writeValueAsString(createAligulacProPlayers1())));
-        server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-            .setBody(objectMapper.writeValueAsString(createAligulacProPlayers2NoTeam())));
-        proPlayerService.update();
-        LadderProPlayer ladderProPlayer2 = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
-        assertNull(ladderProPlayer2.getProTeam());
+            server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                .setBody(objectMapper.writeValueAsString(createAligulacProPlayers1())));
+            server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
+                .setBody(objectMapper.writeValueAsString(createAligulacProPlayers2NoTeam())));
+            proPlayerService.update();
+            LadderProPlayer ladderProPlayer2 = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
+            assertNull(ladderProPlayer2.getProTeam());
+            server.shutdown();
+        }
+        finally
+        {
+            revealedAPI.setWebClient(revealedWebClient);
+            aligulacAPI.setWebClient(aligulacWebClient);
+        }
     }
 
     private RevealedPlayers createRevealedProPlayers()
