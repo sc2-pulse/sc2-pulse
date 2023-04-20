@@ -35,17 +35,17 @@ public class SingleRunnableTest
         SingleRunnable singleRunnable = new SingleRunnable(task);
 
         assertFalse(singleRunnable.isActive());
-        assertTrue(singleRunnable.run());
+        assertTrue(singleRunnable.tryRun());
         assertTrue(singleRunnable.isActive());
         //the task is already active, don't execute a new task
-        assertFalse(singleRunnable.run());
+        assertFalse(singleRunnable.tryRun());
 
         assertThrows(ExecutionException.class, ()->singleRunnable.getFuture().get(), "test");
         assertEquals(1, counter.get());
         //the active status was reset despite the exception
         assertFalse(singleRunnable.isActive());
         //can run a new task now
-        assertTrue(singleRunnable.run());
+        assertTrue(singleRunnable.tryRun());
     }
 
 }

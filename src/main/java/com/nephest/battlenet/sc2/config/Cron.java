@@ -218,7 +218,7 @@ public class Cron
     @Scheduled(fixedDelay = 10_000)
     public void updateAll()
     {
-        updateLaddersTask.run();
+        updateLaddersTask.tryRun();
     }
 
     @Scheduled(cron="0 0 5 * * *")
@@ -432,7 +432,7 @@ public class Cron
     @Scheduled(cron="0,30 * * * * *")
     public void updateProPlayerSocialMediaLinks()
     {
-        updateProPlayerSocialMediaLinksTask.run();
+        updateProPlayerSocialMediaLinksTask.tryRun();
     }
 
 }

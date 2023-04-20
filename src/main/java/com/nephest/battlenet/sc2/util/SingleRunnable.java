@@ -10,7 +10,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * <p>
  * This utility class ensures that there can be only one active {@link #runnable} task, as long
- * as it's accessed via the {@link #run()} method.
+ * as it's accessed via the {@link #tryRun()} method.
  * </p>
  * <p>
  * It's useful in a pattern where services signalize that now is a good time to execute a task,
@@ -42,7 +42,7 @@ public class SingleRunnable
      * Run the {@link #runnable} if there is no active task.
      * @return true if new task was scheduled, false is previous task is still active.
      */
-    public boolean run()
+    public boolean tryRun()
     {
         if(active.compareAndSet(false, true))
         {
