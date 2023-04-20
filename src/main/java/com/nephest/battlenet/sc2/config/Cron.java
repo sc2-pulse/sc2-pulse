@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import com.nephest.battlenet.sc2.util.SingleRunnable;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.ClanService;
@@ -45,7 +46,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -154,7 +154,8 @@ public class Cron
     @Autowired
     private NotificationService notificationService;
 
-    private final AtomicBoolean updatingLadders = new AtomicBoolean(false);
+    private SingleRunnable updateLaddersTask;
+    private SingleRunnable updateProPlayerSocialMediaLinksTask;
 
     @PostConstruct
     public void init()
@@ -202,6 +203,9 @@ public class Cron
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
         }
+        updateLaddersTask = new SingleRunnable(this::nonStopUpdate);
+        updateProPlayerSocialMediaLinksTask
+            = new SingleRunnable(()->proPlayerService.updateSocialMediaLinks(), webExecutorService);
     }
 
     public static OffsetDateTime getNextCharacterReportUpdateTime()
@@ -214,10 +218,7 @@ public class Cron
     @Scheduled(fixedDelay = 10_000)
     public void updateAll()
     {
-        if(!updatingLadders.compareAndSet(false, true)) return;
-
-        nonStopUpdate();
-        updatingLadders.set(false);
+        updateLaddersTask.run();
     }
 
     @Scheduled(cron="0 0 5 * * *")
@@ -431,7 +432,7 @@ public class Cron
     @Scheduled(cron="0,30 * * * * *")
     public void updateProPlayerSocialMediaLinks()
     {
-        webExecutorService.submit(()->proPlayerService.updateSocialMediaLinks());
+        updateProPlayerSocialMediaLinksTask.run();
     }
 
 }
