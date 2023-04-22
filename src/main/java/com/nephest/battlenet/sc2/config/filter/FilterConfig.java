@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.filter;
@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
 @Configuration
 public class FilterConfig
@@ -36,18 +35,44 @@ public class FilterConfig
         FilterRegistrationBean<SeasonCacheFilter> registrationBean = new FilterRegistrationBean<>();
 
         registrationBean.setFilter(new SeasonCacheFilter(seasonDAO, globalContext.getActiveRegions()));
-        registrationBean.addUrlPatterns("/api/season/list", "/api/season/list/all");
+        registrationBean.addUrlPatterns
+        (
+            "/api/season/list",
+            "/api/season/list/all"
+        );
 
         return registrationBean;
     }
 
-    @Bean @Profile("maintenance")
-    public FilterRegistrationBean<MaintenanceFilter> maintenanceFilterRegistration()
+    @Bean
+    public FilterRegistrationBean<DefaultCacheFilter> defaultCacheFilter()
     {
-        FilterRegistrationBean<MaintenanceFilter> reg = new FilterRegistrationBean<>();
-        reg.setFilter(new MaintenanceFilter());
-        reg.addUrlPatterns("/*");
-        return reg;
+        FilterRegistrationBean<DefaultCacheFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new DefaultCacheFilter());
+        registrationBean.addUrlPatterns("/api/character/search/suggestions");
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<VersionFilter> versionFilter()
+    {
+        FilterRegistrationBean<VersionFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new VersionFilter());
+        registrationBean.addUrlPatterns("/api/*");
+        return registrationBean;
+    }
+
+    @Bean
+    public FilterRegistrationBean<NoCacheFilter> noCacheFilter()
+    {
+        FilterRegistrationBean<NoCacheFilter> registrationBean = new FilterRegistrationBean<>();
+        registrationBean.setFilter(new NoCacheFilter());
+        registrationBean.addUrlPatterns
+        (
+            "/api/my/*",
+            "/api/character/report/*"
+        );
+        return registrationBean;
     }
 
 }

@@ -9,17 +9,9 @@ import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.annotation.WebFilter;
 import javax.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
-import org.springframework.stereotype.Component;
 
-@Component
-@WebFilter
-({
-    "/api/character/search/suggestions",
-    "/api/character/search/*/suggestions"
-})
 public class DefaultCacheFilter
 implements Filter
 {

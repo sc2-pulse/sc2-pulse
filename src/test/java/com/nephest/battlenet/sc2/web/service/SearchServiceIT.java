@@ -126,7 +126,8 @@ public class SearchServiceIT
     {
         return objectMapper.readValue(mvc.perform
         (
-            get("/api/character/search/{name}/suggestions", term)
+            get("/api/character/search/suggestions")
+                .queryParam("term", term)
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf().asHeader())
         )
