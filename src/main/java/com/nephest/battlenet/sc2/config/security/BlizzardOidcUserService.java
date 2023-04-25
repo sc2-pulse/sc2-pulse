@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.web.service.AccountService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import java.net.URL;
 import java.util.List;
@@ -39,6 +40,7 @@ implements Oauth2UserServiceRegistration<OidcUserRequest, OidcUser>
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final AccountRoleDAO accountRoleDAO;
+    private final AccountService accountService;
     private final BlizzardSC2API api;
 
     @Autowired
@@ -47,12 +49,14 @@ implements Oauth2UserServiceRegistration<OidcUserRequest, OidcUser>
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDAO,
         AccountRoleDAO accountRoleDAO,
+        AccountService accountService,
         BlizzardSC2API api
     )
     {
         this.accountDAO = accountDAO;
         this.playerCharacterDAO = playerCharacterDAO;
         this.accountRoleDAO = accountRoleDAO;
+        this.accountService = accountService;
         this.api = api;
     }
 
@@ -62,7 +66,13 @@ implements Oauth2UserServiceRegistration<OidcUserRequest, OidcUser>
     {
         OidcUser user = service.loadUser(r);
         Account account = findOrMerge(user);
-        return new BlizzardOidcUser(user, account, accountRoleDAO.getRoles(account.getId()));
+        return new BlizzardOidcUser
+        (
+            user,
+            account,
+            accountService.getOrGenerateNewPassword(account.getId()),
+            accountRoleDAO.getRoles(account.getId())
+        );
     }
 
     @Override

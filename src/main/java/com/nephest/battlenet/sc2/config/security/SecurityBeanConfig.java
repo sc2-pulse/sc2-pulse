@@ -16,6 +16,10 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
 import org.springframework.jdbc.core.JdbcOperations;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.keygen.KeyGenerators;
+import org.springframework.security.crypto.keygen.StringKeyGenerator;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.AuthorizationCodeOAuth2AuthorizedClientProvider;
 import org.springframework.security.oauth2.client.AuthorizedClientServiceOAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.ClientCredentialsOAuth2AuthorizedClientProvider;
@@ -149,6 +153,18 @@ public class SecurityBeanConfig
             remover = (clientRegistrationId, principal, attributes)->oAuth2AuthorizedClientService
                 .removeAuthorizedClient(clientRegistrationId, principal.getName());
         return new RemoveAuthorizedClientOAuth2AuthorizationFailureHandler(remover);
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder()
+    {
+        return PasswordEncoderFactories.createDelegatingPasswordEncoder();
+    }
+
+    @Bean
+    public StringKeyGenerator secureStringGenerator()
+    {
+        return KeyGenerators.string();
     }
 
 }

@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.config.convert.IdentifiableToIntegerConverter;
+import com.nephest.battlenet.sc2.config.convert.IntegerToAccountPropertyTypeConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToClanMemberEventTypeConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToDecisionConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToLeagueTierTypeConverter;
@@ -52,6 +53,7 @@ public class CoreTestConfig
         service.addConverter(new IntegerToSC2PulseAuthority());
         service.addConverter(new IntegerToPlayerCharacterReportTypeConverter());
         service.addConverter(new IntegerToClanMemberEventTypeConverter());
+        service.addConverter(new IntegerToAccountPropertyTypeConverter());
         return service;
     }
 

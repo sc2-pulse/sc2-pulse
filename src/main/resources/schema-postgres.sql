@@ -69,6 +69,20 @@ CREATE TABLE "account_role"
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE "account_property"
+(
+    "account_id" BIGINT NOT NULL,
+    "type" SMALLINT NOT NULL,
+    "value" TEXT NOT NULL,
+
+    PRIMARY KEY("account_id", "type"),
+
+    CONSTRAINT "fk_account_property_account_id"
+        FOREIGN KEY ("account_id")
+        REFERENCES "account"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE "discord_user"
 (
     "id" BIGINT NOT NULL,

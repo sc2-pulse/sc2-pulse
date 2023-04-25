@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
+import com.nephest.battlenet.sc2.web.service.AccountService;
 import com.nephest.battlenet.sc2.web.service.DiscordAPI;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.PersonalService;
@@ -31,6 +32,7 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
     private final OAuth2UserService<OAuth2UserRequest, OAuth2User> service =
         new DefaultOAuth2UserService();
     private final AccountRoleDAO accountRoleDAO;
+    private final AccountService accountService;
     private final DiscordService discordService;
     private final DiscordAPI discordAPI;
     private final PersonalService personalService;
@@ -38,12 +40,14 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
     public DiscordOauth2UserService
     (
         AccountRoleDAO accountRoleDAO,
+        AccountService accountService,
         DiscordService discordService,
         DiscordAPI discordAPI,
         PersonalService personalService
     )
     {
         this.accountRoleDAO = accountRoleDAO;
+        this.accountService = accountService;
         this.discordService = discordService;
         this.discordAPI = discordAPI;
         this.personalService = personalService;
@@ -69,7 +73,13 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
         Account account = accountUser.getAccount();
         discordService.linkAccountToNewDiscordUser(account.getId(), discordUser);
 
-        return new AccountOauth2User<>(user, account, accountRoleDAO.getRoles(account.getId()));
+        return new AccountOauth2User<>
+        (
+            user,
+            account,
+            accountService.getOrGenerateNewPassword(account.getId()),
+            accountRoleDAO.getRoles(account.getId())
+        );
     }
 
     private static DiscordUser from(OAuth2User oAuth2User)

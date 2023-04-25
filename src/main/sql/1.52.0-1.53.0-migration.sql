@@ -26,3 +26,18 @@ CREATE INDEX "ix_clan_member_event_clan" ON "clan_member_event"("clan_id", "crea
 
 DROP TABLE "persistent_logins";
 DROP TABLE "authentication_request";
+
+CREATE TABLE "account_property"
+(
+    "account_id" BIGINT NOT NULL,
+    "type" SMALLINT NOT NULL,
+    "value" TEXT NOT NULL,
+
+    PRIMARY KEY("account_id", "type"),
+
+    CONSTRAINT "fk_account_property_account_id"
+        FOREIGN KEY ("account_id")
+        REFERENCES "account"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+

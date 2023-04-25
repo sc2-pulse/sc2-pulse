@@ -1,12 +1,11 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
 
 import com.nephest.battlenet.sc2.model.local.Account;
-import org.springframework.security.core.userdetails.User;
-
 import java.util.Collection;
+import org.springframework.security.core.userdetails.User;
 
 public class AccountUser
 extends User
@@ -17,15 +16,14 @@ extends User
     public AccountUser
     (
         Account account,
+        String password,
         Collection<? extends SC2PulseAuthority> authorities
     )
     {
         super
         (
             String.valueOf(account.getId()),
-            //account users don't have a password, using partition + battletag to provide Spring Security with unique,
-            //user-controlled string
-            account.getPartition().toString() + account.getBattleTag(),
+            password,
             true, true, true,
             !authorities.contains(SC2PulseAuthority.NONE),
             authorities

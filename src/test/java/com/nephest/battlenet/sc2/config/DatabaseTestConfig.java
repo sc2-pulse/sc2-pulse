@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.config.security.SecurityBeanConfig;
 import com.nephest.battlenet.sc2.config.security.SecurityConfig;
 import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.discord.DiscordBootstrap;
+import com.nephest.battlenet.sc2.web.service.AccountService;
 import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
@@ -47,6 +48,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DiscordBootstrap.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SpringDocConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardOidcUserService.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = AccountService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardSC2API.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardPrivacyService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = PersonalService.class),

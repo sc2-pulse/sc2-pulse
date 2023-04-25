@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -15,9 +15,15 @@ extends AccountOauth2User<OidcUser>
 implements OidcUser
 {
 
-    public BlizzardOidcUser(OidcUser user, Account account, Collection<? extends SC2PulseAuthority> authorities)
+    public BlizzardOidcUser
+    (
+        OidcUser user,
+        Account account,
+        String password,
+        Collection<? extends SC2PulseAuthority> authorities
+    )
     {
-        super(user, account, authorities);
+        super(user, account, password, authorities);
     }
 
     @Override

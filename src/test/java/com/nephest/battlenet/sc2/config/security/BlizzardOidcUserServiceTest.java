@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -21,6 +21,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.web.service.AccountService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import java.net.MalformedURLException;
 import java.net.URL;
@@ -59,6 +60,9 @@ public class BlizzardOidcUserServiceTest
     private AccountRoleDAO accountRoleDAO;
 
     @Mock
+    private AccountService accountService;
+
+    @Mock
     private BlizzardSC2API api;
 
     @Mock
@@ -70,7 +74,14 @@ public class BlizzardOidcUserServiceTest
     public void beforeEach()
     throws MalformedURLException
     {
-        service = new BlizzardOidcUserService(accountDAO, playerCharacterDAO, accountRoleDAO, api);
+        service = new BlizzardOidcUserService
+        (
+            accountDAO,
+            playerCharacterDAO,
+            accountRoleDAO,
+            accountService,
+            api
+        );
         service.setService(oidcUserService);
         OidcUser user = new DefaultOidcUser
         (
@@ -94,6 +105,7 @@ public class BlizzardOidcUserServiceTest
                 .build()
         );
         when(oidcUserService.loadUser(any())).thenReturn(user);
+        when(accountService.getOrGenerateNewPassword(1L)).thenReturn("password");
     }
 
     @Test
@@ -140,6 +152,14 @@ public class BlizzardOidcUserServiceTest
 
         assertEquals(expectedResult, ((BlizzardOidcUser) service.loadUser(null)).getAccount());
         verify(accountDAO).merge(argThat(a->a.equals(expectedResult)));
+    }
+
+    @Test
+    public void whenAuthenticatedWithoutPassword_thenGenerateRandomPassword()
+    {
+        Account account = new Account(1L, PARTITION, BATTLE_TAG);
+        when(accountDAO.find(PARTITION, BATTLE_TAG)).thenReturn(Optional.of(account));
+        assertEquals("password", ((BlizzardOidcUser) service.loadUser(null)).getPassword());
     }
 
 }
