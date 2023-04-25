@@ -81,28 +81,4 @@ implements AutoLoginCookieProcessor
         return super.processAutoLoginCookie(cookieTokens, request, response);
     }
 
-    @Override
-    public String encodeCookie(String[] tokens)
-    {
-        return super.encodeCookie(tokens);
-    }
-
-    @Override
-    public String[] decodeCookie(String cookieValue)
-    {
-        return super.decodeCookie(cookieValue);
-    }
-
-    @Override
-    public void setCookie
-    (
-        String[] tokens,
-        int maxAge,
-        HttpServletRequest request,
-        HttpServletResponse response
-    )
-    {
-        super.setCookie(tokens, maxAge, request, response);
-    }
-
 }

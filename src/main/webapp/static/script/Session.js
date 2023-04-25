@@ -26,28 +26,7 @@ class Session
 
     static beforeRequest()
     {
-        Session.scheduleSynchronization();
         return Promise.resolve();
-    }
-
-    static scheduleSynchronization()
-    {
-        if(Session.shouldSynchronize())
-        {
-            localStorage.setItem("lastSessionSynchronizationTimestamp", Date.now() + Session.synchronizationOffsetMillis);
-            window.setTimeout(Session.synchronize, Session.synchronizationOffsetMillis);
-        }
-    }
-
-    static synchronize()
-    {
-        return fetch(ROOT_CONTEXT_PATH + "api/my/session/synchronize");
-    }
-
-    static shouldSynchronize()
-    {
-        return Date.now() - (localStorage.getItem("lastSessionSynchronizationTimestamp") || 0) >= Session.millisBetweenSynchronizations
-            && Session.isAuthenticated();
     }
 
     static verifyResponse(resp, verifyStatus = true)
@@ -363,8 +342,6 @@ Session.sessionStartTimestamp = null;
 Session.INVALID_API_VERSION_CODE = 112233;
 Session.confirmActionText = null;
 Session.confirmAction = null;
-Session.millisBetweenSynchronizations = (SESSION_TIMEOUT_SECONDS - 60) * 1000;
-Session.synchronizationOffsetMillis = 10000;
 
 Session.sectionParams = new Map();
 
