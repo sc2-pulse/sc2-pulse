@@ -11,7 +11,6 @@ import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PersistentLoginDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
@@ -105,9 +104,6 @@ public class Cron
 
     @Autowired
     private TeamStateDAO teamStateDAO;
-
-    @Autowired
-    private PersistentLoginDAO persistentLoginDAO;
 
     @Autowired
     private PostgreSQLUtils postgreSQLUtils;
@@ -426,7 +422,6 @@ public class Cron
             "ix_player_character_updated",
             "ix_clan_member_updated"
         );
-        persistentLoginDAO.removeExpired();
     }
 
     @Scheduled(cron="0,30 * * * * *")

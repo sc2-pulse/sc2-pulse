@@ -184,6 +184,7 @@ To ensure that the potential violation is a minor one, the following rules are a
 * `contacts.github`
 * `cache.ttl` TTL(duration) of cache entries, 7 days by default
 * `cache.size` max size of the cache, 20000 by default
+* `security.remember-me.token.key` key for signing remember-me tokens
 ## Contributing
 Want to make a bug report/feature request? Any contributions are welcome, see [CONTRIBUTING](CONTRIBUTING.md) for 
 more information.

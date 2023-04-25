@@ -113,9 +113,6 @@ public class SqlSyntaxIT
     private VarDAO varDAO;
 
     @Autowired
-    private PersistentLoginDAO persistentLoginDAO;
-
-    @Autowired
     private PostgreSQLUtils postgreSQLUtils;
 
     @Autowired
@@ -401,7 +398,6 @@ public class SqlSyntaxIT
         leagueStatsDAO.mergeCalculateForSeason(40);
 
         teamStateDAO.removeExpired();
-        persistentLoginDAO.removeExpired();
         twitchVideoDAO.removeExpired();
 
         teamMemberDAO.removeByTeamId(zergTeam.getId());

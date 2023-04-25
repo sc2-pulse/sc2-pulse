@@ -814,25 +814,6 @@ CREATE TABLE "evidence_vote"
 
 CREATE INDEX "ix_evidence_vote_updated" ON "evidence_vote"("updated");
 
-CREATE TABLE "persistent_logins"
-(
-    "username" TEXT NOT NULL,
-    "series" TEXT PRIMARY KEY,
-    "token" TEXT NOT NULL,
-    "last_used" TIMESTAMP WITH TIME ZONE NOT NULL
-);
-
-CREATE INDEX "ix_persistent_logins_username" ON "persistent_logins"("username");
-
-CREATE TABLE "authentication_request"
-(
-    "name" TEXT NOT NULL,
-    "created" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-
-    PRIMARY KEY ("name")
-);
-CREATE INDEX "ix_authentication_request_created" ON "authentication_request"("created");
-
 CREATE TABLE oauth2_authorized_client
 (
     client_registration_id VARCHAR(100) NOT NULL,

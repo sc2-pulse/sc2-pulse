@@ -23,3 +23,6 @@ SELECT "player_character_id", "clan_id", 1
 FROM "clan_member";
 
 CREATE INDEX "ix_clan_member_event_clan" ON "clan_member_event"("clan_id", "created", "player_character_id");
+
+DROP TABLE "persistent_logins";
+DROP TABLE "authentication_request";
