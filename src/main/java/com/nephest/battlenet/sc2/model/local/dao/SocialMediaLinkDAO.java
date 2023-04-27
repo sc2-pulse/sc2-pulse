@@ -50,6 +50,12 @@ public class SocialMediaLinkDAO
     private static final String FIND_LIST_BY_TYPES =
         "SELECT " + STD_SELECT + "FROM social_media_link WHERE type IN(:types)";
 
+    private static final String FIND_BY_PRO_PLAYER_ID =
+        "SELECT " + STD_SELECT
+        + "FROM social_media_link "
+        + "WHERE pro_player_id = :proPlayerId "
+        + "ORDER BY pro_player_id, type";
+
     private static final String FIND_BY_ID_CURSOR_AND_TYPE =
         "SELECT " + STD_SELECT
         + "FROM social_media_link "
@@ -165,6 +171,13 @@ public class SocialMediaLinkDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("types", typeInts);
         return template.query(FIND_LIST_BY_TYPES, params, STD_ROW_MAPPER);
+    }
+
+    public List<SocialMediaLink> find(Long proPlayerId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("proPlayerId", proPlayerId);
+        return template.query(FIND_BY_PRO_PLAYER_ID, params, STD_ROW_MAPPER);
     }
 
     public List<SocialMediaLink> findByIdCursor

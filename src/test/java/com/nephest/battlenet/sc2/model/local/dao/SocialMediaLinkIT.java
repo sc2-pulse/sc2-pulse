@@ -58,6 +58,41 @@ public class SocialMediaLinkIT
         }
     }
 
+    private static void verifyLink
+    (
+        SocialMediaLink link,
+        Long proPlayerId,
+        SocialMedia type,
+        String url,
+        boolean isProtected
+    )
+    {
+        assertEquals(proPlayerId, link.getProPlayerId());
+        assertEquals(type, link.getType());
+        assertEquals(url, link.getUrl());
+        assertEquals(isProtected, link.isProtected());
+    }
+
+    @Test
+    public void testFindByProPlayerId()
+    {
+        ProPlayer proPlayer1 = proPlayerDAO
+            .merge(new ProPlayer(null, 1L, "nick", "name"));
+        ProPlayer proPlayer2 = proPlayerDAO
+            .merge(new ProPlayer(null, 2L, "nick2", "name2"));
+        socialMediaLinkDAO.merge
+        (
+            new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url1"),
+            new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url2"),
+            new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "url3")
+        );
+
+        List<SocialMediaLink> links = socialMediaLinkDAO.find(proPlayer1.getId());
+        assertEquals(2, links.size());
+        verifyLink(links.get(0), proPlayer1.getId(), SocialMedia.ALIGULAC, "url2", false);
+        verifyLink(links.get(1), proPlayer1.getId(), SocialMedia.TWITCH, "url1", false);
+    }
+
     @Test
     public void testFindByTypes()
     {
