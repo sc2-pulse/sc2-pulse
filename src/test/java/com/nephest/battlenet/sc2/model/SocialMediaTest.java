@@ -50,4 +50,16 @@ public class SocialMediaTest
         assertEquals(expectedResult, SocialMedia.fromBaseUserUrlPrefix(url));
     }
 
+    @CsvSource
+    ({
+        "ALIGULAC, http://aligulac.com/players",
+        "DISCORD, https://discord.gg",
+        "UNKNOWN,"
+    })
+    @ParameterizedTest
+    public void testGetBaseUserOrBaseUrl(SocialMedia type, String expectedResult)
+    {
+        assertEquals(expectedResult, type.getBaseUserOrBaseUrl());
+    }
+
 }

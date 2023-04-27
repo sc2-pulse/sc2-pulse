@@ -98,4 +98,9 @@ implements Identifiable
         return baseUserUrl;
     }
 
+    public String getBaseUserOrBaseUrl()
+    {
+        return baseUserUrl != null ? baseUserUrl : baseUrl;
+    }
+
 }
