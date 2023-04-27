@@ -28,7 +28,6 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig
 {
 
-    public static final Duration REMEMBER_ME_DURATION = Duration.ofDays(30);
     public static final String REMEMBER_ME_COOKIE_NAME = "remember-me-v2";
     public static final String REMEMBER_ME_KEY_PROPERTY_NAME = "security.remember-me.token.key";
 
@@ -46,6 +45,9 @@ public class SecurityConfig
 
     @Value("${" + REMEMBER_ME_KEY_PROPERTY_NAME + ":'dev'}")
     private String rememberMeKey;
+
+    @Value("${security.remember-me.token.max-age:P3650D}")
+    private Duration rememberMeDuration;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http)
@@ -84,7 +86,7 @@ public class SecurityConfig
                 .key(rememberMeKey)
                 .alwaysRemember(true)
                 .rememberMeCookieName(REMEMBER_ME_COOKIE_NAME)
-                .tokenValiditySeconds((int) REMEMBER_ME_DURATION.toSeconds())
+                .tokenValiditySeconds((int) rememberMeDuration.toSeconds())
                 .useSecureCookie(true)
             .and().build();
     }
