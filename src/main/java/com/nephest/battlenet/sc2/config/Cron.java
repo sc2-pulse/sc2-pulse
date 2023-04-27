@@ -151,7 +151,6 @@ public class Cron
     private NotificationService notificationService;
 
     private SingleRunnable updateLaddersTask;
-    private SingleRunnable updateProPlayerSocialMediaLinksTask;
 
     @PostConstruct
     public void init()
@@ -200,8 +199,6 @@ public class Cron
             LOG.warn(ex.getMessage(), ex);
         }
         updateLaddersTask = new SingleRunnable(this::nonStopUpdate);
-        updateProPlayerSocialMediaLinksTask
-            = new SingleRunnable(()->proPlayerService.updateSocialMediaLinks(), webExecutorService);
     }
 
     public static OffsetDateTime getNextCharacterReportUpdateTime()
@@ -422,12 +419,6 @@ public class Cron
             "ix_player_character_updated",
             "ix_clan_member_updated"
         );
-    }
-
-    @Scheduled(cron="0,30 * * * * *")
-    public void updateProPlayerSocialMediaLinks()
-    {
-        updateProPlayerSocialMediaLinksTask.tryRun();
     }
 
 }

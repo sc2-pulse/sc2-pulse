@@ -277,6 +277,7 @@ public class ProPlayerServiceIT
     {
         ProPlayer proPlayer = proPlayerDAO.merge(new ProPlayer(null, 1L, "tag", "name"));
         ProPlayer proPlayer2 = proPlayerDAO.merge(new ProPlayer(null, 2L, "tag2", "name2"));
+        ProPlayer proPlayer3 = proPlayerDAO.merge(new ProPlayer(null, 3L, "tag3", "name3"));
         socialMediaLinkDAO.merge
         (
             false,
@@ -291,31 +292,37 @@ public class ProPlayerServiceIT
                 proPlayer2.getId(),
                 SocialMedia.TWITTER,
                 "oldTwitterLink"
+            ),
+
+            new SocialMediaLink
+            (
+                proPlayer3.getId(),
+                SocialMedia.LIQUIPEDIA,
+                "https://liquipedia.net/starcraft2/Maru"
             )
         );
-        proPlayerService.getLinkUpdateIdCursor().setValue(0L);
-        assertTrue(proPlayerService.updateSocialMediaLinks() > 0);
+        assertTrue(proPlayerService.updateSocialMediaLinks().block() >= 2);
 
         //links were updated
-        List<SocialMediaLink> links = socialMediaLinkDAO.findByTypes(SocialMedia.values());
-        assertTrue(links.size() > 1);
+        List<SocialMediaLink> serralLinks = socialMediaLinkDAO.find(proPlayer2.getId());
+        assertTrue(serralLinks.size() > 1);
 
-        verifyTypePresent(links, SocialMedia.TWITCH);
-        verifyTypePresent(links, SocialMedia.DISCORD);
-        SocialMediaLink twitterLink = verifyTypePresent(links, SocialMedia.TWITTER);
+        verifyTypePresent(serralLinks, SocialMedia.TWITCH);
+        verifyTypePresent(serralLinks, SocialMedia.DISCORD);
+        SocialMediaLink twitterLink = verifyTypePresent(serralLinks, SocialMedia.TWITTER);
         assertNotEquals("oldTwitterLink", twitterLink.getUrl());
 
         //aligulac links shouldn't be updated even if they present in the upstream API
-        Optional<SocialMediaLink> aligulacLink = links.stream()
+        Optional<SocialMediaLink> aligulacLink = serralLinks.stream()
             .filter(l->l.getType() == SocialMedia.ALIGULAC)
             .findAny();
         assertTrue(aligulacLink.isEmpty());
 
-        assertEquals(proPlayer2.getId(), proPlayerService.getLinkUpdateIdCursor().getValue());
+        List<SocialMediaLink> maruLinks = socialMediaLinkDAO.find(proPlayer3.getId());
+        assertTrue(maruLinks.size() > 1);
 
-        //no more players to update, reset the cursor
-        assertEquals(0, proPlayerService.updateSocialMediaLinks());
-        assertEquals(0, proPlayerService.getLinkUpdateIdCursor().getValue());
+        verifyTypePresent(maruLinks, SocialMedia.INSTAGRAM);
+        verifyTypePresent(maruLinks, SocialMedia.TWITCH);
     }
 
     private <T extends SocialMediaLink> T verifyTypePresent

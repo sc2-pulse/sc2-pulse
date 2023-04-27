@@ -3,44 +3,73 @@
 
 package com.nephest.battlenet.sc2.web.service.liquipedia;
 
+import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
+import com.nephest.battlenet.sc2.model.liquipedia.query.revision.LiquipediaMediaWikiRevisionQueryResult;
+import com.nephest.battlenet.sc2.model.liquipedia.query.revision.RevisionPage;
+import com.nephest.battlenet.sc2.model.liquipedia.query.revision.RevisionSlot;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-import org.jsoup.Jsoup;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 public final class LiquipediaParser
 {
 
+    public static final Map<SocialMedia, String> WIKI_TEXT_LINKS = Map.of
+    (
+        SocialMedia.TWITCH, "twitch",
+        SocialMedia.TWITTER, "twitter",
+        SocialMedia.DISCORD, "discord",
+        SocialMedia.YOUTUBE, "youtube",
+        SocialMedia.INSTAGRAM, "instagram"
+    );
+
     private LiquipediaParser(){}
 
-
-    public static LiquipediaPlayer parsePlayer(String html)
+    public static List<LiquipediaPlayer> parse(LiquipediaMediaWikiRevisionQueryResult result)
     {
-        Element infobox = Jsoup.parse(html)
-            .select(".fo-nttax-infobox > div .infobox-header")
-            .stream()
-            .filter(e->e.hasText() && e.text().equalsIgnoreCase("player information"))
-            .map(e->e.closest(".fo-nttax-infobox"))
-            .findFirst()
-            .orElseThrow();
-        Elements infoboxDivs = infobox.select("> div");
-        List<String> links = infoboxDivs.get(findHeaderIndex(infoboxDivs, "links") + 1)
-            .select("a").stream()
-            .map(e->e.attributes().get("href"))
-            .map(LiquipediaParser::sanitizeUrl)
+        return result.getQuery().getPages().stream()
+            .map(LiquipediaParser::parse)
             .collect(Collectors.toList());
-        return new LiquipediaPlayer(links);
     }
 
-    private static int findHeaderIndex(Elements infobox, String header)
+    private static LiquipediaPlayer parse(RevisionPage revisionPage)
     {
-        return IntStream.range(0, infobox.size())
-            .filter(i->infobox.get(i).hasText() && infobox.get(i).text().trim().equalsIgnoreCase(header))
-            .findFirst()
-            .orElseThrow();
+        String name = revisionPage.getTitle();
+        RevisionSlot mainSlot = !revisionPage.getRevisions().isEmpty()
+            ? revisionPage.getRevisions().get(0).getSlots().get("main")
+            : null;
+        String text = mainSlot != null ? mainSlot.getContent() : null;
+        List<String> links = text != null ? parseWikiTextLinks(text) : List.of();
+        return new LiquipediaPlayer(name, links);
+    }
+
+    private static List<String> parseWikiTextLinks(String text)
+    {
+        int infoboxIx = text.indexOf("{Infobox player");
+        String linkText = infoboxIx != -1
+            ? text.substring(infoboxIx, text.indexOf("<br", infoboxIx))
+            : text;
+        List<String> links = new ArrayList<>(WIKI_TEXT_LINKS.size());
+        for(Map.Entry<SocialMedia, String> entry : WIKI_TEXT_LINKS.entrySet())
+        {
+            String link = parseWikiTextLink(linkText, entry.getKey(), entry.getValue());
+            if(link != null) links.add(link);
+        }
+        return links;
+    }
+
+    private static String parseWikiTextLink(String text, SocialMedia type, String typeName)
+    {
+        int ix = text.indexOf(typeName + "=");
+        if(ix == -1) return null;
+
+        int idIx = ix + typeName.length() + 1;
+        String id = text.substring(idIx, text.indexOf("\n", idIx)).trim();
+        return id.startsWith("http")
+            ? sanitizeUrl(id)
+            : type.getBaseUserOrBaseUrl() + "/" + id;
     }
 
     public static String sanitizeUrl(String url)

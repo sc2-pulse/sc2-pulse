@@ -5,10 +5,8 @@ package com.nephest.battlenet.sc2.web.service.liquipedia;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,11 +25,14 @@ public class LiquipediaAPIIT
     @Test
     public void testParsePlayer()
     {
-        LiquipediaPlayer player = api.parsePlayer("Serral").block();
-        List<String> links = player.getLinks();
-        assertNotNull(links);
-        assertFalse(links.isEmpty());
-        assertTrue(links.contains("http://aligulac.com/players/485"));
+       api.parsePlayers("Serral", "Maru")
+            .toStream()
+            .forEach(lpPlayer->
+            {
+                List<String> links = lpPlayer.getLinks();
+                assertNotNull(links);
+                assertFalse(links.isEmpty());
+            });
     }
 
 }

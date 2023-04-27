@@ -6,8 +6,8 @@ package com.nephest.battlenet.sc2.web.service.liquipedia;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaMediaWikiParseResult;
 import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
+import com.nephest.battlenet.sc2.model.liquipedia.query.revision.LiquipediaMediaWikiRevisionQueryResult;
 import com.nephest.battlenet.sc2.web.service.BaseAPI;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 @Service
@@ -53,33 +54,39 @@ extends BaseAPI
         return userAgent;
     }
 
-    @Scheduled(cron="0,30 * * * * *")
+    @Scheduled(cron="*/2 * * * * *")
     public void refreshRateLimiter()
     {
         rateLimiter.refreshSlots(REQUESTS_PER_PERIOD);
     }
 
-    public Mono<LiquipediaMediaWikiParseResult> getPlayer(String name)
+    public Mono<LiquipediaMediaWikiRevisionQueryResult> getPlayer(String... names)
     {
+        if(names.length == 0) return Mono.empty();
+
         return getWebClient()
             .get()
             .uri
             (
-                b->b.queryParam("action", "parse")
-                    .queryParam("page", name)
+                b->b.queryParam("action", "query")
+                    .queryParam("titles", String.join("|", names))
+                    .queryParam("prop", "revisions")
+                    .queryParam("rvslots", "*")
+                    .queryParam("rvprop", "content")
+                    .queryParam("formatversion", "2")
                     .queryParam("format", "json")
                     .build()
             )
             .accept(APPLICATION_JSON)
             .retrieve()
-            .bodyToMono(LiquipediaMediaWikiParseResult.class)
+            .bodyToMono(LiquipediaMediaWikiRevisionQueryResult.class)
             .delaySubscription(rateLimiter.requestSlot());
     }
 
-    public Mono<LiquipediaPlayer> parsePlayer(String name)
+    public Flux<LiquipediaPlayer> parsePlayers(String... names)
     {
-        return getPlayer(name)
-            .map(r->LiquipediaParser.parsePlayer(r.getParse().getText().getValue()));
+        return getPlayer(names)
+            .flatMapMany(r->Flux.fromIterable(LiquipediaParser.parse(r)));
     }
 
 }

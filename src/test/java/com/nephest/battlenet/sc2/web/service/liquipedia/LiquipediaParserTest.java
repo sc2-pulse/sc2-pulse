@@ -7,13 +7,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaMediaWikiParseResult;
 import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
+import com.nephest.battlenet.sc2.model.liquipedia.query.revision.LiquipediaMediaWikiRevisionQueryResult;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -28,26 +29,35 @@ public class LiquipediaParserTest
     {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        String parseText = Files.readString
+        String queryText = Files.readString
         (
-            Paths.get(LiquipediaParserTest.class.getResource("liquipedia-parse.json").toURI()),
+            Paths.get(LiquipediaParserTest.class.getResource("liquipedia-query.json").toURI()),
             Charset.defaultCharset()
         );
-        String text = objectMapper
-            .readValue(parseText, LiquipediaMediaWikiParseResult.class)
-            .getParse()
-            .getText()
-            .getValue();
-        LiquipediaPlayer player = LiquipediaParser.parsePlayer(text);
-        List<String> links = player.getLinks();
-        assertEquals(7, links.size());
-        assertEquals("http://aligulac.com/players/485", links.get(0));
-        assertEquals("https://challonge.com/users/serral", links.get(1));
-        assertEquals("https://play.eslgaming.com/player/6467940", links.get(2));
-        assertEquals("https://discord.gg/GrnX3jUtsA", links.get(3));
-        assertEquals("https://twitter.com/Serral_SC2", links.get(4));
-        assertEquals("https://www.twitch.tv/serral", links.get(5));
-        assertEquals("https://tl.net/forum/fan-clubs/448777-serral-fanclub", links.get(6));
+        LiquipediaMediaWikiRevisionQueryResult result = objectMapper
+            .readValue(queryText, LiquipediaMediaWikiRevisionQueryResult.class);
+        List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
+        assertEquals(2, players.size());
+        List<String> serralLinks = players.stream()
+            .filter(player->player.getName().equalsIgnoreCase("Serral"))
+            .findAny()
+            .map(LiquipediaPlayer::getLinks)
+            .orElseThrow();
+        serralLinks.sort(Comparator.naturalOrder());
+        assertEquals(3, serralLinks.size());
+        assertEquals("https://discord.gg/GrnX3jUtsA", serralLinks.get(0));
+        assertEquals("https://twitter.com/Serral_SC2", serralLinks.get(1));
+        assertEquals("https://www.twitch.tv/serral", serralLinks.get(2));
+
+        List<String> maruLinks = players.stream()
+            .filter(p->p.getName().equalsIgnoreCase("Maru"))
+            .findAny()
+            .map(LiquipediaPlayer::getLinks)
+            .orElseThrow();
+        maruLinks.sort(Comparator.naturalOrder());
+        assertEquals(2, maruLinks.size());
+        assertEquals("https://www.instagram.com/maru00072", maruLinks.get(0));
+        assertEquals("https://www.twitch.tv/maru072", maruLinks.get(1));
     }
 
     @CsvSource

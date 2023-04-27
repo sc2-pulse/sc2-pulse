@@ -8,15 +8,27 @@ import java.util.List;
 public class LiquipediaPlayer
 {
 
+    private String name;
     private List<String> links;
 
     public LiquipediaPlayer()
     {
     }
 
-    public LiquipediaPlayer(List<String> links)
+    public LiquipediaPlayer(String name, List<String> links)
     {
+        this.name = name;
         this.links = links;
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public void setName(String name)
+    {
+        this.name = name;
     }
 
     public List<String> getLinks()

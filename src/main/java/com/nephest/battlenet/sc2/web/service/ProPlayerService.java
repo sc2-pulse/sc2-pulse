@@ -6,7 +6,7 @@ package com.nephest.battlenet.sc2.web.service;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
-import com.nephest.battlenet.sc2.model.local.LongVar;
+import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProTeam;
@@ -17,7 +17,6 @@ import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProTeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
-import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
 import java.util.ArrayList;
@@ -25,12 +24,16 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +45,8 @@ import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 @Service
 public class ProPlayerService
@@ -73,10 +78,9 @@ public class ProPlayerService
     private AligulacAPI aligulacAPI;
     private final LiquipediaAPI liquipediaAPI;
 
-    private final LongVar linkUpdateIdCursor;
-
     private int aligulacBatchSize = 100;
-    private final int linkBatchSize = 1;
+    private final int linkWebBatchSize = 10;
+    private final int linkDbBatchSize = 100;
 
     @Autowired @Lazy
     private ProPlayerService proPlayerService;
@@ -91,8 +95,7 @@ public class ProPlayerService
         ProPlayerAccountDAO proPlayerAccountDAO,
         SC2RevealedAPI sc2RevealedAPI,
         AligulacAPI aligulacAPI,
-        LiquipediaAPI liquipediaAPI,
-        VarDAO varDAO
+        LiquipediaAPI liquipediaAPI
     )
     {
         this.proPlayerDAO = proPlayerDAO;
@@ -103,16 +106,6 @@ public class ProPlayerService
         this.sc2RevealedAPI = sc2RevealedAPI;
         this.aligulacAPI = aligulacAPI;
         this.liquipediaAPI = liquipediaAPI;
-        linkUpdateIdCursor = new LongVar(varDAO, "player.pro.link.id.cursor", false);
-        try
-        {
-            linkUpdateIdCursor.load();
-            if(linkUpdateIdCursor.getValue() == null) linkUpdateIdCursor.setValueAndSave(0L);
-        }
-        catch (Exception ex)
-        {
-            LOG.error(ex.getMessage(), ex);
-        }
     }
 
     protected ProPlayerService getProPlayerService()
@@ -138,6 +131,7 @@ public class ProPlayerService
     public void update()
     {
         updateAligulac();
+        updateSocialMediaLinks();
         LOG.info("Updated pro players");
     }
 
@@ -234,14 +228,14 @@ public class ProPlayerService
         this.aligulacBatchSize = aligulacBatchSize;
     }
 
-    public int getLinkBatchSize()
+    public int getLinkWebBatchSize()
     {
-        return linkBatchSize;
+        return linkWebBatchSize;
     }
 
-    protected LongVar getLinkUpdateIdCursor()
+    public int getLinkDbBatchSize()
     {
-        return linkUpdateIdCursor;
+        return linkDbBatchSize;
     }
 
     public Optional<ProPlayer> importProfile(String url)
@@ -328,85 +322,69 @@ public class ProPlayerService
     }
 
     /**
-     * Update social media links of next {@link #linkBatchSize} pro players. This method is not
-     * thread safe.
+     * Update social media links of pro players. This method is not thread safe.
      * @param ignoreParsingErrors Log errors and ignore them if true, throw exception if false.
-     * @return number of updated links, -1 if {@code ignoreParsingErrors} is true and exception
-     * was thrown when pulling the links from the liquipedia API.
+     * @return async number of updated links.
      */
-    public int updateSocialMediaLinks(boolean ignoreParsingErrors)
+    public Mono<Integer> updateSocialMediaLinks(boolean ignoreParsingErrors)
     {
-        List<SocialMediaLink> links = socialMediaLinkDAO.findByIdCursor
-        (
-            linkUpdateIdCursor.getValue(),
-            SocialMedia.LIQUIPEDIA,
-            linkBatchSize
-        );
-        SocialMediaLink[] pulledLinks = getSocialMediaLinks(links, ignoreParsingErrors);
-        if(pulledLinks != null)
-        {
-            socialMediaLinkDAO.merge(false, pulledLinks);
-            if(pulledLinks.length > 0)
-                LOG.info("Updated {} social media links", pulledLinks.length);
-        }
-        linkUpdateIdCursor.setValueAndSave(links.isEmpty() ? 0 : links.get(links.size() - 1).getProPlayerId());
-        return pulledLinks != null ? pulledLinks.length : -1;
+        List<SocialMediaLink> links = socialMediaLinkDAO.findByTypes(SocialMedia.LIQUIPEDIA);
+        return getSocialMediaLinks(links, ignoreParsingErrors)
+            .buffer(linkDbBatchSize)
+            .flatMap(smLinks->Mono.fromCallable(()->
+            {
+                socialMediaLinkDAO.merge(false, smLinks.toArray(SocialMediaLink[]::new));
+                return smLinks.size();
+            }))
+            .reduce(0, Integer::sum)
+            .doOnNext(updatedCount->
+            {
+                if(updatedCount > 0) LOG.info("Updated {} social media links", updatedCount);
+            });
     }
 
-    public Integer updateSocialMediaLinks()
+    public Mono<Integer> updateSocialMediaLinks()
     {
         return updateSocialMediaLinks(true);
     }
 
-    private SocialMediaLink[] getSocialMediaLinks
+    private Flux<SocialMediaLink> getSocialMediaLinks
     (
-        Collection<? extends SocialMediaLink> links,
+        Collection<? extends SocialMediaLink> lpLinks,
         boolean ignoreParsingErrors
     )
     {
-        SocialMediaLink[] pulledLinks = null;
-        try
-        {
-            pulledLinks = links.stream()
-                .flatMap(this::getSocialMediaLinks)
-                .toArray(SocialMediaLink[]::new);
-        }
-        catch (RuntimeException e)
-        {
-            if(ignoreParsingErrors)
-            {
-                LOG.error(e.getMessage(), e);
-            }
-            else
-            {
-                throw e;
-            }
-        }
-        return pulledLinks;
-    }
-
-    private Stream<SocialMediaLink> getSocialMediaLinks(SocialMediaLink link)
-    {
-        String liquipediaName = PlayerCharacterLink.getRelativeUrl(link.getUrl()).orElse(null);
-        if(liquipediaName == null)
-        {
-            LOG.error
+        Map<String, Long> idMap = lpLinks.stream()
+            .map(lpLink->new ImmutablePair<>
             (
-                "Invalid liquipedia URL {} for the pro player {}",
-                link.getUrl(),
-                link.getProPlayerId()
-            );
-            return Stream.empty();
-        }
-        return getSocialMediaLinks(link.getProPlayerId(), liquipediaName);
+                PlayerCharacterLink.getRelativeUrl(lpLink.getUrl()).orElse(null),
+                lpLink.getProPlayerId()
+            ))
+            .filter(pair->pair.getKey() != null)
+            .collect(Collectors.toMap(Pair::getKey, Pair::getValue, (l, r)->l));
+        return Flux.fromIterable(idMap.keySet())
+            .buffer(linkWebBatchSize)
+            .flatMap(lpNames->
+            {
+                Flux<LiquipediaPlayer> lpPlayers
+                    = liquipediaAPI.parsePlayers(lpNames.toArray(String[]::new));
+                return ignoreParsingErrors
+                    ? lpPlayers.doOnError(ex->LOG.error(ex.getMessage(), ex)).onErrorComplete()
+                    : lpPlayers;
+            })
+            .flatMap(lpPlayer->Flux.fromStream
+            (
+                extractSocialMediaLinks(idMap.get(lpPlayer.getName()), lpPlayer
+            )));
     }
 
-    private Stream<SocialMediaLink> getSocialMediaLinks(Long proPlayerId, String liquipediaName)
+    private static Stream<SocialMediaLink> extractSocialMediaLinks
+    (
+        Long proPlayerId,
+        LiquipediaPlayer player
+    )
     {
-        return liquipediaAPI.parsePlayer(liquipediaName)
-            .block()
-            .getLinks()
-            .stream()
+        return player.getLinks().stream()
             .map(url->new SocialMediaLink
             (
                 proPlayerId,
