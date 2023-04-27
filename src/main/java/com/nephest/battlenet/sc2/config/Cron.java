@@ -220,6 +220,12 @@ public class Cron
         characterReportService.update(REPORT_UPDATE_FROM);
     }
 
+    @Scheduled(cron="0 0 4 * * *")
+    public void updateProPlayers()
+    {
+        webExecutorService.submit(()->proPlayerService.update());
+    }
+
     @Scheduled(cron="0 0 0/1 * * *")
     public void evictVarCache()
     {
@@ -288,7 +294,6 @@ public class Cron
             ? calculateHeavyStatsTask.getValue()
             : Instant.now().minusSeconds(24 * 60 * 60 * 1000);
         OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
-        proPlayerService.update();
         for(Integer season : seasonDAO.getLastInAllRegions())
             queueStatsDAO.mergeCalculateForSeason(season);
         teamStateDAO.archive(defaultOdt);
