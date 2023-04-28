@@ -7,8 +7,13 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
@@ -19,14 +24,19 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest(classes = {AllTestConfig.class})
+@AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class AccountServiceIT
@@ -40,6 +50,9 @@ public class AccountServiceIT
 
     @Autowired
     private UserDetailsService userDetailsService;
+
+    @Autowired
+    private MockMvc mvc;
 
     @BeforeEach
     public void beforeEach(@Autowired DataSource dataSource)
@@ -103,6 +116,31 @@ public class AccountServiceIT
         //existing password is retrieved
         accountService.getOrGenerateNewPassword(accounts[0].getId());
         assertEquals(password, userDetailsService.loadUserByUsername(userName).getPassword());
+    }
+
+    @Test
+    @WithBlizzardMockUser(partition = Partition.GLOBAL, username = "btag")
+    public void testInvalidateSessions()
+    throws Exception
+    {
+        Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "btag", 2);
+        String userName = String.valueOf(accounts[0].getId());
+
+        String password = accountService.generateNewPassword(accounts[0].getId());
+        assertEquals(password, userDetailsService.loadUserByUsername(userName).getPassword());
+
+        mvc.perform
+        (
+            delete("/settings/advanced")
+                .param("action", "invalidate-sessions")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().is3xxRedirection())
+            .andExpect(header().string(HttpHeaders.LOCATION, "/"))
+            .andReturn();
+
+        assertNotEquals(password, userDetailsService.loadUserByUsername(userName).getPassword());
     }
 
 }

@@ -339,6 +339,11 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     gap: 1em;
 }
 
+.dl-gap-05 dt
+{
+    margin-bottom: 0.5em;
+}
+
 .flex-basis-content
 {
     flex-basis: content;

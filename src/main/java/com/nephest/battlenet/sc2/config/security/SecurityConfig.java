@@ -15,6 +15,7 @@ import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.core.session.SessionRegistry;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AccessTokenResponseClient;
 import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCodeGrantRequest;
 import org.springframework.security.web.SecurityFilterChain;
@@ -43,8 +44,14 @@ public class SecurityConfig
     @Autowired
     private Environment environment;
 
+    @Autowired
+    private SessionRegistry sessionRegistry;
+
     @Value("${" + REMEMBER_ME_KEY_PROPERTY_NAME + ":'dev'}")
     private String rememberMeKey;
+
+    @Value("${server.servlet.session.cookie.name:'JSESSIONID'}")
+    private String sessionCookieName;
 
     @Value("${security.remember-me.token.max-age:P3650D}")
     private Duration rememberMeDuration;
@@ -56,7 +63,14 @@ public class SecurityConfig
         checkConfig();
         return http
             .mvcMatcher("/**")
-            .csrf()
+            .sessionManagement()
+                .sessionConcurrency
+                (
+                    c->c.maximumSessions(-1)
+                        .sessionRegistry(sessionRegistry)
+                        .expiredSessionStrategy(new ResetSessionInformationExpiredStrategy(sessionCookieName, "/", "/api/"))
+                )
+            .and().csrf()
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .and().exceptionHandling()
                 .defaultAuthenticationEntryPointFor
@@ -73,7 +87,11 @@ public class SecurityConfig
                     "/api/my/**",
                     "/verify/*"
                 ).authenticated()
-                .mvcMatchers("/data/battle-net").fullyAuthenticated()
+                .mvcMatchers
+                (
+                    "/data/battle-net",
+                    "/settings/**"
+                ).fullyAuthenticated()
             .and().logout()
                 .logoutSuccessUrl("/?#stats")
             .and().oauth2Login()

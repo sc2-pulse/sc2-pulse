@@ -72,6 +72,7 @@ public class SecurityIT
     @CsvSource
     ({
         "GET, /verify/discord, 401",
+        "GET, /settings/advanced, 401",
     })
     public void testNotAuthenticatedSecurity(HttpMethod method, String path, int status)
     throws Exception
@@ -87,7 +88,8 @@ public class SecurityIT
     @CsvSource
     ({
         "GET, /admin, 403",
-        "GET, /sba, 403"
+        "GET, /sba, 403",
+        "GET, /settings/advanced, 200",
     })
     @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER})
     public void testUserSecurity(HttpMethod method, String path, int status)

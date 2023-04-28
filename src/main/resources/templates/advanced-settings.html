@@ -1,0 +1,43 @@
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+      th:replace="~{layout/base :: layout(~{::title}, ~{::meta}, ~{::div}, ~{::#main-script-block}, true)}">
+<head>
+    <title>Advanced account settings - SC2 Pulse</title>
+    <meta name="description" content="Advanced account settings"/>
+</head>
+<body>
+<div id="settings">
+    <h1 class="text-dark no-popup-hide mt-3"><a th:href="@{/}"><img width="32" height="32" th:src="@{/static/icon/misc/pulse.svg}" class="mr-1" alt="Pulse"/><span> SC2 Pulse</span></a></h1>
+    <section>
+        <h2>Advanced account settings</h2>
+        <dl class="dl-gap-05">
+            <dt>
+                <form
+                        th:action="@{''}"
+                        method="post"
+                        class="confirmation"
+                        data-confirmation-text="INVALIDATE"
+                        data-confirmation-description="Invalidate session"
+                        data-confirmation-action-name="Invalidate"
+                        data-confirmation-action-class="btn-danger"
+                >
+                    <input type="hidden" name="action" value="invalidate-sessions">
+                    <button class="btn btn-outline-danger" type="submit">Invalidate sessions</button>
+                </form>
+            </dt>
+            <dd>
+                Invalidate all sessions in all browsers and devices. You will be logged out.
+                This may be useful if you suspect you've been hacked or if you forgot to log out
+                on a public device.
+            </dd>
+        </dl>
+    </section>
+    <section th:replace="~{fragments/app :: modal-essential}"></section>
+</div>
+<script id="main-script-block">SC2Restful.start(START_MODE.BARE);</script>
+</body>
+</html>
