@@ -12,6 +12,7 @@
 </head>
 <body>
 <div id="c-content">
+    <h1 class="text-dark no-popup-hide mt-3"><a th:href="@{/}"><img width="32" height="32" th:src="@{/static/icon/misc/pulse.svg}" class="mr-1" alt="Pulse"/><span> SC2 Pulse</span></a></h1>
     <div th:replace="~{fragments/no-tab :: no-tab-short(${tabId}, ${tabName}, ${embedContent}, true)}"></div>
 </div>
 <div th:fragment="no-tab-short (tabId, tabName, embedContent, hide)">
