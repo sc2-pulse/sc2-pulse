@@ -278,6 +278,7 @@ public class ProPlayerServiceIT
         ProPlayer proPlayer = proPlayerDAO.merge(new ProPlayer(null, 1L, "tag", "name"));
         ProPlayer proPlayer2 = proPlayerDAO.merge(new ProPlayer(null, 2L, "tag2", "name2"));
         ProPlayer proPlayer3 = proPlayerDAO.merge(new ProPlayer(null, 3L, "tag3", "name3"));
+        ProPlayer proPlayer4 = proPlayerDAO.merge(new ProPlayer(null, 4L, "tag4", "name4"));
         socialMediaLinkDAO.merge
         (
             false,
@@ -299,9 +300,16 @@ public class ProPlayerServiceIT
                 proPlayer3.getId(),
                 SocialMedia.LIQUIPEDIA,
                 "https://liquipedia.net/starcraft2/Maru"
+            ),
+
+            new SocialMediaLink
+            (
+                proPlayer4.getId(),
+                SocialMedia.LIQUIPEDIA,
+                "https://liquipedia.net/starcraft2/jEcho"
             )
         );
-        assertTrue(proPlayerService.updateSocialMediaLinks().block() >= 2);
+        assertTrue(proPlayerService.updateSocialMediaLinks().block() >= 3);
 
         //links were updated
         List<SocialMediaLink> serralLinks = socialMediaLinkDAO.find(proPlayer2.getId());
@@ -323,6 +331,12 @@ public class ProPlayerServiceIT
 
         verifyTypePresent(maruLinks, SocialMedia.INSTAGRAM);
         verifyTypePresent(maruLinks, SocialMedia.TWITCH);
+
+        List<SocialMediaLink> jEchoLinks = socialMediaLinkDAO.find(proPlayer4.getId());
+        assertTrue(jEchoLinks.size() > 1);
+
+        verifyTypePresent(jEchoLinks, SocialMedia.TWITTER);
+        verifyTypePresent(jEchoLinks, SocialMedia.TWITCH);
     }
 
     private <T extends SocialMediaLink> T verifyTypePresent

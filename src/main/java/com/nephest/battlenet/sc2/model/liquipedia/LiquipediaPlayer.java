@@ -8,16 +8,17 @@ import java.util.List;
 public class LiquipediaPlayer
 {
 
-    private String name;
+    private String name, queryName;
     private List<String> links;
 
     public LiquipediaPlayer()
     {
     }
 
-    public LiquipediaPlayer(String name, List<String> links)
+    public LiquipediaPlayer(String name, String queryName, List<String> links)
     {
         this.name = name;
+        this.queryName = queryName;
         this.links = links;
     }
 
@@ -29,6 +30,16 @@ public class LiquipediaPlayer
     public void setName(String name)
     {
         this.name = name;
+    }
+
+    public String getQueryName()
+    {
+        return queryName;
+    }
+
+    public void setQueryName(String queryName)
+    {
+        this.queryName = queryName;
     }
 
     public List<String> getLinks()

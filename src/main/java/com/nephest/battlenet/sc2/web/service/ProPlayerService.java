@@ -374,7 +374,7 @@ public class ProPlayerService
             })
             .flatMap(lpPlayer->Flux.fromStream
             (
-                extractSocialMediaLinks(idMap.get(lpPlayer.getName()), lpPlayer
+                extractSocialMediaLinks(idMap.get(lpPlayer.getQueryName()), lpPlayer
             )));
     }
 

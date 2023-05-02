@@ -37,7 +37,7 @@ public class LiquipediaParserTest
         LiquipediaMediaWikiRevisionQueryResult result = objectMapper
             .readValue(queryText, LiquipediaMediaWikiRevisionQueryResult.class);
         List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
-        assertEquals(3, players.size());
+        assertEquals(4, players.size());
         List<String> serralLinks = players.stream()
             .filter(player->player.getName().equalsIgnoreCase("Serral"))
             .findAny()
@@ -70,6 +70,13 @@ public class LiquipediaParserTest
         assertEquals("https://www.instagram.com/harstemsc", harstemLinks.get(1));
         assertEquals("https://www.twitch.tv/harstem", harstemLinks.get(2));
         assertEquals("https://www.youtube.com/channel/UCCRdB9rqzP2m7bPYb5drH_Q", harstemLinks.get(3));
+
+        LiquipediaPlayer jEcho = players.stream()
+            .filter(p->p.getName().equalsIgnoreCase("JEcho"))
+            .findAny()
+            .orElseThrow();
+        assertEquals("jEcho", jEcho.getQueryName());
+        assertEquals("JEcho", jEcho.getName());
     }
 
     @CsvSource

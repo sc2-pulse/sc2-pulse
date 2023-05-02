@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.web.service.liquipedia;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
 import com.nephest.battlenet.sc2.model.liquipedia.query.revision.LiquipediaMediaWikiRevisionQueryResult;
+import com.nephest.battlenet.sc2.model.liquipedia.query.revision.Normalization;
 import com.nephest.battlenet.sc2.model.liquipedia.query.revision.RevisionPage;
 import com.nephest.battlenet.sc2.model.liquipedia.query.revision.RevisionSlot;
 import java.util.ArrayList;
@@ -30,11 +31,15 @@ public final class LiquipediaParser
     public static List<LiquipediaPlayer> parse(LiquipediaMediaWikiRevisionQueryResult result)
     {
         return result.getQuery().getPages().stream()
-            .map(LiquipediaParser::parse)
+            .map(page->parse(result.getQuery().getNormalizations(), page))
             .collect(Collectors.toList());
     }
 
-    private static LiquipediaPlayer parse(RevisionPage revisionPage)
+    private static LiquipediaPlayer parse
+    (
+        List<Normalization> normalizations,
+        RevisionPage revisionPage
+    )
     {
         String name = revisionPage.getTitle();
         RevisionSlot mainSlot = !revisionPage.getRevisions().isEmpty()
@@ -42,7 +47,22 @@ public final class LiquipediaParser
             : null;
         String text = mainSlot != null ? mainSlot.getContent() : null;
         List<String> links = text != null ? parseWikiTextLinks(text) : List.of();
-        return new LiquipediaPlayer(name, links);
+        return new LiquipediaPlayer(name, getPlayerQueryName(normalizations, name), links);
+    }
+
+    private static String getPlayerQueryName
+    (
+        List<Normalization> normalizations,
+        String name
+    )
+    {
+        if(normalizations == null || normalizations.isEmpty()) return name;
+
+        return normalizations.stream()
+            .filter(normalization->normalization.getTo().equals(name))
+            .map(Normalization::getFrom)
+            .findAny()
+            .orElse(name);
     }
 
     private static List<String> parseWikiTextLinks(String text)
