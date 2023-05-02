@@ -74,7 +74,7 @@ public final class LiquipediaParser
         String linkText;
         if(infoboxIx != -1)
         {
-            int infoboxEndIx = text.indexOf("<br", infoboxIx);
+            int infoboxEndIx = text.indexOf("{PlayerIntroduction", infoboxIx);
             linkText = infoboxEndIx != -1
                 ? text.substring(infoboxIx, infoboxEndIx)
                 : text;
