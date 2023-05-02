@@ -54,7 +54,7 @@ extends BaseAPI
         return userAgent;
     }
 
-    @Scheduled(cron="*/2 * * * * *")
+    @Scheduled(cron="*/4 * * * * *")
     public void refreshRateLimiter()
     {
         rateLimiter.refreshSlots(REQUESTS_PER_PERIOD);
