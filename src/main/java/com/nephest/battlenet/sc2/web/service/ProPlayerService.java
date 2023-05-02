@@ -131,7 +131,7 @@ public class ProPlayerService
     public void update()
     {
         updateAligulac();
-        updateSocialMediaLinks();
+        updateSocialMediaLinks().block();
         LOG.info("Updated pro players");
     }
 
