@@ -49,8 +49,13 @@ public final class LiquipediaParser
                     : null
                 : null;
         String text = mainSlot != null ? mainSlot.getContent() : null;
-        List<String> links = text != null ? parseWikiTextLinks(text) : List.of();
-        return new LiquipediaPlayer(name, getPlayerQueryName(normalizations, name), links);
+        String queryName = getPlayerQueryName(normalizations, name);
+        if(text == null ) return new LiquipediaPlayer(name, queryName, List.of());
+
+        String redirect = getRedirect(text);
+        if(redirect != null) return LiquipediaPlayer.redirect(name, queryName, redirect);
+
+        return new LiquipediaPlayer(name, queryName, parseWikiTextLinks(text));
     }
 
     private static String getPlayerQueryName
@@ -66,6 +71,13 @@ public final class LiquipediaParser
             .map(Normalization::getFrom)
             .findAny()
             .orElse(name);
+    }
+
+    private static String getRedirect(String text)
+    {
+        return text.startsWith("#REDIRECT")
+            ? text.substring(text.indexOf("[[") + 2, text.indexOf("]]")).trim()
+            : null;
     }
 
     private static List<String> parseWikiTextLinks(String text)

@@ -11,6 +11,10 @@ import com.nephest.battlenet.sc2.model.liquipedia.query.revision.LiquipediaMedia
 import com.nephest.battlenet.sc2.web.service.BaseAPI;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
+import java.util.Collection;
+import java.util.Map;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -86,7 +90,30 @@ extends BaseAPI
     public Flux<LiquipediaPlayer> parsePlayers(String... names)
     {
         return getPlayer(names)
-            .flatMapMany(r->Flux.fromIterable(LiquipediaParser.parse(r)));
+            .map(LiquipediaParser::parse)
+            .flatMap(this::processRedirects)
+            .flatMapIterable(Function.identity());
+    }
+
+    private Mono<Collection<LiquipediaPlayer>> processRedirects
+    (
+        Collection<LiquipediaPlayer> players
+    )
+    {
+        Map<String, String> redirects = players.stream()
+            .filter(player->player.getRedirect() != null)
+            .collect(Collectors.toMap(LiquipediaPlayer::getRedirect, LiquipediaPlayer::getQueryName));
+        if(redirects.isEmpty()) return Mono.just(players);
+
+        return getPlayer(redirects.keySet().toArray(String[]::new))
+            .map(LiquipediaParser::parse)
+            .map(redirectedPlayers->
+            {
+                redirectedPlayers.forEach(p->p.setQueryName(redirects.get(p.getName())));
+                players.removeIf(player->player.getRedirect() != null);
+                players.addAll(redirectedPlayers);
+                return players;
+            });
     }
 
 }

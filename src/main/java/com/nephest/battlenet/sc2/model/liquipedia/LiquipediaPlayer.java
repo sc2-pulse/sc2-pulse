@@ -8,7 +8,7 @@ import java.util.List;
 public class LiquipediaPlayer
 {
 
-    private String name, queryName;
+    private String name, queryName, redirect;
     private List<String> links;
 
     public LiquipediaPlayer()
@@ -20,6 +20,13 @@ public class LiquipediaPlayer
         this.name = name;
         this.queryName = queryName;
         this.links = links;
+    }
+
+    public static LiquipediaPlayer redirect(String name, String queryName, String redirect)
+    {
+        LiquipediaPlayer player = new LiquipediaPlayer(name, queryName, List.of());
+        player.setRedirect(redirect);
+        return player;
     }
 
     public String getName()
@@ -40,6 +47,16 @@ public class LiquipediaPlayer
     public void setQueryName(String queryName)
     {
         this.queryName = queryName;
+    }
+
+    public String getRedirect()
+    {
+        return redirect;
+    }
+
+    public void setRedirect(String redirect)
+    {
+        this.redirect = redirect;
     }
 
     public List<String> getLinks()

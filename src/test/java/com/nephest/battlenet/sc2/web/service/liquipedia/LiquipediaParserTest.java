@@ -37,7 +37,7 @@ public class LiquipediaParserTest
         LiquipediaMediaWikiRevisionQueryResult result = objectMapper
             .readValue(queryText, LiquipediaMediaWikiRevisionQueryResult.class);
         List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
-        assertEquals(4, players.size());
+        assertEquals(5, players.size());
         List<String> serralLinks = players.stream()
             .filter(player->player.getName().equalsIgnoreCase("Serral"))
             .findAny()
@@ -77,6 +77,14 @@ public class LiquipediaParserTest
             .orElseThrow();
         assertEquals("jEcho", jEcho.getQueryName());
         assertEquals("JEcho", jEcho.getName());
+
+        LiquipediaPlayer demuslim = players.stream()
+            .filter(p->p.getName().equalsIgnoreCase("DeMusliM"))
+            .findAny()
+            .orElseThrow();
+        assertEquals("DeMusliM", demuslim.getQueryName());
+        assertEquals("DeMusliM", demuslim.getName());
+        assertEquals("DeMu", demuslim.getRedirect());
     }
 
     @CsvSource

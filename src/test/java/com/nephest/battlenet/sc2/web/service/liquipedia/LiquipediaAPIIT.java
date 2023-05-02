@@ -3,11 +3,16 @@
 
 package com.nephest.battlenet.sc2.web.service.liquipedia;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -25,14 +30,22 @@ public class LiquipediaAPIIT
     @Test
     public void testParsePlayer()
     {
-       api.parsePlayers("Serral", "Maru", "Harstem")
-            .toStream()
-            .forEach(lpPlayer->
-            {
-                List<String> links = lpPlayer.getLinks();
-                assertNotNull(links);
-                assertFalse(links.isEmpty());
-            });
+        Set<String> names = Set.of("Serral", "Maru", "Harstem", "DeMusliM");
+        Set<String> urls = new HashSet<>();
+        List<LiquipediaPlayer> players = api.parsePlayers(names.toArray(String[]::new))
+            .collectList()
+            .block();
+        assertEquals(names.size(), players.size());
+        players.forEach(lpPlayer->
+        {
+            assertTrue(names.contains(lpPlayer.getQueryName()));
+            List<String> links = lpPlayer.getLinks();
+            assertNotNull(links);
+            assertFalse(links.isEmpty());
+            //verify unique links
+            links.forEach(link->assertFalse(urls.contains(link)));
+            urls.addAll(links);
+        });
     }
 
 }
