@@ -25,7 +25,7 @@ public class LiquipediaAPIIT
     @Test
     public void testParsePlayer()
     {
-       api.parsePlayers("Serral", "Maru")
+       api.parsePlayers("Serral", "Maru", "Harstem")
             .toStream()
             .forEach(lpPlayer->
             {

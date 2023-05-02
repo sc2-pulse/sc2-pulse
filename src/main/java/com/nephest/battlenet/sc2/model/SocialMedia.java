@@ -13,7 +13,7 @@ implements Identifiable
     TWITTER(4, "twitter", "https://twitter.com", "/"),
     INSTAGRAM(5, "instagram", "https://www.instagram.com", "/"),
     DISCORD(6, "discord", "https://discord.gg", null),
-    YOUTUBE(7, "youtube", "https://www.youtube.com", "/c"),
+    YOUTUBE(7, "youtube", "https://www.youtube.com", "/channel"),
     UNKNOWN(8, "", null, null),
     BATTLE_NET(9, "battlenet", "battlenet:://starcraft", "/profile"),
     REPLAY_STATS(10, "replaystats", "https://sc2replaystats.com", "/player");
