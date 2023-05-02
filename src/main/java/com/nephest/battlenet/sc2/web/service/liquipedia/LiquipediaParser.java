@@ -42,9 +42,12 @@ public final class LiquipediaParser
     )
     {
         String name = revisionPage.getTitle();
-        RevisionSlot mainSlot = !revisionPage.getRevisions().isEmpty()
-            ? revisionPage.getRevisions().get(0).getSlots().get("main")
-            : null;
+        RevisionSlot mainSlot = revisionPage.getRevisions() != null
+            && !revisionPage.getRevisions().isEmpty()
+                ? revisionPage.getRevisions().get(0).getSlots() != null
+                    ? revisionPage.getRevisions().get(0).getSlots().get("main")
+                    : null
+                : null;
         String text = mainSlot != null ? mainSlot.getContent() : null;
         List<String> links = text != null ? parseWikiTextLinks(text) : List.of();
         return new LiquipediaPlayer(name, getPlayerQueryName(normalizations, name), links);
@@ -68,9 +71,17 @@ public final class LiquipediaParser
     private static List<String> parseWikiTextLinks(String text)
     {
         int infoboxIx = text.indexOf("{Infobox player");
-        String linkText = infoboxIx != -1
-            ? text.substring(infoboxIx, text.indexOf("<br", infoboxIx))
-            : text;
+        String linkText;
+        if(infoboxIx != -1)
+        {
+            int infoboxEndIx = text.indexOf("<br", infoboxIx);
+            linkText = infoboxEndIx != -1
+                ? text.substring(infoboxIx, infoboxEndIx)
+                : text;
+        } else
+        {
+            linkText = text;
+        }
         List<String> links = new ArrayList<>(WIKI_TEXT_LINKS.size());
         for(Map.Entry<SocialMedia, String> entry : WIKI_TEXT_LINKS.entrySet())
         {
