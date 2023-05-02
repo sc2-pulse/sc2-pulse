@@ -118,6 +118,7 @@ const START_MODE = Object.freeze
   FULL: {name: "full", order: 1},
   MINIMAL: {name: "minimal", order: 2},
   ESSENTIAL: {name: "essential", order: 3},
+  BARE: {name: "bare", order: 4}
 });
 
 const TIER_RANGE = Object.freeze

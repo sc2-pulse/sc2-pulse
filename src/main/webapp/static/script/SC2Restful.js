@@ -13,8 +13,15 @@ class SC2Restful
 
     static start(mode = START_MODE.FULL)
     {
-        window.addEventListener("popstate", e=>{HistoryUtil.restoreState(e)});
-        if(mode == START_MODE.ESSENTIAL) {
+        if(mode !== START_MODE.BARE)
+            window.addEventListener("popstate", e=>{HistoryUtil.restoreState(e)});
+        if(mode == START_MODE.BARE) {
+            Util.formatDateTimes();
+            ChartUtil.init();
+            SC2Restful.enhance(mode);
+            return Promise.resolve(START_MODE.BARE);
+        }
+        else if(mode == START_MODE.ESSENTIAL) {
             SC2Restful.initAll();
             Session.restoreState();
             SC2Restful.enhance(mode);
@@ -90,6 +97,8 @@ class SC2Restful
                 FollowUtil.enhanceFollowButtons();
                 BufferUtil.enhance();
             case START_MODE.ESSENTIAL:
+                BootstrapUtil.enhanceTabs();
+            case START_MODE.BARE:
                 BootstrapUtil.init();
                 BootstrapUtil.enhanceModals();
                 BootstrapUtil.enhanceCollapsibles();
@@ -98,7 +107,6 @@ class SC2Restful
                 FormUtil.initInputStateLinks();
                 FormUtil.linkInputStateBindings();
                 FormUtil.enhanceFormConfirmations();
-                BootstrapUtil.enhanceTabs();
                 BootstrapUtil.enhanceTooltips();
                 ElementUtil.enhanceFullscreenToggles();
                 ElementUtil.enhanceCopyToClipboard();
