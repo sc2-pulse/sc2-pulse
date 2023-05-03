@@ -119,7 +119,7 @@ public final class LiquipediaParser
     {
         url = url.trim();
         return url.startsWith("https://web.archive.org/web/")
-            ? url.substring(url.indexOf("http:", 7))
+            ? url.substring(url.indexOf("http", 7))
             : url;
     }
 

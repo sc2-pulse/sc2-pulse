@@ -84,6 +84,8 @@ public class LiquipediaParserTest
     ({
         "'\nhttps://web.archive.org/web/20230331032550/http://aligulac.com/players/49-Maru/ \n', "
             + "'http://aligulac.com/players/49-Maru/'",
+        "'\nhttps://web.archive.org/web/20230331032550/https://aligulac.com/players/49-Maru/ \n', "
+            + "'https://aligulac.com/players/49-Maru/'",
         "'http://aligulac.com/players/49-Maru/', 'http://aligulac.com/players/49-Maru/'"
     })
     @ParameterizedTest
