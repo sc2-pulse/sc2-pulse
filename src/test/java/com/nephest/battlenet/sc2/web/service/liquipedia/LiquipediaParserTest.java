@@ -30,7 +30,7 @@ public class LiquipediaParserTest
             LiquipediaMediaWikiRevisionQueryResult.class
         );
         List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
-        assertEquals(5, players.size());
+        assertEquals(4, players.size());
         List<String> serralLinks = players.stream()
             .filter(player->player.getName().equalsIgnoreCase("Serral"))
             .findAny()
@@ -70,11 +70,21 @@ public class LiquipediaParserTest
             .orElseThrow();
         assertEquals("jEcho", jEcho.getQueryName());
         assertEquals("JEcho", jEcho.getName());
+    }
 
-        LiquipediaPlayer demuslim = players.stream()
-            .filter(p->p.getName().equalsIgnoreCase("DeMusliM"))
-            .findAny()
-            .orElseThrow();
+    @Test
+    public void testRedirect()
+    throws URISyntaxException, IOException
+    {
+        LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
+        (
+            LiquipediaParserTest.class,
+            "liquipedia-query-redirect.json",
+            LiquipediaMediaWikiRevisionQueryResult.class
+        );
+        List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
+        assertEquals(1, players.size());
+        LiquipediaPlayer demuslim = players.get(0);
         assertEquals("DeMusliM", demuslim.getQueryName());
         assertEquals("DeMusliM", demuslim.getName());
         assertEquals("DeMu", demuslim.getRedirect());
