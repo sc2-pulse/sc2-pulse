@@ -10,6 +10,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.Disposable;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.publisher.MonoSink;
 import reactor.util.retry.Retry;
@@ -37,8 +39,32 @@ public class ReactorRateLimiter
 
     private final AtomicInteger slots = new AtomicInteger(0);
     private final AtomicBoolean isResetActive = new AtomicBoolean(false);
+    private RateLimitRefreshConfig refreshConfig;
+    private Disposable refreshSubscription;
 
     private RateLimitData lastData;
+
+    public ReactorRateLimiter(RateLimitRefreshConfig refreshConfig)
+    {
+        setRefreshConfig(refreshConfig);
+    }
+
+    public ReactorRateLimiter()
+    {
+        this(null);
+    }
+
+    public void setRefreshConfig(RateLimitRefreshConfig config)
+    {
+        if(refreshSubscription != null) refreshSubscription.dispose();
+        if(config != null) Flux.interval(Duration.ofSeconds(0), config.getPeriod())
+            .subscribe(i->refreshSlots(config.getSlotsPerPeriod()));
+    }
+
+    public RateLimitRefreshConfig getRefreshConfig()
+    {
+        return refreshConfig;
+    }
 
     public RateLimitData getLastData()
     {

@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.time.Instant;
@@ -78,6 +79,19 @@ public class ReactorRateLimiterTest
         limiter.refreshUndeterminedSlots(thresholdReached ? threshold : threshold.plusSeconds(10), 50);
         //The limit of last RateLimitData is used when possible
         assertEquals(thresholdReached ? 10 : 9, limiter.getAvailableSlots());
+    }
+
+    @Test
+    public void testRefreshConfig()
+    {
+        Duration period = Duration.ofMillis(100);
+        RateLimitRefreshConfig config = new RateLimitRefreshConfig(period, 1);
+        ReactorRateLimiter limiter = new ReactorRateLimiter(config);
+        limiter.requestSlot().block();
+        Instant begin = Instant.now();
+        limiter.requestSlot().block();
+        Duration realPeriod = Duration.between(begin, Instant.now());
+        assertTrue(realPeriod.compareTo(period.multipliedBy(2)) <= 0);
     }
 
 }
