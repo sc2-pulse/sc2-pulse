@@ -114,7 +114,7 @@ public final class LiquipediaParser
             ? null
             : id.startsWith("http")
                 ? sanitizeUrl(id)
-                : type.getBaseUrl() + "/" + id;
+                : type.getBaseUrl() + "/" + sanitizeUserUrl(id);
     }
 
     public static String sanitizeUrl(String url)
@@ -123,6 +123,14 @@ public final class LiquipediaParser
         return url.startsWith("https://web.archive.org/web/")
             ? url.substring(url.indexOf("http", 7))
             : url;
+    }
+
+    public static String sanitizeUserUrl(String url)
+    {
+        url = url.trim();
+        if(url.startsWith("/")) url = url.substring(1);
+
+        return url;
     }
 
 }

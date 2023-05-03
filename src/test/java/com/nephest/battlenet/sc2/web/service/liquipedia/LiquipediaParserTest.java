@@ -110,6 +110,25 @@ public class LiquipediaParserTest
         assertEquals("https://www.twitch.tv/Iba_sc2", links.get(1));
     }
 
+    @Test
+    public void whenRedundantLinkSlash_thenRemoveIt()
+    throws URISyntaxException, IOException
+    {
+        LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
+        (
+            LiquipediaParserTest.class,
+            "liquipedia-query-redundant-slash.json",
+            LiquipediaMediaWikiRevisionQueryResult.class
+        );
+        List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
+        assertEquals(1, players.size());
+        List<String> links = players.get(0).getLinks();
+        links.sort(Comparator.naturalOrder());
+        assertEquals(3, links.size());
+        //redundant slash is removed(//channel/UCOlVDgCRQjAkdIsYnfi199Q)
+        assertEquals("https://www.youtube.com/channel/UCOlVDgCRQjAkdIsYnfi199Q", links.get(2));
+    }
+
     @CsvSource
     ({
         "'\nhttps://web.archive.org/web/20230331032550/http://aligulac.com/players/49-Maru/ \n', "
@@ -122,6 +141,17 @@ public class LiquipediaParserTest
     public void testSanitizeUrl(String input, String expectedResult)
     {
         assertEquals(expectedResult, LiquipediaParser.sanitizeUrl(input));
+    }
+
+    @CsvSource
+    ({
+        "'\n url\n', 'url'",
+        "'\n /url \n', 'url'"
+    })
+    @ParameterizedTest
+    public void testSanitizeUserUrl(String input, String expectedResult)
+    {
+        assertEquals(expectedResult, LiquipediaParser.sanitizeUserUrl(input));
     }
 
 }
