@@ -110,9 +110,11 @@ public final class LiquipediaParser
 
         int idIx = ix + typeName.length() + 1;
         String id = text.substring(idIx, text.indexOf("\n", idIx)).trim();
-        return id.startsWith("http")
-            ? sanitizeUrl(id)
-            : type.getBaseUrl() + "/" + id;
+        return id.isEmpty()
+            ? null
+            : id.startsWith("http")
+                ? sanitizeUrl(id)
+                : type.getBaseUrl() + "/" + id;
     }
 
     public static String sanitizeUrl(String url)

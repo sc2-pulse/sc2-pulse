@@ -80,6 +80,26 @@ public class LiquipediaParserTest
         assertEquals("DeMu", demuslim.getRedirect());
     }
 
+    @Test
+    public void whenEmptyValues_thenSkipThem()
+    throws URISyntaxException, IOException
+    {
+        LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
+        (
+            LiquipediaParserTest.class,
+            "liquipedia-query-empty-values.json",
+            LiquipediaMediaWikiRevisionQueryResult.class
+        );
+        List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
+        assertEquals(1, players.size());
+        List<String> links = players.get(0).getLinks();
+        links.sort(Comparator.naturalOrder());
+        //empty values(youtube=) are ignored
+        assertEquals(2, links.size());
+        assertEquals("https://twitter.com/ibabattlenet", links.get(0));
+        assertEquals("https://www.twitch.tv/Iba_sc2", links.get(1));
+    }
+
     @CsvSource
     ({
         "'\nhttps://web.archive.org/web/20230331032550/http://aligulac.com/players/49-Maru/ \n', "
