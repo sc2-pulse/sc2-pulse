@@ -5,15 +5,11 @@ package com.nephest.battlenet.sc2.web.service.liquipedia;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
 import com.nephest.battlenet.sc2.model.liquipedia.query.revision.LiquipediaMediaWikiRevisionQueryResult;
+import com.nephest.battlenet.sc2.util.TestUtil;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.util.Comparator;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -27,15 +23,12 @@ public class LiquipediaParserTest
     public void testParsePlayer()
     throws URISyntaxException, IOException
     {
-        ObjectMapper objectMapper = new ObjectMapper();
-        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
-        String queryText = Files.readString
+        LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
         (
-            Paths.get(LiquipediaParserTest.class.getResource("liquipedia-query.json").toURI()),
-            Charset.defaultCharset()
+            LiquipediaParserTest.class,
+            "liquipedia-query.json",
+            LiquipediaMediaWikiRevisionQueryResult.class
         );
-        LiquipediaMediaWikiRevisionQueryResult result = objectMapper
-            .readValue(queryText, LiquipediaMediaWikiRevisionQueryResult.class);
         List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
         assertEquals(5, players.size());
         List<String> serralLinks = players.stream()

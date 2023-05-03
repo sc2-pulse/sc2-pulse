@@ -10,11 +10,9 @@ import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.replaystats.ReplayStatsPlayerCharacter;
+import com.nephest.battlenet.sc2.util.TestUtil;
 import java.io.IOException;
 import java.net.URISyntaxException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.sql.Connection;
 import java.sql.SQLException;
 import javax.sql.DataSource;
@@ -48,11 +46,8 @@ public class SC2ReplayStatsAPIIT
     {
         try
         {
-            validCharacter = Files.readString
-            (
-                Paths.get(SC2ReplayStatsAPIIT.class.getResource("sc2-replay-stats-profile.json").toURI()),
-                Charset.defaultCharset()
-            );
+            validCharacter = TestUtil
+                .readResource(SC2ReplayStatsAPIIT.class, "sc2-replay-stats-profile.json");
         }
         catch (IOException | URISyntaxException e)
         {
