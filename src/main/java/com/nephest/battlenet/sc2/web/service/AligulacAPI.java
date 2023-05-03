@@ -7,8 +7,10 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
+import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Mono;
 
@@ -18,8 +20,10 @@ extends BaseAPI
 {
 
     public static final String BASE_URL = "http://aligulac.com/api/v1/";
+    public static final int SLOTS_PER_PERIOD = 2;
 
     private final String apiKey;
+    private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
 
     @Autowired
     public AligulacAPI
@@ -27,6 +31,12 @@ extends BaseAPI
     {
         initClient(objectMapper);
         this.apiKey = apiKey;
+    }
+
+    @Scheduled(cron="* * * * * *")
+    public void refreshReactorSlots()
+    {
+        rateLimiter.refreshSlots(SLOTS_PER_PERIOD);
     }
 
     private void initClient(ObjectMapper objectMapper)
@@ -51,7 +61,8 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(AligulacProPlayerRoot.class)
-            .retryWhen(getRetry(WebServiceUtil.RETRY));
+            .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
+            .delaySubscription(rateLimiter.requestSlot());
     }
 
 }
