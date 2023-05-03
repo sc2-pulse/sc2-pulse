@@ -158,7 +158,7 @@ public class ProPlayerService
         int ix = 0;
         int total = 0;
         List<ProPlayer> originalProPlayers = proPlayerDAO.findAligulacList();
-        long[] ids = new long[getAligulacBatchSize()];
+        Long[] ids = new Long[getAligulacBatchSize()];
         ProPlayer[] proPlayers = new ProPlayer[getAligulacBatchSize()];
 
         for(ProPlayer proPlayer : originalProPlayers)

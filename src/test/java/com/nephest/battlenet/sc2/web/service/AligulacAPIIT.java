@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
+import java.util.stream.LongStream;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -48,8 +49,9 @@ public class AligulacAPIIT
     @Order(1)
     public void testFetch()
     {
-        long[] batch = new long[proPlayerService.getAligulacBatchSize()];
-        for(int i = 0; i < batch.length; i++) batch[i] = i + 1;
+        Long[] batch = LongStream.range(1L, proPlayerService.getAligulacBatchSize() + 1)
+            .boxed()
+            .toArray(Long[]::new);
         AligulacProPlayer[] players = api.getPlayers(batch).block().getObjects();
         assertEquals(players.length, batch.length);
         for(AligulacProPlayer player : players)
