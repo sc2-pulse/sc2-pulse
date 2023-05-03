@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -47,6 +48,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
 
 @Service
 public class ProPlayerService
@@ -128,11 +130,12 @@ public class ProPlayerService
         this.aligulacAPI = aligulacAPI;
     }
 
-    public void update()
+    public Mono<Void> update()
     {
-        updateAligulac();
-        updateSocialMediaLinks().block();
-        LOG.info("Updated pro players");
+        return updateAligulac()
+            .then(updateSocialMediaLinks())
+            .then()
+            .doOnSuccess((s)->LOG.info("Updated pro players"));
     }
 
     @Deprecated
@@ -153,26 +156,27 @@ public class ProPlayerService
         }
     }
 
-    private void updateAligulac()
+    private Flux<Void> updateAligulac()
     {
-        int ix = 0;
-        int total = 0;
-        List<ProPlayer> originalProPlayers = proPlayerDAO.findAligulacList();
-        Long[] ids = new Long[getAligulacBatchSize()];
-        ProPlayer[] proPlayers = new ProPlayer[getAligulacBatchSize()];
+        return Mono.fromCallable(proPlayerDAO::findAligulacList)
+            .flatMapIterable(Function.identity())
+            .buffer(getAligulacBatchSize())
+            .flatMap(this::getAligulacPlayers)
+            .flatMap(tuple->Mono.fromRunnable(()->proPlayerService.updateAligulac(tuple.getT2(), tuple.getT1())));
+    }
 
-        for(ProPlayer proPlayer : originalProPlayers)
-        {
-            ids[ix] = proPlayer.getAligulacId();
-            proPlayers[ix] = proPlayer;
-            ix++; total++;
-            if(ix == getAligulacBatchSize() || total == originalProPlayers.size())
-            {
-                AligulacProPlayer[] aligulacProPlayers = aligulacAPI.getPlayers(Arrays.copyOf(ids, ix)).block().getObjects();
-                proPlayerService.updateAligulac(proPlayers, aligulacProPlayers, ix);
-                ix = 0;
-            }
-        }
+    private Mono<Tuple2<List<AligulacProPlayer>, List<ProPlayer>>> getAligulacPlayers
+    (
+        List<ProPlayer> proPlayers
+    )
+    {
+        Long[] aligulacIds = proPlayers.stream()
+            .map(ProPlayer::getAligulacId)
+            .toArray(Long[]::new);
+        return aligulacAPI.getPlayers(aligulacIds)
+            .map(AligulacProPlayerRoot::getObjects)
+            .map(Arrays::asList)
+            .zipWith(Mono.just(proPlayers));
     }
 
     @CacheEvict(cacheNames={"pro-player-characters"}, allEntries=true)
@@ -183,35 +187,36 @@ public class ProPlayerService
     )
     public void updateAligulac
     (
-        ProPlayer[] proPlayers,
-        AligulacProPlayer[] aligulacProPlayers,
-        int ix
+        List<ProPlayer> proPlayers,
+        List<AligulacProPlayer> aligulacProPlayers
     )
     {
         ArrayList<ProTeamMember> members = new ArrayList<>();
         ArrayList<Long> notMembers = new ArrayList<>();
-        ArrayList<SocialMediaLink> links = new ArrayList<>(aligulacProPlayers.length * 2);
-        //aligulac returns players in the same order they were requested
-        for(int i = 0; i < aligulacProPlayers.length; i++)
+        ArrayList<SocialMediaLink> links = new ArrayList<>(aligulacProPlayers.size() * 2);
+        Map<Long, ProPlayer> aligulacIdMap = proPlayers.stream()
+            .collect(Collectors.toMap(ProPlayer::getAligulacId, Function.identity()));
+        for(AligulacProPlayer aligulacProPlayer : aligulacProPlayers)
         {
-            ProPlayer.update(proPlayers[i], aligulacProPlayers[i]);
-            ProTeam proTeam = ProTeam.of(aligulacProPlayers[i]);
+            ProPlayer proPlayer = aligulacIdMap.get(aligulacProPlayer.getId());
+            ProPlayer.update(proPlayer, aligulacProPlayer);
+            ProTeam proTeam = ProTeam.of(aligulacProPlayer);
             if(proTeam != null)
             {
                 ProTeamMember member = new ProTeamMember
                 (
                     proTeamDAO.merge(proTeam).getId(),
-                    proPlayers[i].getId()
+                    proPlayer.getId()
                 );
                 members.add(member);
             }
             else
             {
-                notMembers.add(proPlayers[i].getId());
+                notMembers.add(proPlayer.getId());
             }
-            links.addAll(extractLinks(proPlayers[i], aligulacProPlayers[i]));
+            links.addAll(extractLinks(proPlayer, aligulacProPlayer));
         }
-        proPlayerDAO.mergeWithoutIds(Arrays.copyOf(proPlayers, ix));
+        proPlayerDAO.mergeWithoutIds(proPlayers.toArray(ProPlayer[]::new));
         proTeamMemberDAO.merge(members.toArray(new ProTeamMember[0]));
         proTeamMemberDAO.remove(notMembers.toArray(Long[]::new));
         socialMediaLinkDAO.merge(false, links.toArray(SocialMediaLink[]::new));

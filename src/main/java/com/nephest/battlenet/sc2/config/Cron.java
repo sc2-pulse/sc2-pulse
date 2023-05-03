@@ -223,7 +223,7 @@ public class Cron
     @Scheduled(cron="0 0 4 * * *")
     public void updateProPlayers()
     {
-        webExecutorService.submit(()->proPlayerService.update());
+        proPlayerService.update().subscribe();
     }
 
     @Scheduled(cron="0 0 0/1 * * *")

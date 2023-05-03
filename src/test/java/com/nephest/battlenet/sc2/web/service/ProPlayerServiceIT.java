@@ -137,6 +137,7 @@ public class ProPlayerServiceIT
         playerCharacterStatsDAO.mergeCalculate();
         WebClient revealedWebClient = revealedAPI.getWebClient();
         WebClient aligulacWebClient = aligulacAPI.getWebClient();
+        int prevBatchSize = proPlayerService.getAligulacBatchSize();
         try(MockWebServer server = new MockWebServer())
         {
             server.start();
@@ -152,7 +153,7 @@ public class ProPlayerServiceIT
 
             proPlayerService.setAligulacBatchSize(1); //test batching
             proPlayerService.updateRevealed(); //deprecated
-            proPlayerService.update();
+            proPlayerService.update().block();
 
             LadderTeamMember member1 = ladderCharacterDAO.findDistinctCharacters("battletag#10").get(0).getMembers();
             assertEquals("Aligulac nickname1", member1.getProNickname());
@@ -182,11 +183,16 @@ public class ProPlayerServiceIT
             assertEquals(SocialMedia.LIQUIPEDIA, ladderProPlayer.getLinks().get(2).getType());
             assertEquals("https://liquipedia.net/starcraft2/Lpname2", ladderProPlayer.getLinks().get(2).getUrl());
 
+            AligulacProPlayerRoot root2 = new AligulacProPlayerRoot(new AligulacProPlayer[]
+            {
+                //reversed order, should be properly handled
+                createAligulacProPlayers2NoTeam().getObjects()[0],
+                createAligulacProPlayers1().getObjects()[0]
+            });
             server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                .setBody(objectMapper.writeValueAsString(createAligulacProPlayers1())));
-            server.enqueue(new MockResponse().setHeader(HttpHeaders.CONTENT_TYPE, "application/json")
-                .setBody(objectMapper.writeValueAsString(createAligulacProPlayers2NoTeam())));
-            proPlayerService.update();
+                .setBody(objectMapper.writeValueAsString(root2)));
+            proPlayerService.setAligulacBatchSize(prevBatchSize);
+            proPlayerService.update().block();
             LadderProPlayer ladderProPlayer2 = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
             assertNull(ladderProPlayer2.getProTeam());
             server.shutdown();
@@ -195,6 +201,7 @@ public class ProPlayerServiceIT
         {
             revealedAPI.setWebClient(revealedWebClient);
             aligulacAPI.setWebClient(aligulacWebClient);
+            proPlayerService.setAligulacBatchSize(prevBatchSize);
         }
     }
 
