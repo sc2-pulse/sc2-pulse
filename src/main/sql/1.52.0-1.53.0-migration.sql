@@ -41,3 +41,10 @@ CREATE TABLE "account_property"
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+ALTER TABLE "league_stats"
+    ADD COLUMN "terran_team_count" INTEGER,
+    ADD COLUMN "protoss_team_count" INTEGER,
+    ADD COLUMN "zerg_team_count" INTEGER,
+    ADD COLUMN "random_team_count" INTEGER;
+CREATE INDEX "ix_team_season_queue_type" ON "team"("season", "queue_type") WHERE "queue_type" = 201;
+

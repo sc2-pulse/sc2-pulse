@@ -338,6 +338,7 @@ CREATE TABLE "team"
 WITH (fillfactor = 50);
 
 CREATE INDEX "ix_team_ladder_search_full" ON "team"("season", "queue_type", "team_type", "rating", "id");
+CREATE INDEX "ix_team_season_queue_type" ON "team"("season", "queue_type") WHERE "queue_type" = 201;
 
 CREATE TABLE "team_member"
 (
@@ -423,6 +424,10 @@ CREATE TABLE "league_stats"
     "protoss_games_played" INTEGER NOT NULL,
     "zerg_games_played" INTEGER NOT NULL,
     "random_games_played" INTEGER NOT NULL,
+    "terran_team_count" INTEGER,
+    "protoss_team_count" INTEGER,
+    "zerg_team_count" INTEGER,
+    "random_team_count" INTEGER,
 
     PRIMARY KEY ("league_id"),
 
