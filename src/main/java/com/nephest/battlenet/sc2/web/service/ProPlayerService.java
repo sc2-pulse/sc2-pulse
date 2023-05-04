@@ -135,7 +135,7 @@ public class ProPlayerService
         return updateAligulac()
             .then(updateSocialMediaLinks())
             .then()
-            .doOnSuccess((s)->LOG.info("Updated pro players"));
+            .doOnSuccess((s)->LOG.info("Updated pro player data"));
     }
 
     @Deprecated
@@ -156,13 +156,18 @@ public class ProPlayerService
         }
     }
 
-    private Flux<Void> updateAligulac()
+    private Mono<Integer> updateAligulac()
     {
         return Mono.fromCallable(proPlayerDAO::findAligulacList)
             .flatMapIterable(Function.identity())
             .buffer(getAligulacBatchSize())
             .flatMap(this::getAligulacPlayers)
-            .flatMap(tuple->Mono.fromRunnable(()->proPlayerService.updateAligulac(tuple.getT2(), tuple.getT1())));
+            .flatMap(tuple->Mono.fromCallable(()->proPlayerService.updateAligulac(tuple.getT2(), tuple.getT1())))
+            .reduce(0, Integer::sum)
+            .doOnSuccess(updatedCount->
+            {
+                if(updatedCount > 0) LOG.info("Updated {} pro players", updatedCount);
+            });
     }
 
     private Mono<Tuple2<List<AligulacProPlayer>, List<ProPlayer>>> getAligulacPlayers
@@ -185,7 +190,7 @@ public class ProPlayerService
     (
         propagation = Propagation.REQUIRES_NEW
     )
-    public void updateAligulac
+    public int updateAligulac
     (
         List<ProPlayer> proPlayers,
         List<AligulacProPlayer> aligulacProPlayers
@@ -220,6 +225,7 @@ public class ProPlayerService
         proTeamMemberDAO.merge(members.toArray(new ProTeamMember[0]));
         proTeamMemberDAO.remove(notMembers.toArray(Long[]::new));
         socialMediaLinkDAO.merge(false, links.toArray(SocialMediaLink[]::new));
+        return aligulacProPlayers.size();
     }
 
     public int getAligulacBatchSize()
