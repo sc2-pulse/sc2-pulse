@@ -339,8 +339,8 @@ public class ProPlayerService
      */
     public Mono<Integer> updateSocialMediaLinks(boolean ignoreParsingErrors)
     {
-        List<SocialMediaLink> links = socialMediaLinkDAO.findByTypes(SocialMedia.LIQUIPEDIA);
-        return getSocialMediaLinks(links, ignoreParsingErrors)
+        return Mono.fromCallable(()->socialMediaLinkDAO.findByTypes(SocialMedia.LIQUIPEDIA))
+            .flatMapMany(links->getSocialMediaLinks(links, ignoreParsingErrors))
             .buffer(linkDbBatchSize)
             .flatMap(smLinks->Mono.fromCallable(()->
             {
