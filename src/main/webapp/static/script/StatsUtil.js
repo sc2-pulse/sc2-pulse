@@ -176,13 +176,18 @@ class StatsUtil
             null, null, SeasonUtil.seasonIdTranslator
         );
 
-        TableUtil.updateColRowTable
-        (
-            document.getElementById("games-played-race-table"), percentageResult.raceGamesPlayed,
-            (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order,
-            (name)=>EnumUtil.enumOfName(name, RACE).name,
-            SeasonUtil.seasonIdTranslator
-        );
+        const raceStatsType = StatsUtil.getRaceStatsType();
+        if(StatsUtil.setRaceStatsStatus(raceStatsType, document.querySelectorAll("#games-played-race"))) {
+            TableUtil.updateColRowTable
+            (
+                document.getElementById("games-played-race-table"), percentageResult["race" + raceStatsType.parameterSuffix],
+                (a, b)=>EnumUtil.enumOfName(a, RACE).order - EnumUtil.enumOfName(b, RACE).order,
+                (name)=>EnumUtil.enumOfName(name, RACE).name,
+                SeasonUtil.seasonIdTranslator
+            );
+            document.querySelectorAll('#games-played-race .header .main')
+                .forEach(header=>header.textContent = raceStatsType.description);
+        }
         TableUtil.updateColRowTable
         (
             document.getElementById("games-played-region-table"),
@@ -218,6 +223,35 @@ class StatsUtil
         );
     }
 
+    static getRaceStatsType()
+    {
+        return EnumUtil.enumOfName(localStorage.getItem("stats-race-type") || "games-played", LADDER_RACE_STATS_TYPE);
+    }
+
+    static setRaceStatsStatus(raceStatsType, raceContainers)
+    {
+        const raceMsg = document.querySelector("#stats-race .msg-info");
+        if(raceStatsType == LADDER_RACE_STATS_TYPE.TEAM_COUNT
+            && EnumUtil.enumOfFullName(Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).urlParams.get("queue"), TEAM_FORMAT) != TEAM_FORMAT._1V1) {
+            raceContainers.forEach(container=>container.classList.add("d-none"));
+            raceMsg.textContent = "Only in 1v1 mode each race has a separate team. Team can have multiple races in other modes(2v2, 3v3, 4v4, Archon).";
+            raceMsg.classList.remove("d-none");
+            return false;
+        }
+        else
+        {
+            raceContainers.forEach(container=>container.classList.remove("d-none"));
+            raceMsg.classList.add("d-none");
+            return true;
+        }
+    }
+
+    static enhanceRaceControls()
+    {
+        const typeCrl = document.querySelector("#stats-race-type");
+        if(typeCrl) typeCrl.addEventListener("change", e=>window.setTimeout(StatsUtil.updateLadderStatsView, 1));
+    }
+
     static applyUserSettings(globalResult)
     {
         const gamesOption = localStorage.getItem("settings-games-played-number");
@@ -241,6 +275,7 @@ class StatsUtil
         document.querySelectorAll("#stats-race .table-race-league-region").forEach(t=>t.closest("section").classList.add("d-none"));
         const formattedLeagueStats = {};
         const formattedStatsPercentage = {};
+        const raceStatsType = StatsUtil.getRaceStatsType();
         for(const [region, regionStats] of stats)
         {
             const regionStatsPercentage = {};
@@ -248,13 +283,13 @@ class StatsUtil
             for(const leagueStats of regionStats)
             {
                 let totalGamesPlayed = 0;
-                Object.values(RACE).forEach(race=>totalGamesPlayed += leagueStats.leagueStats[race.name + "GamesPlayed"]);
+                Object.values(RACE).forEach(race=>totalGamesPlayed += leagueStats.leagueStats[race.name + raceStatsType.parameterSuffix]);
                 const league = EnumUtil.enumOfId(leagueStats.league.type, LEAGUE).name;
                 if(!formattedLeagueStats[league]) formattedLeagueStats[league] = {};
                 regionStatsPercentage[league] = {};
                 for(const race of Object.values(RACE))
                 {
-                    const raceGamesStr = race.name + "GamesPlayed";
+                    const raceGamesStr = race.name + raceStatsType.parameterSuffix;
                     if(leagueStats.leagueStats[raceGamesStr]) {
                         formattedLeagueStats[league][race.name] = formattedLeagueStats[league][race.name] == null
                             ? leagueStats.leagueStats[raceGamesStr]
@@ -269,6 +304,9 @@ class StatsUtil
             const totalGamesPlayed = Object.values(lStats).reduce((a, b)=>a+b, 0);
             for(const [race, games] of Object.entries(lStats)) lStats[race] = (games / totalGamesPlayed) * 100;
         }
+
+        if(!StatsUtil.setRaceStatsStatus(raceStatsType, document.querySelectorAll('[id^="games-played-race-league"]')))
+            return;
 
         TableUtil.updateColRowTable
         (
@@ -294,6 +332,8 @@ class StatsUtil
             const season = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).current[0].season.battlenetId;
             document.querySelectorAll("#stats-race .season-current").forEach(s=>s.textContent = "s" + season)
         }
+        document.querySelectorAll('[id^="games-played-race-league"] .header .main')
+            .forEach(header=>header.textContent = raceStatsType.description);
     }
 
     static updateLadderStatsCurrentLeagueView(stats)

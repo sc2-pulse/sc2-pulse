@@ -121,6 +121,12 @@ const START_MODE = Object.freeze
   BARE: {name: "bare", order: 4}
 });
 
+const LADDER_RACE_STATS_TYPE = Object.freeze
+({
+  GAMES_PLAYED: {name: "games-played", description: "Games played by race", parameterSuffix: "GamesPlayed", order: 1},
+  TEAM_COUNT: {name: "team-count", description: "Team count by race", parameterSuffix: "TeamCount", order: 2}
+});
+
 const TIER_RANGE = Object.freeze
 ({
     1: {bottomThreshold: 1.333, league: LEAGUE.MASTER, tierType: 0, order: 1},

@@ -350,11 +350,17 @@
             </section>
             <section id="stats-race" class="tab-pane fade c-height-linked" data-view-title="Race distribution">
                 <h3>Race distribution</h3>
+                <form class="form-inline flex-center-wrap-gap mb-3">
+                    <select id="stats-race-type" class="form-control serializable">
+                        <option value="games-played" selected="selected">Games</option>
+                        <option value="team-count">Teams</option>
+                    </select>
+                </form>
                 <div class="row no-gutters ml-3">
                     <section id="games-played-race" class="col-lg-6 mb-3"
                              th:replace="~{fragments/section :: stats('games-played-race', ~{::#games-played-race/h4}, '%', 'line')}"
                     >
-                        <h4>Games played by race (%)</h4>
+                        <h4 class="header"><span class="main">Games played by race</span> (%)</h4>
                     </section>
                     <section th:replace="~{fragments/section :: stats-race-league-region('global')}"></section>
                     <section th:replace="~{fragments/section :: stats-race-league-region('us')}"></section>
@@ -362,6 +368,7 @@
                     <section th:replace="~{fragments/section :: stats-race-league-region('kr')}"></section>
                     <section th:replace="~{fragments/section :: stats-race-league-region('cn')}"></section>
                 </div>
+                <p class="msg-info"></p>
             </section>
             <section id="stats-match-up" class="tab-pane fade c-height-linked" data-view-title="Match-up statistics">
                 <h3>Match-up stats</h3>

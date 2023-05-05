@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -12,7 +12,7 @@
          th:class="|col-lg-${autoHeight == 'true' ? '6' : '12'} mb-3|"
          th:fragment="stats-league-region (region, title, idPrefix, legendDisplay, autoHeight, tableCount, zoom)"
 >
-    <h4><span th:text="${title}"></span>, distribution by league,
+    <h4 class="header"><span class="main" th:text="${title}"></span>, distribution by league,
         <span th:switch="${region}">
             <span th:case="global">Global</span>
             <img th:case="*" th:src="@{'/static/icon/flag/' + ${region} + '.svg'}" th:alt="${region}" th:title=${region} class="table-image-long"/> (<span class="season-current"></span>)

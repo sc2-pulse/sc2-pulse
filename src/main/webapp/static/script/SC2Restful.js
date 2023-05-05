@@ -71,6 +71,7 @@ class SC2Restful
                 CharacterUtil.enhanceLoadAllCharacterReportsButton();
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
+                StatsUtil.enhanceRaceControls();
                 StatsUtil.enhanceMatchUpControls();
                 StatsUtil.enhanceSettings();
                 StatsUtil.addMatchUpLegend();
