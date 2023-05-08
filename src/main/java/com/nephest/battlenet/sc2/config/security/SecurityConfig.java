@@ -29,7 +29,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class SecurityConfig
 {
 
-    public static final String REMEMBER_ME_COOKIE_NAME = "remember-me-v2";
+    public static final String REMEMBER_ME_COOKIE_NAME = "remember-me";
     public static final String REMEMBER_ME_KEY_PROPERTY_NAME = "security.remember-me.token.key";
 
     @Autowired
