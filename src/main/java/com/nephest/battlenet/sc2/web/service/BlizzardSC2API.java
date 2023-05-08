@@ -57,6 +57,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
@@ -91,6 +92,7 @@ extends BaseAPI
     public static final double RETRY_ERROR_RATE_THRESHOLD = 40.0;
     public static final double FORCE_REGION_ERROR_RATE_THRESHOLD = 40.0;
     public static final Duration AUTO_FORCE_REGION_MAX_DURATION = Duration.ofDays(7);
+    public static final Duration IO_TIMEOUT = Duration.ofSeconds(50);
     public static final Duration SHORT_IO_TIMEOUT = Duration.ofSeconds(20);
     /*
         This data is mainly used in ladder discovery process when starting with an empty DB. The values should be
@@ -340,6 +342,8 @@ extends BaseAPI
             oauth2Client.setAuthorizationFailureHandler(failureHandler);
             //some endpoints return invalid content type headers, ignore the headers and handle all types
             clients.put(region, WebServiceUtil.getWebClientBuilder(objectMapper, 600 * 1024, ALL)
+                .clientConnector(new ReactorClientHttpConnector(WebServiceUtil
+                    .getHttpClient(WebServiceUtil.CONNECT_TIMEOUT, IO_TIMEOUT)))
                 .apply(oauth2Client.oauth2Configuration()).build());
         }
     }
