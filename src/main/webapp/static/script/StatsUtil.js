@@ -266,7 +266,7 @@ class StatsUtil
             }
         }
         for(const [league, lStats] of Object.entries(formattedLeagueStats)) {
-            const totalGamesPlayed = Object.values(lStats).reduce((a, b)=>a+b);
+            const totalGamesPlayed = Object.values(lStats).reduce((a, b)=>a+b, 0);
             for(const [race, games] of Object.entries(lStats)) lStats[race] = (games / totalGamesPlayed) * 100;
         }
 
@@ -311,7 +311,7 @@ class StatsUtil
         }
         for(const [region, regionStats] of Object.entries(formattedStats))
         {
-            const teamsTotal = Object.values(regionStats).reduce((a, b)=>a+b);
+            const teamsTotal = Object.values(regionStats).reduce((a, b)=>a+b, 0);
             formattedStatsPercentage[region] = {};
             for(const [league, games] of Object.entries(regionStats))
             {
