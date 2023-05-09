@@ -7,16 +7,17 @@ import java.io.IOException;
 import java.util.Arrays;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.springframework.security.web.session.InvalidSessionStrategy;
 import org.springframework.security.web.session.SessionInformationExpiredEvent;
 import org.springframework.security.web.session.SessionInformationExpiredStrategy;
 
-public class ResetSessionInformationExpiredStrategy
-implements SessionInformationExpiredStrategy
+public class ResetSessionStrategy
+implements SessionInformationExpiredStrategy, InvalidSessionStrategy
 {
 
     private final String sessionCookieName, redirectUrl, restPrefix;
 
-    public ResetSessionInformationExpiredStrategy
+    public ResetSessionStrategy
     (
         String sessionCookieName,
         String redirectUrl,
@@ -32,10 +33,23 @@ implements SessionInformationExpiredStrategy
     public void onExpiredSessionDetected(SessionInformationExpiredEvent event)
     throws IOException
     {
-        deleteSessionCookies(sessionCookieName, event.getRequest(), event.getResponse());
-        event.getResponse().setHeader("X-Application-Version", "-1");
-        if(!event.getRequest().getServletPath().startsWith(restPrefix))
-            event.getResponse().sendRedirect(redirectUrl);
+        resetSession(event.getRequest(), event.getResponse());
+    }
+
+    @Override
+    public void onInvalidSessionDetected(HttpServletRequest request, HttpServletResponse response)
+    throws IOException
+    {
+        resetSession(request, response);
+    }
+    
+    private void resetSession(HttpServletRequest request, HttpServletResponse response)
+    throws IOException
+    {
+        deleteSessionCookies(sessionCookieName, request, response);
+        response.setHeader("X-Application-Version", "-1");
+        if(!request.getServletPath().startsWith(restPrefix))
+            response.sendRedirect(redirectUrl);
     }
 
     private static void deleteSessionCookies

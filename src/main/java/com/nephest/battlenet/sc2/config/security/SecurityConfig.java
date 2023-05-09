@@ -60,6 +60,8 @@ public class SecurityConfig
     public SecurityFilterChain filterChain(HttpSecurity http)
     throws Exception
     {
+        ResetSessionStrategy resetSessionStrategy
+            = new ResetSessionStrategy(sessionCookieName, "/", "/api/");
         checkConfig();
         return http
             .mvcMatcher("/**")
@@ -68,8 +70,9 @@ public class SecurityConfig
                 (
                     c->c.maximumSessions(-1)
                         .sessionRegistry(sessionRegistry)
-                        .expiredSessionStrategy(new ResetSessionInformationExpiredStrategy(sessionCookieName, "/", "/api/"))
+                        .expiredSessionStrategy(resetSessionStrategy)
                 )
+            .invalidSessionStrategy(resetSessionStrategy)
             .and().csrf()
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
             .and().exceptionHandling()
