@@ -47,10 +47,10 @@ public class SecurityConfig
     @Autowired
     private SessionRegistry sessionRegistry;
 
-    @Value("${" + REMEMBER_ME_KEY_PROPERTY_NAME + ":'dev'}")
+    @Value("${" + REMEMBER_ME_KEY_PROPERTY_NAME + ":dev}")
     private String rememberMeKey;
 
-    @Value("${server.servlet.session.cookie.name:'JSESSIONID'}")
+    @Value("${server.servlet.session.cookie.name:JSESSIONID}")
     private String sessionCookieName;
 
     @Value("${security.remember-me.token.max-age:P3650D}")
