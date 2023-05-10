@@ -17,7 +17,8 @@ implements java.io.Serializable
     {
         CHEATER(1, "Cheater", true),
         LINK(2, "Wintrader account pool", true),
-        GRIEFER(3, "Stream sniper/team killer", true);
+        GRIEFER(3, "Stream sniper/team killer", true),
+        ACQUITTAL(4, "Acquittal", false);
 
         private final int id;
         private final String description;
