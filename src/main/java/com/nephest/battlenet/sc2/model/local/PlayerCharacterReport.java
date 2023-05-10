@@ -15,17 +15,19 @@ implements java.io.Serializable
     public enum PlayerCharacterReportType
     implements Identifiable
     {
-        CHEATER(1, "Cheater"),
-        LINK(2, "Wintrader account pool"),
-        GRIEFER(3, "Stream sniper/team killer");
+        CHEATER(1, "Cheater", true),
+        LINK(2, "Wintrader account pool", true),
+        GRIEFER(3, "Stream sniper/team killer", true);
 
         private final int id;
         private final String description;
+        private final boolean isPublic;
 
-        PlayerCharacterReportType(int id, String description)
+        PlayerCharacterReportType(int id, String description, boolean isPublic)
         {
             this.id = id;
             this.description = description;
+            this.isPublic = isPublic;
         }
 
         public static PlayerCharacterReportType from(int id)
@@ -44,6 +46,11 @@ implements java.io.Serializable
         public String getDescription()
         {
             return description;
+        }
+
+        public boolean isPublic()
+        {
+            return isPublic;
         }
 
     }

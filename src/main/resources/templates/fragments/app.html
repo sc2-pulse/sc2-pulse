@@ -119,7 +119,7 @@
                                 <label for="report-character-type">Report type</label>
                                 <select id="report-character-type" class="form-control text-center" name="type" required="required">
                                     <th:block th:each="type,iterator : ${T(com.nephest.battlenet.sc2.model.local.PlayerCharacterReport.PlayerCharacterReportType).values()}">
-                                        <option th:value="${type.name()}" th:text="${type.getDescription()}" th:attrappend="selected=${type.getId() == 1}?'selected'"></option>
+                                        <option th:if="${type.isPublic()}" th:value="${type.name()}" th:text="${type.getDescription()}" th:attrappend="selected=${type.getId() == 1}?'selected'"></option>
                                     </th:block>
                                 </select>
                             </div>
