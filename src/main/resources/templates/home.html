@@ -682,7 +682,7 @@
                             <li th:text="|Mods: ${@userController.getModTags().stream().collect(T(java.util.stream.Collectors).joining(', '))}|"></li>
                         </ul>
                         <button id="load-all-character-reports" type="button" class="btn btn-primary mb-3">Refresh</button>
-                        <div th:replace="~{fragments/table :: reports-character('all-character-reports-table-container', 'all-character-reports-table', '')}"></div>
+                        <div class="character-reports"></div>
                     </section>
                 </div>
             </div>

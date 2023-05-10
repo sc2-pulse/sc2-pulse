@@ -1323,14 +1323,14 @@ class CharacterUtil
     static updateCharacterReportsView()
     {
         const reportsContainer = document.querySelector("#character-reports");
-        const tbody = reportsContainer.querySelector(":scope #character-reports-table tbody");
+        const reportsBody = reportsContainer.querySelector(":scope .character-reports");
         const reports = Model.DATA.get(VIEW.CHARACTER).get("reports");
         if(!reports || reports.length == 0) {
             reportsContainer.classList.add("d-none");
             return;
         }
         reportsContainer.classList.remove("d-none");
-        CharacterUtil.updateCharacterReportsTable(tbody, reports);
+        CharacterUtil.updateCharacterReportsSection(reportsBody, reports, 4);
         if(!document.querySelector("#player-info-additional-container .player-flag"))
             document.querySelector("#player-info-additional-container").appendChild(ElementUtil.createCheaterFlag(CHEATER_FLAG.REPORTED, true));
     }
@@ -1338,65 +1338,18 @@ class CharacterUtil
     static updateAllCharacterReportsView()
     {
         const reportsContainer = document.querySelector("#all-character-reports");
-        const tbody = reportsContainer.querySelector(":scope #all-character-reports-table tbody");
+        const reportsBody = reportsContainer.querySelector(":scope .character-reports");
         const reports = Model.DATA.get(VIEW.CHARACTER_REPORTS).get("reports");
         if(!reports || reports.length == 0) return;
-        CharacterUtil.updateCharacterReportsTable(tbody, reports);
+        CharacterUtil.updateCharacterReportsSection(reportsBody, reports, 4);
         Session.updateReportsNotifications();
     }
 
-    static updateCharacterReportsTable(tbody, reports, removeChildren = true)
+    static updateCharacterReportsSection(section, reports, headerLevel, removeChildren = true)
     {
-        if(removeChildren) ElementUtil.removeChildren(tbody);
-        for(const report of reports)
-        {
-            let tr = tbody.insertRow();
-
-            const rowSpan = report.evidence ? report.evidence.length : 1;
-
-            CharacterUtil.appendStatusCell(tr, report.report.status).setAttribute("rowspan", rowSpan);
-
-            const playerCell = tr.insertCell();
-            playerCell.setAttribute("rowspan", rowSpan);
-            playerCell.appendChild(TeamUtil.createPlayerLink(null, report.member, false));
-            const typeCell = tr.insertCell();
-            typeCell.setAttribute("rowspan", rowSpan);
-            typeCell.textContent = report.report.type;
-
-            if(report.additionalMember)
-            {
-                const additionalPlayerCell = tr.insertCell();
-                additionalPlayerCell.setAttribute("rowspan", rowSpan);
-                additionalPlayerCell.appendChild(TeamUtil.createPlayerLink(null, report.additionalMember, false));
-            } else
-            {
-                tr.insertCell().setAttribute("rowspan", rowSpan);
-            }
-
-            if(!report.evidence) continue;
-
-            for(let i = 0; i < report.evidence.length; i++)
-            {
-                const evidence = report.evidence[i];
-                if(i > 0) tr = tbody.insertRow();
-                tr.setAttribute("data-report-id", report.report.id);
-                tr.setAttribute("data-evidence-id", evidence.evidence.id);
-                CharacterUtil.appendStatusCell(tr, evidence.evidence.status);
-
-                const evidenceDescription = tr.insertCell();
-                evidenceDescription.classList.add("cell-main", "text-break", "readable-text-block", "text-left");
-                evidenceDescription.textContent = evidence.evidence.description;
-
-                const reporter = tr.insertCell()
-                reporter.textContent = evidence.reporterAccount ? evidence.reporterAccount.battleTag : "";
-                reporter.classList.add("text-break");
-                tr.insertCell().textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(evidence.evidence.created));
-
-                CharacterUtil.appendVotes(tr, evidence.votes);
-            }
-        }
-
-        $(tbody.closest("table")).popover
+        if(removeChildren) ElementUtil.removeChildren(section);
+        for(const report of reports) section.appendChild(CharacterUtil.createReportElement(report, headerLevel));
+        $(section).popover
         ({
             html: true,
             boundary: "body",
@@ -1406,35 +1359,84 @@ class CharacterUtil
             content: function(){return CharacterUtil.createDynamicVotersTable($(this)[0]).outerHTML;}
         });
     }
-    
-    static appendStatusCell(tr, status)
+
+    static createReportElement(report, headerLevel)
     {
-        const statusCell = tr.insertCell();
-        statusCell.classList.add("text-white", "font-weight-bold");
+        const reportContainer = ElementUtil.createElement("section", null, "player-character-report text-left mb-5");
+
+        const header = ElementUtil.createElement("h" + headerLevel, null, "header d-flex flex-wrap-gap-05 py-1 mb-3 em-1 font-weight-bold bg-transparent-05 rounded");
+        header.appendChild(TeamUtil.createPlayerLink(null, report.member, false));
+        if(report.additionalMember) header.appendChild(TeamUtil.createPlayerLink(null, report.additionalMember, false));
+        header.appendChild(ElementUtil.createElement("span", null, "type", report.report.type));
+        header.appendChild(CharacterUtil.createReportStatus(report.report.status));
+
+        const evidenceContainer = ElementUtil.createElement("div", null, "evidence-container d-flex flex-column flex-wrap-gap-1-5");
+        for(const evidence of report.evidence) evidenceContainer.appendChild(CharacterUtil.createEvidenceElement(evidence, headerLevel + 1));
+        reportContainer.appendChild(header);
+        reportContainer.appendChild(evidenceContainer);
+        return reportContainer;
+    }
+
+    static createEvidenceElement(evidence, headerLevel)
+    {
+        const evidenceElement = ElementUtil.createElement("article", null, "evidence", null, [
+            ["data-report-id", evidence.evidence.playerCharacterReportId],
+            ["data-evidence-id", evidence.evidence.id],
+        ]);
+        evidenceElement.appendChild(CharacterUtil.createEvidenceHeader(evidence, headerLevel));
+        evidenceElement.appendChild(ElementUtil.createElement("p", null, "content text-break", evidence.evidence.description));
+        evidenceElement.appendChild(CharacterUtil.createEvidenceFooter(evidence));
+
+        return evidenceElement;
+    }
+
+    static createEvidenceHeader(evidence, headerLevel)
+    {
+        const header = ElementUtil.createElement("h" + headerLevel, null, "header em-1 d-flex flex-wrap-gap-05");
+        header.appendChild(ElementUtil.createElement("span", null, "reporter font-weight-bold",
+            evidence.reporterAccount ? evidence.reporterAccount.battleTag : "Anonymous"));
+        header.appendChild(ElementUtil.createElement("time", null, "reporter text-secondary",
+            Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(evidence.evidence.created)),
+            [["datetime", evidence.evidence.created]]
+        ));
+        return header;
+    }
+
+    static createEvidenceFooter(evidence)
+    {
+        const footer = document.createElement("footer");
+        footer.classList.add("d-flex", "flex-wrap-gap");
+        footer.appendChild(CharacterUtil.createVotesCell(evidence.votes.filter(v=>v.vote.vote == true), "text-success", "bg-success", "true"));
+        footer.appendChild(CharacterUtil.createReportStatus(evidence.evidence.status));
+        footer.appendChild(CharacterUtil.createVotesCell(evidence.votes.filter(v=>v.vote.vote == false), "text-danger", "bg-danger", "false"));
+        return footer;
+    }
+    
+    static createReportStatus(status)
+    {
+        const statusCell = ElementUtil.createElement("span", null, "status px-1 rounded");
         if(status == true) {
-            statusCell.classList.add("bg-success");
+            statusCell.classList.add("text-success", "border-success");
             statusCell.textContent = "Confirmed";
         } else if (status == false) {
-            statusCell.classList.add("bg-danger");
+            statusCell.classList.add("text-danger", "border-danger");
             statusCell.textContent = "Denied";
         } else {
-            statusCell.classList.add("bg-secondary");
+            statusCell.classList.add("text-secondary", "border-secondary");
             statusCell.textContent = "Undecided";
         }
         return statusCell;
     }
 
-    static appendVotes(tr, votes)
+    static createVotesCell(votes, textClass, bgClass, vote)
     {
-        CharacterUtil.appendVotesCell(tr, votes.filter(v=>v.vote.vote == true), "text-success", "bg-success", "true");
-        CharacterUtil.appendVotesCell(tr, votes.filter(v=>v.vote.vote == false), "text-danger", "bg-danger", "false");
-    }
-
-    static appendVotesCell(tr, votes, textClass, bgClass, vote)
-    {
-        const votesCell = tr.insertCell();
-        votesCell.setAttribute("data-toggle", "popover");
-        votesCell.setAttribute("data-vote", vote);
+        const votesCell = ElementUtil.createElement("span", null, "vote d-inline-block px-2 rounded",
+            votes.length,
+            [
+                ["data-toggle", "popover"],
+                ["data-vote", vote]
+            ]
+        );
         if(Session.currentAccount && votes.find(v=>v.vote.voterAccountId == Session.currentAccount.id)) {
             votesCell.classList.add("text-white", "font-weight-bold", bgClass);
         } else {
@@ -1445,8 +1447,7 @@ class CharacterUtil
             votesCell.addEventListener("click", CharacterUtil.onEvidenceVote);
             votesCell.setAttribute("role", "button");
         }
-
-        votesCell.textContent = votes.length;
+        return votesCell;
     }
 
     static voteOnEvidence(id, vote)
@@ -1462,7 +1463,7 @@ class CharacterUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         //remove popovers to avoid the popover bug on td removal
         document.querySelectorAll(".popover").forEach(e=>e.remove());
-        CharacterUtil.voteOnEvidence(td.closest("tr").getAttribute("data-evidence-id"), td.getAttribute("data-vote"))
+        CharacterUtil.voteOnEvidence(td.closest("[data-evidence-id]").getAttribute("data-evidence-id"), td.getAttribute("data-vote"))
             .then(updatedVotes=>
             {
                 const rows = document.querySelectorAll('[data-evidence-id="' + updatedVotes[0].vote.evidenceId + '"]');
@@ -1472,9 +1473,8 @@ class CharacterUtil
                         .flatMap(r=>r.evidence)
                         .find(e=>e.evidence.id == updatedVotes[0].vote.evidenceId);
                     evidence.votes = updatedVotes;
-                    row.children[row.children.length - 1].remove();
-                    row.children[row.children.length - 1].remove();
-                    CharacterUtil.appendVotes(row, evidence.votes);
+                    row.querySelector(":scope footer").remove();
+                    row.appendChild(CharacterUtil.createEvidenceFooter(evidence));
                 }
                 Session.updateReportsNotifications();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
@@ -1486,7 +1486,7 @@ class CharacterUtil
     {
         const votersTable = TableUtil.createTable(["Date", "Moderator"], false);
         const tbody = votersTable.querySelector(":scope tbody");
-        const row = parent.closest("tr");
+        const row = parent.closest("[data-report-id]");
         const reportId = row.getAttribute("data-report-id");
         const evidenceId = row.getAttribute("data-evidence-id");
         const vote = parent.getAttribute("data-vote") == "true" ? true : false;
