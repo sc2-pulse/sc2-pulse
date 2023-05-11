@@ -97,20 +97,31 @@ class CharacterUtil
             .then(json => Model.DATA.get(VIEW.CHARACTER).set("reports", json));
     }
 
-    static updateAllCharacterReportsModel()
+    static updateAllCharacterReportsModel(onlyUnreviewed = false)
     {
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/report/list`))
             .then(Session.verifyJsonResponse)
-            .then(json => Model.DATA.get(VIEW.CHARACTER_REPORTS).set("reports", json));
+            .then(json => Model.DATA.get(VIEW.CHARACTER_REPORTS).set("reports", CharacterUtil.filterCharacterReports(json, onlyUnreviewed)));
     }
 
-    static updateAllCharacterReports()
+    static filterCharacterReports(reports, onlyUnreviewed = false)
+    {
+        if(!onlyUnreviewed || !Session.currentAccount) return reports;
+
+        for(const report of reports) report.evidence = report.evidence
+            .filter(evidence=>!evidence.votes.find(v=>v.vote.voterAccountId == Session.currentAccount.id));
+        reports = reports.filter(r=>r.evidence.length > 0);
+
+        return reports;
+    }
+
+    static updateAllCharacterReports(onlyUnreviewed = false)
     {
         if(!document.querySelector("#all-character-reports")) return Promise.resolve();
 
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return CharacterUtil.updateAllCharacterReportsModel()
+        return CharacterUtil.updateAllCharacterReportsModel(onlyUnreviewed)
             .then(e=>{
                 CharacterUtil.updateAllCharacterReportsView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
@@ -1583,10 +1594,14 @@ class CharacterUtil
         }
     }
 
-    static enhanceLoadAllCharacterReportsButton()
+    static enhanceAllCharacterReportsControls()
     {
-        const button = document.querySelector("#load-all-character-reports");
-        if(button) button.addEventListener("click", e=>CharacterUtil.updateAllCharacterReports());
+        const form = document.querySelector("#load-all-character-reports");
+        if(form) form.addEventListener("submit", e=>{
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            CharacterUtil.updateAllCharacterReports(formData.get("only-unreviewed"));
+        });
     }
 
     static enhanceMatchesHistoricalMmrInput()

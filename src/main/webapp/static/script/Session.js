@@ -92,7 +92,7 @@ class Session
         {
             CharacterUtil.updatePersonalCharactersView();
             CharacterUtil.updateFollowingCharactersView();
-            CharacterUtil.updateAllCharacterReports();
+            CharacterUtil.updateAllCharacterReports(localStorage.getItem("character-report-only-unreviewed") === "true");
             for(const e of document.querySelectorAll(".login-anonymous")) e.classList.add("d-none");
             for(const e of document.querySelectorAll(".login-user")) e.classList.remove("d-none");
         }

@@ -681,7 +681,15 @@
                             <li>Next update: <span class="datetime-iso" th:text="${T(com.nephest.battlenet.sc2.config.Cron).getNextCharacterReportUpdateTime().toString()}"></span></li>
                             <li th:text="|Mods: ${@userController.getModTags().stream().collect(T(java.util.stream.Collectors).joining(', '))}|"></li>
                         </ul>
-                        <button id="load-all-character-reports" type="button" class="btn btn-primary mb-3">Refresh</button>
+                        <form id="load-all-character-reports">
+                            <div>
+                                <div class="form-check form-check-inline mb-3">
+                                    <input id="character-report-only-unreviewed" class="form-check-input serializable" type="checkbox" name="only-unreviewed"/>
+                                    <label th:for="character-report-only-unreviewed" class="form-check-label">Only unreviewed</label>
+                                </div>
+                            </div>
+                            <button type="submit" class="btn btn-primary mb-3">Refresh</button>
+                        </form>
                         <div class="character-reports"></div>
                     </section>
                 </div>
