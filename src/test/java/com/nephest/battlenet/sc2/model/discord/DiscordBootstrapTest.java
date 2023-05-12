@@ -46,6 +46,7 @@ import discord4j.rest.service.ApplicationService;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
 import java.math.BigInteger;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -161,6 +162,7 @@ public class DiscordBootstrapTest
             1,
             10L,
             120, 1, 2, 2,
+            OffsetDateTime.now(),
             List.of
             (
                 new LadderTeamMember

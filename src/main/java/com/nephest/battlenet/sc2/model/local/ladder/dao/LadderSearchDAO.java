@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -292,6 +293,7 @@ public class LadderSearchDAO
                 rs.getInt("team.losses"),
                 rs.getInt("team.ties"),
                 null,
+                rs.getObject("team.last_played", OffsetDateTime.class),
                 new ArrayList<>(),
                 PopulationStateDAO.TEAM_DATA_ROW_MAPPER.mapRow(rs, 1)
             );

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -284,7 +284,8 @@ public class VersusIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(character.getBattlenetId(), character.getRealm(), character.getName())
             }, Race.TERRAN),
-            division.getId(), 1L, 1, 1, 1, 1
+            division.getId(), 1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         ))[0];
     }
 

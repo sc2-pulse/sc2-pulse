@@ -63,3 +63,6 @@ DROP INDEX "migration_temp_index4";
 DROP INDEX "migration_temp_index5";
 DROP INDEX "migration_temp_index6";
 DROP INDEX "migration_temp_index7";
+
+ALTER TABLE "team"
+    ADD COLUMN "last_played" TIMESTAMP WITH TIME ZONE;

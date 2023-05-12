@@ -38,6 +38,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
@@ -158,7 +159,8 @@ public class AccountFollowingIT
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11111L), bronze1.getId(),
-            100L, 100, 0, 0, 0
+            100L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.create(team1);
         TeamMember member1 = new TeamMember
@@ -179,7 +181,8 @@ public class AccountFollowingIT
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11112L), bronze1.getId(),
-            101L, 100, 0, 0, 0
+            101L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.create(team2);
         TeamMember member2 = new TeamMember
@@ -194,7 +197,8 @@ public class AccountFollowingIT
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11113L), bronze1.getId(),
-            99L, 100, 0, 0, 0
+            99L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.create(team3);
         TeamMember member3 = new TeamMember

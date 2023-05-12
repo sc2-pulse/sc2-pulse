@@ -319,6 +319,7 @@ CREATE TABLE "team"
     "global_rank" INTEGER,
     "region_rank" INTEGER,
     "league_rank" INTEGER,
+    "last_played" TIMESTAMP WITH TIME ZONE,
 
     PRIMARY KEY ("id"),
 

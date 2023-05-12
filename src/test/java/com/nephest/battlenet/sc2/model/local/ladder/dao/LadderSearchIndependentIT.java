@@ -49,6 +49,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -200,7 +201,8 @@ public class LadderSearchIndependentIT
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11111L), bronze1.getId(),
-            100L, 100, 0, 0, 0
+            100L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.create(team1);
         TeamMember member1 = new TeamMember
@@ -214,7 +216,8 @@ public class LadderSearchIndependentIT
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11114L), bronze2.getId(),
-            98L, 99, 0, 0, 0
+            98L, 99, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.create(team1_2);
         TeamMember member1_2 = new TeamMember
@@ -228,7 +231,8 @@ public class LadderSearchIndependentIT
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11115L), bronze2.getId(),
-            97L, 50, 0, 0, 0
+            97L, 50, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.create(team1_3);
         TeamMember member1_3 = new TeamMember
@@ -242,7 +246,8 @@ public class LadderSearchIndependentIT
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11112L), bronze1.getId(),
-            101L, 100, 0, 0, 0
+            101L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.create(team2);
         TeamMember member2 = new TeamMember
@@ -256,7 +261,8 @@ public class LadderSearchIndependentIT
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11113L), bronze1.getId(),
-            102L, 100, 0, 0, 0
+            102L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.create(team3);
         TeamMember member3 = new TeamMember
@@ -271,7 +277,8 @@ public class LadderSearchIndependentIT
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11113L), bronze1.getId(),
-            102L, 100, 0, 0, 0
+            102L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.create(team3_2);
         TeamMember member3_2 = new TeamMember
@@ -484,7 +491,8 @@ public class LadderSearchIndependentIT
             null, season1.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(10001L), d1.getId(),
-            3L, 100, 0, 0, 0
+            3L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         //2nd mmr, but prev season
         Team team2 = new Team
@@ -492,7 +500,8 @@ public class LadderSearchIndependentIT
             null, season2.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(10002L), d2.getId(),
-            2L, 100, 0, 0, 0
+            2L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         //3rd mmr, picked because it's the latest team
         Team team3 = new Team
@@ -500,7 +509,8 @@ public class LadderSearchIndependentIT
             null, season3.getBattlenetId(), region,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(10003L), d3.getId(),
-            1L, 100, 0, 0, 0
+            1L, 100, 0, 0, 0,
+            OffsetDateTime.now()
         );
         teamDAO.merge(team1, team2, team3);
         teamMemberDAO.merge

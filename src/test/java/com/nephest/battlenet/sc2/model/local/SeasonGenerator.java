@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -239,7 +239,8 @@ public class SeasonGenerator
             (
                 null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
                 teamDAO.legacyIdOf(league, bTeam), division.getId(),
-                (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3
+                (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3,
+                OffsetDateTime.now()
             );
             Team team = teamDAO.create(newTeam);
             TeamState teamState = TeamState.of(team);
@@ -297,7 +298,8 @@ public class SeasonGenerator
         (
             null, season.getBattlenetId(), season.getRegion(), league, tierType,
             legacyId, division.getId(),
-            rating, wins, losses, ties, points
+            rating, wins, losses, ties, points,
+            OffsetDateTime.now()
         );
         Team team = teamDAO.create(newTeam);
         for(PlayerCharacter member : members) teamMemberDAO.create(new TeamMember(team.getId(), member.getId(), 1, 2, 3, 4));

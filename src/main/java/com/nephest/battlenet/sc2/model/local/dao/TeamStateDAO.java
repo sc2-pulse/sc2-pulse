@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
@@ -134,7 +135,11 @@ public class TeamStateDAO
             + "team_id, \"timestamp\", division_id, wins, games, rating, secondary, "
             + "global_rank, region_rank, league_rank, population_state_id"
         + ") "
-        + "SELECT team.id, :timestamp, division_id, wins, wins + losses, rating, "
+        + "SELECT team.id, "
+        + "CASE WHEN :timestamp::timestamp with time zone IS NULL "
+            + "THEN last_played "
+            + "ELSE :timestamp::timestamp with time zone END, "
+        + "division_id, wins, wins + losses, rating, "
         + "CASE WHEN team.queue_type != :mainQueueType THEN true ELSE null::boolean END, "
         + "global_rank, region_rank, league_rank, "
         + "team.population_state_id "
@@ -261,7 +266,7 @@ public class TeamStateDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("mainQueueType", conversionService.convert(TeamState.MAIN_QUEUE_TYPE, Integer.class))
             .addValue("teamIds", Set.copyOf(teamIds))
-            .addValue("timestamp", timestamp);
+            .addValue("timestamp", timestamp, Types.TIMESTAMP_WITH_TIMEZONE);
         return template.update(TAKE_TEAM_SNAPSHOT, params);
     }
 
@@ -283,7 +288,7 @@ public class TeamStateDAO
 
     /**
      * <p>
-     *     calls {@link #takeSnapshot(List, OffsetDateTime) takeSnapshot} with current datetime.
+     *     calls {@link #takeSnapshot(List, OffsetDateTime) takeSnapshot} with null datetime.
      * </p>
      * @param teamIds team ids to create snapshots of
      * @return number of created snapshots
@@ -291,7 +296,7 @@ public class TeamStateDAO
     @Transactional
     public int takeSnapshot(List<Long> teamIds)
     {
-        return takeSnapshot(teamIds, OffsetDateTime.now());
+        return takeSnapshot(teamIds, null);
     }
 
     public void archive(OffsetDateTime from)

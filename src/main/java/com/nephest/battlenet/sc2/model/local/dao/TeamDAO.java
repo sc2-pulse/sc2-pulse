@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.AbstractMap;
 import java.util.Arrays;
 import java.util.Collection;
@@ -73,18 +74,21 @@ public class TeamDAO
         + "team.points AS \"team.points\", "
         + "team.global_rank AS \"team.global_rank\", "
         + "team.region_rank AS \"team.region_rank\", "
-        + "team.league_rank AS \"team.league_rank\" ";
+        + "team.league_rank AS \"team.league_rank\", "
+        + "team.last_played AS \"team.last_played\" ";
 
     private static final String CREATE_TEMPLATE = "INSERT INTO team "
         + "("
             + "%1$slegacy_id, division_id, "
             + "season, region, league_type, queue_type, team_type, tier_type, "
-            + "rating, points, wins, losses, ties"
+            + "rating, points, wins, losses, ties, "
+            + "last_played"
         + ") "
         + "VALUES ("
             + "%2$s:legacyId, :divisionId, "
             + ":season, :region, :leagueType, :queueType, :teamType, :tierType, "
-            + ":rating, :points, :wins, :losses, :ties"
+            + ":rating, :points, :wins, :losses, :ties, "
+            + ":lastPlayed"
         + ")";
 
     private static final String CREATE_QUERY = String.format(CREATE_TEMPLATE, "", "");
@@ -116,7 +120,8 @@ public class TeamDAO
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, tier_type "
+                + "rating, points, wins, losses, ties, tier_type, "
+                + "last_played "
             + ") "
                 + "USING(queue_type, region, legacy_id, season) "
         + "), "
@@ -131,12 +136,14 @@ public class TeamDAO
             + "points=v.points, "
             + "wins=v.wins, "
             + "losses=v.losses, "
-            + "ties=v.ties "
+            + "ties=v.ties, "
+            + "last_played=v.last_played::timestamp with time zone "
             + "FROM vals v"
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, tier_type "
+                + "rating, points, wins, losses, ties, tier_type, "
+                + "last_played "
             + ") "
             + "INNER JOIN team t ON "
                 + "t.queue_type = v.queue_type "
@@ -175,12 +182,14 @@ public class TeamDAO
             + "SELECT "
             + "v.legacy_id, v.division_id, "
             + "v.season, v.region, v.league_type, v.queue_type, v.team_type, "
-            + "v.rating, v.points, v.wins, v.losses, v.ties, v.tier_type::smallint "
+            + "v.rating, v.points, v.wins, v.losses, v.ties, v.tier_type::smallint, "
+            + "v.last_played::timestamp with time zone "
             + "FROM vals v"
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, tier_type "
+                + "rating, points, wins, losses, ties, tier_type, "
+                + "last_played "
             + ") "
             + "LEFT JOIN existing ON "
                 + "v.queue_type = existing.queue_type "
@@ -195,7 +204,8 @@ public class TeamDAO
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, tier_type "
+                + "rating, points, wins, losses, ties, tier_type, "
+                + "last_played "
             + ") "
             + "SELECT * FROM missing "
             + MERGE_CLAUSE
@@ -385,7 +395,8 @@ public class TeamDAO
                 rs.getInt("team.division_id"),
                 rs.getLong("team.rating"),
                 rs.getInt("team.wins"), rs.getInt("team.losses"), rs.getInt("team.ties"),
-                rs.getInt("team.points")
+                rs.getInt("team.points"),
+                rs.getObject("team.last_played", OffsetDateTime.class)
             );
             team.setGlobalRank(DAOUtils.getInteger(rs, "team.global_rank"));
             team.setRegionRank(DAOUtils.getInteger(rs, "team.region_rank"));
@@ -452,6 +463,7 @@ public class TeamDAO
                 t.getLosses(),
                 t.getTies(),
                 conversionService.convert(t.getTierType(), Integer.class),
+                t.getLastPlayed()
             })
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("teams", data);
@@ -541,7 +553,8 @@ public class TeamDAO
             .addValue("points", team.getPoints())
             .addValue("wins", team.getWins())
             .addValue("losses", team.getLosses())
-            .addValue("ties", team.getTies());
+            .addValue("ties", team.getTies())
+            .addValue("lastPlayed", team.getLastPlayed());
     }
 
 }

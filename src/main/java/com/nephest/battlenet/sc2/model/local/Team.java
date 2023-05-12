@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import java.math.BigInteger;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -53,6 +54,8 @@ implements java.io.Serializable
 
     private Integer leagueRank;
 
+    private OffsetDateTime lastPlayed;
+
     public Team(){}
 
     public Team
@@ -63,7 +66,8 @@ implements java.io.Serializable
         LeagueTier.LeagueTierType tierType,
         BigInteger legacyId,
         Integer divisionId,
-        Long rating, Integer wins, Integer losses, Integer ties, Integer points
+        Long rating, Integer wins, Integer losses, Integer ties, Integer points,
+        OffsetDateTime lastPlayed
     )
     {
         super(rating, wins, losses, ties, points);
@@ -74,6 +78,7 @@ implements java.io.Serializable
         this.region = region;
         this.league = league;
         this.tierType = tierType;
+        this.lastPlayed = lastPlayed;
     }
 
     public static Team of
@@ -97,7 +102,8 @@ implements java.io.Serializable
             division.getId(),
             bTeam.getRating(),
             bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(),
-            bTeam.getPoints()
+            bTeam.getPoints(),
+            bTeam.getLastPlayedTimeStamp().atOffset(OffsetDateTime.now().getOffset())
         );
     }
 
@@ -125,6 +131,7 @@ implements java.io.Serializable
             null,
             null,
             null, null, null,
+            null,
             null
         );
     }
@@ -287,6 +294,16 @@ implements java.io.Serializable
     public void setLeagueRank(Integer leagueRank)
     {
         this.leagueRank = leagueRank;
+    }
+
+    public OffsetDateTime getLastPlayed()
+    {
+        return lastPlayed;
+    }
+
+    public void setLastPlayed(OffsetDateTime lastPlayed)
+    {
+        this.lastPlayed = lastPlayed;
     }
 
 }

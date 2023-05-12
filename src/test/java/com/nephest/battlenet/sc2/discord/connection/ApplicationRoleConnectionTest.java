@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Team;
 import java.math.BigInteger;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -53,7 +54,8 @@ public class ApplicationRoleConnectionTest
             BaseLeagueTier.LeagueTierType.FIRST,
             BigInteger.ONE,
             1,
-            1234L, 1, 1, 1, 1
+            1234L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         );
         Map<PulseConnectionParameter, List<ConnectionMetaData>> metas =
             new PulseConnectionParameters(nullConversionService).getParameters();

@@ -33,6 +33,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import javax.sql.DataSource;
@@ -193,43 +194,50 @@ public class SqlSyntaxIT
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             BigInteger.ONE, division.getId(),
-            1L, 1, 1, 1, 1
+            1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         );
         Team newTeam2 = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             BigInteger.TEN, division.getId(),
-            1L, 1, 1, 1, 1
+            1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         );
         Team mergedTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             BigInteger.ONE, division.getId(),
-            2L, 2, 2, 2, 2
+            2L, 2, 2, 2, 2,
+            OffsetDateTime.now()
         );
         Team sameTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             BigInteger.ONE, division.getId(),
-            2L, 2, 2, 2, 2
+            2L, 2, 2, 2, 2,
+            OffsetDateTime.now()
         );
         Team updatedTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
             BigInteger.ONE, division2.getId(),
-            3L, 3, 3, 3, 3
+            3L, 3, 3, 3, 3,
+            OffsetDateTime.now()
         );
         Team zergTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
             BigInteger.valueOf(-1), division2.getId(),
-            4L, 3, 3, 0, 3
+            4L, 3, 3, 0, 3,
+            OffsetDateTime.now()
         );
         Team zergTeamClone = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
             BigInteger.valueOf(-1), division2.getId(),
-            4L, 3, 3, 0, 3
+            4L, 3, 3, 0, 3,
+            OffsetDateTime.now()
         );
         Team mergeTestTeam6 = createGenericTeam(season, league2, tier2, division2, -4);
         Team mergeTestTeam5 = createGenericTeam(season, league2, tier2, division2, -5);
@@ -435,7 +443,8 @@ public class SqlSyntaxIT
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier.getType(),
             BigInteger.valueOf(id), division.getId(),
-            4L, 3, 3, 0, 3
+            4L, 3, 3, 0, 3,
+            OffsetDateTime.now()
         );
     }
 

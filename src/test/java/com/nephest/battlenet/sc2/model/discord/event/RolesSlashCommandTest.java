@@ -44,6 +44,7 @@ import discord4j.core.spec.InteractionFollowupCreateMono;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
 import java.math.BigInteger;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
@@ -293,6 +294,7 @@ public class RolesSlashCommandTest
             1,
             10L,
             120, 2, 1, 2,
+            OffsetDateTime.now(),
             List.of(mainMember),
             null
         );

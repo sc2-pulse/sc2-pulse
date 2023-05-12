@@ -43,6 +43,7 @@ import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -435,7 +436,8 @@ public class AlternativeLadderService
                         season.getBattlenetId(), season.getRegion(),
                         baseLeague, null,
                         teamDao.legacyIdOf(baseLeague, bTeam), division.getId(),
-                        bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints()
+                        bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints(),
+                        OffsetDateTime.now()
                     ),
                     bTeam
                 )

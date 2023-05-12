@@ -233,7 +233,8 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charEu3.getBattlenetId(), charEu3.getRealm(), charEu3.getName()),
                 new BlizzardPlayerCharacter(charEu4.getBattlenetId(), charEu4.getRealm(), charEu4.getName())
             }),
-            division4v4.getId(), 1L, 1, 1, 1, 1
+            division4v4.getId(), 1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         ))[0];
         Team team4v4Loss = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
@@ -245,7 +246,8 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charEu7.getBattlenetId(), charEu7.getRealm(), charEu7.getName()),
                 new BlizzardPlayerCharacter(charEu8.getBattlenetId(), charEu8.getRealm(), charEu8.getName())
             }),
-            division4v4_2.getId(), 2L, 2, 2, 2, 2
+            division4v4_2.getId(), 2L, 2, 2, 2, 2,
+            OffsetDateTime.now()
         ))[0];
         Team team2v2Win1 = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -254,7 +256,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charUs1.getBattlenetId(), charUs1.getRealm(), charUs1.getName())
             }),
-            division2v2.getId(), 1L, 1, 1, 1, 1
+            division2v2.getId(), 1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         ))[0];
         Team team2v2Win2 = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -263,7 +266,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charUs2.getBattlenetId(), charUs2.getRealm(), charUs2.getName())
             }),
-            division2v2.getId(), 1L, 1, 1, 1, 1
+            division2v2.getId(), 1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         ))[0];
         Team team2v2Loss1 = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -272,7 +276,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charUs3.getBattlenetId(), charUs3.getRealm(), charUs3.getName())
             }),
-            division2v2.getId(), 2L, 2, 2, 2, 2
+            division2v2.getId(), 2L, 2, 2, 2, 2,
+            OffsetDateTime.now()
         ))[0];
         Team team2v2Loss2 = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -281,7 +286,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charUs4.getBattlenetId(), charUs4.getRealm(), charUs4.getName())
             }),
-            division2v2.getId(), 2L, 2, 2, 2, 2
+            division2v2.getId(), 2L, 2, 2, 2, 2,
+            OffsetDateTime.now()
         ))[0];
 
         Team team1v1Win = teamDAO.merge(new Team(
@@ -291,7 +297,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charKr1.getBattlenetId(), charKr1.getRealm(), charKr1.getName())
             }, Race.TERRAN),
-            division1v1.getId(), 1L, 1, 1, 1, 1
+            division1v1.getId(), 1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         ))[0];
         Team team1v1Loss = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.KR,
@@ -300,7 +307,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charKr2.getBattlenetId(), charKr2.getRealm(), charKr2.getName())
             }, Race.PROTOSS),
-            division1v1.getId(), 2L, 2, 2, 2, 2
+            division1v1.getId(), 2L, 2, 2, 2, 2,
+            OffsetDateTime.now()
         ))[0];
 
         Team team1v1Win4 = teamDAO.merge(new Team(
@@ -310,7 +318,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charEu9.getBattlenetId(), charEu9.getRealm(), charEu9.getName())
             }, Race.TERRAN),
-            division1v1_2.getId(), 1L, 1, 1, 1, 1
+            division1v1_2.getId(), 1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         ))[0];
         Team team1v1Loss4 = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
@@ -319,7 +328,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charEu10.getBattlenetId(), charEu10.getRealm(), charEu10.getName())
             }, Race.PROTOSS),
-            division1v1_2.getId(), 2L, 2, 2, 2, 2
+            division1v1_2.getId(), 2L, 2, 2, 2, 2,
+            OffsetDateTime.now()
         ))[0];
 
         Team team1v1WinInvalidState = teamDAO.merge(new Team(
@@ -329,7 +339,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charKr3.getBattlenetId(), charKr3.getRealm(), charKr3.getName())
             }, Race.TERRAN),
-            division1v1.getId(), 1L, 1, 1, 1, 1
+            division1v1.getId(), 1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         ))[0];
         Team team1v1LossInvalidState = teamDAO.merge(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -338,7 +349,8 @@ public class MatchIT
             teamDAO.legacyIdOf(new BlizzardPlayerCharacter[]{
                 new BlizzardPlayerCharacter(charKr4.getBattlenetId(), charKr4.getRealm(), charKr4.getName())
             }, Race.PROTOSS),
-            division1v1.getId(), 1L, 1, 1, 1, 1
+            division1v1.getId(), 1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         ))[0];
         teamMemberDAO.merge
         (

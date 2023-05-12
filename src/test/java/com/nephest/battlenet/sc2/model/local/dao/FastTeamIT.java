@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
@@ -127,7 +128,8 @@ public class FastTeamIT
             1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
-            1L, 1, 1, 1, 1
+            1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         );
         Team team2 = new Team
         (
@@ -135,7 +137,8 @@ public class FastTeamIT
             1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(2), 1,
-            2L, 2, 2, 2, 2
+            2L, 2, 2, 2, 2,
+            OffsetDateTime.now()
         );
         Team[] merge1 = fastTeamDAO.merge(team1, team2);
         assertEquals(2, merge1.length);
@@ -148,7 +151,8 @@ public class FastTeamIT
             1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 3,
-            3L, 4, 5, 6, 3
+            3L, 4, 5, 6, 3,
+            OffsetDateTime.now()
         );
         //no changes in team2
         Team[] merge2 = fastTeamDAO.merge(team1_1, team2);

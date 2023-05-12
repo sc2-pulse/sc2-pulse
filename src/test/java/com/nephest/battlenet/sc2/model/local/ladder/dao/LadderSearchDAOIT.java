@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -41,6 +41,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -179,7 +180,8 @@ public class LadderSearchDAOIT
         (
             null, emptySeasons.get(0).getBattlenetId(), Region.EU, bronzeLeague, TIER_TYPE,
             BigInteger.valueOf(9999L), bronzeDivision.getId(),
-            1L, 1, 1, 1, 1
+            1L, 1, 1, 1, 1,
+            OffsetDateTime.now()
         );
         Team team = teamDAO.create(newTeam);
         //old player
@@ -296,7 +298,7 @@ public class LadderSearchDAOIT
         boolean cursor
     )
     {
-        long expectedTeamCount = REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
+        long expectedTeamCount = (long) REGIONS.size() * SEARCH_LEAGUES.size() * TEAMS_PER_LEAGUE;
         int leagueTeamCount = REGIONS.size() * TEAMS_PER_LEAGUE;
 
         //validate meta
@@ -357,7 +359,7 @@ public class LadderSearchDAOIT
         long expectedRegionRank =
             (((TEAMS_TOTAL - team.getId()) / TEAMS_PER_LEAGUE_REGION) * TEAMS_PER_LEAGUE //prev region ranks
             + expectedGlobalLeagueRank //cur region ranks
-            - (REGIONS.size() - 1 - REGIONS.indexOf(team.getRegion())) * TEAMS_PER_LEAGUE) //region offset
+            - (long) (REGIONS.size() - 1 - REGIONS.indexOf(team.getRegion())) * TEAMS_PER_LEAGUE) //region offset
             / seasonOrdinal;
 
         assertEquals(expectedGlobalRank, (long) team.getGlobalRank());
@@ -471,7 +473,7 @@ public class LadderSearchDAOIT
             }
             for(Race race : Race.values())
             {
-                assertEquals((race.ordinal() + 1) * teamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE), stats.getRaceGamesPlayed().get(race));
+                assertEquals((long) (race.ordinal() + 1) * teamCount * QUEUE_TYPE.getTeamFormat().getMemberCount(TEAM_TYPE), stats.getRaceGamesPlayed().get(race));
             }
         }
 
@@ -485,7 +487,7 @@ public class LadderSearchDAOIT
 
         for(int i = 0; i < queueStats.size() - 1; i++)
         {
-            assertEquals(PLAYERS_TOTAL * (i + 1), queueStats.get(i).getPlayerBase());
+            assertEquals((long) PLAYERS_TOTAL * (i + 1), queueStats.get(i).getPlayerBase());
             assertEquals(PLAYERS_TOTAL, queueStats.get(i).getPlayerCount());
         }
 
