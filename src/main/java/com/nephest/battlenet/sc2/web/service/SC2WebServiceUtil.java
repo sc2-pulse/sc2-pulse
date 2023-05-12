@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -7,14 +7,14 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import java.time.LocalDate;
+import javax.validation.ValidationException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
-
-import java.time.LocalDate;
 
 @Service
 public class SC2WebServiceUtil
@@ -42,7 +42,11 @@ public class SC2WebServiceUtil
         }
         catch(RuntimeException ex)
         {
-            if(!(ExceptionUtils.getRootCause(ex) instanceof WebClientResponseException)) throw ex;
+            if
+            (
+                ExceptionUtils.indexOfType(ex, WebClientResponseException.class) == -1
+                && ExceptionUtils.indexOfType(ex, ValidationException.class) == -1
+            ) throw ex;
             LOG.warn(ExceptionUtils.getRootCauseMessage(ex));
         }
         Season s = seasonDAO.findListByRegion(region).stream()

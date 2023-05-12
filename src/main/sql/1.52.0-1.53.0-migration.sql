@@ -48,3 +48,18 @@ ALTER TABLE "league_stats"
     ADD COLUMN "random_team_count" INTEGER;
 CREATE INDEX "ix_team_season_queue_type" ON "team"("season", "queue_type") WHERE "queue_type" = 201;
 
+CREATE INDEX "migration_temp_index" ON "population_state"("league_id");
+CREATE INDEX "migration_temp_index2" ON "season_state"("season_id");
+CREATE INDEX "migration_temp_index3" ON "map_stats"("league_id");
+CREATE INDEX "migration_temp_index4" ON "team"("population_state_id");
+CREATE INDEX "migration_temp_index5" ON "team_state"("population_state_id");
+CREATE INDEX "migration_temp_index6" ON "team_state"("division_id");
+CREATE INDEX "migration_temp_index7" ON "team"("division_id");
+DELETE FROM season WHERE battlenet_id = 0;
+DROP INDEX "migration_temp_index";
+DROP INDEX "migration_temp_index2";
+DROP INDEX "migration_temp_index3";
+DROP INDEX "migration_temp_index4";
+DROP INDEX "migration_temp_index5";
+DROP INDEX "migration_temp_index6";
+DROP INDEX "migration_temp_index7";

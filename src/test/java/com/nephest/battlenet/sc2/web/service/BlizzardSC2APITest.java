@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.spy;
@@ -17,16 +18,21 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.validation.ValidationException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.MockitoAnnotations;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
@@ -169,6 +175,65 @@ public class BlizzardSC2APITest
         assertNotEquals(BlizzardSC2API.DEFAULT_REGION_REDIRECTS.get(targetRegion), api.getForceRegion(targetRegion));
         //healthy region is picked instead
         assertEquals(expectedResult, api.getForceRegion(targetRegion));
+    }
+
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testCurrentSeasonValidity(boolean isCurrentSeasonValid)
+    {
+        BlizzardSC2API spy = spy(api);
+        LocalDate start = LocalDate.now().minusMonths(2);
+        LocalDate end = start.plusMonths(1);
+        int lastSeasonId = 15;
+        BlizzardSeason currentSeason = new BlizzardSeason
+        (
+            isCurrentSeasonValid ? lastSeasonId : lastSeasonId - 1,
+            2020, 1,
+            start, end
+        );
+        BlizzardSeason lastSeason = new BlizzardSeason(lastSeasonId, 2020, 1, start, end);
+        doReturn(Mono.just(currentSeason)).when(spy).getCurrentSeason(Region.EU);
+        doReturn(Mono.just(lastSeason)).when(spy).getLastSeason(Region.EU, lastSeasonId);
+
+        BlizzardSeason result = spy.getCurrentOrLastSeason(Region.EU, lastSeasonId).block();
+        assertEquals(isCurrentSeasonValid ? currentSeason : lastSeason, result);
+    }
+
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testLastSeasonValidity(boolean isLastSeasonValid)
+    {
+        BlizzardSC2API spy = spy(api);
+        LocalDate start = LocalDate.now().minusMonths(2);
+        LocalDate end = start.plusMonths(1);
+        int lastSeasonId = 15;
+        BlizzardSeason currentSeason = new BlizzardSeason
+        (
+            lastSeasonId - 1,
+            2020, 1,
+            start, end
+        );
+        BlizzardSeason lastSeason = new BlizzardSeason
+        (
+            isLastSeasonValid ? lastSeasonId : lastSeasonId - 1,
+            2020, 1,
+            start, end
+        );
+        doReturn(Mono.just(currentSeason)).when(spy).getCurrentSeason(Region.EU);
+        doReturn(Mono.just(lastSeason)).when(spy).getLastSeason(Region.EU, lastSeasonId);
+
+        if(isLastSeasonValid)
+        {
+            assertEquals(lastSeason, spy.getCurrentOrLastSeason(Region.EU, lastSeasonId).block());
+        }
+        else
+        {
+            assertThrows
+            (
+                ValidationException.class,
+                ()->spy.getCurrentOrLastSeason(Region.EU, lastSeasonId).block()
+            );
+        }
     }
 
 

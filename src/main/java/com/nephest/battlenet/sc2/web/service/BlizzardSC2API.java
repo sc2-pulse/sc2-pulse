@@ -52,6 +52,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.LongStream;
 import javax.annotation.PostConstruct;
+import javax.validation.ValidationException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -510,7 +511,18 @@ extends BaseAPI
     //current season endpoint can return the 500/503 code sometimes
     public Mono<BlizzardSeason> getCurrentOrLastSeason(Region region, int startFrom)
     {
-        return getCurrentSeason(region).onErrorResume(t->getLastSeason(region, startFrom));
+        return getCurrentSeason(region)
+            .flatMap(season->validate(season, startFrom))
+            .onErrorResume(t->getLastSeason(region, startFrom))
+            .flatMap(season->validate(season, startFrom));
+    }
+
+    private static Mono<BlizzardSeason> validate(BlizzardSeason season, int minSeason)
+    {
+        return season.getId() == null || season.getId() < minSeason
+            ? Mono.error(new ValidationException("Invalid season id: " + season.getId()
+                + ", expected " + minSeason + " or greater"))
+            : Mono.just(season);
     }
 
     public Mono<BlizzardLeague> getLeague
