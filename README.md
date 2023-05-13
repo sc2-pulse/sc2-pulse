@@ -4,14 +4,21 @@ The [reference website](https://www.nephest.com/sc2/) (runs the latest release) 
 [The public discord bot](https://discord.com/api/oauth2/authorize?client_id=908047161994915901&permissions=264192&scope=bot%20applications.commands)
 is also available.
 ## Disclaimer
-It's my first Spring Boot project, and it's old, there is a lot of legacy code that is poorly though out. Please do
-not use this project as a reference if you are new to programming.
-
 This application uses Battle.net&reg; API. 
 This is not an official Blizzard Entertainment&reg; application.
 
 The project uses [sc2revealed](http://sc2revealed.com/) and [aligulac](http://aligulac.com/) APIs to get the info about pro and 
 semipro players.
+
+## Warning
+**Please do not use this project as a reference if you are new to programming**.
+
+This is my first Spring Boot project, and it's old, there is a lot of legacy code that is poorly though out.
+
+I use this project to learn new stuff, so it's just a bunch of helloworlds of different technologies that evolve over time.
+Furthermore, I'm only interested in backend stack, so the frontend part of the project is a mess. I focus on new features
+and I don't have time to rewrite the old code. The project will remain as it is until I implement all the planned features.
+
 ## Dependencies
 * Java 11+
 * PostgreSQL 13+ with btree_gist extension
