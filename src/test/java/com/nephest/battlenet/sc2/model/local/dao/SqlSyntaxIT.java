@@ -139,6 +139,9 @@ public class SqlSyntaxIT
         }
     }
 
+    /*TODO
+        Split this abomination into proper tests
+     */
     @Test
     public void testSqlSyntax()
     {
