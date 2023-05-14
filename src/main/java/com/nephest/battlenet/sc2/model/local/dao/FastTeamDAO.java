@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.BasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.Team;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Repository;
  */
 @Repository
 public class FastTeamDAO
+implements BasicEntityOperations<Team>
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(FastTeamDAO.class);
@@ -76,9 +78,16 @@ public class FastTeamDAO
             Integer season
     )
     {
-        return Optional.ofNullable(teams.get(region).get(Team.uid(queueType, region, legacyId, season)));
+        return find(Team.uid(queueType, region, legacyId, season));
     }
 
+    @Override
+    public Optional<Team> find(Team team)
+    {
+        return Optional.ofNullable(teams.get(team.getRegion()).get(team));
+    }
+
+    @Override
     public Team[] merge(Team... teamsToMerge)
     {
         if(teamsToMerge.length == 0) return new Team[0];
@@ -88,27 +97,29 @@ public class FastTeamDAO
         {
             Map<Team, Team> regionTeams = teams.get(team.getRegion());
             Team existingTeam = regionTeams.get(team);
-            if(existingTeam == null)
+            if(existingTeam == null || mustUpdate(existingTeam, team))
             {
                 regionTeams.put(team, team);
-                merged.add(team);
-            }
-            else if
-            (
-                !Objects.equals(existingTeam.getWins(), team.getWins())
-                    || !Objects.equals(existingTeam.getLosses(), team.getLosses())
-                    || !Objects.equals(existingTeam.getDivisionId(), team.getDivisionId())
-            )
-            {
-                existingTeam.setWins(team.getWins());
-                existingTeam.setLosses(team.getLosses());
-                existingTeam.setTies(team.getTies());
-                existingTeam.setDivisionId(team.getDivisionId());
                 merged.add(team);
             }
         }
 
         return merged.toArray(Team[]::new);
+    }
+
+    private static boolean mustUpdate(Team existingTeam, Team newTeam)
+    {
+        return
+        (
+            !Objects.equals(existingTeam.getWins(), newTeam.getWins())
+            || !Objects.equals(existingTeam.getLosses(), newTeam.getLosses())
+            || !Objects.equals(existingTeam.getDivisionId(), newTeam.getDivisionId())
+        )
+        &&
+        (
+            existingTeam.getLastPlayed() == null
+            || existingTeam.getLastPlayed().isBefore(newTeam.getLastPlayed())
+        );
     }
 
 }

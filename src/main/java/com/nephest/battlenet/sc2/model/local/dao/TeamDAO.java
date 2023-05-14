@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
 import com.nephest.battlenet.sc2.model.local.BaseLocalTeamMember;
+import com.nephest.battlenet.sc2.model.local.BasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -52,6 +53,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class TeamDAO
+implements BasicEntityOperations<Team>
 {
 
     private  static final Logger LOG = LoggerFactory.getLogger(TeamDAO.class);
@@ -449,6 +451,7 @@ public class TeamDAO
         return team;
     }
 
+    @Override
     public Team[] merge(Team... teams)
     {
         if(teams.length == 0) return new Team[0];
@@ -477,6 +480,12 @@ public class TeamDAO
         return Arrays.stream(DAOUtils.updateOriginals(teams, mergedTeams, (o, m)->o.setId(m.getId()), o->o.setId(null)))
             .filter(t->t.getId() != null)
             .toArray(Team[]::new);
+    }
+
+    @Override
+    public Optional<Team> find(Team team)
+    {
+        return findById(team.getId());
     }
 
     public Optional<Team> findById(long id)

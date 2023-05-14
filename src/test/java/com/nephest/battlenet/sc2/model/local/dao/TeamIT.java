@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.BasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamState;
@@ -25,9 +26,12 @@ import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -54,6 +58,14 @@ public class TeamIT
     @Autowired
     private JdbcTemplate template;
 
+    private static List<BasicEntityOperations<Team>> operations;
+
+    @BeforeAll
+    public static void beforeAll(@Autowired List<BasicEntityOperations<Team>> operations)
+    {
+        TeamIT.operations = operations;
+    }
+
     @BeforeEach
     public void beforeEach(@Autowired DataSource dataSource)
     throws SQLException
@@ -66,9 +78,10 @@ public class TeamIT
     }
 
     @AfterEach
-    public void afterEach(@Autowired DataSource dataSource)
+    public void afterEach(@Autowired DataSource dataSource, @Autowired FastTeamDAO fastTeamDAO)
     throws SQLException
     {
+        for(Region region : Region.values()) fastTeamDAO.remove(region);
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
@@ -195,11 +208,18 @@ public class TeamIT
         );
     }
 
-    @Test
-    public void whenDivisionIdIsChanged_thenUpdate()
+    private static Stream<Arguments> teamOperations()
+    {
+        return operations.stream().map(Arguments::of);
+    }
+
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenDivisionIdIsChanged_thenUpdate(BasicEntityOperations<Team> operations)
     {
         testMerge
         (
+            operations,
             team->
             {
                 team.setDivisionId(team.getDivisionId() + 1);
@@ -209,11 +229,13 @@ public class TeamIT
         );
     }
 
-    @Test
-    public void whenWinsIsChanged_thenUpdate()
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenWinsIsChanged_thenUpdate(BasicEntityOperations<Team> operations)
     {
         testMerge
         (
+            operations,
             team->
             {
                 team.setWins(team.getWins() + 1);
@@ -223,11 +245,13 @@ public class TeamIT
         );
     }
 
-    @Test
-    public void whenLossesIsChanged_thenUpdate()
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenLossesIsChanged_thenUpdate(BasicEntityOperations<Team> operations)
     {
         testMerge
         (
+            operations,
             team->
             {
                 team.setLosses(team.getLosses() + 1);
@@ -237,11 +261,13 @@ public class TeamIT
         );
     }
 
-    @Test
-    public void testMergeSecondaryProperties()
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void testMergeSecondaryProperties(BasicEntityOperations<Team> operations)
     {
         testMerge
         (
+            operations,
             team->
             {
                 team.setDivisionId(team.getDivisionId() + 1);
@@ -256,11 +282,13 @@ public class TeamIT
         );
     }
 
-    @Test
-    public void whenPreviousLastPlayedIsNull_thenUpdate()
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousLastPlayedIsNull_thenUpdate(BasicEntityOperations<Team> operations)
     {
         testMerge
         (
+            operations,
             team->team.setLastPlayed(null),
             team->
             {
@@ -271,12 +299,14 @@ public class TeamIT
         );
     }
 
-    @Test
-    public void whenPreviousLastPlayedIsAfterCurrentLastPlayed_thenSkip()
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousLastPlayedIsAfterCurrentLastPlayed_thenSkip(BasicEntityOperations<Team> operations)
     {
         OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
         testMerge
         (
+            operations,
             team->team.setLastPlayed(lastPlayed),
             team->
             {
@@ -287,12 +317,14 @@ public class TeamIT
         );
     }
 
-    @Test
-    public void whenPreviousLastPlayedEqualsCurrentLastPlayed_thenSkip()
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenPreviousLastPlayedEqualsCurrentLastPlayed_thenSkip(BasicEntityOperations<Team> operations)
     {
         OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
         testMerge
         (
+            operations,
             team->team.setLastPlayed(lastPlayed),
             team->
             {
@@ -305,34 +337,39 @@ public class TeamIT
 
     private void testMerge
     (
+        BasicEntityOperations<Team> operations,
         Consumer<Team> updateModifier,
         boolean updated
     )
     {
-        testMerge(null, updateModifier, updated);
+        testMerge(operations, null, updateModifier, updated);
     }
 
     private void testMerge
     (
+        BasicEntityOperations<Team> operations,
         Consumer<Team> originalModifier,
         Consumer<Team> updateModifier,
         boolean updated
     )
     {
-        seasonGenerator.generateDefaultSeason
-        (
-            List.of(Region.values()),
-            List.of
+        if(!(operations instanceof FastTeamDAO))
+        {
+            seasonGenerator.generateDefaultSeason
             (
-                BaseLeague.LeagueType.BRONZE,
-                BaseLeague.LeagueType.SILVER,
-                BaseLeague.LeagueType.GOLD
-            ),
-            List.of(QueueType.LOTV_1V1),
-            TeamType.ARRANGED,
-            BaseLeagueTier.LeagueTierType.FIRST,
-            0
-        );
+                List.of(Region.values()),
+                List.of
+                    (
+                        BaseLeague.LeagueType.BRONZE,
+                        BaseLeague.LeagueType.SILVER,
+                        BaseLeague.LeagueType.GOLD
+                    ),
+                List.of(QueueType.LOTV_1V1),
+                TeamType.ARRANGED,
+                BaseLeagueTier.LeagueTierType.FIRST,
+                0
+            );
+        }
         OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
         Team team = new Team
         (
@@ -343,8 +380,8 @@ public class TeamIT
             lastPlayed
         );
         if(originalModifier != null) originalModifier.accept(team);
-        teamDAO.create(team);
-        assertFullyEquals(team, teamDAO.findById(team.getId()).orElseThrow());
+        operations.merge(new Team[]{team});
+        assertFullyEquals(team, operations.find(team).orElseThrow());
 
         Team team1_2 = SerializationUtils.clone(team);
         updateModifier.accept(team1_2);
@@ -356,9 +393,9 @@ public class TeamIT
             5L, 6, 7, 8, 9,
             lastPlayed.plusSeconds(2)
         );
-        assertEquals(updated ? 2 : 1, teamDAO.merge(team1_2, team2).length);
-        assertFullyEquals(updated ? team1_2 : team, teamDAO.findById(team.getId()).orElseThrow());
-        assertFullyEquals(team2, teamDAO.findById(team2.getId()).orElseThrow()); //inserted
+        assertEquals(updated ? 2 : 1, operations.merge(new Team[]{team1_2, team2}).length);
+        assertFullyEquals(updated ? team1_2 : team, operations.find(team).orElseThrow());
+        assertFullyEquals(team2, operations.find(team2).orElseThrow()); //inserted
     }
 
     public static void assertFullyEquals(Team team, Team team2)
