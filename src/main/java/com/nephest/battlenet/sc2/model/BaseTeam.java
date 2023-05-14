@@ -1,12 +1,16 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
 
+import java.io.Serializable;
 import javax.validation.constraints.NotNull;
 
 public class BaseTeam
+implements Serializable
 {
+
+    private static final long serialVersionUID = 1L;
 
     public static final int MAX_RATING = 10000;
 
