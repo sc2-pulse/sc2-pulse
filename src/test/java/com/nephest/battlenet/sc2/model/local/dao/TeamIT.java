@@ -20,8 +20,10 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
+import org.apache.commons.lang3.SerializationUtils;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -194,7 +196,128 @@ public class TeamIT
     }
 
     @Test
-    public void testMerge()
+    public void whenDivisionIdIsChanged_thenUpdate()
+    {
+        testMerge
+        (
+            team->
+            {
+                team.setDivisionId(team.getDivisionId() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+            },
+            true
+        );
+    }
+
+    @Test
+    public void whenWinsIsChanged_thenUpdate()
+    {
+        testMerge
+        (
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+            },
+            true
+        );
+    }
+
+    @Test
+    public void whenLossesIsChanged_thenUpdate()
+    {
+        testMerge
+        (
+            team->
+            {
+                team.setLosses(team.getLosses() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+            },
+            true
+        );
+    }
+
+    @Test
+    public void testMergeSecondaryProperties()
+    {
+        testMerge
+        (
+            team->
+            {
+                team.setDivisionId(team.getDivisionId() + 1);
+                team.setLeagueType(BaseLeague.LeagueType.DIAMOND);
+                team.setTierType(BaseLeagueTier.LeagueTierType.THIRD);
+                team.setRating(team.getRating() + 1);
+                team.setWins(team.getWins() + 1);
+                team.setLosses(team.getLosses() + 1);
+                team.setLastPlayed(team.getLastPlayed().plusSeconds(1));
+            },
+            true
+        );
+    }
+
+    @Test
+    public void whenPreviousLastPlayedIsNull_thenUpdate()
+    {
+        testMerge
+        (
+            team->team.setLastPlayed(null),
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(OffsetDateTime.now());
+            },
+            true
+        );
+    }
+
+    @Test
+    public void whenPreviousLastPlayedIsAfterCurrentLastPlayed_thenSkip()
+    {
+        OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
+        testMerge
+        (
+            team->team.setLastPlayed(lastPlayed),
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(lastPlayed.minusSeconds(1));
+            },
+            false
+        );
+    }
+
+    @Test
+    public void whenPreviousLastPlayedEqualsCurrentLastPlayed_thenSkip()
+    {
+        OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
+        testMerge
+        (
+            team->team.setLastPlayed(lastPlayed),
+            team->
+            {
+                team.setWins(team.getWins() + 1);
+                team.setLastPlayed(lastPlayed);
+            },
+            false
+        );
+    }
+
+    private void testMerge
+    (
+        Consumer<Team> updateModifier,
+        boolean updated
+    )
+    {
+        testMerge(null, updateModifier, updated);
+    }
+
+    private void testMerge
+    (
+        Consumer<Team> originalModifier,
+        Consumer<Team> updateModifier,
+        boolean updated
+    )
     {
         seasonGenerator.generateDefaultSeason
         (
@@ -219,17 +342,12 @@ public class TeamIT
             3L, 4, 5, 6, 7,
             lastPlayed
         );
+        if(originalModifier != null) originalModifier.accept(team);
         teamDAO.create(team);
         assertFullyEquals(team, teamDAO.findById(team.getId()).orElseThrow());
 
-        Team team1_2 = new Team
-        (
-            null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
-            new BaseLeague(BaseLeague.LeagueType.GOLD, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.SECOND, BigInteger.valueOf(1), 3,
-            4L, 5, 6, 7, 8,
-            lastPlayed.plusSeconds(1)
-        );
+        Team team1_2 = SerializationUtils.clone(team);
+        updateModifier.accept(team1_2);
         Team team2 = new Team
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
@@ -238,46 +356,9 @@ public class TeamIT
             5L, 6, 7, 8, 9,
             lastPlayed.plusSeconds(2)
         );
-        teamDAO.merge(team1_2, team2);
-        assertFullyEquals(team1_2, teamDAO.findById(team.getId()).orElseThrow()); //updated
+        assertEquals(updated ? 2 : 1, teamDAO.merge(team1_2, team2).length);
+        assertFullyEquals(updated ? team1_2 : team, teamDAO.findById(team.getId()).orElseThrow());
         assertFullyEquals(team2, teamDAO.findById(team2.getId()).orElseThrow()); //inserted
-    }
-
-    @ValueSource(booleans = {false, true})
-    @ParameterizedTest
-    public void testPreviousNullOrStaleLastPlayed(boolean previousNull)
-    {
-        seasonGenerator.generateDefaultSeason
-        (
-            List.of(Region.values()),
-            List.of(BaseLeague.LeagueType.BRONZE),
-            List.of(QueueType.LOTV_1V1),
-            TeamType.ARRANGED,
-            BaseLeagueTier.LeagueTierType.FIRST,
-            0
-        );
-        OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
-        Team team = new Team
-        (
-            null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
-            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
-            3L, 4, 5, 6, 7,
-            previousNull ? null : lastPlayed
-        );
-        teamDAO.merge(team);
-        assertFullyEquals(team, teamDAO.findById(team.getId()).orElseThrow());
-
-        Team staleLastPlayedTeam = new Team
-        (
-            null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
-            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
-            4L, 5, 6, 7, 8,
-            lastPlayed.minusSeconds(1)
-        );
-        assertEquals(previousNull ? 1: 0, teamDAO.merge(staleLastPlayedTeam).length);
-        assertFullyEquals(previousNull ? staleLastPlayedTeam : team, teamDAO.findById(team.getId()).orElseThrow());
     }
 
     public static void assertFullyEquals(Team team, Team team2)
