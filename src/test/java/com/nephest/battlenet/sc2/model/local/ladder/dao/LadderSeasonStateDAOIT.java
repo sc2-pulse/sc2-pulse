@@ -201,6 +201,7 @@ public class LadderSeasonStateDAOIT
 
         //hour2: 2 4v4 US teams, 1 1v1 EU team
         team1.setWins(2); // + 1 win
+        team1.setLastPlayed(OffsetDateTime.now());
         teamDAO.merge(team1);
         OffsetDateTime time2 = time1.plusHours(1);
         TeamState state21 = TeamState.of(team1);

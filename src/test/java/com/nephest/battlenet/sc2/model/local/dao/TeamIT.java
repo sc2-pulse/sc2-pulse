@@ -243,6 +243,43 @@ public class TeamIT
         assertFullyEquals(team2, teamDAO.findById(team2.getId()).orElseThrow()); //inserted
     }
 
+    @ValueSource(booleans = {false, true})
+    @ParameterizedTest
+    public void testPreviousNullOrStaleLastPlayed(boolean previousNull)
+    {
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.values()),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            0
+        );
+        OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
+        Team team = new Team
+        (
+            null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+            3L, 4, 5, 6, 7,
+            previousNull ? null : lastPlayed
+        );
+        teamDAO.merge(team);
+        assertFullyEquals(team, teamDAO.findById(team.getId()).orElseThrow());
+
+        Team staleLastPlayedTeam = new Team
+        (
+            null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+            4L, 5, 6, 7, 8,
+            lastPlayed.minusSeconds(1)
+        );
+        assertEquals(previousNull ? 1: 0, teamDAO.merge(staleLastPlayedTeam).length);
+        assertFullyEquals(previousNull ? staleLastPlayedTeam : team, teamDAO.findById(team.getId()).orElseThrow());
+    }
+
     public static void assertFullyEquals(Team team, Team team2)
     {
         assertEquals(team.getId(), team2.getId());

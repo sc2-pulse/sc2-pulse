@@ -283,10 +283,14 @@ public class SqlSyntaxIT
         assertEquals(2, team.getPoints());
         assertEquals(0, teamDAO.merge(team).length); //do not update a team when games played or division is the same
         team.setDivisionId(division2.getId());
+        team.setLastPlayed(OffsetDateTime.now());
         assertEquals(1, teamDAO.merge(team).length);
         team.setDivisionId(division.getId());
+        team.setLastPlayed(OffsetDateTime.now());
         assertEquals(1, teamDAO.merge(team).length);
+        sameTeam.setLastPlayed(OffsetDateTime.now());
         assertEquals(0, teamDAO.merge(sameTeam).length);
+        updatedTeam.setLastPlayed(OffsetDateTime.now());
         teamDAO.merge(updatedTeam);
         Team foundTeam = teamDAO.findById(updatedTeam.getId()).orElse(null);
         assertEquals(updatedTeam.getId(), foundTeam.getId());
@@ -399,6 +403,7 @@ public class SqlSyntaxIT
         assertEquals(zergTeam.getId(),
             teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
         zergTeam.setWins(zergTeam.getWins() + 1);
+        zergTeam.setLastPlayed(OffsetDateTime.now());
         teamDAO.merge(zergTeam);
         assertEquals(zergTeam.getWins(), teamDAO.find1v1TeamByFavoriteRace(season.getBattlenetId(), character, Race.ZERG)
             .get().getKey().getWins());

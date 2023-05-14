@@ -145,6 +145,7 @@ public class LegacySearchIT
         teamMemberDAO.merge(members);
         teamStateDAO.saveState(TeamState.of(team1));
         team1.setWins(team1.getWins() + 1);
+        team1.setLastPlayed(OffsetDateTime.now());
         teamDAO.merge(team1);
         teamStateDAO.saveState(TeamState.of(team1));
         return team1;
