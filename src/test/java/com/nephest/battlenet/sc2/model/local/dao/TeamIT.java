@@ -301,6 +301,13 @@ public class TeamIT
 
     @MethodSource("teamOperations")
     @ParameterizedTest
+    public void whenNoNewData_thenSkip(BasicEntityOperations<Team> operations)
+    {
+        testMerge(operations, team->{}, false);
+    }
+
+    @MethodSource("teamOperations")
+    @ParameterizedTest
     public void whenPreviousLastPlayedIsAfterCurrentLastPlayed_thenSkip(BasicEntityOperations<Team> operations)
     {
         OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
