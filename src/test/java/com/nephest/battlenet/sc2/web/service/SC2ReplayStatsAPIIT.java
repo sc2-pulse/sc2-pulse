@@ -46,8 +46,11 @@ public class SC2ReplayStatsAPIIT
     {
         try
         {
-            validCharacter = TestUtil
-                .readResource(SC2ReplayStatsAPIIT.class, "sc2-replay-stats-profile.json");
+            validCharacter = TestUtil.readResource
+            (
+                SC2ReplayStatsAPIIT.class,
+                "sc2replaystats/sc2-replay-stats-profile.json"
+            );
         }
         catch (IOException | URISyntaxException e)
         {

@@ -26,7 +26,7 @@ public class LiquipediaParserTest
         LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
         (
             LiquipediaParserTest.class,
-            "liquipedia-query.json",
+            "liquipedia/liquipedia-query.json",
             LiquipediaMediaWikiRevisionQueryResult.class
         );
         List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
@@ -79,7 +79,7 @@ public class LiquipediaParserTest
         LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
         (
             LiquipediaParserTest.class,
-            "liquipedia-query-redirect.json",
+            "liquipedia/liquipedia-query-redirect.json",
             LiquipediaMediaWikiRevisionQueryResult.class
         );
         List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
@@ -97,7 +97,7 @@ public class LiquipediaParserTest
         LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
         (
             LiquipediaParserTest.class,
-            "liquipedia-query-empty-values.json",
+            "liquipedia/liquipedia-query-empty-values.json",
             LiquipediaMediaWikiRevisionQueryResult.class
         );
         List<LiquipediaPlayer> players = LiquipediaParser.parse(result);
@@ -117,7 +117,7 @@ public class LiquipediaParserTest
         LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
         (
             LiquipediaParserTest.class,
-            "liquipedia-query-redundant-slash.json",
+            "liquipedia/liquipedia-query-redundant-slash.json",
             LiquipediaMediaWikiRevisionQueryResult.class
         );
         List<LiquipediaPlayer> players = LiquipediaParser.parse(result);

@@ -44,7 +44,7 @@ public final class TestUtil
     {
         return Files.readString
         (
-            Paths.get(loader.getResource(path).toURI()),
+            Paths.get(loader.getClassLoader().getResource(path).toURI()),
             charset
         );
     }
