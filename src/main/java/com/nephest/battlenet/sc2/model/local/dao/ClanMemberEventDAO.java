@@ -37,7 +37,7 @@ public class ClanMemberEventDAO
             + "prev.clan_id AS \"previous_clan_id\", "
             + "prev.type AS \"previous_type\", "
             + "prev.created AS \"previous_created\" "
-            + "FROM vals v(player_character_id, clan_id, type, created) "
+            + "FROM vals v(player_character_id, type, created, clan_id) "
             + "LEFT JOIN LATERAL "
             + "("
                 + "SELECT clan_member_event.clan_id, "
@@ -57,25 +57,25 @@ public class ClanMemberEventDAO
             + "FROM previous "
             + "WHERE previous_type = 1 "
             + "AND type = 1 "
-            + "AND clan_id != previous_clan_id "
+            + "AND clan_id::integer != previous_clan_id "
             + "RETURNING 1 "
         + ") "
         + "INSERT INTO clan_member_event(player_character_id, clan_id, type, created, seconds_since_previous) "
         + "SELECT player_character_id, "
-        + "CASE WHEN clan_id IS NOT NULL THEN clan_id ELSE previous_clan_id END, "
+        + "CASE WHEN clan_id::integer IS NOT NULL THEN clan_id::integer ELSE previous_clan_id END, "
         + "type, "
         + "created, "
         + "CASE "
             + "WHEN "
                 + "previous_type = 1 "
                 + "AND type = 1 "
-                + "AND clan_id != previous_clan_id "
+                + "AND clan_id::integer != previous_clan_id "
             + "THEN 0 "
             + "ELSE EXTRACT(EPOCH FROM created - previous_created) "
         + "END "
         + "FROM previous "
         + "WHERE type != previous_type "
-        + "OR clan_id IS DISTINCT FROM previous_clan_id ";
+        + "OR clan_id::integer IS DISTINCT FROM previous_clan_id ";
 
     private static final String FIND =
         "("
@@ -147,9 +147,9 @@ public class ClanMemberEventDAO
         List<Object[]> data = Arrays.stream(events)
             .map(evt->new Object[]{
                 evt.getPlayerCharacterId(),
-                evt.getClanId(),
                 conversionService.convert(evt.getType(), Integer.class),
-                evt.getCreated()
+                evt.getCreated(),
+                evt.getClanId() == null ? null : String.valueOf(evt.getClanId()),
             })
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()

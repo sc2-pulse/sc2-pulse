@@ -122,8 +122,8 @@ implements BasicEntityOperations<Team>
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, tier_type, "
-                + "last_played "
+                + "rating, points, wins, losses, ties, last_played, "
+                + "tier_type "
             + ") "
                 + "USING(queue_type, region, legacy_id, season) "
         + "), "
@@ -144,8 +144,8 @@ implements BasicEntityOperations<Team>
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, tier_type, "
-                + "last_played "
+                + "rating, points, wins, losses, ties, last_played, "
+                + "tier_type "
             + ") "
             + "INNER JOIN team t ON "
                 + "t.queue_type = v.queue_type "
@@ -195,8 +195,8 @@ implements BasicEntityOperations<Team>
             + "("
                 + "legacy_id, division_id, "
                 + "season, region, league_type, queue_type, team_type, "
-                + "rating, points, wins, losses, ties, tier_type, "
-                + "last_played "
+                + "rating, points, wins, losses, ties, last_played, "
+                + "tier_type "
             + ") "
             + "LEFT JOIN existing ON "
                 + "v.queue_type = existing.queue_type "
@@ -470,8 +470,8 @@ implements BasicEntityOperations<Team>
                 t.getWins(),
                 t.getLosses(),
                 t.getTies(),
-                conversionService.convert(t.getTierType(), Integer.class),
-                t.getLastPlayed()
+                t.getLastPlayed(),
+                conversionService.convert(t.getTierType(), Integer.class)
             })
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("teams", data);
