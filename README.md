@@ -7,9 +7,6 @@ is also available.
 This application uses Battle.net&reg; API. 
 This is not an official Blizzard Entertainment&reg; application.
 
-The project uses [sc2revealed](http://sc2revealed.com/) and [aligulac](http://aligulac.com/) APIs to get the info about pro and 
-semipro players.
-
 ## Warning
 **Please do not use this project as a reference if you are new to programming**.
 
