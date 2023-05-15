@@ -60,7 +60,7 @@
         </th:block>
         <section>
             <h3>Tech</h3>
-            <section>
+            <section th:if="${@environment.getProperty('com.nephest.battlenet.sc2.db-dump-file') != null}">
                 <h4>DB dump</h4>
                 <p>
                     You are free to use the <a th:href="@{/dl/db-dump}">DB dump</a> for non-commercial purposes

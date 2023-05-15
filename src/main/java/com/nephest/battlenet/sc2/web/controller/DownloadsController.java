@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -9,6 +9,7 @@ import java.io.File;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -22,16 +23,16 @@ import org.springframework.web.server.ResponseStatusException;
 
 @RestController @Hidden
 @RequestMapping("/dl")
+@ConditionalOnProperty(name = "com.nephest.battlenet.sc2.db-dump-file")
 public class DownloadsController
 {
 
-    @Value("${com.nephest.battlenet.sc2.db-dump-file:#{''}}")
+    @Value("${com.nephest.battlenet.sc2.db-dump-file}")
     private String dbDumpPath;
 
     @GetMapping("/db-dump")
     public ResponseEntity<Resource> downloadDatabaseDump()
     {
-        if(dbDumpPath.isEmpty()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
         File file = new File(dbDumpPath);
         if(!file.exists()) throw new ResponseStatusException(HttpStatus.NOT_FOUND, "File not found");
 

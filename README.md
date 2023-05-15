@@ -108,11 +108,7 @@ com.nephest.battlenet.sc2.replaystats.api.key
 You can use the ```src/main/resources/application-private.properties``` file (ignored by git, used by config) 
 for private/local application properties
 
-You can use the [latest DB dump](https://www.nephest.com/sc2/dl/db-dump) to kickstart the deployment. You are free to
-use the DB dump for non-commercial purposes if you credit the [reference website](https://www.nephest.com/sc2/). Bear in
-mind that some tables may be empty due to privacy policy.
-
-You can also use a [DB init script](src/main/resources/schema-postgres.sql) to have an empty DB if you wish so.
+Use [DB init script](src/main/resources/schema-postgres.sql) to create a fresh DB.
 
 To run the local server execute the following command in a terminal
 ```
@@ -177,6 +173,7 @@ To ensure that the potential violation is a minor one, the following rules are a
 * `com.nephest.battlenet.sc2.mmr.history.main.length` 1v1 mmr history length in days, 180 by default.
 * `com.nephest.battlenet.sc2.mmr.history.secondary.length` team mmr history length in days, 180 by default.
 * `com.nephest.battlenet.sc2.ladder.regions` set of regions that will be updated, currently active regions by default.
+* `com.nephest.battlenet.sc2.db-dump-file` path to the database dump.
 * `contacts.email`
 * `contacts.discord.server`
 * `contacts.discord.server.name`
