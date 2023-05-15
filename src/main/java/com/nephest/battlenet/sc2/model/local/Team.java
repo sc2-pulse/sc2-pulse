@@ -103,7 +103,9 @@ implements java.io.Serializable
             bTeam.getRating(),
             bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(),
             bTeam.getPoints(),
-            bTeam.getLastPlayedTimeStamp().atOffset(OffsetDateTime.now().getOffset())
+            bTeam.getLastPlayedTimeStamp() != null
+                ? bTeam.getLastPlayedTimeStamp().atOffset(OffsetDateTime.now().getOffset())
+                : OffsetDateTime.now()
         );
     }
 
