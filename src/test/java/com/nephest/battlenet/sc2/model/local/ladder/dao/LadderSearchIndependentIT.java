@@ -45,6 +45,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -382,75 +383,58 @@ public class LadderSearchIndependentIT
 
     private void verifyDistinctChar1(LadderDistinctCharacter char1)
     {
-        assertEquals("refaccount#123", char1.getMembers().getAccount().getBattleTag());
-        assertEquals("refchar1#123", char1.getMembers().getCharacter().getName());
-        assertEquals(BaseLeague.LeagueType.SILVER, char1.getLeagueMax());
-        assertEquals(100, char1.getRatingMax());
-        assertEquals(249, char1.getTotalGamesPlayed());
-        assertEquals(98, char1.getCurrentStats().getRating());
-        assertEquals(149, char1.getCurrentStats().getGamesPlayed());
-        assertNull(char1.getCurrentStats().getRank());
-        assertEquals(100, char1.getPreviousStats().getRating());
-        assertEquals(100, char1.getPreviousStats().getGamesPlayed());
-        assertNull(char1.getPreviousStats().getRank());
+        LadderSearchIndependentIT.verify
+        (
+            char1,
+            72L, Partition.GLOBAL, "refaccount#123",
+            71L, Region.EU, 1, 9998L, "refchar1#123",
+            "clanTag", "clanName",
+            100, 249, BaseLeague.LeagueType.SILVER,
+            98, 149, null,
+            100, 100, null
+        );
     }
 
     private void verifyCharacterAccountStats(List<LadderDistinctCharacter> byAccount)
     {
         assertEquals(2, byAccount.size());
         //sorted by rating cur, rating max
-        LadderDistinctCharacter char11 = byAccount.get(1);
-        assertEquals("refaccount#123", char11.getMembers().getAccount().getBattleTag());
-        assertEquals("refchar1#123", char11.getMembers().getCharacter().getName());
-        assertNotNull(char11.getMembers().getClan());
-        assertEquals("clanTag", char11.getMembers().getClan().getTag());
-        assertEquals(Region.EU, char11.getMembers().getClan().getRegion());
-        assertEquals("clanName", char11.getMembers().getClan().getName());
-        assertEquals(BaseLeague.LeagueType.SILVER, char11.getLeagueMax());
-        assertEquals(100, char11.getRatingMax());
-        assertEquals(249, char11.getTotalGamesPlayed());
-        assertEquals(98, char11.getCurrentStats().getRating());
-        assertEquals(149, char11.getCurrentStats().getGamesPlayed());
-        assertNull(char11.getCurrentStats().getRank());
-        assertEquals(100, char11.getPreviousStats().getRating());
-        assertEquals(100, char11.getPreviousStats().getGamesPlayed());
-        assertNull(char11.getPreviousStats().getRank());
-
-        LadderDistinctCharacter char12 = byAccount.get(0);
-        assertEquals("refaccount#123", char12.getMembers().getAccount().getBattleTag());
-        assertEquals("refchar2#123", char12.getMembers().getCharacter().getName());
-        assertNotNull(char12.getMembers().getClan());
-        assertEquals("clanTag", char12.getMembers().getClan().getTag());
-        assertEquals(Region.EU, char12.getMembers().getClan().getRegion());
-        assertEquals("clanName", char12.getMembers().getClan().getName());
-        assertEquals(BaseLeague.LeagueType.BRONZE, char12.getLeagueMax());
-        assertEquals(101, char12.getRatingMax());
-        assertEquals(100, char12.getTotalGamesPlayed());
-        assertNull(char12.getCurrentStats().getRating());
-        assertNull(char12.getCurrentStats().getGamesPlayed());
-        assertNull(char12.getCurrentStats().getRank());
-        assertEquals(101, char12.getPreviousStats().getRating());
-        assertEquals(100, char12.getPreviousStats().getGamesPlayed());
-        assertNull(char12.getPreviousStats().getRank());
+        LadderSearchIndependentIT.verify
+        (
+            byAccount.get(1),
+            72L, Partition.GLOBAL, "refaccount#123",
+            71L, Region.EU, 1, 9998L, "refchar1#123",
+            "clanTag", "clanName",
+            100, 249, BaseLeague.LeagueType.SILVER,
+            98, 149, null,
+            100, 100, null
+        );
+        LadderSearchIndependentIT.verify
+        (
+            byAccount.get(0),
+            72L, Partition.GLOBAL, "refaccount#123",
+            72L, Region.EU, 1, 9999L, "refchar2#123",
+            "clanTag", "clanName",
+            101, 100, BaseLeague.LeagueType.BRONZE,
+            null, null, null,
+            101, 100, null
+        );
     }
 
     private void verifyProCharacterAccountStats(List<LadderDistinctCharacter> byAccount)
     {
         assertEquals(3, byAccount.size());
         //sorted by rating max
-        LadderDistinctCharacter char13 = byAccount.get(0);
-        assertEquals("refaccount2#123", char13.getMembers().getAccount().getBattleTag());
-        assertEquals("refchar3#123", char13.getMembers().getCharacter().getName());
-        assertNull(char13.getMembers().getClan());
-        assertEquals(BaseLeague.LeagueType.BRONZE, char13.getLeagueMax());
-        assertEquals(102, char13.getRatingMax());
-        assertEquals(200, char13.getTotalGamesPlayed());
-        assertEquals(102, char13.getCurrentStats().getRating());
-        assertEquals(100, char13.getCurrentStats().getGamesPlayed());
-        assertNull(char13.getCurrentStats().getRank());
-        assertEquals(102, char13.getPreviousStats().getRating());
-        assertEquals(100, char13.getPreviousStats().getGamesPlayed());
-        assertNull(char13.getPreviousStats().getRank());
+        LadderSearchIndependentIT.verify
+        (
+            byAccount.get(0),
+            73L, Partition.GLOBAL, "refaccount2#123",
+            73L, Region.EU, 1, 9997L, "refchar3#123",
+            null, null,
+            102, 200, BaseLeague.LeagueType.BRONZE,
+            102, 100, null,
+            102, 100, null
+        );
 
         verifyCharacterAccountStats(List.of(byAccount.get(1), byAccount.get(2)));
     }
@@ -524,6 +508,58 @@ public class LadderSearchIndependentIT
 
         LadderDistinctCharacter foundCharacter = ladderCharacterDAO.findDistinctCharacters("name").get(0);
         assertEquals(Race.ZERG, foundCharacter.getMembers().getFavoriteRace());
+    }
+    
+    public static void verify
+    (
+        LadderDistinctCharacter ladderCharacter,
+        Long accountId, Partition partition, String battleTag,
+        Long characterId, Region region, Integer realm, Long battlenetId, String name,
+        String clanTag, String clanName,
+        Integer ratingMax, Integer gamesPlayed, BaseLeague.LeagueType leagueMax,
+        Integer curRating, Integer curGamesPlayed, Integer curRank,
+        Integer prevRating, Integer prevGamesPlayed, Integer prevRank
+    )
+    {
+        Account account = ladderCharacter.getMembers().getAccount();
+        assertNotNull(account);
+        assertEquals(accountId, account.getId());
+        assertEquals(partition, account.getPartition());
+        assertEquals(battleTag, account.getBattleTag());
+        
+        PlayerCharacter character = ladderCharacter.getMembers().getCharacter();
+        assertNotNull(character);
+        assertEquals(characterId, character.getId());
+        assertEquals(region, character.getRegion());
+        assertEquals(realm, character.getRealm());
+        assertEquals(battlenetId, character.getBattlenetId());
+        assertEquals(name, character.getName());
+
+        Clan clan = ladderCharacter.getMembers().getClan();
+        if(clanTag == null)
+        {
+            assertNull(clan);
+        } else
+        {
+            assertEquals(clanTag, clan.getTag());
+            assertEquals(clanName, clan.getName());
+        }
+        
+        assertEquals(gamesPlayed, ladderCharacter.getTotalGamesPlayed());
+        assertEquals(ratingMax, ladderCharacter.getRatingMax());
+        assertEquals(leagueMax, ladderCharacter.getLeagueMax());
+        
+        LadderPlayerSearchStats curStats = ladderCharacter.getCurrentStats();
+        assertNotNull(curStats);
+        assertEquals(curGamesPlayed, curStats.getGamesPlayed());
+        assertEquals(curRating, curStats.getRating());
+        assertEquals(curRank, curStats.getRank());
+
+        LadderPlayerSearchStats prevStats = ladderCharacter.getPreviousStats();
+        assertNotNull(prevStats);
+        assertEquals(prevGamesPlayed, prevStats.getGamesPlayed());
+        assertEquals(prevRating, prevStats.getRating());
+        assertEquals(prevRank, prevStats.getRank());
     }
 
 }
