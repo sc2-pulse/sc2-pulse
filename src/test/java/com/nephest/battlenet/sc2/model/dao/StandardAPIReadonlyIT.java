@@ -14,13 +14,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchIndependentIT;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
@@ -35,6 +40,8 @@ import java.util.stream.LongStream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -65,8 +72,10 @@ public class StandardAPIReadonlyIT
         @Autowired DataSource dataSource,
         @Autowired WebApplicationContext webApplicationContext,
         @Autowired SeasonGenerator generator,
+        @Autowired TeamDAO teamDAO,
         @Autowired LeagueStatsDAO leagueStatsDAO,
-        @Autowired PopulationStateDAO populationStateDAO
+        @Autowired PopulationStateDAO populationStateDAO,
+        @Autowired PlayerCharacterStatsDAO playerCharacterStatsDAO
     )
     throws SQLException
     {
@@ -85,8 +94,10 @@ public class StandardAPIReadonlyIT
             BaseLeagueTier.LeagueTierType.FIRST,
             TEAMS_PER_LEAGUE
         );
+        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
+        playerCharacterStatsDAO.mergeCalculate();
 
         mvc = MockMvcBuilders
             .webAppContextSetup(webApplicationContext)
@@ -113,8 +124,13 @@ public class StandardAPIReadonlyIT
         assertEquals("character#10", char2.getName());
     }
 
-    @Test
-    public void testFindCharacterByIdsLongList() throws Exception
+    @ValueSource(strings =
+    {
+        "/api/character/{ids}",
+        "/api/character/{ids}/full",
+    })
+    @ParameterizedTest
+    public void testFindCharacterByIdsLongList(String url) throws Exception
     {
         String ids = LongStream.range(0, CharacterController.PLAYER_CHARACTERS_MAX + 1)
             .boxed()
@@ -122,11 +138,42 @@ public class StandardAPIReadonlyIT
             .collect(Collectors.joining(","));
 
         mvc.perform
-            (
-                get("/api/character/" + ids)
-                    .contentType(MediaType.APPLICATION_JSON)
-            )
+        (
+            get(url, ids)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
             .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void testFindFullCharactersByIds() throws Exception
+    {
+        LadderDistinctCharacter[] characters = WebServiceTestUtil
+            .getObject(mvc, objectMapper, new TypeReference<>(){}, "/api/character/1,2/full");
+        Arrays.sort(characters, Comparator.comparing(c->c.getMembers().getCharacter().getId()));
+
+        assertEquals(2, characters.length);
+
+        LadderSearchIndependentIT.verify
+        (
+            characters[0],
+            1L, Partition.GLOBAL, "battletag#0",
+            1L, Region.US, 1, 0L, "character#0",
+            null, null,
+            0, 3, BaseLeague.LeagueType.BRONZE,
+            0, 3, 56,
+            null, null, null
+        );
+        LadderSearchIndependentIT.verify
+        (
+            characters[1],
+            2L, Partition.GLOBAL, "battletag#10",
+            2L, Region.US, 1, 10L, "character#10",
+            null, null,
+            1, 6, BaseLeague.LeagueType.BRONZE,
+            1, 6, 55,
+            null, null, null
+        );
     }
 
 }

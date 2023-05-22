@@ -17,8 +17,11 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -162,6 +165,11 @@ public class LadderCharacterDAO
     (
         FIND_DISTINCT_CHARACTER_FORMAT,
         "WHERE player_character.id = :playerCharacterId ", ""
+    );
+    private static final String FIND_DISTINCT_CHARACTERS_BY_CHARACTER_IDS_QUERY = String.format
+    (
+        FIND_DISTINCT_CHARACTER_FORMAT,
+        "WHERE player_character.id IN(:playerCharacterIds) ", ""
     );
     private static final String FIND_DISTINCT_CHARACTER_BY_ACCOUNT_ID_QUERY = String.format
     (
@@ -415,6 +423,25 @@ public class LadderCharacterDAO
                 params,
                 DISTINCT_CHARACTER_EXTRACTOR
             )
+        );
+    }
+
+    public List<LadderDistinctCharacter> findDistinctCharactersByCharacterIds(Long... playerCharacterIds)
+    {
+        if(playerCharacterIds.length == 0) return List.of();
+
+        Set<Long> ids = new HashSet<>(Arrays.asList(playerCharacterIds));
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("playerCharacterIds", ids)
+            .addValue("season", seasonDAO.getMaxBattlenetId())
+            .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
+        return template.query
+        (
+            FIND_DISTINCT_CHARACTERS_BY_CHARACTER_IDS_QUERY,
+            params,
+            DISTINCT_CHARACTER_ROW_MAPPER
         );
     }
 
