@@ -196,7 +196,7 @@ public class DiscordService
     public void linkAccountToNewDiscordUser(Long accountId, DiscordUser discordUser)
     {
         discordUserDAO.merge(discordUser);
-        linkAccountToDiscordUser(accountId, discordUser.getId());
+        discordService.linkAccountToDiscordUser(accountId, discordUser.getId());
     }
 
     public void unlinkAccountFromDiscordUser(Long accountId, Snowflake discordUserId)
