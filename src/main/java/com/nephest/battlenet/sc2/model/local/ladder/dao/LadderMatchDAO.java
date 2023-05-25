@@ -108,7 +108,7 @@ public class LadderMatchDAO
             + "INNER JOIN match_participant ON match.id = match_participant.match_id "
             + "WHERE (date, type, map_id) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor) "
             + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) "
-            + "AND match_participant.player_character_id = :playerCharacterId "
+            + "AND match_participant.player_character_id IN(:playerCharacterIds) "
             + "GROUP BY date, type, map_id "
             + "ORDER BY date %2$s, type %2$s, map_id %2$s "
             + "LIMIT :limit"
@@ -392,12 +392,35 @@ public class LadderMatchDAO
         BaseMatch.MatchType... types
     )
     {
+        return findMatchesByCharacterIds
+        (
+            Set.of(characterId),
+            dateAnchor,
+            typeAnchor,
+            mapAnchor,
+            page,
+            pageDiff,
+            types
+        );
+    }
+
+    public PagedSearchResult<List<LadderMatch>> findMatchesByCharacterIds
+    (
+        Set<Long> characterIds,
+        OffsetDateTime dateAnchor,
+        BaseMatch.MatchType typeAnchor,
+        int mapAnchor,
+        int page,
+        int pageDiff,
+        BaseMatch.MatchType... types
+    )
+    {
         if(Math.abs(pageDiff) != 1) throw new IllegalArgumentException("Invalid page diff");
         boolean forward = pageDiff > -1;
         long finalPage = page + pageDiff;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterId", characterId)
+            .addValue("playerCharacterIds", characterIds)
             .addValue("limit", getResultsPerPage());
         addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, types, params);
 
