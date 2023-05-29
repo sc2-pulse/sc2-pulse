@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 @Hidden
 @RestController
-@RequestMapping("/api/group/")
+@RequestMapping("/api/group")
 public class GroupController
 {
 
