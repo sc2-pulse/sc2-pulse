@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
+import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
@@ -83,6 +84,12 @@ public class GroupController
                 characterIdCursor,
                 limit
             )));
+    }
+
+    @GetMapping
+    public ResponseEntity<Set<Long>> getCharacterIds(@CharacterGroup Set<Long> characterIds)
+    {
+        return WebServiceUtil.notFoundIfEmpty(characterIds);
     }
 
 }

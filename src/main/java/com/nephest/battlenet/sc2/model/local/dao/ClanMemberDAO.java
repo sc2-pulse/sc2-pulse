@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -9,6 +9,7 @@ import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -63,6 +64,11 @@ extends StandardDAO
         + "FROM clan_member "
         + "WHERE player_character_id IN (:playerCharacterIds)";
 
+    private static final String FIND_BY_CLAN_IDS =
+        "SELECT " + STD_SELECT
+        + "FROM clan_member "
+        + "WHERE clan_id IN (:clanIds)";
+
     private static final String COUNT_INACTIVE =
         "SELECT COUNT(*) FROM clan_member WHERE updated < :to";
 
@@ -90,6 +96,15 @@ extends StandardDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", List.of(playerCharacterIds));
         return getTemplate().query(FIND_BY_CHARACTER_IDS, params, STD_ROW_MAPPER);
+    }
+
+    public List<ClanMember> findByClanIds(Integer... clanIds)
+    {
+        if(clanIds.length == 0) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("clanIds", Set.of(clanIds));
+        return getTemplate().query(FIND_BY_CLAN_IDS, params, STD_ROW_MAPPER);
     }
 
     public ClanMember[] merge(ClanMember... clans)
