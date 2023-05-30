@@ -5,10 +5,10 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
-import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderClanMemberEventDAO;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
@@ -40,7 +40,7 @@ public class GroupController
     private ClanDAO clanDAO;
 
     @Autowired
-    private ClanMemberEventDAO clanMemberEventDAO;
+    private LadderClanMemberEventDAO ladderClanMemberEventDAO;
 
     public static Optional<ResponseEntity<?>> areIdsInvalid
     (
@@ -113,13 +113,13 @@ public class GroupController
         if(limit > CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
             return ResponseEntity.badRequest().body("Max page size exceeded: " + CLAN_MEMBER_EVENT_PAGE_SIZE_MAX);
         OffsetDateTime cCursor = createdCursor != null ? createdCursor : OffsetDateTime.now();
-            return WebServiceUtil.notFoundIfEmpty(clanMemberEventDAO.find
-            (
-                characterIds,
-                cCursor,
-                characterIdCursor,
-                limit
-            ));
+        return ResponseEntity.of(ladderClanMemberEventDAO.find
+        (
+            characterIds,
+            cCursor,
+            characterIdCursor,
+            limit
+        ));
     }
 
     @GetMapping("/flat")

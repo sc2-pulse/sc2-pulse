@@ -4,7 +4,6 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import static com.nephest.battlenet.sc2.model.local.ClanMemberEvent.EventType.JOIN;
-import static com.nephest.battlenet.sc2.web.service.ClanMemberEventIT.verifyEvent;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -24,6 +23,7 @@ import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.web.service.ClanService;
 import java.sql.Connection;
@@ -35,6 +35,7 @@ import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -259,15 +260,7 @@ public class ClanIT
     public void testSaveClans()
     throws Exception
     {
-        seasonGenerator.generateDefaultSeason
-        (
-            List.of(Region.EU),
-            List.of(BaseLeague.LeagueType.BRONZE),
-            List.of(QueueType.LOTV_1V1),
-            TeamType.ARRANGED,
-            BaseLeagueTier.LeagueTierType.FIRST,
-            10
-        );
+        seasonGenerator.generateDefaultSeason(10);
         playerCharacterStatsDAO.mergeCalculate();
         Clan clan = new Clan(1, "tag123", Region.EU, "name");
         clanService.saveClans(List.of(
@@ -289,42 +282,58 @@ public class ClanIT
         assertEquals(2L, chars[1].getMembers().getCharacter().getId());
         assertEquals(1L, chars[2].getMembers().getCharacter().getId());
 
-        ClanMemberEvent[] evts = objectMapper.readValue(mvc.perform
+        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
             get("/api/group/clan/history")
                 .queryParam("clanId", String.valueOf(clan.getId()))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), ClanMemberEvent[].class);
-        assertEquals(3, evts.length);
-        verifyEvent
-        (
-            evts[0],
-            3L,
-            clan.getId(),
-            JOIN,
-            null,
-            null
-        );
-        verifyEvent
-        (
-            evts[1],
-            2L,
-            clan.getId(),
-            JOIN,
-            null,
-            null
-        );
-        verifyEvent
-        (
-            evts[2],
-            1L,
-            clan.getId(),
-            JOIN,
-            null,
-            null
-        );
+            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
+        evts.getCharacters().sort(Comparator.comparing(c->c.getMembers().getCharacter().getId()));
+        Assertions.assertThat(evts)
+            .usingRecursiveComparison()
+            .ignoringFields("events.created")
+            .isEqualTo
+            (
+                new LadderClanMemberEvents
+                (
+                    List.of
+                    (
+                        SeasonGenerator.defaultLadderCharacter(clan, null, null, 0),
+                        SeasonGenerator.defaultLadderCharacter(clan, null, null, 1),
+                        SeasonGenerator.defaultLadderCharacter(clan, null, null, 2)
+                    ),
+                    List.of(clan),
+                    List.of
+                    (
+                        new ClanMemberEvent
+                        (
+                            3L,
+                            clan.getId(),
+                            JOIN,
+                            null,
+                            null
+                        ),
+                        new ClanMemberEvent
+                        (
+                            2L,
+                            clan.getId(),
+                            JOIN,
+                            null,
+                            null
+                        ),
+                        new ClanMemberEvent
+                        (
+                            1L,
+                            clan.getId(),
+                            JOIN,
+                            null,
+                            null
+                        )
+                    )
+                )
+            );
     }
 
 }

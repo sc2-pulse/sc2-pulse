@@ -6,13 +6,13 @@ package com.nephest.battlenet.sc2.web.service;
 import static com.nephest.battlenet.sc2.model.local.ClanMemberEvent.EventType.JOIN;
 import static com.nephest.battlenet.sc2.model.local.ClanMemberEvent.EventType.LEAVE;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
@@ -24,10 +24,17 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.util.Comparator;
+import java.util.List;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
@@ -60,6 +67,9 @@ public class ClanMemberEventIT
     private ClanMemberEventDAO clanMemberEventDAO;
 
     @Autowired
+    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
+
+    @Autowired
     private CacheManager cacheManager;
 
     @Autowired
@@ -71,6 +81,7 @@ public class ClanMemberEventIT
     @Autowired
     private MockMvc mvc;
 
+    private Account[] accounts;
     private PlayerCharacter[] characters;
     private Clan[] clans;
 
@@ -85,8 +96,11 @@ public class ClanMemberEventIT
         }
         cacheManager.getCacheNames().forEach(cacheName -> cacheManager.getCache(cacheName).clear());
 
-        Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "acc", 10);
+        accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "acc", 10);
         characters = seasonGenerator.generateCharacters("name", accounts, Region.EU, 100L);
+        seasonGenerator.generateDefaultSeason(0);
+        seasonGenerator.createTeams(characters);
+        playerCharacterStatsDAO.mergeCalculate();
         clans = clanDAO.merge
         (
             new Clan(null, "tag1", Region.EU, "name1"),
@@ -120,7 +134,8 @@ public class ClanMemberEventIT
     @Test
     public void testChain() throws Exception
     {
-        OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
+        OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1)
+            .withOffsetSameInstant(ZoneOffset.UTC);
         assertEquals(6, clanMemberEventDAO.merge
         (
             new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1),
@@ -134,7 +149,8 @@ public class ClanMemberEventIT
         ));
 
         int secondsSincePrevious = 10;
-        OffsetDateTime odt2 = odt1.plusSeconds(secondsSincePrevious);
+        OffsetDateTime odt2 = odt1.plusSeconds(secondsSincePrevious)
+            .withOffsetSameInstant(ZoneOffset.UTC);
         clanMemberEventDAO.merge
         (
             new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt2),
@@ -144,7 +160,7 @@ public class ClanMemberEventIT
             new ClanMemberEvent(characters[2].getId(), clans[1].getId(), JOIN, odt2)
         );
 
-        ClanMemberEvent[] evts1 = objectMapper.readValue(mvc.perform
+        LadderClanMemberEvents evts1 = objectMapper.readValue(mvc.perform
         (
             get("/api/group/clan/history")
                 .queryParam
@@ -164,38 +180,50 @@ public class ClanMemberEventIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), ClanMemberEvent[].class);
-        assertEquals(3, evts1.length);
-        verifyEvent
+            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
+        evts1.getCharacters().sort(Comparator.comparing(c->c.getMembers().getCharacter().getId()));
+        Assertions.assertThat(evts1).usingRecursiveComparison().isEqualTo
         (
-            evts1[0],
-            characters[1].getId(),
-            clans[1].getId(),
-            JOIN,
-            odt2,
-            0
-        );
-        verifyEvent
-        (
-            evts1[1],
-            characters[0].getId(),
-            clans[0].getId(),
-            LEAVE,
-            odt2,
-            secondsSincePrevious
-        );
-        verifyEvent
-        (
-            evts1[2],
-            characters[1].getId(),
-            clans[0].getId(),
-            LEAVE,
-            odt2.minus(Duration.ofMillis(1)),
-            secondsSincePrevious
+            new LadderClanMemberEvents
+            (
+                List.of
+                (
+                    createCharacter(clans[0], 0),
+                    createCharacter(clans[0], 1)
+                ),
+                List.of(clans[0], clans[1]),
+                List.of
+                (
+                    new ClanMemberEvent
+                    (
+                        characters[1].getId(),
+                        clans[1].getId(),
+                        JOIN,
+                        odt2,
+                        0
+                    ),
+                    new ClanMemberEvent
+                    (
+                        characters[0].getId(),
+                        clans[0].getId(),
+                        LEAVE,
+                        odt2,
+                        secondsSincePrevious
+                    ),
+                    new ClanMemberEvent
+                    (
+                        characters[1].getId(),
+                        clans[0].getId(),
+                        LEAVE,
+                        odt2.minus(Duration.ofMillis(1)),
+                        secondsSincePrevious
+                    )
+                )
+            )
         );
 
         //next page
-        ClanMemberEvent[] evts2 = objectMapper.readValue(mvc.perform
+        LadderClanMemberEvents evts2 = objectMapper.readValue(mvc.perform
         (
             get("/api/group/clan/history")
                 .queryParam
@@ -214,62 +242,81 @@ public class ClanMemberEventIT
                 .queryParam
                 (
                     "characterIdCursor",
-                    String.valueOf(evts1[2].getPlayerCharacterId())
+                    String.valueOf(evts1.getEvents().get(2).getPlayerCharacterId())
                 )
                 .queryParam
                 (
                     "createdCursor",
-                    evts1[2].getCreated().toString()
+                    evts1.getEvents().get(2).getCreated().toString()
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), ClanMemberEvent[].class);
-        assertEquals(5, evts2.length);
-        verifyEvent
+            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
+        evts2.getCharacters().sort(Comparator.comparing(c->c.getMembers().getCharacter().getId()));
+        Assertions.assertThat(evts2).usingRecursiveComparison().isEqualTo
         (
-            evts2[0],
-            characters[4].getId(),
-            clans[3].getId(),
-            JOIN,
-            odt1,
-            null
-        );
-        verifyEvent
-        (
-            evts2[1],
-            characters[3].getId(),
-            clans[2].getId(),
-            JOIN,
-            odt1,
-            null
-        );
-        verifyEvent
-        (
-            evts2[2],
-            characters[2].getId(),
-            clans[1].getId(),
-            JOIN,
-            odt1,
-            null
-        );
-        verifyEvent
-        (
-            evts2[3],
-            characters[1].getId(),
-            clans[0].getId(),
-            JOIN,
-            odt1,
-            null
-        );
-        verifyEvent
-        (
-            evts2[4],
-            characters[0].getId(),
-            clans[0].getId(),
-            JOIN,
-            odt1,
-            null
+            new LadderClanMemberEvents
+            (
+                List.of
+                (
+                    createCharacter(clans[0], 0),
+                    createCharacter(clans[0], 1),
+                    createCharacter(clans[1], 2),
+                    createCharacter(clans[2], 3),
+                    createCharacter(clans[3], 4)
+                ),
+                List.of
+                (
+                    clans[0],
+                    clans[1],
+                    clans[2],
+                    clans[3]
+                ),
+                List.of
+                (
+                    new ClanMemberEvent
+                    (
+                        characters[4].getId(),
+                        clans[3].getId(),
+                        JOIN,
+                        odt1,
+                        null
+                    ),
+                    new ClanMemberEvent
+                    (
+                        characters[3].getId(),
+                        clans[2].getId(),
+                        JOIN,
+                        odt1,
+                        null
+                    ),
+                    new ClanMemberEvent
+                    (
+                        characters[2].getId(),
+                        clans[1].getId(),
+                        JOIN,
+                        odt1,
+                        null
+                    ),
+                    new ClanMemberEvent
+                    (
+                        characters[1].getId(),
+                        clans[0].getId(),
+                        JOIN,
+                        odt1,
+                        null
+                    ),
+                    new ClanMemberEvent
+                    (
+                        characters[0].getId(),
+                        clans[0].getId(),
+                        JOIN,
+                        odt1,
+                        null
+                    )
+                )
+            )
         );
 
         //next page, empty
@@ -292,12 +339,12 @@ public class ClanMemberEventIT
                 .queryParam
                 (
                     "characterIdCursor",
-                    String.valueOf(evts2[4].getPlayerCharacterId())
+                    String.valueOf(evts2.getEvents().get(4).getPlayerCharacterId())
                 )
                 .queryParam
                 (
                     "createdCursor",
-                    evts2[4].getCreated().toString()
+                    evts2.getEvents().get(4).getCreated().toString()
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -329,7 +376,7 @@ public class ClanMemberEventIT
             new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt3)
         );
 
-        ClanMemberEvent[] evts = objectMapper.readValue(mvc.perform
+        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
             get("/api/group/clan/history")
                 .queryParam
@@ -340,28 +387,37 @@ public class ClanMemberEventIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), ClanMemberEvent[].class);
-        assertEquals(2, evts.length);
-        Assertions.assertThat(evts[0])
+            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
+        Assertions.assertThat(evts)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .isEqualTo(new ClanMemberEvent(
-                characters[0].getId(),
-                clans[0].getId(),
-                LEAVE,
-                odt2,
-                secondsSincePrevious
-            ));
-        Assertions.assertThat(evts[1])
-            .usingRecursiveComparison()
-            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .isEqualTo(new ClanMemberEvent(
-                characters[0].getId(),
-                clans[0].getId(),
-                JOIN,
-                odt1,
-                null
-            ));
+            .isEqualTo
+            (
+                new LadderClanMemberEvents
+                (
+                    List.of(createCharacter(clans[0], 0)),
+                    List.of(clans[0]),
+                    List.of
+                    (
+                        new ClanMemberEvent
+                        (
+                            characters[0].getId(),
+                            clans[0].getId(),
+                            LEAVE,
+                            odt2,
+                            secondsSincePrevious
+                        ),
+                        new ClanMemberEvent
+                        (
+                            characters[0].getId(),
+                            clans[0].getId(),
+                            JOIN,
+                            odt1,
+                            null
+                        )
+                    )
+                )
+            );
     }
 
     @Test
@@ -375,7 +431,7 @@ public class ClanMemberEventIT
             new ClanMemberEvent(characters[0].getId(), clans[1].getId(), JOIN, odt1.plusSeconds(1))
         ));
 
-        ClanMemberEvent[] evts = objectMapper.readValue(mvc.perform
+        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
             get("/api/group/clan/history")
                 .queryParam
@@ -386,34 +442,45 @@ public class ClanMemberEventIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), ClanMemberEvent[].class);
-        Assertions.assertThat(evts[0])
+            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
+        Assertions.assertThat(evts)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .isEqualTo(new ClanMemberEvent(
-                characters[0].getId(),
-                clans[0].getId(),
-                JOIN,
-                odt1,
-                null
-            ));
+            .isEqualTo
+            (
+                new LadderClanMemberEvents
+                (
+                    List.of(createCharacter(clans[0], 0)),
+                    List.of(clans[0]),
+                    List.of
+                    (
+                        new ClanMemberEvent
+                        (
+                            characters[0].getId(),
+                            clans[0].getId(),
+                            JOIN,
+                            odt1,
+                            null
+                        )
+                    )
+                )
+            );
     }
 
-    public static void verifyEvent
-    (
-        ClanMemberEvent evt,
-        Long characterId,
-        Integer clanId,
-        ClanMemberEvent.EventType type,
-        OffsetDateTime created,
-        Integer secondsSincePrevious
-    )
+    private LadderDistinctCharacter createCharacter(Clan clan, int ix)
     {
-        assertEquals(characterId, evt.getPlayerCharacterId());
-        assertEquals(clanId, evt.getClanId());
-        assertEquals(type, evt.getType());
-        if(created != null) assertTrue(created.isEqual(evt.getCreated()));
-        assertEquals(secondsSincePrevious, evt.getSecondsSincePrevious());
+        return new LadderDistinctCharacter
+        (
+            BaseLeague.LeagueType.BRONZE, ix,
+            accounts[ix],
+            characters[ix],
+            clan,
+            null, null,
+            null,
+            null, null, null, ix, ix,
+            new LadderPlayerSearchStats(null, null, null),
+            new LadderPlayerSearchStats(ix, ix, null)
+        );
     }
 
 }
