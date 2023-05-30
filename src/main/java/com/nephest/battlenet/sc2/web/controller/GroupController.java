@@ -3,7 +3,10 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
+import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
@@ -31,6 +34,9 @@ public class GroupController
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
+
+    @Autowired
+    private ClanDAO clanDAO;
 
     @Autowired
     private ClanMemberEventDAO clanMemberEventDAO;
@@ -66,6 +72,25 @@ public class GroupController
         }
 
         return Optional.empty();
+    }
+
+    @GetMapping
+    public ResponseEntity<?> getGroup
+    (
+        @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
+        @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds
+    )
+    {
+        return areIdsInvalid(characterIds, clanIds)
+            .orElseGet(()->
+            {
+                List<LadderDistinctCharacter> characters = ladderCharacterDAO
+                    .findDistinctCharactersByCharacterIds(characterIds.toArray(Long[]::new));
+                List<Clan> clans = clanDAO.findByIds(clanIds.toArray(Integer[]::new));
+                return characters.isEmpty() && clans.isEmpty()
+                    ? ResponseEntity.notFound().build()
+                    : ResponseEntity.ok(new Group(characters, clans));
+            });
     }
 
     @GetMapping("/character/full")

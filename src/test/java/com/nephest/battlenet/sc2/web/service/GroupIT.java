@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -11,21 +12,30 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
+import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.inner.Group;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.LongStream;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -54,6 +64,9 @@ public class GroupIT
 
     @Autowired
     private ClanMemberDAO clanMemberDAO;
+
+    @Autowired
+    private PlayerCharacterStatsDAO playerCharacterStatsDAO;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -87,7 +100,96 @@ public class GroupIT
     }
 
     @Test
+    public void testGetGroup()
+    throws Exception
+    {
+        Group initGroup = init();
+        playerCharacterStatsDAO.mergeCalculate();
+
+        Group result = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group")
+                .queryParam
+                (
+                    "characterId",
+                    String.valueOf(1L),
+                    String.valueOf(20L)
+                )
+                .queryParam
+                (
+                    "clanId",
+                    String.valueOf(initGroup.getClans().get(0).getId()),
+                    String.valueOf(initGroup.getClans().get(1).getId())
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), Group.class);
+
+        assertEquals(2, result.getCharacters().size());
+        result.getCharacters().sort(Comparator.comparing(c->c.getMembers().getCharacter().getId()));
+        Assertions.assertThat(result.getCharacters().get(0))
+            .usingRecursiveComparison().isEqualTo(new LadderDistinctCharacter(
+                BaseLeague.LeagueType.BRONZE, 0,
+                new Account(1L, Partition.GLOBAL, "battletag#0"),
+                new PlayerCharacter(1L, 1L, Region.EU, 0L, 1, "character#0"),
+                initGroup.getClans().get(0),
+                null, null,
+                null,
+                null, null, null, 3, 3,
+                new LadderPlayerSearchStats(null, null, null),
+                new LadderPlayerSearchStats(0, 3, null)
+            ));
+        Assertions.assertThat(result.getCharacters().get(1))
+            .usingRecursiveComparison().isEqualTo(new LadderDistinctCharacter(
+                BaseLeague.LeagueType.BRONZE, 19,
+                new Account(20L, Partition.GLOBAL, "battletag#190"),
+                new PlayerCharacter(20L, 20L, Region.EU, 190L, 1, "character#190"),
+                null,
+                null, null,
+                null,
+                null, null, null, 60, 60,
+                new LadderPlayerSearchStats(null, null, null),
+                new LadderPlayerSearchStats(19, 60, null)
+            ));
+
+        assertEquals(2, result.getClans().size());
+        result.getClans().sort(Comparator.comparing(Clan::getId));
+        Assertions.assertThat(result.getClans().get(0))
+            .usingRecursiveComparison().isEqualTo(initGroup.getClans().get(0));
+        Assertions.assertThat(result.getClans().get(1))
+            .usingRecursiveComparison().isEqualTo(initGroup.getClans().get(1));
+    }
+
+
+    @Test
     public void testGetCharacterIds() throws Exception
+    {
+        Group group = init();
+        Long[] result = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group/flat")
+            .queryParam
+            (
+                "characterId",
+                String.valueOf(1L),
+                String.valueOf(20L)
+            )
+            .queryParam
+            (
+                "clanId",
+                String.valueOf(group.getClans().get(0).getId())
+            )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), Long[].class);
+        Arrays.sort(result);
+        Long[] expectedResult = new Long[]{1L, 2L, 20L};
+        assertArrayEquals(expectedResult, result);
+    }
+
+    private Group init()
     {
         seasonGenerator.generateDefaultSeason
         (
@@ -101,7 +203,8 @@ public class GroupIT
         Clan[] clans = clanDAO.merge
         (
             new Clan(null, "clan1", Region.EU, "clanName1"),
-            new Clan(null, "clan2", Region.EU, "clanName2")
+            new Clan(null, "clan2", Region.EU, "clanName2"),
+            new Clan(null, "clan3", Region.EU, "clanName3")
         );
         clanMemberDAO.merge
         (
@@ -109,28 +212,7 @@ public class GroupIT
             new ClanMember(2L, clans[0].getId()),
             new ClanMember(3L, clans[1].getId())
         );
-
-        Long[] result = objectMapper.readValue(mvc.perform
-        (
-            get("/api/group/flat")
-            .queryParam
-            (
-                "characterId",
-                String.valueOf(1L),
-                String.valueOf(20L)
-            )
-            .queryParam
-            (
-                "clanId",
-                String.valueOf(clans[0].getId())
-            )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), Long[].class);
-        Arrays.sort(result);
-        Long[] expectedResult = new Long[]{1L, 2L, 20L};
-        assertArrayEquals(expectedResult, result);
+        return new Group(List.of(), Arrays.asList(clans));
     }
 
     @Test
