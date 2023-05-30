@@ -8,7 +8,6 @@ import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
-import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -22,47 +21,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/group")
 public class GroupController
 {
-
-    public static final int MAX_CHARACTERS = 100;
-    public static final int MAX_CLANS = 10;
-
     public static final int CLAN_MEMBER_EVENT_PAGE_SIZE = 30;
 
     @Autowired
     private ClanMemberEventDAO clanMemberEventDAO;
-
-    public static Optional<ResponseEntity<?>> areIdsInvalid
-    (
-        Set<Long> characterIds,
-        Set<Integer> clanIds
-    )
-    {
-        if(characterIds.isEmpty() && clanIds.isEmpty())
-        {
-            ResponseEntity<?> entity = ResponseEntity
-                .badRequest()
-                .body("At least one clanId or characterId is required");
-            return Optional.of(entity);
-        }
-
-        if(characterIds.size() > MAX_CHARACTERS)
-        {
-            ResponseEntity<?> entity = ResponseEntity
-                .badRequest()
-                .body("Max size of characters exceeded: " + MAX_CHARACTERS);
-            return Optional.of(entity);
-        }
-
-        if(clanIds.size() > MAX_CLANS)
-        {
-            ResponseEntity<?> entity = ResponseEntity
-                .badRequest()
-                .body("Max size of clans exceeded: " + MAX_CLANS);
-            return Optional.of(entity);
-        }
-
-        return Optional.empty();
-    }
 
     @GetMapping("/clan/history")
     public ResponseEntity<?> geClanMemberHistory
