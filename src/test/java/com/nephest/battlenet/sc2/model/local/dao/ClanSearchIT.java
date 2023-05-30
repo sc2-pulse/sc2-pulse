@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -118,9 +119,11 @@ public class ClanSearchIT
         assertEquals(1, clans.length);
         Clan clan = clans[0];
         assertNotNull(clan);
-        assertEquals(2, clan.getId());
-        assertEquals("clan1", clan.getTag());
-        assertEquals("clan1Name", clan.getName());
+        Assertions.assertThat(clan).usingRecursiveComparison().isEqualTo(new Clan(
+
+            2, "clan1", Region.EU, "clan1Name",
+            5, 2, 3, null, 4
+        ));
     }
 
     @Test
@@ -132,10 +135,10 @@ public class ClanSearchIT
             .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/clan" + (CLAN_COUNT - 1));
         assertEquals(1, clansByTag.length);
         Clan clan = clansByTag[0];
-        assertNotNull(clan);
-        assertEquals(CLAN_COUNT, clan.getId());
-        assertEquals("clan" + (CLAN_COUNT - 1), clan.getTag());
-        assertEquals("clan" + (CLAN_COUNT - 1) + "Name", clan.getName());
+        Assertions.assertThat(clan).usingRecursiveComparison().isEqualTo(new Clan(
+            CLAN_COUNT, "clan" + (CLAN_COUNT - 1), Region.CN, "clan" + (CLAN_COUNT - 1) + "Name",
+            103, 100, 101, null, 200
+        ));
 
 
         Clan[] clansByName = WebServiceTestUtil

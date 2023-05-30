@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -45,6 +44,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -687,10 +687,9 @@ public class MatchIT
                 && (m.getCharacter().getName().equalsIgnoreCase("name#1") || m.getCharacter().getName().equalsIgnoreCase("name#2"))
             )
             .forEach(m->{
-                assertNotNull(m.getClan());
-                assertEquals("clanTag", m.getClan().getTag());
-                assertEquals(Region.EU, m.getClan().getRegion());
-                assertEquals("clanName", m.getClan().getName());
+                Assertions.assertThat(m.getClan()).usingRecursiveComparison().isEqualTo(new Clan(
+                   1, "clanTag", Region.EU, "clanName"
+                ));
             });
 
         participants.stream().map(LadderMatchParticipant::getParticipant).forEach(p->assertEquals(match.getId(), p.getMatchId()));
