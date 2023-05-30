@@ -31,6 +31,7 @@ public class GroupController
 {
 
     public static final int CLAN_MEMBER_EVENT_PAGE_SIZE = 30;
+    public static final int CLAN_MEMBER_EVENT_PAGE_SIZE_MAX = 100;
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
@@ -109,6 +110,8 @@ public class GroupController
         @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "") Integer limit
     )
     {
+        if(limit > CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
+            return ResponseEntity.badRequest().body("Max page size exceeded: " + CLAN_MEMBER_EVENT_PAGE_SIZE_MAX);
         OffsetDateTime cCursor = createdCursor != null ? createdCursor : OffsetDateTime.now();
             return WebServiceUtil.notFoundIfEmpty(clanMemberEventDAO.find
             (

@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
+import com.nephest.battlenet.sc2.web.controller.GroupController;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -267,6 +268,16 @@ public class GroupIT
             .map(String::valueOf)
             .toArray(String[]::new);
         mvc.perform(get("/api/group/flat").queryParam("clanId", longIdList))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void whenClanHistoryPageSizeIsExceeded_thenBadRequest()
+    throws Exception
+    {
+        mvc.perform(get("/api/group/clan/history")
+                .queryParam("characterId", "1")
+                .queryParam("limit", String.valueOf(GroupController.CLAN_MEMBER_EVENT_PAGE_SIZE_MAX + 1)))
             .andExpect(status().isBadRequest());
     }
 
