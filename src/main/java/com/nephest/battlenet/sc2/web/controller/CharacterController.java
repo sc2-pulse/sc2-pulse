@@ -128,15 +128,6 @@ public class CharacterController
         return ResponseEntity.of(Optional.of(playerCharacterDAO.find(ids)));
     }
 
-    @GetMapping("/{ids}/full")
-    public ResponseEntity<List<LadderDistinctCharacter>> getFullPlayerCharacters(@PathVariable("ids") Long[] ids)
-    {
-        if(ids.length > PLAYER_CHARACTERS_MAX)
-            return ResponseEntity.badRequest().build();
-
-        return WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO.findDistinctCharactersByCharacterIds(ids));
-    }
-
     @Hidden
     @GetMapping("/{id}/common/{types}")
     public CommonCharacter getCommonCharacterLegacy

@@ -40,8 +40,6 @@ import java.util.stream.LongStream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -124,13 +122,8 @@ public class StandardAPIReadonlyIT
         assertEquals("character#10", char2.getName());
     }
 
-    @ValueSource(strings =
-    {
-        "/api/character/{ids}",
-        "/api/character/{ids}/full",
-    })
-    @ParameterizedTest
-    public void testFindCharacterByIdsLongList(String url) throws Exception
+    @Test
+    public void testFindCharacterByIdsLongList() throws Exception
     {
         String ids = LongStream.range(0, CharacterController.PLAYER_CHARACTERS_MAX + 1)
             .boxed()
@@ -139,7 +132,7 @@ public class StandardAPIReadonlyIT
 
         mvc.perform
         (
-            get(url, ids)
+            get("/api/character/{ids}", ids)
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isBadRequest());
@@ -148,8 +141,13 @@ public class StandardAPIReadonlyIT
     @Test
     public void testFindFullCharactersByIds() throws Exception
     {
-        LadderDistinctCharacter[] characters = WebServiceTestUtil
-            .getObject(mvc, objectMapper, new TypeReference<>(){}, "/api/character/1,2/full");
+        LadderDistinctCharacter[] characters = WebServiceTestUtil.getObject
+        (
+            mvc,
+            objectMapper,
+            new TypeReference<>(){},
+            "/api/group/character/full?characterId=1,2"
+        );
         Arrays.sort(characters, Comparator.comparing(c->c.getMembers().getCharacter().getId()));
 
         assertEquals(2, characters.length);

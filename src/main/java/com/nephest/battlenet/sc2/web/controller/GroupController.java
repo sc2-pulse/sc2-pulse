@@ -4,10 +4,13 @@
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,7 +27,17 @@ public class GroupController
     public static final int CLAN_MEMBER_EVENT_PAGE_SIZE = 30;
 
     @Autowired
+    private LadderCharacterDAO ladderCharacterDAO;
+
+    @Autowired
     private ClanMemberEventDAO clanMemberEventDAO;
+
+    @GetMapping("/character/full")
+    public ResponseEntity<List<LadderDistinctCharacter>> getFullPlayerCharacters(@CharacterGroup Set<Long> characterIds)
+    {
+        return WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
+            .findDistinctCharactersByCharacterIds(characterIds.toArray(Long[]::new)));
+    }
 
     @GetMapping("/clan/history")
     public ResponseEntity<?> geClanMemberHistory
