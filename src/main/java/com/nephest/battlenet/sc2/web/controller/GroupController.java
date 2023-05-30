@@ -67,23 +67,20 @@ public class GroupController
     @GetMapping("/clan/history")
     public ResponseEntity<?> geClanMemberHistory
     (
-        @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
-        @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
+        @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "createdCursor", required = false) OffsetDateTime createdCursor,
         @RequestParam(name = "characterIdCursor", required = false, defaultValue = Long.MAX_VALUE + "") Long characterIdCursor,
         @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "") Integer limit
     )
     {
         OffsetDateTime cCursor = createdCursor != null ? createdCursor : OffsetDateTime.now();
-        return areIdsInvalid(characterIds, clanIds)
-            .orElseGet(()-> WebServiceUtil.notFoundIfEmpty(clanMemberEventDAO.find
+            return WebServiceUtil.notFoundIfEmpty(clanMemberEventDAO.find
             (
                 characterIds,
-                clanIds,
                 cCursor,
                 characterIdCursor,
                 limit
-            )));
+            ));
     }
 
     @GetMapping
