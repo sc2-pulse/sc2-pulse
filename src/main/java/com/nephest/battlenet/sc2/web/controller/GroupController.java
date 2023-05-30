@@ -7,10 +7,12 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
+import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/group")
 public class GroupController
 {
+
     public static final int CLAN_MEMBER_EVENT_PAGE_SIZE = 30;
 
     @Autowired
@@ -31,6 +34,39 @@ public class GroupController
 
     @Autowired
     private ClanMemberEventDAO clanMemberEventDAO;
+
+    public static Optional<ResponseEntity<?>> areIdsInvalid
+    (
+        Set<Long> characterIds,
+        Set<Integer> clanIds
+    )
+    {
+        if(characterIds.isEmpty() && clanIds.isEmpty())
+        {
+            ResponseEntity<?> entity = ResponseEntity
+                .badRequest()
+                .body("At least one clanId or characterId is required");
+            return Optional.of(entity);
+        }
+
+        if(characterIds.size() > CharacterGroupArgumentResolver.CHARACTERS_MAX)
+        {
+            ResponseEntity<?> entity = ResponseEntity
+                .badRequest()
+                .body("Max size of characters exceeded: " + CharacterGroupArgumentResolver.CHARACTERS_MAX);
+            return Optional.of(entity);
+        }
+
+        if(clanIds.size() > CharacterGroupArgumentResolver.CLANS_MAX)
+        {
+            ResponseEntity<?> entity = ResponseEntity
+                .badRequest()
+                .body("Max size of clans exceeded: " + CharacterGroupArgumentResolver.CLANS_MAX);
+            return Optional.of(entity);
+        }
+
+        return Optional.empty();
+    }
 
     @GetMapping("/character/full")
     public ResponseEntity<List<LadderDistinctCharacter>> getFullPlayerCharacters(@CharacterGroup Set<Long> characterIds)
