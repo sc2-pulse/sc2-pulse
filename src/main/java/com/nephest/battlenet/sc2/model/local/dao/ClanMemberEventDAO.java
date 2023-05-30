@@ -84,15 +84,40 @@ public class ClanMemberEventDAO
         + "END != type "
         + "OR (previous_clan_id IS NULL AND type = 1)";
 
+    /*
+        It seems that an additional filter can be applied here: select UID instead of STD_SELECT
+        and then do limited STD_SELECT from the joined table.
+        In practice, the queries that will be executed will rarely benefit from this optimization,
+        so it only leads to redundant index scan in most cases.
+     */
     private static final String FIND =
-        "SELECT " + STD_SELECT
-        + "FROM clan_member_event "
-        + "WHERE "
-        + "(created, player_character_id) < (:createdCursor, :playerCharacterIdCursor) "
-        + "AND (array_length(:playerCharacterIds::integer[], 1) IS NOT NULL "
-        + "AND player_character_id = ANY(:playerCharacterIds)) "
-        + "ORDER BY created DESC, player_character_id DESC "
-        + "LIMIT :limit ";
+        "("
+            + "SELECT " + STD_SELECT
+            + "FROM clan_member_event "
+            + "WHERE "
+            + "(created, player_character_id) < (:createdCursor, :playerCharacterIdCursor) "
+            + "AND (array_length(:playerCharacterIds::integer[], 1) IS NOT NULL "
+            + "AND player_character_id = ANY(:playerCharacterIds)) "
+            + "ORDER BY created DESC, player_character_id DESC "
+            + "LIMIT :limit "
+        + ") "
+
+        + "UNION "
+
+        + "("
+            + "SELECT " + STD_SELECT
+            + "FROM clan_member_event "
+            + "WHERE "
+            + "(created, player_character_id) < (:createdCursor, :playerCharacterIdCursor) "
+            + "AND (array_length(:clanIds::integer[], 1) IS NOT NULL "
+            + "AND clan_id = ANY(:clanIds)) "
+            + "ORDER BY created DESC, player_character_id DESC "
+            + "LIMIT :limit "
+        + ") "
+
+        + "ORDER BY \"clan_member_event.created\" DESC, "
+        + "\"clan_member_event.player_character_id\" DESC "
+        + "LIMIT :limit";
 
     private static RowMapper<ClanMemberEvent> STD_ROW_MAPPER;
 
@@ -150,15 +175,17 @@ public class ClanMemberEventDAO
     public List<ClanMemberEvent> find
     (
         Set<Long> playerCharacterIds,
+        Set<Integer> clanIds,
         OffsetDateTime createdCursor,
         Long playerCharacterIdCursor,
         int limit
     )
     {
-        if(playerCharacterIds.isEmpty() || limit < 1) return List.of();
+        if((playerCharacterIds.isEmpty() && clanIds.isEmpty()) || limit < 1) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", playerCharacterIds.toArray(Long[]::new))
+            .addValue("clanIds", clanIds.toArray(Integer[]::new))
             .addValue("createdCursor", createdCursor)
             .addValue("playerCharacterIdCursor", playerCharacterIdCursor)
             .addValue("limit", limit);

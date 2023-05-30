@@ -110,7 +110,8 @@ public class GroupController
     @GetMapping("/clan/history")
     public ResponseEntity<?> geClanMemberHistory
     (
-        @CharacterGroup Set<Long> characterIds,
+        @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
+        @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
         @RequestParam(name = "createdCursor", required = false) OffsetDateTime createdCursor,
         @RequestParam(name = "characterIdCursor", required = false, defaultValue = Long.MAX_VALUE + "") Long characterIdCursor,
         @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "") Integer limit
@@ -122,6 +123,7 @@ public class GroupController
         return ResponseEntity.of(ladderClanMemberEventDAO.find
         (
             characterIds,
+            clanIds,
             cCursor,
             characterIdCursor,
             limit

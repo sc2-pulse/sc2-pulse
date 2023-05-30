@@ -467,6 +467,63 @@ public class ClanMemberEventIT
             );
     }
 
+    @Test
+    public void whenSearchingByClanIds_thenDontExpandToCharacterIdsAndSearchByClanIdsInstead()
+    throws Exception
+    {
+        OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
+        OffsetDateTime odt2 = odt1.plusSeconds(20);
+        OffsetDateTime odt3 = odt2.plusSeconds(30);
+        assertEquals(1, clanMemberEventDAO.merge
+        (
+            new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1)
+        ));
+        clanMemberDAO.merge(new ClanMember(characters[0].getId(), clans[1].getId()));
+        assertEquals(1, clanMemberEventDAO.merge
+        (
+            new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt2)
+        ));
+        assertEquals(1, clanMemberEventDAO.merge
+        (
+            new ClanMemberEvent(characters[0].getId(), clans[1].getId(), JOIN, odt3)
+        ));
+
+        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group/clan/history")
+                .queryParam
+                (
+                    "clanId",
+                    String.valueOf(clans[1].getId())
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
+        Assertions.assertThat(evts)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo
+            (
+                new LadderClanMemberEvents
+                (
+                    List.of(createCharacter(clans[1], 0)),
+                    List.of(clans[1]),
+                    List.of
+                    (
+                        new ClanMemberEvent
+                        (
+                            characters[0].getId(),
+                            clans[1].getId(),
+                            JOIN,
+                            odt3,
+                            30
+                        )
+                    )
+                )
+            );
+    }
+
     private LadderDistinctCharacter createCharacter(Clan clan, int ix)
     {
         return new LadderDistinctCharacter

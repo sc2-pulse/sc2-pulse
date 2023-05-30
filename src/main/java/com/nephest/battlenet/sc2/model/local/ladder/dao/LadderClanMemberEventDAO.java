@@ -38,6 +38,7 @@ public class LadderClanMemberEventDAO
     public Optional<LadderClanMemberEvents> find
     (
         Set<Long> characterIds,
+        Set<Integer> clanIds,
         OffsetDateTime createdCursor,
         Long characterIdCursor,
         Integer limit
@@ -46,6 +47,7 @@ public class LadderClanMemberEventDAO
         List<ClanMemberEvent> events = clanMemberEventDAO.find
         (
             characterIds,
+            clanIds,
             createdCursor,
             characterIdCursor,
             limit
