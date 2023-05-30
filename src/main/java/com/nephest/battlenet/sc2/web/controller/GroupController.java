@@ -58,7 +58,7 @@ public class GroupController
             ));
     }
 
-    @GetMapping
+    @GetMapping("/flat")
     public ResponseEntity<Set<Long>> getCharacterIds(@CharacterGroup Set<Long> characterIds)
     {
         return WebServiceUtil.notFoundIfEmpty(characterIds);

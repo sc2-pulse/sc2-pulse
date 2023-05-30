@@ -112,7 +112,7 @@ public class GroupIT
 
         Long[] result = objectMapper.readValue(mvc.perform
         (
-            get("/api/group")
+            get("/api/group/flat")
             .queryParam
             (
                 "characterId",
@@ -137,7 +137,7 @@ public class GroupIT
     public void whenIdsAreEmpty_thenBadRequest()
     throws Exception
     {
-        mvc.perform(get("/api/group"))
+        mvc.perform(get("/api/group/flat"))
             .andExpect(status().isBadRequest());
     }
 
@@ -149,7 +149,7 @@ public class GroupIT
             .boxed()
             .map(String::valueOf)
             .toArray(String[]::new);
-        mvc.perform(get("/api/group").queryParam("characterId", longIdList))
+        mvc.perform(get("/api/group/flat").queryParam("characterId", longIdList))
             .andExpect(status().isBadRequest());
     }
 
@@ -172,7 +172,7 @@ public class GroupIT
             .map(i->new ClanMember(i, clan.getId()))
             .toArray(ClanMember[]::new);
         clanMemberDAO.merge(members);
-        mvc.perform(get("/api/group").queryParam("clanId", "1"))
+        mvc.perform(get("/api/group/flat").queryParam("clanId", "1"))
             .andExpect(status().isBadRequest());
     }
 
@@ -184,7 +184,7 @@ public class GroupIT
             .boxed()
             .map(String::valueOf)
             .toArray(String[]::new);
-        mvc.perform(get("/api/group").queryParam("clanId", longIdList))
+        mvc.perform(get("/api/group/flat").queryParam("clanId", longIdList))
             .andExpect(status().isBadRequest());
     }
 
