@@ -321,6 +321,35 @@ public class SeasonGenerator
     }
 
     @Transactional
+    public List<Team> createTeams(PlayerCharacter... members)
+    {
+        if(members.length == 0) return List.of();
+
+        List<Team> teams = new ArrayList<>();
+        for(int i = 0; i < members.length; i++)
+        {
+            Team team = new Team
+            (
+                null, DEFAULT_SEASON_ID, members[i].getRegion(),
+                new BaseLeague
+                (
+                    BaseLeague.LeagueType.BRONZE,
+                    QueueType.LOTV_1V1,
+                    TeamType.ARRANGED
+                ),
+                BaseLeagueTier.LeagueTierType.FIRST,
+                BigInteger.valueOf(i), 1,
+                (long) i, i, 0, 0, 0,
+                OffsetDateTime.now()
+            );
+            teams.add(team);
+            teamDAO.create(team);
+            teamMemberDAO.create(new TeamMember(team.getId(), members[i].getId(), null, null, null, i));
+        }
+        return teams;
+    }
+
+    @Transactional
     public void createMatches
     (
         BaseMatch.MatchType matchType,
