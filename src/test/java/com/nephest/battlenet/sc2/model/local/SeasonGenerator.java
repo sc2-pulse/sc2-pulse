@@ -90,6 +90,20 @@ public class SeasonGenerator
     private NamedParameterJdbcTemplate template;
 
     @Transactional
+    public void generateDefaultSeason(int teams)
+    {
+        generateDefaultSeason
+        (
+            List.of(Region.EU),
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            teams
+        );
+    }
+
+    @Transactional
     public void generateDefaultSeason
     (
         List<Region> regions,
