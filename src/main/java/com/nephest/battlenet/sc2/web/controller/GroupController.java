@@ -3,12 +3,15 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderClanMemberEventDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
@@ -41,6 +44,9 @@ public class GroupController
 
     @Autowired
     private LadderClanMemberEventDAO ladderClanMemberEventDAO;
+
+    @Autowired
+    private LadderMatchDAO ladderMatchDAO;
 
     public static Optional<ResponseEntity<?>> areIdsInvalid
     (
@@ -120,6 +126,29 @@ public class GroupController
             characterIdCursor,
             limit
         ));
+    }
+
+    @GetMapping("/match")
+    public ResponseEntity<List<LadderMatch>> getMatchHistory
+    (
+        @CharacterGroup Set<Long> characterIds,
+        @RequestParam(name = "dateCursor", required = false) OffsetDateTime dateCursor,
+        @RequestParam(name = "typeCursor", required = false, defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
+        @RequestParam(name = "mapCursor", required = false, defaultValue = "0") int mapCursor,
+        @RequestParam(name = "type", required = false, defaultValue = "") BaseMatch.MatchType[] types
+    )
+    {
+        dateCursor = dateCursor != null ? dateCursor : OffsetDateTime.now();
+        return WebServiceUtil.notFoundIfEmpty
+        (
+            ladderMatchDAO.findMatchesByCharacterIds
+            (
+                characterIds,
+                dateCursor, typeCursor, mapCursor,
+                0, 1,
+                types
+            ).getResult()
+        );
     }
 
     @GetMapping("/flat")

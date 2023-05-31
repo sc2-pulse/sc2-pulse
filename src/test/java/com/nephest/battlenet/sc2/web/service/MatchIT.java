@@ -1,14 +1,18 @@
 // Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-package com.nephest.battlenet.sc2.model.local.dao;
+package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.BaseMatch;
@@ -33,6 +37,21 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProTeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProTeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
@@ -43,19 +62,24 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.test.web.servlet.MockMvc;
 
-@SpringJUnitConfig(classes = DatabaseTestConfig.class)
+@SpringBootTest(classes = {AllTestConfig.class})
+@AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class MatchIT
@@ -115,6 +139,12 @@ public class MatchIT
     @Autowired
     private JdbcTemplate template;
 
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @BeforeEach
     public void beforeAll(@Autowired DataSource dataSource)
     throws SQLException
@@ -136,8 +166,12 @@ public class MatchIT
         }
     }
 
+    /*TODO
+        Split this abomination into proper tests
+     */
     @Test
     public void testMatchesChain()
+    throws Exception
     {
         seasonGenerator.generateDefaultSeason
         (
@@ -218,6 +252,14 @@ public class MatchIT
         PlayerCharacter charKr2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.KR, 2L, 2, "name#2"));
         PlayerCharacter charKr3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.KR, 3L, 3, "name#3"));
         PlayerCharacter charKr4 = playerCharacterDAO.merge(new PlayerCharacter(null, acc4.getId(), Region.KR, 4L, 4, "name#4"));
+        String allCharIds = Stream.of
+        (
+            charEu1, charEu2, charEu3, charEu4, charEu5, charEu6, charEu7, charEu8, charEu9,
+            charEu10, charUs1, charUs2, charUs3, charUs4, charKr1, charKr2, charKr3, charKr4
+        )
+            .map(PlayerCharacter::getId)
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
         clanMemberDAO.merge
         (
             new ClanMember(charEu1.getId(), clan.getId()),
@@ -498,7 +540,13 @@ public class MatchIT
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr4.getId(), BaseMatch.Decision.LOSS)
         );
 
-        List<LadderMatch> matches4v4 = ladderMatchDAO.findMatchesByCharacterId(charEu1.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
+        List<LadderMatch> matches4v4 = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, new TypeReference<>(){},
+            "/api/group/match"
+                + "?characterId=" + allCharIds
+                + "&type=_4V4"
+        );
         assertEquals(1, matches4v4.size());
         assertEquals(match4v4, matches4v4.get(0).getMatch());
         assertEquals(8, matches4v4.get(0).getParticipants().size());
@@ -510,13 +558,33 @@ public class MatchIT
             Set.of(charEu1, charEu2, charEu3, charEu4), match4v4);
         verifyMatch(losers1, 4, 4, team4v4Loss, Set.of(state4v4Loss, state4v4Loss2), BaseLeague.LeagueType.SILVER,
             Set.of(charEu5, charEu6, charEu7, charEu8), match4v4);
-        assertIterableEquals(matches4v4.stream().map(LadderMatch::getMatch).collect(Collectors.toList()),
-            ladderMatchDAO.findMatchesByCharacterId(charEu1.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, BaseMatch.MatchType._4V4).getResult()
-                .stream().map(LadderMatch::getMatch).collect(Collectors.toList()));
-        assertTrue(ladderMatchDAO.findMatchesByCharacterId(charEu1.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, BaseMatch.MatchType._1V1)
-            .getResult().isEmpty());
+        assertIterableEquals
+        (
+            matches4v4.stream().map(LadderMatch::getMatch).collect(Collectors.toList()),
+            WebServiceTestUtil.getObject
+            (
+                mvc, objectMapper, new TypeReference<List<LadderMatch>>(){},
+                "/api/group/match"
+                    + "?characterId=" + allCharIds
+                    + "&type=_4V4"
+            ).stream().map(LadderMatch::getMatch).collect(Collectors.toList())
+        );
+        mvc.perform
+        (
+            get("/api/group/match")
+                .queryParam("characterId", String.valueOf(charEu1.getId()))
+                .queryParam("type", BaseMatch.MatchType._1V1.toString())
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNotFound());
 
-        List<LadderMatch> matches2v2 = ladderMatchDAO.findMatchesByCharacterId(charUs3.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
+        List<LadderMatch> matches2v2 = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, new TypeReference<>(){},
+            "/api/group/match"
+                + "?characterId=" + allCharIds
+                + "&type=_2V2"
+        );
         assertEquals(1, matches2v2.size());
         assertEquals(match2v2, matches2v2.get(0).getMatch());
         assertEquals(4, matches2v2.get(0).getParticipants().size());
@@ -537,9 +605,14 @@ public class MatchIT
             1, 1, team2v2Loss2, Set.of(state2v2Loss2), BaseLeague.LeagueType.BRONZE,
             Set.of(charUs4), match2v2);
 
-        List<LadderMatch> matches1v1 = ladderMatchDAO.findMatchesByCharacterId(charKr1.getId(),
-            OffsetDateTime.now().plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1),
-            BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
+        List<LadderMatch> matches1v1 = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, new TypeReference<>(){},
+            "/api/group/match"
+                + "?characterId=" + charKr1.getId()
+                + "&dateCursor=" + OffsetDateTime.now()
+                    .plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1)
+        );
         assertEquals(6, matches1v1.size());
         assertEquals(match1v1_3, matches1v1.get(0).getMatch());
         assertEquals(2, matches1v1.get(0).getParticipants().size());
@@ -623,7 +696,12 @@ public class MatchIT
         assertEquals(charKr4.getId(), losersUnidentified2.get(0).getParticipant().getPlayerCharacterId());
 
 
-        List<LadderMatch> matches1v1_2 = ladderMatchDAO.findMatchesByCharacterId(charEu9.getId(), OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
+        List<LadderMatch> matches1v1_2 = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, new TypeReference<>(){},
+            "/api/group/match"
+                + "?characterId=" + charEu9.getId()
+        );
         assertEquals(1, matches1v1_2.size());
         assertEquals(match1v1_4, matches1v1_2.get(0).getMatch());
         assertEquals(2, matches1v1_2.get(0).getParticipants().size());
@@ -697,6 +775,7 @@ public class MatchIT
 
     @Test
     public void testDuration()
+    throws Exception
     {
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         Account acc2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#2"));
@@ -745,9 +824,13 @@ public class MatchIT
 
         assertEquals(3, matchDAO.updateDuration(now.minusDays(1)));
 
-        List<LadderMatch> matches = ladderMatchDAO
-            .findMatchesByCharacterId(charEu1.getId(), now.plusSeconds(1), BaseMatch.MatchType._1V1, 0, 0, 1)
-            .getResult();
+        List<LadderMatch> matches = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, new TypeReference<>(){},
+            "/api/group/match"
+                + "?characterId=" + charEu1.getId()
+                + "&dateCursor=" + now.plusSeconds(1)
+        );
 
         assertEquals(300 - MatchDAO.DURATION_OFFSET, matches.get(0).getMatch().getDuration());
         assertEquals(1, matches.get(1).getMatch().getDuration());
@@ -757,6 +840,7 @@ public class MatchIT
 
     @Test
     public void testRatingChange()
+    throws Exception
     {
         seasonGenerator.generateDefaultSeason
         (
@@ -796,8 +880,13 @@ public class MatchIT
         //4mmr changes * 8 participants(4v4)
         assertEquals(40, matchParticipantDAO.calculateRatingDifference(now.minusSeconds(8)));
 
-        List<LadderMatch> matches = ladderMatchDAO
-            .findMatchesByCharacterId(1L, now.plusSeconds(1), BaseMatch.MatchType._1V1, 0, 0, 1).getResult();
+        List<LadderMatch> matches = WebServiceTestUtil.getObject
+        (
+            mvc, objectMapper, new TypeReference<>(){},
+            "/api/group/match"
+                + "?characterId=1"
+                + "&dateCursor=" + now.plusSeconds(1)
+        );
         assertEquals(10, matches.size());
         verifyRatingChange(matches.get(0), 5);
         verifyRatingChange(matches.get(1), null);

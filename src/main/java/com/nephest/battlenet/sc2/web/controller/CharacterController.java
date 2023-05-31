@@ -213,12 +213,13 @@ public class CharacterController
         );
     }
 
+    @Hidden
     @GetMapping
     ({
         "/{id}/matches/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}",
         "/{id}/matches/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}/{types}"
     })
-    public PagedSearchResult<List<LadderMatch>> getCharacterMatches
+    public PagedSearchResult<List<LadderMatch>> getCharacterMatchesLegacy
     (
         @PathVariable("id") long id,
         @PathVariable("dateAnchor") String dateAnchor,
