@@ -25,6 +25,8 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -403,6 +405,58 @@ public class SeasonGenerator
             matchParticipantDAO.merge(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.WIN));
         for(long charId : characterIds2)
             matchParticipantDAO.merge(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.LOSS));
+    }
+
+    public static Account defaultAccount(int ix)
+    {
+        return new Account
+        (
+            (long) ix + 1 ,
+            Partition.GLOBAL,
+            "battletag#" + Integer.parseInt(ix + "" + 0)
+        );
+    }
+
+    public static PlayerCharacter defaultCharacter(int ix)
+    {
+        long id = (long) ix + 1;
+        int accId = Integer.parseInt(ix + "" + 0);
+        return new PlayerCharacter
+        (
+            id,
+            id,
+            Region.EU,
+            (long) accId,
+            DEFAULT_REALM,
+            "character#" + accId
+        );
+    }
+
+    public static LadderDistinctCharacter defaultLadderCharacter(int ix)
+    {
+        return defaultLadderCharacter(null, null, null, ix);
+    }
+
+    public static LadderDistinctCharacter defaultLadderCharacter
+    (
+        Clan clan,
+        String proNickname, String proTeam,
+        int ix
+    )
+    {
+        int games = (ix + 1) * 3;
+        return new LadderDistinctCharacter
+        (
+            BaseLeague.LeagueType.BRONZE, ix,
+            defaultAccount(ix),
+            defaultCharacter(ix),
+            clan,
+            proNickname, proTeam,
+            null,
+            null, null, null, games, games,
+            new LadderPlayerSearchStats(null, null, null),
+            new LadderPlayerSearchStats(ix, games, null)
+        );
     }
 
     public void cleanAll()
