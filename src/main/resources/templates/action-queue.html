@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -13,7 +13,7 @@
 <div th:replace="~{fragments/generic :: content(~{::section})}">
     <section>
         <h2>Action queue</h2>
-        <p>Your action is queued. It will be completed within <span id="action-duration" th:text="${actionDuration}"></span>
+        <p>Your action is queued. It will be completed within <span id="action-duration" th:text="${@formatUtil.formatWords(actionDuration)}"></span>
         depending on server load.</p>
     </section>
 </div>
