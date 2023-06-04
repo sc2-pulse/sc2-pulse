@@ -334,8 +334,7 @@ public class StatsService
     {
         teamStateDAO.removeExpired();
         for(int season : pendingStatsUpdates) updateSeasonStats(season, allStats);
-        takePopulationSnapshot(pendingStatsUpdates, pendingTeams);
-        pendingTeams.clear();
+        processPendingTeams();
         alternativeLadderService.afterCurrentSeasonUpdate(pendingStatsUpdates);
         pendingStatsUpdates.clear();
         playerCharacterStatsDAO.mergeCalculate
@@ -368,6 +367,18 @@ public class StatsService
     {
         if(allStats) queueStatsDAO.mergeCalculateForSeason(seasonId);
         leagueStatsDao.mergeCalculateForSeason(seasonId);
+    }
+
+    private void processPendingTeams()
+    {
+        try
+        {
+            takePopulationSnapshot(pendingStatsUpdates, pendingTeams);
+        }
+        finally
+        {
+            pendingTeams.clear();
+        }
     }
 
     private void takePopulationSnapshot(Collection<Integer> seasons, Collection<Long> teams)

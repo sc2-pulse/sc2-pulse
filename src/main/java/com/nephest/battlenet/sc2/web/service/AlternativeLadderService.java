@@ -629,14 +629,25 @@ public class AlternativeLadderService
 
     public void afterCurrentSeasonUpdate(Set<Integer> pendingSeasons)
     {
-        LOG.info
-        (
-            "Created {} team snapshots",
-            //team ids can be duplicated when the update is too slow
-            teamStateDAO.takeSnapshot(new ArrayList<>(new HashSet<>(pendingTeams)))
-        );
-        pendingTeams.clear();
+        processPendingTeams();
         StatsService.processPendingCharacters(pendingCharacters, eventService);
+    }
+
+    private void processPendingTeams()
+    {
+        try
+        {
+            LOG.info
+            (
+                "Created {} team snapshots",
+                //team ids can be duplicated when the update is too slow
+                teamStateDAO.takeSnapshot(new ArrayList<>(new HashSet<>(pendingTeams)))
+            );
+        }
+        finally
+        {
+            pendingTeams.clear();
+        }
     }
 
 }
