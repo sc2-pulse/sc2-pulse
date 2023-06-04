@@ -7,6 +7,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -150,7 +151,9 @@ public class ClanMemberEventDAO
     {
         if(events.length == 0) return 0;
 
+        Set<Long> characters = new HashSet<>(events.length);
         List<Object[]> data = Arrays.stream(events)
+            .filter(e->characters.add(e.getPlayerCharacterId()))
             .map(evt->new Object[]{
                 evt.getPlayerCharacterId(),
                 conversionService.convert(evt.getType(), Integer.class),

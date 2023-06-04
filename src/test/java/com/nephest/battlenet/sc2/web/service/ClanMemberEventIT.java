@@ -364,6 +364,41 @@ public class ClanMemberEventIT
             ));
     }
 
+    @Test
+    public void whenSeveralEventsWithSameCharacter_thenUseFirstAndIgnoreRest()
+    throws Exception
+    {
+        OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
+        assertEquals(1, clanMemberEventDAO.merge
+        (
+            new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1),
+            new ClanMemberEvent(characters[0].getId(), clans[1].getId(), JOIN, odt1.plusSeconds(1))
+        ));
+
+        ClanMemberEvent[] evts = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group/clan/history")
+                .queryParam
+                (
+                    "characterId",
+                    String.valueOf(characters[0].getId())
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), ClanMemberEvent[].class);
+        Assertions.assertThat(evts[0])
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(new ClanMemberEvent(
+                characters[0].getId(),
+                clans[0].getId(),
+                JOIN,
+                odt1,
+                null
+            ));
+    }
+
     public static void verifyEvent
     (
         ClanMemberEvent evt,
