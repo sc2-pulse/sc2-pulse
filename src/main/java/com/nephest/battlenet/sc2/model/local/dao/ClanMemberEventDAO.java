@@ -58,7 +58,7 @@ public class ClanMemberEventDAO
             + "WHERE previous_type = 1 "
             + "AND type = 1 "
             + "AND clan_id::integer != previous_clan_id "
-            + "RETURNING 1 "
+            + "RETURNING player_character_id "
         + ") "
         + "INSERT INTO clan_member_event(player_character_id, clan_id, type, created, seconds_since_previous) "
         + "SELECT player_character_id, "
@@ -74,8 +74,14 @@ public class ClanMemberEventDAO
             + "ELSE EXTRACT(EPOCH FROM created - previous_created) "
         + "END "
         + "FROM previous "
-        + "WHERE type != previous_type "
-        + "OR clan_id::integer IS DISTINCT FROM previous_clan_id ";
+        + "LEFT JOIN inject_leave USING(player_character_id) "
+        + "WHERE "
+        + "CASE "
+            + "WHEN inject_leave.player_character_id IS NULL "
+            + "THEN previous_type "
+            + "ELSE 0 "
+        + "END != type "
+        + "OR (previous_clan_id IS NULL AND type = 1)";
 
     private static final String FIND =
         "("

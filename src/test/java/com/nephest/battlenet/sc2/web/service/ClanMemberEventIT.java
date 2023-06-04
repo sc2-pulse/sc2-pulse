@@ -29,6 +29,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -302,6 +303,65 @@ public class ClanMemberEventIT
         )
             .andExpect(status().isNotFound())
             .andExpect(content().string(""));
+    }
+
+    @Test
+    public void whenLeavingClanWithoutBeingInClanButWasInClanPreviously_thenIgnoreEvent() throws Exception
+    {
+        OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
+        assertEquals(1, clanMemberEventDAO.merge
+        (
+            new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1)
+        ));
+
+        int secondsSincePrevious = 10;
+        OffsetDateTime odt2 = odt1.plusSeconds(secondsSincePrevious);
+        clanMemberEventDAO.merge
+        (
+            new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt2)
+        );
+
+        //should be ignored because player is not in a clan
+        int secondsSincePrevious3 = 20;
+        OffsetDateTime odt3 = odt2.plusSeconds(secondsSincePrevious3);
+        clanMemberEventDAO.merge
+        (
+            new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt3)
+        );
+
+        ClanMemberEvent[] evts = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group/clan/history")
+                .queryParam
+                (
+                    "characterId",
+                    String.valueOf(characters[0].getId())
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), ClanMemberEvent[].class);
+        assertEquals(2, evts.length);
+        Assertions.assertThat(evts[0])
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(new ClanMemberEvent(
+                characters[0].getId(),
+                clans[0].getId(),
+                LEAVE,
+                odt2,
+                secondsSincePrevious
+            ));
+        Assertions.assertThat(evts[1])
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(new ClanMemberEvent(
+                characters[0].getId(),
+                clans[0].getId(),
+                JOIN,
+                odt1,
+                null
+            ));
     }
 
     public static void verifyEvent
