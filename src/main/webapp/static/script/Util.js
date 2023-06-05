@@ -255,6 +255,15 @@ class Util
         return map;
     }
 
+    static toMap(items, keyMapper, valueMapper=(item)=>item)
+    {
+        const map = new Map();
+        items.forEach((item) =>{
+            map.set(keyMapper(item), valueMapper(item));
+        });
+        return map;
+    }
+
     static getRandomRgbColorString()
     {
         const r = Math.floor(Math.random() * 255);
