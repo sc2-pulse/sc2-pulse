@@ -29,6 +29,14 @@ class Util
         return Util.urlencodeFormData(Util.getFormData(page, form));
     }
 
+    static mapToUrlSearchParams(map)
+    {
+        const params = new URLSearchParams();
+        for(const [key, vals] of map instanceof Map ? map.entries() : Object.entries(map))
+            for(const val of vals) params.append(key, val);
+        return params;
+    }
+
     static setGeneratingStatus(status, errorText = "Error", error = null)
     {
         switch(status)
