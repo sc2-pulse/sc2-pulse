@@ -96,6 +96,7 @@ class SC2Restful
                 RevealUtil.enhanceCtl();
                 VersusUtil.enhance();
                 FollowUtil.enhanceFollowButtons();
+                GroupUtil.enhance();
                 BufferUtil.enhance();
             case START_MODE.ESSENTIAL:
                 BootstrapUtil.enhanceTabs();

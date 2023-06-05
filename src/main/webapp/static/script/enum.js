@@ -85,7 +85,8 @@ const VIEW = Object.freeze
     CLAN_SEARCH: {name: "clan-search", order: 12},
     CLAN_BUFFER: {name: "clan-buffer", order: 13},
     VERSUS: {name: "versus", order: 14},
-    VOD_SEARCH: {name: "vod-search", order: 15}
+    VOD_SEARCH: {name: "vod-search", order: 15},
+    GROUP: {name: "group", order: 16}
 });
 
 const VIEW_DATA = Object.freeze
@@ -203,3 +204,10 @@ const CHEATER_FLAG = Object.freeze
   SUSPICIOUS: {name: "suspicious", description: "This player or one of their linked characters has a confirmed evidence of suspicious activity.", cssClass: "warning", order: 2},
   CHEATER: {name: "cheater", description: "This player or one of their linked characters has a confirmed evidence of cheating.", cssClass: "danger", order: 3}
 });
+
+const CLAN_MEMBER_EVENT_TYPE = Object.freeze
+({
+    JOIN: {name: "join", description: "Joined", symbol: "🠞", cssClass: "text-success font-weight-bold em-1-5", order: 1},
+    LEAVE: {name: "leave", description: "Left", symbol: "🠜",cssClass: "text-danger font-weight-bold em-1-5", order: 2}
+});
+

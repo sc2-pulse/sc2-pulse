@@ -1,0 +1,132 @@
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="https://www.thymeleaf.org"
+>
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div
+        th:fragment="group"
+        class="modal fade no-popup d-none"
+        id="group"
+        aria-labelledby="group-title"
+        aria-hidden="true"
+        data-view-name="group"
+>
+    <div class="modal-dialog modal-complex modal-xl" >
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="close close-left" type="button" aria-label="Back">
+                    <span aria-hidden="true">&lArr;</span>
+                </button>
+                <h2 class="modal-title" id="group-title"></h2>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <nav>
+                    <ul id="group-tabs" class="nav nav-fill nav-pills mb-3 justify-content-center" role="tablist">
+                        <li class="nav-item">
+                            <a
+                                    id="group-group-tab"
+                                    class="nav-link active"
+                                    data-toggle="pill"
+                                    data-target="#group-group"
+                                    href="#group-group"
+                                    role="tab"
+                                    aria-controls="group-group"
+                                    aria-selected="true"
+                            >
+                                Group
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a
+                                    id="group-characters-tab"
+                                    class="nav-link"
+                                    data-toggle="pill"
+                                    data-target="#group-characters"
+                                    href="#group-characters"
+                                    role="tab"
+                                    aria-controls="group-characters"
+                                    aria-selected="false"
+                            >
+                                Characters
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a
+                                    id="group-matches-tab"
+                                    class="nav-link"
+                                    data-toggle="pill"
+                                    data-target="#group-matches"
+                                    href="#group-matches"
+                                    role="tab"
+                                    aria-controls="group-matches"
+                                    aria-selected="false"
+                            >
+                                Matches
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a
+                                    id="group-clan-tab"
+                                    class="nav-link"
+                                    data-toggle="pill"
+                                    data-target="#group-clan"
+                                    href="#group-clan"
+                                    role="tab"
+                                    aria-controls="group-clan"
+                                    aria-selected="false"
+                            >
+                                Clan
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+                <div id="group-all" class="tab-content">
+                    <section id="group-group" class="character-group tab-pane fade show active" data-view-title="Group">
+                        <h3>
+                            Group
+                            <img
+                                    th:src="@{/static/icon/misc/info.svg}"
+                                    alt="Entities used to create this group."
+                                    title="Entities used to create this group."
+                                    data-toggle="tooltip"
+                            />
+                        </h3>
+                        <section>
+                            <h4>Characters</h4>
+                            <div th:replace="~{fragments/table :: player-search('group-group-characters-table', _, 'table-character table-selectable-row')}"></div>
+                        </section>
+                        <section>
+                            <h4>Clans</h4>
+                            <div th:replace="~{fragments/table :: clan('group-group-clans-table-container', 'group-group-clans-table', 'table-clan table-selectable-row')}"></div>
+                        </section>
+                    </section>
+                    <section id="group-characters" class="group-characters container-loading loading-none tab-pane fade" data-view-title="Characters">
+                        <div th:replace="~{fragments/table :: player-search('group-characters-table', 'Characters', 'table-character table-selectable-row')}"></div>
+                        <div th:replace="~{fragments/section :: loading-indicator}"></div>
+                    </section>
+                    <section id="group-matches" class="group-matches container-loading loading-none tab-pane fade" data-view-title="Matches">
+                        <div th:replace="~{/fragments/section :: matches('-group', true, false)}"></div>
+                        <div th:replace="~{fragments/section :: loading-indicator}"></div>
+                    </section>
+                    <section id="group-clan" class="group-clan container-loading loading-none tab-pane fade" data-view-title="Clan history">
+                        <div th:replace="~{/fragments/section :: clan-history('group')}"></div>
+                        <div th:replace="~{fragments/section :: loading-indicator}"></div>
+                    </section>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

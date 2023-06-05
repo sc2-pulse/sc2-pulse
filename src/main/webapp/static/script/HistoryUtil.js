@@ -286,6 +286,9 @@ class HistoryUtil
             case "versus":
                 promises.push(VersusUtil.updateFromParams(params));
                 break;
+            case "group":
+                promises.push(GroupUtil.loadAndShowGroup(params));
+                break;
             case "modal":
                 const modalId = params.get("id"); params.delete("id");
                 promises.push(BootstrapUtil.hideActiveModal("error-generation"));

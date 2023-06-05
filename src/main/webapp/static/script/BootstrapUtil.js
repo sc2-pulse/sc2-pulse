@@ -35,6 +35,10 @@ class BootstrapUtil
             ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateCharacterTitle);
             ElementUtil.DESCRIPTION_CONSTRUCTORS.set(a.getAttribute("data-target"), ElementUtil.generateCharacterDescription);
         }
+        for(const a of document.querySelectorAll('#group .nav-pills a'))
+        {
+            ElementUtil.TITLE_CONSTRUCTORS.set(a.getAttribute("data-target"), GroupUtil.generatePageTitle);
+        }
 
         ElementUtil.TITLE_CONSTRUCTORS.set("#online", ElementUtil.generateOnlineTitle);
         ElementUtil.TITLE_CONSTRUCTORS.set("#team-mmr-history", TeamUtil.generateTeamMmrTitle);

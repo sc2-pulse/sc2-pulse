@@ -99,6 +99,15 @@
         </div>
     </form>
 </div>
+<div th:fragment="clan-history(suffix)">
+    <h3>
+        Clan history
+    </h3>
+    <p class="text-warning font-weight-bold">
+        Clan history of inactive players can lag behind(up to <span th:text="${@formatUtil.formatWords(T(com.nephest.battlenet.sc2.web.service.ClanService).CLAN_MEMBER_INACTIVE_AFTER)}"></span>)
+    </p>
+    <div th:replace="~{fragments/table :: clan-history(${'clan-history' + suffix}, '')}"></div>
+</div>
 <div
     th:fragment="modal-no-popup (id, title, content)"
     class="modal fade no-popup d-none"

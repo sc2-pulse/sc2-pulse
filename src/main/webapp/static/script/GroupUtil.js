@@ -1,0 +1,306 @@
+// Copyright (C) 2020-2023 Oleksandr Masniuk and contributors
+// SPDX-License-Identifier: AGPL-3.0-or-later
+
+class GroupUtil
+{
+
+    static getGroup(groupParams)
+    {
+        const request = `${ROOT_CONTEXT_PATH}api/group?${groupParams.toString()}`;
+        return Session.beforeRequest()
+           .then(n=>fetch(request))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static loadGroupModel(groupParams)
+    {
+        return GroupUtil.getGroup(groupParams)
+            .then(json=>{
+                Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.VAR).group = json;
+                return json;
+            });
+    }
+
+    static updateGroup(group, section)
+    {
+        section.querySelectorAll("section").forEach(s=>s.classList.add("d-none"));
+        if(group.characters && group.characters.length > 0) GroupUtil.updateGroupSection(
+            table=>CharacterUtil.updateCharacters(table, group.characters),
+            section.querySelector(":scope .table-character")
+        );
+        if(group.clans && group.clans.length > 0) GroupUtil.updateGroupSection(
+            table=>ClanUtil.updateClanTable(table,  group.clans),
+            section.querySelector(":scope .table-clan")
+        );
+    }
+
+    static updateGroupSection(updater, section)
+    {
+        updater(section);
+        section.closest("section").classList.remove("d-none");
+    }
+
+    static createHeaderText(group)
+    {
+        let text;
+        if(group.clans && group.clans.length > 0) {
+            text = ClanUtil.generateClanName(group.clans[0], true);
+        } else if(group.characters && group.characters.length > 0) {
+            text = Util.unmaskName(group.characters[0].members).unmaskedName;
+        }
+        const count = (group.clans && group.clans.length || 0)
+            + (group.characters && group.characters.length || 0)
+            - 1;
+        if(count > 0) text += `(+${count})`;
+        return text;
+    }
+
+    static generatePageTitle(params, hash)
+    {
+        const defaultTitle = "Group";
+        const searchResult = Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.VAR);
+        if(!searchResult || !searchResult.group) return defaultTitle;
+
+        return GroupUtil.createHeaderText(searchResult.group) + " - " + ElementUtil.getTabTitle(hash);
+    }
+
+    static updateRequiredMetadata(groupParams, section)
+    {
+        return GroupUtil.loadGroupModel(groupParams)
+            .then(g=>{
+                GroupUtil.updateGroup(g, section.querySelector(":scope .character-group"))
+                section.querySelector(":scope .modal-title").textContent = GroupUtil.createHeaderText(g);
+            });
+    }
+
+    static getCharacters(groupParams)
+    {
+        const request = `${ROOT_CONTEXT_PATH}api/group/character/full?${groupParams.toString()}`;
+        return Session.beforeRequest()
+           .then(n=>fetch(request))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static updateCharacters(groupParams, section)
+    {
+        const container = section.querySelector(":scope .group-characters");
+        const promise = ()=>GroupUtil.getCharacters(groupParams)
+            .then(characters=>{
+                CharacterUtil.updateCharacters(container.querySelector(":scope .table-character"), characters);
+                ElementUtil.setLoadingIndicator(container, LOADING_STATUS.COMPLETE);
+            });
+        return Util.load(container, promise);
+    }
+
+    static getMatches(params)
+    {
+        const request = `${ROOT_CONTEXT_PATH}api/group/match?${params.toString()}`;
+        return Session.beforeRequest()
+           .then(n=>fetch(request))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static createMatchesParams(matches, varModel, matchType)
+    {
+        const params = new URLSearchParams(varModel.groupParams);
+        if(matches && matches.length > 0) {
+            const matchCursor = matches[matches.length - 1];
+            params.append("dateCursor", matchCursor.match.date);
+            params.append("typeCursor", matchCursor.match.type);
+            params.append("mapCursor", matchCursor.map.id);
+            if(varModel.matchType) params.append("type", varModel.matchType);
+        } else {
+            if(matchType != "all") {
+                varModel.matchType = matchType;
+                params.append("type", matchType);
+            }
+        }
+        return params;
+    }
+
+    static updateMatches(section, matchType)
+    {
+        const view = ViewUtil.getView(section);
+        const container = section.querySelector(":scope .group-matches");
+        const matches = Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches;
+        const varModel = Model.DATA.get(view).get(VIEW_DATA.VAR);
+        const params = GroupUtil.createMatchesParams(matches, varModel, matchType);
+        return GroupUtil.getMatches(params)
+            .then(matchesResponse=>{
+                if(!matchesResponse) {
+                    ElementUtil.setLoadingIndicator(container, LOADING_STATUS.COMPLETE);
+                    return;
+                }
+                Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = matches
+                    ? matches.concat(matchesResponse)
+                    : matchesResponse;
+                GroupUtil.updateMatchesView(container, matchesResponse);
+                ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE);
+            });
+    }
+
+    static updateMatchesView(section, matches, reset = false)
+    {
+        const view = ViewUtil.getView(section);
+        const varModel = Model.DATA.get(view).get(VIEW_DATA.VAR);
+        const result = MatchUtil.updateMatchTable(
+            section.querySelector(":scope .matches"), matches,
+            (data)=>GroupUtil.isMainMatchParticipant(data, varModel.groupParams),
+            localStorage.getItem("matches-historical-mmr-" + view.name) != "false",
+            null,
+            reset
+        );
+        const teamsData = Model.DATA.get(view).get(VIEW_DATA.TEAMS);
+        teamsData.result = reset
+            ? result.teams
+            : teamsData.result ? teamsData.result.concat(result.teams) : result.teams;
+    }
+
+    static isMainMatchParticipant(data, groupParams)
+    {
+        return Number.isInteger(data)
+            ? false
+            :
+                (
+                    data.member.clan
+                        && data.member.clan.id
+                        && groupParams.getAll("clanId").some(clanId=>data.member.clan.id == clanId)
+                )
+                || groupParams.getAll("characterId").some(characterId=>data.member.character.id == characterId)
+    }
+
+    static resetMatches(section)
+    {
+        const view = ViewUtil.getView(section);
+        ElementUtil.removeChildren(section.querySelector(":scope .matches tbody"));
+        Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = [];
+        Model.DATA.get(view).get(VIEW_DATA.TEAMS).result = [];
+    }
+
+    static getClanHistory(params)
+    {
+        const request = `${ROOT_CONTEXT_PATH}api/group/clan/history?${params.toString()}`;
+        return Session.beforeRequest()
+           .then(n=>fetch(request))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static createClanHistoryParams(clanHistory, varModel)
+    {
+        const params = new URLSearchParams(varModel.groupParams);
+        if(clanHistory && clanHistory.events && clanHistory.events.length > 0) {
+            const cursor = clanHistory.events[clanHistory.events.length - 1];
+            params.append("createdCursor", cursor.created);
+            params.append("characterIdCursor", cursor.playerCharacterId);
+        }
+        return params;
+    }
+
+    static updateClanHistory(section)
+    {
+        const view = ViewUtil.getView(section);
+        const container = section.querySelector(":scope .group-clan");
+        const clanHistory = Model.DATA.get(view).get(VIEW_DATA.SEARCH).clanHistory;
+        const varModel = Model.DATA.get(view).get(VIEW_DATA.VAR);
+        const params = GroupUtil.createClanHistoryParams(clanHistory, varModel);
+
+        return GroupUtil.getClanHistory(params)
+            .then(response=>{
+                if(!response) {
+                    ElementUtil.setLoadingIndicator(container, LOADING_STATUS.COMPLETE);
+                    return;
+                }
+                GroupUtil.mapClanHistory(response);
+                Model.DATA.get(view).get(VIEW_DATA.SEARCH).clanHistory = clanHistory
+                    ? Util.addAllCollections(response, clanHistory)
+                    : response;
+                ClanUtil.updateClanHistoryTable(container.querySelector(":scope .clan-history"), response);
+                ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE);
+            });
+    }
+
+    static mapClanHistory(clanHistory)
+    {
+        clanHistory.clans = Util.toMap(clanHistory.clans, clan=>clan.id);
+        clanHistory.characters = Util.toMap(clanHistory.characters, character=>character.members.character.id);
+    }
+
+    static loadAndShowGroup(groupIds)
+    {
+        document.querySelectorAll("#group tbody").forEach(tbody=>ElementUtil.removeChildren(tbody));
+        const groupParams = groupIds instanceof URLSearchParams ? groupIds : Util.mapToUrlSearchParams(groupIds);
+        const fullParams = GroupUtil.fullUrlSearchParams(groupParams);
+        Model.DATA.get(VIEW.GROUP).set(VIEW_DATA.VAR, {groupParams: groupParams, fullGroupParams: fullParams});
+        Model.reset(VIEW.GROUP, [VIEW_DATA.SEARCH, VIEW_DATA.TEAMS]);
+        const modal = document.querySelector("#group");
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        return GroupUtil.updateRequiredMetadata(groupParams, modal)
+            .then(e=>{
+                BootstrapUtil.showModal("group");
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+                const stringParams = fullParams.toString();
+                if(!Session.isHistorical) HistoryUtil.pushState({}, document.title, "?" + stringParams + "#group-group");
+                Session.currentSearchParams = stringParams;
+            })
+            .catch(error => Session.onPersonalException(error));
+    }
+
+    static fullUrlSearchParams(params)
+    {
+        const searchParams = new URLSearchParams();
+        searchParams.append("type", "group");
+        searchParams.append("m", "1");
+        return new URLSearchParams("?" + searchParams.toString() + "&" + params.toString());
+    }
+
+    static enhance()
+    {
+        ElementUtil.ELEMENT_TASKS.set("group-characters-tab", e=>GroupUtil.updateCharacters(Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.VAR).groupParams, document.querySelector("#group")));
+        GroupUtil.enhanceMatches();
+        GroupUtil.enhanceClanHistory();
+    }
+
+    static enhanceMatches()
+    {
+        const groupSection = document.querySelector("#group");
+        const options = {
+         rootMargin: "33% 0px",
+        };
+        const observer = new IntersectionObserver((intersection)=>{
+            if (intersection.some(i=>i.isIntersecting))
+                Util.load(document.querySelector("#group .group-matches"),
+                    e=>GroupUtil.updateMatches(document.querySelector("#group"),
+                        localStorage.getItem("matches-type-group") || "all"));
+        }, options);
+        observer.observe(document.querySelector("#group .group-matches .container-indicator-loading-default"));
+
+        document.querySelector("#matches-historical-mmr-group").addEventListener("change",
+            e=>window.setTimeout(e=>GroupUtil.updateMatchesView(
+                document.querySelector("#group .group-matches"),
+                Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.SEARCH).matches,
+                true),
+            1));
+        document.querySelector("#matches-type-group").addEventListener("change",
+            evt=>window.setTimeout(timeout=>{
+                GroupUtil.resetMatches(groupSection);
+                GroupUtil.updateMatches(
+                    groupSection,
+                    localStorage.getItem("matches-type-group") || "all"
+                );
+            }, 1));
+    }
+
+    static enhanceClanHistory()
+    {
+        const options = {
+            rootMargin: "33% 0px",
+        };
+        const observer = new IntersectionObserver((intersection)=>{
+            if (intersection.some(i=>i.isIntersecting))
+                Util.load(document.querySelector("#group .group-clan"),
+                    e=>GroupUtil.updateClanHistory(document.querySelector("#group")));
+        }, options);
+        observer.observe(document.querySelector("#group .group-clan .container-indicator-loading-default"));
+    }
+
+}

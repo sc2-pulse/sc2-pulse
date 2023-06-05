@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2022 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -27,6 +27,24 @@
                 <th scope="col" th:text="${'Last ' + T(com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO).CURRENT_STATS_QUEUE_TYPE.getTeamFormat().getName() + ' MMR'}"></th>
                 <th scope="col" th:text="${'Last ' + T(com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO).CURRENT_STATS_QUEUE_TYPE.getTeamFormat().getName() + ' Games'}"></th>
                 <th scope="col">Player</th>
+            </tr>
+        </thead>
+        <tbody>
+        </tbody>
+    </table>
+</div>
+<div class="table-responsive" th:fragment="clan-history (id, class)">
+    <table
+        th:id="${id}"
+        th:class="${'table table-sm table-hover inline-table clan-history ' + class}"
+    >
+        <thead>
+            <tr>
+                <th scope="col">Date</th>
+                <th scope="col">Player</th>
+                <th scope="col">Action</th>
+                <th scope="col">R</th>
+                <th scope="col">Clan</th>
             </tr>
         </thead>
         <tbody>
