@@ -184,9 +184,9 @@ class ClanUtil
         return viewData.get(VIEW_DATA.SEARCH).searchResult.result.find(t=>t.id==id);
     }
 
-    static generateClanName(clan)
+    static generateClanName(clan, includeName = false)
     {
-        return `[${clan.tag}]`;
+        return `[${clan.tag}]` + (includeName && clan.name ? ` ${clan.name}` : "");
     }
 
 }
