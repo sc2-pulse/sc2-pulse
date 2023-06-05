@@ -198,11 +198,7 @@ class CharacterUtil
     {
         return Session.beforeRequest()
            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/character/${encodeURIComponent(id)}/links/additional`))
-           .then(resp=>{
-                Session.verifyResponse(resp, false);
-                if(resp.status == 200 || resp.status == 404 || resp.status == 502) return resp.json()
-                throw new Error(resp.status + " " + resp.statusText);
-            });
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]));
     }
 
     static updateAdditionalCharacterLinksModel(id)

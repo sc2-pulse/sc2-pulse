@@ -29,9 +29,9 @@ class Session
         return Promise.resolve();
     }
 
-    static verifyResponse(resp, verifyStatus = true)
+    static verifyResponse(resp, allowedStatus = [200])
     {
-        if (verifyStatus && !resp.ok) throw new Error(resp.status + " " + resp.statusText);
+        if (!allowedStatus.includes(resp.status)) throw new Error(resp.status + " " + resp.statusText);
 
         Session.verifyResponseVersion(resp);
         return Promise.resolve(resp);
@@ -45,9 +45,9 @@ class Session
             throw new Error(Session.INVALID_API_VERSION_CODE + " API version has changed");
     }
 
-    static verifyJsonResponse(resp)
+    static verifyJsonResponse(resp, allowedStatus = [200])
     {
-        return Session.verifyResponse(resp)
+        return Session.verifyResponse(resp, allowedStatus)
             .then(resp=>resp.json());
     }
 
