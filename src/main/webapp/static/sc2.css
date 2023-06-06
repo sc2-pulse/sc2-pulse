@@ -1179,6 +1179,26 @@ body.modal-open.modal-open-no-popup
     width: initial;
 }
 
+.container-loading.loading-none .indicator-loading:not(.loading-none)
+{
+    display: none;
+}
+
+.container-loading.loading-in-progress .indicator-loading:not(.loading-in-progress)
+{
+    display: none;
+}
+
+.container-loading.loading-complete .indicator-loading:not(.loading-complete)
+{
+    display: none;
+}
+
+.container-loading.loading-error .indicator-loading:not(.loading-error)
+{
+    display: none;
+}
+
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;

@@ -107,6 +107,14 @@ const STATUS = Object.freeze
   ERROR: {name: "error", order: 3}
 });
 
+const LOADING_STATUS = Object.freeze
+({
+    NONE: {name: "none", className: "loading-none", order: 1},
+    IN_PROGRESS: {name: "in-progress", className: "loading-in-progress", order: 2},
+    COMPLETE: {name: "complete", className: "loading-complete", order: 3},
+    ERROR: {name: "error", className: "loading-error", order: 4},
+});
+
 const THEME = Object.freeze
 ({
   LIGHT: {name: "light", order: 1},

@@ -159,7 +159,7 @@ class CharacterUtil
 
     static resetAdditionalLinks()
     {
-        document.querySelector("#character-links").setAttribute("data-links-loaded", "false");
+        ElementUtil.setLoadingIndicator(document.querySelector("#character-links-section"), LOADING_STATUS.NONE);
         Model.DATA.get(VIEW.CHARACTER).delete("additionalLinks");
     }
 
@@ -175,27 +175,24 @@ class CharacterUtil
 
     static updateAdditionalCharacterLinks(id)
     {
-        document.querySelectorAll("#character-links-section .indicator-loading")
-            .forEach(indicator=>indicator.classList.add("d-none"));
-        const linksContainer = document.querySelector("#character-links");
-        if(linksContainer.getAttribute("data-links-loaded") === "true") return;
+        const linksContainer = document.querySelector("#character-links-section");
+        if(linksContainer.classList.contains(LOADING_STATUS.COMPLETE.className)) return;
 
-        ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.BEGIN);
+        ElementUtil.setLoadingIndicator(linksContainer, LOADING_STATUS.IN_PROGRESS);
         document.querySelectorAll(".additional-link-container").forEach(e=>e.classList.add("d-none"));
         return CharacterUtil.updateAdditionalCharacterLinksModel(id)
             .then(linkResult => {
                 CharacterUtil.updateAdditionalCharacterLinksView();
                 if(linkResult.failedTypes.length == 0) {
-                    linksContainer.setAttribute("data-links-loaded", "true");
-                    ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.SUCCESS);
+                    ElementUtil.setLoadingIndicator(linksContainer, LOADING_STATUS.COMPLETE);
                 } else {
-                    ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.ERROR);
+                    ElementUtil.setLoadingIndicator(linksContainer, LOADING_STATUS.ERROR);
                 }
                 return linkResult;
             })
             .catch(error => {
                 CharacterUtil.updateAdditionalCharacterLinksView();
-                ElementUtil.setLoadingIndicator("indicator-loading-additional-character-link", STATUS.ERROR);
+                ElementUtil.setLoadingIndicator(linksContainer, LOADING_STATUS.ERROR);
             });
     }
 

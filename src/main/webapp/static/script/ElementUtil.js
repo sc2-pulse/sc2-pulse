@@ -545,13 +545,10 @@ class ElementUtil
         if(autofocus) autofocus.focus();
     }
 
-    static setLoadingIndicator(clazz, status)
+    static setLoadingIndicator(container, status)
     {
-        document.querySelectorAll("." + clazz + ".indicator-loading").forEach(e=>e.classList.add("d-none"));
-        if(status == STATUS.SUCCESS) return;
-
-        const showClass = status == STATUS.BEGIN ? "in-progress" : "error"
-        document.querySelectorAll("." + clazz + ".indicator-loading." + showClass).forEach(e=>e.classList.remove("d-none"));
+        for(const curStatus of Object.values(LOADING_STATUS)) container.classList.remove(curStatus.className);
+        container.classList.add(status.className);
     }
 
 }
