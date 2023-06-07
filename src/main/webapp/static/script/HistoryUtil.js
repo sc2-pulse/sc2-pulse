@@ -55,7 +55,7 @@ class HistoryUtil
         {
             history.pushState(obj, title, paramsStr);
         }
-
+        ElementUtil.executeActiveTabTask();
     }
 
     static setParentSectionParameters(deepestTabId, paramsStr)
@@ -222,6 +222,7 @@ class HistoryUtil
             .then(e => {
                 HistoryUtil.updateActiveTabs();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
+                ElementUtil.executeActiveTabTask();
             });
 
         const type = params.get("type"); params.delete("type");
@@ -303,6 +304,7 @@ class HistoryUtil
             HistoryUtil.updateActiveTabs();
             Util.setGeneratingStatus(STATUS.SUCCESS);
             if(scrollTo != null) Util.scrollIntoViewById(scrollTo);
+            ElementUtil.executeActiveTabTask();
         });
     }
 

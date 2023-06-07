@@ -352,6 +352,15 @@ class Util
         return String.fromCodePoint(...codePoints);
     }
 
+    static load(container, lazyPromise)
+    {
+        if(container.classList.contains(LOADING_STATUS.COMPLETE.className)) return Promise.resolve();
+
+        ElementUtil.setLoadingIndicator(container, LOADING_STATUS.IN_PROGRESS);
+        return lazyPromise()
+            .catch(e=>ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR));
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =

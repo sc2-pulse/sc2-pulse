@@ -551,9 +551,18 @@ class ElementUtil
         container.classList.add(status.className);
     }
 
+    static executeActiveTabTask()
+    {
+        if(!window.location.hash) return;
+
+        const task = ElementUtil.ELEMENT_TASKS.get(window.location.hash.substring(1) + "-tab");
+        if(task) task();
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
+ElementUtil.ELEMENT_TASKS = new Map();
 ElementUtil.INPUT_TIMEOUTS = new Map();
 ElementUtil.INPUT_TIMESTAMPS = new Map();
 ElementUtil.TITLE_CONSTRUCTORS = new Map();

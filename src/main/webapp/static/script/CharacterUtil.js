@@ -144,8 +144,6 @@ class CharacterUtil
             .then(o => CharacterUtil.updateCharacterMatchesView())
             .then(jsons => {
                 CharacterUtil.resetAdditionalLinks();
-                if(document.querySelector("#player-stats-player.active"))
-                    CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id);
                 CharacterUtil.updateCharacterTeamsView();
                 CharacterUtil.updateCharacterStatsView();
                 CharacterUtil.updateCharacterLinkedCharactersView(id);
@@ -165,7 +163,7 @@ class CharacterUtil
 
     static enhanceDynamicCharacterData()
     {
-        $("#player-stats-player-tab").on('shown.bs.tab', e=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id));
+        ElementUtil.ELEMENT_TASKS.set("player-stats-player-tab", e=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id));
         document.querySelectorAll(".character-additional-links-reload")
             .forEach(reloadCtl=>reloadCtl.addEventListener("click",e=>{
                 CharacterUtil.resetAdditionalLinks();
