@@ -375,7 +375,10 @@ class Util
 
         ElementUtil.setLoadingIndicator(container, LOADING_STATUS.IN_PROGRESS);
         return lazyPromise()
-            .catch(e=>ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR));
+            .catch(error=>{
+                ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR);
+                if(DEBUG == true) console.log(error);
+            });
     }
 
 }
