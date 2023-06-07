@@ -371,7 +371,8 @@ class Util
 
     static load(container, lazyPromise)
     {
-        if(container.classList.contains(LOADING_STATUS.COMPLETE.className)) return Promise.resolve();
+        if(container.classList.contains(LOADING_STATUS.COMPLETE.className)
+            || container.classList.contains(LOADING_STATUS.IN_PROGRESS.className)) return Promise.resolve();
 
         ElementUtil.setLoadingIndicator(container, LOADING_STATUS.IN_PROGRESS);
         return lazyPromise()
