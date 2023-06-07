@@ -321,6 +321,41 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     font-size: 1em;
 }
 
+.em-1-5
+{
+    font-size: 1.5em;
+}
+
+.em-2
+{
+    font-size: 2em;
+}
+
+.em-3
+{
+    font-size: 3em;
+}
+
+.rem-1
+{
+    font-size: 1rem;
+}
+
+.rem-1-5
+{
+    font-size: 1.5rem;
+}
+
+.rem-2
+{
+    font-size: 2rem;
+}
+
+.rem-3
+{
+    font-size: 3rem;
+}
+
 .flex-list li
 {
     width: 100%;
