@@ -757,14 +757,25 @@ body.theme-light .social-media
   color: black;
 }
 
+body.theme-light .spinner-border,
+body.theme-light .adaptive-border-color,
 body.theme-light .adaptive-border-color-splitter
 {
     border-color: #f0f0f0 !important;
 }
 
+body.theme-dark .spinner-border,
+body.theme-dark .adaptive-border-color,
 .adaptive-border-color-splitter
 {
     border-color: #343a40 !important;
+}
+
+body.theme-light .spinner-border,
+body.theme-dark .spinner-border
+{
+    font-size: 2rem;
+    border-top: 0.25em solid currentColor !important;
 }
 
 .text-decoration-underline
