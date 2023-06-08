@@ -219,5 +219,25 @@
 </form>
 <p th:fragment="missing-characters-message">Are some of your characters missing? <a th:href="@{/data/battle-net}">Import your BattleNet profile</a> to fix it.</p>
 <th:block th:fragment="missing-battle-tag-message">Is your BattleTag missing or invalid? <a th:href="@{/data/battle-net}">Import your BattleNet profile</a> to fix it.</th:block>
+<div th:fragment="loading-indicator" class="container-indicator-loading-default">
+    <span th:replace="~{fragments/section :: loading-indicator-in-progress}"></span>
+    <span th:replace="~{fragments/section :: loading-indicator-error}"></span>
+</div>
+<span   th:fragment="loading-indicator-in-progress"
+        class="indicator-loading loading-in-progress text-primary spinner-border dimension-1 align-self-center  align-middle mt-3"
+        role="status"
+        title="Loading..."
+        data-toggle="tooltip"
+>
+</span>
+<span
+        th:fragment="loading-indicator-error"
+        class="indicator-loading loading-error text-danger font-weight-bold align-self-center align-middle rem-2 mt-3"
+        role="status"
+        title="Failed to load data"
+        data-toggle="tooltip"
+>
+        ×
+</span>
 </body>
 </html>
