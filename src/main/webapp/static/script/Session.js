@@ -48,7 +48,7 @@ class Session
     static verifyJsonResponse(resp, allowedStatus = [200])
     {
         return Session.verifyResponse(resp, allowedStatus)
-            .then(resp=>resp.json());
+            .then(resp=>resp.headers.get("Content-Length") == 0 ? null : resp.json());
     }
 
     static updateApplicationVersion()
