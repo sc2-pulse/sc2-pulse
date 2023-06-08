@@ -4,10 +4,10 @@
 class MatchUtil
 {
 
-    static updateMatchTable(table, matches, isMainParticipant, historical, versusLinkPrefix = null)
+    static updateMatchTable(table, matches, isMainParticipant, historical, versusLinkPrefix = null, removeChildren = true)
     {
         const tBody = table.querySelector(":scope tbody");
-        ElementUtil.removeChildren(tBody);
+        if(removeChildren) ElementUtil.removeChildren(tBody);
         const validMatches = matches;
         const allTeams = [];
         for(let i = 0; i < validMatches.length; i++)
