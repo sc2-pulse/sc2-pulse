@@ -272,6 +272,20 @@ class Util
         return map;
     }
 
+    static addAllCollections(src, dest)
+    {
+        for(const [objKey, objVal] of Object.entries(src)) {
+            if(objVal instanceof Map) {
+                if(!dest[objKey]) dest[objKey] = new Map();
+                for(const [mapKey, mapVal] of objVal.entries()) dest[objKey].set(mapKey, mapVal);
+            } else if(objVal instanceof Array) {
+                if(!dest[objKey]) dest[objKey] = [];
+                dest[objKey] = dest[objKey].concat(objVal);
+            }
+        }
+        return dest;
+    }
+
     static getRandomRgbColorString()
     {
         const r = Math.floor(Math.random() * 255);
