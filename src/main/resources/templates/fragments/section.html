@@ -65,13 +65,13 @@
 <section th:id="${id}" class="col-lg-6 mb-3" th:fragment="stats (id, title, titleY, type)"
          th:replace="~{fragments/section :: statsFull(${id}, ${title}, ${titleY}, ${type}, 'true', 'true', 1)}">>
 </section>
-<div th:fragment="matches(suffix, typeSelect)">
+<div th:fragment="matches(suffix, typeSelect, loadMoreCtl)">
     <h3>
         Recent ladder matches
     </h3>
     <div th:replace="~{fragments/section :: matches-header(${suffix}, ${typeSelect})}"></div>
     <div th:replace="~{fragments/table :: match(${'matches' + suffix}, '')}"></div>
-    <button th:id="|load-more-matches${suffix}|" type="button" class="btn btn-primary mb-3">More matches</button>
+    <button th:if="${loadMoreCtl}" th:id="|load-more-matches${suffix}|" type="button" class="btn btn-primary mb-3">More matches</button>
 </div>
 <p th:fragment="matches-warning" class="text-warning font-weight-bold">
     This feature is done on the best effort basis. Some matches may be missing/invalid.
