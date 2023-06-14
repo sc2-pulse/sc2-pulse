@@ -172,9 +172,15 @@ class ClanUtil
     static createClanTagElem(clan)
     {
         const a = ElementUtil.createElement("a", null, "clan-auto-search", clan.tag);
-        a.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=search&name=[${clan.tag}]#search`));
-        a.addEventListener("click", CharacterUtil.autoClanSearch);
+        a.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=group&clanId=${clan.id}#group-group`));
+        a.addEventListener("click", ClanUtil.showClanGroup);
         return a;
+    }
+
+    static showClanGroup(evt)
+    {
+        evt.preventDefault();
+        return GroupUtil.loadAndShowGroup(Util.getHrefUrlSearchParams(evt.target));
     }
 
     static getClanFromElement(parent)

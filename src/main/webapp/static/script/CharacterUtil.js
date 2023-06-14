@@ -378,14 +378,14 @@ class CharacterUtil
         titleElem.prepend(ElementUtil.createImage("flag/", member.character.region.toLowerCase(), "table-image-long player-info-region"));
         if(charNameAdditionalClan) {
             additionalClanElem.textContent = charNameAdditionalClan;
-            additionalClanElem.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=search&name=${"[" + charNameAdditionalClan + "]"}#search`));
+            additionalClanElem.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=group&clanId=${member.clan.id}#group-group`));
             additionalClanElem.classList.remove("d-none");
         } else {
             additionalClanElem.classList.add("d-none");
         }
         if(charClan) {
             clanElem.textContent = charClan;
-            clanElem.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=search&name=${"[" + charClan + "]"}#search`));
+            clanElem.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=group&clanId=${member.clan.id}#group-group`));
             clanElem.classList.remove("d-none");
         } else {
             clanElem.classList.add("d-none");
@@ -1301,7 +1301,7 @@ class CharacterUtil
 
     static enhanceAutoClanSearch()
     {
-        for(const e of document.querySelectorAll(".clan-auto-search")) e.addEventListener("click", CharacterUtil.autoClanSearch);
+        for(const e of document.querySelectorAll(".clan-auto-search")) e.addEventListener("click", ClanUtil.showClanGroup);
     }
 
     static afterEnhance()
