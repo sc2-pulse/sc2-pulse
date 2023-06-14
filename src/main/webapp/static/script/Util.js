@@ -396,6 +396,22 @@ class Util
             });
     }
 
+    static getHrefUrlSearchParams(element)
+    {
+        const href = element.getAttribute("href");
+        const paramIx = href.indexOf("?");
+        if(paramIx == -1) return new URLSearchParams();
+
+        const hashIx = href.indexOf("#");
+        return new URLSearchParams(href.substring(paramIx, hashIx > 0 ? hashIx : href.length));
+    }
+
+    static deleteSearchParams(params, names = ["type", "m"])
+    {
+        for(const name of names) params.delete(name);
+        return params;
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
