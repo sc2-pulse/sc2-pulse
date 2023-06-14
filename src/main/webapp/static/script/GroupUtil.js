@@ -253,6 +253,12 @@ class GroupUtil
         return new URLSearchParams("?" + searchParams.toString() + "&" + params.toString());
     }
 
+    static onGroupLinkClick(evt)
+    {
+        evt.preventDefault();
+        return GroupUtil.loadAndShowGroup(Util.deleteSearchParams(Util.getHrefUrlSearchParams(evt.target)));
+    }
+
     static enhance()
     {
         ElementUtil.ELEMENT_TASKS.set("group-characters-tab", e=>GroupUtil.updateCharacters(Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.VAR).groupParams, document.querySelector("#group")));

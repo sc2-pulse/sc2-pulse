@@ -173,7 +173,7 @@ class ClanUtil
     {
         const a = ElementUtil.createElement("a", null, "clan-auto-search", clan.tag);
         a.setAttribute("href", encodeURI(`${ROOT_CONTEXT_PATH}?type=group&clanId=${clan.id}#group-group`));
-        a.addEventListener("click", ClanUtil.showClanGroup);
+        a.addEventListener("click", GroupUtil.onGroupLinkClick);
         return a;
     }
 

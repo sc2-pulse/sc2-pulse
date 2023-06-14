@@ -589,6 +589,12 @@ th.hoverable span
     width: 1.2em;
 }
 
+.table-image-unicode
+{
+    line-height: 1em;
+    font-size: 1.2em;
+}
+
 .table-selectable-row tr
 {
     border-left: transparent 0.20rem solid;

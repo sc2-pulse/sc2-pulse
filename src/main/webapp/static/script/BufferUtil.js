@@ -20,6 +20,7 @@ class BufferUtil
         }
         BufferUtil.updateTeamMmrLink();
         BufferUtil.updateVersusLink();
+        BufferUtil.updateGroupLink();
         BufferUtil.updateCopyLink();
     }
 
@@ -45,6 +46,19 @@ class BufferUtil
         if(params.getAll("team1").length + params.getAll('clan1').length > 0
             && params.getAll("team2").length + params.getAll('clan2').length > 0) {
             link.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=versus&m=1&${params.toString()}`);
+            link.classList.remove("d-none");
+        } else {
+            link.classList.add("d-none");
+        }
+    }
+
+    static updateGroupLink()
+    {
+        const params = new URLSearchParams();
+        const link = document.querySelector("#team-buffer-group");
+        for(const clan of BufferUtil.clanBuffer.buffer.values()) params.append("clanId", clan.id);
+        if(params.getAll("clanId").length > 0) {
+            link.setAttribute("href", `${ROOT_CONTEXT_PATH}?type=group&m=1&${params.toString()}`);
             link.classList.remove("d-none");
         } else {
             link.classList.add("d-none");
@@ -109,6 +123,7 @@ class BufferUtil
     {
         document.querySelector("#team-buffer-clear").addEventListener("click", BufferUtil.clear);
         document.querySelector("#team-buffer-versus").addEventListener("click", VersusUtil.onVersusLinkClick);
+        document.querySelector("#team-buffer-group").addEventListener("click", GroupUtil.onGroupLinkClick);
         document.querySelector("#team-buffer-copy-character-id").addEventListener("click", BufferUtil.copyCharacterId);
         document.querySelector("#team-buffer-copy-legacy-id").addEventListener("click", BufferUtil.copyLegacyId);
         document.querySelector("#team-buffer-copy-character-race-id").addEventListener("click", BufferUtil.copyCharacterRaceId);

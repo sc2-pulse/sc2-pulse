@@ -1301,7 +1301,7 @@ class CharacterUtil
 
     static enhanceAutoClanSearch()
     {
-        for(const e of document.querySelectorAll(".clan-auto-search")) e.addEventListener("click", ClanUtil.showClanGroup);
+        for(const e of document.querySelectorAll(".clan-auto-search")) e.addEventListener("click", GroupUtil.onGroupLinkClick);
     }
 
     static afterEnhance()
