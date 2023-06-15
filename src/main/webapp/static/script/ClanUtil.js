@@ -186,8 +186,8 @@ class ClanUtil
     static getClanFromElement(parent)
     {
         const id = parent.closest("tr").getAttribute("data-clan-id");
-        const viewData = Model.DATA.get(ViewUtil.getView(parent));
-        return viewData.get(VIEW_DATA.SEARCH).searchResult.result.find(t=>t.id==id);
+        const searchData = Model.DATA.get(ViewUtil.getView(parent)).get(VIEW_DATA.SEARCH);
+        return (searchData.clans || searchData.searchResult.result).find(t=>t.id==id);
     }
 
     static generateClanName(clan, includeName = false)

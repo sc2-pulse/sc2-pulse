@@ -17,6 +17,7 @@ class GroupUtil
         return GroupUtil.getGroup(groupParams)
             .then(json=>{
                 Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.VAR).group = json;
+                Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.SEARCH).clans = json.clans || [];
                 return json;
             });
     }
