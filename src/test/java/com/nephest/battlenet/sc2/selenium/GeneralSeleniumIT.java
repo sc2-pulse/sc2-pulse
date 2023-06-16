@@ -23,10 +23,12 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
+import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
@@ -92,6 +94,9 @@ public class GeneralSeleniumIT
 
     @Autowired
     private ClanMemberDAO clanMemberDAO;
+
+    @Autowired
+    private ClanMemberEventDAO clanMemberEventDAO;
 
     @Autowired
     private LeagueStatsDAO leagueStatsDAO;
@@ -176,6 +181,7 @@ public class GeneralSeleniumIT
             int port = webServerAppCtxt.getWebServer().getPort();
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
             root = "http://localhost:" + port;
+            testGroup(driver, wait);
             loadMainPage(driver, wait);
             testVersus(driver, wait);
             testLadderUI(driver, wait);
@@ -320,6 +326,22 @@ public class GeneralSeleniumIT
         clickAndWait(driver, wait, "#load-more-matches-versus", "#matches-versus tbody tr:nth-child(25)");
         toggleInputs(driver, "[data-view-name=\"versus\"]");
         clickAndWait(driver, wait, "#versus-modal .close:not(.close-left)", ".tab-content-main:not(.d-none)");
+    }
+
+    private static void testGroup(WebDriver driver, WebDriverWait wait)
+    {
+        testClanGroup(driver, wait);
+    }
+
+    private static void testClanGroup(WebDriver driver, WebDriverWait wait)
+    {
+        loadMainPage(driver, wait);
+        clickAndWait(driver, wait, "#search-all-tab", "#search.show.active");
+        clickAndWait(driver, wait, "#search-clan-tab", "#search-clan.show.active");
+        clickAndWait(driver, wait, "#form-search-clan button[type=\"submit\"]", "#search-result-clan-all:not(.d-none)");
+        clickAndWait(driver, wait, "#search-result-clan .clan-auto-search", "#group:not(.d-none)");
+        switchTabsAndToggleInputs(driver, wait, "#group-tabs");
+        checkJsErrors();
     }
 
     public static void switchTabsAndToggleInputs(WebDriver driver, WebDriverWait wait, String tabContainerSelector)
@@ -495,19 +517,19 @@ public class GeneralSeleniumIT
             10
         );
         Clan clan1 = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
-        ClanMember[] cm1 = template
-            .queryForList("SELECT id FROM player_character WHERE id <= 140", Long.class)
-            .stream()
-            .map(id->new ClanMember(id, clan1.getId()))
-            .toArray(ClanMember[]::new);
-        clanMemberDAO.merge(cm1);
+        setupClanData
+        (
+            template
+                .queryForList("SELECT id FROM player_character WHERE id <= 140", Long.class),
+            clan1
+        );
         Clan clan2 = clanDAO.merge(new Clan(null, "clanTag2", Region.EU, "clanName2"))[0];
-        ClanMember[] cm2 = template
-            .queryForList("SELECT id FROM player_character WHERE id > 140", Long.class)
-            .stream()
-            .map(id->new ClanMember(id, clan2.getId()))
-            .toArray(ClanMember[]::new);
-        clanMemberDAO.merge(cm2);
+        setupClanData
+        (
+            template
+                .queryForList("SELECT id FROM player_character WHERE id > 140", Long.class),
+            clan2
+        );
         OffsetDateTime startDateTime = OffsetDateTime.now();
         int matchCount = (int) Math.round(ladderMatchDAO.getResultsPerPage() * 2.5);
         seasonGenerator.createMatches
@@ -527,6 +549,20 @@ public class GeneralSeleniumIT
         playerCharacterStatsDAO.calculate();
         seasonStateDAO.merge(SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay().atOffset(ZoneOffset.UTC).plusMinutes(1),
             SeasonGenerator.DEFAULT_SEASON_ID);
+    }
+    
+    private void setupClanData(List<Long> charIds, Clan clan)
+    {
+        ClanMember[] cm = charIds
+            .stream()
+            .map(id->new ClanMember(id, clan.getId()))
+            .toArray(ClanMember[]::new);
+        clanMemberDAO.merge(cm);
+        ClanMemberEvent[] cme = charIds.stream()
+            .map(id->new ClanMemberEvent(
+                id, clan.getId(), ClanMemberEvent.EventType.JOIN, OffsetDateTime.now()))
+            .toArray(ClanMemberEvent[]::new);
+        clanMemberEventDAO.merge(cme);
     }
 
 }
