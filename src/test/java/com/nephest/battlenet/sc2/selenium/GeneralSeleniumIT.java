@@ -51,6 +51,8 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedCondition;
+import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
 import org.openqa.selenium.support.ui.WebDriverWait;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -327,6 +329,7 @@ public class GeneralSeleniumIT
             .forEach(l->{
                 String contentId = l.getAttribute("data-target");
                 clickAndWait(driver, wait, "#" + l.getAttribute("id") , contentId +  ".show.active");
+                waitForDynamicContent(driver, wait, contentId);
                 toggleInputs(driver, contentId);
                 clickCanvases(driver, contentId);
             });
@@ -448,6 +451,35 @@ public class GeneralSeleniumIT
                 menuItem.click();
                 wait.until(invisibilityOf(menu));
             }
+        }
+    }
+
+    public static void scrollTo(WebDriver driver, WebElement element)
+    {
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", element);
+    }
+
+    public static void waitForDynamicContent(WebDriver driver, WebDriverWait wait, String selector)
+    {
+        WebElement container = driver.findElement(By.cssSelector(selector));
+        if(!container.getAttribute("class").contains("container-loading")) return;
+
+        WebElement loadingIndicators = container
+            .findElement(By.cssSelector(".container-indicator-loading-default"));
+        while
+        (
+            !container.getAttribute("class").contains("loading-complete")
+            && !container.getAttribute("class").contains("loading-error")
+        )
+        {
+            scrollTo(driver, loadingIndicators);
+            ExpectedCondition<Boolean> contentLoaded = ExpectedConditions.or
+            (
+                ExpectedConditions.attributeContains(container, "class", "loading-complete"),
+                ExpectedConditions.attributeContains(container, "class", "loading-error"),
+                ExpectedConditions.attributeContains(container, "class", "loading-none")
+            );
+            wait.until(contentLoaded);
         }
     }
 
