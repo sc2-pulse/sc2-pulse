@@ -119,6 +119,7 @@ public class GeneralSeleniumIT
     private static JavascriptExecutor js;
 
     private static boolean failed = false;
+    private static String root;
 
     @BeforeAll
     public static void init
@@ -172,8 +173,8 @@ public class GeneralSeleniumIT
         {
             int port = webServerAppCtxt.getWebServer().getPort();
             WebDriverWait wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
-            String root = "http://localhost:" + port;
-            getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
+            root = "http://localhost:" + port;
+            loadMainPage(driver, wait);
             testVersus(driver, wait);
             testLadderUI(driver, wait);
             testOnline(driver, wait);
@@ -331,6 +332,11 @@ public class GeneralSeleniumIT
             });
     }
 
+    public static void loadMainPage(WebDriver driver, WebDriverWait wait)
+    {
+        getAndWait(driver, wait, root + "/", "#form-ladder-season-picker option");
+    }
+
     public static void clickAndWait(WebDriver driver, WebDriverWait wait, String clickSelector, String waitSelector)
     {
         WebElement e = driver.findElement(By.cssSelector(clickSelector));
@@ -350,7 +356,7 @@ public class GeneralSeleniumIT
         wait.until(presenceOfElementLocated(By.cssSelector(waitSelector)));
     }
 
-    private void checkJsErrors()
+    private static void checkJsErrors()
     {
         if(driver.findElement(By.cssSelector("body")).getAttribute("class").contains("js-error-detected"))
         {
@@ -359,7 +365,13 @@ public class GeneralSeleniumIT
         }
     }
 
-    public void getAndWaitAndCheckJsErrors(WebDriver driver, WebDriverWait wait, String url, String waitSelector)
+    public static void getAndWaitAndCheckJsErrors
+    (
+        WebDriver driver,
+        WebDriverWait wait,
+        String url,
+        String waitSelector
+    )
     {
         getAndWait(driver, wait, url, waitSelector);
         checkJsErrors();
