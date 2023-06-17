@@ -298,6 +298,7 @@ public class VersusIT
         OffsetDateTime dateAnchor,
         BaseMatch.MatchType typeAnchor,
         int mapAnchor,
+        Region regionAnchor,
         int page,
         int pageDiff,
         BaseMatch.MatchType type,
@@ -322,9 +323,11 @@ public class VersusIT
                     )
                     : get
                     (
-                        "/api/versus/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}/matches"
+                        "/api/versus"
+                            + "/{dateAnchor}/{typeAnchor}/{mapAnchor}/{regionAnchor}"
+                            + "/{page}/{pageDiff}/matches"
                             + "?type=" + mvcConversionService.convert(type, String.class) + sb,
-                            dateAnchor, typeAnchor, mapAnchor,
+                            dateAnchor, typeAnchor, mapAnchor, regionAnchor,
                             page, pageDiff,
                             type
                     )
@@ -349,7 +352,7 @@ public class VersusIT
         (
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
-            OffsetDateTime.MAX, BaseMatch.MatchType._1V1, 0,
+            OffsetDateTime.MAX, BaseMatch.MatchType._1V1, 0, Region.US,
             0, 1,
             BaseMatch.MatchType._1V1,
             "common",
@@ -362,7 +365,7 @@ public class VersusIT
         (
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
-            OffsetDateTime.MAX, BaseMatch.MatchType._1V1, 0,
+            OffsetDateTime.MAX, BaseMatch.MatchType._1V1, 0, Region.US,
             0, 1,
             BaseMatch.MatchType._1V1,
             "summary",
@@ -374,7 +377,7 @@ public class VersusIT
         (
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
-            OffsetDateTime.MAX, BaseMatch.MatchType._1V1, 0,
+            OffsetDateTime.MAX, BaseMatch.MatchType._1V1, 0, Region.US,
             0, 1,
             BaseMatch.MatchType._1V1,
             "matches",
@@ -387,7 +390,7 @@ public class VersusIT
         (
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
-            mMatch.getDate(), mMatch.getType(), mMatch.getMapId(),
+            mMatch.getDate(), mMatch.getType(), mMatch.getMapId(), mMatch.getRegion(),
             1, 1,
             BaseMatch.MatchType._1V1,
             "matches",
@@ -400,7 +403,7 @@ public class VersusIT
         (
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
-            mMatch2.getDate(), mMatch2.getType(), mMatch2.getMapId(),
+            mMatch2.getDate(), mMatch2.getType(), mMatch2.getMapId(), mMatch2.getRegion(),
             2, 1,
             BaseMatch.MatchType._1V1,
             "matches",
@@ -412,7 +415,7 @@ public class VersusIT
         (
             ids.getT1(), ids.getT2(),
             ids.getT3(), ids.getT4(),
-            mMatch2.getDate(), mMatch2.getType(), mMatch2.getMapId(),
+            mMatch2.getDate(), mMatch2.getType(), mMatch2.getMapId(), mMatch2.getRegion(),
             2, -1,
             BaseMatch.MatchType._1V1,
             "matches",

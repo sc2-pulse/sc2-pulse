@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
@@ -137,6 +138,7 @@ public class GroupController
         @RequestParam(name = "dateCursor", required = false) OffsetDateTime dateCursor,
         @RequestParam(name = "typeCursor", required = false, defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
         @RequestParam(name = "mapCursor", required = false, defaultValue = "0") int mapCursor,
+        @RequestParam(name = "regionCursor", required = false, defaultValue = "US") Region regionCursor,
         @RequestParam(name = "type", required = false, defaultValue = "") BaseMatch.MatchType[] types
     )
     {
@@ -146,7 +148,7 @@ public class GroupController
             ladderMatchDAO.findMatchesByCharacterIds
             (
                 characterIds,
-                dateCursor, typeCursor, mapCursor,
+                dateCursor, typeCursor, mapCursor, regionCursor,
                 0, 1,
                 types
             ).getResult()

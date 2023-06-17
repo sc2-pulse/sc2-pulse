@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.inner.VersusSummary;
@@ -12,14 +13,17 @@ import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.Versus;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.web.service.VersusService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/versus")
@@ -55,7 +59,7 @@ public class VersusController
         (
             clans1, teams1,
             clans2, teams2,
-            OffsetDateTime.MAX, BaseMatch.MatchType._1V1, Integer.MAX_VALUE,
+            OffsetDateTime.MAX, BaseMatch.MatchType._1V1, Integer.MAX_VALUE, Region.US,
             0, 1, types
         );
     }
@@ -79,12 +83,17 @@ public class VersusController
         );
     }
 
-    @GetMapping("/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}/matches")
+    @GetMapping
+    ({
+        "/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}/matches",
+        "/{dateAnchor}/{typeAnchor}/{mapAnchor}/{regionAnchor}/{page}/{pageDiff}/matches",
+    })
     public PagedSearchResult<List<LadderMatch>> getVersusMatches
     (
         @PathVariable("dateAnchor") String dateAnchor,
         @PathVariable("typeAnchor") BaseMatch.MatchType typeAnchor,
         @PathVariable("mapAnchor") int mapAnchor,
+        @PathVariable(name = "regionAnchor", required = false) Region regionAnchor,
         @PathVariable("page") int page,
         @PathVariable("pageDiff") int pageDiff,
         @RequestParam(name = "clan1", defaultValue = "") Integer[] clans1,
@@ -100,7 +109,9 @@ public class VersusController
         (
             clans1, teams1,
             clans2, teams2,
-            OffsetDateTime.parse(dateAnchor), typeAnchor, mapAnchor, page, pageDiff, types
+            OffsetDateTime.parse(dateAnchor), typeAnchor, mapAnchor,
+            regionAnchor != null ? regionAnchor : Region.US,
+            page, pageDiff, types
         );
     }
 

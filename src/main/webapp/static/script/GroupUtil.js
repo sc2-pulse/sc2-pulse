@@ -109,6 +109,7 @@ class GroupUtil
             params.append("dateCursor", matchCursor.match.date);
             params.append("typeCursor", matchCursor.match.type);
             params.append("mapCursor", matchCursor.map.id);
+            params.append("regionCursor", matchCursor.match.region);
             if(varModel.matchType) params.append("type", varModel.matchType);
         } else {
             if(matchType != "all") {

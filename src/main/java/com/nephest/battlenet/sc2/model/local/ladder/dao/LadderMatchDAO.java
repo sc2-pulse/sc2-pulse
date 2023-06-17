@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
@@ -110,13 +111,13 @@ public class LadderMatchDAO
         + "), "
         + "match_filter AS "
         + "("
-            + "SELECT DISTINCT ON (date, type, map_id) "
+            + "SELECT DISTINCT ON (date, type, map_id, region) "
             + "id "
             + "FROM participant_filter "
             + "INNER JOIN match USING(id) "
-            + "WHERE (date, type, map_id) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor) "
+            + "WHERE (date, type, map_id, region) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor, :regionAnchor) "
             + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) "
-            + "ORDER BY date %2$s, type %2$s, map_id %2$s "
+            + "ORDER BY date %2$s, type %2$s, map_id %2$s, region %2$s "
             + "LIMIT :limit"
         + ") "
         + FIND_MATCHES_TEMPLATE;
@@ -134,7 +135,7 @@ public class LadderMatchDAO
             + "SELECT id "
             + "FROM match "
             + "WHERE vod = true "
-            + "AND (date, type, map_id) < (:dateAnchor, :typeAnchor, :mapIdAnchor) "
+            + "AND (date, type, map_id, region) < (:dateAnchor, :typeAnchor, :mapIdAnchor, :regionAnchor) "
             + "AND (:mapId::integer IS NULL OR map_id = :mapId) "
             + "AND (:minDuration::integer IS NULL OR duration >= :minDuration) "
             + "AND (:maxDuration::integer IS NULL OR duration <= :maxDuration) "
@@ -143,7 +144,7 @@ public class LadderMatchDAO
             + "AND (:raceVod::text IS NULL OR race_vod LIKE :raceVod) "
             + "AND (:race::text IS NULL OR race LIKE :race) "
             + "AND (:includeSubOnly = true OR sub_only_vod = false) "
-            + "ORDER BY date DESC, type DESC, map_id DESC "
+            + "ORDER BY date DESC, type DESC, map_id DESC, region DESC "
             + "LIMIT :limit "
         + ") " + FIND_MATCHES_TEMPLATE,
             "<", "DESC"
@@ -248,7 +249,7 @@ public class LadderMatchDAO
         String.format
         (
             VERSUS_FILTER_TEMPLATE,
-            "AND (date, type, map_id) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor) "
+            "AND (date, type, map_id, match.region) %1$s (:dateAnchor, :typeAnchor, :mapIdAnchor, :regionAnchor) "
             + "AND (array_length(:types::smallint[], 1) IS NULL OR match.type = ANY(:types)) ",
             "%2$s",
             "LIMIT :limit"
@@ -404,6 +405,7 @@ public class LadderMatchDAO
             dateAnchor,
             typeAnchor,
             mapAnchor,
+            Region.US,
             page,
             pageDiff,
             types
@@ -416,6 +418,7 @@ public class LadderMatchDAO
         OffsetDateTime dateAnchor,
         BaseMatch.MatchType typeAnchor,
         int mapAnchor,
+        Region regionAnchor,
         int page,
         int pageDiff,
         BaseMatch.MatchType... types
@@ -428,7 +431,7 @@ public class LadderMatchDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", characterIds)
             .addValue("limit", getResultsPerPage());
-        addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, types, params);
+        addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, regionAnchor, types, params);
 
         String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
@@ -445,6 +448,7 @@ public class LadderMatchDAO
         OffsetDateTime dateAnchor,
         BaseMatch.MatchType typeAnchor,
         int mapAnchor,
+        Region regionAnchor,
         int page,
         int pageDiff
     )
@@ -475,7 +479,8 @@ public class LadderMatchDAO
             .addValue("limit", getResultsPerPage());
         addMatchCursorParams
         (
-            dateAnchor, typeAnchor, mapAnchor, new BaseMatch.MatchType[]{BaseMatch.MatchType._1V1},
+            dateAnchor, typeAnchor, mapAnchor, regionAnchor,
+            new BaseMatch.MatchType[]{BaseMatch.MatchType._1V1},
             params
         );
         List<LadderMatch> matches = template.query(FIND_TWITCH_VODS, params, MATCHES_EXTRACTOR);
@@ -487,6 +492,7 @@ public class LadderMatchDAO
         OffsetDateTime dateAnchor,
         BaseMatch.MatchType typeAnchor,
         int mapAnchor,
+        Region regionAnchor,
         BaseMatch.MatchType[] types,
         MapSqlParameterSource params
     )
@@ -495,6 +501,7 @@ public class LadderMatchDAO
             .addValue("dateAnchor", dateAnchor)
             .addValue("typeAnchor", conversionService.convert(typeAnchor, Integer.class))
             .addValue("mapIdAnchor", mapAnchor)
+            .addValue("regionAnchor", conversionService.convert(regionAnchor, Integer.class))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class))
             .addValue("types", Arrays.stream(types)
@@ -532,6 +539,7 @@ public class LadderMatchDAO
         OffsetDateTime dateAnchor,
         BaseMatch.MatchType typeAnchor,
         int mapAnchor,
+        Region regionAnchor,
         int page,
         int pageDiff,
         BaseMatch.MatchType... types
@@ -547,7 +555,7 @@ public class LadderMatchDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("limit", getResultsPerPage());
         addVersusParams(clans1, teams1, clans2, teams2, params);
-        addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, types, params);
+        addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, regionAnchor, types, params);
         String q = forward ? FIND_VERSUS_MATCHES : FIND_VERSUS_MATCHES_REVERSED;
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
         return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);

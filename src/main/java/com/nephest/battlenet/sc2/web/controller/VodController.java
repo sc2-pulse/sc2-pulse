@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
@@ -27,12 +28,17 @@ public class VodController
     @Autowired
     private LadderMatchDAO ladderMatchDAO;
 
-    @GetMapping("/twitch/search/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}")
+    @GetMapping
+    ({
+        "/twitch/search/{dateAnchor}/{typeAnchor}/{mapAnchor}/{regionAnchor}/{page}/{pageDiff}",
+        "/twitch/search/{dateAnchor}/{typeAnchor}/{mapAnchor}/{page}/{pageDiff}",
+    })
     public PagedSearchResult<List<LadderMatch>> getCharacterMatches
     (
         @PathVariable("dateAnchor") String dateAnchor,
         @PathVariable("typeAnchor") BaseMatch.MatchType typeAnchor,
         @PathVariable("mapAnchor") int mapAnchor,
+        @PathVariable(value = "regionAnchor", required = false) Region regionAnchor,
         @PathVariable("page") int page,
         @PathVariable("pageDiff") int pageDiff,
         @RequestParam(value = "race", required = false) Race race,
@@ -57,6 +63,7 @@ public class VodController
             OffsetDateTime.parse(dateAnchor),
             typeAnchor,
             mapAnchor,
+            regionAnchor == null ? Region.US : regionAnchor,
             page,
             pageDiff
         );

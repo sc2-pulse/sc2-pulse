@@ -142,7 +142,7 @@ class VersusUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         const matches = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.SEARCH).matches.result;
         const lastMatch = matches[matches.length - 1];
-        VersusUtil.loadNextMatchesModel(lastMatch.match.date, lastMatch.match.type, lastMatch.map.id, Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.VAR).params)
+        VersusUtil.loadNextMatchesModel(lastMatch.match.date, lastMatch.match.type, lastMatch.map.id, lastMatch.match.region, Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.VAR).params)
             .then(json => {
                 if(json.result.length > 0) VersusUtil.updateVersusView();
                 if(json.result.length < MATCH_BATCH_SIZE) document.querySelector("#load-more-matches-versus").classList.add("d-none");
@@ -151,10 +151,10 @@ class VersusUtil
             .catch(error => Session.onPersonalException(error));
     }
 
-    static loadNextMatchesModel(dateAnchor, typeAnchor, mapAnchor, params)
+    static loadNextMatchesModel(dateAnchor, typeAnchor, mapAnchor, regionAnchor, params)
     {
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/versus/${dateAnchor}/${typeAnchor}/${mapAnchor}/1/1/matches?${params.toString()}`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/versus/${dateAnchor}/${typeAnchor}/${mapAnchor}/${regionAnchor}/1/1/matches?${params.toString()}`))
             .then(Session.verifyJsonResponse)
             .then(json => {
                 const searchResult = Model.DATA.get(VIEW.VERSUS).get(VIEW_DATA.SEARCH);
