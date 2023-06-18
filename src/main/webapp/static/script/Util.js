@@ -402,6 +402,11 @@ class Util
             });
     }
 
+    static resetLoadingIndicator(container)
+    {
+        return ElementUtil.executeTask(container.id, ()=>ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE));
+    }
+
     static getHrefUrlSearchParams(element)
     {
         const href = element.getAttribute("href");

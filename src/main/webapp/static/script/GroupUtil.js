@@ -232,6 +232,7 @@ class GroupUtil
         const fullParams = GroupUtil.fullUrlSearchParams(groupParams);
         Model.DATA.get(VIEW.GROUP).set(VIEW_DATA.VAR, {groupParams: groupParams, fullGroupParams: fullParams});
         Model.reset(VIEW.GROUP, [VIEW_DATA.SEARCH, VIEW_DATA.TEAMS]);
+        document.querySelectorAll("#group .container-loading").forEach(Util.resetLoadingIndicator);
         const modal = document.querySelector("#group");
         Util.setGeneratingStatus(STATUS.BEGIN);
         return GroupUtil.updateRequiredMetadata(groupParams, modal)

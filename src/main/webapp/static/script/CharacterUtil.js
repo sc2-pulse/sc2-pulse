@@ -157,7 +157,7 @@ class CharacterUtil
 
     static resetAdditionalLinks()
     {
-        ElementUtil.setLoadingIndicator(document.querySelector("#character-links-section"), LOADING_STATUS.NONE);
+        Util.resetLoadingIndicator(document.querySelector("#character-links-section"));
         Model.DATA.get(VIEW.CHARACTER).delete("additionalLinks");
     }
 
