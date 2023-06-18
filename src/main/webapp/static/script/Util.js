@@ -385,6 +385,11 @@ class Util
 
     static load(container, lazyPromise)
     {
+        return ElementUtil.executeTask(container.id, ()=>Util.doLoad(container, lazyPromise));
+    }
+
+    static doLoad(container, lazyPromise)
+    {
         if(container.classList.contains(LOADING_STATUS.COMPLETE.className)
             || container.classList.contains(LOADING_STATUS.IN_PROGRESS.className)) return Promise.resolve();
 

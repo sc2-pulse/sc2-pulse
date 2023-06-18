@@ -559,10 +559,20 @@ class ElementUtil
         if(task) task();
     }
 
+    static executeTask(id, task)
+    {
+        const queue = ElementUtil.ELEMENT_TASK_QUEUE.get(id);
+        let enqueuedTask = queue ? queue.then(task) : task();
+        if(!enqueuedTask || !(enqueuedTask instanceof Promise)) enqueuedTask = Promise.resolve();
+        ElementUtil.ELEMENT_TASK_QUEUE.set(id, enqueuedTask);
+        return task;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
 ElementUtil.ELEMENT_TASKS = new Map();
+ElementUtil.ELEMENT_TASK_QUEUE = new Map();
 ElementUtil.INPUT_TIMEOUTS = new Map();
 ElementUtil.INPUT_TIMESTAMPS = new Map();
 ElementUtil.TITLE_CONSTRUCTORS = new Map();
