@@ -163,34 +163,29 @@ class CharacterUtil
 
     static enhanceDynamicCharacterData()
     {
-        ElementUtil.ELEMENT_TASKS.set("player-stats-player-tab", e=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id));
+        ElementUtil.ELEMENT_TASKS.set("player-stats-player-tab", e=>Util.load(document.querySelector("#character-links-section"),
+            n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id)));
         document.querySelectorAll(".character-additional-links-reload")
             .forEach(reloadCtl=>reloadCtl.addEventListener("click",e=>{
                 CharacterUtil.resetAdditionalLinks();
-                CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id);
+                Util.load(document.querySelector("#character-links-section"),
+                    n=>CharacterUtil.updateAdditionalCharacterLinks(Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR).id));
             }));
     }
 
     static updateAdditionalCharacterLinks(id)
     {
         const linksContainer = document.querySelector("#character-links-section");
-        if(linksContainer.classList.contains(LOADING_STATUS.COMPLETE.className)) return;
-
-        ElementUtil.setLoadingIndicator(linksContainer, LOADING_STATUS.IN_PROGRESS);
         document.querySelectorAll(".additional-link-container").forEach(e=>e.classList.add("d-none"));
         return CharacterUtil.updateAdditionalCharacterLinksModel(id)
             .then(linkResult => {
                 CharacterUtil.updateAdditionalCharacterLinksView();
-                if(linkResult.failedTypes.length == 0) {
-                    ElementUtil.setLoadingIndicator(linksContainer, LOADING_STATUS.COMPLETE);
-                } else {
-                    ElementUtil.setLoadingIndicator(linksContainer, LOADING_STATUS.ERROR);
-                }
-                return linkResult;
+                const status = linkResult.failedTypes.length == 0 ? LOADING_STATUS.COMPLETE : LOADING_STATUS.ERROR;
+                return {data: linkResult, status: status};
             })
             .catch(error => {
                 CharacterUtil.updateAdditionalCharacterLinksView();
-                ElementUtil.setLoadingIndicator(linksContainer, LOADING_STATUS.ERROR);
+                throw error;
             });
     }
 
