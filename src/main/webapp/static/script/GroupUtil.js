@@ -274,12 +274,13 @@ class GroupUtil
     static enhanceMatches()
     {
         const groupSection = document.querySelector("#group");
+        const matchContainer = groupSection.querySelector(":scope .group-matches");
         const options = {
          rootMargin: "33% 0px",
         };
         const observer = new IntersectionObserver((intersection)=>{
             if (intersection.some(i=>i.isIntersecting))
-                Util.load(document.querySelector("#group .group-matches"),
+                Util.load(matchContainer,
                     e=>GroupUtil.updateMatches(document.querySelector("#group"),
                         localStorage.getItem("matches-type-group") || "all"));
         }, options);
@@ -287,17 +288,17 @@ class GroupUtil
 
         document.querySelector("#matches-historical-mmr-group").addEventListener("change",
             e=>window.setTimeout(e=>GroupUtil.updateMatchesView(
-                document.querySelector("#group .group-matches"),
+                matchContainer,
                 Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.SEARCH).matches,
                 true),
             1));
         document.querySelector("#matches-type-group").addEventListener("change",
             evt=>window.setTimeout(timeout=>{
-                GroupUtil.resetMatches(document.querySelector("#group .group-matches"));
-                GroupUtil.updateMatches(
+                GroupUtil.resetMatches(matchContainer);
+                Util.load(matchContainer, ()=>GroupUtil.updateMatches(
                     groupSection,
                     localStorage.getItem("matches-type-group") || "all"
-                );
+                ));
             }, 1));
     }
 
