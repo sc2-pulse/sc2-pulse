@@ -172,10 +172,12 @@ class GroupUtil
 
     static resetMatches(section)
     {
-        const view = ViewUtil.getView(section);
-        ElementUtil.removeChildren(section.querySelector(":scope .matches tbody"));
-        Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = [];
-        Model.DATA.get(view).get(VIEW_DATA.TEAMS).result = [];
+        return ElementUtil.executeTask(section.id, ()=>{
+            const view = ViewUtil.getView(section);
+            ElementUtil.removeChildren(section.querySelector(":scope .matches tbody"));
+            Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = [];
+            Model.DATA.get(view).get(VIEW_DATA.TEAMS).result = [];
+        });
     }
 
     static getClanHistory(params)
@@ -227,7 +229,9 @@ class GroupUtil
 
     static loadAndShowGroup(groupIds)
     {
-        document.querySelectorAll("#group tbody").forEach(tbody=>ElementUtil.removeChildren(tbody));
+        document.querySelectorAll("#group .container-loading")
+            .forEach(container=>ElementUtil.executeTask(container.id, ()=>container.querySelectorAll(":scope tbody")
+                .forEach(ElementUtil.removeChildren)));
         const groupParams = groupIds instanceof URLSearchParams ? groupIds : Util.mapToUrlSearchParams(groupIds);
         const fullParams = GroupUtil.fullUrlSearchParams(groupParams);
         Model.DATA.get(VIEW.GROUP).set(VIEW_DATA.VAR, {groupParams: groupParams, fullGroupParams: fullParams});
@@ -289,7 +293,7 @@ class GroupUtil
             1));
         document.querySelector("#matches-type-group").addEventListener("change",
             evt=>window.setTimeout(timeout=>{
-                GroupUtil.resetMatches(groupSection);
+                GroupUtil.resetMatches(document.querySelector("#group .group-matches"));
                 GroupUtil.updateMatches(
                     groupSection,
                     localStorage.getItem("matches-type-group") || "all"
