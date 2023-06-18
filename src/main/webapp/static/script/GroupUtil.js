@@ -88,7 +88,7 @@ class GroupUtil
         const promise = ()=>GroupUtil.getCharacters(groupParams)
             .then(characters=>{
                 CharacterUtil.updateCharacters(container.querySelector(":scope .table-character"), characters);
-                ElementUtil.setLoadingIndicator(container, LOADING_STATUS.COMPLETE);
+                return {data: characters, status: LOADING_STATUS.COMPLETE};
             });
         return Util.load(container, promise);
     }
@@ -130,14 +130,13 @@ class GroupUtil
         return GroupUtil.getMatches(params)
             .then(matchesResponse=>{
                 if(!matchesResponse) {
-                    ElementUtil.setLoadingIndicator(container, LOADING_STATUS.COMPLETE);
-                    return;
+                    return {status: LOADING_STATUS.COMPLETE};
                 }
                 Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = matches
                     ? matches.concat(matchesResponse)
                     : matchesResponse;
                 GroupUtil.updateMatchesView(container, matchesResponse);
-                ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE);
+                return {data: matchesResponse, status: LOADING_STATUS.NONE};
             });
     }
 
@@ -209,15 +208,14 @@ class GroupUtil
         return GroupUtil.getClanHistory(params)
             .then(response=>{
                 if(!response) {
-                    ElementUtil.setLoadingIndicator(container, LOADING_STATUS.COMPLETE);
-                    return;
+                    return {status: LOADING_STATUS.COMPLETE};
                 }
                 GroupUtil.mapClanHistory(response);
                 Model.DATA.get(view).get(VIEW_DATA.SEARCH).clanHistory = clanHistory
                     ? Util.addAllCollections(response, clanHistory)
                     : response;
                 ClanUtil.updateClanHistoryTable(container.querySelector(":scope .clan-history"), response);
-                ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE);
+                return {data: response, status: LOADING_STATUS.NONE}
             });
     }
 

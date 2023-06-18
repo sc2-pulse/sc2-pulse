@@ -390,6 +390,7 @@ class Util
 
         ElementUtil.setLoadingIndicator(container, LOADING_STATUS.IN_PROGRESS);
         return lazyPromise()
+            .then(result=>ElementUtil.setLoadingIndicator(container, result.status))
             .catch(error=>{
                 ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR);
                 if(DEBUG == true) console.log(error);
