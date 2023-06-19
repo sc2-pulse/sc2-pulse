@@ -101,7 +101,7 @@ public class GroupController
             });
     }
 
-    @GetMapping("/character/full")
+    @GetMapping("/character/full") @CharacterGroup
     public ResponseEntity<List<LadderDistinctCharacter>> getFullPlayerCharacters(@CharacterGroup Set<Long> characterIds)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
@@ -131,7 +131,7 @@ public class GroupController
         ));
     }
 
-    @GetMapping("/match")
+    @GetMapping("/match") @CharacterGroup
     public ResponseEntity<?> getMatchHistory
     (
         @CharacterGroup Set<Long> characterIds,
@@ -160,7 +160,7 @@ public class GroupController
         );
     }
 
-    @GetMapping("/flat")
+    @GetMapping("/flat") @CharacterGroup
     public ResponseEntity<Set<Long>> getCharacterIds(@CharacterGroup Set<Long> characterIds)
     {
         return WebServiceUtil.notFoundIfEmpty(characterIds);
