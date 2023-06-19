@@ -336,4 +336,13 @@ public class ClanIT
             );
     }
 
+    @Test
+    public void whenUpdatingFromNullToNonNullName_thenUpdate()
+    {
+        Clan nullNameClan = clanDAO.merge(new Clan(null, "tag", Region.EU, null))[0];
+        clanDAO.merge(new Clan(null, "tag", Region.EU, "name")); //update name
+        Clan foundClan = clanDAO.findByIds(nullNameClan.getId()).get(0);
+        assertEquals("name", foundClan.getName());
+    }
+
 }

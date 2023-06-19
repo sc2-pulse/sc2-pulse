@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -74,7 +74,7 @@ public class ClanDAO
             + "WHERE clan.tag = v.tag "
             + "AND clan.region = v.region "
             + "AND v.name IS NOT NULL "
-            + "AND clan.name != v.name "
+            + "AND clan.name IS DISTINCT FROM v.name "
         + "), "
         + "missing AS "
         + "("
