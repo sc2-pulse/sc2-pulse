@@ -395,7 +395,14 @@ class Util
 
         ElementUtil.setLoadingIndicator(container, LOADING_STATUS.IN_PROGRESS);
         return lazyPromise()
-            .then(result=>ElementUtil.setLoadingIndicator(container, result.status))
+            .then(result=>{
+                ElementUtil.setLoadingIndicator(container, result.status);
+                if(result.status != LOADING_STATUS.COMPLETE) {
+                    const infiniteScrollElem = container.querySelector(":scope .indicator-loading-scroll-infinite");
+                    if(infiniteScrollElem && ElementUtil.isElementInViewport(infiniteScrollElem))
+                        return Util.load(container, lazyPromise);
+                }
+            })
             .catch(error=>{
                 ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR);
                 if(DEBUG == true) console.log(error);

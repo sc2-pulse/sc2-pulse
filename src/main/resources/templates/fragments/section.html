@@ -228,7 +228,7 @@
 </form>
 <p th:fragment="missing-characters-message">Are some of your characters missing? <a th:href="@{/data/battle-net}">Import your BattleNet profile</a> to fix it.</p>
 <th:block th:fragment="missing-battle-tag-message">Is your BattleTag missing or invalid? <a th:href="@{/data/battle-net}">Import your BattleNet profile</a> to fix it.</th:block>
-<div th:fragment="loading-indicator" class="container-indicator-loading-default">
+<div th:fragment="loading-indicator" class="container-indicator-loading-default indicator-loading-scroll-infinite">
     <span th:replace="~{fragments/section :: loading-indicator-in-progress}"></span>
     <span th:replace="~{fragments/section :: loading-indicator-error}"></span>
 </div>
