@@ -9,7 +9,6 @@ import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
-import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
@@ -36,6 +35,7 @@ public class GroupController
 
     public static final int CLAN_MEMBER_EVENT_PAGE_SIZE = 30;
     public static final int CLAN_MEMBER_EVENT_PAGE_SIZE_MAX = 100;
+    public static final int MATCH_PAGE_SIZE_MAX = 100;
 
     @Autowired
     private LadderCharacterDAO ladderCharacterDAO;
@@ -132,16 +132,21 @@ public class GroupController
     }
 
     @GetMapping("/match")
-    public ResponseEntity<List<LadderMatch>> getMatchHistory
+    public ResponseEntity<?> getMatchHistory
     (
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "dateCursor", required = false) OffsetDateTime dateCursor,
         @RequestParam(name = "typeCursor", required = false, defaultValue = "_1V1") BaseMatch.MatchType typeCursor,
         @RequestParam(name = "mapCursor", required = false, defaultValue = "0") int mapCursor,
         @RequestParam(name = "regionCursor", required = false, defaultValue = "US") Region regionCursor,
-        @RequestParam(name = "type", required = false, defaultValue = "") BaseMatch.MatchType[] types
+        @RequestParam(name = "type", required = false, defaultValue = "") BaseMatch.MatchType[] types,
+        @RequestParam(name = "limit", required = false, defaultValue = "20") int limit
     )
     {
+        if(limit > MATCH_PAGE_SIZE_MAX) return ResponseEntity
+            .badRequest()
+            .body("Max limit: " + MATCH_PAGE_SIZE_MAX);
+
         dateCursor = dateCursor != null ? dateCursor : OffsetDateTime.now();
         return WebServiceUtil.notFoundIfEmpty
         (
@@ -149,7 +154,7 @@ public class GroupController
             (
                 characterIds,
                 dateCursor, typeCursor, mapCursor, regionCursor,
-                0, 1,
+                0, 1, limit,
                 types
             ).getResult()
         );

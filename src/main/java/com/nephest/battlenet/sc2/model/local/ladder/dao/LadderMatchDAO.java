@@ -409,6 +409,7 @@ public class LadderMatchDAO
             Region.US,
             page,
             pageDiff,
+            getResultsPerPage(),
             types
         );
     }
@@ -422,6 +423,7 @@ public class LadderMatchDAO
         Region regionAnchor,
         int page,
         int pageDiff,
+        int limit,
         BaseMatch.MatchType... types
     )
     {
@@ -431,12 +433,12 @@ public class LadderMatchDAO
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", characterIds)
-            .addValue("limit", getResultsPerPage());
+            .addValue("limit", limit);
         addMatchCursorParams(dateAnchor, typeAnchor, mapAnchor, regionAnchor, types, params);
 
         String q = forward ? FIND_MATCHES_BY_CHARACTER_ID : FIND_MATCHES_BY_CHARACTER_ID_REVERSED;
         List<LadderMatch> matches = template.query(q, params, MATCHES_EXTRACTOR);
-        return new PagedSearchResult<>(null, (long) getResultsPerPage(), finalPage, matches);
+        return new PagedSearchResult<>(null, (long) limit, finalPage, matches);
     }
 
     public PagedSearchResult<List<LadderMatch>> findTwitchVods
