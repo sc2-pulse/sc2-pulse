@@ -590,3 +590,4 @@ ElementUtil.DESCRIPTION_CONSTRUCTORS = new Map();
 ElementUtil.NEGATION_PREFIX = "neg-";
 ElementUtil.INPUT_TIMEOUT = 1000;
 ElementUtil.MANUAL_TOOLTIP_TIMEOUT = 1000;
+ElementUtil.INFINITE_SCROLL_OPTIONS = {rootMargin: "10% 0px"}

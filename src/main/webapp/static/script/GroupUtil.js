@@ -275,15 +275,12 @@ class GroupUtil
     {
         const groupSection = document.querySelector("#group");
         const matchContainer = groupSection.querySelector(":scope .group-matches");
-        const options = {
-         rootMargin: "33% 0px",
-        };
         const observer = new IntersectionObserver((intersection)=>{
             if (intersection.some(i=>i.isIntersecting))
                 Util.load(matchContainer,
                     e=>GroupUtil.updateMatches(document.querySelector("#group"),
                         localStorage.getItem("matches-type-group") || "all"));
-        }, options);
+        }, ElementUtil.INFINITE_SCROLL_OPTIONS);
         observer.observe(document.querySelector("#group .group-matches .container-indicator-loading-default"));
 
         document.querySelector("#matches-historical-mmr-group").addEventListener("change",
@@ -304,14 +301,11 @@ class GroupUtil
 
     static enhanceClanHistory()
     {
-        const options = {
-            rootMargin: "33% 0px",
-        };
         const observer = new IntersectionObserver((intersection)=>{
             if (intersection.some(i=>i.isIntersecting))
                 Util.load(document.querySelector("#group .group-clan"),
                     e=>GroupUtil.updateClanHistory(document.querySelector("#group")));
-        }, options);
+        }, ElementUtil.INFINITE_SCROLL_OPTIONS);
         observer.observe(document.querySelector("#group .group-clan .container-indicator-loading-default"));
     }
 
