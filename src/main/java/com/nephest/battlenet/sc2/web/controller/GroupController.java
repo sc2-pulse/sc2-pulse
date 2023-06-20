@@ -119,14 +119,15 @@ public class GroupController
         if(limit > CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
             return ResponseEntity.badRequest().body("Max page size exceeded: " + CLAN_MEMBER_EVENT_PAGE_SIZE_MAX);
         OffsetDateTime cCursor = createdCursor != null ? createdCursor : OffsetDateTime.now();
-        return ResponseEntity.of(ladderClanMemberEventDAO.find
-        (
-            characterIds,
-            clanIds,
-            cCursor,
-            characterIdCursor,
-            limit
-        ));
+        return areIdsInvalid(characterIds, clanIds)
+            .orElseGet(()->ResponseEntity.of(ladderClanMemberEventDAO.find
+            (
+                characterIds,
+                clanIds,
+                cCursor,
+                characterIdCursor,
+                limit
+            )));
     }
 
     @GetMapping("/match") @CharacterGroup
