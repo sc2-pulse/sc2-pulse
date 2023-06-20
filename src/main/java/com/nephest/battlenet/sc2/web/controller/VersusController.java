@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.config.openapi.TeamLegacyUids;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
@@ -48,9 +49,9 @@ public class VersusController
     public Versus getVersus
     (
         @RequestParam(name = "clan1", defaultValue = "") Integer[] clans1,
-        @RequestParam(name = "team1", defaultValue = "") Set<TeamLegacyUid> teams1,
+        @RequestParam(name = "team1", defaultValue = "") @TeamLegacyUids Set<TeamLegacyUid> teams1,
         @RequestParam(name = "clan2", defaultValue = "") Integer[] clans2,
-        @RequestParam(name = "team2", defaultValue = "") Set<TeamLegacyUid> teams2,
+        @RequestParam(name = "team2", defaultValue = "") @TeamLegacyUids Set<TeamLegacyUid> teams2,
         @RequestParam(value = "type", defaultValue = "") BaseMatch.MatchType[] types
     )
     {
@@ -68,9 +69,9 @@ public class VersusController
     public VersusSummary getVersusSummary
     (
         @RequestParam(name = "clan1", defaultValue = "") Integer[] clans1,
-        @RequestParam(name = "team1", defaultValue = "") Set<TeamLegacyUid> teams1,
+        @RequestParam(name = "team1", defaultValue = "") @TeamLegacyUids Set<TeamLegacyUid> teams1,
         @RequestParam(name = "clan2", defaultValue = "") Integer[] clans2,
-        @RequestParam(name = "team2", defaultValue = "") Set<TeamLegacyUid> teams2,
+        @RequestParam(name = "team2", defaultValue = "") @TeamLegacyUids Set<TeamLegacyUid> teams2,
         @RequestParam(value = "type", defaultValue = "") BaseMatch.MatchType[] types
     )
     {
@@ -97,9 +98,9 @@ public class VersusController
         @PathVariable("page") int page,
         @PathVariable("pageDiff") int pageDiff,
         @RequestParam(name = "clan1", defaultValue = "") Integer[] clans1,
-        @RequestParam(name = "team1", defaultValue = "") Set<TeamLegacyUid> teams1,
+        @RequestParam(name = "team1", defaultValue = "") @TeamLegacyUids Set<TeamLegacyUid> teams1,
         @RequestParam(name = "clan2", defaultValue = "") Integer[] clans2,
-        @RequestParam(name = "team2", defaultValue = "") Set<TeamLegacyUid> teams2,
+        @RequestParam(name = "team2", defaultValue = "") @TeamLegacyUids Set<TeamLegacyUid> teams2,
         @RequestParam(value = "type", defaultValue = "") BaseMatch.MatchType[] types
 
     )

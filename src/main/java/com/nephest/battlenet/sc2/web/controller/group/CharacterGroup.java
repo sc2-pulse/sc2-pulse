@@ -21,12 +21,12 @@ import java.lang.annotation.Target;
     @Parameter
     (
         in = ParameterIn.QUERY, name = "characterId",
-        array = @ArraySchema(maxItems = 500, schema = @Schema(type = "long"))
+        array = @ArraySchema(maxItems = 500, schema = @Schema(type = "integer", format = "int64"))
     ),
     @Parameter
     (
         in = ParameterIn.QUERY, name = "clanId",
-        array = @ArraySchema(maxItems = 10, schema = @Schema(type = "integer"))
+        array = @ArraySchema(maxItems = 10, schema = @Schema(type = "integer", format = "int32"))
     )
 })
 public @interface CharacterGroup
