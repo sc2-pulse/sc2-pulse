@@ -298,7 +298,8 @@ class CharacterUtil
         if(!discordUser) {
             connectionElem.classList.add("d-none");
         } else {
-            connectionElem.querySelector(":scope .tag").textContent = discordUser.name + "#" + discordUser.discriminator;
+            connectionElem.querySelector(":scope .tag").textContent = discordUser.name
+                + (discordUser.discriminator ? "#" + discordUser.discriminator : "");
             connectionElem.classList.remove("d-none");
         }
     }

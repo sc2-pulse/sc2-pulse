@@ -61,13 +61,13 @@ public class DiscordUserDAO
         + "( "
             + "UPDATE discord_user "
             + "SET name = v.name, "
-            + "discriminator = v.discriminator "
+            + "discriminator = v.discriminator::smallint "
             + "FROM vals v(id, name, discriminator) "
             + "WHERE discord_user.id = v.id "
             + "AND "
             + "( "
                 + "discord_user.name != v.name "
-                + "OR discord_user.discriminator != v.discriminator "
+                + "OR discord_user.discriminator IS DISTINCT FROM v.discriminator::smallint "
             + ") "
             + "RETURNING 1 "
         + "), "
@@ -76,7 +76,7 @@ public class DiscordUserDAO
             + "INSERT INTO discord_user(id, name, discriminator) "
             + "SELECT * FROM "
             + "( "
-                + "SELECT v.id, v.name, v.discriminator "
+                + "SELECT v.id, v.name, v.discriminator::smallint "
                 + "FROM vals v(id, name, discriminator) "
                 + "LEFT JOIN discord_user USING(id) "
                 + "WHERE discord_user.id IS NULL "
@@ -99,7 +99,7 @@ public class DiscordUserDAO
     (
         Snowflake.of(rs.getLong("discord_user.id")),
         rs.getString("discord_user.name"),
-        rs.getInt("discord_user.discriminator")
+        DAOUtils.getInteger(rs, "discord_user.discriminator")
     );
 
     public static final ResultSetExtractor<DiscordUser> STD_EXTRACTOR =

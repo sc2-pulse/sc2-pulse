@@ -53,6 +53,7 @@ import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.web.util.MonoUtil;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
+import discord4j.core.object.entity.User;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -357,6 +358,41 @@ public class DiscordIT
         assertEquals(321, updatedUser.getDiscriminator());
 
         verifyStdDiscordUser(discordUserDAO.find(Snowflake.of(567L)).get(0), 567);
+    }
+
+    @Test
+    public void testNullDiscriminator()
+    {
+        User zeroUser = mock(User.class);
+        when(zeroUser.getId()).thenReturn(Snowflake.of(123L));
+        when(zeroUser.getUsername()).thenReturn("name123");
+        when(zeroUser.getDiscriminator()).thenReturn("0");
+
+        User legacyUser = mock(User.class);
+        when(legacyUser.getId()).thenReturn(Snowflake.of(123L));
+        when(legacyUser.getUsername()).thenReturn("name123");
+        when(legacyUser.getDiscriminator()).thenReturn("123");
+
+        //123
+        DiscordUser user = discordUserDAO.merge(DiscordUser.from(legacyUser))[0];
+        DiscordUser foundDiscordUser = discordUserDAO.find(user.getId()).get(0);
+        assertEquals(123, foundDiscordUser.getDiscriminator());
+
+        //from 123 to null
+        discordUserDAO.merge(DiscordUser.from(zeroUser));
+        foundDiscordUser = discordUserDAO.find(user.getId()).get(0);
+        assertNull(foundDiscordUser.getDiscriminator());
+
+        //from null to 123
+        discordUserDAO.merge(DiscordUser.from(legacyUser));
+        foundDiscordUser = discordUserDAO.find(user.getId()).get(0);
+        assertEquals(123, foundDiscordUser.getDiscriminator());
+
+        //null
+        DiscordUser nullUser = discordUserDAO
+            .merge(new DiscordUser(Snowflake.of(321L), "name123", null))[0];
+        foundDiscordUser = discordUserDAO.find(nullUser.getId()).get(0);
+        assertNull(foundDiscordUser.getDiscriminator());
     }
 
     @Test

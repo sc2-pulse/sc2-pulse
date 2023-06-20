@@ -54,13 +54,24 @@ implements DiscordIdentity
         return Objects.hash(getId());
     }
 
+    /**
+     * The 0 discriminator is a special case that is used for username migration where
+     * discriminators are removed in favor of unique usernames. 0 discriminator means user has
+     * migrated to the new system and has no discriminator, so null is used instead.
+     *
+     * @param user Discord4j user
+     * @return local pulse entity
+     */
     public static DiscordUser from(User user)
     {
+        Integer discriminator = user.getDiscriminator().equals("0")
+            ? null
+            : Integer.valueOf(user.getDiscriminator());
         return new DiscordUser
         (
             user.getId(),
             user.getUsername(),
-            Integer.valueOf(user.getDiscriminator())
+            discriminator
         );
     }
 

@@ -87,13 +87,12 @@ CREATE TABLE "discord_user"
 (
     "id" BIGINT NOT NULL,
     "name" TEXT NOT NULL,
-    "discriminator" SMALLINT NOT NULL,
+    "discriminator" SMALLINT,
 
-    PRIMARY KEY("id"),
-
-    CONSTRAINT "uq_discord_user_name_discriminator"
-        UNIQUE ("name", "discriminator")
+    PRIMARY KEY("id")
 );
+CREATE UNIQUE INDEX "uq_discord_user_name_discriminator" ON "discord_user"("name", "discriminator") WHERE "discriminator" IS NOT NULL;
+CREATE UNIQUE INDEX "uq_discord_user_name" ON "discord_user"("name") WHERE "discriminator" IS NULL;
 
 CREATE TABLE "account_discord_user"
 (

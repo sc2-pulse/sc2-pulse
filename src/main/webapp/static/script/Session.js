@@ -420,7 +420,7 @@ class PersonalUtil
             ));
         } else {
             tr.querySelector(":scope .account-connection-name").textContent =
-                data.discordUser.user.name + "#" + data.discordUser.user.discriminator;
+                data.discordUser.user.name + (data.discordUser.user.discriminator ? "#" + data.discordUser.user.discriminator : "");
 
             const action = ElementUtil.createElement("a", null, "btn btn-outline-danger", "Unlink", [["href", "#"]]);
             action.addEventListener("click", PersonalUtil.unlinkDiscordAccount);
