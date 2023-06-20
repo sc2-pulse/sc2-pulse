@@ -50,7 +50,7 @@ implements HandlerMethodArgumentResolver
     }
 
     public static final int CHARACTERS_MAX = 500;
-    public static final int CLANS_MAX = 10;
+    public static final int CLANS_MAX = 20;
 
     private final RequestParamMethodArgumentResolver paramResolver
         = new RequestParamMethodArgumentResolver(true);
