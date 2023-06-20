@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpStatus;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.ServletRequestBindingException;
@@ -21,6 +22,7 @@ import org.springframework.web.context.request.NativeWebRequest;
 import org.springframework.web.method.annotation.RequestParamMethodArgumentResolver;
 import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
+import org.springframework.web.server.ResponseStatusException;
 
 @Component
 public class CharacterGroupArgumentResolver
@@ -106,6 +108,9 @@ implements HandlerMethodArgumentResolver
         Set<Long> result = Stream.of(characterIds, resolveClans(clanIds))
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
+        CharacterGroup annotation = parameter.getParameterAnnotation(CharacterGroup.class);
+        if(annotation.flatRequired() && result.isEmpty())
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Flattened character group is empty");
         if(result.size() > CHARACTERS_MAX)
             throw new ServletRequestBindingException("Max size of characters exceeded: " + CHARACTERS_MAX);
         return result;
