@@ -161,6 +161,7 @@
         const MATCH_BATCH_SIZE = /*[[${@ladderMatchDAO.getResultsPerPage()}]]*/ '';
         const MATCH_DURATION_OFFSET = /*[[${T(com.nephest.battlenet.sc2.model.local.dao.MatchDAO).DURATION_OFFSET}]]*/ '';
         const CLAN_STATS_DEPTH_DAYS = /*[[${T(com.nephest.battlenet.sc2.model.local.dao.ClanDAO).CLAN_STATS_DEPTH_DAYS}]]*/ '';
+        const CLAN_MIN_ADDITIONAL_CURSOR_FILTER = /*[[${T(com.nephest.battlenet.sc2.web.controller.ClanController).MIN_ADDITIONAL_CURSOR_FILTER}]]*/ '';
         const CLAN_MAX_ADDITIONAL_CURSOR_FILTER = /*[[${T(com.nephest.battlenet.sc2.web.controller.ClanController).MAX_ADDITIONAL_CURSOR_FILTER}]]*/ '';
         const AUTHENTICATED = /*[[${#authentication?.name}]]*/ '';
         const SESSION_TIMEOUT_SECONDS = parseInt(/*[[${!#strings.isEmpty(@environment.getProperty('server.servlet.session.timeout'))

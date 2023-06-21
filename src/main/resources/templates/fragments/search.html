@@ -106,9 +106,9 @@
                 maxCursor=${T(com.nephest.battlenet.sc2.web.controller.ClanController).MAX_ADDITIONAL_CURSOR_FILTER}"
             >
                 <div class="d-inline-block">
-                <div th:replace="~{fragments/search :: search-filter('Active members', 'clan-search-active-members', 'ActiveMembers', minCursor, maxCursor, 1)}"></div>
-                <div th:replace="~{fragments/search :: search-filter('Average MMR', 'clan-search-avg-mmr', 'AvgRating', minCursor, maxCursor, 1)}"></div>
-                <div th:replace="~{fragments/search :: search-filter('Games per active member<br/> per day', 'clan-search-games-per-active-member-per-day', 'GamesPerActiveMemberPerDay', minCursor, maxCursor, 0.1)}"></div>
+                <div th:replace="~{fragments/search :: search-filter('Active members', 'clan-search-active-members', 'ActiveMembers', ${minCursor}, ${maxCursor}, 1)}"></div>
+                <div th:replace="~{fragments/search :: search-filter('Average MMR', 'clan-search-avg-mmr', 'AvgRating', ${minCursor}, ${maxCursor}, 1)}"></div>
+                <div th:replace="~{fragments/search :: search-filter('Games per active member<br/> per day', 'clan-search-games-per-active-member-per-day', 'GamesPerActiveMemberPerDay', ${minCursor}, ${maxCursor}, 0.1)}"></div>
                 </div>
                 <div class="form-group d-inline-block mr-2">
                     <label for="clan-search-region">Region</label>
