@@ -23,8 +23,8 @@ class ClanUtil
         if(!previousData || (page == 0 && pageDiff == 1))
             ClanUtil.updateClanSearchPaginationConfig
             (
-                searchParams.get(params.cursor.minParamName) || CLAN_MIN_ADDITIONAL_CURSOR_FILTER,
-                searchParams.get(params.cursor.maxParamName) || CLAN_MAX_ADDITIONAL_CURSOR_FILTER,
+                Number.parseFloat(searchParams.get(params.cursor.minParamName)) || CLAN_MIN_ADDITIONAL_CURSOR_FILTER,
+                Number.parseFloat(searchParams.get(params.cursor.maxParamName)) || CLAN_MAX_ADDITIONAL_CURSOR_FILTER,
                 params.cursor.getter
             );
 
