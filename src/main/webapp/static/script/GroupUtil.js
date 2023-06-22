@@ -261,7 +261,7 @@ class GroupUtil
     static onGroupLinkClick(evt)
     {
         evt.preventDefault();
-        return GroupUtil.loadAndShowGroup(Util.deleteSearchParams(Util.getHrefUrlSearchParams(evt.target)));
+        return GroupUtil.loadAndShowGroup(Util.deleteSearchParams(Util.getHrefUrlSearchParams(evt.target.closest("a"))));
     }
 
     static enhance()

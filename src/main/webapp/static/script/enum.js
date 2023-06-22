@@ -207,7 +207,7 @@ const CHEATER_FLAG = Object.freeze
 
 const CLAN_MEMBER_EVENT_TYPE = Object.freeze
 ({
-    JOIN: {name: "join", description: "Joined", symbol: "🠞", cssClass: "text-success font-weight-bold em-1-5", order: 1},
-    LEAVE: {name: "leave", description: "Left", symbol: "🠜",cssClass: "text-danger font-weight-bold em-1-5", order: 2}
+    JOIN: {name: "join", description: "Joined", element: ElementUtil.createIcoFontElement("arrow-right", "Joined", "text-success"), order: 1},
+    LEAVE: {name: "leave", description: "Left", element: ElementUtil.createIcoFontElement("arrow-left", "Left", "text-danger"), order: 2}
 });
 

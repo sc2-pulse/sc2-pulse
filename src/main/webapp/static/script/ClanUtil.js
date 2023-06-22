@@ -207,7 +207,7 @@ class ClanUtil
             const type = EnumUtil.enumOfName(event.type, CLAN_MEMBER_EVENT_TYPE);
             tr.insertCell().textContent = Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(event.created));
             TableUtil.insertCell(tr, "text-right").appendChild(TeamUtil.createMemberInfo(character, character.members));
-            TableUtil.insertCell(tr, type.cssClass).textContent = type.symbol;
+            tr.insertCell().appendChild(type.element.cloneNode());
             tr.insertCell().appendChild(ElementUtil.createImage("flag/", clan.region.toLowerCase(), "table-image-long"));
             TableUtil.insertCell(tr, "cell-main text-left").appendChild(ClanUtil.createClanTagElem(clan));
         }
