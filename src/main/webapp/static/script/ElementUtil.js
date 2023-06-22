@@ -112,6 +112,15 @@ class ElementUtil
         return noRace;
     }
 
+    static createIcoFontElement(name, title, clazz)
+    {
+        const elem = document.createElement("span");
+        if(clazz != null) elem.setAttribute("class", clazz);
+        elem.classList.add("icofont-" + name);
+        elem.setAttribute("title", title || name);
+        return elem;
+    }
+
     static createTagButton(tag, classes)
     {
         const elem = document.createElement(tag);

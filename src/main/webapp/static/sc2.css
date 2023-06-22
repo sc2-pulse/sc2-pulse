@@ -1,3 +1,45 @@
+@font-face {
+  font-family: 'sc2pulse';
+  src: url('font/sc2pulse.woff?bpjr9') format('woff');
+  font-weight: normal;
+  font-style: normal;
+  font-display: block;
+}
+
+[class^="icofont-"], [class*=" icofont-"] {
+  /* use !important to prevent issues with browser extensions that change fonts */
+  font-family: 'sc2pulse' !important;
+  speak: never;
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  text-transform: none;
+  line-height: 1;
+
+  /* Better Font Rendering =========== */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.icofont-users:before {
+  content: "\e972";
+}
+.icofont-link:before {
+  content: "\e9cb";
+}
+.icofont-arrow-right:before {
+  content: "\ea34";
+}
+.icofont-arrow-left:before {
+  content: "\ea38";
+}
+.icofont-arrow-right2:before {
+  content: "\ea3c";
+}
+.icofont-arrow-left2:before {
+  content: "\ea40";
+}
+
 body
 {
     text-align: center;
