@@ -188,8 +188,9 @@ more information.
 * [3rd party licenses](3rd-party-licenses.txt)
 ## Blizzard ToS
 SC2 Pulse is fully compliant with the Blizzard ToS.
-* burst requests per second cap is guaranteed
-* the app will try to spread the updates evenly, but no guarantees are made since it's a soft cap
+* Requests per hour cap is guaranteed if your clock desync is within 5 seconds.
+* Requests per second cap is optimistically synchronized on the client side. It works most of the time, but sometimes
+  you may see a 429 response.
 * BattleTags, player names, and matches are removed after 30 days from the moment they were deleted from the API
 ## Trademarks
 Battle.net, Blizzard Entertainment and StarCraft are trademarks or registered trademarks of Blizzard Entertainment,

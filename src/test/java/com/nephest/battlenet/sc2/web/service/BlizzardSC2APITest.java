@@ -21,6 +21,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.util.EnumMap;
 import java.util.HashSet;
@@ -96,7 +97,7 @@ public class BlizzardSC2APITest
         for(int i = 0; i < BlizzardSC2API.REQUESTS_PER_HOUR_CAP / 2; i++) krMonitor.addRequest();
 
         assertEquals(0.25, api.getRequestCapProgress(Region.US));
-        assertEquals(0.3333333333333333, api.getRequestCapProgress(Region.EU));
+        assertEquals("0.33", new DecimalFormat("#.##").format(api.getRequestCapProgress(Region.EU)));
         assertEquals(0.5, api.getRequestCapProgress(Region.KR));
         assertEquals(0.0, api.getRequestCapProgress(Region.CN));
         assertEquals(0.5, api.getRequestCapProgress());

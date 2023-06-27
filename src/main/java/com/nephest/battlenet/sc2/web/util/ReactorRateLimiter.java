@@ -54,6 +54,19 @@ public class ReactorRateLimiter
         this(null);
     }
 
+    public static Mono<Void> requestSlot(Iterable<ReactorRateLimiter> limiters)
+    {
+        Mono<Void> result = Mono.empty();
+        for(ReactorRateLimiter limiter : limiters)
+            result = result.then(limiter.requestSlot());
+        return result;
+    }
+
+    public static Retry retryWhen(Iterable<ReactorRateLimiter> limiters, RetrySpec retrySpec)
+    {
+        return retrySpec.doBeforeRetryAsync(s->requestSlot(limiters));
+    }
+
     public void setRefreshConfig(RateLimitRefreshConfig config)
     {
         if(refreshSubscription != null) refreshSubscription.dispose();

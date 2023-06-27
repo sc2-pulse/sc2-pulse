@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumMap;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.LongStream;
@@ -83,7 +84,8 @@ extends BaseAPI
     private static final Logger LOG = LoggerFactory.getLogger(BlizzardSC2API.class);
 
     public static final int REQUESTS_PER_SECOND_CAP = 100;
-    public static final int REQUESTS_PER_HOUR_CAP = 36000;
+    public static final int REQUESTS_PER_HOUR_CAP = 36000
+        - REQUESTS_PER_SECOND_CAP * 5; //max clock desync: 5 seconds
     public static final int REQUESTS_PER_SECOND_CAP_WEB = 5;
     public static final int DELAY = 1000;
     public static final int FIRST_SEASON = 28;
@@ -122,6 +124,8 @@ extends BaseAPI
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
     private final Map<Region, Duration> clientTimeouts = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
+    private final Map<Region, ReactorRateLimiter> hourlyRateLimiters = new EnumMap<>(Region.class);
+    private final Map<Region, List<ReactorRateLimiter>> regionalRateLimiters = new EnumMap<>(Region.class);
     private final Map<Region, APIHealthMonitor> healthMonitors = new EnumMap<>(Region.class);
     private final ReactorRateLimiter webRateLimiter = new ReactorRateLimiter();
     private final Map<Region, APIHealthMonitor> webHealthMonitors = new EnumMap<>(Region.class);
@@ -152,12 +156,15 @@ extends BaseAPI
         this.objectMapper = objectMapper;
         this.varDAO = varDAO;
         init(globalContext.getActiveRegions());
+        initErrorRates(varDAO, globalContext.getActiveRegions());
         for(Region r : globalContext.getActiveRegions())
         {
             rateLimiters.put(r, new ReactorRateLimiter());
+            hourlyRateLimiters.put(r, new ReactorRateLimiter());
+            hourlyRateLimiters.get(r).refreshSlots((int) (REQUESTS_PER_HOUR_CAP - healthMonitors.get(r).getRequests()));
+            regionalRateLimiters.put(r, List.of(hourlyRateLimiters.get(r), rateLimiters.get(r)));
             clientTimeouts.put(r, WebServiceUtil.IO_TIMEOUT);
         }
-        initErrorRates(varDAO, globalContext.getActiveRegions());
         Flux.interval(HEALTH_SAVE_FRAME).doOnNext(i->saveHealth()).subscribe();
     }
 
@@ -400,6 +407,12 @@ extends BaseAPI
     }
 
     @Scheduled(cron="0 0 * * * *")
+    public void refreshHourlyReactorSlots()
+    {
+        hourlyRateLimiters.values().forEach(l->l.refreshSlots(REQUESTS_PER_HOUR_CAP));
+    }
+
+    @Scheduled(cron="0 0 * * * *")
     public void processErrorRates()
     {
         calculateErrorRates();
@@ -458,7 +471,9 @@ extends BaseAPI
     {
         return new ApiContext
         (
-            web ? webRateLimiter : rateLimiters.get(region),
+            web
+                ? List.of(webRateLimiter)
+                : regionalRateLimiters.get(region),
             web ? webHealthMonitors.get(region) : healthMonitors.get(region),
             web ? region.getBaseWebUrl() : region.getBaseUrl()
         );
@@ -472,8 +487,9 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardDataSeason.class).cast(BlizzardSeason.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
-            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region)))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
     }
@@ -487,8 +503,9 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardSeason.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
-            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region)))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
     }
@@ -548,8 +565,9 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLeague.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
-            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region)))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
 
@@ -607,8 +625,9 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(BlizzardLadder.class)
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
-            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region)))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
     }
@@ -627,8 +646,9 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(String.class)
             .map(s->extractNewTeams(s, startingFromEpochSeconds))
-            .retryWhen(rateLimiters.get(region).retryWhen(getRetry(region, WebServiceUtil.RETRY, false)))
-            .delaySubscription(rateLimiters.get(region).requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                regionalRateLimiters.get(region), getRetry(region, WebServiceUtil.RETRY, false)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(regionalRateLimiters.get(region)))
             .doOnRequest(s->healthMonitors.get(region).addRequest())
             .doOnError(t->healthMonitors.get(region).addError());
     }
@@ -748,8 +768,8 @@ extends BaseAPI
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(context.getRateLimiter().retryWhen(retry))
-            .delaySubscription(context.getRateLimiter().requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(context.getRateLimiters(), retry))
+            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -839,8 +859,9 @@ extends BaseAPI
                     throw new IllegalStateException("Invalid json structure", e);
                 }
             })
-            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND, web)))
-            .delaySubscription(context.getRateLimiter().requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_SKIP_NOT_FOUND, web)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -914,8 +935,9 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY, web)))
-            .delaySubscription(context.getRateLimiter().requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY, web)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -947,8 +969,9 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardLegacyProfile.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY_NEVER, web)))
-            .delaySubscription(context.getRateLimiter().requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_NEVER, web)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -980,8 +1003,9 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(BlizzardProfile.class)
             .zipWith(Mono.just(playerCharacter))
-            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY_NEVER, web)))
-            .delaySubscription(context.getRateLimiter().requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_NEVER, web)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
@@ -1009,8 +1033,9 @@ extends BaseAPI
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToFlux(BlizzardFullPlayerCharacter.class)
-            .retryWhen(context.getRateLimiter().retryWhen(getRetry(region, WebServiceUtil.RETRY_ONCE, false)))
-            .delaySubscription(context.getRateLimiter().requestSlot())
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_ONCE, false)))
+            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }

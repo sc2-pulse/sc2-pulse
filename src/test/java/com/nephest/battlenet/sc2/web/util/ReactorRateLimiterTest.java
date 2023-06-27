@@ -5,15 +5,19 @@ package com.nephest.battlenet.sc2.web.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import reactor.core.publisher.Mono;
+import reactor.util.retry.Retry;
+import reactor.util.retry.RetrySpec;
 
 public class ReactorRateLimiterTest
 {
@@ -92,6 +96,58 @@ public class ReactorRateLimiterTest
         limiter.requestSlot().block();
         Duration realPeriod = Duration.between(begin, Instant.now());
         assertTrue(realPeriod.compareTo(period.multipliedBy(2)) <= 0);
+    }
+
+    @Test
+    public void testRequestMultiLimiterSlot()
+    {
+        ReactorRateLimiter limiter1 = new ReactorRateLimiter();
+        ReactorRateLimiter limiter2 = new ReactorRateLimiter();
+        limiter1.refreshSlots(10);
+        limiter2.refreshSlots(5);
+        ReactorRateLimiter.requestSlot(List.of(limiter1, limiter2)).block(Duration.ofMillis(1));
+        assertEquals(9, limiter1.getAvailableSlots());
+        assertEquals(4, limiter2.getAvailableSlots());
+    }
+
+    @ValueSource(ints = {0, 1})
+    @ParameterizedTest
+    public void whenRequestMultiLimiterSlot_thenAllLimitersShouldBeUsed(int activeIx)
+    {
+        ReactorRateLimiter limiter1 = new ReactorRateLimiter();
+        ReactorRateLimiter limiter2 = new ReactorRateLimiter();
+        List<ReactorRateLimiter> limiters = List.of(limiter1, limiter2);
+        limiters.get(activeIx).refreshSlots(2);
+        assertThrows
+        (
+            IllegalStateException.class,
+            ()->ReactorRateLimiter.requestSlot(limiters).block(Duration.ofMillis(1))
+        );
+        assertThrows
+        (
+            IllegalStateException.class,
+            ()->Mono.error(new RuntimeException("test"))
+                .retryWhen(ReactorRateLimiter.retryWhen(limiters, RetrySpec.max(2)))
+                .onErrorComplete()
+                .block(Duration.ofMillis(1))
+        );
+    }
+
+    @Test
+    public void testMultiLimiterRetry()
+    {
+        ReactorRateLimiter limiter1 = new ReactorRateLimiter();
+        ReactorRateLimiter limiter2 = new ReactorRateLimiter();
+        List<ReactorRateLimiter> limiters = List.of(limiter1, limiter2);
+        Retry retry = ReactorRateLimiter.retryWhen(limiters, RetrySpec.max(2));
+        limiter1.refreshSlots(10);
+        limiter2.refreshSlots(5);
+        Mono.error(new RuntimeException("test"))
+            .retryWhen(retry)
+            .onErrorComplete()
+            .block(Duration.ofMillis(1));
+        assertEquals(8, limiter1.getAvailableSlots());
+        assertEquals(3, limiter2.getAvailableSlots());
     }
 
 }
