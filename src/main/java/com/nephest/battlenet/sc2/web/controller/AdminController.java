@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.Hidden;
 import java.time.Duration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -159,6 +160,26 @@ public class AdminController
         sc2API.setTimeout(region, null);
     }
 
+    @PostMapping("/blizzard/api/rps/{region}/{cap}")
+    public ResponseEntity<Object> setRequestsPerSecondCap
+    (
+        @PathVariable("region") Region region,
+        @PathVariable("cap") int cap
+    )
+    {
+        if(cap < 0) return ResponseEntity.badRequest().body("The cap can't be negative");
+        if(cap > BlizzardSC2API.REQUESTS_PER_SECOND_CAP)
+            return  ResponseEntity.badRequest()
+                .body("Max cap: " + BlizzardSC2API.REQUESTS_PER_SECOND_CAP);
 
+        sc2API.setRequestsPerSecondCap(region, cap);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/blizzard/api/rps/{region}")
+    public void removeRequestsPerSecondCap(@PathVariable("region") Region region)
+    {
+        sc2API.setRequestsPerSecondCap(region, null);
+    }
 
 }

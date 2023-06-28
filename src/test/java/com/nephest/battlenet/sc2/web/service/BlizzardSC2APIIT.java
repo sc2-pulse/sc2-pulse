@@ -349,6 +349,48 @@ public class BlizzardSC2APIIT
     }
 
     @Test
+    @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
+    public void testSetRequestsPerSecondCap()
+    throws Exception
+    {
+        for(Region region : Region.values())
+            assertEquals
+            (
+                BlizzardSC2API.REQUESTS_PER_SECOND_CAP,
+                api.getRequestsPerSecondCap(region)
+            );
+
+        mvc.perform
+        (
+            post("/admin/blizzard/api/rps/EU/5")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        for(Region region : Region.values()) assertEquals
+        (
+            region == Region.EU ? 5 : BlizzardSC2API.REQUESTS_PER_SECOND_CAP,
+            api.getRequestsPerSecondCap(region)
+        );
+
+        mvc.perform
+        (
+            delete("/admin/blizzard/api/rps/EU")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        for(Region region : Region.values())
+            assertEquals
+            (
+                BlizzardSC2API.REQUESTS_PER_SECOND_CAP,
+                api.getRequestsPerSecondCap(region)
+            );
+    }
+
+    @Test
     public void testAutoForceRegion()
     {
         api.setAutoForceRegion(true);

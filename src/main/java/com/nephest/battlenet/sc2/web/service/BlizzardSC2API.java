@@ -123,6 +123,7 @@ extends BaseAPI
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
     private final Map<Region, Duration> clientTimeouts = new EnumMap<>(Region.class);
+    private final Map<Region, Integer> requestsPerSecondCaps = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
     private final Map<Region, ReactorRateLimiter> hourlyRateLimiters = new EnumMap<>(Region.class);
     private final Map<Region, List<ReactorRateLimiter>> regionalRateLimiters = new EnumMap<>(Region.class);
@@ -399,10 +400,37 @@ extends BaseAPI
         return forceRegions.get(region).getValue();
     }
 
+    public void setRequestsPerSecondCap(Region region, Integer cap)
+    {
+        if(cap == null)
+        {
+            requestsPerSecondCaps.remove(region);
+        }
+        else if(cap < 0 || cap > REQUESTS_PER_SECOND_CAP)
+        {
+            throw new IllegalArgumentException
+            (
+                "Invalid cap value: " + cap
+                + ", valid range: 0-" + REQUESTS_PER_SECOND_CAP
+            );
+        }
+        else
+        {
+            requestsPerSecondCaps.put(region, cap);
+        }
+        LOG.info("Requests per seconds cap, {}: {}", region, cap);
+    }
+
+    public int getRequestsPerSecondCap(Region region)
+    {
+        Integer override = requestsPerSecondCaps.get(region);
+        return override != null ? override : REQUESTS_PER_SECOND_CAP;
+    }
+
     @Scheduled(cron="* * * * * *")
     public void refreshReactorSlots()
     {
-        rateLimiters.values().forEach(l->l.refreshSlots(REQUESTS_PER_SECOND_CAP));
+        rateLimiters.forEach((key, value)->value.refreshSlots(getRequestsPerSecondCap(key)));
         webRateLimiter.refreshSlots(REQUESTS_PER_SECOND_CAP_WEB);
     }
 

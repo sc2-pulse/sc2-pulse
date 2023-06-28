@@ -29,6 +29,7 @@
                         <th scope="col">Region</th>
                         <th scope="col">Health</th>
                         <th scope="col">Request cap</th>
+                        <th scope="col" title="Requests per second cap">RPS</th>
                         <th scope="col">Flags</th>
                         <th scope="col">Estimated refresh duration</th>
                     </tr>
@@ -47,6 +48,16 @@
                                 <td
                                     th:class="${requestCap < 110 ? 'text-success' : requestCap < 150 ? 'text-warning' : 'text-danger'}"
                                     th:text="|${#numbers.formatDecimal(requestCap, 1, 'DEFAULT', 2, 'DEFAULT')}%|">
+                                </td>
+                            </th:block>
+                            <th:block
+                                th:with="rps=${@blizzardSC2API.getRequestsPerSecondCap(statusEntry.getKey())},
+                                defaultRps=${T(com.nephest.battlenet.sc2.web.service.BlizzardSC2API).REQUESTS_PER_SECOND_CAP}"
+                            >
+                                <td
+                                    th:class="${rps == defaultRps ? 'text-success' : rps > defaultRps / 3 ? 'text-warning' : 'text-danger'}"
+                                    th:text="${rps}"
+                                >
                                 </td>
                             </th:block>
                             <td>
