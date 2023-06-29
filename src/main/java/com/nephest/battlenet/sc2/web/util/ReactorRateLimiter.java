@@ -13,7 +13,7 @@ import org.slf4j.LoggerFactory;
 import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.publisher.MonoSink;
+import reactor.core.publisher.Sinks;
 import reactor.util.retry.Retry;
 import reactor.util.retry.RetryBackoffSpec;
 import reactor.util.retry.RetrySpec;
@@ -35,7 +35,7 @@ public class ReactorRateLimiter
 
     private static final Logger LOG = LoggerFactory.getLogger(ReactorRateLimiter.class);
 
-    private final ConcurrentLinkedQueue<MonoSink<Void>> requests = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<Sinks.One<Void>> requests = new ConcurrentLinkedQueue<>();
 
     private final AtomicInteger slots = new AtomicInteger(0);
     private final AtomicBoolean isResetActive = new AtomicBoolean(false);
@@ -141,10 +141,10 @@ public class ReactorRateLimiter
     public void refreshSlots(int count)
     {
         int originalCount = count;
-        MonoSink<Void> request;
+        Sinks.One<Void> request;
         while(count > 0 && (request = requests.poll()) != null)
         {
-            request.success();
+            request.emitEmpty(Sinks.EmitFailureHandler.FAIL_FAST);
             count--;
         }
         slots.getAndSet(count);
@@ -155,7 +155,9 @@ public class ReactorRateLimiter
     {
         if(isSlotAvailable()) return Mono.empty();
 
-        return Mono.create(requests::add);
+        Sinks.One<Void> one = Sinks.one();
+        requests.add(one);
+        return one.asMono();
     }
 
     /**
