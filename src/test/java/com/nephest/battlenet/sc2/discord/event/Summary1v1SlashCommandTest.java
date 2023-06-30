@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -64,28 +64,28 @@ public class Summary1v1SlashCommandTest
                 .name("name")
                 .type(ApplicationCommandOption.Type.STRING.getValue())
                 .value("term")
-                .build(),null)));
+                .build(), null, null)));
 
         when(evt.getOption("region")).thenReturn(Optional.of(new ApplicationCommandInteractionOption(client,
             ApplicationCommandInteractionOptionData.builder()
                 .name("region")
                 .type(ApplicationCommandOption.Type.STRING.getValue())
                 .value("EU")
-                .build(),null)));
+                .build(),null, null)));
 
         when(evt.getOption("race")).thenReturn(Optional.of(new ApplicationCommandInteractionOption(client,
             ApplicationCommandInteractionOptionData.builder()
                 .name("race")
                 .type(ApplicationCommandOption.Type.STRING.getValue())
                 .value("Terran")
-                .build(),null)));
+                .build(),null, null)));
 
         when(evt.getOption("depth")).thenReturn(Optional.of(new ApplicationCommandInteractionOption(client,
             ApplicationCommandInteractionOptionData.builder()
                 .name("depth")
                 .type(ApplicationCommandOption.Type.INTEGER.getValue())
                 .value("100")
-                .build(),null)));
+                .build(),null, null)));
 
         when(conversionService.convert("EU", Region.class)).thenReturn(Region.EU);
         when(conversionService.convert("Terran", Race.class)).thenReturn(Race.TERRAN);

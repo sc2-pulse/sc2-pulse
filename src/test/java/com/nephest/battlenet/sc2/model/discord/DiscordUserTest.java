@@ -33,6 +33,7 @@ public class DiscordUserTest
         "1, 1"
     })
     @ParameterizedTest
+    @SuppressWarnings("deprecation")
     public void testUpstreamDiscriminator(String in, Integer out)
     {
         User user = mock(User.class);

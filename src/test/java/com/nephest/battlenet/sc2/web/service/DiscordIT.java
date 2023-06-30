@@ -361,6 +361,7 @@ public class DiscordIT
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void testNullDiscriminator()
     {
         User zeroUser = mock(User.class);

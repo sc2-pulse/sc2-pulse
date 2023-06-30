@@ -64,7 +64,8 @@ implements DiscordIdentity
      */
     public static DiscordUser from(User user)
     {
-        Integer discriminator = user.getDiscriminator().equals("0")
+        @SuppressWarnings("deprecation")
+        Integer discriminator = user.getDiscriminator() == null || user.getDiscriminator().equals("0")
             ? null
             : Integer.valueOf(user.getDiscriminator());
         return new DiscordUser
