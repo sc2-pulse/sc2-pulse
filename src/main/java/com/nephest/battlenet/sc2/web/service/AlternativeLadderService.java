@@ -72,6 +72,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,7 +94,7 @@ public class AlternativeLadderService
     ));
 
     public static final int LADDER_BATCH_SIZE = StatsService.LADDER_BATCH_SIZE;
-    public static final Duration DISCOVERY_TIME_FRAME = Duration.ofMinutes(50);
+    public static final Duration DISCOVERY_TIME_FRAME = Duration.ofHours(6);
     public static final Duration ADDITIONAL_WEB_SCAN_TIME_FRAME = DISCOVERY_TIME_FRAME.dividedBy(2);
     public static final double WEB_API_ERROR_RATE_THRESHOLD = 50;
     public static final double WEB_API_FORCE_REGION_ERROR_RATE_THRESHOLD = 25;
@@ -187,6 +188,7 @@ public class AlternativeLadderService
     public static final int LEGACY_LADDER_BATCH_SIZE = 500;
     public static final int ALTERNATIVE_LADDER_WEB_ERROR_THRESHOLD = 50;
     public static final int LEGACY_LADDER_WEB_BATCH_SIZE = 200;
+    public static final int CONTINUE_SEASON_DISCOVERY_BATCH_SIZE = 25;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
     @PostConstruct
@@ -330,25 +332,42 @@ public class AlternativeLadderService
     {
         long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion())
             .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion())) + 1;
-        discoverSeason(season, lastDivision, web);
+        discoverSeason(season, lastDivision, web, null);
+    }
+
+    private long getLastDivision(Season season)
+    {
+        return divisionDao
+            .findLastDivision(season.getBattlenetId(), season.getRegion())
+            .orElseGet(()->divisionDao
+                .findLastDivision(season.getBattlenetId() - 1, season.getRegion())
+                .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion()))) + 1;
+    }
+
+    private void continueSeasonDiscovery(Season season)
+    {
+        long lastDivision = getLastDivision(season);
+        discoverSeason(season, lastDivision, false, CONTINUE_SEASON_DISCOVERY_BATCH_SIZE);
     }
 
     public void updateThenContinueDiscoverSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
         updateSeason(season, queueTypes, leagues);
-        long lastDivision = divisionDao
-            .findLastDivision(season.getBattlenetId(), season.getRegion())
-            .orElseGet(()->divisionDao
-                .findLastDivision(season.getBattlenetId() - 1, season.getRegion())
-                .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion()))) + 1;
-        discoverSeason(season, lastDivision, false);
+        continueSeasonDiscovery(season);
     }
 
-    private void discoverSeason(Season season, long lastDivision, boolean web)
+    private void discoverSeason
+    (
+        Season season,
+        long lastDivision,
+        boolean web,
+        @Nullable Integer batchSize
+    )
     {
         LOG.info("Discovering {} ladders", season);
 
-        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds = getProfileLadderIds(season, lastDivision);
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds
+            = getProfileLadderIds(season, lastDivision, batchSize);
         LOG.info("{} {} ladders found", profileIds.size(), season);
         updateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds, web);
         discoveryInstants.get(season.getRegion()).setValueAndSave(Instant.now());
@@ -372,12 +391,14 @@ public class AlternativeLadderService
     }
 
     private List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getProfileLadderIds
-    (Season season, long lastDivision)
+    (Season season, long lastDivision, @Nullable Integer batchSize)
     {
         boolean webDiscovery = isDiscoveryWebRegion(season.getRegion());
         if(webDiscovery) LOG.warn("Using web API for ladder discovery for {}", season);
         int errorThreshold = webDiscovery ? ALTERNATIVE_LADDER_WEB_ERROR_THRESHOLD : ALTERNATIVE_LADDER_ERROR_THRESHOLD;
-        int batchSize = webDiscovery ? LEGACY_LADDER_WEB_BATCH_SIZE : LEGACY_LADDER_BATCH_SIZE;
+        batchSize = batchSize != null
+            ? batchSize
+            : webDiscovery ? LEGACY_LADDER_WEB_BATCH_SIZE : LEGACY_LADDER_BATCH_SIZE;
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds = new ArrayList<>();
         AtomicInteger discovered = new AtomicInteger(1);
         while(discovered.get() > 0)
