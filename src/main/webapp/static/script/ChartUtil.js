@@ -38,7 +38,7 @@ class ChartUtil
         (
             config.ctx,
             {
-                type: config.type == "line" ? "lineVCursor" : config.type,
+                type: config.type,
                 data: config.data,
                 options:
                 {
@@ -658,7 +658,7 @@ class ChartUtil
                 primaryColor = color;
                 secondaryColor = color;
             }
-            if (config.type === "lineVCursor" || config.type === "line")
+            if (config.type === "line")
             {
                 data.datasets[i]["borderWidth"] = ChartUtil.getLineBorderWidth(config);
                 data.datasets[i]["pointRadius"] = config.performance == "fast"
@@ -1257,19 +1257,18 @@ ChartUtil.DEFAULT_GROUP_CONFIG = new Map([
 ]);
 ChartUtil.TIER_ANNOTATIONS = null;
 ChartUtil.SEASON_ANNOTATIONS = new Map();
-
-class ChartLineVCursor extends Chart.LineController
+ChartUtil.CURSOR_PLUGIN =
 {
-    draw()
+    id: "nephest-cursor",
+    afterDraw: chart =>
     {
-        super.draw(arguments);
-        if (this.chart.tooltip._active && this.chart.tooltip._active.length)
+        if (chart.config.type == "line" && chart.tooltip._active && chart.tooltip._active.length)
         {
-            var activePoint = this.chart.tooltip._active[0],
-            ctx = this.chart.ctx,
+            var activePoint = chart.tooltip._active[0],
+            ctx = chart.ctx,
             x = activePoint.element.x,
-            topY = this.chart.legend.bottom,
-            bottomY = this.chart.chartArea.bottom;
+            topY = chart.legend.bottom,
+            bottomY = chart.chartArea.bottom;
 
             // draw line
             ctx.save();
@@ -1285,9 +1284,7 @@ class ChartLineVCursor extends Chart.LineController
         }
     }
 }
-ChartLineVCursor.id = "lineVCursor";
-ChartLineVCursor.defaults = Chart.LineController.defaults;
-Chart.register(ChartLineVCursor);
+Chart.register(ChartUtil.CURSOR_PLUGIN);
 Chart.registry.getPlugin('tooltip').positioners.dataXCursorY = (chartElements, coordinates)=>{
     if(chartElements.length > 0) {
         return {x:chartElements[0].element.x, y: coordinates.y}
