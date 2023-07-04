@@ -263,6 +263,7 @@ public class AlternativeLadderService
         }
 
         updateOrAdditionalWebUpdate(season, queueTypes, leagues);
+        continueSeasonDiscovery(season);
     }
 
     private boolean isAdditionalWebUpdate(Region region)
