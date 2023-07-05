@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -68,6 +68,7 @@ public class StatusService
 
             updatePartialFlag(region, status);
             updateRedirectedFlag(region, status);
+            updatePrioritizedFlag(region, status);
             updateWebFlag(region, status);
             updateOperationalFlag(region, status);
             updateDuration(region, status);
@@ -87,6 +88,13 @@ public class StatusService
             && api.getForceRegion(region) != region
                 ? status.getFlags().add(Status.Flag.REDIRECTED)
                 : status.getFlags().remove(Status.Flag.REDIRECTED);
+    }
+
+    private boolean updatePrioritizedFlag(Region region, Status status)
+    {
+        return statsService.isPartialUpdate(region)
+            ? status.getFlags().add(Status.Flag.PRIORITIZED)
+            : status.getFlags().remove(Status.Flag.PRIORITIZED);
     }
 
     private boolean updateWebFlag(Region region, Status status)

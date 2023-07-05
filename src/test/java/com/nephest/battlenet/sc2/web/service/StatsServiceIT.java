@@ -4,13 +4,21 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
+import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
@@ -37,14 +45,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.validation.Validator;
 import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest(classes = {AllTestConfig.class})
+@AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class StatsServiceIT
@@ -61,6 +73,9 @@ public class StatsServiceIT
 
     @Autowired @Qualifier("dbExecutorService")
     private ExecutorService dbExecutorService;
+
+    @Autowired
+    private MockMvc mvc;
 
     @BeforeEach
     public void beforeEach
@@ -143,6 +158,35 @@ public class StatsServiceIT
         Region region = Region.US;
         BlizzardSeason bSeason = api.getSeason(region, 44).block();
         assertEquals(292761, realStatsService.getMaxLadderId(bSeason, region));
+    }
+
+    @Test
+    @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
+    public void testSetPartialUpdate()
+    throws Exception
+    {
+        for(Region region : Region.values()) assertFalse(realStatsService.isPartialUpdate(region));
+
+        mvc.perform
+        (
+            post("/admin/update/partial/EU")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        for(Region region : Region.values())
+            assertEquals(region == Region.EU, realStatsService.isPartialUpdate(region));
+
+        mvc.perform
+        (
+            delete("/admin/update/partial/EU")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        for(Region region : Region.values()) assertFalse(realStatsService.isPartialUpdate(region));
     }
 
 }

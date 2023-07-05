@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -18,6 +18,12 @@ public class Status
         PARTIAL("partial", "No BattleTags, league tiers, and clan names. "
             + "Simplified races in team formats.", Level.WARNING),
         REDIRECTED("redirected", "May be slower in some cases. Arbitrary data may be missing.", Level.WARNING),
+        PRIORITIZED
+        (
+            "prioritized",
+            "1v1 ladders are prioritized, other ladders are updated less frequently.",
+            Level.WARNING
+        ),
         WEB
         (
             "web",

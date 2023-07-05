@@ -23,6 +23,7 @@ import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
+import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.Team;
@@ -66,6 +67,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -134,6 +136,7 @@ public class StatsService
     private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
+    private final Map<Region, LongVar> partialUpdates = new EnumMap<>(Region.class);
     private final ConcurrentLinkedQueue<Long> pendingTeams = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<PlayerCharacter> pendingCharacters =
         new ConcurrentLinkedQueue<>();
@@ -229,16 +232,20 @@ public class StatsService
         {
             forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced", false));
             forcedAlternativeUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.forced.timestamp", false));
+            partialUpdates.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial", false));
         }
         //catch exceptions to allow service autowiring for tests
         try {
             loadAlternativeRegions();
             loadForcedAlternativeRegions();
-            Stream.concat
+            Stream.of
             (
                 forcedUpdateInstants.values().stream(),
-                forcedAlternativeUpdateInstants.values().stream()
+                forcedAlternativeUpdateInstants.values().stream(),
+                partialUpdates.values().stream()
             )
+                .flatMap(Function.identity())
+                .map(var->(Var<?>) var)
                 .forEach(Var::load);
         }
         catch(RuntimeException ex) {
@@ -451,13 +458,7 @@ public class StatsService
     private void alternativeUpdate(Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues)
     {
         Region region = season.getRegion();
-        boolean partialUpdate =
-            Stream.concat(alternativeRegions.stream(), forcedAlternativeRegions.stream())
-                .distinct()
-                .count() >= PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD
-            && partialAlternativeUpdates.get(region) < PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE
-            && Arrays.asList(queues).containsAll(PARTIAL_UPDATE_QUEUE_TYPES)
-            && Arrays.asList(leagues).containsAll(PARTIAL_UPDATE_LEAGUE_TYPES);
+        boolean partialUpdate = isPartialUpdate(season.getRegion(), queues, leagues);
         if(partialUpdate)
             LOG.info
             (
@@ -480,6 +481,25 @@ public class StatsService
         {
             partialAlternativeUpdates.put(region, 0);
         }
+    }
+
+    public boolean isPartialUpdate(Region region, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    {
+        return
+        (
+            isPartialUpdate(region)
+            || Stream.concat(alternativeRegions.stream(), forcedAlternativeRegions.stream())
+                .distinct()
+                .count() >= PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD
+        )
+            && partialAlternativeUpdates.get(region) < PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE
+            && new HashSet<>(Arrays.asList(queues)).containsAll(PARTIAL_UPDATE_QUEUE_TYPES)
+            && new HashSet<>(Arrays.asList(leagues)).containsAll(PARTIAL_UPDATE_LEAGUE_TYPES);
+    }
+
+    public boolean isPartialUpdate(Region region)
+    {
+        return partialUpdates.get(region).getValue() != null;
     }
 
     public boolean isAlternativeUpdate(Region region, boolean currentSeason)
@@ -862,6 +882,12 @@ public class StatsService
             .map(String::valueOf)
             .collect(Collectors.joining(","));
         varDAO.merge("region.alternative.forced", var);
+    }
+
+    public void setPartialUpdate(Region region, boolean partial)
+    {
+        partialUpdates.get(region).setValueAndSave(partial ? 1L : null);
+        LOG.info("{} partial update: {}", region, partial);
     }
 
     private UpdateContext getLadderUpdateContext(Region region, UpdateContext def)

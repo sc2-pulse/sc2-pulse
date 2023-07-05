@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.SupporterService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.Duration;
+import javax.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.http.ResponseEntity;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -45,6 +47,16 @@ public class AdminController
     //lazy for tests
     @Autowired @Lazy
     private Cron cron;
+
+    @RequestMapping
+    (
+        value = "/update/partial/{region}",
+        method = {RequestMethod.POST, RequestMethod.DELETE}
+    )
+    public void addPartialUpdate(@PathVariable("region") Region region, HttpServletRequest request)
+    {
+        statsService.setPartialUpdate(region, request.getMethod().equals("POST"));
+    }
 
     @PostMapping("/alternative/forced/{region}")
     public void addForcedAlternativeRegion(@PathVariable("region") Region region)
