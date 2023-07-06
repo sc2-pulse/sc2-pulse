@@ -67,6 +67,7 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -438,7 +439,19 @@ public class StatsService
         {
             fastTeamDAO.remove(season.getRegion());
             LOG.debug("Cleared FastTeamDAO for {}", season.getRegion());
-            updateLeagues(bSeason, season, queues, leagues, currentSeason, updateContext);
+            update
+            (
+                season, queues, leagues,
+                ctx->updateLeagues
+                (
+                    bSeason,
+                    ctx.getSeason(),
+                    ctx.getQueues(),
+                    ctx.getLeagues(),
+                    currentSeason,
+                    updateContext
+                )
+            );
         }
         else
         {
@@ -450,12 +463,22 @@ public class StatsService
             }
             else
             {
-                alternativeUpdate(season, queues, leagues);
+                update
+                (
+                    season, queues, leagues,
+                    ctx->alternativeLadderService.updateSeason(ctx.getSeason(), ctx.getQueues(), ctx.getLeagues())
+                );
             }
         }
     }
 
-    private void alternativeUpdate(Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    private void update
+    (
+        Season season,
+        QueueType[] queues,
+        BaseLeague.LeagueType[] leagues,
+        Consumer<LadderUpdateContext> updater
+    )
     {
         Region region = season.getRegion();
         boolean partialUpdate = isPartialUpdate(season.getRegion(), queues, leagues);
@@ -467,12 +490,13 @@ public class StatsService
                 PARTIAL_UPDATE_QUEUE_TYPES,
                 PARTIAL_UPDATE_LEAGUE_TYPES
             );
-        alternativeLadderService.updateSeason
+        LadderUpdateContext context = new LadderUpdateContext
         (
             season,
             partialUpdate ? PARTIAL_UPDATE_QUEUE_TYPES.toArray(QueueType[]::new) : queues,
             partialUpdate ? PARTIAL_UPDATE_LEAGUE_TYPES.toArray(BaseLeague.LeagueType[]::new) : leagues
         );
+        updater.accept(context);
         if(partialUpdate)
         {
             partialAlternativeUpdates.put(region, partialAlternativeUpdates.get(region) + 1);
