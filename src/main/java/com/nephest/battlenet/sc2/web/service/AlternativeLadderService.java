@@ -348,7 +348,7 @@ public class AlternativeLadderService
     private void continueSeasonDiscovery(Season season)
     {
         long lastDivision = getLastDivision(season);
-        discoverSeason(season, lastDivision, false, CONTINUE_SEASON_DISCOVERY_BATCH_SIZE);
+        discoverSeason(season, lastDivision, isDiscoveryWebRegion(season.getRegion()), CONTINUE_SEASON_DISCOVERY_BATCH_SIZE);
     }
 
     public void updateThenContinueDiscoverSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
