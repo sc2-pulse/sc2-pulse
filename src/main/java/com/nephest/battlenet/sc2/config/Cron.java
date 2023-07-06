@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
+import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
@@ -51,6 +52,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
+import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -78,6 +80,7 @@ public class Cron
     private TimerVar updateDiscordTask;
     private InstantVar matchInstant;
     private InstantVar mapStatsInstant;
+    private LongVar matchUpdateFrame;
     private UpdateContext matchUpdateContext;
     private boolean updateLadder = true;
 
@@ -191,9 +194,12 @@ public class Cron
             );
             matchInstant = new InstantVar(varDAO, "match.updated");
             mapStatsInstant = new InstantVar(varDAO, "ladder.stats.map.timestamp");
+            matchUpdateFrame = new LongVar(varDAO, "match.update.frame", true);
             if(matchInstant.getValue() != null) matchUpdateContext = new UpdateContext(
                 matchInstant.getValue().minusSeconds(MIN_UPDATE_FRAME.toSeconds()),
                 matchInstant.getValue());
+            if(matchUpdateFrame.getValue() == null)
+                matchUpdateFrame.setValueAndSave(MATCH_UPDATE_FRAME.toMillis());
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -387,7 +393,7 @@ public class Cron
     private boolean shouldUpdateMatches()
     {
         return matchInstant.getValue() == null
-            || System.currentTimeMillis() - matchInstant.getValue().toEpochMilli() >= MATCH_UPDATE_FRAME.toMillis();
+            || System.currentTimeMillis() - matchInstant.getValue().toEpochMilli() >= getMatchUpdateFrame().toMillis();
     }
 
     private boolean shouldUpdate()
@@ -398,6 +404,17 @@ public class Cron
     public void setShouldUpdateLadder(boolean updateLadder)
     {
         this.updateLadder = updateLadder;
+    }
+
+    public Duration getMatchUpdateFrame()
+    {
+        return Duration.ofMillis(matchUpdateFrame.getValue());
+    }
+
+    public void setMatchUpdateFrame(@NonNull Duration matchUpdateFrame)
+    {
+        this.matchUpdateFrame.setValueAndSave(matchUpdateFrame.toMillis());
+        LOG.info("Match update frame: {}", matchUpdateFrame);
     }
 
     private void commenceMaintenance()

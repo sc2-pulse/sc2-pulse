@@ -58,6 +58,17 @@ public class AdminController
         statsService.setPartialUpdate(region, request.getMethod().equals("POST"));
     }
 
+    @PostMapping("/update/match/frame/{durationMillis}")
+    public ResponseEntity<Object> setMatchUpdateTimeFrame(@PathVariable("durationMillis") long durationMillis)
+    {
+        if(durationMillis < Cron.MATCH_UPDATE_FRAME.toMillis())
+            return ResponseEntity.badRequest()
+                .body("Min duration: " + Cron.MATCH_UPDATE_FRAME.toMillis());
+
+        cron.setMatchUpdateFrame(Duration.ofMillis(durationMillis));
+        return ResponseEntity.ok().build();
+    }
+
     @PostMapping("/alternative/forced/{region}")
     public void addForcedAlternativeRegion(@PathVariable("region") Region region)
     {
