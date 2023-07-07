@@ -31,13 +31,20 @@ public class ProPlayerDAO
         + "pro_player.country AS \"pro_player.country\", "
         + "pro_player.birthday AS \"pro_player.birthday\", "
         + "pro_player.earnings AS \"pro_player.earnings\", "
-        + "pro_player.updated AS \"pro_player.updated\" ";
+        + "pro_player.updated AS \"pro_player.updated\", "
+        + "pro_player.version AS \"pro_player.version\" ";
     private static final String CREATE_QUERY =
         "INSERT INTO pro_player (aligulac_id, nickname, name, country, birthday, earnings, updated) "
         + "VALUES (:aligulacId, :nickname, :name, :country, :birthday, :earnings, :updated)";
     private static final String MERGE_QUERY =
         "WITH "
         + "vals AS (VALUES(:aligulacId, :nickname, :name, :country, :birthday, :earnings, :updated)), "
+        + "existing AS "
+        + "("
+            + "SELECT id "
+            + "FROM vals v (aligulac_id, nickname, name, country, birthday, earnings, updated) "
+            + "INNER JOIN pro_player USING(aligulac_id) "
+        + "), "
         + "updated AS "
         + "("
             + "UPDATE pro_player "
@@ -48,16 +55,25 @@ public class ProPlayerDAO
             + "country=v.country, "
             + "birthday=v.birthday, "
             + "earnings=v.earnings, "
-            + "updated=v.updated "
+            + "updated=v.updated, "
+            + "version=version + 1 "
             + "FROM vals v (aligulac_id, nickname, name, country, birthday, earnings, updated) "
             + "WHERE pro_player.aligulac_id = v.aligulac_id "
+            + "AND "
+            + "( "
+                + "pro_player.name IS DISTINCT FROM v.name "
+                + "OR pro_player.nickname IS DISTINCT FROM v.nickname "
+                + "OR pro_player.country IS DISTINCT FROM v.country "
+                + "OR pro_player.birthday IS DISTINCT FROM v.birthday "
+                + "OR pro_player.earnings IS DISTINCT FROM v.earnings "
+            + ") "
             + "RETURNING id "
         + "), "
         + "inserted AS "
         + "("
             + "INSERT INTO pro_player (aligulac_id, nickname, name, country, birthday, earnings, updated) "
             + "SELECT * FROM vals "
-            + "WHERE NOT EXISTS(SELECT 1 FROM updated) "
+            + "WHERE NOT EXISTS(SELECT 1 FROM existing) "
             + "ON CONFLICT(aligulac_id) DO UPDATE SET "
             + "aligulac_id=excluded.aligulac_id,"
             + "name=excluded.name,"
@@ -68,7 +84,7 @@ public class ProPlayerDAO
             + "updated=excluded.updated "
             + "RETURNING id "
         + ") "
-        + "SELECT id FROM updated "
+        + "SELECT id FROM existing "
         + "UNION "
         + "SELECT id FROM inserted";
     private static final String FIND_ALIGULAC_LIST = "SELECT " + STD_SELECT
@@ -111,7 +127,8 @@ public class ProPlayerDAO
             rs.getString("pro_player.country"),
             rs.getObject("pro_player.birthday", LocalDate.class),
             DAOUtils.getInteger(rs, "pro_player.earnings"),
-            rs.getObject("pro_player.updated", OffsetDateTime.class)
+            rs.getObject("pro_player.updated", OffsetDateTime.class),
+            rs.getInt("pro_player.version")
         );
     }
 

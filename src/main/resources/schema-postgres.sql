@@ -533,6 +533,7 @@ CREATE TABLE "pro_player"
     "birthday" DATE,
     "earnings" INTEGER,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "version" SMALLINT NOT NULL DEFAULT 1,
 
     PRIMARY KEY ("id"),
 

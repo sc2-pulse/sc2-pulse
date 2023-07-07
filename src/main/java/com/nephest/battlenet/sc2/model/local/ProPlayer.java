@@ -35,6 +35,8 @@ implements java.io.Serializable
     @NotNull
     private OffsetDateTime updated = OffsetDateTime.now();
 
+    private Integer version;
+
     public ProPlayer()
     {
     }
@@ -56,7 +58,8 @@ implements java.io.Serializable
         String country,
         LocalDate birthday,
         Integer earnings,
-        OffsetDateTime updated
+        OffsetDateTime updated,
+        Integer version
     )
     {
         this.id = id;
@@ -67,6 +70,7 @@ implements java.io.Serializable
         this.birthday = birthday;
         this.earnings = earnings;
         this.updated = updated;
+        this.version = version;
     }
 
     @Override
@@ -205,6 +209,16 @@ implements java.io.Serializable
     public void setUpdated(OffsetDateTime updated)
     {
         this.updated = updated;
+    }
+
+    public Integer getVersion()
+    {
+        return version;
+    }
+
+    public void setVersion(Integer version)
+    {
+        this.version = version;
     }
 
 }

@@ -77,7 +77,8 @@ public class ProPlayerIT
             "US",
             LocalDate.now(),
             123,
-            OffsetDateTime.now()
+            OffsetDateTime.now(),
+            100 //supplied version doesn't matter
         ));
 
         List<ProPlayer> proPlayers = proPlayerDAO.findAll();
@@ -89,6 +90,29 @@ public class ProPlayerIT
         assertEquals(lastPlayer.getBirthday(), proPlayer.getBirthday());
         assertEquals(lastPlayer.getEarnings(), proPlayer.getEarnings());
         assertTrue(lastPlayer.getUpdated().isEqual(proPlayer.getUpdated()));
+        assertEquals(3, proPlayer.getVersion());
+    }
+
+    @Test
+    public void whenExistsWithSameData_thenDontUpdateVersion()
+    {
+        ProPlayer lastPlayer = proPlayerDAO.merge(new ProPlayer(
+            null,
+            1L,
+            "tag3",
+            "name3",
+            "US",
+            LocalDate.now(),
+            123,
+            OffsetDateTime.now(),
+            1
+        ));
+        proPlayerDAO.merge(lastPlayer);
+
+        List<ProPlayer> proPlayers = proPlayerDAO.findAll();
+        assertEquals(1, proPlayers.size());
+        ProPlayer proPlayer = proPlayers.get(0);
+        assertEquals(lastPlayer.getVersion(), proPlayer.getVersion());
     }
 
 

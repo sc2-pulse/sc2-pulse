@@ -156,6 +156,7 @@ public class SocialMediaLinkIT
     {
         ProPlayer proPlayer1 = proPlayerDAO
             .merge(new ProPlayer(null, 1L, "nick", "name"));
+        assertEquals(1,  proPlayerDAO.findAll().get(0).getVersion());
         socialMediaLinkDAO.merge
         (
             true,
@@ -168,6 +169,8 @@ public class SocialMediaLinkIT
                 true
             )
         );
+        //pro player version was updated because link was updated
+        assertEquals(2,  proPlayerDAO.findAll().get(0).getVersion());
 
         socialMediaLinkDAO.merge
         (
@@ -185,6 +188,7 @@ public class SocialMediaLinkIT
         SocialMediaLink link = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH).get(0);
         assertEquals("url1", link.getUrl());
         assertTrue(link.isProtected());
+        assertEquals(2,  proPlayerDAO.findAll().get(0).getVersion());
 
         //set isProtected flag to false
         socialMediaLinkDAO.merge
@@ -199,6 +203,7 @@ public class SocialMediaLinkIT
                 false
             )
         );
+        assertEquals(3,  proPlayerDAO.findAll().get(0).getVersion());
 
         socialMediaLinkDAO.merge
         (
@@ -215,6 +220,46 @@ public class SocialMediaLinkIT
         SocialMediaLink link2 = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH).get(0);
         assertEquals("url2", link2.getUrl());
         assertFalse(link2.isProtected());
+        assertEquals(4,  proPlayerDAO.findAll().get(0).getVersion());
+    }
+
+    @Test
+    public void whenNoChanges_thenDontUpdate()
+    {
+        ProPlayer proPlayer1 = proPlayerDAO
+            .merge(new ProPlayer(null, 1L, "nick", "name"));
+        assertEquals(1,  proPlayerDAO.findAll().get(0).getVersion());
+        OffsetDateTime odt1 = OffsetDateTime.now();
+        socialMediaLinkDAO.merge
+        (
+            true,
+            new SocialMediaLink
+            (
+                proPlayer1.getId(),
+                SocialMedia.TWITCH,
+                "url1",
+                odt1,
+                true
+            )
+        );
+        assertEquals(2,  proPlayerDAO.findAll().get(0).getVersion());
+
+        //no changes
+        socialMediaLinkDAO.merge
+        (
+            true,
+            new SocialMediaLink
+            (
+                proPlayer1.getId(),
+                SocialMedia.TWITCH,
+                "url1",
+                odt1.plusSeconds(10),
+                true
+            )
+        );
+        SocialMediaLink link = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH).get(0);
+        assertTrue(link.getUpdated().isEqual(odt1));
+        assertEquals(2,  proPlayerDAO.findAll().get(0).getVersion());
     }
 
 }

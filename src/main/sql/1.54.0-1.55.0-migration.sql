@@ -1,0 +1,2 @@
+ALTER TABLE "pro_player"
+    ADD COLUMN "version" SMALLINT NOT NULL DEFAULT 1;

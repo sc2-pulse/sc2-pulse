@@ -32,16 +32,53 @@ public class SocialMediaLinkDAO
         + "social_media_link.url AS \"social_media_link.url\", "
         + "social_media_link.updated AS \"social_media_link.updated\", "
         + "social_media_link.protected AS \"social_media_link.protected\" ";
-    private static final String CREATE_QUERY =
-        "INSERT INTO social_media_link (pro_player_id, type, url, updated, protected) "
-            + "VALUES(:proPlayerId, :type, :url, :updated, :protected) ";
-    private static final String MERGE_QUERY = CREATE_QUERY + " "
-        + "ON CONFLICT(pro_player_id, type) DO UPDATE SET "
-        + "url=excluded.url,"
-        + "updated=excluded.updated, "
-        + "protected = excluded.protected ";
-    private static final String PROTECTED_MERGE_QUERY = MERGE_QUERY + " "
-        + "WHERE social_media_link.protected IS NULL";
+
+    public static final String MERGE_QUERY =
+        "WITH updated AS "
+        + "("
+            + "UPDATE social_media_link "
+            + "SET url = :url, "
+            + "updated = :updated, "
+            + "protected = :protected "
+            + "WHERE pro_player_id = :proPlayerId "
+            + "AND type = :type "
+            + "AND(:protectedMode = false OR protected IS NULL) "
+            + "AND "
+            + "( "
+                + "url != :url "
+                + "OR protected IS DISTINCT FROM :protected "
+            + ") "
+            + "RETURNING pro_player_id "
+        + "), "
+        + "inserted AS "
+        + "("
+            + "INSERT INTO social_media_link (pro_player_id, type, url, updated, protected) "
+            + "SELECT :proPlayerId, :type, :url, :updated, :protected "
+            + "WHERE NOT EXISTS"
+            + "("
+                + "SELECT 1 "
+                + "FROM social_media_link "
+                + "WHERE pro_player_id = :proPlayerId "
+                + "AND type = :type "
+            + ") "
+            + "ON CONFLICT(pro_player_id, type) DO UPDATE SET "
+            + "url=excluded.url,"
+            + "updated=excluded.updated, "
+            + "protected = excluded.protected "
+            + "RETURNING pro_player_id "
+        + "), "
+        + "updated_pro_player AS "
+        + "("
+            + "SELECT pro_player_id "
+            + "FROM updated "
+            + "UNION "
+            + "SELECT pro_player_id "
+            + "FROM inserted "
+        + ")"
+        + "UPDATE pro_player "
+        + "SET version = version + 1 "
+        + "FROM updated_pro_player "
+        + "WHERE id = updated_pro_player.pro_player_id";
     private static final String FIND_LIST_BY_TYPE =
         "SELECT " + STD_SELECT + ", " + ProPlayerDAO.STD_SELECT + " "
         + "FROM social_media_link "
@@ -153,10 +190,11 @@ public class SocialMediaLinkDAO
                     ? links[i].getUpdated()
                     : OffsetDateTime.now()
             );
-            params[i] = createParameterSource(links[i]);
+            params[i] = createParameterSource(links[i])
+                .addValue("protectedMode", isProtected);
         }
 
-        return template.batchUpdate(isProtected ? PROTECTED_MERGE_QUERY : MERGE_QUERY, params);
+        return template.batchUpdate(MERGE_QUERY, params);
     }
 
     public Map<ProPlayer, SocialMediaLink> findGroupedListByType(SocialMedia type)
