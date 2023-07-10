@@ -463,6 +463,7 @@ public class DiscordIT
         accountDiscordUserDAO.create(new AccountDiscordUser(main.getT1().getId(), discordUser.getId()));
         stubNoManagedGuilds();
         eventService.createLadderCharacterActivityEvent(main.getT2()[0]);
+        mono.getT1().block();
 
         ArgumentCaptor<ApplicationRoleConnection> captor =
             ArgumentCaptor.forClass(ApplicationRoleConnection.class);
