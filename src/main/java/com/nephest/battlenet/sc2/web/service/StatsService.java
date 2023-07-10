@@ -441,7 +441,7 @@ public class StatsService
             LOG.debug("Cleared FastTeamDAO for {}", season.getRegion());
             update
             (
-                season, queues, leagues,
+                season, queues, leagues, updateContext,
                 ctx->updateLeagues
                 (
                     bSeason,
@@ -465,7 +465,7 @@ public class StatsService
             {
                 update
                 (
-                    season, queues, leagues,
+                    season, queues, leagues, updateContext,
                     ctx->alternativeLadderService.updateSeason(ctx.getSeason(), ctx.getQueues(), ctx.getLeagues())
                 );
             }
@@ -477,11 +477,12 @@ public class StatsService
         Season season,
         QueueType[] queues,
         BaseLeague.LeagueType[] leagues,
+        UpdateContext updateContext,
         Consumer<LadderUpdateContext> updater
     )
     {
         Region region = season.getRegion();
-        boolean partialUpdate = isPartialUpdate(season.getRegion(), queues, leagues);
+        boolean partialUpdate = isPartialUpdate(season.getRegion(), queues, leagues, updateContext);
         if(partialUpdate)
             LOG.info
             (
@@ -507,10 +508,16 @@ public class StatsService
         }
     }
 
-    public boolean isPartialUpdate(Region region, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    public boolean isPartialUpdate
+    (
+        Region region,
+        QueueType[] queues,
+        BaseLeague.LeagueType[] leagues,
+        UpdateContext updateContext
+    )
     {
-        return
-        (
+        return updateContext.getInternalUpdate() != null
+        && (
             isPartialUpdate(region)
             || Stream.concat(alternativeRegions.stream(), forcedAlternativeRegions.stream())
                 .distinct()
