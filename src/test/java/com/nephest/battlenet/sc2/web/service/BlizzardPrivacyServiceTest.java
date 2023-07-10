@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -217,7 +217,11 @@ public class BlizzardPrivacyServiceTest
         when(playerCharacterDAO.countByUpdatedMax(any(), any())).thenReturn(9999);
         privacyService.getLastUpdatedCharacterId().setValue(100L);
         List<PlayerCharacter> chars = List.of(new PlayerCharacter());
-        when(playerCharacterDAO.find(any(), eq(100L), any(), eq(9999 / BlizzardPrivacyService.CHARACTER_UPDATES_PER_TTL)))
+        when(playerCharacterDAO.find
+        (
+            any(), eq(100L), any(),
+            eq((int) Math.ceil(9999d / BlizzardPrivacyService.CHARACTER_UPDATES_PER_TTL)))
+        )
             .thenReturn(chars);
         BlizzardLegacyProfile profile1 = new BlizzardLegacyProfile(1L, 2, "name", "clanTag", null);
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 2, "name");

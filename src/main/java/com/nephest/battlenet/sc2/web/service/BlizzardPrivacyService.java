@@ -354,7 +354,7 @@ public class BlizzardPrivacyService
     {
         int characterCount = playerCharacterDAO
             .countByUpdatedMax(OffsetDateTime.now().minus(CHARACTER_UPDATED_MAX), globalContext.getActiveRegions());
-        return characterCount / CHARACTER_UPDATES_PER_TTL;
+        return (int) Math.ceil((double) characterCount / CHARACTER_UPDATES_PER_TTL);
     }
 
     private void updateCharacters()
