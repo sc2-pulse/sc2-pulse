@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -63,7 +63,7 @@ public class BlizzardPrivacyService
     public static final Duration DATA_TTL = Duration.ofDays(30);
     public static final Duration ANONYMIZATION_DATA_TIME_FRAME = Duration.ofMinutes(60);
     public static final Duration FULL_ANONYMIZATION_DATA_TIME_FRAME = DATA_TTL.dividedBy(3);
-    public static final Duration CHARACTER_UPDATE_TIME_FRAME = Duration.ofMinutes(60);
+    public static final Duration CHARACTER_UPDATE_TIME_FRAME = Duration.ofMinutes(4);
     public static final Duration CHARACTER_UPDATE_EXPIRATION_THRESHOLD = Duration.ofDays(15);
     public static final Duration CHARACTER_UPDATED_MAX = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
     public static final Duration OLD_LADDER_DATA_TTL = Duration.ofDays(20);
