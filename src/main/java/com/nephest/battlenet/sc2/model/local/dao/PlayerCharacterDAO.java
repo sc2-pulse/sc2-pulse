@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -255,24 +255,34 @@ public class PlayerCharacterDAO
             + "WHERE player_character.id = v.id "
             + "AND player_character.anonymous IS NULL "
             + "RETURNING player_character.account_id, v.battle_tag, v.season "
+        + "), "
+        + "account_lock_filter AS "
+        + "( "
+            + "SELECT account.id, "
+            + "updated_character.battle_tag, "
+            + "updated_character.season "
+            + "FROM updated_character "
+            + "INNER JOIN account ON updated_character.account_id = account.id "
+            + "ORDER BY partition, battle_tag "
+            + "FOR UPDATE "
         + ") "
         + "UPDATE account "
         + "SET updated = "
             + "CASE "
-                + "WHEN account.battle_tag_last_season <= updated_character.season "
-                + "OR account.battle_tag = updated_character.battle_tag "
+                + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
+                + "OR account.battle_tag = account_lock_filter.battle_tag "
                 + "THEN NOW() "
                 + "ELSE account.updated "
             + "END, "
         + "battle_tag = "
             + "CASE "
-                + "WHEN account.battle_tag_last_season <= updated_character.season "
-                + "THEN updated_character.battle_tag "
+                + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
+                + "THEN account_lock_filter.battle_tag "
                 + "ELSE account.battle_tag "
             + "END, "
-        + "battle_tag_last_season = GREATEST(account.battle_tag_last_season, updated_character.season) "
-        + "FROM updated_character "
-        + "WHERE account.id = updated_character.account_id "
+        + "battle_tag_last_season = GREATEST(account.battle_tag_last_season, account_lock_filter.season) "
+        + "FROM account_lock_filter "
+        + "WHERE account.id = account_lock_filter.id "
         + "AND account.anonymous IS NULL";
 
     private static final String UPDATE_ANONYMOUS_FLAG =
