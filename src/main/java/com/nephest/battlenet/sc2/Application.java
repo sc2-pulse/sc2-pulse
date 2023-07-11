@@ -116,6 +116,12 @@ extends SpringBootServletInitializer
     }
 
     @Bean
+    public ExecutorService secondaryDbExecutorService()
+    {
+        return Executors.newFixedThreadPool(DB_THREADS);
+    }
+
+    @Bean
     public ExecutorService webExecutorService()
     {
         return new ThreadPoolExecutor
