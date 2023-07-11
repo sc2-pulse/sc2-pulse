@@ -134,8 +134,7 @@ public class BlizzardPrivacyServiceTest
             varDAO,
             accountDAO,
             playerCharacterDAO,
-            executor,
-            executor,
+            executor, executor, executor,
             validator,
             sc2WebServiceUtil,
             globalContext

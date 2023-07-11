@@ -82,6 +82,7 @@ public class BlizzardPrivacyService
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final ExecutorService dbExecutorService;
+    private final ExecutorService secondaryDbExecutorService;
     private final ExecutorService webExecutorService;
     private final SC2WebServiceUtil sc2WebServiceUtil;
     private final Predicate<BlizzardTeamMember> teamMemberPredicate;
@@ -108,6 +109,7 @@ public class BlizzardPrivacyService
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDAO,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
+        @Qualifier("secondaryDbExecutorService") ExecutorService secondaryDbExecutorService,
         @Qualifier("webExecutorService") ExecutorService webExecutorService,
         Validator validator,
         SC2WebServiceUtil sc2WebServiceUtil,
@@ -121,6 +123,7 @@ public class BlizzardPrivacyService
         this.accountDAO = accountDAO;
         this.playerCharacterDAO = playerCharacterDAO;
         this.dbExecutorService = dbExecutorService;
+        this.secondaryDbExecutorService = secondaryDbExecutorService;
         this.webExecutorService = webExecutorService;
         this.teamMemberPredicate = DAOUtils.beanValidationPredicate(validator);
         this.profileTeamMemberPredicate = DAOUtils.beanValidationPredicate(validator);
@@ -208,8 +211,14 @@ public class BlizzardPrivacyService
         handleExpiredData();
         if(shouldUpdateCharacters() && (characterUpdateTask == null || characterUpdateTask.isDone()))
             characterUpdateTask = webExecutorService.submit(this::updateCharacters);
+        webExecutorService.submit(this::updateOldSeasons);
+        return characterUpdateTask;
+    }
+
+    private void updateOldSeasons()
+    {
         Integer season = getSeasonToUpdate();
-        if(season == null) return characterUpdateTask;
+        if(season == null) return;
 
         LOG.debug("Updating old names and BattleTags for season {}", season);
         boolean current = seasonDAO.getMaxBattlenetId().equals(season);
@@ -238,7 +247,6 @@ public class BlizzardPrivacyService
         }
 
         LOG.info("Updated old names and BattleTags for season {}", season);
-        return characterUpdateTask;
     }
 
     private boolean shouldHandleExpiredData()
@@ -277,7 +285,7 @@ public class BlizzardPrivacyService
             .flatMap(l->Flux.fromStream(extractPrivateInfo(l, seasonId, currentSeason)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
-            .forEach(l->dbTasks.add(dbExecutorService.submit(()->
+            .forEach(l->dbTasks.add(secondaryDbExecutorService.submit(()->
                 LOG.debug("Updated {} accounts and characters", playerCharacterDAO.updateAccountsAndCharacters(l)))));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
@@ -313,7 +321,7 @@ public class BlizzardPrivacyService
             .flatMap(l->Flux.fromStream(extractAlternativePrivateInfo(l)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
-            .forEach(l->dbTasks.add(dbExecutorService.submit(()->
+            .forEach(l->dbTasks.add(secondaryDbExecutorService.submit(()->
                 LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(l.toArray(PlayerCharacter[]::new))))));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
