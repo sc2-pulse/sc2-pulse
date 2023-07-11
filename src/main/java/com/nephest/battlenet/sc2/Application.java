@@ -62,7 +62,7 @@ extends SpringBootServletInitializer
      */
     public static final int DB_THREADS = 1;
     public static final int CORE_WEB_THREADS = Region.values().length;
-    public static final int BACKGROUND_WEB_THREADS = 10;
+    public static final int BACKGROUND_WEB_THREADS = 15;
     public static final int WEB_THREAD_TTL_SECONDS = 60;
     public static final String WEB_THREAD_POOL_NAME = "p-web-";
 
