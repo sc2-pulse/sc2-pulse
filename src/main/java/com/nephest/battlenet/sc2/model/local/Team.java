@@ -22,9 +22,9 @@ implements java.io.Serializable
 {
 
     public static final Comparator<Team> NATURAL_ID_COMPARATOR =
-        Comparator.comparing(Team::getLegacyId)
-            .thenComparing(Team::getQueueType)
+        Comparator.comparing(Team::getQueueType)
             .thenComparing(Team::getRegion)
+            .thenComparing(Team::getLegacyId)
             .thenComparing(Team::getSeason);
 
     private static final long serialVersionUID = 9L;

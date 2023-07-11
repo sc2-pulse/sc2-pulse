@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -6,11 +6,10 @@ package com.nephest.battlenet.sc2.model.local;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
-
-import javax.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public class Match
 extends BaseMatch
@@ -22,8 +21,8 @@ implements java.io.Serializable
     public static final Comparator<Match> NATURAL_ID_COMPARATOR =
         Comparator.comparing(Match::getDate)
             .thenComparing(Match::getType)
-            .thenComparing(Match::getRegion)
-            .thenComparing(Match::getMapId);
+            .thenComparing(Match::getMapId)
+            .thenComparing(Match::getRegion);
 
     private Long id;
 
