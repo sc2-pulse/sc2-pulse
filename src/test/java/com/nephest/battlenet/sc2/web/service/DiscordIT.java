@@ -396,6 +396,17 @@ public class DiscordIT
     }
 
     @Test
+    public void whenEmptyDiscriminatorIsBeforeExistingDiscriminator_thenThereShouldBeNoException()
+    {
+        DiscordUser[] users = new DiscordUser[]
+        {
+            new DiscordUser(Snowflake.of(1L), "name1", null),
+            new DiscordUser(Snowflake.of(2L), "name2", 1234),
+        };
+        discordUserDAO.merge(users);
+    }
+
+    @Test
     public void testRemoveEmptyDiscordUsers()
     {
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));

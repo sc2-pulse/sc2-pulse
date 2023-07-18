@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.discord.dao;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import discord4j.common.util.Snowflake;
+import java.sql.Types;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
@@ -56,18 +57,18 @@ public class DiscordUserDAO
 
     private static final String MERGE =
         "WITH "
-        + "vals AS (VALUES :users), "
+        + "vals AS (VALUES (:id, :name, :discriminator)), "
         + "updated AS "
         + "( "
             + "UPDATE discord_user "
             + "SET name = v.name, "
-            + "discriminator = v.discriminator::smallint "
+            + "discriminator = v.discriminator "
             + "FROM vals v(id, name, discriminator) "
             + "WHERE discord_user.id = v.id "
             + "AND "
             + "( "
                 + "discord_user.name != v.name "
-                + "OR discord_user.discriminator IS DISTINCT FROM v.discriminator::smallint "
+                + "OR discord_user.discriminator IS DISTINCT FROM v.discriminator "
             + ") "
             + "RETURNING 1 "
         + "), "
@@ -76,7 +77,7 @@ public class DiscordUserDAO
             + "INSERT INTO discord_user(id, name, discriminator) "
             + "SELECT * FROM "
             + "( "
-                + "SELECT v.id, v.name, v.discriminator::smallint "
+                + "SELECT v.id, v.name, v.discriminator "
                 + "FROM vals v(id, name, discriminator) "
                 + "LEFT JOIN discord_user USING(id) "
                 + "WHERE discord_user.id IS NULL "
@@ -153,17 +154,15 @@ public class DiscordUserDAO
     {
         if(users.length == 0) return new DiscordUser[0];
 
-        List<Object[]> data = Arrays.stream(users)
+        MapSqlParameterSource[] params = Arrays.stream(users)
             .filter(Objects::nonNull)
             .distinct()
-            .map(u->new Object[]{
-                u.getId().asLong(),
-                u.getName(),
-                u.getDiscriminator()
-            }).collect(Collectors.toList());
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("users", data);
-        template.query(MERGE, params, DAOUtils.INT_MAPPER);
+            .map(u->new MapSqlParameterSource()
+                    .addValue("id", u.getId().asLong(), Types.BIGINT)
+                    .addValue("name", u.getName(), Types.VARCHAR)
+                    .addValue("discriminator", u.getDiscriminator(), Types.INTEGER)
+            ).toArray(MapSqlParameterSource[]::new);
+        template.batchUpdate(MERGE, params);
 
         return users;
     }
