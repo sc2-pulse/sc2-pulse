@@ -55,7 +55,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -112,9 +112,9 @@ public class AlternativeLadderService
     private CollectionVar<Set<Region>, Region> profileLadderWebRegions;
     private CollectionVar<Set<Region>, Region> discoveryWebRegions;
 
-    private final ConcurrentLinkedQueue<Long> pendingTeams = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<PlayerCharacter> pendingCharacters
-        = new ConcurrentLinkedQueue<>();
+    private final Set<Long> pendingTeams = ConcurrentHashMap.newKeySet();
+    private final Set<PlayerCharacter> pendingCharacters
+        = ConcurrentHashMap.newKeySet();
     private final Map<Region, Integer> additionalWebUpdates = new EnumMap<>(Region.class);
 
     @Autowired @Lazy
@@ -705,8 +705,7 @@ public class AlternativeLadderService
             LOG.info
             (
                 "Created {} team snapshots",
-                //team ids can be duplicated when the update is too slow
-                teamStateDAO.takeSnapshot(new ArrayList<>(new HashSet<>(pendingTeams)))
+                teamStateDAO.takeSnapshot(new ArrayList<>(pendingTeams))
             );
         }
         finally

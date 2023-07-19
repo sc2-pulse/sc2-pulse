@@ -53,7 +53,6 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
@@ -63,7 +62,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
@@ -138,9 +136,9 @@ public class StatsService
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdates = new EnumMap<>(Region.class);
-    private final ConcurrentLinkedQueue<Long> pendingTeams = new ConcurrentLinkedQueue<>();
-    private final ConcurrentLinkedQueue<PlayerCharacter> pendingCharacters =
-        new ConcurrentLinkedQueue<>();
+    private final Set<Long> pendingTeams = ConcurrentHashMap.newKeySet();
+    private final Set<PlayerCharacter> pendingCharacters =
+        ConcurrentHashMap.newKeySet();
 
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
@@ -356,15 +354,13 @@ public class StatsService
 
     public static void processPendingCharacters
     (
-        Collection<PlayerCharacter> pendingCharacters,
+        Set<PlayerCharacter> pendingCharacters,
         EventService eventService
     )
     {
         if(pendingCharacters.isEmpty()) return;
 
-        PlayerCharacter[] characters = pendingCharacters.stream()
-            .distinct()
-            .toArray(PlayerCharacter[]::new);
+        PlayerCharacter[] characters = pendingCharacters.toArray(PlayerCharacter[]::new);
         eventService.createLadderCharacterActivityEvent(characters);
         pendingCharacters.clear();
         LOG.info("Created {} character ladder activity events", characters.length);
@@ -389,15 +385,14 @@ public class StatsService
         }
     }
 
-    private void takePopulationSnapshot(Collection<Integer> seasons, Collection<Long> teams)
+    private void takePopulationSnapshot(Set<Integer> seasons, Set<Long> teams)
     {
         populationStateDAO.takeSnapshot(seasons);
         for(Integer seasonId : seasons) teamDao.updateRanks(seasonId);
         LOG.info
         (
             "Created {} team snapshots",
-            //team ids can be duplicated when the update is too slow
-            teamStateDAO.takeSnapshot(new ArrayList<>(new HashSet<>(teams)))
+            teamStateDAO.takeSnapshot(new ArrayList<>(teams))
         );
     }
 
