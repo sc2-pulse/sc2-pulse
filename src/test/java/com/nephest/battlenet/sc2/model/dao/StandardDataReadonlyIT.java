@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.dao;
@@ -217,6 +217,20 @@ public class StandardDataReadonlyIT
                 assertEquals(Long.valueOf(teamPosition + (i * Region.values().length * TEAMS_PER_LEAGUE) + charIx + "0"), id.getT2()[charIx].getId());
         }
 
+    }
+
+    @Test
+    public void whenNoLegacyIds_thenReturnEmptyCollection()
+    {
+        List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ids = blizzardDAO.findLegacyLadderIds
+        (
+            SeasonGenerator.DEFAULT_SEASON_ID + 10,
+            new Region[]{Region.US},
+            new QueueType[]{QueueType.LOTV_2V2},
+            BaseLeague.LeagueType.values(),
+            3
+        );
+        assertTrue(ids.isEmpty());
     }
 
     @CsvSource

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard.dao;
@@ -7,6 +7,10 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -16,11 +20,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class BlizzardDAO
@@ -97,7 +96,12 @@ public class BlizzardDAO
                     rs.getString("name")
                 ));
             }
-            ids.add(Tuples.of(lastRegion, currentCharacters.toArray(BlizzardPlayerCharacter[]::new), lastDivision));
+            if(lastRegion != null) ids.add(Tuples.of
+            (
+                lastRegion,
+                currentCharacters.toArray(BlizzardPlayerCharacter[]::new),
+                lastDivision
+            ));
             return ids;
         };
     }
