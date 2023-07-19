@@ -189,6 +189,7 @@ public class AlternativeLadderService
     public static final int ALTERNATIVE_LADDER_WEB_ERROR_THRESHOLD = 50;
     public static final int LEGACY_LADDER_WEB_BATCH_SIZE = 200;
     public static final int CONTINUE_SEASON_DISCOVERY_BATCH_SIZE = 25;
+    public static final int CONTINUE_SEASON_DISCOVERY_LADDER_OFFSET = 3;
     public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
 
     @PostConstruct
@@ -347,7 +348,7 @@ public class AlternativeLadderService
 
     private void continueSeasonDiscovery(Season season)
     {
-        long lastDivision = getLastDivision(season);
+        long lastDivision = getLastDivision(season) - CONTINUE_SEASON_DISCOVERY_LADDER_OFFSET;
         discoverSeason(season, lastDivision, isDiscoveryWebRegion(season.getRegion()), CONTINUE_SEASON_DISCOVERY_BATCH_SIZE);
     }
 
