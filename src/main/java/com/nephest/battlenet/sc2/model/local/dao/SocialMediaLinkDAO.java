@@ -147,7 +147,12 @@ public class SocialMediaLinkDAO
         MapSqlParameterSource[] params = new MapSqlParameterSource[links.length];
         for(int i = 0; i < links.length; i++)
         {
-            links[i].setUpdated(OffsetDateTime.now());
+            links[i].setUpdated
+            (
+                links[i].getUpdated() != null
+                    ? links[i].getUpdated()
+                    : OffsetDateTime.now()
+            );
             params[i] = createParameterSource(links[i]);
         }
 
