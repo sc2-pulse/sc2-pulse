@@ -18,21 +18,21 @@ implements Identifiable, MultiAliasName
         1,
         "NA",
         Set.of("US", "United States", "America", "Americas", "North America"),
-        "https://us.api.blizzard.com/", "https://starcraft2.com/en-us/api/"
+        "https://us.api.blizzard.com/", "https://starcraft2.blizzard.com/en-us/api/"
     ),
     EU
     (
         2,
         "EU",
         Set.of("Europe"),
-        "https://eu.api.blizzard.com/", "https://starcraft2.com/en-gb/api/"
+        "https://eu.api.blizzard.com/", "https://starcraft2.blizzard.com/en-gb/api/"
     ),
     KR
     (
         3,
         "KR",
         Set.of("Korea", "South Korea", "TW", "Taiwan", "Asia"),
-        "https://kr.api.blizzard.com/", "https://starcraft2.com/ko-kr/api/"
+        "https://kr.api.blizzard.com/", "https://starcraft2.blizzard.com/ko-kr/api/"
     ),
     CN
     (

@@ -306,7 +306,7 @@ public class LadderSearchIndependentIT
         List<LadderDistinctCharacter> byClanTag = ladderCharacterDAO.findDistinctCharacters("[clanTag]");
         verifyCharacterAccountStats(byClanTag);
         LadderDistinctCharacter byProfileLink = ladderCharacterDAO
-            .findDistinctCharacterByProfileLink("https://starcraft2.com/profile/2/1/9998")
+            .findDistinctCharacterByProfileLink("https://starcraft2.blizzard.com/en-us/profile/2/1/9998")
             .orElseThrow();
         verifyDistinctChar1(byProfileLink);
 

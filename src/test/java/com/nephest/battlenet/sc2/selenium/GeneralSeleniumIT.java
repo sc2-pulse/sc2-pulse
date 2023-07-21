@@ -256,7 +256,7 @@ public class GeneralSeleniumIT
 
         searchInput.sendKeys(Keys.HOME, Keys.chord(Keys.SHIFT, Keys.END), Keys.BACK_SPACE);
         //find by bnet profile link
-        searchInput.sendKeys("https://starcraft2.com/profile/1/1/10");
+        searchInput.sendKeys("https://starcraft2.blizzard.com/en-us/profile/1/1/10");
         clickAndWait(driver, wait, "#form-search button[type=\"submit\"]", "#search-result-all:not(.d-none) tbody tr");
 
         //clan

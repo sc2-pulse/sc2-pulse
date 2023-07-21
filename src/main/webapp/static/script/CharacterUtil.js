@@ -278,7 +278,7 @@ class CharacterUtil
         }
         else
         {
-            profileLinkElement.setAttribute("href", "https://starcraft2.com/profile" + profileSuffix);
+            profileLinkElement.setAttribute("href", "https://starcraft2.blizzard.com/profile" + profileSuffix);
             profileLinkElement.parentElement.classList.remove("d-none");
         }
         if(Util.isFakeBattleTag(account.battleTag)) {

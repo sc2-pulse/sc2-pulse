@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -34,7 +35,12 @@ public class SearchService
     public static final String CLAN_SEARCH_FORMAT = CLAN_START_DELIMITER + "%1$s" + CLAN_END_DELIMITER;
     public static final String BATTLE_TAG_MARKER = "#";
     public static final String URL_MARKER = "://";
-    public static final String STARCRAFT2_COM_PROFILE_URL_PREFIX = "https://starcraft2.com/profile";
+    public static final Pattern STARCRAFT2_COM_PROFILE_URL_PATTERN = Pattern.compile
+    (
+        "^https://starcraft2(\\.blizzard)?.com"
+        + "(/\\p{L}\\p{L}-\\p{L}\\p{L})?"
+        + "/profile/[0-9]/[0-9]/[0-9]+$"
+    );
 
     private final PlayerCharacterDAO playerCharacterDAO;
     private final AccountDAO accountDAO;
@@ -133,7 +139,7 @@ public class SearchService
 
     private List<LadderDistinctCharacter> findDistinctCharactersByUrl(String term)
     {
-        if(term.startsWith(STARCRAFT2_COM_PROFILE_URL_PREFIX))
+        if(STARCRAFT2_COM_PROFILE_URL_PATTERN.matcher(term).matches())
             return ladderCharacterDAO.findDistinctCharacterByProfileLink(term)
                 .map(List::of)
                 .orElse(List.of());
