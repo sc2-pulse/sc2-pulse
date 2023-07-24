@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -14,7 +15,11 @@ public class SocialMediaLink
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+
+    public static final Comparator<SocialMediaLink> NATURAL_ID_COMPARATOR = Comparator
+        .comparing(SocialMediaLink::getProPlayerId)
+        .thenComparing(SocialMediaLink::getType);
 
     @NotNull
     private Long proPlayerId;
