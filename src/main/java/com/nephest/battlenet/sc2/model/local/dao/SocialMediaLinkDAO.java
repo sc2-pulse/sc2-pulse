@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -181,6 +182,11 @@ public class SocialMediaLinkDAO
     {
         if(links.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
 
+        links = Arrays.stream(links)
+            .filter(Objects::nonNull)
+            .distinct()
+            .sorted(SocialMediaLink.NATURAL_ID_COMPARATOR)
+            .toArray(SocialMediaLink[]::new);
         MapSqlParameterSource[] params = new MapSqlParameterSource[links.length];
         for(int i = 0; i < links.length; i++)
         {
