@@ -9,6 +9,7 @@ import java.sql.Types;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import javax.persistence.OptimisticLockException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -87,6 +88,33 @@ public class ProPlayerDAO
         + "SELECT id FROM existing "
         + "UNION "
         + "SELECT id FROM inserted";
+
+    public static final String MERGE_VERSIONED =
+        "WITH updated AS "
+        + "("
+            + "UPDATE pro_player "
+            + "SET name = :name, " 
+            + "nickname = :nickname, "
+            + "country = :country, "
+            + "birthday = :birthday, "
+            + "earnings = :earnings, "
+            + "updated = :updated, "
+            + "version = version + 1 "
+            + "WHERE id = :id "
+            + "AND version = :version "
+            + "RETURNING id "
+        + "), "
+        + "inserted AS "
+        + "("
+            + "INSERT INTO pro_player (nickname, name, country, birthday, earnings, updated) "
+            + "SELECT :nickname, :name, :country, :birthday, :earnings, :updated "
+            + "WHERE :id IS NULL "
+            + "RETURNING id "
+        + ") "
+        + "SELECT id FROM updated "
+        + "UNION "
+        + "SELECT id FROM inserted";
+
     private static final String FIND_ALIGULAC_LIST = "SELECT " + STD_SELECT
         + "FROM pro_player WHERE aligulac_id IS NOT NULL";
 
@@ -169,6 +197,20 @@ public class ProPlayerDAO
         }
 
         return template.batchUpdate(MERGE_QUERY, params);
+    }
+
+    public ProPlayer mergeVersioned(ProPlayer proPlayer)
+    {
+        proPlayer.setUpdated(OffsetDateTime.now());
+        MapSqlParameterSource params = createParameterSource(proPlayer)
+            .addValue("id", proPlayer.getId(), Types.BIGINT)
+            .addValue("version", proPlayer.getVersion(), Types.INTEGER);
+        Long id = template.query(MERGE_VERSIONED, params, DAOUtils.LONG_EXTRACTOR);
+        if(id == null) throw new OptimisticLockException(proPlayer);
+
+        proPlayer.setVersion(proPlayer.getId() == null ? 1 : proPlayer.getVersion() + 1);
+        proPlayer.setId(id);
+        return proPlayer;
     }
 
     public List<ProPlayer> findAligulacList()

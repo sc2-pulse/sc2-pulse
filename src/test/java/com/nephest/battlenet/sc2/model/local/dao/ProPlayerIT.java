@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
@@ -14,7 +15,9 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import javax.persistence.OptimisticLockException;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -113,6 +116,75 @@ public class ProPlayerIT
         assertEquals(1, proPlayers.size());
         ProPlayer proPlayer = proPlayers.get(0);
         assertEquals(lastPlayer.getVersion(), proPlayer.getVersion());
+    }
+
+    @Test
+    public void whenMergingWithCorrectVersion_thenUpdate()
+    {
+        LocalDate birthday1 = LocalDate.now();
+        ProPlayer proPlayer = proPlayerDAO.mergeVersioned(new ProPlayer(
+            null,
+            null,
+            "tag1",
+            "name1",
+            "US",
+            birthday1,
+            123,
+            OffsetDateTime.now(),
+            1
+        ));
+        ProPlayer updatedProPlayer = proPlayerDAO.mergeVersioned(new ProPlayer(
+            proPlayer.getId(),
+            null,
+            "tag2",
+            "name2",
+            "EU",
+            birthday1.minusDays(1),
+            456,
+            OffsetDateTime.now(),
+            1
+        ));
+        assertEquals(2, updatedProPlayer.getVersion());
+
+        ProPlayer foundPlayer = proPlayerDAO.findAll().get(0);
+        Assertions.assertThat(foundPlayer)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(updatedProPlayer);
+    }
+
+    @Test
+    public void whenMergingWithWrongVersion_thenThrowException()
+    {
+        LocalDate birthday1 = LocalDate.now();
+        ProPlayer proPlayer = proPlayerDAO.mergeVersioned(new ProPlayer(
+            null,
+            null,
+            "tag1",
+            "name1",
+            "US",
+            birthday1,
+            123,
+            OffsetDateTime.now(),
+            1
+        ));
+        ProPlayer invalidVersionPlayer = new ProPlayer
+        (
+            proPlayer.getId(),
+            null,
+            "tag2",
+            "name2",
+            "EU",
+            birthday1.minusDays(1),
+            456,
+            OffsetDateTime.now(),
+            2
+        );
+        assertThrows
+        (
+            OptimisticLockException.class,
+            ()->proPlayerDAO.mergeVersioned(invalidVersionPlayer)
+        );
     }
 
 
