@@ -187,6 +187,52 @@ public class ProPlayerIT
         );
     }
 
-
+    @Test
+    public void testFindByIds()
+    {
+        ProPlayer proPlayer1 = proPlayerDAO.mergeVersioned(new ProPlayer(
+            null,
+            null,
+            "tag1",
+            "name1",
+            "US",
+            LocalDate.now(),
+            123,
+            OffsetDateTime.now(),
+            1
+        ));
+        ProPlayer proPlayer2 = proPlayerDAO.mergeVersioned(new ProPlayer(
+            null,
+            null,
+            "tag2",
+            "name2",
+            "US",
+            LocalDate.now(),
+            123,
+            OffsetDateTime.now(),
+            1
+        ));
+        ProPlayer proPlayer3 = proPlayerDAO.mergeVersioned(new ProPlayer(
+            null,
+            null,
+            "tag3",
+            "name3",
+            "US",
+            LocalDate.now(),
+            123,
+            OffsetDateTime.now(),
+            1
+        ));
+        List<ProPlayer> proPlayers = proPlayerDAO.find(proPlayer1.getId(), proPlayer3.getId());
+        assertEquals(2, proPlayers.size());
+        Assertions.assertThat(proPlayers.get(0))
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(proPlayer1);
+        Assertions.assertThat(proPlayers.get(1))
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(proPlayer3);
+    }
 
 }

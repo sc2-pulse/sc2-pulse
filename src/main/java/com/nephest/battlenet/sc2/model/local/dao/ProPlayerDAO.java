@@ -9,6 +9,7 @@ import java.sql.Types;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import javax.persistence.OptimisticLockException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -115,6 +116,12 @@ public class ProPlayerDAO
         + "UNION "
         + "SELECT id FROM inserted";
 
+    private static final String FIND_BY_IDS =
+        "SELECT " + STD_SELECT
+        + "FROM pro_player "
+        + "WHERE id IN(:ids) "
+        + "ORDER BY id";
+
     private static final String FIND_ALIGULAC_LIST = "SELECT " + STD_SELECT
         + "FROM pro_player WHERE aligulac_id IS NOT NULL";
 
@@ -211,6 +218,14 @@ public class ProPlayerDAO
         proPlayer.setVersion(proPlayer.getId() == null ? 1 : proPlayer.getVersion() + 1);
         proPlayer.setId(id);
         return proPlayer;
+    }
+
+    public List<ProPlayer> find(Long... ids)
+    {
+        if(ids.length == 0) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource("ids", Set.of(ids));
+        return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
     public List<ProPlayer> findAligulacList()
