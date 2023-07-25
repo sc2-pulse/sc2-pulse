@@ -262,4 +262,53 @@ public class SocialMediaLinkIT
         assertEquals(2,  proPlayerDAO.findAll().get(0).getVersion());
     }
 
+    @Test
+    public void whenRemove_thenRemoveAndUpdateProPlayerVersion()
+    {
+        ProPlayer proPlayer1 = proPlayerDAO
+            .merge(new ProPlayer(null, 1L, "nick", "name"));
+        ProPlayer proPlayer2 = proPlayerDAO
+            .merge(new ProPlayer(null, 2L, "nick2", "name2"));
+        assertEquals(1, proPlayerDAO.find(proPlayer1.getId()).get(0).getVersion());
+        OffsetDateTime odt1 = OffsetDateTime.now();
+        socialMediaLinkDAO.merge
+        (
+            true,
+            new SocialMediaLink
+            (
+                proPlayer1.getId(),
+                SocialMedia.TWITCH,
+                "url1",
+                odt1,
+                true
+            ),
+            new SocialMediaLink
+            (
+                proPlayer1.getId(),
+                SocialMedia.YOUTUBE,
+                "url1",
+                odt1,
+                true
+            ),
+            new SocialMediaLink
+            (
+                proPlayer1.getId(),
+                SocialMedia.ALIGULAC,
+                "url1",
+                odt1,
+                true
+            )
+        );
+        assertEquals(4, proPlayerDAO.find(proPlayer1.getId()).get(0).getVersion());
+        socialMediaLinkDAO.remove
+        (
+            new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, null),
+            new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, null)
+        );
+        List<SocialMediaLink> links = socialMediaLinkDAO.find(proPlayer1.getId());
+        assertEquals(1, links.size());
+        assertEquals(SocialMedia.YOUTUBE, links.get(0).getType());
+        assertEquals(5,  proPlayerDAO.findAll().get(0).getVersion());
+    }
+
 }
