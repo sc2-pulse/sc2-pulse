@@ -57,8 +57,7 @@ public class ProPlayerDAO
             + "country=v.country, "
             + "birthday=v.birthday, "
             + "earnings=v.earnings, "
-            + "updated=v.updated, "
-            + "version=version + 1 "
+            + "updated=v.updated "
             + "FROM vals v (aligulac_id, nickname, name, country, birthday, earnings, updated) "
             + "WHERE pro_player.aligulac_id = v.aligulac_id "
             + "AND "
@@ -99,22 +98,21 @@ public class ProPlayerDAO
             + "country = :country, "
             + "birthday = :birthday, "
             + "earnings = :earnings, "
-            + "updated = :updated, "
-            + "version = version + 1 "
+            + "updated = :updated "
             + "WHERE id = :id "
             + "AND version = :version "
-            + "RETURNING id "
+            + "RETURNING id, version "
         + "), "
         + "inserted AS "
         + "("
             + "INSERT INTO pro_player (nickname, name, country, birthday, earnings, updated) "
             + "SELECT :nickname, :name, :country, :birthday, :earnings, :updated "
             + "WHERE :id IS NULL "
-            + "RETURNING id "
+            + "RETURNING id, version "
         + ") "
-        + "SELECT id FROM updated "
+        + "SELECT id, version FROM updated "
         + "UNION "
-        + "SELECT id FROM inserted";
+        + "SELECT id, version FROM inserted";
 
     private static final String FIND_BY_IDS =
         "SELECT " + STD_SELECT
@@ -212,11 +210,11 @@ public class ProPlayerDAO
         MapSqlParameterSource params = createParameterSource(proPlayer)
             .addValue("id", proPlayer.getId(), Types.BIGINT)
             .addValue("version", proPlayer.getVersion(), Types.INTEGER);
-        Long id = template.query(MERGE_VERSIONED, params, DAOUtils.LONG_EXTRACTOR);
-        if(id == null) throw new OptimisticLockException(proPlayer);
+        Long[] pair = template.query(MERGE_VERSIONED, params, DAOUtils.LONG_PAIR_EXTRACTOR);
+        if(pair[0] == null) throw new OptimisticLockException(proPlayer);
 
-        proPlayer.setVersion(proPlayer.getId() == null ? 1 : proPlayer.getVersion() + 1);
-        proPlayer.setId(id);
+        proPlayer.setVersion(pair[1].intValue());
+        proPlayer.setId(pair[0]);
         return proPlayer;
     }
 

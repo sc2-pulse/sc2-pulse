@@ -308,7 +308,7 @@ public class SocialMediaLinkIT
         List<SocialMediaLink> links = socialMediaLinkDAO.find(proPlayer1.getId());
         assertEquals(1, links.size());
         assertEquals(SocialMedia.YOUTUBE, links.get(0).getType());
-        assertEquals(5,  proPlayerDAO.findAll().get(0).getVersion());
+        assertEquals(6,  proPlayerDAO.findAll().get(0).getVersion());
     }
 
 }

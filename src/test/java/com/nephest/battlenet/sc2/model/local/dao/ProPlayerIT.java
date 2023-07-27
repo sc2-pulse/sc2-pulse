@@ -154,6 +154,42 @@ public class ProPlayerIT
     }
 
     @Test
+    public void whenMergingWithCorrectVersionButOnlyDifferenceIsUpdateTimestamp_thenDontUpdateVersion()
+    {
+        LocalDate birthday1 = LocalDate.now();
+        OffsetDateTime odt1 = OffsetDateTime.now();
+        ProPlayer proPlayer = proPlayerDAO.mergeVersioned(new ProPlayer(
+            null,
+            null,
+            "tag1",
+            "name1",
+            "US",
+            birthday1,
+            123,
+            odt1,
+            1
+        ));
+        ProPlayer updatedProPlayer = proPlayerDAO.mergeVersioned(new ProPlayer(
+            proPlayer.getId(),
+            null,
+            "tag1",
+            "name1",
+            "US",
+            birthday1,
+            123,
+            odt1.plusSeconds(1),
+            1
+        ));
+        assertEquals(1, updatedProPlayer.getVersion());
+
+        ProPlayer foundPlayer = proPlayerDAO.findAll().get(0);
+        Assertions.assertThat(foundPlayer)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(updatedProPlayer);
+    }
+
+    @Test
     public void whenMergingWithWrongVersion_thenThrowException()
     {
         LocalDate birthday1 = LocalDate.now();

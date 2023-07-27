@@ -67,30 +67,15 @@ public class SocialMediaLinkDAO
             + "updated=excluded.updated, "
             + "protected = excluded.protected "
             + "RETURNING pro_player_id "
-        + "), "
-        + "updated_pro_player AS "
-        + "("
-            + "SELECT pro_player_id "
-            + "FROM updated "
-            + "UNION "
-            + "SELECT pro_player_id "
-            + "FROM inserted "
-        + ")"
-        + "UPDATE pro_player "
-        + "SET version = version + 1 "
-        + "FROM updated_pro_player "
-        + "WHERE id = updated_pro_player.pro_player_id";
-    private static final String DELETE =
-        "WITH deleted AS "
-        + "("
-            + "DELETE FROM social_media_link "
-            + "WHERE (pro_player_id, type) IN(:data) "
-            + "RETURNING social_media_link.pro_player_id "
         + ") "
-        + "UPDATE pro_player "
-        + "SET version = version + 1 "
-        + "FROM deleted "
-        + "WHERE id = deleted.pro_player_id";
+        + "SELECT pro_player_id "
+        + "FROM updated "
+        + "UNION "
+        + "SELECT pro_player_id "
+        + "FROM inserted ";
+    private static final String DELETE =
+        "DELETE FROM social_media_link "
+        + "WHERE (pro_player_id, type) IN(:data)";
     private static final String FIND_LIST_BY_TYPE =
         "SELECT " + STD_SELECT + ", " + ProPlayerDAO.STD_SELECT + " "
         + "FROM social_media_link "
