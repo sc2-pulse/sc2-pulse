@@ -1,16 +1,7 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.convert.ConversionService;
-import org.springframework.jdbc.core.ResultSetExtractor;
-import org.springframework.jdbc.core.RowMapper;
-import org.springframework.validation.BeanPropertyBindingResult;
-import org.springframework.validation.Errors;
-import org.springframework.validation.Validator;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -22,8 +13,17 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.IntFunction;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.core.convert.ConversionService;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
+import org.springframework.validation.BeanPropertyBindingResult;
+import org.springframework.validation.Errors;
+import org.springframework.validation.Validator;
 
 public final class DAOUtils
 {
@@ -51,6 +51,14 @@ public final class DAOUtils
         long val = rs.getLong(1);
         return rs.wasNull() ? null : val;
     };
+
+    public static ResultSetExtractor<Long[]> LONG_PAIR_EXTRACTOR =
+        arrayExtractor
+        (
+            (rs, ix)->{long l = rs.getLong(ix); return rs.wasNull() ? null : l;},
+            Long[]::new,
+            2
+        );
 
     public static final ResultSetExtractor<Integer> INT_EXTRACTOR =
     (rs)->
@@ -87,6 +95,23 @@ public final class DAOUtils
         Integer val = rs.getInt(1);
         return rs.wasNull() ? null : val;
     };
+
+    public static <T> ResultSetExtractor<T[]> arrayExtractor
+    (
+        ColumnMapper<T> mapper,
+        IntFunction<T[]> arrayFunction,
+        int length
+    )
+    {
+        return (rs)->
+        {
+            T[] result = arrayFunction.apply(length);
+            if(!rs.next()) return result;
+
+            for(int i = 0; i < result.length; i++) result[i] = mapper.mapColumn(rs, i + 1);
+            return result;
+        };
+    }
 
     public static <T>  T[] updateOriginals
     (
