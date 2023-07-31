@@ -75,7 +75,8 @@ public class SocialMediaLinkDAO
         + "FROM inserted ";
     private static final String DELETE =
         "DELETE FROM social_media_link "
-        + "WHERE (pro_player_id, type) IN(:data)";
+        + "WHERE pro_player_id = :proPlayerId "
+        + "AND type = :type";
     private static final String FIND_LIST_BY_TYPE =
         "SELECT " + STD_SELECT + ", " + ProPlayerDAO.STD_SELECT + " "
         + "FROM social_media_link "
@@ -203,16 +204,18 @@ public class SocialMediaLinkDAO
     {
         if(links.length == 0) return;
 
-        List<Object[]> data = Arrays.stream(links)
+        MapSqlParameterSource[] params = Arrays.stream(links)
             .filter(Objects::nonNull)
             .distinct()
-            .map(link->new Object[] {
-                link.getProPlayerId(),
-                conversionService.convert(link.getType(), Integer.class)
-            })
-            .collect(Collectors.toList());
-        MapSqlParameterSource params = new MapSqlParameterSource("data", data);
-        template.update(DELETE, params);
+            .sorted(SocialMediaLink.NATURAL_ID_COMPARATOR)
+            .map
+            (
+                link->new MapSqlParameterSource()
+                    .addValue("proPlayerId", link.getProPlayerId())
+                    .addValue("type", conversionService.convert(link.getType(), Integer.class))
+            )
+            .toArray(MapSqlParameterSource[]::new);
+        template.batchUpdate(DELETE, params);
     }
 
     public Map<ProPlayer, SocialMediaLink> findGroupedListByType(SocialMedia type)

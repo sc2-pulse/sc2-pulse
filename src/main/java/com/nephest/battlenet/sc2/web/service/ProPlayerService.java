@@ -41,8 +41,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Lazy;
-import org.springframework.retry.annotation.Backoff;
-import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -185,7 +183,6 @@ public class ProPlayerService
     }
 
     @CacheEvict(cacheNames={"pro-player-characters"}, allEntries=true)
-    @Retryable(backoff = @Backoff(100L))
     @Transactional
     (
         propagation = Propagation.REQUIRES_NEW
@@ -304,7 +301,6 @@ public class ProPlayerService
         return links;
     }
 
-    @Retryable(backoff = @Backoff(delay = 2000L, maxDelay = 5000L))
     @Transactional
     public void importProfile(ProPlayer proPlayer, ProTeam proTeam, SocialMediaLink... links)
     {
