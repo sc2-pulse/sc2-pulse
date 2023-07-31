@@ -255,7 +255,8 @@ public class RevealControllerIT
             1
         );
         proPlayerAccountDAO.merge(false, new ProPlayerAccount(importedPlayer.getId(), 1L));
-        LadderProPlayer ladderProPlayer = ladderProPlayerDAO.getProPlayerByCharacterId(1L);
+        LadderProPlayer ladderProPlayer = ladderProPlayerDAO
+            .findByCharacterIds(1L).stream().findFirst().orElseThrow();
 
         List<SocialMediaLink> links = ladderProPlayer.getLinks();
         assertEquals(2, links.size());

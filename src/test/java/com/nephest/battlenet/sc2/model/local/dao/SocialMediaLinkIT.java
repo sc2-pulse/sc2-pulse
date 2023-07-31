@@ -80,17 +80,21 @@ public class SocialMediaLinkIT
             .merge(new ProPlayer(null, 1L, "nick", "name"));
         ProPlayer proPlayer2 = proPlayerDAO
             .merge(new ProPlayer(null, 2L, "nick2", "name2"));
+        ProPlayer proPlayer3 = proPlayerDAO
+            .merge(new ProPlayer(null, 3L, "nick3", "name3"));
         socialMediaLinkDAO.merge
         (
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url1"),
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url2"),
-            new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "url3")
+            new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "url3"),
+            new SocialMediaLink(proPlayer3.getId(), SocialMedia.TWITCH, "url4")
         );
 
-        List<SocialMediaLink> links = socialMediaLinkDAO.find(proPlayer1.getId());
-        assertEquals(2, links.size());
+        List<SocialMediaLink> links = socialMediaLinkDAO.find(proPlayer1.getId(), proPlayer2.getId());
+        assertEquals(3, links.size());
         verifyLink(links.get(0), proPlayer1.getId(), SocialMedia.ALIGULAC, "url2", false);
         verifyLink(links.get(1), proPlayer1.getId(), SocialMedia.TWITCH, "url1", false);
+        verifyLink(links.get(2), proPlayer2.getId(), SocialMedia.TWITCH, "url3", false);
     }
 
     @Test

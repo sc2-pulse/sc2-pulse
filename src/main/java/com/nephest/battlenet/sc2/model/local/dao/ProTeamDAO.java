@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.local.ProTeam;
 import java.sql.Types;
 import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
@@ -56,6 +58,11 @@ public class ProTeamDAO
         + "SELECT id FROM updated "
         + "UNION "
         + "SELECT id FROM inserted";
+
+    private static final String FIND_BY_IDS =
+        "SELECT " + STD_SELECT
+        + "FROM pro_team "
+        + "WHERE id IN (:ids)";
 
     private final NamedParameterJdbcTemplate template;
 
@@ -119,6 +126,14 @@ public class ProTeamDAO
         }
 
         return template.batchUpdate(MERGE_QUERY, params);
+    }
+
+    public List<ProTeam> find(Long... ids)
+    {
+        if(ids.length == 0) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource("ids", Set.of(ids));
+        return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
 }

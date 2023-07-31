@@ -163,8 +163,9 @@ public class ProPlayerServiceIT
             assertNull(nullMember.getProTeam());
 
             //skip character id link
-            assertNull(ladderProPlayerDAO.getProPlayerByCharacterId(2L).getProPlayer());
-            LadderProPlayer ladderProPlayer = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
+            assertNull(ladderProPlayerDAO.findByCharacterIds(2L).stream().findFirst().orElse(null));
+            LadderProPlayer ladderProPlayer = ladderProPlayerDAO
+                .findByBattletags("battletag#30").stream().findFirst().orElseThrow();
             assertEquals(123321L, ladderProPlayer.getProPlayer().getAligulacId());
             assertEquals("Aligulac Romanized Name2", ladderProPlayer.getProPlayer().getName());
             assertEquals("Aligulac nickname2", ladderProPlayer.getProPlayer().getNickname());
@@ -193,7 +194,8 @@ public class ProPlayerServiceIT
                 .setBody(objectMapper.writeValueAsString(root2)));
             proPlayerService.setAligulacBatchSize(prevBatchSize);
             proPlayerService.update().block();
-            LadderProPlayer ladderProPlayer2 = ladderProPlayerDAO.getProPlayerByBattletag("battletag#30");
+            LadderProPlayer ladderProPlayer2 = ladderProPlayerDAO
+                .findByBattletags("battletag#30").stream().findFirst().orElseThrow();
             assertNull(ladderProPlayer2.getProTeam());
             server.shutdown();
         }

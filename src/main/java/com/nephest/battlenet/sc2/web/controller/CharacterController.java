@@ -150,7 +150,7 @@ public class CharacterController
             ladderSearch.findCharacterTeams(id),
             linkedCharacters,
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
-            ladderProPlayerDAO.getProPlayerByCharacterId(id),
+            ladderProPlayerDAO.findByCharacterIds(id).stream().findFirst().orElse(null),
             currentCharacter != null
                 ? discordUserDAO
                     .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
@@ -193,7 +193,7 @@ public class CharacterController
             ladderSearch.findCharacterTeams(id),
             linkedCharacters,
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
-            ladderProPlayerDAO.getProPlayerByCharacterId(id),
+            ladderProPlayerDAO.findByCharacterIds(id).stream().findFirst().orElse(null),
             currentCharacter != null
                 ? discordUserDAO
                     .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)

@@ -6,10 +6,13 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.local.ProTeamMember;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.ResultSetExtractor;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -17,6 +20,11 @@ import org.springframework.stereotype.Repository;
 @Repository
 public class ProTeamMemberDAO
 {
+
+    public static final String STD_SELECT
+        = "pro_team_member.pro_team_id AS \"pro_team_member.pro_team_id\", "
+        + "pro_team_member.pro_player_id AS \"pro_team_member.pro_player_id\", "
+        + "pro_team_member.updated AS \"pro_team_member.updated\" ";
 
     private static final String CREATE_QUERY =
         "INSERT INTO pro_team_member (pro_team_id, pro_player_id, updated) "
@@ -29,7 +37,26 @@ public class ProTeamMemberDAO
     private static final String REMOVE_BY_PRO_PLAYER_IDS =
         "DELETE FROM pro_team_member WHERE pro_player_id IN(:proPlayerIds)";
 
+    private static final String FIND_BY_PRO_PLAYER_IDS =
+        "SELECT " + STD_SELECT
+        + "FROM pro_team_member "
+        + "WHERE pro_player_id IN(:pro_player_ids)";
+
     private final NamedParameterJdbcTemplate template;
+
+    public static final RowMapper<ProTeamMember> STD_ROW_MAPPER = (rs, i)->
+    {
+        ProTeamMember ptm = new ProTeamMember
+        (
+            rs.getLong("pro_team_member.pro_team_id"),
+            rs.getLong("pro_team_member.pro_player_id")
+        );
+        ptm.setUpdated(rs.getObject("pro_team_member.updated", OffsetDateTime.class));
+        return ptm;
+    };
+
+    public static final ResultSetExtractor<ProTeamMember> STD_EXTRACTOR
+        = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
 
     @Autowired
     public ProTeamMemberDAO
@@ -71,6 +98,15 @@ public class ProTeamMemberDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("proPlayerIds", uniqueIds);
         return template.update(REMOVE_BY_PRO_PLAYER_IDS, params);
+    }
+
+    public List<ProTeamMember> findByProPlayerIds(Long... proPlayerIds)
+    {
+        if(proPlayerIds.length == 0) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("pro_player_ids", Set.of(proPlayerIds));
+        return template.query(FIND_BY_PRO_PLAYER_IDS, params, STD_ROW_MAPPER);
     }
 
 }

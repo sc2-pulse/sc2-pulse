@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -85,10 +86,10 @@ public class SocialMediaLinkDAO
     private static final String FIND_LIST_BY_TYPES =
         "SELECT " + STD_SELECT + "FROM social_media_link WHERE type IN(:types)";
 
-    private static final String FIND_BY_PRO_PLAYER_ID =
+    private static final String FIND_BY_PRO_PLAYER_IDS =
         "SELECT " + STD_SELECT
         + "FROM social_media_link "
-        + "WHERE pro_player_id = :proPlayerId "
+        + "WHERE pro_player_id IN(:proPlayerIds) "
         + "ORDER BY pro_player_id, type";
 
     private static final String FIND_BY_ID_CURSOR_AND_TYPE =
@@ -237,11 +238,13 @@ public class SocialMediaLinkDAO
         return template.query(FIND_LIST_BY_TYPES, params, STD_ROW_MAPPER);
     }
 
-    public List<SocialMediaLink> find(Long proPlayerId)
+    public List<SocialMediaLink> find(Long... proPlayerIds)
     {
+        if(proPlayerIds.length == 0) return List.of();
+
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("proPlayerId", proPlayerId);
-        return template.query(FIND_BY_PRO_PLAYER_ID, params, STD_ROW_MAPPER);
+            .addValue("proPlayerIds", Set.of(proPlayerIds));
+        return template.query(FIND_BY_PRO_PLAYER_IDS, params, STD_ROW_MAPPER);
     }
 
     public List<SocialMediaLink> findByIdCursor

@@ -21,7 +21,7 @@ class RevealUtil
         const form = document.querySelector("#modal-reveal-player-form");
         const submitCtl = document.querySelector('#modal-reveal-player button[form="modal-reveal-player-form"][type="submit"]');
         const filterInput = document.querySelector("#modal-reveal-player-input");
-        if(!currentCharacter.proPlayer.proPlayer) {
+        if(!currentCharacter.proPlayer) {
             filterInput.disabled = false;
             form.setAttribute("data-reveal-mode", "reveal");
             FormUtil.filterFormInputGroup(filterInput);

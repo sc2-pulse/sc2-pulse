@@ -307,7 +307,7 @@ class CharacterUtil
     static updateCharacterProInfo(commonCharacter)
     {
         for(const el of document.querySelectorAll(".pro-player-info")) el.classList.add("d-none");
-        if(commonCharacter.proPlayer.proPlayer == null) return;
+        if(commonCharacter.proPlayer == null) return;
 
         for(const link of document.querySelectorAll("#revealed-report [rel~=nofollow]")) link.relList.remove("nofollow");
         const proPlayer = commonCharacter.proPlayer;
