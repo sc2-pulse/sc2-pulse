@@ -764,6 +764,11 @@ th.hoverable span
     border-bottom: .3em solid;
 }
 
+.c-dropdown.empty:after
+{
+    margin-left: 0;
+}
+
 .c-dropdown.collapsed:after
 {
     border-top: .3em solid;
