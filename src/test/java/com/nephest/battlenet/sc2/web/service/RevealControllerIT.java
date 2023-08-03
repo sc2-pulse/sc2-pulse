@@ -146,7 +146,7 @@ public class RevealControllerIT
 
         ProPlayer[] playersFound1 = objectMapper.readValue(mvc.perform
         (
-            get("/api/reveal/players")
+            get("/api/revealed/players")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
@@ -163,7 +163,7 @@ public class RevealControllerIT
 
         ProPlayer[] playersFound2 = objectMapper.readValue(mvc.perform
         (
-            get("/api/reveal/players")
+            get("/api/revealed/players")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
@@ -280,12 +280,6 @@ public class RevealControllerIT
     public void whenNotRevealer_thenForbidden()
     throws Exception
     {
-        mvc.perform
-        (
-            get("/api/reveal/players")
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isForbidden());
         mvc.perform
         (
             post("/api/reveal/5/2")
