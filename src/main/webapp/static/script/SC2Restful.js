@@ -112,6 +112,8 @@ class SC2Restful
                 BootstrapUtil.enhanceTooltips();
                 ElementUtil.enhanceFullscreenToggles();
                 ElementUtil.enhanceCopyToClipboard();
+                ElementUtil.enhanceCloneCtl();
+                ElementUtil.enhanceRemoveCtl(document);
                 Session.enhanceSerializable();
                 ChartUtil.enhanceZoomToggles();
                 ChartUtil.enhanceTimeAxisToggles();

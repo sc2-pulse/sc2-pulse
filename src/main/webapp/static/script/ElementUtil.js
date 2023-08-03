@@ -587,6 +587,50 @@ class ElementUtil
             && rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     }
 
+    static onCloneElement(evt)
+    {
+        ElementUtil.cloneElement(evt.target);
+    }
+
+    static cloneElement(ctl)
+    {
+        const src = document.getElementById(ctl.getAttribute("data-clone-source"));
+        const dest = document.getElementById(ctl.getAttribute("data-clone-destination"));
+        const clazz = ctl.getAttribute("data-clone-class");
+        const id = clazz + "-" + (dest.querySelectorAll(":scope ." + clazz).length);
+        const clone = src.cloneNode(true);
+        clone.id = id;
+        dest.appendChild(clone);
+        const processor = ElementUtil.AFTER_CLONE_ELEMENT.get(clazz);
+        if(processor != null) processor(clone);
+        return clone;
+    }
+
+    static enhanceCloneCtl()
+    {
+        document.querySelectorAll(".clone-ctl").forEach(e=>e.addEventListener("click", ElementUtil.onCloneElement));
+    }
+
+    static processDynamicClone(clone)
+    {
+        clone.querySelectorAll("[disabled]").forEach(e=>e.disabled = false);
+        clone.querySelectorAll(':scope [data-action="remove-element"]')
+            .forEach(e=>{if(e.getAttribute("data-target") == null) e.setAttribute("data-target", clone.id)});
+        ElementUtil.enhanceRemoveCtl(clone);
+        clone.classList.remove("d-none");
+        const autofocus = clone.querySelector("[autofocus]");
+        if(autofocus) autofocus.focus();
+    }
+
+    static onRemoveElement(evt)
+    {
+        document.getElementById(evt.target.getAttribute("data-target")).remove();
+    }
+
+    static enhanceRemoveCtl(root)
+    {
+        root.querySelectorAll(':scope [data-action="remove-element"]').forEach(e=>e.addEventListener("click", ElementUtil.onRemoveElement));
+    }
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
@@ -596,6 +640,7 @@ ElementUtil.INPUT_TIMEOUTS = new Map();
 ElementUtil.INPUT_TIMESTAMPS = new Map();
 ElementUtil.TITLE_CONSTRUCTORS = new Map();
 ElementUtil.DESCRIPTION_CONSTRUCTORS = new Map();
+ElementUtil.AFTER_CLONE_ELEMENT = new Map([["dynamic-clone-element", ElementUtil.processDynamicClone]]);
 ElementUtil.NEGATION_PREFIX = "neg-";
 ElementUtil.INPUT_TIMEOUT = 1000;
 ElementUtil.MANUAL_TOOLTIP_TIMEOUT = 1000;
