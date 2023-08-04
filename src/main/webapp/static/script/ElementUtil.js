@@ -390,12 +390,16 @@ class ElementUtil
         {
             case "date":
             {
-                const date = new Date(parseInt(val));
-                if(input.getAttribute("data-exclusive")) date.setDate(date.getDate() - 1);
-                const dateVal = date.getTime() - new Date().getTimezoneOffset() * 60 * 1000;
-                if(input.valueAsNumber != dateVal) {
-                    input.valueAsNumber = dateVal;
-                    changed = true;
+                if(val.indexOf("-") > 0) {
+                    input.value = val;
+                } else {
+                    const date = new Date(parseInt(val));
+                    if(input.getAttribute("data-exclusive")) date.setDate(date.getDate() - 1);
+                    const dateVal = date.getTime() - new Date().getTimezoneOffset() * 60 * 1000;
+                    if(input.valueAsNumber != dateVal) {
+                        input.valueAsNumber = dateVal;
+                        changed = true;
+                    }
                 }
                 break;
             }
