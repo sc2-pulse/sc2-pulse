@@ -99,13 +99,8 @@ public class AlternativeLadderService
     public static final double WEB_API_ERROR_RATE_THRESHOLD = 50;
     public static final double WEB_API_FORCE_REGION_ERROR_RATE_THRESHOLD = 25;
     private static final QueueType[] ADDITIONAL_WEB_UPDATE_QUEUE_TYPES = new QueueType[]{QueueType.LOTV_1V1};
-    private static final BaseLeague.LeagueType[] ADDITIONAL_WEB_UPDATE_LEAGUE_TYPES = new BaseLeague.LeagueType[]
-    {
-        BaseLeague.LeagueType.GRANDMASTER,
-        BaseLeague.LeagueType.MASTER,
-        BaseLeague.LeagueType.DIAMOND,
-        BaseLeague.LeagueType.PLATINUM
-    };
+    private static final BaseLeague.LeagueType[] ADDITIONAL_WEB_UPDATE_LEAGUE_TYPES
+        = BaseLeague.LeagueType.values();
 
     private final Map<Region, InstantVar> discoveryInstants = new HashMap<>();
     private final Map<Region, InstantVar> additionalWebScanInstants = new EnumMap<>(Region.class);
