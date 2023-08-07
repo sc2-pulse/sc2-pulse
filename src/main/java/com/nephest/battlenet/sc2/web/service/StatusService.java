@@ -117,7 +117,7 @@ public class StatusService
     private void updateDuration(Region region, Status status)
     {
         Duration refreshDuration = status.getFlags().contains(Status.Flag.WEB)
-            ? AlternativeLadderService.DISCOVERY_TIME_FRAME
+            ? AlternativeLadderService.ADDITIONAL_WEB_SCAN_TIME_FRAME
             : updateService.calculateUpdateDuration(null);
         status.setRefreshDuration(refreshDuration);
     }
