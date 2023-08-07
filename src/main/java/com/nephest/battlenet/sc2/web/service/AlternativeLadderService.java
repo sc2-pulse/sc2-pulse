@@ -94,7 +94,7 @@ public class AlternativeLadderService
     ));
 
     public static final int LADDER_BATCH_SIZE = StatsService.LADDER_BATCH_SIZE;
-    public static final Duration DISCOVERY_TIME_FRAME = Duration.ofHours(8);
+    public static final Duration DISCOVERY_TIME_FRAME = Duration.ofHours(12);
     public static final Duration ADDITIONAL_WEB_SCAN_TIME_FRAME = Duration.ofMinutes(20);
     public static final double WEB_API_ERROR_RATE_THRESHOLD = 50;
     public static final double WEB_API_FORCE_REGION_ERROR_RATE_THRESHOLD = 25;
