@@ -27,8 +27,8 @@ public class Status
         WEB
         (
             "web",
-            "1v1 is prioritized, "
-            + "teams(2v2+) are updated several times a day, "
+            "Much slower, "
+            + "1v1 is prioritized, "
             + "match history works on the best effort basis, "
             + "no match history for teams.",
             Level.DANGER

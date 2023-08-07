@@ -98,8 +98,13 @@ public class AlternativeLadderService
     public static final Duration ADDITIONAL_WEB_SCAN_TIME_FRAME = Duration.ofMinutes(20);
     public static final double WEB_API_ERROR_RATE_THRESHOLD = 50;
     public static final double WEB_API_FORCE_REGION_ERROR_RATE_THRESHOLD = 25;
+    public static final int ADDITIONAL_WEB_UPDATES_PER_CYCLE = 2;
     private static final QueueType[] ADDITIONAL_WEB_UPDATE_QUEUE_TYPES = new QueueType[]{QueueType.LOTV_1V1};
     private static final BaseLeague.LeagueType[] ADDITIONAL_WEB_UPDATE_LEAGUE_TYPES
+        = BaseLeague.LeagueType.values();
+    private static final QueueType[] BIG_ADDITIONAL_WEB_UPDATE_QUEUE_TYPES =
+        QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new);
+    private static final BaseLeague.LeagueType[] BIG_ADDITIONAL_WEB_UPDATE_LEAGUE_TYPES
         = BaseLeague.LeagueType.values();
 
     private final Map<Region, InstantVar> discoveryInstants = new HashMap<>();
@@ -110,6 +115,7 @@ public class AlternativeLadderService
     private final ConcurrentLinkedQueue<Long> pendingTeams = new ConcurrentLinkedQueue<>();
     private final ConcurrentLinkedQueue<PlayerCharacter> pendingCharacters
         = new ConcurrentLinkedQueue<>();
+    private final Map<Region, Integer> additionalWebUpdates = new EnumMap<>(Region.class);
 
     @Autowired @Lazy
     private AlternativeLadderService alternativeLadderService;
@@ -191,6 +197,7 @@ public class AlternativeLadderService
     public void init()
     {
         if(autoWeb) LOG.warn("Auto web API is active");
+        for(Region region : Region.values()) additionalWebUpdates.put(region, 0);
         //catch exceptions to allow service autowiring for tests
         try {
             for(Region region : Region.values())
@@ -275,36 +282,76 @@ public class AlternativeLadderService
                     >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis());
     }
 
+    private boolean isBigAdditionalWebUpdate(Region region)
+    {
+        return additionalWebUpdates.get(region) >= ADDITIONAL_WEB_UPDATES_PER_CYCLE;
+    }
+
+    public Pair<QueueType[], BaseLeague.LeagueType[]> getUpdateInfo
+    (
+        Season season,
+        QueueType[] queueTypes,
+        BaseLeague.LeagueType[] leagues
+    )
+    {
+        QueueType[] resultQueues;
+        BaseLeague.LeagueType[] resultLeagues;
+        if(isAdditionalWebUpdate(season.getRegion()))
+        {
+            if(isBigAdditionalWebUpdate(season.getRegion()))
+            {
+                resultQueues = BIG_ADDITIONAL_WEB_UPDATE_QUEUE_TYPES;
+                resultLeagues = BIG_ADDITIONAL_WEB_UPDATE_LEAGUE_TYPES;
+            }
+            else
+            {
+                resultQueues = ADDITIONAL_WEB_UPDATE_QUEUE_TYPES;
+                resultLeagues = ADDITIONAL_WEB_UPDATE_LEAGUE_TYPES;
+            }
+        }
+        else
+        {
+            resultQueues = queueTypes;
+            resultLeagues = leagues;
+        }
+        return new ImmutablePair<>(resultQueues, resultLeagues);
+    }
+
     public List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> getExistingLadderIds
     (Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
-        return isAdditionalWebUpdate(season.getRegion())
-            ? blizzardDAO.findLegacyLadderIds
-            (
-                season.getBattlenetId(),
-                new Region[]{season.getRegion()},
-                ADDITIONAL_WEB_UPDATE_QUEUE_TYPES,
-                ADDITIONAL_WEB_UPDATE_LEAGUE_TYPES,
-                BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT
-            )
-            : blizzardDAO.findLegacyLadderIds
-            (
-                season.getBattlenetId(),
-                new Region[]{season.getRegion()},
-                queueTypes,
-                leagues,
-                BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT
-            );
+        return blizzardDAO.findLegacyLadderIds
+        (
+            season.getBattlenetId(),
+            new Region[]{season.getRegion()},
+            queueTypes,
+            leagues,
+            BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT
+        );
     }
 
     private void updateOrAdditionalWebUpdate(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
+        Pair<QueueType[], BaseLeague.LeagueType[]> queuesLeagues
+            = getUpdateInfo(season, queueTypes, leagues);
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
-            getExistingLadderIds(season, queueTypes, leagues);
+            getExistingLadderIds(season, queuesLeagues.getLeft(), queuesLeagues.getRight());
         if(isAdditionalWebUpdate(season.getRegion()))
         {
-            updateLadders(season, Set.of(ADDITIONAL_WEB_UPDATE_QUEUE_TYPES), profileLadderIds, true);
+            boolean big = isBigAdditionalWebUpdate(season.getRegion());
+            LOG.info
+            (
+                "Starting additional web update. {}, {}",
+                season.getRegion(),
+                big ? "big" : "small"
+            );
+            updateLadders(season, Set.of(queuesLeagues.getLeft()), profileLadderIds, true);
             additionalWebScanInstants.get(season.getRegion()).setValueAndSave(Instant.now());
+            additionalWebUpdates.put
+            (
+                season.getRegion(),
+                big ? 0 : additionalWebUpdates.get(season.getRegion()) + 1
+            );
         }
         else
         {
