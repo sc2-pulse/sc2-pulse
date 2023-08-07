@@ -114,9 +114,12 @@ class RevealUtil
 
     static renderAndSelectProPlayer(proPlayer, inputGroup)
     {
-        if(!inputGroup.querySelector(':scope input[value="' + proPlayer.id + '"]'))
-            inputGroup.appendChild(RevealUtil.renderProPlayerInputGroup(proPlayer));
         const proPlayerRender = RevealUtil.renderProPlayer(proPlayer);
+        if(inputGroup.querySelector(':scope input[value="' + proPlayer.id + '"]')) {
+            inputGroup.querySelector(":scope label").textContent = proPlayerRender;
+        } else {
+            inputGroup.appendChild(RevealUtil.renderProPlayerInputGroup(proPlayer));
+        }
         document.querySelectorAll('input[data-filtered-input-group="#' + inputGroup.id + '"]').forEach(filter=>{
                 if(filter.disabled) return;
                 filter.value = proPlayerRender;
