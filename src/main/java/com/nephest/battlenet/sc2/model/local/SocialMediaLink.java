@@ -9,13 +9,17 @@ import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Objects;
+import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 public class SocialMediaLink
 implements java.io.Serializable
 {
 
     private static final long serialVersionUID = 2L;
+
+    public static final int URL_MAX_LENGTH = 300;
 
     public static final Comparator<SocialMediaLink> NATURAL_ID_COMPARATOR = Comparator
         .comparing(SocialMediaLink::getProPlayerId)
@@ -27,7 +31,7 @@ implements java.io.Serializable
     @NotNull
     private SocialMedia type;
 
-    @NotNull
+    @NotBlank @Size(max = URL_MAX_LENGTH)
     private String url;
 
     @NotNull

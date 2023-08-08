@@ -6,10 +6,16 @@ package com.nephest.battlenet.sc2.model.local;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
+import com.nephest.battlenet.sc2.model.util.ModelUtil;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Past;
+import javax.validation.constraints.Pattern;
+import javax.validation.constraints.Size;
 
 public class ProPlayer
 implements java.io.Serializable
@@ -17,19 +23,30 @@ implements java.io.Serializable
 
     private static final long serialVersionUID = 1L;
 
+    public static final int NAME_LENGTH_MAX = 100;
+    public static final long EARNINGS_MIN = 1;
+    public static final long EARNINGS_MAX = 1_000_000_000;
+    public static final String COUNTRY_REGEXP = "^[A-Z]{2}$";
+
     private Long id;
 
     private Long aligulacId;
 
-    @NotNull
+    @NotNull @Pattern(regexp = ModelUtil.VALIDATION_REGEXP_TRIMMED_NOT_BLANK_SINGLE_SPACE)
+    @Size(max = NAME_LENGTH_MAX)
     private String nickname;
 
+    @Pattern(regexp = ModelUtil.VALIDATION_REGEXP_TRIMMED_NOT_BLANK_SINGLE_SPACE)
+    @Size(max = NAME_LENGTH_MAX)
     private String name;
 
+    @Pattern(regexp = COUNTRY_REGEXP)
     private String country;
 
+    @Past
     private LocalDate birthday;
 
+    @Min(EARNINGS_MIN) @Max(EARNINGS_MAX)
     private Integer earnings;
 
     @NotNull
@@ -71,6 +88,16 @@ implements java.io.Serializable
         this.earnings = earnings;
         this.updated = updated;
         this.version = version;
+    }
+
+    public static LocalDate minBirthday()
+    {
+        return LocalDate.now().minusYears(110);
+    }
+
+    public static LocalDate maxBirthday()
+    {
+        return LocalDate.now().minusYears(6);
     }
 
     @Override
