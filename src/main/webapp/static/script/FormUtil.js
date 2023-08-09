@@ -160,7 +160,14 @@ class FormUtil
                 }
             });
             const firstContainer = group.querySelector(":scope .filtered-input-container:not(.d-none)");
-            if(firstContainer) firstContainer.querySelector(":scope input").checked = true;
+            if(firstContainer) {
+                const input = firstContainer.querySelector(":scope input");
+                input.checked = true;
+                group.setAttribute("data-active-option", input.value);
+            } else {
+                const activeOption = group.getAttribute("data-active-option");
+                if(activeOption != null) group.querySelector(':scope input[value="' + activeOption + '"').checked = false;
+            }
             group.setAttribute("data-valid-option-count", validOptionCount);
         });
     }
