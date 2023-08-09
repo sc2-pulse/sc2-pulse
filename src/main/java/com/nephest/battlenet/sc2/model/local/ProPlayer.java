@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import com.nephest.battlenet.sc2.model.util.ModelUtil;
+import com.nephest.battlenet.sc2.model.validation.CountryAlpha2;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -26,7 +27,6 @@ implements java.io.Serializable
     public static final int NAME_LENGTH_MAX = 100;
     public static final long EARNINGS_MIN = 1;
     public static final long EARNINGS_MAX = 1_000_000_000;
-    public static final String COUNTRY_REGEXP = "^[A-Z]{2}$";
 
     private Long id;
 
@@ -40,7 +40,7 @@ implements java.io.Serializable
     @Size(max = NAME_LENGTH_MAX)
     private String name;
 
-    @Pattern(regexp = COUNTRY_REGEXP)
+    @CountryAlpha2
     private String country;
 
     @Past
