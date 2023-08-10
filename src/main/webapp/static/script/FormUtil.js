@@ -139,6 +139,7 @@ class FormUtil
     static enhanceFormInputGroupFilters()
     {
         document.querySelectorAll(".filtered-input-filter").forEach(i=>i.addEventListener("input", FormUtil.onFormInputGroupFilter));
+        document.querySelectorAll(".filtered-input-group input").forEach(i=>i.addEventListener("click", FormUtil.onFormInputGroupInputClick));
     }
 
     static onFormInputGroupFilter(evt)
@@ -169,7 +170,31 @@ class FormUtil
                 if(activeOption != null) group.querySelector(':scope input[value="' + activeOption + '"').checked = false;
             }
             group.setAttribute("data-valid-option-count", validOptionCount);
+            group.classList.remove("d-none");
         });
+    }
+
+    static getFormInputGroupLabelByValue(group, value)
+    {
+        const inputId = group.querySelector(':scope input[value="' + value + '"]').id;
+        return document.querySelector('label[for="' + inputId + '"]').textContent;
+    }
+
+    static setInputGroupFilterByValue(filter, value, hideGroup = true)
+    {
+        const groupSelector = filter.getAttribute("data-filtered-input-group");
+        const group = document.querySelector(groupSelector);
+        filter.value = FormUtil.getFormInputGroupLabelByValue(group, value);
+        filter.dispatchEvent(new Event('input', { 'bubbles': true }));
+        if(hideGroup && group.getAttribute("data-valid-option-count") == "1")
+            document.querySelectorAll(groupSelector).forEach(group=>group.classList.add("d-none"));
+    }
+
+    static onFormInputGroupInputClick(evt)
+    {
+        FormUtil.setInputGroupFilterByValue(
+            document.querySelector('[data-filtered-input-group="#' + evt.target.closest(".filtered-input-group").id + '"]'),
+            evt.target.value);
     }
 
 }
