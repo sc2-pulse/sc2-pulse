@@ -55,6 +55,57 @@ class FormUtil
 
     }
 
+    static formDataToObject(formData, prefix, trim = false)
+    {
+        const result = {};
+        for(const [key, val] of formData.entries()) {
+            if(key.startsWith(prefix)) {
+                const trimmedVal = trim && typeof val === 'string' ? val.trim() : val;
+                result[key.substring(prefix.length)] = trimmedVal == "" ? null : trimmedVal;
+            }
+        }
+        return result;
+    }
+
+    static setFormStateFromObject(form, object, prefix)
+    {
+        Object.entries(object).forEach((entry)=>{
+            const input = form.querySelector(':scope [name="' + prefix + entry[0] + '"]');
+            if(input == null) return;
+
+            if(input.getAttribute("type") == "radio") {
+                const radio = form.querySelector(':scope [name="' + prefix + entry[0] + '"][value="' + entry[1] + '"]');
+                if(radio) ElementUtil.changeInputValue(radio, true);
+            } else {
+                ElementUtil.changeInputValue(input, entry[1] == null ? "" : entry[1]);
+            }
+        })
+    }
+
+    static setFormStateFromArray(form, values, name)
+    {
+        const cloneCtl = Array.from(form.querySelectorAll(":scope .clone-ctl"))
+            .find(ctl=>document.querySelector("#" + ctl.getAttribute("data-clone-source") + ' [name="' + name + '"]') != null);
+        document.querySelectorAll(
+            "#" + cloneCtl.getAttribute("data-clone-destination")
+            + " ." + cloneCtl.getAttribute("data-clone-class")
+            + ":not(#" + cloneCtl.getAttribute("data-clone-source") + ")"
+        )
+            .forEach(e=>e.remove());
+        for(const value of values) ElementUtil.changeInputValue(
+            ElementUtil.cloneElement(cloneCtl).querySelector(':scope [name="' + name + '"]'), value);
+    }
+
+    static resetForm(form)
+    {
+        form.querySelectorAll(":scope .clone-ctl").forEach(ctl=>{
+            form.querySelectorAll(":scope ." + ctl.getAttribute("data-clone-class")
+                + ":not(#" + ctl.getAttribute("data-clone-source")  + ")")
+                    .forEach(elem=>elem.remove())
+        });
+        form.reset();
+    }
+
     static selectAndFocusOnInput(input, preventScroll)
     {
         input.focus({preventScroll: preventScroll});
