@@ -179,12 +179,17 @@ class FormUtil
 
     static setFormInputGroupActiveInput(group, input)
     {
+        const filter = document.querySelector('.filtered-input-filter[data-filtered-input-group="#' + group.id + '"]');
         if(input != null) {
             input.checked = true;
             group.setAttribute("data-active-option", input.value);
+            filter.classList.remove("text-danger");
+            filter.removeAttribute("pattern");
         } else {
             const activeOption = group.getAttribute("data-active-option");
             if(activeOption != null) group.querySelector(':scope input[value="' + activeOption + '"').checked = false;
+            filter.classList.add("text-danger");
+            filter.setAttribute("pattern", "");
         }
     }
 
