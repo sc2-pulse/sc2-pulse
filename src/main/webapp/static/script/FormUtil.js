@@ -163,13 +163,7 @@ class FormUtil
                   container.classList.add("d-none");
                 }
             });
-            const targetInput = FormUtil.getActiveOrFirstFilteredInputGroupOption(group);
-            if(targetInput) {
-                FormUtil.setFormInputGroupActiveInput(targetInput);
-            } else {
-                const activeOption = group.getAttribute("data-active-option");
-                if(activeOption != null) group.querySelector(':scope input[value="' + activeOption + '"').checked = false;
-            }
+            FormUtil.setFormInputGroupActiveInput(group, FormUtil.getActiveOrFirstFilteredInputGroupOption(group));
             group.setAttribute("data-valid-option-count", validOptionCount);
             group.classList.remove("d-none");
         });
@@ -183,10 +177,15 @@ class FormUtil
         return inputs.find(input=>input.checked) || inputs[0];
     }
 
-    static setFormInputGroupActiveInput(input)
+    static setFormInputGroupActiveInput(group, input)
     {
-        input.checked = true;
-        input.closest(".filtered-input-group").setAttribute("data-active-option", input.value);
+        if(input != null) {
+            input.checked = true;
+            group.setAttribute("data-active-option", input.value);
+        } else {
+            const activeOption = group.getAttribute("data-active-option");
+            if(activeOption != null) group.querySelector(':scope input[value="' + activeOption + '"').checked = false;
+        }
     }
 
     static getFormInputGroupLabelByValue(group, value)
@@ -219,7 +218,7 @@ class FormUtil
 
         const activeIx = Array.from(validInputs).findIndex(input=>input.checked);
         const nextIx = down ? Math.min(activeIx + 1, validInputs.length - 1) : Math.max(activeIx - 1, 0);
-        FormUtil.setFormInputGroupActiveInput(validInputs[nextIx]);
+        FormUtil.setFormInputGroupActiveInput(group, validInputs[nextIx]);
     }
 
     static onFormInputGroupFilterKeyDown(evt)
