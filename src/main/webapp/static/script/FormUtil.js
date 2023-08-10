@@ -163,9 +163,9 @@ class FormUtil
                   container.classList.add("d-none");
                 }
             });
-            const firstContainer = group.querySelector(":scope .filtered-input-container:not(.d-none)");
-            if(firstContainer) {
-                FormUtil.setFormInputGroupActiveInput(firstContainer.querySelector(":scope input"));
+            const targetInput = FormUtil.getActiveOrFirstFilteredInputGroupOption(group);
+            if(targetInput) {
+                FormUtil.setFormInputGroupActiveInput(targetInput);
             } else {
                 const activeOption = group.getAttribute("data-active-option");
                 if(activeOption != null) group.querySelector(':scope input[value="' + activeOption + '"').checked = false;
@@ -173,6 +173,14 @@ class FormUtil
             group.setAttribute("data-valid-option-count", validOptionCount);
             group.classList.remove("d-none");
         });
+    }
+
+    static getActiveOrFirstFilteredInputGroupOption(group)
+    {
+        const inputs = Array.from(group.querySelectorAll(":scope .filtered-input-container:not(.d-none) input"));
+        if(inputs.length == 0) return null;
+
+        return inputs.find(input=>input.checked) || inputs[0];
     }
 
     static setFormInputGroupActiveInput(input)
