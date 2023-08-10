@@ -152,7 +152,8 @@ class FormUtil
 
     static filterFormInputGroup(filterInput)
     {
-        const term = filterInput.value.toLowerCase();
+        let term = filterInput.value.toLowerCase();
+        if(filterInput.getAttribute("data-trim") == "true") term = term.trim();
         document.querySelectorAll(filterInput.getAttribute("data-filtered-input-group")).forEach(group=>{
             let validOptionCount = 0;
             group.querySelectorAll(":scope .filtered-input-container").forEach(container=>{
