@@ -32,15 +32,7 @@ class RevealUtil
         } else {
             filterInput.disabled = true;
             form.setAttribute("data-reveal-mode", "unlink");
-            document.querySelectorAll("#modal-reveal-player-players .filtered-input-container").forEach(container=>{
-                const input = container.querySelector(":scope input");
-                if(input.value == currentCharacter.proPlayer.proPlayer.id) {
-                    container.classList.remove("d-none");
-                    input.checked = true;
-                } else {
-                    container.classList.add("d-none");
-                }
-            });
+            FormUtil.setInputGroupFilterByValue(filterInput, currentCharacter.proPlayer.proPlayer.id);
             submitCtl.disabled = false;
             submitCtl.textContent = "Unlink";
             submitCtl.classList.remove("btn-success");
@@ -121,11 +113,8 @@ class RevealUtil
         } else {
             inputGroup.appendChild(RevealUtil.renderProPlayerInputGroup(proPlayer));
         }
-        document.querySelectorAll('input[data-filtered-input-group="#' + inputGroup.id + '"]').forEach(filter=>{
-                if(filter.disabled) return;
-                filter.value = proPlayerRender;
-                filter.dispatchEvent(new Event('input', { 'bubbles': true }));
-        });
+        const filter = document.querySelector('input[data-filtered-input-group="#' + inputGroup.id + '"]');
+        if(!filter.disabled) FormUtil.setInputGroupFilterByValue(filter, proPlayer.id);
     }
 
 }
