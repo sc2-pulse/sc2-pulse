@@ -138,7 +138,10 @@ class FormUtil
 
     static enhanceFormInputGroupFilters()
     {
-        document.querySelectorAll(".filtered-input-filter").forEach(i=>i.addEventListener("input", FormUtil.onFormInputGroupFilter));
+        document.querySelectorAll(".filtered-input-filter").forEach(i=>{
+            i.addEventListener("input", FormUtil.onFormInputGroupFilter);
+            i.addEventListener("keydown", FormUtil.onFormInputGroupFilterKeyDown)
+        });
         document.querySelectorAll(".filtered-input-group input").forEach(i=>i.addEventListener("click", FormUtil.onFormInputGroupInputClick));
     }
 
@@ -162,9 +165,7 @@ class FormUtil
             });
             const firstContainer = group.querySelector(":scope .filtered-input-container:not(.d-none)");
             if(firstContainer) {
-                const input = firstContainer.querySelector(":scope input");
-                input.checked = true;
-                group.setAttribute("data-active-option", input.value);
+                FormUtil.setFormInputGroupActiveInput(firstContainer.querySelector(":scope input"));
             } else {
                 const activeOption = group.getAttribute("data-active-option");
                 if(activeOption != null) group.querySelector(':scope input[value="' + activeOption + '"').checked = false;
@@ -172,6 +173,12 @@ class FormUtil
             group.setAttribute("data-valid-option-count", validOptionCount);
             group.classList.remove("d-none");
         });
+    }
+
+    static setFormInputGroupActiveInput(input)
+    {
+        input.checked = true;
+        input.closest(".filtered-input-group").setAttribute("data-active-option", input.value);
     }
 
     static getFormInputGroupLabelByValue(group, value)
@@ -195,6 +202,36 @@ class FormUtil
         FormUtil.setInputGroupFilterByValue(
             document.querySelector('[data-filtered-input-group="#' + evt.target.closest(".filtered-input-group").id + '"]'),
             evt.target.value);
+    }
+
+    static navigateInputGroupOptions(group, down)
+    {
+        const validInputs = group.querySelectorAll(":scope .filtered-input-container:not(.d-none) input");
+        if(validInputs.length == 0) return;
+
+        const activeIx = Array.from(validInputs).findIndex(input=>input.checked);
+        const nextIx = down ? Math.min(activeIx + 1, validInputs.length - 1) : Math.max(activeIx - 1, 0);
+        FormUtil.setFormInputGroupActiveInput(validInputs[nextIx]);
+    }
+
+    static onFormInputGroupFilterKeyDown(evt)
+    {
+        const group = document.querySelector(evt.target.getAttribute("data-filtered-input-group"));
+        switch(evt.key)
+        {
+            case "ArrowDown":
+                FormUtil.navigateInputGroupOptions(group, true);
+                break;
+            case "ArrowUp":
+                FormUtil.navigateInputGroupOptions(group, false);
+                break;
+            case "Enter":
+                evt.preventDefault();
+                const activeOption = Array.from(group.querySelectorAll(":scope .filtered-input-container:not(.d-none) input"))
+                    .find(input=>input.checked);
+                if(activeOption != null) FormUtil.setInputGroupFilterByValue(evt.target, activeOption.value);
+                break;
+        }
     }
 
 }
