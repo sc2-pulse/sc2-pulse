@@ -165,7 +165,11 @@ class FormUtil
             });
             FormUtil.setFormInputGroupActiveInput(group, FormUtil.getActiveOrFirstFilteredInputGroupOption(group));
             group.setAttribute("data-valid-option-count", validOptionCount);
-            group.classList.remove("d-none");
+            if(validOptionCount > 0) {
+                group.classList.remove("d-none");
+            } else {
+                group.classList.add("d-none");
+            }
         });
     }
 
