@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.util;
@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
@@ -25,6 +26,8 @@ public final class MiscUtil
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(MiscUtil.class);
+
+    private static List<Locale> COUNTRY_LOCALES;
 
     public static void awaitAndLogExceptions(List<Future<?>> tasks, boolean clear)
     {
@@ -172,6 +175,14 @@ public final class MiscUtil
         // offset between uppercase ASCII and regional indicator symbols
         for (int i = 0; i < code.length(); i++) sb.appendCodePoint(code.charAt(i) + 127397);
         return sb.toString();
+    }
+
+    public static List<Locale> getCountryLocales()
+    {
+        if(COUNTRY_LOCALES == null) COUNTRY_LOCALES = Arrays.stream(Locale.getISOCountries())
+            .map(code->new Locale("", code))
+            .collect(Collectors.toUnmodifiableList());
+        return COUNTRY_LOCALES;
     }
 
 }

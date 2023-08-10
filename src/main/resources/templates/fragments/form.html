@@ -1,0 +1,32 @@
+<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
+
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org" lang="en">
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="country-a2-filtered-input (suffix, name)" th:id="|country-a2-${suffix}|" class="filtered-input-group">
+    <div class="form-check mb-3 d-none filtered-input-container"
+         th:each="curLocale : ${T(com.nephest.battlenet.sc2.util.MiscUtil).getCountryLocales()}"
+         th:with="id=|country-a2-${suffix}-${curLocale.getCountry()}|"
+    >
+        <input
+                th:id="${id}"
+                type="radio"
+                th:name="${name}"
+                th:value="${curLocale.getCountry()}"
+        />
+        <label
+                class="form-check-label"
+                th:for="${id}"
+                th:text="${curLocale.getDisplayCountry()}"
+        >
+        </label>
+    </div>
+</div>
+</body>
+</html>
