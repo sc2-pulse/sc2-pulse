@@ -115,8 +115,9 @@ class RevealUtil
     static renderAndSelectProPlayer(proPlayer, inputGroup)
     {
         const proPlayerRender = RevealUtil.renderProPlayer(proPlayer);
-        if(inputGroup.querySelector(':scope input[value="' + proPlayer.id + '"]')) {
-            inputGroup.querySelector(":scope label").textContent = proPlayerRender;
+        const input = inputGroup.querySelector(':scope input[value="' + proPlayer.id + '"]');
+        if(input != null) {
+            inputGroup.querySelector(':scope label[for="' + input.id + '"]').textContent = proPlayerRender;
         } else {
             inputGroup.appendChild(RevealUtil.renderProPlayerInputGroup(proPlayer));
         }
