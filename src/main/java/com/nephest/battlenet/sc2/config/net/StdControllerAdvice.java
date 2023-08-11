@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.net;
 
+import javax.persistence.OptimisticLockException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,6 +29,21 @@ extends ResponseEntityExceptionHandler
     {
         String bodyOfResponse = "Invalid number";
         return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler({OptimisticLockException.class })
+    protected ResponseEntity<Object> handleOptimisticLock(RuntimeException ex, WebRequest request)
+    {
+        String bodyOfResponse = "Invalid entity version. "
+            + "Someone has already modified the entity while you were editing it.";
+        return handleExceptionInternal
+        (
+            ex,
+            bodyOfResponse,
+            new HttpHeaders(),
+            HttpStatus.CONFLICT,
+            request
+        );
     }
 
 }
