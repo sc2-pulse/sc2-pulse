@@ -388,12 +388,12 @@ class Util
         return String.fromCodePoint(...codePoints);
     }
 
-    static load(container, lazyPromise)
+    static load(container, lazyPromise, showErrors = false)
     {
-        return ElementUtil.executeTask(container.id, ()=>Util.doLoad(container, lazyPromise));
+        return ElementUtil.executeTask(container.id, ()=>Util.doLoad(container, lazyPromise, showErrors));
     }
 
-    static doLoad(container, lazyPromise)
+    static doLoad(container, lazyPromise, showErrors = false)
     {
         if(container.classList.contains(LOADING_STATUS.COMPLETE.className)
             || container.classList.contains(LOADING_STATUS.IN_PROGRESS.className)) return Promise.resolve();
@@ -410,7 +410,8 @@ class Util
             })
             .catch(error=>{
                 ElementUtil.setLoadingIndicator(container, LOADING_STATUS.ERROR);
-                if(DEBUG == true) console.log(error);
+                if(DEBUG == true && !showErrors) console.log(error);
+                if(showErrors) Util.showGlobalError(error);
             });
     }
 
