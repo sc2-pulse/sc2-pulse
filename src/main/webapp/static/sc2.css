@@ -362,6 +362,13 @@ body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
     max-width: 6em !important;
 }
 
+label.required::after
+{
+    content: "*";
+    color: #dc3545;
+    margin-left: 0.2em;
+}
+
 #mmr-history-info-panel
 {
     margin-bottom: 1em;

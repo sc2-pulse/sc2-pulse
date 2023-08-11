@@ -17,6 +17,8 @@ import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProTeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProTeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
 import java.util.ArrayList;
@@ -66,12 +68,27 @@ public class ProPlayerService
         SocialMedia.DISCORD,
         SocialMedia.INSTAGRAM
     );
+    public static final Set<SocialMedia> PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA = EnumSet.of
+    (
+        SocialMedia.LIQUIPEDIA,
+        SocialMedia.TWITCH,
+        SocialMedia.YOUTUBE,
+        SocialMedia.TWITTER,
+        SocialMedia.DISCORD,
+        SocialMedia.INSTAGRAM
+    );
+    public static final String PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA_REGEXP = PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.stream()
+        .map(media->"^" + media.getBaseUrl() + "/.*$")
+        .collect(Collectors.joining("|"));
+    public static final Pattern PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA_PATTERN
+        = Pattern.compile(PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA_REGEXP);
 
     private final ProPlayerDAO proPlayerDAO;
     private final ProTeamDAO proTeamDAO;
     private final ProTeamMemberDAO proTeamMemberDAO;
     private final SocialMediaLinkDAO socialMediaLinkDAO;
     private final ProPlayerAccountDAO proPlayerAccountDAO;
+    private final LadderProPlayerDAO ladderProPlayerDAO;
 
     private final SC2RevealedAPI sc2RevealedAPI;
 
@@ -93,6 +110,7 @@ public class ProPlayerService
         ProTeamMemberDAO proTeamMemberDAO,
         SocialMediaLinkDAO socialMediaLinkDAO,
         ProPlayerAccountDAO proPlayerAccountDAO,
+        LadderProPlayerDAO ladderProPlayerDAO,
         SC2RevealedAPI sc2RevealedAPI,
         AligulacAPI aligulacAPI,
         LiquipediaAPI liquipediaAPI
@@ -103,6 +121,7 @@ public class ProPlayerService
         this.proTeamMemberDAO = proTeamMemberDAO;
         this.socialMediaLinkDAO = socialMediaLinkDAO;
         this.proPlayerAccountDAO = proPlayerAccountDAO;
+        this.ladderProPlayerDAO = ladderProPlayerDAO;
         this.sc2RevealedAPI = sc2RevealedAPI;
         this.aligulacAPI = aligulacAPI;
         this.liquipediaAPI = liquipediaAPI;
@@ -399,6 +418,32 @@ public class ProPlayerService
                 url
             ))
             .filter(link->SUPPORTED_SOCIAL_MEDIA.contains(link.getType()));
+    }
+
+    @Transactional
+    public LadderProPlayer edit(ProPlayerForm form)
+    {
+        boolean invalidLink = form.getLinks().stream()
+            .anyMatch(link->!PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA_PATTERN.matcher(link).matches());
+        if(invalidLink) throw new IllegalArgumentException("Unsupported url");
+
+        ProPlayer proPlayer = proPlayerDAO.mergeVersioned(form.getProPlayer());
+        SocialMediaLink[] links = form.getLinks().stream()
+            .map(url->new SocialMediaLink(proPlayer.getId(), SocialMedia.fromBaseUrlPrefix(url), url))
+            .toArray(SocialMediaLink[]::new);
+        if(Arrays.stream(links).anyMatch(link->!PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.contains(link.getType())))
+            throw new IllegalArgumentException("Unsupported social media type");
+
+        socialMediaLinkDAO.merge(false, links);
+        Set<SocialMedia> savedMedia = Arrays.stream(links)
+            .map(SocialMediaLink::getType)
+            .collect(Collectors.toSet());
+        SocialMediaLink[] removedLinks = PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.stream()
+            .filter(media->!savedMedia.contains(media))
+            .map(media->new SocialMediaLink(proPlayer.getId(), media, null))
+            .toArray(SocialMediaLink[]::new);
+        socialMediaLinkDAO.remove(removedLinks);
+        return ladderProPlayerDAO.findByIds(proPlayer.getId()).get(0);
     }
 
 }

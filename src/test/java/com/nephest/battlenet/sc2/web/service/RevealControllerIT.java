@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static com.nephest.battlenet.sc2.util.TestUtil.UPDATED_IS_AFTER_ASSERTION_COMPARATOR;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -38,14 +39,17 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
+import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -71,6 +75,9 @@ public class RevealControllerIT
 
     @Autowired
     private ProPlayerAccountDAO proPlayerAccountDAO;
+
+    @Autowired
+    private SocialMediaLinkDAO socialMediaLinkDAO;
 
     @Autowired
     private LadderProPlayerDAO ladderProPlayerDAO;
@@ -276,6 +283,172 @@ public class RevealControllerIT
     }
 
     @Test
+    @WithBlizzardMockUser
+    (
+        partition =  Partition.GLOBAL,
+        username = "user",
+        roles =
+        {
+            SC2PulseAuthority.USER,
+            SC2PulseAuthority.REVEALER
+        }
+    )
+    public void testEditProPlayer()
+    throws Exception
+    {
+        //new
+        LocalDate bd1 = LocalDate.now().minusYears(10);
+        OffsetDateTime minUpdated = OffsetDateTime.now();
+        String strResp1 = mvc.perform
+        (
+            post("/api/reveal/player/edit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new ProPlayerForm(
+                    new ProPlayer
+                    (
+                        null,
+                        1L,
+                        "tag1", "name1", "US",
+                        bd1,
+                        12345,
+                        minUpdated.minusDays(1),
+                        null
+                    ),
+                    List.of
+                    (
+                        "https://www.twitch.tv/serral",
+                        "https://twitter.com/Serral_SC2"
+                    )
+                )))
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        LadderProPlayer player = objectMapper.readValue(strResp1, LadderProPlayer.class);
+        Assertions.assertThat(player)
+            .usingRecursiveComparison()
+            .withComparatorForType(UPDATED_IS_AFTER_ASSERTION_COMPARATOR, OffsetDateTime.class)
+            .isEqualTo(new LadderProPlayer
+            (
+                new ProPlayer
+                (
+                    1L,
+                    null, //aligulac id is ignored
+                    "tag1", "name1", "US",
+                    bd1,
+                    12345,
+                    minUpdated,
+                    3
+                ),
+                null,
+                List.of
+                (
+                    new SocialMediaLink
+                    (
+                        1L, SocialMedia.TWITCH, "https://www.twitch.tv/serral",
+                        minUpdated, null
+                    ),
+                    new SocialMediaLink
+                    (
+                        1L, SocialMedia.TWITTER, "https://twitter.com/Serral_SC2",
+                        minUpdated, null
+                    )
+                )
+            ));
+
+        //edit
+        LocalDate bd2 = bd1.minusYears(10);
+        OffsetDateTime minUpdated2 = OffsetDateTime.now();
+        socialMediaLinkDAO.merge
+        (
+            false,
+            new SocialMediaLink(1L, SocialMedia.ALIGULAC, "http://aligulac.com/players/485")
+        );
+        String strResp2 = mvc.perform
+        (
+            post("/api/reveal/player/edit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new ProPlayerForm(
+                    new ProPlayer
+                    (
+                        1L,
+                        1L,
+                        "tag2", "name2", "KR",
+                        bd2,
+                        23456,
+                        minUpdated2.minusDays(1),
+                        4
+                    ),
+                    List.of
+                    (
+                        "https://www.twitch.tv/serral2"
+                    )
+                )))
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString();
+        LadderProPlayer player2 = objectMapper.readValue(strResp2, LadderProPlayer.class);
+        Assertions.assertThat(player2)
+            .usingRecursiveComparison()
+            .withComparatorForType(UPDATED_IS_AFTER_ASSERTION_COMPARATOR, OffsetDateTime.class)
+            .isEqualTo(new LadderProPlayer
+            (
+                new ProPlayer
+                (
+                    1L,
+                    null, //aligulac id is ignored
+                    "tag2", "name2", "KR",
+                    bd2,
+                    23456,
+                    minUpdated2,
+                    7
+                ),
+                null,
+                List.of
+                (
+                    //aligulac link wasn't removed
+                    new SocialMediaLink
+                    (
+                        1L, SocialMedia.ALIGULAC, "http://aligulac.com/players/485",
+                        minUpdated2, null
+                    ),
+                    new SocialMediaLink
+                    (
+                        1L, SocialMedia.TWITCH, "https://www.twitch.tv/serral2",
+                        minUpdated2, null
+                    )
+                )
+            ));
+    }
+
+    @Test
+    @WithBlizzardMockUser
+    (
+        partition =  Partition.GLOBAL,
+        username = "user",
+        roles =
+        {
+            SC2PulseAuthority.USER,
+            SC2PulseAuthority.REVEALER
+        }
+    )
+    public void whenEditWithWrongVersion_thenReturn409()
+    throws Exception
+    {
+        ProPlayer player = proPlayerDAO.merge(new ProPlayer(null, 1L, "tag1", "name1"));
+        player.setVersion(999);
+        mvc.perform
+        (
+            post("/api/reveal/player/edit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new ProPlayerForm(player, List.of())))
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isConflict());
+    }
+
+    @Test
     @WithBlizzardMockUser(partition = Partition.GLOBAL, username = "name")
     public void whenNotRevealer_thenForbidden()
     throws Exception
@@ -299,6 +472,14 @@ public class RevealControllerIT
             post("/api/reveal/import")
                 .param("url", "http://aligulac.com/players/485-Serral/")
                 .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isForbidden());
+        mvc.perform
+        (
+            post("/api/reveal/player/edit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}")
                 .with(csrf().asHeader())
         )
             .andExpect(status().isForbidden());

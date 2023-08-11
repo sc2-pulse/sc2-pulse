@@ -216,8 +216,143 @@
                             </div>
                         </div>
                     </form>
-
-
+                    <div class="c-divider-hr"></div>
+                    <section class="container-loading loading-none">
+                    <div class="d-flex flex-wrap-gap mb-4">
+                        <button id="pro-player-edit" class="btn btn-primary">Edit</button>
+                        <button id="pro-player-new" class="btn btn-success">New</button>
+                        <div class="flex-grow-1"></div>
+                        <a role="button"
+                           class="btn btn-secondary c-dropdown collapsed empty"
+                           data-toggle="collapse"
+                           href="#reveal-player-edit-form"
+                           aria-expanded="false"
+                           aria-controls="reveal-player-edit-form"
+                        >
+                        </a>
+                    </div>
+                    <form id="reveal-player-edit-form" class="collapse" method="post">
+                        <div class="form-group row">
+                            <label for="pro-player-edit-id" class="col-sm-2 col-form-label">Id</label>
+                            <div class="col-sm-10">
+                                <input type="text"
+                                       class="form-control"
+                                       id="pro-player-edit-id"
+                                       name="pro-player-id"
+                                       autocomplete="off"
+                                       readonly="readonly"
+                                />
+                            </div>
+                        </div>
+                        <input name="pro-player-version" class="d-none"/>
+                        <div class="form-group row">
+                            <label for="pro-player-edit-nickname" class="col-sm-2 col-form-label required">Tag</label>
+                            <div class="col-sm-10">
+                                <input type="text"
+                                   th:pattern="${T(com.nephest.battlenet.sc2.model.util.ModelUtil).VALIDATION_REGEXP_NOT_BLANK}"
+                                   th:maxlength="${T(com.nephest.battlenet.sc2.model.local.ProPlayer).NAME_LENGTH_MAX}"
+                                   class="form-control"
+                                   id="pro-player-edit-nickname"
+                                   name="pro-player-nickname"
+                                   required="required"
+                                   autocomplete="off"
+                                   title="In-game tag/name"
+                                />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="pro-player-edit-name" class="col-sm-2 col-form-label">Name</label>
+                            <div class="col-sm-10">
+                                <input type="text"
+                                       th:maxlength="${T(com.nephest.battlenet.sc2.model.local.ProPlayer).NAME_LENGTH_MAX}"
+                                       class="form-control"
+                                       id="pro-player-edit-name"
+                                       name="pro-player-name"
+                                       autocomplete="off"
+                                       title="Romanized name"
+                                >
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="pro-player-edit-birthday" class="col-sm-2 col-form-label">Birthday</label>
+                            <div class="col-sm-10">
+                                <input type="date"
+                                       class="form-control"
+                                       id="pro-player-edit-birthday"
+                                       name="pro-player-birthday"
+                                       autocomplete="off"
+                                       th:min="${T(com.nephest.battlenet.sc2.model.local.ProPlayer).minBirthday().toString()}"
+                                       th:max="${T(com.nephest.battlenet.sc2.model.local.ProPlayer).maxBirthday().toString()}"
+                                />
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="pro-player-edit-country" class="col-sm-2 col-form-label">Country</label>
+                            <div class="col-sm-10">
+                                <div class="d-flex flex-column gap-1">
+                                    <input type="search"
+                                           class="form-control filtered-input-filter"
+                                           id="pro-player-edit-country"
+                                           name="country-search"
+                                           autocomplete="off"
+                                           data-filtered-input-group="#country-a2-pro-player-edit"
+                                           data-trim="true"
+                                           title="Country name(US locale)"
+                                    />
+                                    <div th:replace="~{fragments/form :: country-a2-filtered-input('pro-player-edit', 'pro-player-country')}"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group row">
+                            <label for="pro-player-edit-earnings" class="col-sm-2 col-form-label">Earnings</label>
+                            <div class="col-sm-10">
+                                <input type="number"
+                                       th:min="${T(com.nephest.battlenet.sc2.model.local.ProPlayer).EARNINGS_MIN}"
+                                       th:max="${T(com.nephest.battlenet.sc2.model.local.ProPlayer).EARNINGS_MAX}"
+                                       class="form-control"
+                                       id="pro-player-edit-earnings"
+                                       name="pro-player-earnings"
+                                       autocomplete="off"
+                                       title="USD"
+                                />
+                            </div>
+                        </div>
+                        <section class="mb-3">
+                            <h3>Links</h3>
+                            <div id="pro-player-link-input-container" class="d-flex flex-wrap-gap-1-5 mb-4">
+                                <div id="pro-player-link-input-template" class="dynamic-clone-element d-flex gap-1 align-items-center w-100 d-none">
+                                    <input type="url"
+                                           th:maxlength="${T(com.nephest.battlenet.sc2.model.local.SocialMediaLink).URL_MAX_LENGTH}"
+                                           th:title="${T(com.nephest.battlenet.sc2.web.service.ProPlayerService).PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.![name].stream.collect(@formatUtil.joining(', '))}"
+                                           th:pattern="${T(com.nephest.battlenet.sc2.web.service.ProPlayerService).PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA_REGEXP}"
+                                           class="form-control flex-grow-1 autofocus"
+                                           name="link-url"
+                                           autocomplete="off"
+                                           disabled="disabled"
+                                    >
+                                    <button type="button"
+                                            class="btn btn-outline-danger icofont-cross"
+                                            title="Remove"
+                                            data-action="remove-element"
+                                    ></button>
+                                </div>
+                            </div>
+                            <div class="text-left">
+                                <button type="button"
+                                        class="btn btn-outline-success icofont-plus clone-ctl"
+                                        title="Add"
+                                        data-clone-source="pro-player-link-input-template"
+                                        data-clone-destination="pro-player-link-input-container"
+                                        data-clone-class="dynamic-clone-element"
+                                ></button>
+                            </div>
+                        </section>
+                        <div class="d-flex flex-wrap-gap mb-3 justify-content-center">
+                            <button type="submit" class="btn btn-action btn-success">Save</button>
+                        </div>
+                    </form>
+                    <div class="text-center"><div th:replace="~{fragments/section :: loading-indicator}"></div></div>
+                    </section>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

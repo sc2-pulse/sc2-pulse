@@ -7,15 +7,19 @@ import com.nephest.battlenet.sc2.config.security.AccountUser;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
+import com.nephest.battlenet.sc2.web.service.ProPlayerForm;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
+import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -67,6 +71,13 @@ public class RevealController
         return proPlayerService.importProfile(url.trim())
             .map(ResponseEntity::ok)
             .orElseGet(()->ResponseEntity.notFound().build());
+    }
+
+    @PostMapping("/player/edit")
+    public ResponseEntity<LadderProPlayer> edit(@Valid @RequestBody ProPlayerForm form)
+    {
+        form.getProPlayer().setUpdated(OffsetDateTime.now());
+        return ResponseEntity.ok(proPlayerService.edit(form));
     }
 
 }
