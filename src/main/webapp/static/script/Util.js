@@ -53,10 +53,7 @@ class Util
                 Session.currentRequests--;
                 if(status === STATUS.ERROR)
                 {
-                    document.body.classList.add("js-error-detected");
-                    if(DEBUG == true) console.log(error);
-                    document.getElementById("error-generation-text").textContent = errorText;
-                    if(!Session.isSilent) $("#error-generation").modal();
+                    Util.showGlobalError(error != null ? error : {message: errorText});
                 }
                 if(Session.currentRequests > 0) return;
                 ElementUtil.setElementsVisibility(document.getElementsByClassName("status-generating-begin"), false);
@@ -64,6 +61,14 @@ class Util
                 Session.isHistorical = false;
             break;
         }
+    }
+
+    static showGlobalError(error)
+    {
+        if(DEBUG == true) console.log(error);
+        document.body.classList.add("js-error-detected");
+        document.getElementById("error-generation-text").textContent = error.message;
+        if(!Session.isSilent) $("#error-generation").modal();
     }
 
     static successStatusPromise(e)
