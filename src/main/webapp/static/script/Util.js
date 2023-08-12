@@ -67,7 +67,7 @@ class Util
     {
         if(DEBUG == true) console.log(error);
         document.body.classList.add("js-error-detected");
-        document.getElementById("error-generation-text").textContent = error.message;
+        document.getElementById("error-generation-text").textContent = Util.ERROR_MESSAGES.get(error.message.trim()) || error.message;
         if(!Session.isSilent) $("#error-generation").modal();
     }
 
@@ -459,3 +459,8 @@ Util.DATE_FORMAT = new Intl.DateTimeFormat(navigator.language, {day: "2-digit", 
 Util.DATE_TIME_FORMAT = new Intl.DateTimeFormat(navigator.language, {day: "2-digit", month: "2-digit", year: "numeric",
     hour: "2-digit", minute: "2-digit", second: "2-digit"});
 Util.DAY_MILLIS = 86400000;
+Util.ERROR_MESSAGES = new Map([
+    ["409", "409 Conflict. "
+        + "The entity has already been modified by someone else. "
+        + "Please reload the entity and verify changes."]
+]);
