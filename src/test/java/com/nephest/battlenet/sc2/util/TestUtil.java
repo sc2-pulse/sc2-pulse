@@ -13,6 +13,8 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.OffsetDateTime;
+import java.util.Comparator;
 
 public final class TestUtil
 {
@@ -22,6 +24,9 @@ public final class TestUtil
     {
         OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
+
+    public static Comparator<OffsetDateTime> UPDATED_IS_AFTER_ASSERTION_COMPARATOR =
+        (l, r)->l.isAfter(r) ? 0 : 1;
 
     private TestUtil(){}
 
