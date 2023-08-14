@@ -40,6 +40,10 @@ implements java.io.Serializable
     @NotNull
     private Boolean isProtected;
 
+    public SocialMediaLink()
+    {
+    }
+
     public SocialMediaLink
     (
         @NotNull Long proPlayerId, @NotNull SocialMedia type, @NotNull String url
