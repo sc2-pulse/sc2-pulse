@@ -3,7 +3,7 @@
 
 package com.nephest.battlenet.sc2.config.net;
 
-import javax.persistence.OptimisticLockException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -31,7 +31,7 @@ extends ResponseEntityExceptionHandler
         return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
     }
 
-    @ExceptionHandler({OptimisticLockException.class })
+    @ExceptionHandler({OptimisticLockingFailureException.class })
     protected ResponseEntity<Object> handleOptimisticLock(RuntimeException ex, WebRequest request)
     {
         String bodyOfResponse = "Invalid entity version. "

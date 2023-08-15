@@ -10,10 +10,10 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
-import javax.persistence.OptimisticLockException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -211,7 +211,7 @@ public class ProPlayerDAO
             .addValue("id", proPlayer.getId(), Types.BIGINT)
             .addValue("version", proPlayer.getVersion(), Types.INTEGER);
         Long[] pair = template.query(MERGE_VERSIONED, params, DAOUtils.LONG_PAIR_EXTRACTOR);
-        if(pair[0] == null) throw new OptimisticLockException(proPlayer);
+        if(pair[0] == null) throw new OptimisticLockingFailureException("Invalid version: " + proPlayer.getVersion());
 
         proPlayer.setVersion(pair[1].intValue());
         proPlayer.setId(pair[0]);
