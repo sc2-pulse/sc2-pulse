@@ -185,4 +185,15 @@ public final class MiscUtil
         return COUNTRY_LOCALES;
     }
 
+    /**
+     * Converts reserved code that is misused in some countries/regions/etc. to a valid code.
+     * Returns supplied @{@code code} otherwise.
+     * @param code ISO3166 Alpha2 country code
+     * @return valid code
+     */
+    public static String convertReservedISO3166Alpha2Code(String code)
+    {
+        return code.equals("UK") ? "GB" : code;
+    }
+
 }

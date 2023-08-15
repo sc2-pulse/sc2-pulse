@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.util;
@@ -114,6 +114,18 @@ public class MiscUtilTest
             RuntimeException.class,
             ()->MiscUtil.countryCodeToEmoji(input)
         );
+    }
+
+    @CsvSource
+    ({
+        "UK, GB",
+        "GB, GB",
+        "US, US"
+    })
+    @ParameterizedTest
+    public void testConvertReservedISO3166Alpha2Code(String in, String out)
+    {
+        assertEquals(out, MiscUtil.convertReservedISO3166Alpha2Code(in));
     }
 
 }
