@@ -172,7 +172,7 @@ public class ProPlayerServiceIT
             //even though revealed team is null, it is updated from the aligulac
             assertEquals("currentTeam2", ladderProPlayer.getProTeam().getName());
             assertEquals("ct2", ladderProPlayer.getProTeam().getShortName());
-            assertEquals("EU", ladderProPlayer.getProPlayer().getCountry());
+            assertEquals("GB", ladderProPlayer.getProPlayer().getCountry());
             assertEquals(LocalDate.of(2020, 1, 2), ladderProPlayer.getProPlayer().getBirthday());
             assertEquals(2, ladderProPlayer.getProPlayer().getEarnings());
             assertEquals(3, ladderProPlayer.getLinks().size());
@@ -265,9 +265,9 @@ public class ProPlayerServiceIT
         players[0] = new AligulacProPlayer
         (
             123321L,
-            "Aligulac Name2", "Aligulac Romanized Name2", "Aligulac nickname2", "Lpname2",
+            "Aligulac Name2", "  Aligulac   Romanized Name2 ", " Aligulac  nickname2 ", "Lpname2",
             LocalDate.of(2020, 1, 2),
-            "EU",
+            "UK",
             2,
             new AligulacProTeamRoot[]{new AligulacProTeamRoot(new AligulacProTeam(1L, "currentTeam2", "ct2"))}
         );

@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import com.nephest.battlenet.sc2.model.util.ModelUtil;
 import com.nephest.battlenet.sc2.model.validation.CountryAlpha2;
+import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Objects;
@@ -151,10 +152,15 @@ implements java.io.Serializable
     public static ProPlayer update(ProPlayer proPlayer, AligulacProPlayer aligulacProPlayer)
     {
         proPlayer.setEarnings(aligulacProPlayer.getTotalEarnings());
-        proPlayer.setNickname(aligulacProPlayer.getTag());
-        proPlayer.setName(aligulacProPlayer.getCombinedName());
+        proPlayer.setNickname(ModelUtil.trimSingleSpaceNotBlank(aligulacProPlayer.getTag()));
+        proPlayer.setName(ModelUtil.trimSingleSpaceNotBlank(aligulacProPlayer.getCombinedName()));
         proPlayer.setBirthday(aligulacProPlayer.getBirthday());
-        proPlayer.setCountry(aligulacProPlayer.getCountry());
+        proPlayer.setCountry
+        (
+            aligulacProPlayer.getCountry() != null
+                ? MiscUtil.convertReservedISO3166Alpha2Code(aligulacProPlayer.getCountry())
+                : null
+        );
         return proPlayer;
     }
 

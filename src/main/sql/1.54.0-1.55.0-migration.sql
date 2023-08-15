@@ -64,3 +64,7 @@ AFTER INSERT OR DELETE OR UPDATE
 ON social_media_link
 FOR EACH ROW
 EXECUTE FUNCTION increase_foreign_version('pro_player');
+
+UPDATE pro_player
+SET country = 'GB'
+WHERE country = 'UK';
