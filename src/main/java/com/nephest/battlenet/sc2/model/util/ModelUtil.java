@@ -12,4 +12,17 @@ public final class ModelUtil
 
     private ModelUtil(){}
 
+    public static String trimSingleSpace(String input)
+    {
+        return input.trim().replaceAll("  +", " ");
+    }
+
+    public static String trimSingleSpaceNotBlank(String input)
+    {
+        if(input == null) return null;
+
+        String result = trimSingleSpace(input);
+        return result.isBlank() ? null : result;
+    }
+
 }
