@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -63,7 +63,6 @@ public class MatchService
     public static final int FAILED_MATCHES_MAX = 100;
     public static final QueueType WEB_QUEUE_TYPE = QueueType.LOTV_1V1;
     public static final TeamType WEB_TEAM_TYPE = TeamType.ARRANGED;
-    public static final int WEB_CHARACTER_COUNT = 500;
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
@@ -162,16 +161,7 @@ public class MatchService
         LOG.debug("Saved {} previously failed matches", r1);
         //clear here to avoid unbound retries of the same characters
         boolean web = isWeb(regions);
-        List<PlayerCharacter> characters = web
-            ? playerCharacterDAO.findTopRecentlyActiveCharacters
-                (
-                    OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()),
-                    WEB_QUEUE_TYPE,
-                    WEB_TEAM_TYPE,
-                    List.of(regions),
-                    WEB_CHARACTER_COUNT
-                )
-            : playerCharacterDAO
+        List<PlayerCharacter> characters = playerCharacterDAO
                 .findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()), regions);
         if(web) LOG.warn("Using web API for {} matches, top {} players of {} {}",
                 regions, characters.size(), WEB_QUEUE_TYPE, WEB_TEAM_TYPE);
