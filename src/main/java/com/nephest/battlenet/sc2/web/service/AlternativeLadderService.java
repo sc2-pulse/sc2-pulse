@@ -96,6 +96,7 @@ public class AlternativeLadderService
     public static final int LADDER_BATCH_SIZE = StatsService.LADDER_BATCH_SIZE;
     public static final Duration DISCOVERY_TIME_FRAME = Duration.ofHours(12);
     public static final Duration ADDITIONAL_WEB_SCAN_TIME_FRAME = Duration.ZERO;
+    public static final Duration NON_WEB_SCAN_TIME_FRAME = Duration.ofMinutes(30);
     public static final double WEB_API_ERROR_RATE_THRESHOLD = 50;
     public static final double WEB_API_FORCE_REGION_ERROR_RATE_THRESHOLD = 25;
     public static final int ADDITIONAL_WEB_UPDATES_PER_CYCLE = 2;
@@ -108,6 +109,7 @@ public class AlternativeLadderService
         = BaseLeague.LeagueType.values();
 
     private final Map<Region, InstantVar> discoveryInstants = new HashMap<>();
+    private final Map<Region, InstantVar> scanInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> additionalWebScanInstants = new EnumMap<>(Region.class);
     private CollectionVar<Set<Region>, Region> profileLadderWebRegions;
     private CollectionVar<Set<Region>, Region> discoveryWebRegions;
@@ -203,6 +205,7 @@ public class AlternativeLadderService
             for(Region region : Region.values())
             {
                 discoveryInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.discovered"));
+                scanInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.updated"));
                 additionalWebScanInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.web.additional"));
             }
         }
@@ -272,6 +275,7 @@ public class AlternativeLadderService
     private boolean isAdditionalWebUpdate(Region region)
     {
         Instant discoveryInstant = discoveryInstants.get(region).getValue();
+        Instant scanInstant = scanInstants.get(region).getValue();
         Instant additionalScanInstant = additionalWebScanInstants.get(region).getValue();
         return isProfileLadderWebRegion(region)
             && (discoveryInstant != null
@@ -279,7 +283,10 @@ public class AlternativeLadderService
                     >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis())
             && (additionalScanInstant == null
                 || System.currentTimeMillis() - additionalScanInstant.toEpochMilli()
-                    >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis());
+                    >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis())
+            && (scanInstant != null
+                && System.currentTimeMillis() - scanInstant.toEpochMilli()
+                    < NON_WEB_SCAN_TIME_FRAME.toMillis());
     }
 
     private boolean isBigAdditionalWebUpdate(Region region)
@@ -356,6 +363,7 @@ public class AlternativeLadderService
         else
         {
             updateLadders(season, Set.of(queueTypes), profileLadderIds, false);
+            scanInstants.get(season.getRegion()).setValueAndSave(Instant.now());
         }
     }
 
