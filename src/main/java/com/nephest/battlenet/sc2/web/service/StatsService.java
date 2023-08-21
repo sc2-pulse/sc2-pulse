@@ -452,18 +452,11 @@ public class StatsService
         {
             fastTeamDAO.load(season.getRegion(), season.getBattlenetId());
             LOG.debug("Loaded teams into FastTeamDAO for {}", season);
-            if(queues.length < QueueType.getTypes(VERSION).size())
-            {
-                alternativeLadderService.updateThenSmartDiscoverSeason(season, queues, leagues);
-            }
-            else
-            {
-                update
-                (
-                    season, queues, leagues, updateContext,
-                    ctx->alternativeLadderService.updateSeason(ctx.getSeason(), ctx.getQueues(), ctx.getLeagues())
-                );
-            }
+            update
+            (
+                season, queues, leagues, updateContext,
+                ctx->alternativeLadderService.updateSeason(ctx.getSeason(), ctx.getQueues(), ctx.getLeagues())
+            );
         }
     }
 
