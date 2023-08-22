@@ -376,7 +376,7 @@ public class Cron
             {
                 UpdateContext muc = matchUpdateContext == null ? updateService.getUpdateContext(null) : matchUpdateContext;
                 for(Region region : globalContext.getActiveRegions())
-                    tasks.add(webExecutorService.submit(()->matchService.update(muc, region)));
+                    tasks.add(webExecutorService.submit(()->matchService.update(region)));
                 MiscUtil.awaitAndThrowException(tasks, true, true);
                 matchService.updateMeta(muc);
                 matchInstant.setValueAndSave(Instant.now());

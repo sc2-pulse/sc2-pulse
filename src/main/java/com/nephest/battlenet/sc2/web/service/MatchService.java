@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SC2Map;
+import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
@@ -21,10 +22,9 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
-import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,6 +32,7 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -49,6 +50,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
@@ -75,6 +77,7 @@ public class MatchService
     private final Predicate<BlizzardMatch> validationPredicate;
     private final ConcurrentLinkedQueue<Set<PlayerCharacterNaturalId>> failedCharacters = new ConcurrentLinkedQueue<>();
     private CollectionVar<Set<Region>, Region> webRegions;
+    private Var<Set<PlayerCharacter>> pendingCharacters;
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -90,6 +93,7 @@ public class MatchService
         SC2MapDAO mapDAO,
         VarDAO varDAO,
         AlternativeLadderService alternativeLadderService,
+        EventService eventService,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         Validator validator
     )
@@ -102,6 +106,7 @@ public class MatchService
         this.mapDAO = mapDAO;
         this.alternativeLadderService = alternativeLadderService;
         this.dbExecutorService = dbExecutorService;
+        subToEvents(eventService);
         initVars(varDAO);
         validationPredicate = DAOUtils.beanValidationPredicate(validator);
     }
@@ -109,6 +114,46 @@ public class MatchService
     private void initVars(VarDAO varDAO)
     {
         webRegions = WebServiceUtil.loadRegionSetVar(varDAO, "match.web.regions", "Loaded web regions for match history: {}");
+        pendingCharacters = new Var<>
+        (
+            varDAO, "match.character.pending",
+            chars->chars.isEmpty()
+                ? null
+                : chars.stream()
+                    .map(PlayerCharacter::getId)
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(",")),
+            str->str == null
+                ? ConcurrentHashMap.newKeySet()
+                : Flux.fromStream(Arrays.stream(str.split(",")).map(Long::valueOf))
+                    .buffer(500)
+                    .flatMapIterable(batch->playerCharacterDAO.find(batch.toArray(Long[]::new)))
+                    .collect(Collectors.toCollection(ConcurrentHashMap::newKeySet))
+                    .block(),
+            false
+        );
+        try
+        {
+            pendingCharacters.load();
+            LOG.debug("Loaded {} pending match characters", pendingCharacters.getValue().size());
+        }
+        catch (RuntimeException e)
+        {
+            pendingCharacters.setValue(new HashSet<>());
+            LOG.error(e.toString(), e);
+        }
+    }
+
+    private void subToEvents(EventService eventService)
+    {
+        eventService.getLadderCharacterActivityEvent()
+            .subscribe(character->pendingCharacters.getValue().add(character));
+        eventService.getLadderUpdateEvent()
+            .subscribeOn(Schedulers.boundedElastic())
+            .subscribe(allStats->{
+                pendingCharacters.save();
+                LOG.debug("Pending characters: {}", pendingCharacters.getValue().size());
+            });
     }
 
     public boolean isWeb(Region... regions)
@@ -140,12 +185,9 @@ public class MatchService
         return Collections.unmodifiableSet(webRegions.getValue());
     }
 
-    public void update(UpdateContext updateContext, Region... regions)
+    public void update(Region... regions)
     {
-        if(updateContext.getExternalUpdate() == null || updateContext.getInternalUpdate() == null) return;
-
-        //Active players can't be updated retroactively, so there is no reason to sync with other services here
-        int matchCount = saveMatches(updateContext.getInternalUpdate(), regions);
+        int matchCount = saveMatches(regions);
         matchDAO.removeExpired();
         LOG.info("Saved {} matches for {}", matchCount, regions);
         if(api.isAutoForceRegion() && matchCount < 1)
@@ -155,17 +197,19 @@ public class MatchService
         }
     }
 
-    private int saveMatches(Instant lastUpdated, Region... regions)
+    private int saveMatches(Region... regions)
     {
         int r1 = saveFailedMatches();
         LOG.debug("Saved {} previously failed matches", r1);
         //clear here to avoid unbound retries of the same characters
         boolean web = isWeb(regions);
-        List<PlayerCharacter> characters = playerCharacterDAO
-                .findRecentlyActiveCharacters(OffsetDateTime.ofInstant(lastUpdated, ZoneId.systemDefault()), regions);
+        List<PlayerCharacter> characters = new ArrayList<>(pendingCharacters.getValue());
         if(web) LOG.warn("Using web API for {} matches, top {} players of {} {}",
                 regions, characters.size(), WEB_QUEUE_TYPE, WEB_TEAM_TYPE);
-        return r1 + saveMatches(characters, true, web);
+        int result = r1 + saveMatches(characters, true, web);
+        pendingCharacters.getValue().clear();
+        pendingCharacters.save();
+        return result;
     }
 
     private int saveFailedMatches()
