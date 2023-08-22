@@ -102,7 +102,6 @@ public class StatsService
     public static final Version VERSION = Version.LOTV;
     public static final int STALE_LADDER_TOLERANCE = 1;
     public static final int STALE_LADDER_DEPTH = 12;
-    public static final int DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH = 2;
     public static final int LADDER_BATCH_SIZE = 100;
     public static final Duration FORCED_LADDER_SCAN_FRAME = Duration.ofHours(2);
     /*
@@ -336,30 +335,24 @@ public class StatsService
         updateSeasonStats(seasonId, true);
     }
 
-    public void afterCurrentSeasonUpdate(UpdateContext updateContext, boolean allStats)
+    public void afterCurrentSeasonUpdate(boolean allStats)
     {
         teamStateDAO.removeExpired();
         for(int season : pendingStatsUpdates) updateSeasonStats(season, allStats);
         processPendingTeams();
         alternativeLadderService.afterCurrentSeasonUpdate(pendingStatsUpdates);
         pendingStatsUpdates.clear();
-        playerCharacterStatsDAO.mergeCalculate
-        (
-            updateContext.getInternalUpdate() != null
-                ? OffsetDateTime.ofInstant(updateContext.getInternalUpdate(), ZoneId.systemDefault())
-                : OffsetDateTime.now().minusHours(DEFAULT_PLAYER_CHARACTER_STATS_HOURS_DEPTH)
-        );
-        processPendingCharacters(pendingCharacters, eventService);
+        processPendingCharacters(pendingCharacters);
     }
 
-    public static void processPendingCharacters
-    (
-        Set<PlayerCharacter> pendingCharacters,
-        EventService eventService
-    )
+    public void processPendingCharacters(Set<PlayerCharacter> pendingCharacters)
     {
         if(pendingCharacters.isEmpty()) return;
 
+        Set<Long> pendingCharacterIds = pendingCharacters.stream()
+            .map(PlayerCharacter::getId)
+            .collect(Collectors.toSet());
+        playerCharacterStatsDAO.mergeCalculate(pendingCharacterIds);
         PlayerCharacter[] characters = pendingCharacters.toArray(PlayerCharacter[]::new);
         eventService.createLadderCharacterActivityEvent(characters);
         pendingCharacters.clear();

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -8,13 +8,16 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
+import java.sql.Types;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -32,6 +35,8 @@ public class PlayerCharacterStatsDAO
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(PlayerCharacterStatsDAO.class);
+
+    public static final int ID_BATCH_SIZE = 500;
 
     public static final String CHARACTER_RACIAL_FILTER_TEMPLATE =
         "WITH player_character_filter AS"
@@ -107,6 +112,13 @@ public class PlayerCharacterStatsDAO
             RECENT_CHARACTER_FILTER + CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE + MERGE_TEMPLATE,
             "NULL", CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END
         );
+    public static final String CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_BY_ID_QUERY =
+        String.format(
+            "WITH player_character_filter AS (SELECT * FROM UNNEST(:ids) AS t(player_character_id)) "
+            + CALCULATE_PLAYER_CHARACTER_RACELESS_STATS_TEMPLATE
+            + MERGE_TEMPLATE,
+            "NULL", CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END
+        );
 
     public static final String CALCULATE_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
         CHARACTER_RACIAL_FILTER_TEMPLATE
@@ -130,11 +142,28 @@ public class PlayerCharacterStatsDAO
         + CALCULATE_PLAYER_CHARACTER_STATS_GROUP;
     public static final String CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE =
         CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE + MERGE_TEMPLATE;
+    public static final String CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_BY_ID_TEMPLATE =
+        "WITH player_character_filter AS "
+        + "("
+            + "SELECT DISTINCT(player_character_id) "
+            + "FROM team_member "
+            + "WHERE player_character_id IN(:ids) "
+            + "AND team_member.%2$s_games_played > 0 "
+        + ") "
+        + CALCULATE_PLAYER_CHARACTER_STATS_TEMPLATE_START
+        + "SUM(%2$s_games_played) "
+        + CALCULATE_FILTERED_PLAYER_CHARACTER_STATS_TEMPLATE_END
+        + "WHERE "
+        + "%2$s_games_played > 0 "
+        + "%3$s "
+        + CALCULATE_PLAYER_CHARACTER_STATS_GROUP
+        + MERGE_TEMPLATE;
 
     private static Map<Race, String> CALCULATE_PLAYER_CHARACTER_RACE_STATS_QUERIES;
     private static Map<Race, String> CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_QUERIES;
     private static Map<Race, String> CALCULATE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES;
     private static Map<Race, String> CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES;
+    private static Map<Race, String> CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_BY_ID_QUERIES;
 
     public static final String FIND_GLOBAL_STATS_LIST_BY_PLAYER_CHARACTER_ID_QUERY =
         "SELECT id, queue_type, team_type, player_character_id, race, rating_max, league_max, games_played "
@@ -172,6 +201,9 @@ public class PlayerCharacterStatsDAO
         if(CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES == null)
             CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES =
                 initQueries(CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_TEMPLATE, conversionService);
+        if(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_BY_ID_QUERIES == null)
+            CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_BY_ID_QUERIES =
+                initQueries(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_BY_ID_TEMPLATE, conversionService);
     }
 
     private static Map<Race, String> initQueries(String query, ConversionService conversionService)
@@ -269,6 +301,30 @@ public class PlayerCharacterStatsDAO
             count += template.update(CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACE_STATS_QUERIES.get(race), params);
         count += template.update(CALCULATE_MERGE_RECENT_PLAYER_CHARACTER_RACELESS_STATS_QUERY, params);
         LOG.debug("Calculated (merged) {} recent({}) player character stats", count, updatedMin);
+        return count;
+    }
+
+    @Transactional
+    public int mergeCalculate(Set<Long> playerCharacterIds)
+    {
+        if(playerCharacterIds.isEmpty()) return 0;
+
+        int count = 0;
+        List<Long> idList = new ArrayList<>(playerCharacterIds);
+        int ix = 0;
+        while(ix < idList.size())
+        {
+            List<Long> batch = idList.subList(ix, Math.min(ix + ID_BATCH_SIZE, idList.size()));
+            SqlParameterSource params = new MapSqlParameterSource()
+                .addValue("ids", batch);
+            for(Race race : Race.values())
+                count += template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACE_STATS_BY_ID_QUERIES.get(race), params);
+            SqlParameterSource racelessParams = new MapSqlParameterSource()
+                .addValue("ids", batch.toArray(Long[]::new), Types.ARRAY);
+            count += template.update(CALCULATE_MERGE_PLAYER_CHARACTER_RACELESS_STATS_BY_ID_QUERY, racelessParams);
+            ix += batch.size();
+        }
+        LOG.debug("Calculated (merged) {} player character stats", count);
         return count;
     }
 

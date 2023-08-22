@@ -31,6 +31,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -116,6 +117,16 @@ public class PlayerCharacterStatsDAOIT
         PlayerCharacter character = setupStats();
         playerCharacterStatsDAO.calculate(OffsetDateTime.now().minusHours(1));
         playerCharacterStatsDAO.mergeCalculate(OffsetDateTime.now().minusHours(1)); //just for testing, not actually required
+        Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> stats =
+            ladderPlayerCharacterStatsDAO.findGlobalMap(character.getId());
+        verifyStats(character, stats);
+    }
+
+    @Test
+    public void testStatsCalculationById()
+    {
+        PlayerCharacter character = setupStats();
+        playerCharacterStatsDAO.mergeCalculate(Set.of(character.getId(), 99912345L));
         Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> stats =
             ladderPlayerCharacterStatsDAO.findGlobalMap(character.getId());
         verifyStats(character, stats);

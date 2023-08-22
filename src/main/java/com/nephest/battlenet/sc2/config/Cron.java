@@ -369,7 +369,7 @@ public class Cron
             tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
 
         MiscUtil.awaitAndThrowException(tasks, true, true);
-        statsService.afterCurrentSeasonUpdate(updateService.getUpdateContext(null), false);
+        statsService.afterCurrentSeasonUpdate(false);
         try
         {
             if (shouldUpdateMatches())

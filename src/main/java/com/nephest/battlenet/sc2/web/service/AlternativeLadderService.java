@@ -39,7 +39,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.AlternativeTeamData;
-import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
 import java.time.Instant;
@@ -138,7 +137,7 @@ public class AlternativeLadderService
     private final ConversionService conversionService;
     private final ExecutorService dbExecutorService;
     private final ClanService clanService;
-    private final EventService eventService;
+    private final StatsService statsService;
     private final Predicate<BlizzardProfileTeam> teamValidationPredicate;
 
     @Value("${com.nephest.battlenet.sc2.ladder.alternative.web.auto:#{'false'}}")
@@ -164,7 +163,7 @@ public class AlternativeLadderService
         Validator validator,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         ClanService clanService,
-        EventService eventService
+        @Lazy StatsService statsService
     )
     {
         this.api = api;
@@ -184,7 +183,7 @@ public class AlternativeLadderService
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         this.dbExecutorService = dbExecutorService;
         this.clanService = clanService;
-        this.eventService = eventService;
+        this.statsService = statsService;
     }
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 100;
@@ -703,7 +702,7 @@ public class AlternativeLadderService
     public void afterCurrentSeasonUpdate(Set<Integer> pendingSeasons)
     {
         processPendingTeams();
-        StatsService.processPendingCharacters(pendingCharacters, eventService);
+        statsService.processPendingCharacters(pendingCharacters);
     }
 
     private void processPendingTeams()
