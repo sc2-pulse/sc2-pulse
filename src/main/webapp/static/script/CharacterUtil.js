@@ -1329,7 +1329,7 @@ class CharacterUtil
         }
         reportsContainer.classList.remove("d-none");
         CharacterUtil.updateCharacterReportsSection(reportsBody, reports, 4);
-        if(!document.querySelector("#player-info-additional-container .player-flag"))
+        if(!document.querySelector("#player-info-additional-container .player-flag-class-cheater"))
             document.querySelector("#player-info-additional-container").appendChild(ElementUtil.createCheaterFlag(CHEATER_FLAG.REPORTED, true));
     }
 

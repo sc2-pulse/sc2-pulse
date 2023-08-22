@@ -423,7 +423,7 @@ class ElementUtil
     static createCheaterFlag(flag, collapsible = false)
     {
         const cheaterFlag = document.createElement(collapsible ? "button" : "span");
-        cheaterFlag.classList.add("player-flag", "player-flag-" + flag.name);
+        cheaterFlag.classList.add("player-flag", "player-flag-class-cheater", "player-flag-" + flag.name);
         cheaterFlag.textContent = flag.name.toUpperCase();
         cheaterFlag.title = flag.description;
         if(collapsible) {
