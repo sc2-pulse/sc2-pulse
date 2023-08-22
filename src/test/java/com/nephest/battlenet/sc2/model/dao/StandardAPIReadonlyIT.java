@@ -174,4 +174,16 @@ public class StandardAPIReadonlyIT
         );
     }
 
+    @Test
+    public void whenNoCharacter_thenReturn404()
+    throws Exception
+    {
+        mvc.perform
+        (
+            get("/api/character/{id}/common", 12345678)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+        .andExpect(status().isNotFound());
+    }
+
 }

@@ -130,7 +130,7 @@ public class CharacterController
 
     @Hidden
     @GetMapping("/{id}/common/{types}")
-    public CommonCharacter getCommonCharacterLegacy
+    public ResponseEntity<CommonCharacter> getCommonCharacterLegacy
     (
         @PathVariable("id") long id,
         @PathVariable(name = "types") BaseMatch.MatchType[] types
@@ -139,23 +139,22 @@ public class CharacterController
         if(types == null) types = new BaseMatch.MatchType[0];
         List<LadderDistinctCharacter> linkedCharacters =
             ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id);
-        LadderDistinctCharacter currentCharacter = linkedCharacters.isEmpty()
-            ? null
-            : linkedCharacters.stream()
+        if(linkedCharacters.isEmpty()) return ResponseEntity.notFound().build();
+
+        LadderDistinctCharacter currentCharacter = linkedCharacters.stream()
                 .filter(c->c.getMembers().getCharacter().getId() == id)
                 .findAny()
                 .orElseThrow();
-        return new CommonCharacter
+
+        return ResponseEntity.ok(new CommonCharacter
         (
             ladderSearch.findCharacterTeams(id),
             linkedCharacters,
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.findByCharacterIds(id).stream().findFirst().orElse(null),
-            currentCharacter != null
-                ? discordUserDAO
-                    .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
-                    .orElse(null)
-                : null,
+            discordUserDAO
+                .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
+                .orElse(null),
             ladderMatchDAO.findMatchesByCharacterId(
                 id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
             ladderTeamStateDAO.find(id),
@@ -167,11 +166,11 @@ public class CharacterController
                     .map(PlayerCharacter::getId)
                     .toArray(Long[]::new)
             )
-        );
+        ));
     }
 
     @GetMapping("/{id}/common")
-    public CommonCharacter getCommonCharacter
+    public ResponseEntity<CommonCharacter> getCommonCharacter
     (
         @PathVariable("id") long id,
         @RequestParam(name = "matchType", required = false) BaseMatch.MatchType[] types,
@@ -182,23 +181,22 @@ public class CharacterController
         OffsetDateTime from = depth == null ? null : OffsetDateTime.now().minusDays(depth);
         List<LadderDistinctCharacter> linkedCharacters =
             ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id);
-        LadderDistinctCharacter currentCharacter = linkedCharacters.isEmpty()
-            ? null
-            : linkedCharacters.stream()
-                .filter(c->c.getMembers().getCharacter().getId() == id)
-                .findAny()
-                .orElseThrow();
-        return new CommonCharacter
+        if(linkedCharacters.isEmpty()) return ResponseEntity.notFound().build();
+
+        LadderDistinctCharacter currentCharacter = linkedCharacters.stream()
+            .filter(c->c.getMembers().getCharacter().getId() == id)
+            .findAny()
+            .orElseThrow();
+
+        return ResponseEntity.ok(new CommonCharacter
         (
             ladderSearch.findCharacterTeams(id),
             linkedCharacters,
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
             ladderProPlayerDAO.findByCharacterIds(id).stream().findFirst().orElse(null),
-            currentCharacter != null
-                ? discordUserDAO
-                    .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
-                    .orElse(null)
-                : null,
+            discordUserDAO
+                .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
+                .orElse(null),
             ladderMatchDAO.findMatchesByCharacterId(
                 id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
             ladderTeamStateDAO.find(id, from),
@@ -210,7 +208,7 @@ public class CharacterController
                     .map(PlayerCharacter::getId)
                     .toArray(Long[]::new)
             )
-        );
+        ));
     }
 
     @Hidden
