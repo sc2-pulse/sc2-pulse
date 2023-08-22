@@ -38,6 +38,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.util.function.Tuple2;
 
 @Service
@@ -60,6 +61,7 @@ public class ClanService
     private final ClanMemberDAO clanMemberDAO;
     private final ClanMemberEventDAO clanMemberEventDAO;
     private final BlizzardSC2API api;
+    private final AlternativeLadderService alternativeLadderService;
     private final ExecutorService dbExecutorService;
     private final ExecutorService webExecutorService;
 
@@ -84,6 +86,7 @@ public class ClanService
         ClanMemberEventDAO clanMemberEventDAO,
         VarDAO varDAO,
         BlizzardSC2API api,
+        @Lazy AlternativeLadderService alternativeLadderService,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         @Qualifier("webExecutorService") ExecutorService webExecutorService
     )
@@ -93,6 +96,7 @@ public class ClanService
         this.clanMemberDAO = clanMemberDAO;
         this.clanMemberEventDAO = clanMemberEventDAO;
         this.api = api;
+        this.alternativeLadderService = alternativeLadderService;
         this.dbExecutorService = dbExecutorService;
         this.webExecutorService = webExecutorService;
         init(varDAO);
@@ -278,7 +282,17 @@ public class ClanService
     private void updateInactiveClanMembersBatch(List<PlayerCharacter> clanMembers)
     {
         List<Future<?>> dbTasks = new ArrayList<>();
-        api.getLegacyProfiles(clanMembers, false)
+        Flux.fromIterable
+        (
+            clanMembers.stream()
+                .collect(Collectors.groupingBy(PlayerCharacter::getRegion))
+                .entrySet()
+        )
+            .flatMap(entry->api.getLegacyProfiles
+            (
+                entry.getValue(),
+                alternativeLadderService.isProfileLadderWebRegion(entry.getKey())
+            ))
             .map(this::extractClanMembers)
             .buffer(INACTIVE_CLAN_MEMBER_BATCH_SIZE)
             .toStream()

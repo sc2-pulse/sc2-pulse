@@ -215,7 +215,7 @@ public class BlizzardPrivacyServiceTest
 
         when(playerCharacterDAO.countByUpdatedMax(any(), any())).thenReturn(9999);
         privacyService.getLastUpdatedCharacterId().setValue(100L);
-        List<PlayerCharacter> chars = List.of(new PlayerCharacter());
+        List<PlayerCharacter> chars = List.of(new PlayerCharacter(null, null, Region.EU, null, null, null));
         when(playerCharacterDAO.find
         (
             any(), eq(100L), any(),

@@ -58,6 +58,9 @@ public class ClanServiceTest
     private BlizzardSC2API api;
 
     @Mock
+    private AlternativeLadderService alternativeLadderService;
+
+    @Mock
     private VarDAO varDAO;
 
     @Mock
@@ -82,6 +85,7 @@ public class ClanServiceTest
             clanMemberEventDAO,
             varDAO,
             api,
+            alternativeLadderService,
             executor,
             executor
         );

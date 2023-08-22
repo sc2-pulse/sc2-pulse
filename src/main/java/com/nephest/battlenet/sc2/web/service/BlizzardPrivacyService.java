@@ -41,6 +41,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -388,7 +389,17 @@ public class BlizzardPrivacyService
         }
 
         List<Future<?>> dbTasks = new ArrayList<>();
-        api.getLegacyProfiles(batch, false)
+        Flux.fromIterable
+        (
+            batch.stream()
+                .collect(Collectors.groupingBy(PlayerCharacter::getRegion))
+                .entrySet()
+        )
+            .flatMap(entry->api.getLegacyProfiles
+            (
+                entry.getValue(),
+                alternativeLadderService.isProfileLadderWebRegion(entry.getKey())
+            ))
             .filter(c->legacyProfilePredicate.test(c.getT1()))
             .map(this::extractCharacter)
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
