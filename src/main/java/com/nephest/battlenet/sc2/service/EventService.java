@@ -18,15 +18,19 @@ public class EventService
         Sinks.EmitFailureHandler.FAIL_FAST;
 
     private final Sinks.Many<PlayerCharacter> ladderCharacterActivityEvent;
+    private final Sinks.Many<Boolean> ladderUpdateEvent;
 
     @Autowired
     public EventService
     (
-        @Value("${com.nephest.battlenet.sc2.event.buffer:#{'5000'}}") int buffer
+        @Value("${com.nephest.battlenet.sc2.event.buffer:#{'5000'}}") int buffer,
+        @Value("${com.nephest.battlenet.sc2.event.buffer.small:#{'10'}}") int smallBuffer
     )
     {
         ladderCharacterActivityEvent = Sinks.unsafe()
             .many().multicast().onBackpressureBuffer(buffer);
+        ladderUpdateEvent = Sinks.unsafe()
+            .many().multicast().onBackpressureBuffer(smallBuffer);
     }
 
     public synchronized void createLadderCharacterActivityEvent(PlayerCharacter... playerCharacters)
@@ -44,6 +48,22 @@ public class EventService
     public Flux<PlayerCharacter> getLadderCharacterActivityEvent()
     {
         return ladderCharacterActivityEvent.asFlux();
+    }
+
+    public synchronized void createLadderUpdateEvent(Boolean allStats)
+    {
+        ladderUpdateEvent.emitNext(allStats, DEFAULT_FAILURE_HANDLER);
+    }
+
+    /**
+     * An event is emitted after every ladder update. Emits {@code allStats} flag.
+     *
+     * @return endless {@link Flux} of ladder updates. Consumers are expected to
+     * {@link Flux#subscribe()}.
+     */
+    public Flux<Boolean> getLadderUpdateEvent()
+    {
+        return ladderUpdateEvent.asFlux();
     }
 
 

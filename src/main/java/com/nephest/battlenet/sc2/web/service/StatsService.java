@@ -343,6 +343,7 @@ public class StatsService
         alternativeLadderService.afterCurrentSeasonUpdate(pendingStatsUpdates);
         pendingStatsUpdates.clear();
         processPendingCharacters(pendingCharacters);
+        eventService.createLadderUpdateEvent(allStats);
     }
 
     public void processPendingCharacters(Set<PlayerCharacter> pendingCharacters)
