@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -56,7 +56,11 @@ implements SlashCommand, AutoComplete
             .description("League, games played; Last, avg, and max MMR; 1v1 only")
             .addOption(ApplicationCommandOptionData.builder()
                 .name("name")
-                .description("name, btag#123, [cLaNtAg]. Clan tag is case sensitive.")
+                .description
+                (
+                    "name, btag#123, [cLaNtAg], battlenet:://, starcraft2.blizzard.com. "
+                    + "Clan tag is case sensitive."
+                )
                 .type(ApplicationCommandOption.Type.STRING.getValue())
                 .required(true)
                 .autocomplete(true)

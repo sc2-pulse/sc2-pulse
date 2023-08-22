@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -21,7 +21,7 @@ import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
-import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.web.service.SearchService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.spec.InteractionFollowupCreateMono;
 import java.time.OffsetDateTime;
@@ -40,10 +40,10 @@ public class Summary1v1CommandTest
 {
 
     @Mock
-    private LadderCharacterDAO ladderCharacterDAO;
+    private PlayerCharacterSummaryDAO summaryDAO;
 
     @Mock
-    private PlayerCharacterSummaryDAO summaryDAO;
+    private SearchService searchService;
 
     @Mock
     private DiscordBootstrap discordBootstrap;
@@ -67,7 +67,7 @@ public class Summary1v1CommandTest
     {
         when(evt.createFollowup()).thenReturn(followup);
         when(followup.withContent(anyString())).thenReturn(mock(InteractionFollowupCreateMono.class));
-        cmd = new Summary1v1Command(ladderCharacterDAO, summaryDAO, discordBootstrap);
+        cmd = new Summary1v1Command(summaryDAO, searchService, discordBootstrap);
     }
 
     @Test
@@ -121,8 +121,8 @@ public class Summary1v1CommandTest
         characters.add(DiscordTestUtil.createSimpleCharacter(
             "tag#6", "name#6", "6", "clan6", "proTeam6", Region.US, 6, 6
         ));
-        when(ladderCharacterDAO.findDistinctCharacters("emptyTerm")).thenReturn(List.of());
-        when(ladderCharacterDAO.findDistinctCharacters("term")).thenReturn(characters);
+        when(searchService.findDistinctCharacters("emptyTerm")).thenReturn(List.of());
+        when(searchService.findDistinctCharacters("term")).thenReturn(characters);
 
         List<PlayerCharacterSummary> summaries = new ArrayList<>();
         for(int i = 0; i < 4; i++)
@@ -150,7 +150,7 @@ public class Summary1v1CommandTest
     @Test
     public void whenNotFound_thenShowCustomMessage()
     {
-        when(ladderCharacterDAO.findDistinctCharacters(any())).thenReturn(List.of());
+        when(searchService.findDistinctCharacters(any())).thenReturn(List.of());
 
         cmd.handle
         (

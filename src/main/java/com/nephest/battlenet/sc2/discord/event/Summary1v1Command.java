@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import com.nephest.battlenet.sc2.web.service.SearchService;
 import discord4j.core.event.domain.interaction.ApplicationCommandInteractionEvent;
 import discord4j.core.object.entity.Message;
 import java.time.OffsetDateTime;
@@ -47,20 +48,20 @@ public class Summary1v1Command
     public static final Comparator<PlayerCharacterSummary> DEFAULT_COMPARATOR =
         Comparator.comparing(PlayerCharacterSummary::getRatingLast).reversed();
 
-    private final LadderCharacterDAO ladderCharacterDAO;
     private final PlayerCharacterSummaryDAO summaryDAO;
+    private final SearchService searchService;
     private final DiscordBootstrap discordBootstrap;
 
     @Autowired
     public Summary1v1Command
     (
-        LadderCharacterDAO ladderCharacterDAO,
         PlayerCharacterSummaryDAO summaryDAO,
+        SearchService searchService,
         DiscordBootstrap discordBootstrap
     )
     {
-        this.ladderCharacterDAO = ladderCharacterDAO;
         this.summaryDAO = summaryDAO;
+        this.searchService = searchService;
         this.discordBootstrap = discordBootstrap;
     }
 
@@ -74,7 +75,6 @@ public class Summary1v1Command
         String... names
     )
     {
-        if(names.length == 0) return notFound(evt, additionalDescription, region, race, depth, names);
 
         for(String name : names)
         {
@@ -111,7 +111,7 @@ public class Summary1v1Command
         LadderCharacterDAO.SearchType searchType = LadderCharacterDAO.SearchType.from(name);
         int maxLines = MAX_LINES.getOrDefault(searchType, DiscordBootstrap.DEFAULT_LINES);
 
-        Map<Long, LadderTeamMember> characters = ladderCharacterDAO.findDistinctCharacters(name).stream()
+        Map<Long, LadderTeamMember> characters = searchService.findDistinctCharacters(name).stream()
             .filter(generateCharacterFilter(searchType, region))
             .limit(race == null ? maxLines : CHARACTER_LIMIT)
             .collect(Collectors.toMap(c->c.getMembers().getCharacter().getId(), LadderDistinctCharacter::getMembers));
