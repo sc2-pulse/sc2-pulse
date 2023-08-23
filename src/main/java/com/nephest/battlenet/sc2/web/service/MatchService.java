@@ -146,7 +146,7 @@ public class MatchService
             }
             catch (RuntimeException e)
             {
-                pendingCharsVar.setValue(new HashSet<>());
+                pendingCharsVar.setValue(ConcurrentHashMap.newKeySet());
                 LOG.error(e.toString(), e);
             }
         }
