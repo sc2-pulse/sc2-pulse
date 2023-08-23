@@ -180,8 +180,6 @@ To ensure that the potential violation is a minor one, the following rules are a
 * `cache.size` max size of the cache, 20000 by default
 * `security.remember-me.token.key` key for signing remember-me tokens
 * `security.remember-me.token.max-age` Max age(duration) of the cookie, P3650D(~10 years) by default
-* `com.nephest.battlenet.sc2.ladder.alternative.web.queue.separate` controls if a separate, independent, optimized
-queue will be used when the web flag is active. Boolean, false by default.
 ## Contributing
 Want to make a bug report/feature request? Any contributions are welcome, see [CONTRIBUTING](CONTRIBUTING.md) for 
 more information.

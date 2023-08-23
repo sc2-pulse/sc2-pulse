@@ -142,8 +142,7 @@ public class AlternativeLadderService
 
     @Value("${com.nephest.battlenet.sc2.ladder.alternative.web.auto:#{'false'}}")
     private boolean autoWeb;
-    @Value("${com.nephest.battlenet.sc2.ladder.alternative.web.queue.separate:#{'false'}}")
-    private boolean separateWebQueue;
+    private boolean separateWebQueue = false;
 
     @Autowired
     public AlternativeLadderService
