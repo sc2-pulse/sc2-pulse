@@ -154,10 +154,6 @@ automated queries to Blizzard or any Blizzard game, service, or website, or use 
 to gather or extract data other information from Blizzard or any Blizzard game or service.
 ```
 To ensure that the potential violation is a minor one, the following rules are applied:
-* only required data is pulled every hour
-    * 1 full ladder scan
-    * 2 small scans(1v1)
-    * match history of top 500 1v1 players
 * a very low request rate is used
 * the data is considered as if it came from the regular dev API and the relevant ToS and Privacy Policy are applied.
 
