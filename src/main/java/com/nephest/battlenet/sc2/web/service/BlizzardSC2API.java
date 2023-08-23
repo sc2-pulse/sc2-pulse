@@ -290,13 +290,14 @@ extends BaseAPI
 
     public double getRequestCapProgress(Region region)
     {
-        return healthMonitors.get(region).getRequests() / (double) REQUESTS_PER_HOUR_CAP;
+        return (healthMonitors.get(region).getRequests() + webHealthMonitors.get(region).getRequests())
+            / (double) REQUESTS_PER_HOUR_CAP;
     }
 
     public double getRequestCapProgress()
     {
-        return healthMonitors.values().stream()
-            .mapToDouble(m->(m.getRequests() / (double) REQUESTS_PER_HOUR_CAP))
+        return globalContext.getActiveRegions().stream()
+            .mapToDouble(this::getRequestCapProgress)
             .max()
             .orElse(0);
     }

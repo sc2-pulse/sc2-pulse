@@ -83,15 +83,17 @@ public class BlizzardSC2APITest
         APIHealthMonitor usMonitor = api.getHealthMonitor(Region.US, false);
         APIHealthMonitor euMonitor = api.getHealthMonitor(Region.EU, false);
         APIHealthMonitor krMonitor = api.getHealthMonitor(Region.KR, false);
+        APIHealthMonitor krWebMonitor = api.getHealthMonitor(Region.KR, true);
         for(int i = 0; i < BlizzardSC2API.REQUESTS_PER_HOUR_CAP / 4; i++) usMonitor.addRequest();
         for(int i = 0; i < BlizzardSC2API.REQUESTS_PER_HOUR_CAP / 3; i++) euMonitor.addRequest();
-        for(int i = 0; i < BlizzardSC2API.REQUESTS_PER_HOUR_CAP / 2; i++) krMonitor.addRequest();
+        for(int i = 0; i < BlizzardSC2API.REQUESTS_PER_HOUR_CAP / 4; i++) krMonitor.addRequest();
+        for(int i = 0; i < BlizzardSC2API.REQUESTS_PER_HOUR_CAP / 4; i++) krWebMonitor.addRequest();
 
-        assertEquals(0.25, api.getRequestCapProgress(Region.US));
+        assertEquals("0.25", new DecimalFormat("#.##").format(api.getRequestCapProgress(Region.US)));
         assertEquals("0.33", new DecimalFormat("#.##").format(api.getRequestCapProgress(Region.EU)));
-        assertEquals(0.5, api.getRequestCapProgress(Region.KR));
-        assertEquals(0.0, api.getRequestCapProgress(Region.CN));
-        assertEquals(0.5, api.getRequestCapProgress());
+        assertEquals("0.5", new DecimalFormat("#.##").format(api.getRequestCapProgress(Region.KR)));
+        assertEquals("0", new DecimalFormat("#.##").format(api.getRequestCapProgress(Region.CN)));
+        assertEquals("0.5", new DecimalFormat("#.##").format(api.getRequestCapProgress()));
     }
 
     @Test
