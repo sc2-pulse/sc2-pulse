@@ -27,10 +27,7 @@ public class Status
         WEB
         (
             "web",
-            "Much slower, "
-            + "1v1 is prioritized, "
-            + "match history works on the best effort basis, "
-            + "no match history for teams.",
+            "Much slower.",
             Level.DANGER
         );
 

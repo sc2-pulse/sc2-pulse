@@ -5,9 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.PlayerCharacterNaturalId;
-import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.local.CollectionVar;
 import com.nephest.battlenet.sc2.model.local.Match;
@@ -63,8 +61,6 @@ public class MatchService
     private static final Logger LOG = LoggerFactory.getLogger(MatchService.class);
     public static final int BATCH_SIZE = 1000;
     public static final int FAILED_MATCHES_MAX = 100;
-    public static final QueueType WEB_QUEUE_TYPE = QueueType.LOTV_1V1;
-    public static final TeamType WEB_TEAM_TYPE = TeamType.ARRANGED;
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
@@ -204,8 +200,7 @@ public class MatchService
         //clear here to avoid unbound retries of the same characters
         boolean web = isWeb(regions);
         List<PlayerCharacter> characters = new ArrayList<>(pendingCharacters.getValue());
-        if(web) LOG.warn("Using web API for {} matches, top {} players of {} {}",
-                regions, characters.size(), WEB_QUEUE_TYPE, WEB_TEAM_TYPE);
+        if(web) LOG.warn("Using web API for {} matches {} players", regions, characters.size());
         int result = r1 + saveMatches(characters, true, web);
         pendingCharacters.getValue().clear();
         pendingCharacters.save();
