@@ -142,6 +142,8 @@ public class AlternativeLadderService
 
     @Value("${com.nephest.battlenet.sc2.ladder.alternative.web.auto:#{'false'}}")
     private boolean autoWeb;
+    @Value("${com.nephest.battlenet.sc2.ladder.alternative.web.queue.separate:#{'false'}}")
+    private boolean separateWebQueue;
 
     @Autowired
     public AlternativeLadderService
@@ -256,6 +258,16 @@ public class AlternativeLadderService
         if(discoveryWebRegions.getValue().remove(region)) discoveryWebRegions.save();
     }
 
+    public boolean isSeparateWebQueue()
+    {
+        return separateWebQueue;
+    }
+
+    public void setSeparateWebQueue(boolean separateWebQueue)
+    {
+        this.separateWebQueue = separateWebQueue;
+    }
+
     public void updateSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
         LOG.debug("Updating season {}", season);
@@ -302,7 +314,7 @@ public class AlternativeLadderService
     {
         QueueType[] resultQueues;
         BaseLeague.LeagueType[] resultLeagues;
-        if(isAdditionalWebUpdate(season.getRegion()))
+        if(isSeparateWebQueue() && isAdditionalWebUpdate(season.getRegion()))
         {
             if(isBigAdditionalWebUpdate(season.getRegion()))
             {
@@ -347,9 +359,10 @@ public class AlternativeLadderService
             boolean big = isBigAdditionalWebUpdate(season.getRegion());
             LOG.info
             (
-                "Starting additional web update. {}, {}",
+                "Starting additional web update. {}, {}, web queue: {}",
                 season.getRegion(),
-                big ? "big" : "small"
+                big ? "big" : "small",
+                isSeparateWebQueue()
             );
             updateLadders(season, Set.of(queuesLeagues.getLeft()), profileLadderIds, true);
             additionalWebScanInstants.get(season.getRegion()).setValueAndSave(Instant.now());
