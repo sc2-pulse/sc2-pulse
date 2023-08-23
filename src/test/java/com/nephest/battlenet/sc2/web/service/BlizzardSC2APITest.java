@@ -29,19 +29,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.validation.ValidationException;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
-import org.mockito.MockitoAnnotations;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
 import org.springframework.security.oauth2.client.RemoveAuthorizedClientOAuth2AuthorizationFailureHandler;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
+@ExtendWith(MockitoExtension.class)
 public class BlizzardSC2APITest
 {
 
@@ -62,12 +63,9 @@ public class BlizzardSC2APITest
 
     private BlizzardSC2API api;
 
-    private AutoCloseable mocks;
-
     @BeforeEach
     public void beforeEach()
     {
-        mocks = MockitoAnnotations.openMocks(this);
         globalContext = new GlobalContext(Set.of(Region.values()));
         api = new BlizzardSC2API
         (
@@ -77,13 +75,6 @@ public class BlizzardSC2APITest
             varDAO,
             globalContext
         );
-    }
-
-    @AfterEach
-    public void afterEach()
-    throws Exception
-    {
-        mocks.close();
     }
 
     @Test
@@ -194,7 +185,8 @@ public class BlizzardSC2APITest
         );
         BlizzardSeason lastSeason = new BlizzardSeason(lastSeasonId, 2020, 1, start, end);
         doReturn(Mono.just(currentSeason)).when(spy).getCurrentSeason(Region.EU);
-        doReturn(Mono.just(lastSeason)).when(spy).getLastSeason(Region.EU, lastSeasonId);
+        if(!isCurrentSeasonValid)
+            doReturn(Mono.just(lastSeason)).when(spy).getLastSeason(Region.EU, lastSeasonId);
 
         BlizzardSeason result = spy.getCurrentOrLastSeason(Region.EU, lastSeasonId).block();
         assertEquals(isCurrentSeasonValid ? currentSeason : lastSeason, result);
