@@ -26,9 +26,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -73,7 +76,7 @@ public class MatchService
     private final Predicate<BlizzardMatch> validationPredicate;
     private final ConcurrentLinkedQueue<Set<PlayerCharacterNaturalId>> failedCharacters = new ConcurrentLinkedQueue<>();
     private CollectionVar<Set<Region>, Region> webRegions;
-    private Var<Set<PlayerCharacter>> pendingCharacters;
+    private final Map<Region, Var<Set<PlayerCharacter>>> pendingCharacters = new EnumMap<>(Region.class);
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -110,45 +113,61 @@ public class MatchService
     private void initVars(VarDAO varDAO)
     {
         webRegions = WebServiceUtil.loadRegionSetVar(varDAO, "match.web.regions", "Loaded web regions for match history: {}");
-        pendingCharacters = new Var<>
-        (
-            varDAO, "match.character.pending",
-            chars->chars.isEmpty()
-                ? null
-                : chars.stream()
-                    .map(PlayerCharacter::getId)
-                    .map(String::valueOf)
-                    .collect(Collectors.joining(",")),
-            str->str == null
-                ? ConcurrentHashMap.newKeySet()
-                : Flux.fromStream(Arrays.stream(str.split(",")).map(Long::valueOf))
-                    .buffer(500)
-                    .flatMapIterable(batch->playerCharacterDAO.find(batch.toArray(Long[]::new)))
-                    .collect(Collectors.toCollection(ConcurrentHashMap::newKeySet))
-                    .block(),
-            false
-        );
-        try
+        for(Region region : Region.values())
         {
-            pendingCharacters.load();
-            LOG.debug("Loaded {} pending match characters", pendingCharacters.getValue().size());
-        }
-        catch (RuntimeException e)
-        {
-            pendingCharacters.setValue(new HashSet<>());
-            LOG.error(e.toString(), e);
+            Var<Set<PlayerCharacter>> pendingCharsVar = new Var<>
+            (
+                varDAO, region.getId() + ".match.character.pending",
+                chars->chars.isEmpty()
+                    ? null
+                    : chars.stream()
+                        .map(PlayerCharacter::getId)
+                        .map(String::valueOf)
+                        .collect(Collectors.joining(",")),
+                str->str == null
+                    ? ConcurrentHashMap.newKeySet()
+                    : Flux.fromStream(Arrays.stream(str.split(",")).map(Long::valueOf))
+                        .buffer(500)
+                        .flatMapIterable(batch->playerCharacterDAO.find(batch.toArray(Long[]::new)))
+                        .collect(Collectors.toCollection(ConcurrentHashMap::newKeySet))
+                        .block(),
+                false
+            );
+            pendingCharacters.put(region, pendingCharsVar);
+            try
+            {
+                pendingCharsVar.load();
+                LOG.debug
+                (
+                    "Loaded {} pending match characters, {}",
+                    pendingCharsVar.getValue().size(),
+                    region
+                );
+            }
+            catch (RuntimeException e)
+            {
+                pendingCharsVar.setValue(new HashSet<>());
+                LOG.error(e.toString(), e);
+            }
         }
     }
 
     private void subToEvents(EventService eventService)
     {
         eventService.getLadderCharacterActivityEvent()
-            .subscribe(character->pendingCharacters.getValue().add(character));
+            .subscribe(character->pendingCharacters.get(character.getRegion()).getValue().add(character));
         eventService.getLadderUpdateEvent()
             .subscribeOn(Schedulers.boundedElastic())
             .subscribe(allStats->{
-                pendingCharacters.save();
-                LOG.debug("Pending characters: {}", pendingCharacters.getValue().size());
+                pendingCharacters.values().forEach(Var::save);
+                LOG.debug
+                (
+                    "Pending characters: {}",
+                    pendingCharacters.values().stream()
+                        .map(Var::getValue)
+                        .mapToInt(Collection::size)
+                        .sum()
+                );
             });
     }
 
@@ -199,11 +218,20 @@ public class MatchService
         LOG.debug("Saved {} previously failed matches", r1);
         //clear here to avoid unbound retries of the same characters
         boolean web = isWeb(regions);
-        List<PlayerCharacter> characters = new ArrayList<>(pendingCharacters.getValue());
+        List<PlayerCharacter> characters = Arrays.stream(regions)
+            .distinct()
+            .map(pendingCharacters::get)
+            .map(Var::getValue)
+            .flatMap(Collection::stream)
+            .collect(Collectors.toList());
         if(web) LOG.warn("Using web API for {} matches {} players", regions, characters.size());
         int result = r1 + saveMatches(characters, true, web);
-        pendingCharacters.getValue().clear();
-        pendingCharacters.save();
+        for(Region region : regions)
+        {
+            Var<Set<PlayerCharacter>> var = pendingCharacters.get(region);
+            var.getValue().clear();
+            var.save();
+        }
         return result;
     }
 
