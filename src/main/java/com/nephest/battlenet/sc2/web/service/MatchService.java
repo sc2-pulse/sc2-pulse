@@ -33,7 +33,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -125,11 +124,11 @@ public class MatchService
                         .map(String::valueOf)
                         .collect(Collectors.joining(",")),
                 str->str == null
-                    ? ConcurrentHashMap.newKeySet()
+                    ? new HashSet<>()
                     : Flux.fromStream(Arrays.stream(str.split(",")).map(Long::valueOf))
                         .buffer(500)
                         .flatMapIterable(batch->playerCharacterDAO.find(batch.toArray(Long[]::new)))
-                        .collect(Collectors.toCollection(ConcurrentHashMap::newKeySet))
+                        .collect(Collectors.toSet())
                         .block(),
                 false
             );
@@ -146,7 +145,7 @@ public class MatchService
             }
             catch (RuntimeException e)
             {
-                pendingCharsVar.setValue(ConcurrentHashMap.newKeySet());
+                pendingCharsVar.setValue(new HashSet<>());
                 LOG.error(e.toString(), e);
             }
         }
