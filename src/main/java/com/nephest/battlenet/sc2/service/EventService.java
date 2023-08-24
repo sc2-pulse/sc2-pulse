@@ -23,7 +23,7 @@ public class EventService
     @Autowired
     public EventService
     (
-        @Value("${com.nephest.battlenet.sc2.event.buffer:#{'5000'}}") int buffer,
+        @Value("${com.nephest.battlenet.sc2.event.buffer:#{'6000'}}") int buffer,
         @Value("${com.nephest.battlenet.sc2.event.buffer.small:#{'10'}}") int smallBuffer
     )
     {
