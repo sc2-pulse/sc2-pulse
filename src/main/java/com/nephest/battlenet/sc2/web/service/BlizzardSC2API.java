@@ -127,6 +127,7 @@ extends BaseAPI
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
     private final Map<Region, ReactorRateLimiter> hourlyRateLimiters = new EnumMap<>(Region.class);
     private final Map<Region, List<ReactorRateLimiter>> regionalRateLimiters = new EnumMap<>(Region.class);
+    private final Map<Region, List<ReactorRateLimiter>> regionalWebRateLimiters = new EnumMap<>(Region.class);
     private final Map<Region, APIHealthMonitor> healthMonitors = new EnumMap<>(Region.class);
     private final ReactorRateLimiter webRateLimiter = new ReactorRateLimiter();
     private final Map<Region, APIHealthMonitor> webHealthMonitors = new EnumMap<>(Region.class);
@@ -164,6 +165,11 @@ extends BaseAPI
             hourlyRateLimiters.put(r, new ReactorRateLimiter());
             hourlyRateLimiters.get(r).refreshSlots((int) (REQUESTS_PER_HOUR_CAP - healthMonitors.get(r).getRequests()));
             regionalRateLimiters.put(r, List.of(hourlyRateLimiters.get(r), rateLimiters.get(r)));
+            regionalWebRateLimiters.put
+            (
+                r,
+                List.of(hourlyRateLimiters.get(r), rateLimiters.get(r), webRateLimiter)
+            );
             clientTimeouts.put(r, WebServiceUtil.IO_TIMEOUT);
         }
         Flux.interval(HEALTH_SAVE_FRAME).doOnNext(i->saveHealth()).subscribe();
@@ -500,9 +506,7 @@ extends BaseAPI
     {
         return new ApiContext
         (
-            web
-                ? List.of(webRateLimiter)
-                : regionalRateLimiters.get(region),
+            web ? regionalWebRateLimiters.get(region) : regionalRateLimiters.get(region),
             web ? webHealthMonitors.get(region) : healthMonitors.get(region),
             web ? region.getBaseWebUrl() : region.getBaseUrl()
         );
