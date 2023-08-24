@@ -86,7 +86,7 @@ extends BaseAPI
     public static final int REQUESTS_PER_SECOND_CAP = 100;
     public static final int REQUESTS_PER_HOUR_CAP = 36000
         - REQUESTS_PER_SECOND_CAP * 5; //max clock desync: 5 seconds
-    public static final int REQUESTS_PER_SECOND_CAP_WEB = 5;
+    public static final int REQUESTS_PER_SECOND_CAP_WEB = 10;
     public static final int DELAY = 1000;
     public static final int FIRST_SEASON = 28;
     public static final int PROFILE_LADDER_RETRY_COUNT = 3;
