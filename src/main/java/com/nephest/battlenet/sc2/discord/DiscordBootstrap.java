@@ -396,6 +396,11 @@ public class DiscordBootstrap
         return sb.toString();
     }
 
+    public static String sanitizeAndEscape(String input)
+    {
+        return "`" + input.replaceAll("`", "") + "`";
+    }
+
     public static Mono<Message> notFoundFollowup(ApplicationCommandInteractionEvent evt)
     {
         return evt.createFollowup("Not found. Try different filter combinations");

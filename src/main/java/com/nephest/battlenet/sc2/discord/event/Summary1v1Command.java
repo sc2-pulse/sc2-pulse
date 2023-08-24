@@ -198,8 +198,9 @@ public class Summary1v1Command
     private static StringBuilder appendDescription
     (StringBuilder sb, String name, long depth, int lines, Region region, Race race)
     {
+        sb.append(DiscordBootstrap.sanitizeAndEscape(name)).append(", ");
         sb.append("*");
-        sb.append(name).append(", ").append(depth).append(" days, Top ").append(lines);
+        sb.append(depth).append(" days, Top ").append(lines);
         if(region != null) sb.append(", ").append(region.getName());
         if(race != null) sb.append(", ").append(race.getName());
         sb.append("*");

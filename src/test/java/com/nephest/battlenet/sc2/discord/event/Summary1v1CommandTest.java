@@ -30,6 +30,8 @@ import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
@@ -70,10 +72,11 @@ public class Summary1v1CommandTest
         cmd = new Summary1v1Command(summaryDAO, searchService, discordBootstrap);
     }
 
-    @Test
-    public void test()
+    @ValueSource(strings = {"term", "`term`", "te`rm"})
+    @ParameterizedTest
+    public void test(String term)
     {
-        stub();
+        stub(term);
 
         cmd.handle
         (
@@ -82,7 +85,7 @@ public class Summary1v1CommandTest
             Region.EU,
             Race.TERRAN,
             100,
-            "emptyTerm", "term"
+            "emptyTerm", term
         );
 
         verify(summaryDAO).find(any(), depthCaptor.capture(), eq(Race.TERRAN));
@@ -96,7 +99,7 @@ public class Summary1v1CommandTest
         StringBuilder sb = new StringBuilder()
             .append("**1v1 Summary**\n")
             .append("Additional description\n")
-            .append("*term, 100 days, Top 5, EU, Terran*\n**`Games`** | **last**/*avg*/max MMR\n\n");
+            .append("`term`, *100 days, Top 5, EU, Terran*\n**`Games`** | **last**/*avg*/max MMR\n\n");
         for(int i = 3; i > -1; i--)
         {
             sb.append(String.format(
@@ -110,7 +113,7 @@ public class Summary1v1CommandTest
         assertEquals(sb.toString(), content);
     }
 
-    private void stub()
+    private void stub(String term)
     {
         List<LadderDistinctCharacter> characters = new ArrayList<>();
         for(int i = 0; i < 5; i++) characters.add(DiscordTestUtil.createSimpleCharacter(
@@ -122,7 +125,7 @@ public class Summary1v1CommandTest
             "tag#6", "name#6", "6", "clan6", "proTeam6", Region.US, 6, 6
         ));
         when(searchService.findDistinctCharacters("emptyTerm")).thenReturn(List.of());
-        when(searchService.findDistinctCharacters("term")).thenReturn(characters);
+        when(searchService.findDistinctCharacters(term)).thenReturn(characters);
 
         List<PlayerCharacterSummary> summaries = new ArrayList<>();
         for(int i = 0; i < 4; i++)
@@ -165,7 +168,7 @@ public class Summary1v1CommandTest
         String expectedResult =
             "**1v1 Summary**\n"
             + "Additional description\n"
-            + "*name1, name2, 120 days, Top 5, EU, Terran*\n"
+            + "`name1, name2`, *120 days, Top 5, EU, Terran*\n"
             + "**`Games`** | **last**/*avg*/max MMR\n\n"
 
             + "**Not found**";

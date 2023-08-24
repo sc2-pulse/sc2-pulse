@@ -56,6 +56,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
@@ -315,6 +316,19 @@ public class DiscordBootstrapTest
             discordBootstrap.getLeagueEmojiOrName(evt, BaseLeague.LeagueType.BRONZE)
         );
         verifyNoInteractions(guildEmojiStore);
+    }
+
+    @CsvSource
+    ({
+        "tEst, `tEst`",
+        "'tE st ', '`tE st `'",
+        "*tEst*, `*tEst*`",
+        "tE`st`, `tEst`"
+    })
+    @ParameterizedTest
+    public void testSanitizeAndEscape(String in, String out)
+    {
+        assertEquals(out, DiscordBootstrap.sanitizeAndEscape(in));
     }
 
 }
