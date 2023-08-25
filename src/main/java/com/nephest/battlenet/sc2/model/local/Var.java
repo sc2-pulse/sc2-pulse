@@ -1,14 +1,13 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import java.util.function.Function;
+import javax.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import javax.validation.constraints.NotNull;
-import java.util.function.Function;
 
 public class Var<T>
 {
@@ -48,6 +47,24 @@ public class Var<T>
         this.value = deserializer.apply(varDAO.find(key).orElse(null));
         LOG.debug("Loaded var {}: {}", key, value);
         return this.value;
+    }
+
+    /**
+     * Try to load the var. Exceptions are logged and ignored.
+     * @return true if successfully loaded without exceptions, false otherwise.
+     */
+    public boolean tryLoad()
+    {
+        try
+        {
+            load();
+            return true;
+        }
+        catch (RuntimeException e)
+        {
+            LOG.error(e.getMessage(), e);
+            return false;
+        }
     }
 
     public void save()
