@@ -326,8 +326,8 @@ public class BlizzardSC2APIIT
     public void testSetTimeout()
     throws Exception
     {
-        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.EU));
-        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.US));
+        assertEquals(BlizzardSC2API.IO_TIMEOUT, api.getTimeout(Region.EU));
+        assertEquals(BlizzardSC2API.IO_TIMEOUT, api.getTimeout(Region.US));
         mvc.perform
         (
             post("/admin/blizzard/api/timeout/EU/1000")
@@ -337,7 +337,7 @@ public class BlizzardSC2APIIT
             .andExpect(status().isOk())
             .andReturn();
         assertEquals(Duration.ofMillis(1000), api.getTimeout(Region.EU));
-        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.US));
+        assertEquals(BlizzardSC2API.IO_TIMEOUT, api.getTimeout(Region.US));
 
         mvc.perform
         (
@@ -347,8 +347,8 @@ public class BlizzardSC2APIIT
         )
             .andExpect(status().isOk())
             .andReturn();
-        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.EU));
-        assertEquals(WebServiceUtil.IO_TIMEOUT, api.getTimeout(Region.US));
+        assertEquals(BlizzardSC2API.IO_TIMEOUT, api.getTimeout(Region.EU));
+        assertEquals(BlizzardSC2API.IO_TIMEOUT, api.getTimeout(Region.US));
     }
 
     @Test

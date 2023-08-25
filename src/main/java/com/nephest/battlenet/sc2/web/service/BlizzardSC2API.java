@@ -524,7 +524,7 @@ extends BaseAPI
         for(Region region : globalContext.getActiveRegions())
         {
             Duration timeout = getErrorRate(region, false) < RETRY_ERROR_RATE_THRESHOLD
-                ? WebServiceUtil.IO_TIMEOUT
+                ? IO_TIMEOUT
                 : SHORT_IO_TIMEOUT;
             setTimeout(region, timeout);
         }
@@ -532,7 +532,7 @@ extends BaseAPI
 
     public void setTimeout(Region region, Duration timeout)
     {
-        timeout = timeout != null ? timeout : WebServiceUtil.IO_TIMEOUT;
+        timeout = timeout != null ? timeout : IO_TIMEOUT;
         if(getTimeout(region).equals(timeout)) return;
 
         WebClient client = clients.get(region).mutate()
