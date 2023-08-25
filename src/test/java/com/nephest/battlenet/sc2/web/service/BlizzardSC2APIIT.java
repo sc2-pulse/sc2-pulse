@@ -97,6 +97,9 @@ public class BlizzardSC2APIIT
     private BlizzardSC2API api;
 
     @Autowired
+    private GlobalContext globalContext;
+
+    @Autowired
     private Validator validator;
 
     @Autowired
@@ -353,7 +356,8 @@ public class BlizzardSC2APIIT
     public void testSetRequestsPerSecondCap()
     throws Exception
     {
-        for(Region region : Region.values())
+        Region targetRegion = globalContext.getActiveRegions().iterator().next();
+        for(Region region : globalContext.getActiveRegions())
             assertEquals
             (
                 BlizzardSC2API.REQUESTS_PER_SECOND_CAP,
@@ -362,27 +366,27 @@ public class BlizzardSC2APIIT
 
         mvc.perform
         (
-            post("/admin/blizzard/api/rps/EU/5")
+            post("/admin/blizzard/api/rps/{region}/5", targetRegion.name())
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf().asHeader())
         )
             .andExpect(status().isOk())
             .andReturn();
-        for(Region region : Region.values()) assertEquals
+        for(Region region : globalContext.getActiveRegions()) assertEquals
         (
-            region == Region.EU ? 5 : BlizzardSC2API.REQUESTS_PER_SECOND_CAP,
+            region == targetRegion ? 5 : BlizzardSC2API.REQUESTS_PER_SECOND_CAP,
             api.getRequestsPerSecondCap(region)
         );
 
         mvc.perform
         (
-            delete("/admin/blizzard/api/rps/EU")
+            delete("/admin/blizzard/api/rps/{region}", targetRegion.name())
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf().asHeader())
         )
             .andExpect(status().isOk())
             .andReturn();
-        for(Region region : Region.values())
+        for(Region region : globalContext.getActiveRegions())
             assertEquals
             (
                 BlizzardSC2API.REQUESTS_PER_SECOND_CAP,
@@ -395,7 +399,8 @@ public class BlizzardSC2APIIT
     public void testSetRequestsPerHourCap()
     throws Exception
     {
-        for(Region region : Region.values())
+        Region targetRegion = globalContext.getActiveRegions().iterator().next();
+        for(Region region : globalContext.getActiveRegions())
             assertEquals
             (
                 BlizzardSC2API.REQUESTS_PER_HOUR_CAP,
@@ -404,27 +409,27 @@ public class BlizzardSC2APIIT
 
         mvc.perform
         (
-            post("/admin/blizzard/api/rph/EU/1000")
+            post("/admin/blizzard/api/rph/{region}/1000", targetRegion.name())
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf().asHeader())
         )
             .andExpect(status().isOk())
             .andReturn();
-        for(Region region : Region.values()) assertEquals
+        for(Region region : globalContext.getActiveRegions()) assertEquals
         (
-            region == Region.EU ? 1000 : BlizzardSC2API.REQUESTS_PER_HOUR_CAP,
+            region == targetRegion ? 1000 : BlizzardSC2API.REQUESTS_PER_HOUR_CAP,
             api.getRequestsPerHourCap(region)
         );
 
         mvc.perform
         (
-            delete("/admin/blizzard/api/rph/EU")
+            delete("/admin/blizzard/api/rph/{region}", targetRegion.name())
                 .contentType(MediaType.APPLICATION_JSON)
                 .with(csrf().asHeader())
         )
             .andExpect(status().isOk())
             .andReturn();
-        for(Region region : Region.values())
+        for(Region region : globalContext.getActiveRegions())
             assertEquals
             (
                 BlizzardSC2API.REQUESTS_PER_HOUR_CAP,

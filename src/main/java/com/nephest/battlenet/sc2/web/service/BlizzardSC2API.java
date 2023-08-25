@@ -34,8 +34,10 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.local.DurationVar;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
@@ -51,7 +53,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.validation.ValidationException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -122,9 +126,9 @@ extends BaseAPI
     private final Map<Region, InstantVar> forceRegionInstants = new EnumMap<>(Region.class);
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
-    private final Map<Region, Duration> clientTimeouts = new EnumMap<>(Region.class);
-    private final Map<Region, Integer> requestsPerSecondCaps = new EnumMap<>(Region.class);
-    private final Map<Region, Integer> requestsPerHourCaps = new EnumMap<>(Region.class);
+    private final Map<Region, DurationVar> clientTimeouts = new EnumMap<>(Region.class);
+    private final Map<Region, LongVar> requestsPerSecondCaps = new EnumMap<>(Region.class);
+    private final Map<Region, LongVar> requestsPerHourCaps = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
     private final Map<Region, ReactorRateLimiter> hourlyRateLimiters = new EnumMap<>(Region.class);
     private final Map<Region, List<ReactorRateLimiter>> regionalRateLimiters = new EnumMap<>(Region.class);
@@ -160,6 +164,7 @@ extends BaseAPI
         this.varDAO = varDAO;
         init(globalContext.getActiveRegions());
         initErrorRates(varDAO, globalContext.getActiveRegions());
+        initVars(varDAO, globalContext.getActiveRegions());
         for(Region r : globalContext.getActiveRegions())
         {
             rateLimiters.put(r, new ReactorRateLimiter());
@@ -171,7 +176,6 @@ extends BaseAPI
                 r,
                 List.of(hourlyRateLimiters.get(r), rateLimiters.get(r), webRateLimiter)
             );
-            clientTimeouts.put(r, WebServiceUtil.IO_TIMEOUT);
         }
         Flux.interval(HEALTH_SAVE_FRAME).doOnNext(i->saveHealth()).subscribe();
     }
@@ -184,6 +188,28 @@ extends BaseAPI
             LOG.warn("Auto force region is enabled");
             autoForceRegion();
         }
+    }
+
+    private void initVars(VarDAO varDAO, Set<Region> activeRegions)
+    {
+        for(Region r : activeRegions)
+        {
+            requestsPerHourCaps.put(r, new LongVar(varDAO, r.getId() + ".blizzard.api.rph", false));
+            requestsPerSecondCaps.put(r, new LongVar(varDAO, r.getId() + ".blizzard.api.rps", false));
+            clientTimeouts.put(r, new DurationVar(varDAO, r.getId() + ".blizzard.api.timeout", false));
+        }
+        Stream.of
+        (
+            requestsPerHourCaps.values().stream(),
+            requestsPerSecondCaps.values().stream(),
+            clientTimeouts.values().stream()
+        )
+            .flatMap(Function.identity())
+            .map(v->(Var<?>) v)
+            .forEach(Var::tryLoad);
+        clientTimeouts.values().stream()
+            .filter(v->v.getValue() == null)
+            .forEach(v->v.setValue(IO_TIMEOUT));
     }
 
     private void initErrorRates(VarDAO varDAO, Set<Region> activeRegions)
@@ -412,7 +438,7 @@ extends BaseAPI
     {
         if(cap == null)
         {
-            requestsPerSecondCaps.remove(region);
+            requestsPerSecondCaps.get(region).setValueAndSave(null);
         }
         else if(cap < 0 || cap > REQUESTS_PER_SECOND_CAP)
         {
@@ -424,22 +450,22 @@ extends BaseAPI
         }
         else
         {
-            requestsPerSecondCaps.put(region, cap);
+            requestsPerSecondCaps.get(region).setValueAndSave(cap.longValue());
         }
         LOG.info("Requests per seconds cap, {}: {}", region, cap);
     }
 
     public int getRequestsPerSecondCap(Region region)
     {
-        Integer override = requestsPerSecondCaps.get(region);
-        return override != null ? override : REQUESTS_PER_SECOND_CAP;
+        Long override = requestsPerSecondCaps.get(region).getValue();
+        return override != null ? override.intValue() : REQUESTS_PER_SECOND_CAP;
     }
 
     public void setRequestsPerHourCap(Region region, Integer cap)
     {
         if(cap == null)
         {
-            requestsPerHourCaps.remove(region);
+            requestsPerHourCaps.get(region).setValueAndSave(null);
         }
         else if(cap < 0 || cap > REQUESTS_PER_HOUR_CAP)
         {
@@ -450,15 +476,15 @@ extends BaseAPI
         }
         else
         {
-            requestsPerHourCaps.put(region, cap);
+            requestsPerHourCaps.get(region).setValueAndSave(cap.longValue());
         }
         LOG.info("Requests per hour cap, {}: {}", region, cap);
     }
 
     public int getRequestsPerHourCap(Region region)
     {
-        Integer override = requestsPerHourCaps.get(region);
-        return override != null ? override : REQUESTS_PER_HOUR_CAP;
+        Long override = requestsPerHourCaps.get(region).getValue();
+        return override != null ? override.intValue() : REQUESTS_PER_HOUR_CAP;
     }
 
     @Scheduled(cron="* * * * * *")
@@ -507,19 +533,19 @@ extends BaseAPI
     public void setTimeout(Region region, Duration timeout)
     {
         timeout = timeout != null ? timeout : WebServiceUtil.IO_TIMEOUT;
-        if(clientTimeouts.get(region).equals(timeout)) return;
+        if(getTimeout(region).equals(timeout)) return;
 
         WebClient client = clients.get(region).mutate()
             .clientConnector(WebServiceUtil.getClientHttpConnector(WebServiceUtil.CONNECT_TIMEOUT, timeout))
             .build();
         clients.put(region, client);
-        clientTimeouts.put(region, timeout);
+        clientTimeouts.get(region).setValueAndSave(timeout);
         LOG.info("Changed {} web client timeout: {}", region, timeout);
     }
 
     public Duration getTimeout(Region region)
     {
-        return clientTimeouts.get(region);
+        return clientTimeouts.get(region).getValue();
     }
     
     private RetrySpec getRetry(Region region, RetrySpec wanted, boolean web)
