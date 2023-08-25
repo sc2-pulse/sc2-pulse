@@ -205,4 +205,26 @@ public class AdminController
         sc2API.setRequestsPerSecondCap(region, null);
     }
 
+    @PostMapping("/blizzard/api/rph/{region}/{cap}")
+    public ResponseEntity<Object> setRequestsPerHourCap
+    (
+        @PathVariable("region") Region region,
+        @PathVariable("cap") int cap
+    )
+    {
+        if(cap < 0) return ResponseEntity.badRequest().body("The cap can't be negative");
+        if(cap > BlizzardSC2API.REQUESTS_PER_HOUR_CAP)
+            return  ResponseEntity.badRequest()
+                .body("Max cap: " + BlizzardSC2API.REQUESTS_PER_HOUR_CAP);
+
+        sc2API.setRequestsPerHourCap(region, cap);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/blizzard/api/rph/{region}")
+    public void removeRequestsPerHourCap(@PathVariable("region") Region region)
+    {
+        sc2API.setRequestsPerHourCap(region, null);
+    }
+
 }

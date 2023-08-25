@@ -391,6 +391,48 @@ public class BlizzardSC2APIIT
     }
 
     @Test
+    @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
+    public void testSetRequestsPerHourCap()
+    throws Exception
+    {
+        for(Region region : Region.values())
+            assertEquals
+            (
+                BlizzardSC2API.REQUESTS_PER_HOUR_CAP,
+                api.getRequestsPerHourCap(region)
+            );
+
+        mvc.perform
+        (
+            post("/admin/blizzard/api/rph/EU/1000")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        for(Region region : Region.values()) assertEquals
+        (
+            region == Region.EU ? 1000 : BlizzardSC2API.REQUESTS_PER_HOUR_CAP,
+            api.getRequestsPerHourCap(region)
+        );
+
+        mvc.perform
+        (
+            delete("/admin/blizzard/api/rph/EU")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        for(Region region : Region.values())
+            assertEquals
+            (
+                BlizzardSC2API.REQUESTS_PER_HOUR_CAP,
+                api.getRequestsPerHourCap(region)
+            );
+    }
+
+    @Test
     public void testAutoForceRegion()
     {
         api.setAutoForceRegion(true);

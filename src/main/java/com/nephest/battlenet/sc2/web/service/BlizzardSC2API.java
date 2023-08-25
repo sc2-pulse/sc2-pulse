@@ -124,6 +124,7 @@ extends BaseAPI
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
     private final Map<Region, Duration> clientTimeouts = new EnumMap<>(Region.class);
     private final Map<Region, Integer> requestsPerSecondCaps = new EnumMap<>(Region.class);
+    private final Map<Region, Integer> requestsPerHourCaps = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
     private final Map<Region, ReactorRateLimiter> hourlyRateLimiters = new EnumMap<>(Region.class);
     private final Map<Region, List<ReactorRateLimiter>> regionalRateLimiters = new EnumMap<>(Region.class);
@@ -163,7 +164,7 @@ extends BaseAPI
         {
             rateLimiters.put(r, new ReactorRateLimiter());
             hourlyRateLimiters.put(r, new ReactorRateLimiter());
-            hourlyRateLimiters.get(r).refreshSlots((int) (REQUESTS_PER_HOUR_CAP - healthMonitors.get(r).getRequests()));
+            hourlyRateLimiters.get(r).refreshSlots((int) (getRequestsPerHourCap(r) - healthMonitors.get(r).getRequests()));
             regionalRateLimiters.put(r, List.of(hourlyRateLimiters.get(r), rateLimiters.get(r)));
             regionalWebRateLimiters.put
             (
@@ -297,7 +298,7 @@ extends BaseAPI
     public double getRequestCapProgress(Region region)
     {
         return (healthMonitors.get(region).getRequests() + webHealthMonitors.get(region).getRequests())
-            / (double) REQUESTS_PER_HOUR_CAP;
+            / (double) getRequestsPerHourCap(region);
     }
 
     public double getRequestCapProgress()
@@ -434,6 +435,32 @@ extends BaseAPI
         return override != null ? override : REQUESTS_PER_SECOND_CAP;
     }
 
+    public void setRequestsPerHourCap(Region region, Integer cap)
+    {
+        if(cap == null)
+        {
+            requestsPerHourCaps.remove(region);
+        }
+        else if(cap < 0 || cap > REQUESTS_PER_HOUR_CAP)
+        {
+            throw new IllegalArgumentException
+            (
+                "Invalid cap value: " + cap + ", valid range: 0-" + REQUESTS_PER_HOUR_CAP
+            );
+        }
+        else
+        {
+            requestsPerHourCaps.put(region, cap);
+        }
+        LOG.info("Requests per hour cap, {}: {}", region, cap);
+    }
+
+    public int getRequestsPerHourCap(Region region)
+    {
+        Integer override = requestsPerHourCaps.get(region);
+        return override != null ? override : REQUESTS_PER_HOUR_CAP;
+    }
+
     @Scheduled(cron="* * * * * *")
     public void refreshReactorSlots()
     {
@@ -444,7 +471,7 @@ extends BaseAPI
     @Scheduled(cron="0 0 * * * *")
     public void refreshHourlyReactorSlots()
     {
-        hourlyRateLimiters.values().forEach(l->l.refreshSlots(REQUESTS_PER_HOUR_CAP));
+        hourlyRateLimiters.forEach((key, value)->value.refreshSlots(getRequestsPerHourCap(key)));
     }
 
     @Scheduled(cron="0 0 * * * *")
