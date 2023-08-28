@@ -113,4 +113,34 @@ public class TimerVarTest
         assertTrue(timerVar.isAvailable());
     }
 
+    @Test
+    public void whenValueBeforeTask_thenCalculateValueBeforeTaskWasRan()
+    {
+        timerVar = new TimerVar(varDAO, KEY, false, DEFAULT_DURATION_BETWEEN_TASKS, task, true);
+        assertFalse(timerVar.isActive());
+        assertTrue(timerVar.isAvailable());
+
+        Instant[] instants = new Instant[1];
+        doAnswer
+        (
+            i->
+            {
+                try
+                {
+                    instants[0] = Instant.now();
+                    Thread.sleep(100);
+                }
+                catch (InterruptedException e)
+                {
+                    throw new RuntimeException(e);
+                }
+                return null;
+            }
+        ).when(task).run();
+
+        assertTrue(timerVar.runIfAvailable());
+        assertTrue(timerVar.getValue().isBefore(instants[0]));
+
+    }
+
 }

@@ -22,6 +22,23 @@ extends InstantVar
     private final Duration durationBetweenRuns;
     private final Runnable task;
     private final AtomicBoolean active = new AtomicBoolean(false);
+    private final boolean valueBeforeTask;
+
+    public TimerVar
+    (
+        VarDAO varDAO,
+        String key,
+        boolean load,
+        Duration durationBetweenRuns,
+        Runnable task,
+        boolean valueBeforeTask
+    )
+    {
+        super(varDAO, key, load);
+        this.durationBetweenRuns = durationBetweenRuns;
+        this.task = task;
+        this.valueBeforeTask = valueBeforeTask;
+    }
 
     public TimerVar
     (
@@ -32,9 +49,7 @@ extends InstantVar
         Runnable task
     )
     {
-        super(varDAO, key, load);
-        this.durationBetweenRuns = durationBetweenRuns;
-        this.task = task;
+        this(varDAO, key, load, durationBetweenRuns, task, false);
     }
 
     public Duration getDurationBetweenRuns()
@@ -57,6 +72,11 @@ extends InstantVar
         return active.get();
     }
 
+    public boolean isValueBeforeTask()
+    {
+        return valueBeforeTask;
+    }
+
     public boolean runIfAvailable()
     {
         if(!isAvailable() || !active.compareAndSet(false, true))
@@ -65,10 +85,13 @@ extends InstantVar
             return false;
         }
 
+        Instant val = null;
+        if(isValueBeforeTask()) val = Instant.now();
         try
         {
             task.run();
-            this.setValueAndSave(Instant.now());
+            if(!valueBeforeTask) val = Instant.now();
+            this.setValueAndSave(val);
             LOG.debug("Executed {} timer", getKey());
         }
         finally
