@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -53,6 +54,8 @@ public class TimerVarTest
         when(varDAO.find(KEY))
             .thenReturn(Optional.of(
                 String.valueOf(Instant.now().minus(DEFAULT_DURATION_BETWEEN_TASKS).toEpochMilli())));
+        when(varDAO.find(KEY + TimerVar.DURATION_BETWEEN_TASKS_SUFFIX))
+            .thenReturn(Optional.of(DEFAULT_DURATION_BETWEEN_TASKS.toString()));
         timerVar.load();
 
         assertTrue(timerVar.availableOn().isBefore(Instant.now()));
@@ -71,6 +74,8 @@ public class TimerVarTest
         when(varDAO.find(KEY))
             .thenReturn(Optional.of(String.valueOf(Instant.now().minus(
                 DEFAULT_DURATION_BETWEEN_TASKS).plusSeconds(TEST_LAG_SECONDS).toEpochMilli())));
+        when(varDAO.find(KEY + TimerVar.DURATION_BETWEEN_TASKS_SUFFIX))
+            .thenReturn(Optional.of(DEFAULT_DURATION_BETWEEN_TASKS.toString()));
         timerVar.load();
 
         assertFalse(timerVar.availableOn().isBefore(Instant.now()));
@@ -141,6 +146,14 @@ public class TimerVarTest
         assertTrue(timerVar.runIfAvailable());
         assertTrue(timerVar.getValue().isBefore(instants[0]));
 
+    }
+
+    @Test
+    public void whenDurationBetweenTasksIsNull_thenReturnDefaultDuration()
+    {
+        timerVar = new TimerVar(varDAO, KEY, false, DEFAULT_DURATION_BETWEEN_TASKS, task);
+        timerVar.setDurationBetweenRuns(null);
+        assertEquals(DEFAULT_DURATION_BETWEEN_TASKS, timerVar.getDurationBetweenRuns());
     }
 
 }

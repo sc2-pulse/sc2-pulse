@@ -18,8 +18,10 @@ extends InstantVar
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(TimerVar.class);
+    public static final String DURATION_BETWEEN_TASKS_SUFFIX = ".duration-between-runs";
 
-    private final Duration durationBetweenRuns;
+    private final Duration defaultDurationBetweenRuns;
+    private final DurationVar durationBetweenRuns;
     private final Runnable task;
     private final AtomicBoolean active = new AtomicBoolean(false);
     private final boolean valueBeforeTask;
@@ -29,13 +31,16 @@ extends InstantVar
         VarDAO varDAO,
         String key,
         boolean load,
-        Duration durationBetweenRuns,
+        Duration defaultDurationBetweenRuns,
         Runnable task,
         boolean valueBeforeTask
     )
     {
         super(varDAO, key, load);
-        this.durationBetweenRuns = durationBetweenRuns;
+        this.defaultDurationBetweenRuns = defaultDurationBetweenRuns;
+        this.durationBetweenRuns = new DurationVar(varDAO, key + DURATION_BETWEEN_TASKS_SUFFIX, load);
+        if(durationBetweenRuns.getValue() == null)
+            durationBetweenRuns.setValue(defaultDurationBetweenRuns);
         this.task = task;
         this.valueBeforeTask = valueBeforeTask;
     }
@@ -52,14 +57,41 @@ extends InstantVar
         this(varDAO, key, load, durationBetweenRuns, task, false);
     }
 
+    @Override
+    public Instant load()
+    {
+        if(durationBetweenRuns != null) durationBetweenRuns.load();
+        return super.load();
+    }
+
+    @Override
+    public boolean tryLoad()
+    {
+        return super.tryLoad() & durationBetweenRuns.tryLoad();
+    }
+
+    @Override
+    public void save()
+    {
+        durationBetweenRuns.save();
+        super.save();
+    }
+
     public Duration getDurationBetweenRuns()
     {
-        return durationBetweenRuns;
+        return durationBetweenRuns.getValue() != null
+            ? durationBetweenRuns.getValue()
+            : defaultDurationBetweenRuns;
+    }
+
+    public void setDurationBetweenRuns(Duration duration)
+    {
+        durationBetweenRuns.setValue(duration);
     }
 
     public Instant availableOn()
     {
-        return getValue() == null ? Instant.now() : getValue().plus(durationBetweenRuns);
+        return getValue() == null ? Instant.now() : getValue().plus(getDurationBetweenRuns());
     }
 
     public boolean isAvailable()
