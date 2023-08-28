@@ -44,6 +44,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import javax.annotation.PostConstruct;
@@ -154,6 +155,7 @@ public class Cron
     private NotificationService notificationService;
 
     private SingleRunnable updateLaddersTask;
+    private Future<?> afterLadderUpdateTask;
 
     @PostConstruct
     public void init()
@@ -369,7 +371,18 @@ public class Cron
             tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
 
         MiscUtil.awaitAndThrowException(tasks, true, true);
-        statsService.afterCurrentSeasonUpdate(false);
+        if(afterLadderUpdateTask != null)
+        {
+            try
+            {
+                afterLadderUpdateTask.get();
+            }
+            catch (InterruptedException | ExecutionException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+        afterLadderUpdateTask = statsService.afterCurrentSeasonUpdate(false);
         try
         {
             if (shouldUpdateMatches())

@@ -46,7 +46,6 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.service.EventService;
-import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -65,7 +64,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -130,14 +128,11 @@ public class StatsService
 
     private final Map<Region, Integer> partialAlternativeUpdates = new EnumMap<>(Region.class);
 
-    private final Set<Integer> pendingStatsUpdates = new HashSet<>();
     private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdates = new EnumMap<>(Region.class);
-    private final Set<Long> pendingTeams = ConcurrentHashMap.newKeySet();
-    private final Set<PlayerCharacter> pendingCharacters =
-        ConcurrentHashMap.newKeySet();
+    private final PendingLadderData pendingLadderData = new PendingLadderData();
 
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
@@ -289,16 +284,18 @@ public class StatsService
     }
 
     @CacheEvict(cacheNames="fqdn-ladder-scan", allEntries=true)
-    public void updateCurrent
+    public Map<Region, List<Future<?>>> updateCurrent
     (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
     {
         long start = System.currentTimeMillis();
 
         checkStaleData(regions);
-        updateCurrentSeason(regions, queues, leagues, allStats, updateContext);
+        Map<Region, List<Future<?>>> tasks
+            = updateCurrentSeason(regions, queues, leagues, allStats, updateContext);
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
         LOG.info("Updated current for {} after {} seconds", regions, seconds);
+        return tasks;
     }
 
     public void updateLadders(int seasonId, Region region, Long[] ids)
@@ -335,15 +332,45 @@ public class StatsService
         updateSeasonStats(seasonId, true);
     }
 
-    public void afterCurrentSeasonUpdate(boolean allStats)
+    private PendingLadderData copyAndClearPendingData()
+    {
+        PendingLadderData pending = new PendingLadderData(pendingLadderData);
+        pendingLadderData.clear();
+        return pending;
+    }
+
+    public Future<?> afterCurrentSeasonUpdate(boolean allStats)
+    {
+        PendingLadderData pending = copyAndClearPendingData();
+        PendingLadderData altPending = alternativeLadderService.copyAndClearPendingData();
+        return dbExecutorService.submit(()->
+            statsService.afterCurrentSeasonUpdate(allStats, pending, altPending));
+    }
+
+    @Transactional
+    public void afterCurrentSeasonUpdate
+    (
+        boolean allStats,
+        PendingLadderData pending,
+        PendingLadderData altPending
+    )
     {
         teamStateDAO.removeExpired();
-        for(int season : pendingStatsUpdates) updateSeasonStats(season, allStats);
-        processPendingTeams();
-        alternativeLadderService.afterCurrentSeasonUpdate(pendingStatsUpdates);
-        pendingStatsUpdates.clear();
-        processPendingCharacters(pendingCharacters);
+        for(int season : pending.getStatsUpdates()) updateSeasonStats(season, allStats);
+        takePopulationSnapshot(pending.getStatsUpdates());
+        process(pending);
+        process(altPending);
         eventService.createLadderUpdateEvent(allStats);
+    }
+
+    private void process(PendingLadderData pending)
+    {
+        processPendingCharacters(pending.getCharacters());
+        LOG.info
+        (
+            "Created {} team snapshots",
+            teamStateDAO.takeSnapshot(new ArrayList<>(pending.getTeams()))
+        );
     }
 
     public void processPendingCharacters(Set<PlayerCharacter> pendingCharacters)
@@ -367,27 +394,10 @@ public class StatsService
         leagueStatsDao.mergeCalculateForSeason(seasonId);
     }
 
-    private void processPendingTeams()
-    {
-        try
-        {
-            takePopulationSnapshot(pendingStatsUpdates, pendingTeams);
-        }
-        finally
-        {
-            pendingTeams.clear();
-        }
-    }
-
-    private void takePopulationSnapshot(Set<Integer> seasons, Set<Long> teams)
+    private void takePopulationSnapshot(Set<Integer> seasons)
     {
         populationStateDAO.takeSnapshot(seasons);
         for(Integer seasonId : seasons) teamDao.updateRanks(seasonId);
-        LOG.info
-        (
-            "Created {} team snapshots",
-            teamStateDAO.takeSnapshot(new ArrayList<>(teams))
-        );
     }
 
     private void updateSeason(Region region, int seasonId, QueueType[] queues, BaseLeague.LeagueType[] leagues)
@@ -398,9 +408,10 @@ public class StatsService
         LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
 
-    private void updateCurrentSeason
+    private Map<Region, List<Future<?>>> updateCurrentSeason
     (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
     {
+        Map<Region, List<Future<?>>> tasks = new EnumMap<>(Region.class);
         //there can be two seasons here when a new season starts
         Set<Integer> seasons = new HashSet<>(2);
         for(Region region : regions)
@@ -410,25 +421,31 @@ public class StatsService
             BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
             Season season = seasonDao.merge(Season.of(bSeason, region));
             createLeagues(season);
-            updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, regionalContext);
+            tasks.put
+            (
+                region,
+                updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, regionalContext)
+            );
             seasons.add(season.getBattlenetId());
             if(regionalContext.getInternalUpdate() == null) forcedUpdateInstants.get(region).setValueAndSave(Instant.now());
             LOG.debug("Updated leagues: {} {}", season.getBattlenetId(), region);
         }
-        pendingStatsUpdates.addAll(seasons);
+        pendingLadderData.getStatsUpdates().addAll(seasons);
+        return tasks;
     }
 
-    private void updateOrAlternativeUpdate
+    private List<Future<?>> updateOrAlternativeUpdate
     (
         BlizzardSeason bSeason, Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues,
         boolean currentSeason, UpdateContext updateContext
     )
     {
+        List<Future<?>> tasks;
         if(!isAlternativeUpdate(season.getRegion(), currentSeason))
         {
             fastTeamDAO.remove(season.getRegion());
             LOG.debug("Cleared FastTeamDAO for {}", season.getRegion());
-            update
+            tasks = update
             (
                 season, queues, leagues, updateContext,
                 ctx->updateLeagues
@@ -446,21 +463,22 @@ public class StatsService
         {
             fastTeamDAO.load(season.getRegion(), season.getBattlenetId());
             LOG.debug("Loaded teams into FastTeamDAO for {}", season);
-            update
+            tasks = update
             (
                 season, queues, leagues, updateContext,
                 ctx->alternativeLadderService.updateSeason(ctx.getSeason(), ctx.getQueues(), ctx.getLeagues())
             );
         }
+        return tasks;
     }
 
-    private void update
+    private List<Future<?>> update
     (
         Season season,
         QueueType[] queues,
         BaseLeague.LeagueType[] leagues,
         UpdateContext updateContext,
-        Consumer<LadderUpdateContext> updater
+        Function<LadderUpdateContext, List<Future<?>>> updater
     )
     {
         Region region = season.getRegion();
@@ -479,7 +497,7 @@ public class StatsService
             partialUpdate ? PARTIAL_UPDATE_QUEUE_TYPES.toArray(QueueType[]::new) : queues,
             partialUpdate ? PARTIAL_UPDATE_LEAGUE_TYPES.toArray(BaseLeague.LeagueType[]::new) : leagues
         );
-        updater.accept(context);
+        List<Future<?>> tasks = updater.apply(context);
         if(partialUpdate)
         {
             partialAlternativeUpdates.put(region, partialAlternativeUpdates.get(region) + 1);
@@ -488,6 +506,7 @@ public class StatsService
         {
             partialAlternativeUpdates.put(region, 0);
         }
+        return tasks;
     }
 
     public boolean isPartialUpdate
@@ -520,7 +539,7 @@ public class StatsService
         return currentSeason && (forcedAlternativeRegions.contains(region) || alternativeRegions.contains(region));
     }
 
-    private void updateLeagues
+    private List<Future<?>> updateLeagues
     (
         BlizzardSeason bSeason,
         Season season,
@@ -534,10 +553,10 @@ public class StatsService
         LOG.debug("Updating season {} using {} checkpoint", season, updateContext.getExternalUpdate());
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             getLadderIds(getLeagueIds(bSeason, season.getRegion(), queues, leagues), currentSeason);
-        updateLadders(season, ladderIds, updateContext.getExternalUpdate());
+        return updateLadders(season, ladderIds, updateContext.getExternalUpdate());
     }
 
-    private void updateLadders
+    private List<Future<?>> updateLadders
     (Season season, List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds, Instant lastUpdated)
     {
         List<Future<?>> dbTasks = new ArrayList<>();
@@ -545,7 +564,7 @@ public class StatsService
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
             .forEach(l->dbTasks.add(dbExecutorService.submit(()->statsService.saveLadders(season, l, lastUpdated))));
-        MiscUtil.awaitAndLogExceptions(dbTasks, true);
+        return dbTasks;
     }
 
     @Transactional
@@ -630,11 +649,13 @@ public class StatsService
             .filter(t->t.getT1().getId() != null)
             .forEach(t->{
                 extractTeamMembers(t.getT2().getMembers(), members, clans, season, t.getT1());
-                if(season.getBattlenetId().equals(curSeason)) pendingTeams.add(t.getT1().getId());
+                if(season.getBattlenetId().equals(curSeason))
+                    pendingLadderData.getTeams().add(t.getT1().getId());
             });
         saveMembersConcurrently(members);
         clanService.saveClans(clans);
-        pendingCharacters.addAll(members.stream().map(Tuple3::getT2).collect(Collectors.toList()));
+        pendingLadderData.getCharacters()
+            .addAll(members.stream().map(Tuple3::getT2).collect(Collectors.toList()));
     }
 
     //cross field validation
