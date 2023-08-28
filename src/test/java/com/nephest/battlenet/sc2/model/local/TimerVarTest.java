@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -7,6 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -50,8 +51,8 @@ public class TimerVarTest
         assertTrue(timerVar.isAvailable());
 
         when(varDAO.find(KEY))
-            .thenReturn(Optional.of(Instant.now().minus(DEFAULT_DURATION_BETWEEN_TASKS)
-                .toEpochMilli() + ""));
+            .thenReturn(Optional.of(
+                String.valueOf(Instant.now().minus(DEFAULT_DURATION_BETWEEN_TASKS).toEpochMilli())));
         timerVar.load();
 
         assertTrue(timerVar.availableOn().isBefore(Instant.now()));
@@ -68,10 +69,8 @@ public class TimerVarTest
     public void whenShouldNotRun_thenDoNothing()
     {
         when(varDAO.find(KEY))
-            .thenReturn(Optional.of(Instant.now()
-                .minus(DEFAULT_DURATION_BETWEEN_TASKS)
-                .plusSeconds(TEST_LAG_SECONDS)
-                .toEpochMilli() + ""));
+            .thenReturn(Optional.of(String.valueOf(Instant.now().minus(
+                DEFAULT_DURATION_BETWEEN_TASKS).plusSeconds(TEST_LAG_SECONDS).toEpochMilli())));
         timerVar.load();
 
         assertFalse(timerVar.availableOn().isBefore(Instant.now()));
@@ -81,6 +80,37 @@ public class TimerVarTest
         assertFalse(timerVar.getValue().isAfter(Instant.now().minusSeconds(TEST_LAG_SECONDS)));
         verify(varDAO, never()).merge(eq(KEY), any());
         assertFalse(timerVar.availableOn().isBefore(Instant.now()));
+    }
+
+    @Test
+    public void whenActive_thenDoNothing()
+    throws InterruptedException
+    {
+        doAnswer
+        (
+            i->
+            {
+                try
+                {
+                    Thread.sleep(100);
+                    throw new RuntimeException("test");
+                }
+                catch (InterruptedException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+        ).when(task).run();
+
+        assertFalse(timerVar.isActive());
+        assertTrue(timerVar.isAvailable());
+        new Thread(()->timerVar.runIfAvailable()).start();
+        Thread.sleep(50);
+        assertTrue(timerVar.isActive());
+        assertFalse(timerVar.isAvailable());
+        Thread.sleep(100);
+        assertFalse(timerVar.isActive());
+        assertTrue(timerVar.isAvailable());
     }
 
 }

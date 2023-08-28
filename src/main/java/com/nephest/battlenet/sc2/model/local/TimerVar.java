@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ extends InstantVar
 
     private final Duration durationBetweenRuns;
     private final Runnable task;
+    private final AtomicBoolean active = new AtomicBoolean(false);
 
     public TimerVar
     (
@@ -47,20 +49,33 @@ extends InstantVar
 
     public boolean isAvailable()
     {
-        return availableOn().minusMillis(1).isBefore(Instant.now());
+        return availableOn().minusMillis(1).isBefore(Instant.now()) && !isActive();
+    }
+
+    public boolean isActive()
+    {
+        return active.get();
     }
 
     public boolean runIfAvailable()
     {
-        if(!isAvailable())
+        if(!isAvailable() || !active.compareAndSet(false, true))
         {
             LOG.trace("Wanted to execute {} timer but there is no need to do it yet", getKey());
             return false;
         }
 
-        task.run();
-        this.setValueAndSave(Instant.now());
-        LOG.debug("Executed {} timer", getKey());
+        try
+        {
+            task.run();
+            this.setValueAndSave(Instant.now());
+            LOG.debug("Executed {} timer", getKey());
+        }
+        finally
+        {
+            active.compareAndSet(true, false);
+        }
+
         return true;
     }
 
