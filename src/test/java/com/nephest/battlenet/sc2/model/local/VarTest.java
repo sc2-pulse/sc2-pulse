@@ -48,4 +48,48 @@ public class VarTest
         assertEquals("value123", var.getValue());
     }
 
+    @Test
+    public void whenTryLoadDefaultValueAndThereIsValue_thenIgnoreDefaultValue()
+    {
+        when(varDAO.find("test")).thenReturn(Optional.of("value123"));
+        Var<String> var = new Var<>
+        (
+            varDAO,
+            "test",
+            Function.identity(), Function.identity(),
+            false
+        );
+        assertTrue(var.tryLoad("value321"));
+        assertEquals("value123", var.getValue());
+    }
+
+    @Test
+    public void whenTryLoadDefaultValueAndThereIsNoValue_thenUseDefaultValue()
+    {
+        Var<String> var = new Var<>
+        (
+            varDAO,
+            "test",
+            Function.identity(), Function.identity(),
+            false
+        );
+        assertTrue(var.tryLoad("value321"));
+        assertEquals("value321", var.getValue());
+    }
+
+    @Test
+    public void whenTryLoadDefaultValueAndExceptionIsThrown_thenUseDefaultValue()
+    {
+        when(varDAO.find("test")).thenThrow(new RuntimeException("test"));
+        Var<String> var = new Var<>
+        (
+            varDAO,
+            "test",
+            Function.identity(), Function.identity(),
+            false
+        );
+        assertFalse(var.tryLoad("value321"));
+        assertEquals("value321", var.getValue());
+    }
+
 }

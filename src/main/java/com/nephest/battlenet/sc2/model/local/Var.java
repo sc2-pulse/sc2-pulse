@@ -51,20 +51,37 @@ public class Var<T>
 
     /**
      * Try to load the var. Exceptions are logged and ignored.
+     *
+     * @param defaultValue default value. Will be used if no value was loaded. The value is
+     *                     persisted only if there was no exception thrown, otherwise it's set
+     *                     but not saved.
      * @return true if successfully loaded without exceptions, false otherwise.
      */
-    public boolean tryLoad()
+    public boolean tryLoad(T defaultValue)
     {
+        boolean result;
         try
         {
             load();
-            return true;
+            result =  true;
         }
         catch (RuntimeException e)
         {
             LOG.error(e.getMessage(), e);
-            return false;
+            result = false;
         }
+
+        if(defaultValue != null && getValue() == null)
+        {
+            setValue(defaultValue);
+            if(result) save();
+        }
+        return result;
+    }
+
+    public boolean tryLoad()
+    {
+        return tryLoad(null);
     }
 
     public void save()
