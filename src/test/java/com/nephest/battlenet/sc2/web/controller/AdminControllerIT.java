@@ -3,25 +3,30 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import com.nephest.battlenet.sc2.config.Cron;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.web.service.MatchService;
+import java.sql.Connection;
+import java.sql.SQLException;
 import java.time.Duration;
+import javax.sql.DataSource;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -35,15 +40,37 @@ public class AdminControllerIT
     @Autowired
     private MockMvc mvc;
 
-    @MockBean
-    private Cron cron;
+    @Autowired
+    private MatchService matchService;
+
+    @BeforeEach
+    public void beforeEach(@Autowired DataSource dataSource)
+    throws SQLException
+    {
+        try(Connection connection = dataSource.getConnection())
+        {
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+        }
+    }
+
+    @AfterAll
+    public static void afterAll(@Autowired DataSource dataSource)
+    throws SQLException
+    {
+        try(Connection connection = dataSource.getConnection())
+        {
+            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
+        }
+    }
+
 
     @Test
     @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
     public void whenMatchUpdateFrameDurationIsLowerThanDefaultDuration_thenBadRequest()
     throws Exception
     {
-        long lowDuration = Cron.MATCH_UPDATE_FRAME.toMillis() - 1;
+        long lowDuration = MatchService.MATCH_UPDATE_FRAME.toMillis() - 1;
         mvc.perform
         (
             post("/admin/update/match/frame/{lowDuration}", lowDuration)
@@ -51,7 +78,7 @@ public class AdminControllerIT
                 .with(csrf().asHeader())
         )
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Min duration: " + Cron.MATCH_UPDATE_FRAME.toMillis()));
+            .andExpect(content().string("Min duration: " + MatchService.MATCH_UPDATE_FRAME.toMillis()));
     }
 
     @Test
@@ -59,7 +86,7 @@ public class AdminControllerIT
     public void testSetMatchUpdateFrameDuration()
     throws Exception
     {
-        Duration newDuration = Cron.MATCH_UPDATE_FRAME.plusMillis(1);
+        Duration newDuration = MatchService.MATCH_UPDATE_FRAME.plusMillis(1);
         mvc.perform
         (
             post("/admin/update/match/frame/{newDuration}", newDuration.toMillis())
@@ -67,8 +94,7 @@ public class AdminControllerIT
                 .with(csrf().asHeader())
         )
             .andExpect(status().isOk());
-        verify(cron).setMatchUpdateFrame(newDuration);
-        verifyNoMoreInteractions(cron);
+        assertEquals(newDuration, matchService.getMatchUpdateFrame());
     }
 
 }

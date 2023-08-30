@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.service;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.web.service.UpdateContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -19,6 +20,7 @@ public class EventService
 
     private final Sinks.Many<PlayerCharacter> ladderCharacterActivityEvent;
     private final Sinks.Many<Boolean> ladderUpdateEvent;
+    private final Sinks.Many<UpdateContext> matchUpdateEvent;
 
     @Autowired
     public EventService
@@ -30,6 +32,8 @@ public class EventService
         ladderCharacterActivityEvent = Sinks.unsafe()
             .many().multicast().onBackpressureBuffer(buffer);
         ladderUpdateEvent = Sinks.unsafe()
+            .many().multicast().onBackpressureBuffer(smallBuffer);
+        matchUpdateEvent = Sinks.unsafe()
             .many().multicast().onBackpressureBuffer(smallBuffer);
     }
 
@@ -64,6 +68,23 @@ public class EventService
     public Flux<Boolean> getLadderUpdateEvent()
     {
         return ladderUpdateEvent.asFlux();
+    }
+
+    public synchronized void createMatchUpdateEvent(UpdateContext uc)
+    {
+        matchUpdateEvent.emitNext(uc, DEFAULT_FAILURE_HANDLER);
+    }
+
+    /**
+     * An event is emitted when processing of new matches is complete. Emits
+     * {@code updateContext} that was used to process matches.
+     *
+     * @return endless {@link Flux} of match updates. Consumers are expected to
+     * {@link Flux#subscribe()}.
+     */
+    public Flux<UpdateContext> getMatchUpdateEvent()
+    {
+        return matchUpdateEvent.asFlux();
     }
 
 

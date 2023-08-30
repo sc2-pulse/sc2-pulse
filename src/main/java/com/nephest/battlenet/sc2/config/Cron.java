@@ -6,12 +6,9 @@ package com.nephest.battlenet.sc2.config;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.InstantVar;
-import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
-import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
@@ -30,20 +27,16 @@ import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.StatusService;
-import com.nephest.battlenet.sc2.web.service.TwitchService;
-import com.nephest.battlenet.sc2.web.service.UpdateContext;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.service.VarService;
 import com.nephest.battlenet.sc2.web.service.notification.NotificationService;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -53,7 +46,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Profile;
-import org.springframework.lang.NonNull;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -64,14 +56,10 @@ public class Cron
 
     private static final Logger LOG = LoggerFactory.getLogger(Cron.class);
 
-    public static final Duration MATCH_UPDATE_FRAME = Duration.ofMinutes(50);
     public static final OffsetDateTime REPORT_UPDATE_FROM =
         OffsetDateTime.of(2021, 8, 17, 0, 0, 0, 0, ZoneOffset.UTC);
     public static final Duration MAINTENANCE_FREQUENT_FRAME = Duration.ofDays(2);
     public static final Duration MAINTENANCE_INFREQUENT_FRAME = Duration.ofDays(10);
-    public static final Duration MIN_UPDATE_FRAME = Duration.ofSeconds(300);
-    public static final Duration MAP_STATS_DEFAULT_UPDATE_FRAME = Duration.ofMinutes(60);
-    public static final Duration MAP_STATS_SKIP_NEW_SEASON_FRAME = Duration.ofDays(8);
     public static final Duration HEAVY_STATS_UPDATE_FRAME = Duration.ofDays(1);
     public static final Duration DISCORD_UPDATE_FRAME = Duration.ofDays(1);
 
@@ -79,10 +67,6 @@ public class Cron
     private TimerVar maintenanceFrequentTask;
     private TimerVar maintenanceInfrequentTask;
     private TimerVar updateDiscordTask;
-    private InstantVar matchInstant;
-    private InstantVar mapStatsInstant;
-    private LongVar matchUpdateFrame;
-    private UpdateContext matchUpdateContext;
     private boolean updateLadder = true;
 
     @Autowired
@@ -143,9 +127,6 @@ public class Cron
     private ClanService clanService;
 
     @Autowired
-    private TwitchService twitchService;
-
-    @Autowired
     private DiscordService discordService;
 
     @Autowired
@@ -194,14 +175,6 @@ public class Cron
                 DISCORD_UPDATE_FRAME,
                 ()->webExecutorService.submit(discordService::update)
             );
-            matchInstant = new InstantVar(varDAO, "match.updated");
-            mapStatsInstant = new InstantVar(varDAO, "ladder.stats.map.timestamp");
-            matchUpdateFrame = new LongVar(varDAO, "match.update.frame", true);
-            if(matchInstant.getValue() != null) matchUpdateContext = new UpdateContext(
-                matchInstant.getValue().minusSeconds(MIN_UPDATE_FRAME.toSeconds()),
-                matchInstant.getValue());
-            if(matchUpdateFrame.getValue() == null)
-                matchUpdateFrame.setValueAndSave(MATCH_UPDATE_FRAME.toMillis());
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -275,7 +248,6 @@ public class Cron
         try
         {
             Instant begin = Instant.now();
-            Instant lastMatchInstant = matchInstant.getValue();
 
             statusService.update();
             doUpdateSeasons();
@@ -285,9 +257,6 @@ public class Cron
             clanService.update();
             blizzardPrivacyService.update();
             updateService.updated(begin);
-            if(!Objects.equals(lastMatchInstant, matchInstant.getValue())) matchUpdateContext =
-                updateService.getUpdateContext(null);
-            updateMapStats();
             commenceMaintenance();
             LOG.info("Update cycle completed. Duration: {} seconds", (System.currentTimeMillis() - begin.toEpochMilli()) / 1000);
         }
@@ -308,32 +277,6 @@ public class Cron
         teamStateDAO.cleanArchive(defaultOdt);
         teamStateDAO.removeExpired();
         evidenceDAO.nullifyReporterIps(defaultOdt);
-    }
-
-    private void updateMapStats()
-    {
-        if(matchUpdateContext == null) return;
-        OffsetDateTime to = OffsetDateTime.ofInstant(matchUpdateContext.getExternalUpdate(), ZoneOffset.systemDefault())
-            .minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES);
-        //skipping because the ladder is very volatile(top% leagues) at the beginning of the new season
-        if(seasonDAO.findLast().orElseThrow().getStart().plusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays()).isAfter(LocalDate.now()))
-        {
-            mapStatsInstant.setValueAndSave(to.toInstant());
-            return;
-        }
-
-        Instant defaultInstant = mapStatsInstant.getValue() != null
-            ? mapStatsInstant.getValue()
-            : Instant.now().minusSeconds(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 60 + MAP_STATS_DEFAULT_UPDATE_FRAME.toSeconds());
-        OffsetDateTime from = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
-        if(from.isAfter(to)) return;
-
-        /*
-            Map stats are incremental stats, preemptively update the var to prevent double calculation in exceptional
-            cases. Some stats may be lost this way, but this guarantees that existing stats are 100% valid.
-         */
-        mapStatsInstant.setValueAndSave(to.toInstant());
-        mapStatsDAO.add(from, to);
     }
 
     private boolean doUpdateSeasons(Region... regions)
@@ -383,30 +326,6 @@ public class Cron
             }
         }
         afterLadderUpdateTask = statsService.afterCurrentSeasonUpdate(false);
-        try
-        {
-            if (shouldUpdateMatches())
-            {
-                UpdateContext muc = matchUpdateContext == null ? updateService.getUpdateContext(null) : matchUpdateContext;
-                for(Region region : globalContext.getActiveRegions())
-                    tasks.add(webExecutorService.submit(()->matchService.update(region)));
-                MiscUtil.awaitAndThrowException(tasks, true, true);
-                matchService.updateMeta(muc);
-                matchInstant.setValueAndSave(Instant.now());
-                twitchService.update();
-            }
-        }
-        catch (RuntimeException ex)
-        {
-            //API can be broken randomly. All we can do at this point is log the exception.
-            LOG.error(ex.getMessage(), ex);
-        }
-    }
-
-    private boolean shouldUpdateMatches()
-    {
-        return matchInstant.getValue() == null
-            || System.currentTimeMillis() - matchInstant.getValue().toEpochMilli() >= getMatchUpdateFrame().toMillis();
     }
 
     private boolean shouldUpdate()
@@ -417,17 +336,6 @@ public class Cron
     public void setShouldUpdateLadder(boolean updateLadder)
     {
         this.updateLadder = updateLadder;
-    }
-
-    public Duration getMatchUpdateFrame()
-    {
-        return Duration.ofMillis(matchUpdateFrame.getValue());
-    }
-
-    public void setMatchUpdateFrame(@NonNull Duration matchUpdateFrame)
-    {
-        this.matchUpdateFrame.setValueAndSave(matchUpdateFrame.toMillis());
-        LOG.info("Match update frame: {}", matchUpdateFrame);
     }
 
     private void commenceMaintenance()

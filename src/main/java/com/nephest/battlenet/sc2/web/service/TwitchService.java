@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -14,16 +14,16 @@ import com.nephest.battlenet.sc2.model.twitch.TwitchUser;
 import com.nephest.battlenet.sc2.model.twitch.TwitchVideo;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchUserDAO;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchVideoDAO;
+import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import reactor.core.scheduler.Schedulers;
 
 @Service
 public class TwitchService
@@ -44,7 +44,6 @@ public class TwitchService
     private final MatchDAO matchDAO;
     private final MatchParticipantDAO matchParticipantDAO;
     private final TwitchClient twitchClient;
-    private final ExecutorService webExecutorService;
 
     @Autowired
     public TwitchService
@@ -56,7 +55,7 @@ public class TwitchService
         MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
         TwitchClient twitchClient,
-        @Qualifier("webExecutorService") ExecutorService webExecutorService
+        EventService eventService
     )
     {
         this.twitchUserDAO = twitchUserDAO;
@@ -66,16 +65,14 @@ public class TwitchService
         this.matchDAO = matchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
         this.twitchClient = twitchClient;
-        this.webExecutorService = webExecutorService;
+        subToEvents(eventService);
     }
 
-    /**
-     * Give a hint to the service that it's a good time to update. It's up to the service to
-     * decide what to do and how to do it.
-     */
-    public void update()
+    private void subToEvents(EventService eventService)
     {
-        webExecutorService.submit(this::doUpdate);
+        eventService.getMatchUpdateEvent()
+            .subscribeOn(Schedulers.boundedElastic())
+            .subscribe(uc->doUpdate());
     }
 
     private void doUpdate()

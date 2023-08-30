@@ -16,9 +16,12 @@ import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.service.EventService;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -43,7 +46,13 @@ public class MatchServiceIT
     private MatchService matchService;
 
     @Autowired
+    private EventService eventService;
+
+    @Autowired
     private BlizzardSC2API api;
+
+    @Autowired
+    private GlobalContext globalContext;
 
     @BeforeAll
     public static void beforeAll(@Autowired BlizzardSC2API api, @Autowired DataSource dataSource)
@@ -68,15 +77,23 @@ public class MatchServiceIT
 
     @Test
     public void testAutoRegionRedirect()
+    throws ExecutionException, InterruptedException
     {
         api.setAutoForceRegion(true);
-
-        //no matches found
-        matchService.update(Region.EU);
-        assertEquals(Region.KR, api.getForceRegion(Region.EU));
-
-        api.setForceRegion(Region.EU, null);
-        api.setAutoForceRegion(false);
+        CompletableFuture<UpdateContext> update = new CompletableFuture<>();
+        eventService.getMatchUpdateEvent().subscribe(update::complete);
+        try
+        {
+            //no matches found
+            eventService.createLadderUpdateEvent(true);
+            update.get();
+            assertEquals(Region.KR, api.getForceRegion(Region.EU));
+        }
+        finally
+        {
+            for(Region region : globalContext.getActiveRegions()) api.setForceRegion(region, null);
+            api.setAutoForceRegion(false);
+        }
     }
 
     @Test

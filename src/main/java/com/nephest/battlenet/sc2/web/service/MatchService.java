@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.SC2Map;
+import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
@@ -22,6 +23,8 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -45,6 +48,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.lang.NonNull;
 import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -63,6 +67,7 @@ public class MatchService
     private static final Logger LOG = LoggerFactory.getLogger(MatchService.class);
     public static final int BATCH_SIZE = 1000;
     public static final int FAILED_MATCHES_MAX = 100;
+    public static final Duration MATCH_UPDATE_FRAME = Duration.ofMinutes(50);
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
@@ -71,11 +76,16 @@ public class MatchService
     private final SeasonDAO seasonDAO;
     private final SC2MapDAO mapDAO;
     private final AlternativeLadderService alternativeLadderService;
+    private final EventService eventService;
+    private final UpdateService updateService;
     private final ExecutorService dbExecutorService;
+    private final GlobalContext globalContext;
     private final Predicate<BlizzardMatch> validationPredicate;
     private final ConcurrentLinkedQueue<Set<PlayerCharacterNaturalId>> failedCharacters = new ConcurrentLinkedQueue<>();
     private CollectionVar<Set<Region>, Region> webRegions;
     private final Map<Region, Var<Set<PlayerCharacter>>> pendingCharacters = new EnumMap<>(Region.class);
+    private TimerVar updateMatchesTask;
+    private UpdateContext updateContext;
 
     @Autowired @Lazy
     private MatchService matchService;
@@ -91,9 +101,11 @@ public class MatchService
         SC2MapDAO mapDAO,
         VarDAO varDAO,
         AlternativeLadderService alternativeLadderService,
+        UpdateService updateService,
         EventService eventService,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
-        Validator validator
+        Validator validator,
+        GlobalContext globalContext
     )
     {
         this.api = api;
@@ -103,7 +115,10 @@ public class MatchService
         this.seasonDAO = seasonDAO;
         this.mapDAO = mapDAO;
         this.alternativeLadderService = alternativeLadderService;
+        this.eventService = eventService;
+        this.updateService = updateService;
         this.dbExecutorService = dbExecutorService;
+        this.globalContext = globalContext;
         subToEvents(eventService);
         initVars(varDAO);
         validationPredicate = DAOUtils.beanValidationPredicate(validator);
@@ -112,7 +127,7 @@ public class MatchService
     private void initVars(VarDAO varDAO)
     {
         webRegions = WebServiceUtil.loadRegionSetVar(varDAO, "match.web.regions", "Loaded web regions for match history: {}");
-        for(Region region : Region.values())
+        for(Region region : globalContext.getActiveRegions())
         {
             Var<Set<PlayerCharacter>> pendingCharsVar = new Var<>
             (
@@ -149,6 +164,16 @@ public class MatchService
                 LOG.error(e.toString(), e);
             }
         }
+        updateMatchesTask = new TimerVar
+        (
+            varDAO,
+            "match.updated",
+            false,
+            MATCH_UPDATE_FRAME,
+            this::update,
+            true
+        );
+        updateMatchesTask.tryLoad();
     }
 
     private void subToEvents(EventService eventService)
@@ -167,7 +192,21 @@ public class MatchService
                         .mapToInt(Collection::size)
                         .sum()
                 );
+                UpdateContext uc = updateService.getUpdateContext(null);
+                if(updateMatchesTask.runIfAvailable()) updateContext = uc;
             });
+    }
+
+    public Duration getMatchUpdateFrame()
+    {
+        return updateMatchesTask.getDurationBetweenRuns();
+    }
+
+    public void setMatchUpdateFrame(@NonNull Duration matchUpdateFrame)
+    {
+        updateMatchesTask.setDurationBetweenRuns(matchUpdateFrame);
+        updateMatchesTask.save();
+        LOG.info("Match update frame: {}", matchUpdateFrame);
     }
 
     public boolean isWeb(Region... regions)
@@ -199,9 +238,41 @@ public class MatchService
         return Collections.unmodifiableSet(webRegions.getValue());
     }
 
-    public void update(Region... regions)
+    private void update()
     {
-        int matchCount = saveMatches(regions);
+        UpdateContext uc = getUpdateContext();
+        update(copyAndClearPendingCharacters(), globalContext.getActiveRegions().toArray(new Region[0]));
+        matchService.updateMeta(uc);
+        eventService.createMatchUpdateEvent(uc);
+    }
+
+    private Map<Region, Set<PlayerCharacter>> copyAndClearPendingCharacters()
+    {
+        Map<Region, Set<PlayerCharacter>> copy = pendingCharacters.entrySet().stream()
+            .collect(Collectors.toMap(Map.Entry::getKey, e->e.getValue().getValue()));
+        pendingCharacters.values().forEach(var->{
+            var.getValue().clear();
+            var.save();
+        });
+        return copy;
+    }
+
+    private UpdateContext getUpdateContext()
+    {
+        return updateContext != null
+            ? updateContext
+            : updateMatchesTask.getValue() != null
+                ? new UpdateContext(updateMatchesTask.getValue(), updateMatchesTask.getValue())
+                : new UpdateContext
+                (
+                    Instant.now().minus(updateMatchesTask.getDurationBetweenRuns()),
+                    Instant.now().minus(updateMatchesTask.getDurationBetweenRuns())
+                );
+    }
+
+    private void update(Map<Region, Set<PlayerCharacter>> pendingCharacters, Region... regions)
+    {
+        int matchCount = saveMatches(pendingCharacters, regions);
         matchDAO.removeExpired();
         LOG.info("Saved {} matches for {}", matchCount, regions);
         if(api.isAutoForceRegion() && matchCount < 1)
@@ -211,7 +282,7 @@ public class MatchService
         }
     }
 
-    private int saveMatches(Region... regions)
+    private int saveMatches(Map<Region, Set<PlayerCharacter>> pendingCharacters, Region... regions)
     {
         int r1 = saveFailedMatches();
         LOG.debug("Saved {} previously failed matches", r1);
@@ -220,18 +291,10 @@ public class MatchService
         List<PlayerCharacter> characters = Arrays.stream(regions)
             .distinct()
             .map(pendingCharacters::get)
-            .map(Var::getValue)
             .flatMap(Collection::stream)
             .collect(Collectors.toList());
         if(web) LOG.warn("Using web API for {} matches {} players", regions, characters.size());
-        int result = r1 + saveMatches(characters, true, web);
-        for(Region region : regions)
-        {
-            Var<Set<PlayerCharacter>> var = pendingCharacters.get(region);
-            var.getValue().clear();
-            var.save();
-        }
-        return result;
+        return r1 + saveMatches(characters, true, web);
     }
 
     private int saveFailedMatches()

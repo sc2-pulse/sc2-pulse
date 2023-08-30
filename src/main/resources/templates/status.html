@@ -19,8 +19,8 @@
         <p th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev') && not #arrays.contains(@environment.getActiveProfiles(), 'maintenance')}">
             Match history is updated every
             <span
-                th:class="${@cron.matchUpdateFrame.equals(T(com.nephest.battlenet.sc2.config.Cron).MATCH_UPDATE_FRAME) ? 'text-success' : 'text-warning'}"
-                th:text="${@formatUtil.formatWords(@cron.matchUpdateFrame)}"
+                th:class="${@matchService.matchUpdateFrame.equals(T(com.nephest.battlenet.sc2.web.service.MatchService).MATCH_UPDATE_FRAME) ? 'text-success' : 'text-warning'}"
+                th:text="${@formatUtil.formatWords(@matchService.matchUpdateFrame)}"
             >
             </span>
         </p>
