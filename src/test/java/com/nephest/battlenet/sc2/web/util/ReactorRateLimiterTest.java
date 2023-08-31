@@ -115,6 +115,22 @@ public class ReactorRateLimiterTest
         assertEquals(4, limiter2.getAvailableSlots());
     }
 
+    @Test
+    public void whenPriorityLimiterExists_thenUseIt()
+    {
+        ReactorRateLimiter limiter1 = new ReactorRateLimiter();
+        ReactorRateLimiter limiter2 = new ReactorRateLimiter();
+        ReactorRateLimiter priorityLimiter1 = new ReactorRateLimiter("priority1", 2);
+        limiter1.addPriorityLimiter(priorityLimiter1);
+        limiter1.refreshSlots(10);
+        limiter2.refreshSlots(5);
+        ReactorRateLimiter.requestSlot(List.of(limiter1, limiter2), "priority1")
+            .block(Duration.ofMillis(1));
+        assertEquals(8, limiter1.getAvailableSlots());
+        assertEquals(1, priorityLimiter1.getAvailableSlots());
+        assertEquals(4, limiter2.getAvailableSlots());
+    }
+
     @ValueSource(ints = {0, 1})
     @ParameterizedTest
     public void whenRequestMultiLimiterSlot_thenAllLimitersShouldBeUsed(int activeIx)
@@ -152,6 +168,26 @@ public class ReactorRateLimiterTest
             .onErrorComplete()
             .block(Duration.ofMillis(1));
         assertEquals(8, limiter1.getAvailableSlots());
+        assertEquals(3, limiter2.getAvailableSlots());
+    }
+
+    @Test
+    public void whenPriorityRetryLimiterExists_thenUseIt()
+    {
+        ReactorRateLimiter limiter1 = new ReactorRateLimiter();
+        ReactorRateLimiter limiter2 = new ReactorRateLimiter();
+        ReactorRateLimiter priorityLimiter1 = new ReactorRateLimiter("priority1", 2);
+        limiter1.addPriorityLimiter(priorityLimiter1);
+        List<ReactorRateLimiter> limiters = List.of(limiter1, limiter2);
+        Retry retry = ReactorRateLimiter.retryWhen(limiters, RetrySpec.max(2), "priority1");
+        limiter1.refreshSlots(10);
+        limiter2.refreshSlots(5);
+        Mono.error(new RuntimeException("test"))
+            .retryWhen(retry)
+            .onErrorComplete()
+            .block(Duration.ofMillis(1));
+        assertEquals(8, limiter1.getAvailableSlots());
+        assertEquals(0, priorityLimiter1.getAvailableSlots());
         assertEquals(3, limiter2.getAvailableSlots());
     }
 

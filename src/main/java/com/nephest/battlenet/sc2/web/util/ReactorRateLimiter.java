@@ -74,17 +74,35 @@ public class ReactorRateLimiter
         this(null);
     }
 
-    public static Mono<Void> requestSlot(Iterable<ReactorRateLimiter> limiters)
+    public static Mono<Void> requestSlot(Iterable<ReactorRateLimiter> limiters, String priorityName)
     {
         Mono<Void> result = Mono.empty();
         for(ReactorRateLimiter limiter : limiters)
-            result = result.then(limiter.requestSlot());
+        {
+            ReactorRateLimiter priority = limiter.getPriorityLimiter(priorityName);
+            result = result.then((priority != null ? priority : limiter).requestSlot());
+        }
         return result;
+    }
+
+    public static Mono<Void> requestSlot(Iterable<ReactorRateLimiter> limiters)
+    {
+        return requestSlot(limiters, null);
+    }
+
+    public static Retry retryWhen
+    (
+        Iterable<ReactorRateLimiter> limiters,
+        RetrySpec retrySpec,
+        String priorityName
+    )
+    {
+        return retrySpec.doBeforeRetryAsync(s->requestSlot(limiters, priorityName));
     }
 
     public static Retry retryWhen(Iterable<ReactorRateLimiter> limiters, RetrySpec retrySpec)
     {
-        return retrySpec.doBeforeRetryAsync(s->requestSlot(limiters));
+        return retryWhen(limiters, retrySpec, null);
     }
 
     public String getName()
