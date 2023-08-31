@@ -238,7 +238,7 @@ public class ReactorRateLimiter
 
     public int getAvailableSlots()
     {
-        return slots.get();
+        return requests.isEmpty() ? slots.get() : requests.size() * -1;
     }
 
     public Retry retryWhen(RetrySpec retrySpec)

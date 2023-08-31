@@ -258,4 +258,13 @@ public class ReactorRateLimiterTest
         slots2.blockLast();
     }
 
+    @Test
+    public void whenGettingNumberOfAvailableSlots_thenTakeIntoAccountSlotQueue()
+    {
+        ReactorRateLimiter limiter = new ReactorRateLimiter();
+        for(int i = 0; i < 10; i++) limiter.requestSlot();
+        limiter.refreshSlots(3);
+        assertEquals(-7, limiter.getAvailableSlots());
+    }
+
 }
