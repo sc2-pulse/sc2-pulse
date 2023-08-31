@@ -5,6 +5,8 @@ package com.nephest.battlenet.sc2.web.util;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,18 +37,36 @@ public class ReactorRateLimiter
 
     private static final Logger LOG = LoggerFactory.getLogger(ReactorRateLimiter.class);
 
+    private final String name;
+    private final Integer maxRequestCount;
     private final ConcurrentLinkedQueue<Sinks.One<Void>> requests = new ConcurrentLinkedQueue<>();
 
     private final AtomicInteger slots = new AtomicInteger(0);
     private final AtomicBoolean isResetActive = new AtomicBoolean(false);
     private RateLimitRefreshConfig refreshConfig;
     private Disposable refreshSubscription;
+    private final Map<String, ReactorRateLimiter> priorityLimiters = new LinkedHashMap<>();
 
     private RateLimitData lastData;
 
+    public ReactorRateLimiter(RateLimitRefreshConfig refreshConfig, String name, Integer maxRequestCount)
+    {
+        if(maxRequestCount != null && maxRequestCount < 1)
+            throw new IllegalArgumentException("Request count must be null or greater then 0");
+
+        this.name = name;
+        this.maxRequestCount = maxRequestCount;
+        setRefreshConfig(refreshConfig);
+    }
+
+    public ReactorRateLimiter(String name, Integer maxRequestCount)
+    {
+        this(null, name, maxRequestCount);
+    }
+
     public ReactorRateLimiter(RateLimitRefreshConfig refreshConfig)
     {
-        setRefreshConfig(refreshConfig);
+        this(refreshConfig, null, null);
     }
 
     public ReactorRateLimiter()
@@ -65,6 +85,16 @@ public class ReactorRateLimiter
     public static Retry retryWhen(Iterable<ReactorRateLimiter> limiters, RetrySpec retrySpec)
     {
         return retrySpec.doBeforeRetryAsync(s->requestSlot(limiters));
+    }
+
+    public String getName()
+    {
+        return name;
+    }
+
+    public Integer getMaxRequestCount()
+    {
+        return maxRequestCount;
     }
 
     public void setRefreshConfig(RateLimitRefreshConfig config)
@@ -140,6 +170,10 @@ public class ReactorRateLimiter
 
     public void refreshSlots(int count)
     {
+        if(count < 1) return;
+        count = refreshPrioritySlots(count);
+        if(count < 1) return;
+
         int originalCount = count;
         Sinks.One<Void> request;
         while(count > 0 && (request = requests.poll()) != null)
@@ -151,6 +185,29 @@ public class ReactorRateLimiter
         LOG.trace("Slots granted: {}, current slots: {}, queue: {}", originalCount, count, requests.size());
     }
 
+    private int refreshPrioritySlots(int count)
+    {
+        if(priorityLimiters.isEmpty()) return count;
+
+        int slotsLeft = count;
+        for(ReactorRateLimiter limiter : priorityLimiters.values())
+        {
+            int maxSlots = limiter.getMaxRequestCount() != null
+                ? limiter.getMaxRequestCount() - Math.max(limiter.getAvailableSlots(), 0)
+                : slotsLeft;
+            int slotsGranted = Math.min(maxSlots, slotsLeft);
+            if(slotsGranted == 0) continue;
+
+            limiter.refreshSlots(slotsGranted);
+            slotsLeft -= slotsGranted;
+            if(slotsLeft == 0) break;
+        }
+        //use remaining slots if there are enough slots in the parent limiter
+        if(slotsLeft > 0 && slotsLeft != count && getAvailableSlots() >= slotsLeft)
+            return refreshPrioritySlots(slotsLeft);
+        return slotsLeft;
+    }
+
     public Mono<Void> requestSlot()
     {
         if(isSlotAvailable()) return Mono.empty();
@@ -158,6 +215,14 @@ public class ReactorRateLimiter
         Sinks.One<Void> one = Sinks.one();
         requests.add(one);
         return one.asMono();
+    }
+
+    public Mono<Void> requestSlot(String name)
+    {
+        ReactorRateLimiter limiter = priorityLimiters.get(name);
+        if(limiter == null) throw new IllegalStateException("Limiter not found: " + name);
+
+        return limiter.requestSlot();
     }
 
     /**
@@ -184,6 +249,16 @@ public class ReactorRateLimiter
     public Retry retryWhen(RetryBackoffSpec retrySpec)
     {
         return retrySpec.doBeforeRetryAsync(s->requestSlot());
+    }
+
+    public void addPriorityLimiter(ReactorRateLimiter limiter)
+    {
+        priorityLimiters.put(limiter.getName(), limiter);
+    }
+
+    public ReactorRateLimiter getPriorityLimiter(String name)
+    {
+        return priorityLimiters.get(name);
     }
 
 }

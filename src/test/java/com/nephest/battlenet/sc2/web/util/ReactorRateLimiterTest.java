@@ -11,10 +11,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.retry.Retry;
 import reactor.util.retry.RetrySpec;
@@ -148,6 +153,109 @@ public class ReactorRateLimiterTest
             .block(Duration.ofMillis(1));
         assertEquals(8, limiter1.getAvailableSlots());
         assertEquals(3, limiter2.getAvailableSlots());
+    }
+
+    @CsvSource
+    ({
+        "10, 3, 2, 3, 2, 5",
+        "4, 3, 2, 3, 1, 0",
+        "2, 3, 2, 2, 0, 0",
+        "0, 1, 1, 0, 0, 0"
+    })
+    @ParameterizedTest
+    public void whenPriorityRateLimiterExists_thenUseItBeforeParent
+    (
+        int slots,
+        int priority1MaxSlots,
+        int priority2MaxSlots,
+        int expectedPrioritySlots1,
+        int expectedPrioritySlots2,
+        int expectedGeneralSlots
+    )
+    {
+        ReactorRateLimiter limiter = new ReactorRateLimiter();
+        limiter.addPriorityLimiter(new ReactorRateLimiter("priority1", priority1MaxSlots));
+        limiter.addPriorityLimiter(new ReactorRateLimiter("priority2", priority2MaxSlots));
+        ReactorRateLimiter priorityLimiter1 = limiter.getPriorityLimiter("priority1");
+        ReactorRateLimiter priorityLimiter2 = limiter.getPriorityLimiter("priority2");
+
+        assertEquals(0, priorityLimiter1.getAvailableSlots());
+        assertEquals(0, priorityLimiter2.getAvailableSlots());
+        assertEquals(0, limiter.getAvailableSlots());
+
+        limiter.refreshSlots(slots);
+        assertEquals(expectedPrioritySlots1, priorityLimiter1.getAvailableSlots());
+        assertEquals(expectedPrioritySlots2, priorityLimiter2.getAvailableSlots());
+        assertEquals(expectedGeneralSlots, limiter.getAvailableSlots());
+    }
+
+    @Test
+    public void testRequestPrioritySlot()
+    {
+        ReactorRateLimiter priorityLimiter1
+            = new ReactorRateLimiter("priority1", 2);
+        ReactorRateLimiter priorityLimiter2
+            = new ReactorRateLimiter("priority2", 3);
+        ReactorRateLimiter limiter = new ReactorRateLimiter();
+        limiter.addPriorityLimiter(priorityLimiter1);
+        limiter.addPriorityLimiter(priorityLimiter2);
+
+        assertEquals(0, priorityLimiter1.getAvailableSlots());
+        assertEquals(0, priorityLimiter2.getAvailableSlots());
+        assertEquals(0, limiter.getAvailableSlots());
+
+        limiter.refreshSlots(10);
+        assertEquals(2, priorityLimiter1.getAvailableSlots());
+        assertEquals(3, priorityLimiter2.getAvailableSlots());
+        assertEquals(5, limiter.getAvailableSlots());
+
+        limiter.requestSlot(priorityLimiter1.getName());
+        assertEquals(1, priorityLimiter1.getAvailableSlots());
+        assertEquals(3, priorityLimiter2.getAvailableSlots());
+        assertEquals(5, limiter.getAvailableSlots());
+    }
+
+    @Test
+    public void whenThereIsEnoughGeneralSlots_thenUseNewSlotsForPriorityLimiters()
+    {
+        ReactorRateLimiter limiter = new ReactorRateLimiter();
+        limiter.addPriorityLimiter(new ReactorRateLimiter("priority1", 2));
+        limiter.addPriorityLimiter(new ReactorRateLimiter("priority2", 1));
+        ReactorRateLimiter priorityLimiter1 = limiter.getPriorityLimiter("priority1");
+        ReactorRateLimiter priorityLimiter2 = limiter.getPriorityLimiter("priority2");
+
+        assertEquals(0, priorityLimiter1.getAvailableSlots());
+        assertEquals(0, priorityLimiter2.getAvailableSlots());
+        assertEquals(0, limiter.getAvailableSlots());
+
+        limiter.refreshSlots(10);
+        assertEquals(2, priorityLimiter1.getAvailableSlots());
+        assertEquals(1, priorityLimiter2.getAvailableSlots());
+        assertEquals(7, limiter.getAvailableSlots());
+
+
+        Flux<Void> slots1 = Flux.fromIterable
+        (
+            IntStream.range(0, 5)
+                .boxed()
+                .map(i->limiter.requestSlot("priority1"))
+                .collect(Collectors.toList())
+        )
+            .flatMap(Function.identity());
+        Flux<Void> slots2 = Flux.fromIterable
+        (
+            IntStream.range(0, 1)
+                .boxed()
+                .map(i->limiter.requestSlot("priority2"))
+                .collect(Collectors.toList())
+        )
+            .flatMap(Function.identity());
+        limiter.refreshSlots(7);
+        assertEquals(1, priorityLimiter1.getAvailableSlots());
+        assertEquals(1, priorityLimiter2.getAvailableSlots());
+        assertEquals(7, limiter.getAvailableSlots());
+        slots1.blockLast();
+        slots2.blockLast();
     }
 
 }
