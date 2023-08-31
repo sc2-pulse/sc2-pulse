@@ -68,6 +68,8 @@ public class MatchService
     public static final int BATCH_SIZE = 1000;
     public static final int FAILED_MATCHES_MAX = 100;
     public static final Duration MATCH_UPDATE_FRAME = Duration.ofMinutes(50);
+    public static final String REQUEST_LIMIT_PRIORITY_NAME = "match";
+    public static final Duration REQUEST_LIMIT_PRIORITY_OFFSET = Duration.ofMinutes(5);
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
@@ -241,9 +243,33 @@ public class MatchService
     private void update()
     {
         UpdateContext uc = getUpdateContext();
-        update(copyAndClearPendingCharacters(), globalContext.getActiveRegions().toArray(new Region[0]));
+        Map<Region, Set<PlayerCharacter>> pendingCharacters = copyAndClearPendingCharacters();
+        setRequestLimitPriority(pendingCharacters);
+        update(pendingCharacters, globalContext.getActiveRegions().toArray(new Region[0]));
         matchService.updateMeta(uc);
         eventService.createMatchUpdateEvent(uc);
+    }
+
+    private void setRequestLimitPriority(Map<Region, Set<PlayerCharacter>> characters)
+    {
+        int limit = calculateRequestLimit(characters);
+        api.addRequestLimitPriority(REQUEST_LIMIT_PRIORITY_NAME, limit);
+        LOG.info("Using {} request limit priority", limit);
+    }
+
+    private int calculateRequestLimit(Map<Region, Set<PlayerCharacter>> characters)
+    {
+        int characterCount = characters.values().stream()
+            .mapToInt(Collection::size)
+            .sum();
+        int limit = (int) Math.ceil
+        (
+            characterCount / (double) updateMatchesTask.getDurationBetweenRuns()
+                .plus(REQUEST_LIMIT_PRIORITY_OFFSET)
+                .toSeconds()
+        );
+        return Math.min(Math.max(limit, 1),
+            api.getRequestsPerSecondCap(globalContext.getActiveRegions().iterator().next()) / 2);
     }
 
     private Map<Region, Set<PlayerCharacter>> copyAndClearPendingCharacters()
@@ -321,7 +347,7 @@ public class MatchService
         List<Future<?>> dbTasks = new ArrayList<>();
         AtomicInteger count = new AtomicInteger(0);
         Set<PlayerCharacterNaturalId> errors = new HashSet<>();
-        api.getMatches(characters, errors, web)
+        api.getMatches(characters, errors, web, REQUEST_LIMIT_PRIORITY_NAME)
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
             .buffer(BATCH_SIZE)

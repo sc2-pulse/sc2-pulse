@@ -75,6 +75,8 @@ public class BlizzardPrivacyService
         OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
     private static final QueueType[] QUEUE_TYPES = QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new);
     private static final BaseLeague.LeagueType[] LEAGUE_TYPES = BaseLeague.LeagueType.values();
+    public static final String REQUEST_LIMIT_PRIORITY_NAME = "privacy";
+    public static final int REQUEST_LIMIT_PRIORITY_SLOTS = 1;
 
     private final BlizzardSC2API api;
     private final StatsService statsService;
@@ -132,6 +134,7 @@ public class BlizzardPrivacyService
         this.sc2WebServiceUtil = sc2WebServiceUtil;
         this.globalContext = globalContext;
         initVars(varDAO);
+        api.addRequestLimitPriority(REQUEST_LIMIT_PRIORITY_NAME, REQUEST_LIMIT_PRIORITY_SLOTS);
     }
 
     private void initVars(VarDAO varDAO)
@@ -282,7 +285,7 @@ public class BlizzardPrivacyService
         List<Future<?>> dbTasks = new ArrayList<>();
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, QUEUE_TYPES, LEAGUE_TYPES), currentSeason);
-        api.getLadders(ladderIds, -1, null)
+        api.getLadders(ladderIds, -1, null, REQUEST_LIMIT_PRIORITY_NAME)
             .flatMap(l->Flux.fromStream(extractPrivateInfo(l, seasonId, currentSeason)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
@@ -318,7 +321,13 @@ public class BlizzardPrivacyService
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladderIds = alternativeLadderService
             .getExistingLadderIds(season, QUEUE_TYPES, LEAGUE_TYPES);
         List<Future<?>> dbTasks = new ArrayList<>();
-        api.getProfileLadders(ladderIds, Set.of(QUEUE_TYPES), alternativeLadderService.isProfileLadderWebRegion(region))
+        api.getProfileLadders
+        (
+            ladderIds,
+            Set.of(QUEUE_TYPES),
+            alternativeLadderService.isProfileLadderWebRegion(region),
+            REQUEST_LIMIT_PRIORITY_NAME
+        )
             .flatMap(l->Flux.fromStream(extractAlternativePrivateInfo(l)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()

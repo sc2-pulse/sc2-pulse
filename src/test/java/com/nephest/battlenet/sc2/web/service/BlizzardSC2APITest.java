@@ -110,16 +110,17 @@ public class BlizzardSC2APITest
         errors.get(region).add(division.getLadderId());
 
         BlizzardSC2API spy = spy(api);
-        doReturn(fullLadder).when(spy).getLadder(region, division);
-        doReturn(filteredLadder).when(spy).getFilteredLadder(region, id, seconds);
+        doReturn(fullLadder).when(spy).getLadder(region, division, null);
+        doReturn(filteredLadder).when(spy).getFilteredLadder(region, id, seconds, null);
 
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> list
             = List.of(Tuples.of(new BlizzardLeague(), region, new BlizzardLeagueTier(), division));
         spy.getLadders(list, seconds, errors).blockLast();
 
         verify(spy).getLadders(list, seconds, errors);
+        verify(spy).getLadders(list, seconds, errors, null);
         //failed ladder, ignore the timestamp and parse the full ladder
-        verify(spy).getLadder(region, division);
+        verify(spy).getLadder(region, division, null);
         verifyNoMoreInteractions(spy);
         assertTrue(errors.get(region).contains(id)); //errors shouldn't be touched/cleared
 
@@ -128,7 +129,8 @@ public class BlizzardSC2APITest
 
         verify(spy, times(2)).getLadders(list, seconds, errors);
         //normal ladder, conditional pasrsing is in effect
-        verify(spy).getFilteredLadder(region, id, seconds);
+        verify(spy).getFilteredLadder(region, id, seconds, null);
+        verify(spy, times(2)).getLadders(list, seconds, errors, null);
         verifyNoMoreInteractions(spy);
     }
 

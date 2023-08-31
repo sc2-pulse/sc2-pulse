@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService.REQUEST_LIMIT_PRIORITY_NAME;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
@@ -285,7 +286,8 @@ public class BlizzardPrivacyServiceTest
             )
         );
         OngoingStubbing<Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>>> stub =
-            when(api.getProfileLadders(any(), any(), anyBoolean())).thenReturn(ladders);
+            when(api.getProfileLadders(any(), any(), anyBoolean(), eq(REQUEST_LIMIT_PRIORITY_NAME)))
+                .thenReturn(ladders);
         for(int i = 1; i < globalContext.getActiveRegions().size(); i++)
             stub = stub.thenReturn(Flux.empty());
         privacyService.update();
@@ -346,8 +348,9 @@ public class BlizzardPrivacyServiceTest
 
     private void stubLadderApi()
     {
-        OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>>
-            stub = when(api.getLadders(any(), eq(-1L), isNull())).thenReturn(createLadder());
+        OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>> stub
+            = when(api.getLadders(any(), eq(-1L), isNull(), eq(REQUEST_LIMIT_PRIORITY_NAME)))
+                .thenReturn(createLadder());
         for(int i = 0; i < globalContext.getActiveRegions().size(); i++)
             stub = stub.thenReturn(Flux.empty());
     }
