@@ -265,7 +265,7 @@ public class MatchService
         int limit = (int) Math.ceil
         (
             characterCount / (double) updateMatchesTask.getDurationBetweenRuns()
-                .plus(REQUEST_LIMIT_PRIORITY_OFFSET)
+                .minus(REQUEST_LIMIT_PRIORITY_OFFSET)
                 .toSeconds()
         );
         return Math.min(Math.max(limit, 1),
