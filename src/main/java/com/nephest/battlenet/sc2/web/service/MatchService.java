@@ -105,7 +105,7 @@ public class MatchService
         AlternativeLadderService alternativeLadderService,
         UpdateService updateService,
         EventService eventService,
-        @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
+        @Qualifier("secondaryDbExecutorService") ExecutorService dbExecutorService,
         Validator validator,
         GlobalContext globalContext
     )
