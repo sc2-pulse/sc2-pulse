@@ -39,7 +39,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -245,7 +244,7 @@ public class MatchService
         UpdateContext uc = getUpdateContext();
         Map<Region, Set<PlayerCharacter>> pendingCharacters = copyAndClearPendingCharacters();
         setRequestLimitPriority(pendingCharacters);
-        update(pendingCharacters, globalContext.getActiveRegions().toArray(Region[]::new));
+        update(pendingCharacters);
         matchService.updateMeta(uc);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(pendingCharacters, uc));
     }
@@ -299,72 +298,69 @@ public class MatchService
                 );
     }
 
-    private void update(Map<Region, Set<PlayerCharacter>> pendingCharacters, Region... regions)
+    private void update(Map<Region, Set<PlayerCharacter>> pendingCharacters)
     {
-        int matchCount = saveMatches(pendingCharacters, regions);
+
+        int matchCount = MiscUtil.awaitAndLogExceptions
+        (
+            saveMatches(pendingCharacters).collectList().block(),
+            true
+        )
+            .stream()
+            .mapToInt(i->i)
+            .sum();
         matchDAO.removeExpired();
-        LOG.info("Saved {} matches for {}", matchCount, regions);
+        LOG.info("Saved {} matches for {}", matchCount, pendingCharacters.keySet());
         if(api.isAutoForceRegion() && matchCount < 1)
         {
-            LOG.warn("No matches found in {} regions", (Object[]) regions);
-            for(Region region : regions) api.setForceRegion(region);
+            LOG.warn("No matches found in {} regions", pendingCharacters.keySet());
+            for(Region region : pendingCharacters.keySet()) api.setForceRegion(region);
         }
     }
 
-    private int saveMatches(Map<Region, Set<PlayerCharacter>> pendingCharacters, Region... regions)
+    private Flux<Future<Integer>> saveMatches(Map<Region, Set<PlayerCharacter>> pendingCharacters)
     {
-        int r1 = saveFailedMatches();
-        LOG.debug("Saved {} previously failed matches", r1);
-        //clear here to avoid unbound retries of the same characters
-        boolean web = isWeb(regions);
-        List<PlayerCharacter> characters = Arrays.stream(regions)
-            .distinct()
-            .map(pendingCharacters::get)
+        return Flux.concat
+        (
+            saveFailedMatches(),
+            Flux.fromIterable(pendingCharacters.entrySet())
+                .doOnNext(e->{if (isWeb(e.getKey()))
+                    LOG.warn("Using web API for {} matches {} players", e.getKey(), e.getValue().size());
+                })
+                .flatMap(e->saveMatches(e.getValue(), true, isWeb(e.getKey())))
+        );
+    }
+
+    private Flux<Future<Integer>> saveFailedMatches()
+    {
+        List<PlayerCharacterNaturalId> chars = failedCharacters.stream()
             .flatMap(Collection::stream)
+            .limit(FAILED_MATCHES_MAX)
+            .distinct()
             .collect(Collectors.toList());
-        if(web) LOG.warn("Using web API for {} matches {} players", regions, characters.size());
-        return r1 + saveMatches(characters, true, web);
+        failedCharacters.clear();
+        return saveMatches(chars, false, false);
     }
 
-    private int saveFailedMatches()
+    private Flux<Future<Integer>> saveMatches
+    (
+        Iterable<? extends PlayerCharacterNaturalId> characters,
+        boolean saveFailedCharacters,
+        boolean web
+    )
     {
-        int i = 0;
-        Set<PlayerCharacterNaturalId> chars;
-        while((chars = failedCharacters.poll()) != null)
-        {
-            if(chars.size() > FAILED_MATCHES_MAX)
-            {
-                LOG.debug("Dropped failed matches batch: {}/{}", chars.size(), FAILED_MATCHES_MAX);
-            }
-            else
-            {
-                LOG.debug("Retrying {} previously failed matches", chars.size());
-                i += saveMatches(chars, false, false);
-            }
-        }
-        return i;
-    }
-
-    private int saveMatches(Iterable<? extends PlayerCharacterNaturalId> characters, boolean saveFailedCharacters, boolean web)
-    {
-        List<Future<Void>> dbTasks = new ArrayList<>();
-        AtomicInteger count = new AtomicInteger(0);
         Set<PlayerCharacterNaturalId> errors = new HashSet<>();
-        api.getMatches(characters, errors, web, REQUEST_LIMIT_PRIORITY_NAME)
+        return api.getMatches(characters, errors, web, REQUEST_LIMIT_PRIORITY_NAME)
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
             .buffer(BATCH_SIZE)
-            .doOnNext(b->count.getAndAdd(b.size()))
-            .toStream()
-            .forEach(m->dbTasks.add(dbExecutorService.submit(()->matchService.saveMatches(m), null)));
-        MiscUtil.awaitAndLogExceptions(dbTasks, true);
-        if(saveFailedCharacters) failedCharacters.add(errors);
-        return count.get();
+            .map(m->dbExecutorService.submit(()->matchService.saveMatches(m)))
+            .doOnComplete(()->{if(saveFailedCharacters) failedCharacters.add(errors);});
     }
 
     //This method fails in a rare occasion due to unknown reason. Retry for now, should be properly fixed later.
     @Transactional @Retryable
-    protected void saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacterNaturalId>> matches)
+    protected int saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacterNaturalId>> matches)
     {
         matches = matches.stream()
             .filter(t->validationPredicate.test(t.getT1()))
@@ -399,6 +395,7 @@ public class MatchService
         }
         matchParticipantDAO.merge(participantBatch);
         LOG.debug("Saved {} matches", matches.size());
+        return matches.size();
     }
 
     private void identify(UpdateContext updateContext)
