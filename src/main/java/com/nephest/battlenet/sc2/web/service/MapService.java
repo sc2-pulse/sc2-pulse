@@ -72,7 +72,7 @@ public class MapService
     public boolean seasonIsTooYoung()
     {
         return seasonDAO.findLast().orElseThrow().getStart()
-            .plus(MAP_STATS_SKIP_NEW_SEASON_FRAME).isAfter(LocalDate.now());
+            .plusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays()).isAfter(LocalDate.now());
     }
 
     private void update(UpdateContext updateContext)
