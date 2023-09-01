@@ -15,11 +15,15 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public final class TestUtil
 {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    public static final ExecutorService EXECUTOR_SERVICE = Executors.newSingleThreadExecutor();
+
     static
     {
         OBJECT_MAPPER.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
