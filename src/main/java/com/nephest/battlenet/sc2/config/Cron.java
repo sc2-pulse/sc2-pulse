@@ -309,9 +309,9 @@ public class Cron
 
     private void doUpdateSeasons()
     {
-        List<Future<?>> tasks = new ArrayList<>();
+        List<Future<Void>> tasks = new ArrayList<>();
         for(Region region : globalContext.getActiveRegions())
-            tasks.add(webExecutorService.submit(()->doUpdateSeasons(region)));
+            tasks.add(webExecutorService.submit(()->doUpdateSeasons(region), null));
 
         MiscUtil.awaitAndThrowException(tasks, true, true);
         if(afterLadderUpdateTask != null)

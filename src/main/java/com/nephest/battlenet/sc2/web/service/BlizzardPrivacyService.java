@@ -227,16 +227,16 @@ public class BlizzardPrivacyService
         LOG.debug("Updating old names and BattleTags for season {}", season);
         boolean current = seasonDAO.getMaxBattlenetId().equals(season);
 
-        List<Future<?>> dbTasks = new ArrayList<>();
+        List<Future<Void>> dbTasks = new ArrayList<>();
         for(Region region : globalContext.getActiveRegions())
         {
             if(!statsService.isAlternativeUpdate(region, current))
             {
-                dbTasks.add(webExecutorService.submit(()->update(region, season, current)));
+                dbTasks.add(webExecutorService.submit(()->update(region, season, current), null));
             }
             else
             {
-                dbTasks.add(webExecutorService.submit(()->alternativeUpdate(region, season)));
+                dbTasks.add(webExecutorService.submit(()->alternativeUpdate(region, season), null));
             }
         }
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
@@ -282,7 +282,7 @@ public class BlizzardPrivacyService
     protected void update(Region region, int seasonId, boolean currentSeason)
     {
         BlizzardSeason bSeason = sc2WebServiceUtil.getExternalOrExistingSeason(region, seasonId);
-        List<Future<?>> dbTasks = new ArrayList<>();
+        List<Future<Void>> dbTasks = new ArrayList<>();
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, QUEUE_TYPES, LEAGUE_TYPES), currentSeason);
         api.getLadders(ladderIds, -1, null, REQUEST_LIMIT_PRIORITY_NAME)
@@ -290,7 +290,8 @@ public class BlizzardPrivacyService
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
             .forEach(l->dbTasks.add(secondaryDbExecutorService.submit(()->
-                LOG.debug("Updated {} accounts and characters", playerCharacterDAO.updateAccountsAndCharacters(l)))));
+                LOG.debug("Updated {} accounts and characters", playerCharacterDAO.updateAccountsAndCharacters(l)),
+                    null)));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 
@@ -320,7 +321,7 @@ public class BlizzardPrivacyService
         Season season = new Season(null, seasonId, region, null, null, null, null);
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladderIds = alternativeLadderService
             .getExistingLadderIds(season, QUEUE_TYPES, LEAGUE_TYPES);
-        List<Future<?>> dbTasks = new ArrayList<>();
+        List<Future<Void>> dbTasks = new ArrayList<>();
         api.getProfileLadders
         (
             ladderIds,
@@ -332,7 +333,8 @@ public class BlizzardPrivacyService
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
             .forEach(l->dbTasks.add(secondaryDbExecutorService.submit(()->
-                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(l.toArray(PlayerCharacter[]::new))))));
+                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(l.toArray(PlayerCharacter[]::new))),
+                    null)));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 

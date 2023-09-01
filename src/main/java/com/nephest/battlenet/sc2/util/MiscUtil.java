@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.MultiAliasName;
 import java.time.Duration;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumMap;
@@ -29,13 +30,14 @@ public final class MiscUtil
 
     private static List<Locale> COUNTRY_LOCALES;
 
-    public static void awaitAndLogExceptions(List<Future<?>> tasks, boolean clear)
+    public static <T> List<T> awaitAndLogExceptions(List<Future<T>> tasks, boolean clear)
     {
-        for(Future<?> task : tasks)
+        List<T> values = new ArrayList<>(tasks.size());
+        for(Future<T> task : tasks)
         {
             try
             {
-                task.get();
+                values.add(task.get());
             }
             catch (ExecutionException | InterruptedException e)
             {
@@ -43,17 +45,24 @@ public final class MiscUtil
             }
         }
         if(clear) tasks.clear();
+        return values;
     }
 
-    public static void awaitAndThrowException(List<Future<?>> tasks, boolean clear, boolean delayException)
+    public static <T> List<T> awaitAndThrowException
+    (
+        List<Future<T>> tasks,
+        boolean clear,
+        boolean delayException
+    )
     {
         Exception cause = null;
 
-        for(Future<?> f : tasks)
+        List<T> values = new ArrayList<>(tasks.size());
+        for(Future<T> f : tasks)
         {
             try
             {
-                f.get();
+                values.add(f.get());
             }
             catch (InterruptedException | ExecutionException e)
             {
@@ -66,6 +75,7 @@ public final class MiscUtil
 
         if(cause != null) throw new IllegalStateException(cause);
         if(clear) tasks.clear();
+        return values;
     }
 
     public static Duration sinceHourStart(Temporal temporal)

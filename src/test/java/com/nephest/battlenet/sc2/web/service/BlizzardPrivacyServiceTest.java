@@ -16,6 +16,7 @@ import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -120,7 +121,12 @@ public class BlizzardPrivacyServiceTest
     @BeforeEach
     public void beforeEach()
     {
-        when(executor.submit(any(Runnable.class))).then(i->{
+        lenient().when(executor.submit(any(Runnable.class))).then(i->{
+            Runnable r = i.getArgument(0);
+            r.run();
+            return CompletableFuture.completedFuture(null);
+        });
+        lenient().when(executor.submit(any(Runnable.class), any())).then(i->{
             Runnable r = i.getArgument(0);
             r.run();
             return CompletableFuture.completedFuture(null);

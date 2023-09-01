@@ -14,6 +14,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -159,7 +160,12 @@ public class DiscordServiceTest
 
     public void stubExecutor()
     {
-        when(executor.submit(any(Runnable.class))).then(i->{
+        lenient().when(executor.submit(any(Runnable.class))).then(i->{
+            Runnable r = i.getArgument(0);
+            r.run();
+            return CompletableFuture.completedFuture(null);
+        });
+        lenient().when(executor.submit(any(Runnable.class), any())).then(i->{
             Runnable r = i.getArgument(0);
             r.run();
             return CompletableFuture.completedFuture(null);

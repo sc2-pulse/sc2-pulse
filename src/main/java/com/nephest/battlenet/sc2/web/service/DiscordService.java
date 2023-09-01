@@ -274,11 +274,11 @@ public class DiscordService
             List<Snowflake> toUpdate = discordUserDAO.findIdsByIdCursor(idCursor, DB_CURSOR_BATCH_SIZE);
             if(toUpdate.isEmpty()) break;
 
-            List<Future<?>> tasks = new ArrayList<>();
+            List<Future<Void>> tasks = new ArrayList<>();
             discordAPI.getUsers(toUpdate)
                 .buffer(USER_UPDATE_BATCH_SIZE)
                 .toStream()
-                .forEach(batch->tasks.add(dbExecutorService.submit(()->updateUsers(batch))));
+                .forEach(batch->tasks.add(dbExecutorService.submit(()->updateUsers(batch), null)));
             MiscUtil.awaitAndThrowException(tasks, true, true);
 
             count += toUpdate.size();

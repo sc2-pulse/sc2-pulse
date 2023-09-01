@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
@@ -72,7 +73,12 @@ public class ClanServiceTest
     @BeforeEach
     public void beforeEach()
     {
-        when(executor.submit(any(Runnable.class))).then(i->{
+        lenient().when(executor.submit(any(Runnable.class))).then(i->{
+            Runnable r = i.getArgument(0);
+            r.run();
+            return CompletableFuture.completedFuture(null);
+        });
+        lenient().when(executor.submit(any(Runnable.class), any())).then(i->{
             Runnable r = i.getArgument(0);
             r.run();
             return CompletableFuture.completedFuture(null);

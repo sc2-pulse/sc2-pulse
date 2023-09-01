@@ -281,7 +281,7 @@ public class ClanService
 
     private void updateInactiveClanMembersBatch(List<PlayerCharacter> clanMembers)
     {
-        List<Future<?>> dbTasks = new ArrayList<>();
+        List<Future<Void>> dbTasks = new ArrayList<>();
         Flux.fromIterable
         (
             clanMembers.stream()
@@ -297,7 +297,7 @@ public class ClanService
             .buffer(INACTIVE_CLAN_MEMBER_BATCH_SIZE)
             .toStream()
             .forEach(profiles->dbTasks.add(dbExecutorService.submit(()->
-                clanService.saveClans(profiles))));
+                clanService.saveClans(profiles), null)));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
         LOG.info("Updated {} inactive clan members", clanMembers.size());
     }

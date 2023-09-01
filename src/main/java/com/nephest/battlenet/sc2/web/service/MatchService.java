@@ -347,7 +347,7 @@ public class MatchService
 
     private int saveMatches(Iterable<? extends PlayerCharacterNaturalId> characters, boolean saveFailedCharacters, boolean web)
     {
-        List<Future<?>> dbTasks = new ArrayList<>();
+        List<Future<Void>> dbTasks = new ArrayList<>();
         AtomicInteger count = new AtomicInteger(0);
         Set<PlayerCharacterNaturalId> errors = new HashSet<>();
         api.getMatches(characters, errors, web, REQUEST_LIMIT_PRIORITY_NAME)
@@ -356,7 +356,7 @@ public class MatchService
             .buffer(BATCH_SIZE)
             .doOnNext(b->count.getAndAdd(b.size()))
             .toStream()
-            .forEach(m->dbTasks.add(dbExecutorService.submit(()->matchService.saveMatches(m))));
+            .forEach(m->dbTasks.add(dbExecutorService.submit(()->matchService.saveMatches(m), null)));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
         if(saveFailedCharacters) failedCharacters.add(errors);
         return count.get();

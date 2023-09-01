@@ -8,7 +8,11 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.Future;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import org.apache.commons.lang3.Range;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,6 +23,36 @@ public class MiscUtilTest
 {
 
     public static final Function<Long, Long> SUBTRACTOR = l->l-1;
+
+
+    @Test
+    public void testAwaitAndLogExceptions()
+    {
+        List<Future<Integer>> tasks = IntStream.range(0, 10)
+            .boxed()
+            .map(i->TestUtil.EXECUTOR_SERVICE.submit(()->{
+                if(i == 5) throw new IllegalStateException("test");
+                return i;
+            }))
+            .collect(Collectors.toList());
+        List<Integer> vals = MiscUtil.awaitAndLogExceptions(tasks, false);
+        assertEquals(9, vals.size());
+        for(int i = 0; i < vals.size(); i++)
+            assertEquals(i >= 5 ? i + 1 : i, vals.get(i));
+    }
+
+    @Test
+    public void whenAwaitAndThrowExceptionAndThereIsException_thenThrowException()
+    {
+        List<Future<Integer>> tasks = IntStream.range(0, 10)
+            .boxed()
+            .map(i->TestUtil.EXECUTOR_SERVICE.submit(()->{
+                if(i == 5) throw new IllegalStateException("test");
+                return i;
+            }))
+            .collect(Collectors.toList());
+        assertThrows(IllegalStateException.class, ()->MiscUtil.awaitAndThrowException(tasks, false, true));
+    }
 
     @CsvSource
     ({
