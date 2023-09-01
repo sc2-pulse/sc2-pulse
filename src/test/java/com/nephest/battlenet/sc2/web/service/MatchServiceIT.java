@@ -80,7 +80,7 @@ public class MatchServiceIT
     throws ExecutionException, InterruptedException
     {
         api.setAutoForceRegion(true);
-        CompletableFuture<UpdateContext> update = new CompletableFuture<>();
+        CompletableFuture<MatchUpdateContext> update = new CompletableFuture<>();
         eventService.getMatchUpdateEvent().subscribe(update::complete);
         try
         {

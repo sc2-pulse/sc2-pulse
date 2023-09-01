@@ -4,7 +4,7 @@
 package com.nephest.battlenet.sc2.service;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
-import com.nephest.battlenet.sc2.web.service.UpdateContext;
+import com.nephest.battlenet.sc2.web.service.MatchUpdateContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -20,7 +20,7 @@ public class EventService
 
     private final Sinks.Many<PlayerCharacter> ladderCharacterActivityEvent;
     private final Sinks.Many<Boolean> ladderUpdateEvent;
-    private final Sinks.Many<UpdateContext> matchUpdateEvent;
+    private final Sinks.Many<MatchUpdateContext> matchUpdateEvent;
 
     @Autowired
     public EventService
@@ -70,7 +70,7 @@ public class EventService
         return ladderUpdateEvent.asFlux();
     }
 
-    public synchronized void createMatchUpdateEvent(UpdateContext uc)
+    public synchronized void createMatchUpdateEvent(MatchUpdateContext uc)
     {
         matchUpdateEvent.emitNext(uc, DEFAULT_FAILURE_HANDLER);
     }
@@ -82,7 +82,7 @@ public class EventService
      * @return endless {@link Flux} of match updates. Consumers are expected to
      * {@link Flux#subscribe()}.
      */
-    public Flux<UpdateContext> getMatchUpdateEvent()
+    public Flux<MatchUpdateContext> getMatchUpdateEvent()
     {
         return matchUpdateEvent.asFlux();
     }

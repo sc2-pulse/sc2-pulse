@@ -247,7 +247,7 @@ public class MatchService
         setRequestLimitPriority(pendingCharacters);
         update(pendingCharacters, globalContext.getActiveRegions().toArray(new Region[0]));
         matchService.updateMeta(uc);
-        eventService.createMatchUpdateEvent(uc);
+        eventService.createMatchUpdateEvent(new MatchUpdateContext(pendingCharacters, uc));
     }
 
     private void setRequestLimitPriority(Map<Region, Set<PlayerCharacter>> characters)

@@ -75,9 +75,9 @@ public class MapService
             .plusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays()).isAfter(LocalDate.now());
     }
 
-    private void update(UpdateContext updateContext)
+    private void update(MatchUpdateContext updateContext)
     {
-        OffsetDateTime to = getMapStatsEnd(updateContext);
+        OffsetDateTime to = getMapStatsEnd(updateContext.getUpdateContext());
         //skipping because the ladder is very volatile(top% leagues) at the beginning of the new season
         if(seasonIsTooYoung())
         {
