@@ -245,7 +245,7 @@ public class MatchService
         UpdateContext uc = getUpdateContext();
         Map<Region, Set<PlayerCharacter>> pendingCharacters = copyAndClearPendingCharacters();
         setRequestLimitPriority(pendingCharacters);
-        update(pendingCharacters, globalContext.getActiveRegions().toArray(new Region[0]));
+        update(pendingCharacters, globalContext.getActiveRegions().toArray(Region[]::new));
         matchService.updateMeta(uc);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(pendingCharacters, uc));
     }
@@ -275,7 +275,10 @@ public class MatchService
     private Map<Region, Set<PlayerCharacter>> copyAndClearPendingCharacters()
     {
         Map<Region, Set<PlayerCharacter>> copy = pendingCharacters.entrySet().stream()
-            .collect(Collectors.toMap(Map.Entry::getKey, e->e.getValue().getValue()));
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                e-> Set.copyOf(e.getValue().getValue())
+            ));
         pendingCharacters.values().forEach(var->{
             var.getValue().clear();
             var.save();
