@@ -170,7 +170,7 @@ public class ClanService
     public void update()
     {
         updateClanMembers();
-        clanService.updateAndNullifyStats();
+        dbExecutorService.submit(()->clanService.updateAndNullifyStats());
     }
 
     @Transactional
@@ -252,7 +252,7 @@ public class ClanService
 
     private void updateClanMembers()
     {
-        removeExpiredClanMembers();
+        dbExecutorService.submit(this::removeExpiredClanMembers);
         if(inactiveClanMembersUpdateTask.isDone())
             inactiveClanMembersUpdateTask = webExecutorService.submit(this::updateInactiveClanMembers);
     }
