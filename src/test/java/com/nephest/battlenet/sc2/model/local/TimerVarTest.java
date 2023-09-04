@@ -60,7 +60,7 @@ public class TimerVarTest
 
         assertTrue(timerVar.availableOn().isBefore(Instant.now()));
         assertTrue(timerVar.isAvailable());
-        assertTrue(timerVar.runIfAvailable());
+        assertTrue(timerVar.runIfAvailable().block());
         verify(task).run();
         //timer is updated
         assertTrue(timerVar.getValue().isAfter(Instant.now().minusSeconds(TEST_LAG_SECONDS)));
@@ -80,7 +80,7 @@ public class TimerVarTest
 
         assertFalse(timerVar.availableOn().isBefore(Instant.now()));
         assertFalse(timerVar.isAvailable());
-        assertFalse(timerVar.runIfAvailable());
+        assertFalse(timerVar.runIfAvailable().block());
         verify(task, never()).run();
         assertFalse(timerVar.getValue().isAfter(Instant.now().minusSeconds(TEST_LAG_SECONDS)));
         verify(varDAO, never()).merge(eq(KEY), any());
@@ -109,7 +109,7 @@ public class TimerVarTest
 
         assertFalse(timerVar.isActive());
         assertTrue(timerVar.isAvailable());
-        new Thread(()->timerVar.runIfAvailable()).start();
+        new Thread(()->timerVar.runIfAvailable().block()).start();
         Thread.sleep(50);
         assertTrue(timerVar.isActive());
         assertFalse(timerVar.isAvailable());
@@ -143,7 +143,7 @@ public class TimerVarTest
             }
         ).when(task).run();
 
-        assertTrue(timerVar.runIfAvailable());
+        assertTrue(timerVar.runIfAvailable().block());
         assertTrue(timerVar.getValue().isBefore(instants[0]));
 
     }

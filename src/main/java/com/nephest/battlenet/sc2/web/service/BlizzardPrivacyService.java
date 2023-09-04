@@ -270,7 +270,7 @@ public class BlizzardPrivacyService
 
     private void anonymizeExpiredData()
     {
-        fullAnonymizeTask.runIfAvailable();
+        fullAnonymizeTask.runIfAvailable().block();
         Instant anonymizeInstant = OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).toInstant();
         OffsetDateTime from = OffsetDateTime.ofInstant(lastAnonymizeInstant.getValue(), ZoneId.systemDefault());
         int accounts = accountDAO.anonymizeExpiredAccounts(from);

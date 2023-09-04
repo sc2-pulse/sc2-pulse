@@ -222,7 +222,7 @@ public class Cron
     @Scheduled(cron="0 0/10 * * * *")
     public void updateBackgroundServices()
     {
-        updateDiscordTask.runIfAvailable();
+        updateDiscordTask.runIfAvailable().block();
     }
 
     @Scheduled(cron="0 0/10 * * * *")
@@ -253,7 +253,7 @@ public class Cron
             doUpdateSeasons();
             //There is a long pause here due to stats calculations in the DB, a good place to do a GC run, make a hint.
             System.gc();
-            calculateHeavyStatsTask.runIfAvailable();
+            calculateHeavyStatsTask.runIfAvailable().block();
             clanService.update();
             blizzardPrivacyService.update();
             updateService.updated(begin);
@@ -340,8 +340,8 @@ public class Cron
 
     private void commenceMaintenance()
     {
-        maintenanceFrequentTask.runIfAvailable();
-        maintenanceInfrequentTask.runIfAvailable();
+        maintenanceFrequentTask.runIfAvailable().block();
+        maintenanceInfrequentTask.runIfAvailable().block();
     }
 
     private void commenceFrequentMaintenance()

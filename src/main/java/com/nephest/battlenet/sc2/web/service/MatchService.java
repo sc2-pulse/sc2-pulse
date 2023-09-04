@@ -171,7 +171,7 @@ public class MatchService
             "match.updated",
             false,
             MATCH_UPDATE_FRAME,
-            this::update,
+            ()->this.update(),
             true
         );
         updateMatchesTask.tryLoad();
@@ -194,7 +194,9 @@ public class MatchService
                         .sum()
                 );
                 UpdateContext uc = updateService.getUpdateContext(null);
-                if(updateMatchesTask.runIfAvailable()) updateContext = uc;
+                updateMatchesTask.runIfAvailable()
+                    .doOnNext(ran->updateContext = ran ? uc : updateContext)
+                    .subscribe();
             });
     }
 

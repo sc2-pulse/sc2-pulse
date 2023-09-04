@@ -9,6 +9,8 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 /**
  * This var encapsulates common logic for simple timer based tasks(run every x duration).
@@ -22,9 +24,28 @@ extends InstantVar
 
     private final Duration defaultDurationBetweenRuns;
     private final DurationVar durationBetweenRuns;
-    private final Runnable task;
+    private final Mono<?> task;
     private final AtomicBoolean active = new AtomicBoolean(false);
     private final boolean valueBeforeTask;
+
+    public TimerVar
+    (
+        VarDAO varDAO,
+        String key,
+        boolean load,
+        Duration defaultDurationBetweenRuns,
+        Mono<?> task,
+        boolean valueBeforeTask
+    )
+    {
+        super(varDAO, key, load);
+        this.defaultDurationBetweenRuns = defaultDurationBetweenRuns;
+        this.durationBetweenRuns = new DurationVar(varDAO, key + DURATION_BETWEEN_TASKS_SUFFIX, load);
+        if(durationBetweenRuns.getValue() == null)
+            durationBetweenRuns.setValue(defaultDurationBetweenRuns);
+        this.task = task;
+        this.valueBeforeTask = valueBeforeTask;
+    }
 
     public TimerVar
     (
@@ -36,13 +57,15 @@ extends InstantVar
         boolean valueBeforeTask
     )
     {
-        super(varDAO, key, load);
-        this.defaultDurationBetweenRuns = defaultDurationBetweenRuns;
-        this.durationBetweenRuns = new DurationVar(varDAO, key + DURATION_BETWEEN_TASKS_SUFFIX, load);
-        if(durationBetweenRuns.getValue() == null)
-            durationBetweenRuns.setValue(defaultDurationBetweenRuns);
-        this.task = task;
-        this.valueBeforeTask = valueBeforeTask;
+        this
+        (
+            varDAO,
+            key,
+            load,
+            defaultDurationBetweenRuns,
+            Mono.fromRunnable(task),
+            valueBeforeTask
+        );
     }
 
     public TimerVar
@@ -109,29 +132,23 @@ extends InstantVar
         return valueBeforeTask;
     }
 
-    public boolean runIfAvailable()
+    public Mono<Boolean> runIfAvailable()
     {
         if(!isAvailable() || !active.compareAndSet(false, true))
         {
             LOG.trace("Wanted to execute {} timer but there is no need to do it yet", getKey());
-            return false;
+            return Mono.just(false);
         }
 
-        Instant val = null;
-        if(isValueBeforeTask()) val = Instant.now();
-        try
-        {
-            task.run();
-            if(!valueBeforeTask) val = Instant.now();
-            this.setValueAndSave(val);
-            LOG.debug("Executed {} timer", getKey());
-        }
-        finally
-        {
-            active.compareAndSet(true, false);
-        }
-
-        return true;
+        Instant beforeTask = Instant.now();
+        return task
+            .doOnError(e->active.compareAndSet(true, false))
+            .then(Mono.fromRunnable(()->{
+                this.setValueAndSave(isValueBeforeTask() ? beforeTask : Instant.now());
+                LOG.debug("Executed {} timer", getKey());
+                active.compareAndSet(true, false);
+            }).subscribeOn(Schedulers.boundedElastic()))
+            .thenReturn(true);
     }
 
 }

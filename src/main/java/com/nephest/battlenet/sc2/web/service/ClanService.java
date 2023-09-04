@@ -177,7 +177,7 @@ public class ClanService
     public void updateAndNullifyStats()
     {
         if(shouldUpdateStats()) updateStats();
-        nullifyStatsTask.runIfAvailable();
+        nullifyStatsTask.runIfAvailable().block();
     }
 
     private boolean shouldUpdateStats()
