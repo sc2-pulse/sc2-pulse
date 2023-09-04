@@ -54,7 +54,7 @@ public class MapService
     private void subscribeToEvents(EventService eventService)
     {
         eventService.getMatchUpdateEvent()
-            .subscribeOn(Schedulers.boundedElastic())
+            .publishOn(Schedulers.boundedElastic())
             .subscribe(this::update);
     }
 

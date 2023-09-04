@@ -71,7 +71,7 @@ public class TwitchService
     private void subToEvents(EventService eventService)
     {
         eventService.getMatchUpdateEvent()
-            .subscribeOn(Schedulers.boundedElastic())
+            .publishOn(Schedulers.boundedElastic())
             .subscribe(uc->doUpdate());
     }
 

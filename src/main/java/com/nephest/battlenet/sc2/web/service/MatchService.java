@@ -182,7 +182,7 @@ public class MatchService
         eventService.getLadderCharacterActivityEvent()
             .subscribe(character->pendingCharacters.get(character.getRegion()).getValue().add(character));
         eventService.getLadderUpdateEvent()
-            .subscribeOn(Schedulers.boundedElastic())
+            .publishOn(Schedulers.boundedElastic())
             .subscribe(allStats->{
                 pendingCharacters.values().forEach(Var::save);
                 LOG.debug
