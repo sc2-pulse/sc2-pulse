@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Supplier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import reactor.core.publisher.Mono;
@@ -24,7 +25,7 @@ extends InstantVar
 
     private final Duration defaultDurationBetweenRuns;
     private final DurationVar durationBetweenRuns;
-    private final Mono<?> task;
+    private final Supplier<Mono<?>> task;
     private final AtomicBoolean active = new AtomicBoolean(false);
     private final boolean valueBeforeTask;
 
@@ -34,7 +35,7 @@ extends InstantVar
         String key,
         boolean load,
         Duration defaultDurationBetweenRuns,
-        Mono<?> task,
+        Supplier<Mono<?>> task,
         boolean valueBeforeTask
     )
     {
@@ -63,7 +64,7 @@ extends InstantVar
             key,
             load,
             defaultDurationBetweenRuns,
-            Mono.fromRunnable(task),
+            ()->Mono.fromRunnable(task),
             valueBeforeTask
         );
     }
@@ -142,6 +143,7 @@ extends InstantVar
 
         Instant beforeTask = Instant.now();
         return task
+            .get()
             .doOnError(e->active.compareAndSet(true, false))
             .then(Mono.fromRunnable(()->{
                 this.setValueAndSave(isValueBeforeTask() ? beforeTask : Instant.now());
