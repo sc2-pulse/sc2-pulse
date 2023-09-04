@@ -25,6 +25,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Instant;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -36,6 +37,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -57,6 +59,9 @@ public class ClanServiceTest
 
     @Mock
     private BlizzardSC2API api;
+    
+    @Mock
+    private EventService eventService;
 
     @Mock
     private AlternativeLadderService alternativeLadderService;
@@ -69,6 +74,7 @@ public class ClanServiceTest
 
     private ClanService clanService;
     private ClanService nestedClanService;
+    private Sinks.Many<Boolean> ladderUpdateEvent;
 
     @BeforeEach
     public void beforeEach()
@@ -83,6 +89,8 @@ public class ClanServiceTest
             r.run();
             return CompletableFuture.completedFuture(null);
         });
+        ladderUpdateEvent = Sinks.unsafe().many().multicast().onBackpressureBuffer(10);
+        when(eventService.getLadderUpdateEvent()).thenReturn(ladderUpdateEvent.asFlux());
         clanService = new ClanService
         (
             playerCharacterDAO,
@@ -91,12 +99,18 @@ public class ClanServiceTest
             clanMemberEventDAO,
             varDAO,
             api,
+            eventService,
             alternativeLadderService,
             executor,
             executor
         );
         nestedClanService = spy(clanService);
         clanService.setClanService(nestedClanService);
+    }
+    
+    private void update()
+    {
+        ladderUpdateEvent.emitNext(true, Sinks.EmitFailureHandler.FAIL_FAST);
     }
 
     @Test
@@ -105,12 +119,12 @@ public class ClanServiceTest
         clanService.getNullifyStatsTask().setValue(Instant.now()
             .minus(ClanService.STATS_UPDATE_FRAME)
             .plusSeconds(1));
-        clanService.update();
+        update();
         verify(clanDAO, never()).nullifyStats(anyInt());
 
         Instant beforeStart = Instant.now();
         clanService.getNullifyStatsTask().setValue(Instant.now().minus(ClanService.STATS_UPDATE_FRAME));
-        clanService.update();
+        update();
         verify(clanDAO).nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
         assertTrue(beforeStart.isBefore(clanService.getNullifyStatsTask().getValue()));
     }
@@ -125,7 +139,7 @@ public class ClanServiceTest
         clanService.getStatsUpdated().setValue(Instant.now().minus(ClanService.STATS_UPDATE_FRAME.dividedBy(2)));
         Instant beforeStart = Instant.now();
 
-        clanService.update();
+        update();
         verify(clanDAO).updateStats(firstList);
         assertTrue(beforeStart.isBefore(clanService.getStatsUpdated().getValue()));
         assertEquals(22, clanService.getStatsCursor().getValue());
@@ -137,7 +151,7 @@ public class ClanServiceTest
         beforeStart = Instant.now();
 
         //The cursor is reset due to end of cursor
-        clanService.update();
+        update();
         assertTrue(beforeStart.isBefore(clanService.getStatsUpdated().getValue()));
         assertEquals(0, clanService.getStatsCursor().getValue());
     }
@@ -149,7 +163,7 @@ public class ClanServiceTest
         clanService.getStatsCursor().setValue(33L);
 
         //cursor was not reset
-        clanService.update();
+        update();
         assertEquals(33, clanService.getStatsCursor().getValue());
     }
     
@@ -189,7 +203,7 @@ public class ClanServiceTest
 
         ArgumentCaptor<ClanMember> clanMemberCaptor = ArgumentCaptor.forClass(ClanMember.class);
         Instant beforeUpdate = Instant.now();
-        clanService.update();
+        update();
         verify(clanMemberDAO).removeExpired();
         //clan membership dropped
         verify(clanMemberDAO).remove(2L);
@@ -214,7 +228,7 @@ public class ClanServiceTest
         clanService.getInactiveClanMembersCursor().setValue(33L);
         clanService.getInactiveClanMembersUpdated().setValue(beforeUpdate);
 
-        clanService.update();
+        update();
 
         assertEquals(beforeUpdate, clanService.getInactiveClanMembersUpdated().getValue());
         assertEquals(33L, clanService.getInactiveClanMembersCursor().getValue());
@@ -228,7 +242,7 @@ public class ClanServiceTest
         clanService.getInactiveClanMembersCursor().setValue(33L);
         clanService.getInactiveClanMembersUpdated().setValue(beforeUpdate);
 
-        clanService.update();
+        update();
 
         assertEquals(beforeUpdate, clanService.getInactiveClanMembersUpdated().getValue());
         assertEquals(Long.MAX_VALUE, clanService.getInactiveClanMembersCursor().getValue());

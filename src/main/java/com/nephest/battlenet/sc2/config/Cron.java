@@ -254,7 +254,6 @@ public class Cron
             //There is a long pause here due to stats calculations in the DB, a good place to do a GC run, make a hint.
             System.gc();
             calculateHeavyStatsTask.runIfAvailable().block();
-            clanService.update();
             blizzardPrivacyService.update();
             updateService.updated(begin);
             commenceMaintenance();

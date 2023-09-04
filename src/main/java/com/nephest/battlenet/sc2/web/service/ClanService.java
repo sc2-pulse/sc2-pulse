@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
 import java.time.Instant;
@@ -86,6 +87,7 @@ public class ClanService
         ClanMemberEventDAO clanMemberEventDAO,
         VarDAO varDAO,
         BlizzardSC2API api,
+        EventService eventService,
         @Lazy AlternativeLadderService alternativeLadderService,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         @Qualifier("webExecutorService") ExecutorService webExecutorService
@@ -100,6 +102,7 @@ public class ClanService
         this.dbExecutorService = dbExecutorService;
         this.webExecutorService = webExecutorService;
         init(varDAO);
+        subscribeToEvents(eventService);
     }
 
     private void init(VarDAO varDAO)
@@ -136,6 +139,11 @@ public class ClanService
         }
     }
 
+    private void subscribeToEvents(EventService eventService)
+    {
+        eventService.getLadderUpdateEvent().subscribe(allStats->this.update());
+    }
+
     protected InstantVar getStatsUpdated()
     {
         return statsUpdated;
@@ -167,7 +175,7 @@ public class ClanService
     }
 
 
-    public void update()
+    private void update()
     {
         updateClanMembers();
         dbExecutorService.submit(()->clanService.updateAndNullifyStats());
