@@ -22,7 +22,6 @@ import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.service.EventService;
-import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -37,15 +36,12 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.lang.NonNull;
 import org.springframework.retry.annotation.Retryable;
@@ -53,6 +49,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple4;
@@ -65,6 +62,7 @@ public class MatchService
 
     private static final Logger LOG = LoggerFactory.getLogger(MatchService.class);
     public static final int BATCH_SIZE = 1000;
+    public static final int BATCH_PREFETCH = 5;
     public static final int FAILED_MATCHES_MAX = 100;
     public static final Duration MATCH_UPDATE_FRAME = Duration.ofMinutes(50);
     public static final String REQUEST_LIMIT_PRIORITY_NAME = "match";
@@ -79,7 +77,6 @@ public class MatchService
     private final AlternativeLadderService alternativeLadderService;
     private final EventService eventService;
     private final UpdateService updateService;
-    private final ExecutorService dbExecutorService;
     private final GlobalContext globalContext;
     private final Predicate<BlizzardMatch> validationPredicate;
     private final ConcurrentLinkedQueue<Set<PlayerCharacterNaturalId>> failedCharacters = new ConcurrentLinkedQueue<>();
@@ -104,7 +101,6 @@ public class MatchService
         AlternativeLadderService alternativeLadderService,
         UpdateService updateService,
         EventService eventService,
-        @Qualifier("secondaryDbExecutorService") ExecutorService dbExecutorService,
         Validator validator,
         GlobalContext globalContext
     )
@@ -118,7 +114,6 @@ public class MatchService
         this.alternativeLadderService = alternativeLadderService;
         this.eventService = eventService;
         this.updateService = updateService;
-        this.dbExecutorService = dbExecutorService;
         this.globalContext = globalContext;
         subToEvents(eventService);
         initVars(varDAO);
@@ -171,7 +166,7 @@ public class MatchService
             "match.updated",
             false,
             MATCH_UPDATE_FRAME,
-            ()->this.update(),
+            ()->update(),
             true
         );
         updateMatchesTask.tryLoad();
@@ -182,22 +177,19 @@ public class MatchService
         eventService.getLadderCharacterActivityEvent()
             .subscribe(character->pendingCharacters.get(character.getRegion()).getValue().add(character));
         eventService.getLadderUpdateEvent()
-            .publishOn(Schedulers.boundedElastic())
-            .subscribe(allStats->{
-                pendingCharacters.values().forEach(Var::save);
-                LOG.debug
-                (
-                    "Pending characters: {}",
-                    pendingCharacters.values().stream()
-                        .map(Var::getValue)
-                        .mapToInt(Collection::size)
-                        .sum()
-                );
-                UpdateContext uc = updateService.getUpdateContext(null);
-                updateMatchesTask.runIfAvailable()
-                    .doOnNext(ran->updateContext = ran ? uc : updateContext)
-                    .subscribe();
-            });
+            .flatMap(allStats->savePendingCharacters())
+            .doOnNext(characters->LOG.debug("Pending characters: {}", characters))
+            .flatMap
+            (
+                characters->
+                {
+                    UpdateContext uc = updateService.getUpdateContext(null);
+                    return updateMatchesTask.runIfAvailable()
+                        .doOnNext(ran->updateContext = ran ? uc : updateContext);
+                }
+
+            )
+            .subscribe();
     }
 
     public Duration getMatchUpdateFrame()
@@ -241,14 +233,14 @@ public class MatchService
         return Collections.unmodifiableSet(webRegions.getValue());
     }
 
-    private void update()
+    private Mono<Void> update()
     {
-        UpdateContext uc = getUpdateContext();
-        Map<Region, Set<PlayerCharacter>> pendingCharacters = copyAndClearPendingCharacters();
-        setRequestLimitPriority(pendingCharacters);
-        update(pendingCharacters);
-        matchService.updateMeta(uc);
-        eventService.createMatchUpdateEvent(new MatchUpdateContext(pendingCharacters, uc));
+        return copyAndClearPendingCharacters()
+            .flatMap(pendingCharacters->{
+                setRequestLimitPriority(pendingCharacters);
+                return update(pendingCharacters)
+                    .doOnSuccess(v->eventService.createMatchUpdateEvent(new MatchUpdateContext(pendingCharacters, getUpdateContext())));
+            });
     }
 
     private void setRequestLimitPriority(Map<Region, Set<PlayerCharacter>> characters)
@@ -273,18 +265,41 @@ public class MatchService
             api.getRequestsPerSecondCap(globalContext.getActiveRegions().iterator().next()) / 2);
     }
 
-    private Map<Region, Set<PlayerCharacter>> copyAndClearPendingCharacters()
+    private Mono<Integer> savePendingCharacters()
     {
-        Map<Region, Set<PlayerCharacter>> copy = pendingCharacters.entrySet().stream()
-            .collect(Collectors.toMap(
-                Map.Entry::getKey,
-                e-> Set.copyOf(e.getValue().getValue())
-            ));
-        pendingCharacters.values().forEach(var->{
-            var.getValue().clear();
-            var.save();
-        });
-        return copy;
+        return Mono.fromCallable
+        (
+            ()->
+            {
+                pendingCharacters.values().forEach(Var::save);
+                return pendingCharacters.values().stream()
+                    .map(Var::getValue)
+                    .mapToInt(Collection::size)
+                    .sum();
+            }
+        )
+            .subscribeOn(Schedulers.boundedElastic());
+    }
+
+    private Mono<Map<Region, Set<PlayerCharacter>>> copyAndClearPendingCharacters()
+    {
+        return Mono.fromCallable
+        (
+            ()->
+            {
+                Map<Region, Set<PlayerCharacter>> copy = pendingCharacters.entrySet().stream()
+                    .collect(Collectors.toMap(
+                        Map.Entry::getKey,
+                        e-> Set.copyOf(e.getValue().getValue())
+                    ));
+                pendingCharacters.values().forEach(var->{
+                    var.getValue().clear();
+                    var.save();
+                });
+                return copy;
+            }
+        )
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     private UpdateContext getUpdateContext()
@@ -300,27 +315,34 @@ public class MatchService
                 );
     }
 
-    private void update(Map<Region, Set<PlayerCharacter>> pendingCharacters)
+    private Mono<Void> update(Map<Region, Set<PlayerCharacter>> pendingCharacters)
     {
-
-        int matchCount = MiscUtil.awaitAndLogExceptions
-        (
-            saveMatches(pendingCharacters).collectList().block(),
-            true
-        )
-            .stream()
-            .mapToInt(i->i)
-            .sum();
-        matchDAO.removeExpired();
-        LOG.info("Saved {} matches for {}", matchCount, pendingCharacters.keySet());
-        if(api.isAutoForceRegion() && matchCount < 1)
-        {
-            LOG.warn("No matches found in {} regions", pendingCharacters.keySet());
-            for(Region region : pendingCharacters.keySet()) api.setForceRegion(region);
-        }
+        return saveMatches(pendingCharacters)
+            .reduce(0, Integer::sum)
+            .doOnSuccess(count->LOG.info("Saved {} matches for {}", count, pendingCharacters.keySet()))
+            .flatMap(this::postUpdate);
     }
 
-    private Flux<Future<Integer>> saveMatches(Map<Region, Set<PlayerCharacter>> pendingCharacters)
+    private Mono<Void> postUpdate(int matchCount)
+    {
+        return Mono.fromRunnable
+        (
+            ()->
+            {
+                matchDAO.removeExpired();
+                matchService.updateMeta(getUpdateContext());
+                if(api.isAutoForceRegion() && matchCount < 1)
+                {
+                    LOG.warn("No matches found in {} regions", pendingCharacters.keySet());
+                    for(Region region : pendingCharacters.keySet()) api.setForceRegion(region);
+                }
+            }
+        )
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
+    }
+
+    private Flux<Integer> saveMatches(Map<Region, Set<PlayerCharacter>> pendingCharacters)
     {
         return Flux.concat
         (
@@ -333,7 +355,7 @@ public class MatchService
         );
     }
 
-    private Flux<Future<Integer>> saveFailedMatches()
+    private Flux<Integer> saveFailedMatches()
     {
         List<PlayerCharacterNaturalId> chars = failedCharacters.stream()
             .flatMap(Collection::stream)
@@ -344,7 +366,7 @@ public class MatchService
         return saveMatches(chars, false, false);
     }
 
-    private Flux<Future<Integer>> saveMatches
+    private Flux<Integer> saveMatches
     (
         Iterable<? extends PlayerCharacterNaturalId> characters,
         boolean saveFailedCharacters,
@@ -356,13 +378,19 @@ public class MatchService
             .flatMap(m->Flux.fromArray(m.getT1().getMatches())
                 .zipWith(Flux.fromStream(Stream.iterate(m.getT2(), i->m.getT2()))))
             .buffer(BATCH_SIZE)
-            .map(m->dbExecutorService.submit(()->matchService.saveMatches(m)))
+            .flatMap(this::saveMatches, 1, BATCH_PREFETCH)
             .doOnComplete(()->{if(saveFailedCharacters) failedCharacters.add(errors);});
+    }
+
+    private Mono<Integer> saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacterNaturalId>> matches)
+    {
+        return Mono.fromCallable(()->matchService.saveMatchesSync(matches))
+            .subscribeOn(Schedulers.boundedElastic());
     }
 
     //This method fails in a rare occasion due to unknown reason. Retry for now, should be properly fixed later.
     @Transactional @Retryable
-    protected int saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacterNaturalId>> matches)
+    protected int saveMatchesSync(List<Tuple2<BlizzardMatch, PlayerCharacterNaturalId>> matches)
     {
         matches = matches.stream()
             .filter(t->validationPredicate.test(t.getT1()))
