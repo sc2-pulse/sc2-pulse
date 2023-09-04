@@ -317,6 +317,8 @@ public class Cron
         {
             try
             {
+                if(!afterLadderUpdateTask.isDone())
+                    LOG.warn("Waiting for previous post ladder update task to complete");
                 afterLadderUpdateTask.get();
             }
             catch (InterruptedException | ExecutionException e)
