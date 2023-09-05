@@ -36,7 +36,6 @@ import com.nephest.battlenet.sc2.model.local.dao.LeagueTierDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
-import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.AlternativeTeamData;
 import java.time.Duration;
@@ -123,7 +122,6 @@ public class AlternativeLadderService
     private final DivisionDAO divisionDao;
     private final FastTeamDAO fastTeamDAO;
     private final TeamDAO teamDao;
-    private final TeamStateDAO teamStateDAO;
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDao;
     private final TeamMemberDAO teamMemberDao;
@@ -133,7 +131,6 @@ public class AlternativeLadderService
     private final ConversionService conversionService;
     private final ExecutorService dbExecutorService;
     private final ClanService clanService;
-    private final StatsService statsService;
     private final Predicate<BlizzardProfileTeam> teamValidationPredicate;
 
     @Value("${com.nephest.battlenet.sc2.ladder.alternative.web.auto:#{'false'}}")
@@ -149,7 +146,6 @@ public class AlternativeLadderService
         DivisionDAO divisionDao,
         FastTeamDAO fastTeamDAO,
         TeamDAO teamDao,
-        TeamStateDAO teamStateDAO,
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDao,
         TeamMemberDAO teamMemberDao,
@@ -159,8 +155,7 @@ public class AlternativeLadderService
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
-        ClanService clanService,
-        @Lazy StatsService statsService
+        ClanService clanService
     )
     {
         this.api = api;
@@ -169,7 +164,6 @@ public class AlternativeLadderService
         this.divisionDao = divisionDao;
         this.fastTeamDAO = fastTeamDAO;
         this.teamDao = teamDao;
-        this.teamStateDAO = teamStateDAO;
         this.accountDAO = accountDAO;
         this.playerCharacterDao = playerCharacterDao;
         this.teamMemberDao = teamMemberDao;
@@ -180,7 +174,6 @@ public class AlternativeLadderService
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         this.dbExecutorService = dbExecutorService;
         this.clanService = clanService;
-        this.statsService = statsService;
     }
 
     public static final int ALTERNATIVE_LADDER_ERROR_THRESHOLD = 100;
