@@ -8,7 +8,6 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
-import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
@@ -19,10 +18,8 @@ import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.SingleRunnable;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
-import com.nephest.battlenet.sc2.web.service.ClanService;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.GlobalContext;
-import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
@@ -82,9 +79,6 @@ public class Cron
     private ProPlayerService proPlayerService;
 
     @Autowired
-    private MatchService matchService;
-
-    @Autowired
     private SeasonStateDAO seasonStateDAO;
 
     @Autowired
@@ -103,9 +97,6 @@ public class Cron
     private QueueStatsDAO queueStatsDAO;
 
     @Autowired
-    private MapStatsDAO mapStatsDAO;
-
-    @Autowired
     private PlayerCharacterReportService characterReportService;
 
     @Autowired
@@ -122,9 +113,6 @@ public class Cron
 
     @Autowired
     private StatusService statusService;
-
-    @Autowired
-    private ClanService clanService;
 
     @Autowired
     private DiscordService discordService;
