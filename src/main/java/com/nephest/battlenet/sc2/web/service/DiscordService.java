@@ -145,8 +145,9 @@ public class DiscordService
         this.dbExecutorService = dbExecutorService;
         this.conversionService = conversionService;
         eventService.getLadderCharacterActivityEvent()
-            .subscribeOn(Schedulers.boundedElastic())
-            .subscribe(c->updateRoles(c.getAccountId()).subscribe());
+            .publishOn(Schedulers.boundedElastic())
+            .flatMap(c->updateRoles(c.getAccountId()))
+            .subscribe();
     }
 
     protected DiscordAPI getDiscordAPI()
