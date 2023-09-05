@@ -347,7 +347,6 @@ public class StatsService
             statsService.afterCurrentSeasonUpdate(allStats, pending, altPending));
     }
 
-    @Transactional
     public void afterCurrentSeasonUpdate
     (
         boolean allStats,
