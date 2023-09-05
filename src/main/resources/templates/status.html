@@ -20,7 +20,7 @@
             Match history is updated every
             <span
                 th:class="${@matchService.matchUpdateFrame.equals(T(com.nephest.battlenet.sc2.web.service.MatchService).MATCH_UPDATE_FRAME) ? 'text-success' : 'text-warning'}"
-                th:text="${@formatUtil.formatWords(@matchService.matchUpdateFrame)}"
+                th:text="${@formatUtil.formatWords(@matchService.matchUpdateFrame.multipliedBy(2))}"
             >
             </span>
         </p>
