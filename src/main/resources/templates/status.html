@@ -16,7 +16,7 @@
         <p>
             The estimated refresh time is a pessimistic estimate, some data may be updated faster.
         </p>
-        <p th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev') && not #arrays.contains(@environment.getActiveProfiles(), 'maintenance')}">
+        <p>
             Match history is updated every
             <span
                 th:class="${@matchService.matchUpdateFrame.equals(T(com.nephest.battlenet.sc2.web.service.MatchService).MATCH_UPDATE_FRAME) ? 'text-success' : 'text-warning'}"
