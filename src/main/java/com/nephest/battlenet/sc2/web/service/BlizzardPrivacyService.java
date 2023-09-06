@@ -29,6 +29,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.MiscUtil;
+import com.nephest.battlenet.sc2.util.SingleRunnable;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -100,6 +101,7 @@ public class BlizzardPrivacyService
     private TimerVar fullAnonymizeTask;
     private InstantVar lastUpdatedCharacterInstant;
     private Future<?> characterUpdateTask = CompletableFuture.completedFuture(null);
+    private final SingleRunnable updateOldDataTask;
 
     @Autowired
     public BlizzardPrivacyService
@@ -135,6 +137,7 @@ public class BlizzardPrivacyService
         this.globalContext = globalContext;
         initVars(varDAO);
         api.addRequestLimitPriority(REQUEST_LIMIT_PRIORITY_NAME, REQUEST_LIMIT_PRIORITY_SLOTS);
+        updateOldDataTask = new SingleRunnable(this::updateOldSeasons, webExecutorService);
     }
 
     private void initVars(VarDAO varDAO)
@@ -210,12 +213,17 @@ public class BlizzardPrivacyService
         return characterUpdateTask;
     }
 
+    public CompletableFuture<Void> getUpdateOldDataTask()
+    {
+        return updateOldDataTask.getFuture();
+    }
+
     public Future<?> update()
     {
         handleExpiredData();
         if(shouldUpdateCharacters() && (characterUpdateTask == null || characterUpdateTask.isDone()))
             characterUpdateTask = webExecutorService.submit(this::updateCharacters);
-        webExecutorService.submit(this::updateOldSeasons);
+        updateOldDataTask.tryRun();
         return characterUpdateTask;
     }
 

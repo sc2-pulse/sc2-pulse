@@ -13,7 +13,6 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.argThat;
-import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
@@ -45,14 +44,19 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.util.MiscUtil;
+import com.nephest.battlenet.sc2.util.TestUtil;
 import java.math.BigInteger;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -62,7 +66,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.validation.Validator;
@@ -131,6 +134,11 @@ public class BlizzardPrivacyServiceTest
             r.run();
             return CompletableFuture.completedFuture(null);
         });
+        lenient().doAnswer(i->{
+            Runnable r = i.getArgument(0);
+            r.run();
+            return null;
+        }).when(executor).execute(any(Runnable.class));
         globalContext = new GlobalContext(Set.of(Region.EU, Region.US, Region.KR));
         privacyService = new BlizzardPrivacyService
         (
@@ -152,8 +160,23 @@ public class BlizzardPrivacyServiceTest
     public void testGetSeasonToUpdate()
     throws ExecutionException, InterruptedException
     {
-        BlizzardPrivacyService spy = Mockito.spy(privacyService);
-        doNothing().when(spy).update(any(), anyInt(), anyBoolean());
+        privacyService = new BlizzardPrivacyService
+        (
+            api,
+            statsService,
+            alternativeLadderService,
+            seasonDAO,
+            varDAO,
+            accountDAO,
+            playerCharacterDAO,
+            TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE,
+            validator,
+            sc2WebServiceUtil,
+            globalContext
+        );
+        when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
+        when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
+        stubLadderApi();
         //there ate no seasons in the db, nothing to update
         assertNull(privacyService.getSeasonToUpdate());
 
@@ -161,7 +184,9 @@ public class BlizzardPrivacyServiceTest
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 2);
         assertEquals(BlizzardSC2API.FIRST_SEASON + 2, privacyService.getSeasonToUpdate());
 
-        spy.update();
+        privacyService.update();
+        privacyService.getUpdateOldDataTask().get();
+
         //season was updated recently, nothing to update
         assertNull(privacyService.getSeasonToUpdate());
 
@@ -186,24 +211,28 @@ public class BlizzardPrivacyServiceTest
         //rewind update timestamp to simulate the time flow
         privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON, privacyService.getSeasonToUpdate());
-        spy.update();
+        privacyService.update();
+        privacyService.getUpdateOldDataTask().get();
 
         //rewind update timestamp to simulate the time flow, next season is updated
         privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON + 1, privacyService.getSeasonToUpdate());
-        spy.update();
+        privacyService.update();
+        privacyService.getUpdateOldDataTask().get();
 
         //rewind update timestamp to simulate the time flow, all previous season were updated, starting from the first
         //season again
         privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON, privacyService.getSeasonToUpdate());
-        spy.update();
+        privacyService.update();
+        privacyService.getUpdateOldDataTask().get();
 
         //current season update is prioritized
         privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(Instant.now().minusSeconds(currentUpdateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON + 2, privacyService.getSeasonToUpdate());
-        spy.update();
+        privacyService.update();
+        privacyService.getUpdateOldDataTask().get();
     }
 
     @Test
@@ -352,13 +381,49 @@ public class BlizzardPrivacyServiceTest
         assertTrue(accountPlayerCaptor.getValue().get(0).getT3());
     }
 
-    private void stubLadderApi()
+    @Test
+    public void whenAlreadyUpdatingOldData_thenDoNothing()
+    {
+        when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
+        when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
+        when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
+
+        Duration delay = Duration.ofMillis(100);
+        OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>>
+            stub = stubLadderApi(delay).thenReturn(createLadder().delayElements(delay));
+        for(int i = 0; i < globalContext.getActiveRegions().size(); i++)
+            stub = stub.thenReturn(Flux.empty());
+        List<Future<Void>> tasks = new ArrayList<>(2);
+        when(executor.submit(any(Runnable.class))).then(i->{
+            Runnable r = i.getArgument(0);
+            Future<Void> task = TestUtil.EXECUTOR_SERVICE.submit(r, null);
+            tasks.add(task);
+            return task;
+        });
+        //update current season
+        privacyService.update();
+        //second update is ignored
+        privacyService.update();
+        MiscUtil.awaitAndThrowException(tasks, false, false);
+        //executed once
+        verify(playerCharacterDAO, times(1)).updateAccountsAndCharacters(accountPlayerCaptor.capture());
+        //true because season is the current season and alternative update route is disabled
+        assertTrue(accountPlayerCaptor.getValue().get(0).getT3());
+    }
+
+    private OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>> stubLadderApi(Duration delay)
     {
         OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>> stub
             = when(api.getLadders(any(), eq(-1L), isNull(), eq(REQUEST_LIMIT_PRIORITY_NAME)))
-                .thenReturn(createLadder());
+                .thenReturn(createLadder().delayElements(delay));
         for(int i = 0; i < globalContext.getActiveRegions().size(); i++)
             stub = stub.thenReturn(Flux.empty());
+        return stub;
+    }
+
+    private OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>> stubLadderApi()
+    {
+        return stubLadderApi(Duration.ZERO);
     }
 
     private Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>
