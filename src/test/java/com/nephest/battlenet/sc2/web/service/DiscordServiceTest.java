@@ -8,7 +8,6 @@ import static com.nephest.battlenet.sc2.web.service.DiscordService.USER_UPDATE_B
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.argThat;
@@ -65,7 +64,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
@@ -253,7 +251,7 @@ public class DiscordServiceTest
             .createOAuth2AuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1");
         when(api.getAuthorizedClient(1L)).thenReturn(Optional.of(client));
         doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds(client);
-        Tuple2<Mono<Void>, AtomicBoolean> rolesMono = MonoUtil.verifiableMono();
+        Tuple2<Mono<Void>, Mono<Void>> rolesMono = MonoUtil.verifiableMono();
         when(rolesSlashCommand.updateRoles(any(), any(), any(), any(), any()))
             .thenReturn(new ImmutableTriple<>(null, Set.of(), rolesMono.getT1().flux()));
         doReturn(Mono.empty()).when(api).updateConnectionMetaData(any(), any());
@@ -286,7 +284,7 @@ public class DiscordServiceTest
             member2.getT2(),
             "Updated roles based on the last ranked ladder stats"
         );
-        assertTrue(rolesMono.getT2().get());
+        rolesMono.getT2().block();
     }
 
     @Test
@@ -363,7 +361,7 @@ public class DiscordServiceTest
             .createOAuth2AuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1");
         when(api.getAuthorizedClient(1L)).thenReturn(Optional.of(client));
         doReturn(Flux.just(member1.getT1(), member2.getT1())).when(spy).getManagedRoleGuilds(client);
-        Tuple2<Mono<Void>, AtomicBoolean> rolesMono = MonoUtil.verifiableMono();
+        Tuple2<Mono<Void>, Mono<Void>> rolesMono = MonoUtil.verifiableMono();
         when(rolesSlashCommand.updateRoles(any(), any(), any(), any(), any()))
             .thenReturn(new ImmutableTriple<>(team, Set.of(), rolesMono.getT1().flux()));
         doReturn(Mono.empty()).when(api).updateConnectionMetaData(any(), any());
@@ -401,7 +399,7 @@ public class DiscordServiceTest
             member2.getT2(),
             "Updated roles based on the last ranked ladder stats"
         );
-        assertTrue(rolesMono.getT2().get());
+        rolesMono.getT2().block();
     }
 
     private Tuple2<Guild, Member> stubRoleMember(PulseMappings<Role> roleMappings)

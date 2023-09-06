@@ -3,8 +3,8 @@
 
 package com.nephest.battlenet.sc2.web.util;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import reactor.core.publisher.Mono;
+import reactor.core.publisher.Sinks;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuples;
 
@@ -14,11 +14,11 @@ public final class MonoUtil
     private MonoUtil(){}
 
 
-    public static <T> Tuple2<Mono<T>, AtomicBoolean> verifiableMono(T val)
+    public static <T> Tuple2<Mono<T>, Mono<Void>> verifiableMono(T val)
     {
-        AtomicBoolean wasCalled = new AtomicBoolean(false);
+        Sinks.One<Void> complete = Sinks.one();
         Mono<T> mono = Mono.create(sink->{
-            wasCalled.set(true);
+            complete.emitEmpty(Sinks.EmitFailureHandler.FAIL_FAST);
             if(val != null)
             {
                 sink.success(val);
@@ -28,10 +28,10 @@ public final class MonoUtil
                 sink.success();
             }
         });
-        return Tuples.of(mono, wasCalled);
+        return Tuples.of(mono, complete.asMono());
     }
 
-    public static <T> Tuple2<Mono<T>, AtomicBoolean> verifiableMono()
+    public static <T> Tuple2<Mono<T>, Mono<Void>> verifiableMono()
     {
         return verifiableMono(null);
     }

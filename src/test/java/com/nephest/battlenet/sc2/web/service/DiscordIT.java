@@ -63,7 +63,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicBoolean;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Assertions;
@@ -235,10 +234,10 @@ public class DiscordIT
         assertNotNull(oAuth2AuthorizedClientService.loadAuthorizedClient(DiscordAPI.USER_CLIENT_REGISTRATION_ID, "1"));
 
         //second links is removed, no linked chars
-        Tuple2<Mono<Void>, AtomicBoolean> mono = MonoUtil.verifiableMono();
+        Tuple2<Mono<Void>, Mono<Void>> mono = MonoUtil.verifiableMono();
         doReturn(mono.getT1())
             .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
-        Tuple2<Mono<Void>, AtomicBoolean> mono2 = MonoUtil.verifiableMono();
+        Tuple2<Mono<Void>, Mono<Void>> mono2 = MonoUtil.verifiableMono();
         doReturn(mono2.getT1().flux())
             .when(discordService.getDiscordAPI()).revokeRefreshToken(any());
         stubNoManagedGuilds();
@@ -265,8 +264,8 @@ public class DiscordIT
         assertEquals(ApplicationRoleConnection.DEFAULT_PLATFORM_NAME, connection.getPlatformName());
         assertEquals(BATTLE_TAG, connection.getPlatformUsername());
         assertNull(connection.getMetadata());
-        assertTrue(mono.getT2().get());
-        assertTrue(mono2.getT2().get());
+        mono.getT2().block();
+        mono2.getT2().block();
     }
 
     private void verifyLinkedDiscordUser(Long characterId, DiscordUser discordUser)
@@ -461,7 +460,7 @@ public class DiscordIT
     public void whenLadderCharacterActivityEventReceived_thenUpdateRoles()
     {
         Tuple3<Account, PlayerCharacter[], Team> main = stubMainTeam();
-        Tuple2<Mono<Void>, AtomicBoolean> mono = MonoUtil.verifiableMono();
+        Tuple2<Mono<Void>, Mono<Void>> mono = MonoUtil.verifiableMono();
         doReturn(mono.getT1())
             .when(discordService.getDiscordAPI()).updateConnectionMetaData(any(), any());
         OAuth2AuthorizedClient client = WebServiceTestUtil.createOAuth2AuthorizedClient
@@ -475,7 +474,7 @@ public class DiscordIT
         accountDiscordUserDAO.create(new AccountDiscordUser(main.getT1().getId(), discordUser.getId()));
         stubNoManagedGuilds();
         eventService.createLadderCharacterActivityEvent(main.getT2()[0]);
-        mono.getT1().block();
+        mono.getT2().block();
 
         ArgumentCaptor<ApplicationRoleConnection> captor =
             ArgumentCaptor.forClass(ApplicationRoleConnection.class);
@@ -490,7 +489,6 @@ public class DiscordIT
         assertEquals("0", connection.getMetadata().get("league"));
         assertEquals("1", connection.getMetadata().get("rating_from"));
         assertEquals("1", connection.getMetadata().get("rating_to"));
-        assertTrue(mono.getT2().get());
     }
 
     private void stubNoManagedGuilds()
