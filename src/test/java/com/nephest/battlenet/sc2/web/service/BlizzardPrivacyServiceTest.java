@@ -117,8 +117,6 @@ public class BlizzardPrivacyServiceTest
 
     public BlizzardPrivacyService privacyService;
 
-    private AutoCloseable mocks;
-
     private GlobalContext globalContext;
 
     @BeforeEach
@@ -237,7 +235,6 @@ public class BlizzardPrivacyServiceTest
 
     @Test
     public void testUpdateCharacters()
-    throws ExecutionException, InterruptedException
     {
         privacyService.getLastUpdatedCharacterId().setValue(10L);
         when(playerCharacterDAO.countByUpdatedMax(any(), any())).thenReturn(0);
@@ -276,7 +273,6 @@ public class BlizzardPrivacyServiceTest
 
     @Test
     public void testUpdateCharactersEmptyBatch()
-    throws ExecutionException, InterruptedException
     {
         privacyService.getLastUpdatedCharacterId().setValue(10L);
         when(playerCharacterDAO.countByUpdatedMax(any(), any())).thenReturn(9999);
@@ -288,7 +284,6 @@ public class BlizzardPrivacyServiceTest
 
     @Test
     public void testUpdateAlternativeLadder()
-    throws ExecutionException, InterruptedException
     {
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON);
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(true);
@@ -341,7 +336,6 @@ public class BlizzardPrivacyServiceTest
     ({"true", "false"})
     @ParameterizedTest
     public void testUpdateLadder(boolean updated)
-    throws ExecutionException, InterruptedException
     {
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
         when(statsService.isAlternativeUpdate(any(), eq(true))).thenReturn(!updated);
