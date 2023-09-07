@@ -255,9 +255,9 @@ public class MatchService
         int characterCount = characters.values().stream()
             .mapToInt(Collection::size)
             .sum();
-        int limit = (int) Math.ceil
+        int limit = Math.round
         (
-            characterCount / (double) updateMatchesTask.getDurationBetweenRuns()
+            characterCount / (float) updateMatchesTask.getDurationBetweenRuns()
                 .minus(REQUEST_LIMIT_PRIORITY_OFFSET)
                 .toSeconds()
         );
