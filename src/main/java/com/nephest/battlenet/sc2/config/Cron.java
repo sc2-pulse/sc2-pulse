@@ -228,8 +228,7 @@ public class Cron
     private void nonStopUpdate()
     {
         if(!shouldUpdate()) {
-            LOG.info("Can't update the ladder because request cap is reached "
-                + "or updateLadder flag is set to false");
+            LOG.info("Can't update the ladder because updateLadder flag is set to false");
             return;
         }
 
@@ -319,7 +318,7 @@ public class Cron
 
     private boolean shouldUpdate()
     {
-        return updateLadder && sc2API.requestCapNotReached();
+        return updateLadder;
     }
 
     public void setShouldUpdateLadder(boolean updateLadder)
