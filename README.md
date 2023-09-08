@@ -185,8 +185,7 @@ more information.
 ## Blizzard ToS
 SC2 Pulse is fully compliant with the Blizzard ToS.
 * Requests per hour cap is guaranteed if your clock desync is within 5 seconds.
-* Requests per second cap is optimistically synchronized on the client side. It works most of the time, but sometimes
-  you may see a 429 response.
+* Requests per second cap is guaranteed.
 * BattleTags, player names, and matches are removed after 30 days from the moment they were deleted from the API
 ## Trademarks
 Battle.net, Blizzard Entertainment and StarCraft are trademarks or registered trademarks of Blizzard Entertainment,

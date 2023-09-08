@@ -87,7 +87,7 @@ extends BaseAPI
 
     private static final Logger LOG = LoggerFactory.getLogger(BlizzardSC2API.class);
 
-    public static final int REQUESTS_PER_SECOND_CAP = 100;
+    public static final int REQUESTS_PER_SECOND_CAP = 10;
     public static final int REQUESTS_PER_HOUR_CAP = 36000
         - REQUESTS_PER_SECOND_CAP * 5; //max clock desync: 5 seconds
     public static final int REQUESTS_PER_SECOND_CAP_WEB = 10;
