@@ -73,7 +73,8 @@ public class BlizzardSC2APITest
             oAuth2AuthorizedClientManager,
             failureHandler,
             varDAO,
-            globalContext
+            globalContext,
+            false
         );
     }
 
@@ -93,7 +94,11 @@ public class BlizzardSC2APITest
         assertEquals("0.33", new DecimalFormat("#.##").format(api.getRequestCapProgress(Region.EU)));
         assertEquals("0.5", new DecimalFormat("#.##").format(api.getRequestCapProgress(Region.KR)));
         assertEquals("0", new DecimalFormat("#.##").format(api.getRequestCapProgress(Region.CN)));
-        assertEquals("0.5", new DecimalFormat("#.##").format(api.getRequestCapProgress()));
+        assertEquals
+        (
+            api.isSeparateRequestLimits() ? "0.5" : "1.08",
+            new DecimalFormat("#.##").format(api.getRequestCapProgress())
+        );
     }
 
     @Test

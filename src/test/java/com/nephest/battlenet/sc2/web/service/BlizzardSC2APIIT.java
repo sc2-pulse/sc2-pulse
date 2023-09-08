@@ -374,7 +374,9 @@ public class BlizzardSC2APIIT
             .andReturn();
         for(Region region : globalContext.getActiveRegions()) assertEquals
         (
-            region == targetRegion ? 5 : BlizzardSC2API.REQUESTS_PER_SECOND_CAP,
+            api.isSeparateRequestLimits()
+                ? region == targetRegion ? 5 : BlizzardSC2API.REQUESTS_PER_SECOND_CAP
+                : 5,
             api.getRequestsPerSecondCap(region)
         );
 
@@ -417,7 +419,9 @@ public class BlizzardSC2APIIT
             .andReturn();
         for(Region region : globalContext.getActiveRegions()) assertEquals
         (
-            region == targetRegion ? 1000 : BlizzardSC2API.REQUESTS_PER_HOUR_CAP,
+            api.isSeparateRequestLimits()
+                ? region == targetRegion ? 1000 : BlizzardSC2API.REQUESTS_PER_HOUR_CAP
+                : 1000,
             api.getRequestsPerHourCap(region)
         );
 

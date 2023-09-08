@@ -54,6 +54,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
@@ -141,6 +142,7 @@ extends BaseAPI
 
     @Value("${com.nephest.battlenet.sc2.api.force.region.auto:#{'false'}}")
     private boolean autoForceRegion = false;
+    private final boolean separateRequestLimits;
 
     @Autowired
     public BlizzardSC2API
@@ -149,7 +151,8 @@ extends BaseAPI
         OAuth2AuthorizedClientManager auth2AuthorizedClientManager,
         RemoveAuthorizedClientOAuth2AuthorizationFailureHandler failureHandler,
         VarDAO varDAO,
-        GlobalContext globalContext
+        GlobalContext globalContext,
+        @Value("${com.nephest.battlenet.sc2.api.request.limit.separate:#{'false'}}") boolean separateRequestLimits
     )
     {
         this.globalContext = globalContext;
@@ -162,21 +165,11 @@ extends BaseAPI
         );
         this.objectMapper = objectMapper;
         this.varDAO = varDAO;
+        this.separateRequestLimits = separateRequestLimits;
         init(globalContext.getActiveRegions());
         initErrorRates(varDAO, globalContext.getActiveRegions());
         initVars(varDAO, globalContext.getActiveRegions());
-        for(Region r : globalContext.getActiveRegions())
-        {
-            rateLimiters.put(r, new ReactorRateLimiter());
-            hourlyRateLimiters.put(r, new ReactorRateLimiter());
-            hourlyRateLimiters.get(r).refreshSlots((int) (getRequestsPerHourCap(r) - healthMonitors.get(r).getRequests()));
-            regionalRateLimiters.put(r, List.of(hourlyRateLimiters.get(r), rateLimiters.get(r)));
-            regionalWebRateLimiters.put
-            (
-                r,
-                List.of(hourlyRateLimiters.get(r), rateLimiters.get(r), webRateLimiter)
-            );
-        }
+        initRequestLimiters(separateRequestLimits);
         Flux.interval(HEALTH_SAVE_FRAME).doOnNext(i->saveHealth()).subscribe();
     }
 
@@ -218,6 +211,25 @@ extends BaseAPI
         {
             healthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api"));
             webHealthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api.web"));
+        }
+    }
+
+    private void initRequestLimiters(boolean separate)
+    {
+        if(separate) LOG.warn("Using a separate rate limiter for each region");
+        ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
+        ReactorRateLimiter hourlyLimiter = new ReactorRateLimiter();
+        for(Region r : globalContext.getActiveRegions())
+        {
+            rateLimiters.put(r, separate ? new ReactorRateLimiter() : rateLimiter);
+            hourlyRateLimiters.put(r, separate ? new ReactorRateLimiter() : hourlyLimiter);
+            hourlyRateLimiters.get(r).refreshSlots((int) (getRequestsPerHourCap(r) - healthMonitors.get(r).getRequests()));
+            regionalRateLimiters.put(r, List.of(hourlyRateLimiters.get(r), rateLimiters.get(r)));
+            regionalWebRateLimiters.put
+            (
+                r,
+                List.of(hourlyRateLimiters.get(r), rateLimiters.get(r), webRateLimiter)
+            );
         }
     }
 
@@ -321,6 +333,11 @@ extends BaseAPI
             : healthMonitors.get(getRegion(region)).getErrorRate();
     }
 
+    public boolean isSeparateRequestLimits()
+    {
+        return separateRequestLimits;
+    }
+
     public double getRequestCapProgress(Region region)
     {
         return (healthMonitors.get(region).getRequests() + webHealthMonitors.get(region).getRequests())
@@ -329,10 +346,9 @@ extends BaseAPI
 
     public double getRequestCapProgress()
     {
-        return globalContext.getActiveRegions().stream()
-            .mapToDouble(this::getRequestCapProgress)
-            .max()
-            .orElse(0);
+        DoubleStream progressStream = globalContext.getActiveRegions().stream()
+            .mapToDouble(this::getRequestCapProgress);
+        return isSeparateRequestLimits() ? progressStream.max().orElse(0) : progressStream.sum();
     }
 
     public boolean requestCapNotReached()
@@ -439,25 +455,43 @@ extends BaseAPI
         return forceRegions.get(region).getValue();
     }
 
-    public void setRequestsPerSecondCap(Region region, Integer cap)
+    private void setRequestCap
+    (
+        Map<Region, ? extends Var<Long>> caps,
+        Region region,
+        Integer cap,
+        Integer maxCap,
+        String capName
+    )
     {
-        if(cap == null)
-        {
-            requestsPerSecondCaps.get(region).setValueAndSave(null);
-        }
-        else if(cap < 0 || cap > REQUESTS_PER_SECOND_CAP)
+        if(cap != null && (cap < 0 || cap > maxCap))
         {
             throw new IllegalArgumentException
             (
                 "Invalid cap value: " + cap
-                + ", valid range: 0-" + REQUESTS_PER_SECOND_CAP
+                + ", valid range: 0-" + maxCap
             );
+        }
+        Long lCap = cap != null ? cap.longValue() : null;
+        if(isSeparateRequestLimits())
+        {
+            caps.get(region).setValueAndSave(lCap);
         }
         else
         {
-            requestsPerSecondCaps.get(region).setValueAndSave(cap.longValue());
+            caps.values().forEach(v->v.setValueAndSave(lCap));
         }
-        LOG.info("Requests per seconds cap, {}: {}", region, cap);
+        LOG.info
+        (
+            capName + " cap, {}: {}",
+            isSeparateRequestLimits() ? region : globalContext.getActiveRegions(),
+            cap
+        );
+    }
+
+    public void setRequestsPerSecondCap(Region region, Integer cap)
+    {
+        setRequestCap(requestsPerSecondCaps, region, cap, REQUESTS_PER_SECOND_CAP, "RPS");
     }
 
     public int getRequestsPerSecondCap(Region region)
@@ -468,22 +502,7 @@ extends BaseAPI
 
     public void setRequestsPerHourCap(Region region, Integer cap)
     {
-        if(cap == null)
-        {
-            requestsPerHourCaps.get(region).setValueAndSave(null);
-        }
-        else if(cap < 0 || cap > REQUESTS_PER_HOUR_CAP)
-        {
-            throw new IllegalArgumentException
-            (
-                "Invalid cap value: " + cap + ", valid range: 0-" + REQUESTS_PER_HOUR_CAP
-            );
-        }
-        else
-        {
-            requestsPerHourCaps.get(region).setValueAndSave(cap.longValue());
-        }
-        LOG.info("Requests per hour cap, {}: {}", region, cap);
+        setRequestCap(requestsPerHourCaps, region, cap, REQUESTS_PER_HOUR_CAP, "RPH");
     }
 
     public int getRequestsPerHourCap(Region region)
@@ -492,17 +511,35 @@ extends BaseAPI
         return override != null ? override.intValue() : REQUESTS_PER_HOUR_CAP;
     }
 
+    private void refreshReactorSlots
+    (
+        Map<Region, ReactorRateLimiter> limiters,
+        Function<Region, Integer> limitFunction
+    )
+    {
+        if(isSeparateRequestLimits())
+        {
+            limiters.forEach((key, value)->value.refreshSlots(limitFunction.apply(key)));
+        }
+        else
+        {
+            limiters.entrySet().stream()
+                .findAny()
+                .ifPresent(e->e.getValue().refreshSlots(limitFunction.apply(e.getKey())));
+        }
+    }
+
     @Scheduled(cron="* * * * * *")
     public void refreshReactorSlots()
     {
-        rateLimiters.forEach((key, value)->value.refreshSlots(getRequestsPerSecondCap(key)));
+        refreshReactorSlots(rateLimiters, this::getRequestsPerSecondCap);
         webRateLimiter.refreshSlots(REQUESTS_PER_SECOND_CAP_WEB);
     }
 
     @Scheduled(cron="0 0 * * * *")
     public void refreshHourlyReactorSlots()
     {
-        hourlyRateLimiters.forEach((key, value)->value.refreshSlots(getRequestsPerHourCap(key)));
+        refreshReactorSlots(hourlyRateLimiters, this::getRequestsPerHourCap);
     }
 
     @Scheduled(cron="0 0 * * * *")

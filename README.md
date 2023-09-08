@@ -114,9 +114,6 @@ mvn spring-boot:run
 
 Scheduled tasks are disabled in the dev mode. You can remove the `@Profile` annotation from the Cron class if you want 
 to run the tasks(like ladder scans) in the dev mode.
-## Blizzard API clients
-The default config expects you to use different API clients/keys for each region. You **must** reduce the 
-`BlizzardSC2API.REQUESTS_PER_SECOND_CAP` to 25 if you want to use one API client for all regions. 
 ## Alternative update
 ### Legacy and profile ladders
 The Blizzard API can sometimes break and return stale data. The app checks the API state before every update and will
@@ -167,6 +164,8 @@ To ensure that the potential violation is a minor one, the following rules are a
 * `com.nephest.battlenet.sc2.mmr.history.secondary.length` team mmr history length in days, 180 by default.
 * `com.nephest.battlenet.sc2.ladder.regions` set of regions that will be updated, currently active regions by default.
 * `com.nephest.battlenet.sc2.db-dump-file` path to the database dump.
+* `com.nephest.battlenet.sc2.api.request.limit.separate` Activates legacy mode where each region uses a separate request
+limiter. False by default.
 * `contacts.email`
 * `contacts.discord.server`
 * `contacts.discord.server.name`
