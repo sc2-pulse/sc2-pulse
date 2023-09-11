@@ -256,7 +256,7 @@ public class AlternativeLadderService
         this.separateWebQueue = separateWebQueue;
     }
 
-    public List<Future<?>> updateSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
+    public List<Future<Void>> updateSeason(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
         LOG.debug("Updating season {}", season);
         Instant discoveryInstant = discoveryInstants.get(season.getRegion()).getValue();
@@ -266,7 +266,7 @@ public class AlternativeLadderService
             return discoverSeason(season, isProfileLadderWebRegion(season.getRegion()));
         }
 
-        List<Future<?>> tasks = updateOrAdditionalWebUpdate(season, queueTypes, leagues);
+        List<Future<Void>> tasks = updateOrAdditionalWebUpdate(season, queueTypes, leagues);
         tasks.addAll(continueSeasonDiscovery(season));
         return tasks;
     }
@@ -336,13 +336,13 @@ public class AlternativeLadderService
         );
     }
 
-    private List<Future<?>> updateOrAdditionalWebUpdate(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
+    private List<Future<Void>> updateOrAdditionalWebUpdate(Season season, QueueType[] queueTypes, BaseLeague.LeagueType[] leagues)
     {
         Pair<QueueType[], BaseLeague.LeagueType[]> queuesLeagues
             = getUpdateInfo(season, queueTypes, leagues);
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileLadderIds =
             getExistingLadderIds(season, queuesLeagues.getLeft(), queuesLeagues.getRight());
-        List<Future<?>> tasks;
+        List<Future<Void>> tasks;
         if(isAdditionalWebUpdate(season.getRegion()))
         {
             boolean big = isBigAdditionalWebUpdate(season.getRegion());
@@ -382,7 +382,7 @@ public class AlternativeLadderService
         }
     }
 
-    public List<Future<?>> discoverSeason(Season season, boolean web)
+    public List<Future<Void>> discoverSeason(Season season, boolean web)
     {
         long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion())
             .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion())) + 1;
@@ -398,7 +398,7 @@ public class AlternativeLadderService
                 .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion()))) + 1;
     }
 
-    private List<Future<?>> continueSeasonDiscovery(Season season)
+    private List<Future<Void>> continueSeasonDiscovery(Season season)
     {
         long lastDivision = getLastDivision(season) - CONTINUE_SEASON_DISCOVERY_LADDER_OFFSET;
         return discoverSeason(season, lastDivision, isDiscoveryWebRegion(season.getRegion()), CONTINUE_SEASON_DISCOVERY_BATCH_SIZE);
@@ -410,7 +410,7 @@ public class AlternativeLadderService
         continueSeasonDiscovery(season);
     }
 
-    private List<Future<?>> discoverSeason
+    private List<Future<Void>> discoverSeason
     (
         Season season,
         long lastDivision,
@@ -423,13 +423,13 @@ public class AlternativeLadderService
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> profileIds
             = getProfileLadderIds(season, lastDivision, batchSize);
         LOG.info("{} {} ladders found", profileIds.size(), season);
-        List<Future<?>> tasks =
+        List<Future<Void>> tasks =
             updateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds, web);
         discoveryInstants.get(season.getRegion()).setValueAndSave(Instant.now());
         return tasks;
     }
 
-    private List<Future<?>> updateLadders
+    private List<Future<Void>> updateLadders
     (
         Season season,
         Set<QueueType> queueTypes,
@@ -438,11 +438,11 @@ public class AlternativeLadderService
     )
     {
         if(web) LOG.warn("Using web API for {}", season);
-        List<Future<?>> dbTasks = new ArrayList<>();
+        List<Future<Void>> dbTasks = new ArrayList<>();
         (web ? api.getProfileLadders(ladders, queueTypes, true) : api.getProfileLadders(ladders, queueTypes))
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
-            .forEach((r)->dbTasks.add(dbExecutorService.submit(()->alternativeLadderService.saveProfileLadders(season, r))));
+            .forEach((r)->dbTasks.add(dbExecutorService.submit(()->alternativeLadderService.saveProfileLadders(season, r), null)));
         return dbTasks;
     }
 

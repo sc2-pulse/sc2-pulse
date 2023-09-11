@@ -284,13 +284,13 @@ public class StatsService
     }
 
     @CacheEvict(cacheNames="fqdn-ladder-scan", allEntries=true)
-    public Map<Region, List<Future<?>>> updateCurrent
+    public Map<Region, List<Future<Void>>> updateCurrent
     (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
     {
         long start = System.currentTimeMillis();
 
         checkStaleData(regions);
-        Map<Region, List<Future<?>>> tasks
+        Map<Region, List<Future<Void>>> tasks
             = updateCurrentSeason(regions, queues, leagues, allStats, updateContext);
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
@@ -339,12 +339,12 @@ public class StatsService
         return pending;
     }
 
-    public Future<?> afterCurrentSeasonUpdate(boolean allStats)
+    public Future<Void> afterCurrentSeasonUpdate(boolean allStats)
     {
         PendingLadderData pending = copyAndClearPendingData();
         PendingLadderData altPending = alternativeLadderService.copyAndClearPendingData();
         return dbExecutorService.submit(()->
-            statsService.afterCurrentSeasonUpdate(allStats, pending, altPending));
+            statsService.afterCurrentSeasonUpdate(allStats, pending, altPending), null);
     }
 
     public void afterCurrentSeasonUpdate
@@ -407,10 +407,10 @@ public class StatsService
         LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
 
-    private Map<Region, List<Future<?>>> updateCurrentSeason
+    private Map<Region, List<Future<Void>>> updateCurrentSeason
     (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
     {
-        Map<Region, List<Future<?>>> tasks = new EnumMap<>(Region.class);
+        Map<Region, List<Future<Void>>> tasks = new EnumMap<>(Region.class);
         //there can be two seasons here when a new season starts
         Set<Integer> seasons = new HashSet<>(2);
         for(Region region : regions)
@@ -433,13 +433,13 @@ public class StatsService
         return tasks;
     }
 
-    private List<Future<?>> updateOrAlternativeUpdate
+    private List<Future<Void>> updateOrAlternativeUpdate
     (
         BlizzardSeason bSeason, Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues,
         boolean currentSeason, UpdateContext updateContext
     )
     {
-        List<Future<?>> tasks;
+        List<Future<Void>> tasks;
         if(!isAlternativeUpdate(season.getRegion(), currentSeason))
         {
             fastTeamDAO.remove(season.getRegion());
@@ -471,13 +471,13 @@ public class StatsService
         return tasks;
     }
 
-    private List<Future<?>> update
+    private List<Future<Void>> update
     (
         Season season,
         QueueType[] queues,
         BaseLeague.LeagueType[] leagues,
         UpdateContext updateContext,
-        Function<LadderUpdateContext, List<Future<?>>> updater
+        Function<LadderUpdateContext, List<Future<Void>>> updater
     )
     {
         Region region = season.getRegion();
@@ -496,7 +496,7 @@ public class StatsService
             partialUpdate ? PARTIAL_UPDATE_QUEUE_TYPES.toArray(QueueType[]::new) : queues,
             partialUpdate ? PARTIAL_UPDATE_LEAGUE_TYPES.toArray(BaseLeague.LeagueType[]::new) : leagues
         );
-        List<Future<?>> tasks = updater.apply(context);
+        List<Future<Void>> tasks = updater.apply(context);
         if(partialUpdate)
         {
             partialAlternativeUpdates.put(region, partialAlternativeUpdates.get(region) + 1);
@@ -538,7 +538,7 @@ public class StatsService
         return currentSeason && (forcedAlternativeRegions.contains(region) || alternativeRegions.contains(region));
     }
 
-    private List<Future<?>> updateLeagues
+    private List<Future<Void>> updateLeagues
     (
         BlizzardSeason bSeason,
         Season season,
@@ -555,14 +555,14 @@ public class StatsService
         return updateLadders(season, ladderIds, updateContext.getExternalUpdate());
     }
 
-    private List<Future<?>> updateLadders
+    private List<Future<Void>> updateLadders
     (Season season, List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds, Instant lastUpdated)
     {
-        List<Future<?>> dbTasks = new ArrayList<>();
+        List<Future<Void>> dbTasks = new ArrayList<>();
         api.getLadders(ladderIds, lastUpdated != null ? lastUpdated.toEpochMilli() / 1000 : -1, failedLadders)
             .buffer(LADDER_BATCH_SIZE)
             .toStream()
-            .forEach(l->dbTasks.add(dbExecutorService.submit(()->statsService.saveLadders(season, l, lastUpdated))));
+            .forEach(l->dbTasks.add(dbExecutorService.submit(()->statsService.saveLadders(season, l, lastUpdated), null)));
         return dbTasks;
     }
 

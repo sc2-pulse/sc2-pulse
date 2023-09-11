@@ -121,7 +121,7 @@ public class Cron
     private NotificationService notificationService;
 
     private SingleRunnable updateLaddersTask;
-    private Future<?> afterLadderUpdateTask;
+    private Future<Void> afterLadderUpdateTask;
 
     @PostConstruct
     public void init()
