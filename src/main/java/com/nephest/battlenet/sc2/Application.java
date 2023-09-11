@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToRegionConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
@@ -60,7 +61,7 @@ extends SpringBootServletInitializer
         boost whatsoever. Concurrency/CPU intensive work is done by web threads.
      */
     public static final int DB_THREADS = 1;
-    public static final int CORE_WEB_THREADS = 1;
+    public static final int CORE_WEB_THREADS = Region.values().length;
     public static final int BACKGROUND_WEB_THREADS = 15;
     public static final int WEB_THREAD_TTL_SECONDS = 60;
     public static final String WEB_THREAD_POOL_NAME = "p-web-";

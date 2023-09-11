@@ -32,7 +32,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -268,37 +270,44 @@ public class Cron
     private boolean doUpdateSeasons(Region... regions)
     {
         boolean result = true;
-        try
+        Instant begin = Instant.now();
+        for(Region region : regions)
         {
-            Instant begin = Instant.now();
-            MiscUtil.awaitAndLogExceptions
-            (
-                statsService.updateCurrent
+            try
+            {
+                MiscUtil.awaitAndLogExceptions
                 (
-                    regions,
-                    QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
-                    BaseLeague.LeagueType.values(),
-                    false,
-                    updateService.getUpdateContext(null)
-                ).values().stream()
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toList()),
+                    statsService.updateCurrent
+                    (
+                        new Region[]{region},
+                        QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
+                        BaseLeague.LeagueType.values(),
+                        false,
+                        updateService.getUpdateContext(null)
+                    ).values().stream()
+                        .flatMap(Collection::stream)
+                        .collect(Collectors.toList()),
                     true
-            );
-            for(Region region : regions) updateService.updated(region, begin);
+                );
+            }
+            catch (RuntimeException ex)
+            {
+                //API can be broken randomly. All we can do at this point is log the exception.
+                LOG.error(ex.getMessage(), ex);
+                result = false;
+            }
         }
-        catch (RuntimeException ex)
-        {
-            //API can be broken randomly. All we can do at this point is log the exception.
-            LOG.error(ex.getMessage(), ex);
-            result = false;
-        }
+        for(Region region : regions) updateService.updated(region, begin);
         return result;
     }
 
     private void doUpdateSeasons()
     {
-        doUpdateSeasons(globalContext.getActiveRegions().toArray(Region[]::new));
+        List<Future<Void>> tasks = new ArrayList<>();
+        for(Region region : globalContext.getActiveRegions())
+            tasks.add(webExecutorService.submit(()->doUpdateSeasons(region), null));
+
+        MiscUtil.awaitAndThrowException(tasks, true, true);
         if(afterLadderUpdateTask != null)
         {
             try
