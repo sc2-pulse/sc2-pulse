@@ -14,7 +14,6 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
-import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.SingleRunnable;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
@@ -32,8 +31,6 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -268,38 +265,31 @@ public class Cron
     private boolean doUpdateSeasons(Region... regions)
     {
         boolean result = true;
-        for(Region region : regions)
+        try
         {
-            try
-            {
-                Instant begin = Instant.now();
-                statsService.updateCurrent
-                (
-                    new Region[]{region},
-                    QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
-                    BaseLeague.LeagueType.values(),
-                    false,
-                    updateService.getUpdateContext(region)
-                );
-                updateService.updated(region, begin);
-            }
-            catch (RuntimeException ex)
-            {
-                //API can be broken randomly. All we can do at this point is log the exception.
-                LOG.error(ex.getMessage(), ex);
-                result = false;
-            }
+            Instant begin = Instant.now();
+            statsService.updateCurrent
+            (
+                regions,
+                QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
+                BaseLeague.LeagueType.values(),
+                false,
+                updateService.getUpdateContext(null)
+            );
+            for(Region region : regions) updateService.updated(region, begin);
+        }
+        catch (RuntimeException ex)
+        {
+            //API can be broken randomly. All we can do at this point is log the exception.
+            LOG.error(ex.getMessage(), ex);
+            result = false;
         }
         return result;
     }
 
     private void doUpdateSeasons()
     {
-        List<Future<Void>> tasks = new ArrayList<>();
-        for(Region region : globalContext.getActiveRegions())
-            tasks.add(webExecutorService.submit(()->doUpdateSeasons(region), null));
-
-        MiscUtil.awaitAndThrowException(tasks, true, true);
+        doUpdateSeasons(globalContext.getActiveRegions().toArray(Region[]::new));
         if(afterLadderUpdateTask != null)
         {
             try
