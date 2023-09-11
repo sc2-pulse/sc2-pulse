@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -30,7 +30,7 @@ public class PersonalService
 
     public Optional<BlizzardOidcUser> getOidcUser()
     {
-        Object principal = SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+        Object principal = getAuthentication().getPrincipal();
         if(!(principal instanceof BlizzardOidcUser)) return Optional.empty();
 
         return Optional.of((BlizzardOidcUser) principal);
