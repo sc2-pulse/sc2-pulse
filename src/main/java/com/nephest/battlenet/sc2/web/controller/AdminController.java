@@ -61,9 +61,8 @@ public class AdminController
     @PostMapping("/update/match/frame/{durationMillis}")
     public ResponseEntity<Object> setMatchUpdateTimeFrame(@PathVariable("durationMillis") long durationMillis)
     {
-        if(durationMillis < MatchService.MATCH_UPDATE_FRAME.toMillis())
-            return ResponseEntity.badRequest()
-                .body("Min duration: " + MatchService.MATCH_UPDATE_FRAME.toMillis());
+        if(durationMillis < 0) return ResponseEntity.badRequest()
+            .body("Duration can't be negative");
 
         matchService.setMatchUpdateFrame(Duration.ofMillis(durationMillis));
         return ResponseEntity.ok().build();

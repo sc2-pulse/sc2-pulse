@@ -67,10 +67,10 @@ public class AdminControllerIT
 
     @Test
     @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
-    public void whenMatchUpdateFrameDurationIsLowerThanDefaultDuration_thenBadRequest()
+    public void whenMatchUpdateFrameDurationIsNegative_thenBadRequest()
     throws Exception
     {
-        long lowDuration = MatchService.MATCH_UPDATE_FRAME.toMillis() - 1;
+        long lowDuration = -1;
         mvc.perform
         (
             post("/admin/update/match/frame/{lowDuration}", lowDuration)
@@ -78,7 +78,7 @@ public class AdminControllerIT
                 .with(csrf().asHeader())
         )
             .andExpect(status().isBadRequest())
-            .andExpect(content().string("Min duration: " + MatchService.MATCH_UPDATE_FRAME.toMillis()));
+            .andExpect(content().string("Duration can't be negative"));
     }
 
     @Test
