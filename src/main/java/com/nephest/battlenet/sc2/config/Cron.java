@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.SingleRunnable;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
@@ -31,9 +32,11 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.util.Collection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -268,13 +271,19 @@ public class Cron
         try
         {
             Instant begin = Instant.now();
-            statsService.updateCurrent
+            MiscUtil.awaitAndLogExceptions
             (
-                regions,
-                QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
-                BaseLeague.LeagueType.values(),
-                false,
-                updateService.getUpdateContext(null)
+                statsService.updateCurrent
+                (
+                    regions,
+                    QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
+                    BaseLeague.LeagueType.values(),
+                    false,
+                    updateService.getUpdateContext(null)
+                ).values().stream()
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList()),
+                    true
             );
             for(Region region : regions) updateService.updated(region, begin);
         }
