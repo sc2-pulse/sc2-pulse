@@ -41,7 +41,9 @@ public class PersonalService
         return getOidcUser()
             .map(u->u.getAccount().getPartition() == Partition.GLOBAL
                 ? api.getPlayerCharacters(Region.EU, Long.parseLong(u.getSubject()))
-                    .collectList().block()
+                    .onErrorComplete()
+                    .collectList()
+                    .block()
                 : new ArrayList<BlizzardFullPlayerCharacter>())
             .orElse(List.of());
     }

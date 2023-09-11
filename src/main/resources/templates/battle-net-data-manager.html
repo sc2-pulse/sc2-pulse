@@ -21,7 +21,10 @@
             </section>
             <section>
                 <h4>Characters</h4>
-                <ul class="d-inline-block">
+                <p th:if="${blizzardCharacters.isEmpty()}">
+                    Characters not found. Make sure you have enabled 3rd party access in your Blizzard account settings.
+                </p>
+                <ul th:unless="${blizzardCharacters.isEmpty()}" class="d-inline-block">
                     <li th:each="character : ${blizzardCharacters}"
                         th:text="|${character.region.getName()}, ${character.name}|"
                     >
