@@ -284,6 +284,7 @@ public class AlternativeLadderService
                 || System.currentTimeMillis() - additionalScanInstant.toEpochMilli()
                     >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis())
             && (scanInstant != null
+                && !profileLadderWebRegions.getValue().contains(region)
                 && System.currentTimeMillis() - scanInstant.toEpochMilli()
                     < NON_WEB_SCAN_TIME_FRAME.toMillis());
     }
