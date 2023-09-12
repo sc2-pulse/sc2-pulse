@@ -34,10 +34,10 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.local.DoubleVar;
 import com.nephest.battlenet.sc2.model.local.DurationVar;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
-import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
@@ -88,10 +88,10 @@ extends BaseAPI
 
     private static final Logger LOG = LoggerFactory.getLogger(BlizzardSC2API.class);
 
-    public static final int REQUESTS_PER_SECOND_CAP = 10;
-    public static final int REQUESTS_PER_HOUR_CAP = 36000
+    public static final float REQUESTS_PER_SECOND_CAP = 10f;
+    public static final float REQUESTS_PER_HOUR_CAP = 36000f
         - REQUESTS_PER_SECOND_CAP * 5; //max clock desync: 5 seconds
-    public static final int REQUESTS_PER_SECOND_CAP_WEB = 10;
+    public static final float REQUESTS_PER_SECOND_CAP_WEB = 10f;
     public static final int DELAY = 1000;
     public static final int FIRST_SEASON = 28;
     public static final int PROFILE_LADDER_RETRY_COUNT = 3;
@@ -130,8 +130,8 @@ extends BaseAPI
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
     private final Map<Region, DurationVar> clientTimeouts = new EnumMap<>(Region.class);
-    private final Map<Region, LongVar> requestsPerSecondCaps = new EnumMap<>(Region.class);
-    private final Map<Region, LongVar> requestsPerHourCaps = new EnumMap<>(Region.class);
+    private final Map<Region, DoubleVar> requestsPerSecondCaps = new EnumMap<>(Region.class);
+    private final Map<Region, DoubleVar> requestsPerHourCaps = new EnumMap<>(Region.class);
     private final Map<Region, ReactorRateLimiter> rateLimiters = new HashMap<>();
     private final Map<Region, ReactorRateLimiter> hourlyRateLimiters = new EnumMap<>(Region.class);
     private final Map<Region, List<ReactorRateLimiter>> regionalRateLimiters = new EnumMap<>(Region.class);
@@ -189,8 +189,8 @@ extends BaseAPI
     {
         for(Region r : activeRegions)
         {
-            requestsPerHourCaps.put(r, new LongVar(varDAO, r.getId() + ".blizzard.api.rph", false));
-            requestsPerSecondCaps.put(r, new LongVar(varDAO, r.getId() + ".blizzard.api.rps", false));
+            requestsPerHourCaps.put(r, new DoubleVar(varDAO, r.getId() + ".blizzard.api.rph", false));
+            requestsPerSecondCaps.put(r, new DoubleVar(varDAO, r.getId() + ".blizzard.api.rps", false));
             clientTimeouts.put(r, new DurationVar(varDAO, r.getId() + ".blizzard.api.timeout", false));
         }
         Stream.of
@@ -479,10 +479,10 @@ extends BaseAPI
 
     private void setRequestCap
     (
-        Map<Region, ? extends Var<Long>> caps,
+        Map<Region, ? extends Var<Double>> caps,
         Region region,
-        Integer cap,
-        Integer maxCap,
+        Float cap,
+        Float maxCap,
         String capName
     )
     {
@@ -494,14 +494,14 @@ extends BaseAPI
                 + ", valid range: 0-" + maxCap
             );
         }
-        Long lCap = cap != null ? cap.longValue() : null;
+        Double dCap = cap != null ? cap.doubleValue() : null;
         if(isSeparateRequestLimits())
         {
-            caps.get(region).setValueAndSave(lCap);
+            caps.get(region).setValueAndSave(dCap);
         }
         else
         {
-            caps.values().forEach(v->v.setValueAndSave(lCap));
+            caps.values().forEach(v->v.setValueAndSave(dCap));
         }
         LOG.info
         (
@@ -511,32 +511,32 @@ extends BaseAPI
         );
     }
 
-    public void setRequestsPerSecondCap(Region region, Integer cap)
+    public void setRequestsPerSecondCap(Region region, Float cap)
     {
         setRequestCap(requestsPerSecondCaps, region, cap, REQUESTS_PER_SECOND_CAP, "RPS");
     }
 
-    public int getRequestsPerSecondCap(Region region)
+    public float getRequestsPerSecondCap(Region region)
     {
-        Long override = requestsPerSecondCaps.get(region).getValue();
-        return override != null ? override.intValue() : REQUESTS_PER_SECOND_CAP;
+        Double override = requestsPerSecondCaps.get(region).getValue();
+        return override != null ? override.floatValue() : REQUESTS_PER_SECOND_CAP;
     }
 
-    public void setRequestsPerHourCap(Region region, Integer cap)
+    public void setRequestsPerHourCap(Region region, Float cap)
     {
         setRequestCap(requestsPerHourCaps, region, cap, REQUESTS_PER_HOUR_CAP, "RPH");
     }
 
-    public int getRequestsPerHourCap(Region region)
+    public float getRequestsPerHourCap(Region region)
     {
-        Long override = requestsPerHourCaps.get(region).getValue();
-        return override != null ? override.intValue() : REQUESTS_PER_HOUR_CAP;
+        Double override = requestsPerHourCaps.get(region).getValue();
+        return override != null ? override.floatValue() : REQUESTS_PER_HOUR_CAP;
     }
 
     private void refreshReactorSlots
     (
         Map<Region, ReactorRateLimiter> limiters,
-        Function<Region, Integer> limitFunction
+        Function<Region, Float> limitFunction
     )
     {
         if(isSeparateRequestLimits())

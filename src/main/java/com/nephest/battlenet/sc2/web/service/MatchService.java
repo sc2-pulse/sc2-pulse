@@ -262,7 +262,7 @@ public class MatchService
                 .toSeconds()
         );
         return Math.min(Math.max(limit, 1),
-            api.getRequestsPerSecondCap(globalContext.getActiveRegions().iterator().next()) / 2);
+            (int) (api.getRequestsPerSecondCap(globalContext.getActiveRegions().iterator().next()) / 2));
     }
 
     private Mono<Integer> savePendingCharacters()

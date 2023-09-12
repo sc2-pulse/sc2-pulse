@@ -186,7 +186,7 @@ public class AdminController
     public ResponseEntity<Object> setRequestsPerSecondCap
     (
         @PathVariable("region") Region region,
-        @PathVariable("cap") int cap
+        @PathVariable("cap") float cap
     )
     {
         if(cap < 0) return ResponseEntity.badRequest().body("The cap can't be negative");
@@ -208,7 +208,7 @@ public class AdminController
     public ResponseEntity<Object> setRequestsPerHourCap
     (
         @PathVariable("region") Region region,
-        @PathVariable("cap") int cap
+        @PathVariable("cap") float cap
     )
     {
         if(cap < 0) return ResponseEntity.badRequest().body("The cap can't be negative");

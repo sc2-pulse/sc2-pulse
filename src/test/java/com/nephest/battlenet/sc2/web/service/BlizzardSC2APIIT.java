@@ -213,7 +213,7 @@ public class BlizzardSC2APIIT
     {
         Set<PlayerCharacterNaturalId> failedCharacters = new HashSet<>();
         api.getMatches(Set.of(SERRAL, HEROMARINE, MARU), failedCharacters, false)
-            .toStream(BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2)
+            .toStream((int) (BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2))
             .forEach((m)->
             {
                 assertTrue(m.getT1().getMatches().length > 0);
@@ -231,7 +231,7 @@ public class BlizzardSC2APIIT
     public void testFetchLegacyProfiles()
     {
         api.getLegacyProfiles(Set.of(SERRAL, HEROMARINE, MARU), false)
-            .toStream(BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2)
+            .toStream((int) (BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2))
             .forEach(p->
             {
                 assertNotNull(p.getT1().getName());
@@ -244,7 +244,7 @@ public class BlizzardSC2APIIT
     public void testFetchProfiles()
     {
         api.getProfiles(Set.of(SERRAL, HEROMARINE, MARU), false)
-            .toStream(BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2)
+            .toStream((int) (BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2))
             .forEach(p->
             {
                 assertNotNull(p.getT1().getSummary().getName());
