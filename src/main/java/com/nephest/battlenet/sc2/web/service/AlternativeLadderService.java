@@ -283,10 +283,13 @@ public class AlternativeLadderService
             && (additionalScanInstant == null
                 || System.currentTimeMillis() - additionalScanInstant.toEpochMilli()
                     >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis())
-            && (scanInstant != null
-                && !profileLadderWebRegions.getValue().contains(region)
-                && System.currentTimeMillis() - scanInstant.toEpochMilli()
-                    < NON_WEB_SCAN_TIME_FRAME.toMillis());
+            && (profileLadderWebRegions.getValue().contains(region)
+                || (
+                    scanInstant != null
+                    && System.currentTimeMillis() - scanInstant.toEpochMilli()
+                        < NON_WEB_SCAN_TIME_FRAME.toMillis()
+                )
+            );
     }
 
     private boolean isBigAdditionalWebUpdate(Region region)
