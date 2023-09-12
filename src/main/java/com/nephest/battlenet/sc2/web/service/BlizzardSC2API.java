@@ -358,9 +358,19 @@ extends BaseAPI
         return getRequestCapProgress() < MiscUtil.getHourProgress(LocalDateTime.now());
     }
 
+    public void addHourlyRequestLimitPriority(String name, int slots)
+    {
+        hourlyRateLimiters.values().forEach(l->l.addPriorityLimiter(new ReactorRateLimiter(name, slots)));
+    }
+
     public void addRequestLimitPriority(String name, int slots)
     {
         rateLimiters.values().forEach(l->l.addPriorityLimiter(new ReactorRateLimiter(name, slots)));
+    }
+
+    public void addWebRequestLimitPriority(String name, int slots)
+    {
+        webRateLimiter.addPriorityLimiter(new ReactorRateLimiter(name, slots));
     }
 
 
