@@ -103,6 +103,7 @@ extends BaseAPI
     public static final Duration IO_TIMEOUT = Duration.ofSeconds(50);
     public static final Duration SHORT_IO_TIMEOUT = Duration.ofSeconds(20);
     public static final String SYSTEM_REQUEST_LIMIT_PRIORITY_NAME = "system";
+    public static final int SYSTEM_HOURLY_REQUEST_LIMIT_PRIORITY_SLOTS = 200;
     /*
         This data is mainly used in ladder discovery process when starting with an empty DB. The values should be
         manually updated when a new season begins.
@@ -172,7 +173,6 @@ extends BaseAPI
         initVars(varDAO, globalContext.getActiveRegions());
         initRequestLimiters(separateRequestLimits);
         Flux.interval(HEALTH_SAVE_FRAME).doOnNext(i->saveHealth()).subscribe();
-        addRequestLimitPriority(SYSTEM_REQUEST_LIMIT_PRIORITY_NAME, 1);
     }
 
     @PostConstruct
@@ -225,7 +225,6 @@ extends BaseAPI
         {
             rateLimiters.put(r, separate ? new ReactorRateLimiter() : rateLimiter);
             hourlyRateLimiters.put(r, separate ? new ReactorRateLimiter() : hourlyLimiter);
-            hourlyRateLimiters.get(r).refreshSlots((int) (getRequestsPerHourCap(r) - healthMonitors.get(r).getRequests()));
             regionalRateLimiters.put(r, List.of(hourlyRateLimiters.get(r), rateLimiters.get(r)));
             regionalWebRateLimiters.put
             (
@@ -233,6 +232,17 @@ extends BaseAPI
                 List.of(hourlyRateLimiters.get(r), rateLimiters.get(r), webRateLimiter)
             );
         }
+
+        addHourlyRequestLimitPriority
+        (
+            SYSTEM_REQUEST_LIMIT_PRIORITY_NAME,
+            SYSTEM_HOURLY_REQUEST_LIMIT_PRIORITY_SLOTS
+        );
+        addRequestLimitPriority(SYSTEM_REQUEST_LIMIT_PRIORITY_NAME, 1);
+        addWebRequestLimitPriority(SYSTEM_REQUEST_LIMIT_PRIORITY_NAME, 1);
+
+        hourlyRateLimiters.forEach((r, limiter)-> limiter.refreshSlots(
+            (int) (getRequestsPerHourCap(r) - healthMonitors.get(r).getRequests())));
     }
 
     private void init(Set<Region> activeRegions)
