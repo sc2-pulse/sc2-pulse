@@ -102,6 +102,7 @@ extends BaseAPI
     public static final Duration AUTO_FORCE_REGION_MAX_DURATION = Duration.ofDays(7);
     public static final Duration IO_TIMEOUT = Duration.ofSeconds(50);
     public static final Duration SHORT_IO_TIMEOUT = Duration.ofSeconds(20);
+    public static final String SYSTEM_REQUEST_LIMIT_PRIORITY_NAME = "system";
     /*
         This data is mainly used in ladder discovery process when starting with an empty DB. The values should be
         manually updated when a new season begins.
@@ -171,6 +172,7 @@ extends BaseAPI
         initVars(varDAO, globalContext.getActiveRegions());
         initRequestLimiters(separateRequestLimits);
         Flux.interval(HEALTH_SAVE_FRAME).doOnNext(i->saveHealth()).subscribe();
+        addRequestLimitPriority(SYSTEM_REQUEST_LIMIT_PRIORITY_NAME, 1);
     }
 
     @PostConstruct
@@ -1311,9 +1313,17 @@ extends BaseAPI
             .accept(web ? ALL : APPLICATION_JSON)
             .retrieve()
             .bodyToFlux(BlizzardFullPlayerCharacter.class)
-            .retryWhen(ReactorRateLimiter.retryWhen(
-                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_ONCE, web)))
-            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
+            .retryWhen(ReactorRateLimiter.retryWhen
+            (
+                context.getRateLimiters(),
+                getRetry(region, WebServiceUtil.RETRY_ONCE, web),
+                SYSTEM_REQUEST_LIMIT_PRIORITY_NAME
+            ))
+            .delaySubscription(ReactorRateLimiter.requestSlot
+            (
+                context.getRateLimiters(),
+                SYSTEM_REQUEST_LIMIT_PRIORITY_NAME
+            ))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
     }
