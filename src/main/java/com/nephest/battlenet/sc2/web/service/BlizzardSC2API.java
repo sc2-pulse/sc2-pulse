@@ -1290,10 +1290,15 @@ extends BaseAPI
             .flatMap(p->WebServiceUtil.getOnErrorLogAndSkipMono(getProfile(p, web)));
     }
 
-    public Flux<BlizzardFullPlayerCharacter> getPlayerCharacters(Region region, Long profileId)
+    public Flux<BlizzardFullPlayerCharacter> getPlayerCharacters
+    (
+        Region region,
+        Long profileId,
+        boolean web
+    )
     {
         if(region == Region.CN) throw new UnsupportedOperationException("CN region is not supported");
-        ApiContext context = getContext(region, false);
+        ApiContext context = getContext(region, web);
         return getWebClient(region)
             .get()
             .uri
@@ -1303,14 +1308,28 @@ extends BaseAPI
                     : (context.getBaseUrl() + "sc2/player/{0}"),
                 profileId
             )
-            .accept(APPLICATION_JSON)
+            .accept(web ? ALL : APPLICATION_JSON)
             .retrieve()
             .bodyToFlux(BlizzardFullPlayerCharacter.class)
             .retryWhen(ReactorRateLimiter.retryWhen(
-                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_ONCE, false)))
+                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY_ONCE, web)))
             .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters()))
             .doOnRequest(s->context.getHealthMonitor().addRequest())
             .doOnError(t->context.getHealthMonitor().addError());
+    }
+
+    public Flux<BlizzardFullPlayerCharacter> getPlayerCharacters
+    (
+        Region region,
+        Long profileId
+    )
+    {
+        return webHealthMonitors.values().stream()
+            .map(APIHealthMonitor::getRequests)
+            .anyMatch(l->l > 0)
+                ? getPlayerCharacters(region, profileId, true)
+                : getPlayerCharacters(region, profileId, false)
+                    .onErrorResume(e->getPlayerCharacters(region, profileId, true));
     }
 
 }
