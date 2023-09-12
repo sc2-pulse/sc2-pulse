@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
@@ -301,6 +302,31 @@ public class ReactorRateLimiterTest
         for(int i = 0; i < 10; i++) limiter.requestSlot();
         limiter.refreshSlots(3);
         assertEquals(-7, limiter.getAvailableSlots());
+    }
+
+    @Test
+    public void testRefreshFloatSlots()
+    {
+        DecimalFormat format = new DecimalFormat("#.#");
+        ReactorRateLimiter limiter = new ReactorRateLimiter();
+        assertEquals(0, limiter.getAvailableSlots());
+        assertEquals(0.0f, limiter.getSlotDecimal());
+
+        limiter.refreshSlots(0.5f);
+        assertEquals(0, limiter.getAvailableSlots());
+        assertEquals(0.5f, limiter.getSlotDecimal());
+
+        limiter.refreshSlots(0.5f);
+        assertEquals(1, limiter.getAvailableSlots());
+        assertEquals(0f, limiter.getSlotDecimal());
+
+        limiter.refreshSlots(2.3f);
+        assertEquals(2, limiter.getAvailableSlots());
+        assertEquals("0.3", format.format(limiter.getSlotDecimal()));
+
+        limiter.refreshSlots(3.8f);
+        assertEquals(4, limiter.getAvailableSlots());
+        assertEquals("0.1", format.format(limiter.getSlotDecimal()));
     }
 
 }

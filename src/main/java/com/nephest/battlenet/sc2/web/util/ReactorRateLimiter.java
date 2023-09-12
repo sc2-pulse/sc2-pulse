@@ -48,6 +48,7 @@ public class ReactorRateLimiter
     private final Map<String, ReactorRateLimiter> priorityLimiters = new LinkedHashMap<>();
 
     private RateLimitData lastData;
+    private float slotDecimal = 0.0f;
 
     public ReactorRateLimiter(RateLimitRefreshConfig refreshConfig, String name, Integer maxRequestCount)
     {
@@ -203,6 +204,23 @@ public class ReactorRateLimiter
         LOG.trace("Slots granted: {}, current slots: {}, queue: {}", originalCount, count, requests.size());
     }
 
+    private int updateSlotDecimal(float count)
+    {
+        slotDecimal += count - (int) count;
+        if(slotDecimal >= 1)
+        {
+            slotDecimal = slotDecimal - (int) slotDecimal;
+            return (int) count + 1;
+        }
+        return (int) count;
+    }
+
+    public void refreshSlots(float fCount)
+    {
+        if(fCount <= 0) return;
+        refreshSlots(updateSlotDecimal(fCount));
+    }
+
     private int refreshPrioritySlots(int count)
     {
         if(priorityLimiters.isEmpty()) return count;
@@ -257,6 +275,11 @@ public class ReactorRateLimiter
     public int getAvailableSlots()
     {
         return requests.isEmpty() ? slots.get() : requests.size() * -1;
+    }
+
+    public float getSlotDecimal()
+    {
+        return slotDecimal;
     }
 
     public Retry retryWhen(RetrySpec retrySpec)
