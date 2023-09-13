@@ -108,8 +108,44 @@ public class StatsService
      */
     public static final int PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD = Integer.MAX_VALUE;
     public static final int PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE = 2;
-    public static final Map<QueueType, Set<BaseLeague.LeagueType>> PARTIAL_UPDATE_DATA =
-        LadderUpdateContext._1V1;
+    public static final List<Map<QueueType, Set<BaseLeague.LeagueType>>> PARTIAL_UPDATE_DATA =
+        List.of
+        (
+            Map.of
+            (
+                QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES,
+                QueueType.LOTV_2V2,
+                Set.of
+                (
+                    BaseLeague.LeagueType.BRONZE,
+                    BaseLeague.LeagueType.SILVER,
+                    BaseLeague.LeagueType.GOLD
+                )
+            ),
+            Map.of
+            (
+                QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES,
+                QueueType.LOTV_2V2,
+                Set.of
+                (
+                    BaseLeague.LeagueType.PLATINUM,
+                    BaseLeague.LeagueType.DIAMOND,
+                    BaseLeague.LeagueType.MASTER,
+                    BaseLeague.LeagueType.GRANDMASTER
+                )
+            ),
+            Map.of
+            (
+                QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES,
+                QueueType.LOTV_3V3, LadderUpdateContext.ALL_LEAGUES
+            ),
+            Map.of
+            (
+                QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES,
+                QueueType.LOTV_4V4, LadderUpdateContext.ALL_LEAGUES,
+                QueueType.LOTV_ARCHON, LadderUpdateContext.ALL_LEAGUES
+            )
+        );
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
     public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofDays(7);
 
@@ -172,7 +208,7 @@ public class StatsService
                             ))
                     ))
             ));
-
+    private int partialUpdateIndex = 0;
 
     public StatsService(){}
 
@@ -515,16 +551,19 @@ public class StatsService
     {
         Region region = season.getRegion();
         boolean partialUpdate = isPartialUpdate(season.getRegion(), updateContext);
-        if(partialUpdate) LOG.info("Partially updating {}({})", season, PARTIAL_UPDATE_DATA);
         LadderUpdateContext context = new LadderUpdateContext
         (
             season,
-            partialUpdate ? PARTIAL_UPDATE_DATA : data
+            partialUpdate ? PARTIAL_UPDATE_DATA.get(partialUpdateIndex) : data
         );
+        if(partialUpdate) LOG.info("Partially updating {}({})", season, context.getData());
         List<Future<Void>> tasks = updater.apply(context);
         if(partialUpdate)
         {
             partialAlternativeUpdates.put(region, partialAlternativeUpdates.get(region) + 1);
+            partialUpdateIndex = partialUpdateIndex == PARTIAL_UPDATE_DATA.size() - 1
+                ? 0
+                : partialUpdateIndex + 1;
         }
         else
         {
