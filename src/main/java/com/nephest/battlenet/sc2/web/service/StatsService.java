@@ -55,7 +55,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
-import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -109,9 +108,8 @@ public class StatsService
      */
     public static final int PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD = Integer.MAX_VALUE;
     public static final int PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE = 2;
-    public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_LEAGUE_TYPES =
-        EnumSet.allOf(BaseLeague.LeagueType.class);
-    public static final Set<QueueType> PARTIAL_UPDATE_QUEUE_TYPES = EnumSet.of(QueueType.LOTV_1V1);
+    public static final Map<QueueType, Set<BaseLeague.LeagueType>> PARTIAL_UPDATE_DATA =
+        LadderUpdateContext._1V1;
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
     public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofDays(7);
 
@@ -267,13 +265,13 @@ public class StatsService
     }
 
     @CacheEvict(cacheNames="fqdn-ladder-scan", allEntries=true)
-    public void updateAll(Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    public void updateAll(Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data)
     {
         long start = System.currentTimeMillis();
         int lastSeasonIx = api.getLastSeason(Region.EU, seasonDao.getMaxBattlenetId()).block().getId() + 1;
         for(int season = BlizzardSC2API.FIRST_SEASON; season < lastSeasonIx; season++)
         {
-            updateSeason(season, regions, queues, leagues);
+            updateSeason(season, data);
             LOG.info("Updated season {}", season);
         }
         teamStateDAO.removeExpired();
@@ -285,16 +283,20 @@ public class StatsService
 
     @CacheEvict(cacheNames="fqdn-ladder-scan", allEntries=true)
     public Map<Region, List<Future<Void>>> updateCurrent
-    (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
+    (
+        Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data,
+        boolean allStats,
+        UpdateContext updateContext
+    )
     {
         long start = System.currentTimeMillis();
 
-        checkStaleData(regions);
+        checkStaleData(data.keySet());
         Map<Region, List<Future<Void>>> tasks
-            = updateCurrentSeason(regions, queues, leagues, allStats, updateContext);
+            = updateCurrentSeason(data, allStats, updateContext);
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
-        LOG.info("Updated current for {} after {} seconds", regions, seconds);
+        LOG.info("Updated current for {} after {} seconds", data, seconds);
         return tasks;
     }
 
@@ -323,12 +325,14 @@ public class StatsService
         updateTeams(bLadder.getTeams(), season, league, tier, division, null);
     }
 
-    private void updateSeason(int seasonId, Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    private void updateSeason
+    (
+        int seasonId,
+        Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data
+    )
     {
-        for(Region region : regions)
-        {
-            updateSeason(region, seasonId, queues, leagues);
-        }
+        for(Map.Entry<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> e : data.entrySet())
+            updateSeason(e.getKey(), seasonId, data.get(e.getKey()));
         updateSeasonStats(seasonId, true);
     }
 
@@ -399,22 +403,32 @@ public class StatsService
         for(Integer seasonId : seasons) teamDao.updateRanks(seasonId);
     }
 
-    private void updateSeason(Region region, int seasonId, QueueType[] queues, BaseLeague.LeagueType[] leagues)
+    private void updateSeason
+    (
+        Region region,
+        int seasonId,
+        Map<QueueType, Set<BaseLeague.LeagueType>> data
+    )
     {
         BlizzardSeason bSeason = api.getSeason(region, seasonId).block();
         Season season = seasonDao.merge(Season.of(bSeason, region));
-        updateLeagues(bSeason, season, queues, leagues, false, new UpdateContext());
+        updateLeagues(bSeason, season, data, false, new UpdateContext());
         LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
 
     private Map<Region, List<Future<Void>>> updateCurrentSeason
-    (Region[] regions, QueueType[] queues, BaseLeague.LeagueType[] leagues, boolean allStats, UpdateContext updateContext)
+    (
+        Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data,
+        boolean allStats,
+        UpdateContext updateContext
+    )
     {
         Map<Region, List<Future<Void>>> tasks = new EnumMap<>(Region.class);
         //there can be two seasons here when a new season starts
         Set<Integer> seasons = new HashSet<>(2);
-        for(Region region : regions)
+        for(Map.Entry<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> entry : data.entrySet())
         {
+            Region region = entry.getKey();
             int maxSeason = seasonDao.getMaxBattlenetId(region);
             UpdateContext regionalContext = getLadderUpdateContext(region, updateContext);
             BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
@@ -423,7 +437,7 @@ public class StatsService
             tasks.put
             (
                 region,
-                updateOrAlternativeUpdate(bSeason, season, queues, leagues, true, regionalContext)
+                updateOrAlternativeUpdate(bSeason, season, entry.getValue(), true, regionalContext)
             );
             seasons.add(season.getBattlenetId());
             if(regionalContext.getInternalUpdate() == null) forcedUpdateInstants.get(region).setValueAndSave(Instant.now());
@@ -435,8 +449,11 @@ public class StatsService
 
     private List<Future<Void>> updateOrAlternativeUpdate
     (
-        BlizzardSeason bSeason, Season season, QueueType[] queues, BaseLeague.LeagueType[] leagues,
-        boolean currentSeason, UpdateContext updateContext
+        BlizzardSeason bSeason,
+        Season season,
+        Map<QueueType, Set<BaseLeague.LeagueType>> data,
+        boolean currentSeason,
+        UpdateContext updateContext
     )
     {
         List<Future<Void>> tasks;
@@ -446,13 +463,12 @@ public class StatsService
             LOG.debug("Cleared FastTeamDAO for {}", season.getRegion());
             tasks = update
             (
-                season, queues, leagues, updateContext,
+                season, data, updateContext,
                 ctx->updateLeagues
                 (
                     bSeason,
                     ctx.getSeason(),
-                    ctx.getQueues(),
-                    ctx.getLeagues(),
+                    data,
                     currentSeason,
                     updateContext
                 )
@@ -464,8 +480,8 @@ public class StatsService
             LOG.debug("Loaded teams into FastTeamDAO for {}", season);
             tasks = update
             (
-                season, queues, leagues, updateContext,
-                ctx->alternativeLadderService.updateSeason(ctx.getSeason(), ctx.getQueues(), ctx.getLeagues())
+                season, data, updateContext,
+                ctx->alternativeLadderService.updateSeason(ctx.getSeason(), data)
             );
         }
         return tasks;
@@ -474,27 +490,18 @@ public class StatsService
     private List<Future<Void>> update
     (
         Season season,
-        QueueType[] queues,
-        BaseLeague.LeagueType[] leagues,
+        Map<QueueType, Set<BaseLeague.LeagueType>> data,
         UpdateContext updateContext,
         Function<LadderUpdateContext, List<Future<Void>>> updater
     )
     {
         Region region = season.getRegion();
-        boolean partialUpdate = isPartialUpdate(season.getRegion(), queues, leagues, updateContext);
-        if(partialUpdate)
-            LOG.info
-            (
-                "Partially updating {}({}, {})",
-                season,
-                PARTIAL_UPDATE_QUEUE_TYPES,
-                PARTIAL_UPDATE_LEAGUE_TYPES
-            );
+        boolean partialUpdate = isPartialUpdate(season.getRegion(), updateContext);
+        if(partialUpdate) LOG.info("Partially updating {}({})", season, PARTIAL_UPDATE_DATA);
         LadderUpdateContext context = new LadderUpdateContext
         (
             season,
-            partialUpdate ? PARTIAL_UPDATE_QUEUE_TYPES.toArray(QueueType[]::new) : queues,
-            partialUpdate ? PARTIAL_UPDATE_LEAGUE_TYPES.toArray(BaseLeague.LeagueType[]::new) : leagues
+            partialUpdate ? PARTIAL_UPDATE_DATA : data
         );
         List<Future<Void>> tasks = updater.apply(context);
         if(partialUpdate)
@@ -511,8 +518,6 @@ public class StatsService
     public boolean isPartialUpdate
     (
         Region region,
-        QueueType[] queues,
-        BaseLeague.LeagueType[] leagues,
         UpdateContext updateContext
     )
     {
@@ -523,9 +528,7 @@ public class StatsService
                 .distinct()
                 .count() >= PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD
         )
-            && partialAlternativeUpdates.get(region) < PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE
-            && new HashSet<>(Arrays.asList(queues)).containsAll(PARTIAL_UPDATE_QUEUE_TYPES)
-            && new HashSet<>(Arrays.asList(leagues)).containsAll(PARTIAL_UPDATE_LEAGUE_TYPES);
+            && partialAlternativeUpdates.get(region) < PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE;
     }
 
     public boolean isPartialUpdate(Region region)
@@ -542,8 +545,7 @@ public class StatsService
     (
         BlizzardSeason bSeason,
         Season season,
-        QueueType[] queues,
-        BaseLeague.LeagueType[] leagues,
+        Map<QueueType, Set<BaseLeague.LeagueType>> data,
         boolean currentSeason,
         UpdateContext updateContext
     )
@@ -551,7 +553,7 @@ public class StatsService
         if(updateContext.getInternalUpdate() == null) LOG.info("Starting forced ladder scan: {}", season.getRegion());
         LOG.debug("Updating season {} using {} checkpoint", season, updateContext.getExternalUpdate());
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
-            getLadderIds(getLeagueIds(bSeason, season.getRegion(), queues, leagues), currentSeason);
+            getLadderIds(getLeagueIds(bSeason, season.getRegion(), data), currentSeason);
         return updateLadders(season, ladderIds, updateContext.getExternalUpdate());
     }
 
@@ -739,14 +741,13 @@ public class StatsService
     (
         BlizzardSeason bSeason,
         Region region,
-        QueueType[] queues,
-        BaseLeague.LeagueType[] leagues
+        Map<QueueType, Set<BaseLeague.LeagueType>> data
     )
     {
         List<Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> leagueIds = new ArrayList<>();
-        for(BaseLeague.LeagueType league : leagues)
+        for(QueueType queue : data.keySet())
         {
-            for(QueueType queue : queues)
+            for(BaseLeague.LeagueType league : data.get(queue))
             {
                 for(TeamType team : TeamType.values())
                 {
@@ -776,7 +777,7 @@ public class StatsService
     public long getMaxLadderId(BlizzardSeason bSeason, Region region)
     {
         List<Tuple5<Region, BlizzardSeason, BaseLeague.LeagueType, QueueType, TeamType>> leagueIds =
-            getLeagueIds(bSeason, region, QueueType.getTypes(VERSION).toArray(QueueType[]::new), BaseLeague.LeagueType.values());
+            getLeagueIds(bSeason, region, LadderUpdateContext.ALL);
 
         AtomicLong max = new AtomicLong(-1);
         api.getLeagues(leagueIds, true)
@@ -790,7 +791,7 @@ public class StatsService
         return max.get();
     }
 
-    public void checkStaleData(Region[] regions)
+    public void checkStaleData(Set<Region> regions)
     {
         for(Region region : regions)
         {

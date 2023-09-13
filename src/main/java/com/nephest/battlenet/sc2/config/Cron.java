@@ -3,8 +3,6 @@
 
 package com.nephest.battlenet.sc2.config;
 
-import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.TimerVar;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
@@ -20,6 +18,7 @@ import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.GlobalContext;
+import com.nephest.battlenet.sc2.web.service.LadderUpdateContext;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
@@ -35,6 +34,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -279,9 +279,7 @@ public class Cron
                 (
                     statsService.updateCurrent
                     (
-                        new Region[]{region},
-                        QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new),
-                        BaseLeague.LeagueType.values(),
+                        Map.of(region, LadderUpdateContext.ALL),
                         false,
                         updateService.getUpdateContext(null)
                     ).values().stream()

@@ -37,6 +37,7 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -74,8 +75,8 @@ public class BlizzardPrivacyService
     public static final int CHARACTER_UPDATES_PER_TTL = (int) (CHARACTER_UPDATE_EXPIRATION_THRESHOLD.toSeconds() / CHARACTER_UPDATE_TIME_FRAME.toSeconds());
     public static final OffsetDateTime DEFAULT_ANONYMIZE_START =
         OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
-    private static final QueueType[] QUEUE_TYPES = QueueType.getTypes(StatsService.VERSION).toArray(QueueType[]::new);
-    private static final BaseLeague.LeagueType[] LEAGUE_TYPES = BaseLeague.LeagueType.values();
+    private static final Map<QueueType, Set<BaseLeague.LeagueType>> UPDATE_DATA
+        = LadderUpdateContext.ALL;
     public static final String REQUEST_LIMIT_PRIORITY_NAME = "privacy";
     public static final int REQUEST_LIMIT_PRIORITY_SLOTS = 1;
 
@@ -292,7 +293,7 @@ public class BlizzardPrivacyService
         BlizzardSeason bSeason = sc2WebServiceUtil.getExternalOrExistingSeason(region, seasonId);
         List<Future<Void>> dbTasks = new ArrayList<>();
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
-            statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, QUEUE_TYPES, LEAGUE_TYPES), currentSeason);
+            statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, UPDATE_DATA), currentSeason);
         api.getLadders(ladderIds, -1, null, REQUEST_LIMIT_PRIORITY_NAME)
             .flatMap(l->Flux.fromStream(extractPrivateInfo(l, seasonId, currentSeason)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
@@ -328,12 +329,12 @@ public class BlizzardPrivacyService
     {
         Season season = new Season(null, seasonId, region, null, null, null, null);
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladderIds = alternativeLadderService
-            .getExistingLadderIds(season, QUEUE_TYPES, LEAGUE_TYPES);
+            .getExistingLadderIds(season, UPDATE_DATA);
         List<Future<Void>> dbTasks = new ArrayList<>();
         api.getProfileLadders
         (
             ladderIds,
-            Set.of(QUEUE_TYPES),
+            UPDATE_DATA.keySet(),
             alternativeLadderService.isProfileLadderWebRegion(region),
             REQUEST_LIMIT_PRIORITY_NAME
         )
