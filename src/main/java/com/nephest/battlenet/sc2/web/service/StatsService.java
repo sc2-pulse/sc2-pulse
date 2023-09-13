@@ -155,6 +155,24 @@ public class StatsService
     private ClanService clanService;
     private EventService eventService;
     private Predicate<BlizzardTeam> teamValidationPredicate;
+    private final Map<Region, Map<QueueType, Map<BaseLeague.LeagueType, Instant>>> updateInstants =
+        Arrays.stream(Region.values())
+            .collect(Collectors.toUnmodifiableMap
+            (
+                Function.identity(),
+                r->QueueType.getTypes(VERSION).stream()
+                    .collect(Collectors.toUnmodifiableMap
+                    (
+                        Function.identity(),
+                        q->Arrays.stream(BaseLeague.LeagueType.values())
+                            .collect(Collectors.toUnmodifiableMap
+                            (
+                                Function.identity(),
+                                l->Instant.now().minus(Duration.ofDays(1))
+                            ))
+                    ))
+            ));
+
 
     public StatsService(){}
 
@@ -551,20 +569,34 @@ public class StatsService
     )
     {
         if(updateContext.getInternalUpdate() == null) LOG.info("Starting forced ladder scan: {}", season.getRegion());
-        LOG.debug("Updating season {} using {} checkpoint", season, updateContext.getExternalUpdate());
+        LOG.debug("Updating season {}", season);
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             getLadderIds(getLeagueIds(bSeason, season.getRegion(), data), currentSeason);
-        return updateLadders(season, ladderIds, updateContext.getExternalUpdate());
+        return updateLadders(season, ladderIds, updateContext);
     }
 
     private List<Future<Void>> updateLadders
-    (Season season, List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds, Instant lastUpdated)
+    (
+        Season season,
+        List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds,
+        UpdateContext updateContext
+    )
     {
         List<Future<Void>> dbTasks = new ArrayList<>();
-        api.getLadders(ladderIds, lastUpdated != null ? lastUpdated.toEpochMilli() / 1000 : -1, failedLadders)
-            .buffer(LADDER_BATCH_SIZE)
+        Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>
+            ladders = updateContext.getInternalUpdate() == null
+                ? api.getLadders(ladderIds, -1, failedLadders)
+                : Flux.fromIterable
+                (
+                    ladderIds.stream()
+                        .collect(Collectors.groupingBy(t->updateInstants
+                            .get(t.getT2()).get(t.getT1().getQueueType()).get(t.getT1().getType())))
+                        .entrySet()
+                )
+                    .flatMap(e->api.getLadders(e.getValue(), e.getKey().getEpochSecond(), failedLadders));
+        ladders.buffer(LADDER_BATCH_SIZE)
             .toStream()
-            .forEach(l->dbTasks.add(dbExecutorService.submit(()->statsService.saveLadders(season, l, lastUpdated), null)));
+            .forEach(l->dbTasks.add(dbExecutorService.submit(()->statsService.saveLadders(season, l, updateContext), null)));
         return dbTasks;
     }
 
@@ -577,7 +609,7 @@ public class StatsService
     (
         Season season,
         List<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>> ladders,
-        Instant lastUpdated
+        UpdateContext updateContext
     )
     {
         for(Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> l : ladders)
@@ -588,7 +620,11 @@ public class StatsService
             //force update previously failed ladders, this will pick up all skipped teams
             Instant lastUpdatedToUse = failedLadders.get(l.getT2().getT2()).remove(l.getT2().getT4().getLadderId())
                 ? null
-                : lastUpdated;
+                : updateContext.getInternalUpdate() == null
+                    ? null
+                    : updateInstants.get(l.getT2().getT2())
+                        .get(l.getT2().getT1().getQueueType())
+                        .get(l.getT2().getT1().getType());
             updateTeams(l.getT1().getTeams(), season, league, tier, division, lastUpdatedToUse);
             LOG.debug
             (
