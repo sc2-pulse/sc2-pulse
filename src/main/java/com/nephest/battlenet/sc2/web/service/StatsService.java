@@ -166,6 +166,7 @@ public class StatsService
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdates = new EnumMap<>(Region.class);
+    private final Map<Region, LongVar> partialUpdateIndexes = new EnumMap<>(Region.class);
     private final PendingLadderData pendingLadderData = new PendingLadderData();
 
     private AlternativeLadderService alternativeLadderService;
@@ -208,7 +209,6 @@ public class StatsService
                             ))
                     ))
             ));
-    private int partialUpdateIndex = 0;
 
     public StatsService(){}
 
@@ -278,6 +278,7 @@ public class StatsService
             forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced", false));
             forcedAlternativeUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.forced.timestamp", false));
             partialUpdates.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial", false));
+            partialUpdateIndexes.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial.ix", false));
         }
         //catch exceptions to allow service autowiring for tests
         try {
@@ -287,11 +288,15 @@ public class StatsService
             (
                 forcedUpdateInstants.values().stream(),
                 forcedAlternativeUpdateInstants.values().stream(),
-                partialUpdates.values().stream()
+                partialUpdates.values().stream(),
+                partialUpdateIndexes.values().stream()
             )
                 .flatMap(Function.identity())
                 .map(var->(Var<?>) var)
                 .forEach(Var::load);
+            partialUpdateIndexes.values().stream()
+                .filter(v->v.getValue() == null)
+                .forEach(v->v.setValueAndSave(0L));
         }
         catch(RuntimeException ex) {
             LOG.warn(ex.getMessage(), ex);
@@ -551,19 +556,25 @@ public class StatsService
     {
         Region region = season.getRegion();
         boolean partialUpdate = isPartialUpdate(season.getRegion(), updateContext);
+        LongVar partialUpdateIndex = partialUpdateIndexes.get(season.getRegion());
         LadderUpdateContext context = new LadderUpdateContext
         (
             season,
-            partialUpdate ? PARTIAL_UPDATE_DATA.get(partialUpdateIndex) : data
+            partialUpdate
+                ? PARTIAL_UPDATE_DATA.get(partialUpdateIndex.getValue().intValue())
+                : data
         );
         if(partialUpdate) LOG.info("Partially updating {}({})", season, context.getData());
         List<Future<Void>> tasks = updater.apply(context);
         if(partialUpdate)
         {
             partialAlternativeUpdates.put(region, partialAlternativeUpdates.get(region) + 1);
-            partialUpdateIndex = partialUpdateIndex == PARTIAL_UPDATE_DATA.size() - 1
-                ? 0
-                : partialUpdateIndex + 1;
+            partialUpdateIndex.setValueAndSave
+            (
+                partialUpdateIndex.getValue() == PARTIAL_UPDATE_DATA.size() - 1
+                    ? 0
+                    : partialUpdateIndex.getValue() + 1
+            );
         }
         else
         {
