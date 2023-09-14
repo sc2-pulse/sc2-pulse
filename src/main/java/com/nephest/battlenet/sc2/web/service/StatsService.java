@@ -533,7 +533,7 @@ public class StatsService
                 (
                     bSeason,
                     ctx.getSeason(),
-                    data,
+                    ctx.getData(),
                     currentSeason,
                     updateContext
                 )
@@ -546,7 +546,7 @@ public class StatsService
             return update
             (
                 season, data, updateContext, true,
-                ctx->alternativeLadderService.updateSeason(ctx.getSeason(), data)
+                ctx->alternativeLadderService.updateSeason(ctx.getSeason(), ctx.getData())
             );
         }
     }
@@ -580,7 +580,7 @@ public class StatsService
                     ? 0
                     : partialUpdateIndex.getValue() + 1
             );
-        return new LadderUpdateTaskContext<>(season, data, tasks);
+        return new LadderUpdateTaskContext<>(season, context.getData(), tasks);
     }
 
     public boolean isPartialUpdate
