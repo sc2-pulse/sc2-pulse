@@ -348,7 +348,7 @@ public class StatsService
         Map<Region, LadderUpdateTaskContext<Void>> ctx
             = updateCurrentSeason(data, allStats, updateContext);
 
-        updateInstants(data, start);
+        updateInstants(ctx, start);
         long seconds = (System.currentTimeMillis() - start.toEpochMilli()) / 1000;
         LOG.info("Updated current for {} after {} seconds", ctx, seconds);
         return ctx;
@@ -356,13 +356,13 @@ public class StatsService
 
     private void updateInstants
     (
-        Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data,
+        Map<Region, LadderUpdateTaskContext<Void>> ctx,
         Instant instant
     )
     {
-        for(Region region : data.keySet())
-            for(QueueType queue : data.get(region).keySet())
-                for(BaseLeague.LeagueType league : data.get(region).get(queue))
+        for(Region region : ctx.keySet())
+            for(QueueType queue : ctx.get(region).getData().keySet())
+                for(BaseLeague.LeagueType league : ctx.get(region).getData().get(queue))
                     updateInstants.get(region).get(queue).put(league, instant);
     }
 
