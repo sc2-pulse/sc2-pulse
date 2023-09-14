@@ -46,7 +46,10 @@
             <a href="https://us.forums.blizzard.com/en/blizzard/t/data-protection-notice-and-faq/609/2"
                target="_blank" rel="noopener nofollow">deemed as public data(section 15)</a>. You can remove some
             of your data by submitting a data removal request to Blizzard, disabling 3rd party access in settings of your
-            Blizzard account, or using the <a th:href="@{/data/battle-net}">BattleNet data manager</a>.
+            Blizzard account, or using the <a th:href="@{/data/battle-net}">BattleNet data manager</a>. We update affected
+            player data of the last
+            <span th:text="${T(com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService).OLD_SEASON_COUNT + 1}"></span>
+            ranked ladder seasons, other data may be removed when it expires unless it's updated from other seasons.
         </dd>
         <dt>NO WARRANTY</dt>
         <dd>SC2 PULSE PROVIDES THE DATA “AS IS,” AND “AS AVAILABLE,” AND THE ENTIRE RISK AS TO SATISFACTORY QUALITY, PERFORMANCE, ACCURACY, AND EFFORT IS WITH YOU.</dd>

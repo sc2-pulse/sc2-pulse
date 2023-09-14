@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
@@ -71,6 +72,8 @@ public class BlizzardPrivacyService
     public static final Duration CHARACTER_UPDATED_MAX = DATA_TTL.minus(CHARACTER_UPDATE_EXPIRATION_THRESHOLD);
     public static final Duration OLD_LADDER_DATA_TTL = Duration.ofDays(20);
     public static final int CURRENT_SEASON_UPDATES_PER_PERIOD = 3;
+    public static final int OLD_SEASON_COUNT = (int) OLD_LADDER_DATA_TTL.toDays()
+        - CURRENT_SEASON_UPDATES_PER_PERIOD;
     public static final int ACCOUNT_AND_CHARACTER_BATCH_SIZE = 250;
     public static final int CHARACTER_UPDATES_PER_TTL = (int) (CHARACTER_UPDATE_EXPIRATION_THRESHOLD.toSeconds() / CHARACTER_UPDATE_TIME_FRAME.toSeconds());
     public static final OffsetDateTime DEFAULT_ANONYMIZE_START =
@@ -138,7 +141,7 @@ public class BlizzardPrivacyService
         this.globalContext = globalContext;
         initVars(varDAO);
         api.addRequestLimitPriority(REQUEST_LIMIT_PRIORITY_NAME, REQUEST_LIMIT_PRIORITY_SLOTS);
-        updateOldDataTask = new SingleRunnable(this::updateOldSeasons, webExecutorService);
+        updateOldDataTask = new SingleRunnable(this::doUpdateOldSeasons, webExecutorService);
     }
 
     private void initVars(VarDAO varDAO)
@@ -224,11 +227,16 @@ public class BlizzardPrivacyService
         handleExpiredData();
         if(shouldUpdateCharacters() && (characterUpdateTask == null || characterUpdateTask.isDone()))
             characterUpdateTask = webExecutorService.submit(this::updateCharacters);
-        updateOldDataTask.tryRun();
         return characterUpdateTask;
     }
 
-    private void updateOldSeasons()
+    @Scheduled(cron="0 0 6 * * *", zone = "UTC")
+    public void updateOldSeasons()
+    {
+        updateOldDataTask.tryRun();
+    }
+
+    private void doUpdateOldSeasons()
     {
         Integer season = getSeasonToUpdate();
         if(season == null) return;
@@ -363,15 +371,12 @@ public class BlizzardPrivacyService
         Integer lastSeason = seasonDAO.getMaxBattlenetId();
         if(lastSeason == null || lastSeason < BlizzardSC2API.FIRST_SEASON) return null;
 
-        int updatesPerPeriod = ((lastSeason - BlizzardSC2API.FIRST_SEASON) + 1) + CURRENT_SEASON_UPDATES_PER_PERIOD;
-        long secondsBetweenUpdates = OLD_LADDER_DATA_TTL.toSeconds() / updatesPerPeriod;
-        if(Instant.now().getEpochSecond() - lastUpdatedSeasonInstant.getValue().getEpochSecond() < secondsBetweenUpdates)
-            return null;
-
         long secondsBetweenCurrentSeasonUpdates = OLD_LADDER_DATA_TTL.toSeconds() / CURRENT_SEASON_UPDATES_PER_PERIOD;
         return Instant.now().getEpochSecond() - lastUpdatedCurrentSeasonInstant.getValue().getEpochSecond() >= secondsBetweenCurrentSeasonUpdates
             ? lastSeason
-            : (int) (lastUpdatedSeason.getValue() + 1 >= lastSeason ? BlizzardSC2API.FIRST_SEASON : lastUpdatedSeason.getValue() + 1);
+            : (int) (lastUpdatedSeason.getValue() + 1 >= lastSeason
+                ? Math.max(lastSeason - OLD_SEASON_COUNT, BlizzardSC2API.FIRST_SEASON)
+                : lastUpdatedSeason.getValue() + 1);
     }
 
     private boolean shouldUpdateCharacters()

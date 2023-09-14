@@ -9,10 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
-import static org.mockito.Mockito.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
@@ -183,21 +183,8 @@ public class BlizzardPrivacyServiceTest
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 2);
         assertEquals(BlizzardSC2API.FIRST_SEASON + 2, privacyService.getSeasonToUpdate());
 
-        privacyService.update();
+        privacyService.updateOldSeasons();
         privacyService.getUpdateOldDataTask().get();
-
-        //season was updated recently, nothing to update
-        assertNull(privacyService.getSeasonToUpdate());
-
-        OffsetDateTime anonymizeOffset = OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
-        InOrder order = inOrder(accountDAO, playerCharacterDAO);
-        order.verify(accountDAO).removeEmptyAccounts();
-        order.verify(accountDAO, times(2)).anonymizeExpiredAccounts(offsetDateTimeArgumentCaptor.capture());
-        //full anonymization
-        assertTrue(BlizzardPrivacyService.DEFAULT_ANONYMIZE_START.isEqual(offsetDateTimeArgumentCaptor.getAllValues().get(0)));
-        //partial anonymization
-        assertTrue(anonymizeOffset.isEqual(offsetDateTimeArgumentCaptor.getAllValues().get(1)));
-        order.verify(playerCharacterDAO).anonymizeExpiredCharacters(argThat(m->m.isEqual(anonymizeOffset)));
 
         long updateTimeFrame = BlizzardPrivacyService.DATA_TTL
             .dividedBy(BlizzardPrivacyService.CURRENT_SEASON_UPDATES_PER_PERIOD + 2) //+ 2 existing seasons
@@ -210,28 +197,40 @@ public class BlizzardPrivacyServiceTest
         //rewind update timestamp to simulate the time flow
         privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON, privacyService.getSeasonToUpdate());
-        privacyService.update();
+        privacyService.updateOldSeasons();
         privacyService.getUpdateOldDataTask().get();
 
-        //rewind update timestamp to simulate the time flow, next season is updated
-        privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
+        //next season is updated
         assertEquals(BlizzardSC2API.FIRST_SEASON + 1, privacyService.getSeasonToUpdate());
-        privacyService.update();
+        privacyService.updateOldSeasons();
         privacyService.getUpdateOldDataTask().get();
 
-        //rewind update timestamp to simulate the time flow, all previous season were updated, starting from the first
-        //season again
-        privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
+        //all previous season were updated, starting from the first season again
         assertEquals(BlizzardSC2API.FIRST_SEASON, privacyService.getSeasonToUpdate());
-        privacyService.update();
+        privacyService.updateOldSeasons();
         privacyService.getUpdateOldDataTask().get();
 
         //current season update is prioritized
-        privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
         privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(Instant.now().minusSeconds(currentUpdateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON + 2, privacyService.getSeasonToUpdate());
-        privacyService.update();
+        privacyService.updateOldSeasons();
         privacyService.getUpdateOldDataTask().get();
+    }
+
+    @Test
+    public void testAnonymizeExpiredData()
+    {
+        privacyService.update();
+
+        OffsetDateTime anonymizeOffset = OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
+        InOrder order = inOrder(accountDAO, playerCharacterDAO);
+        order.verify(accountDAO).removeEmptyAccounts();
+        order.verify(accountDAO, times(2)).anonymizeExpiredAccounts(offsetDateTimeArgumentCaptor.capture());
+        //full anonymization
+        assertTrue(BlizzardPrivacyService.DEFAULT_ANONYMIZE_START.isEqual(offsetDateTimeArgumentCaptor.getAllValues().get(0)));
+        //partial anonymization
+        assertTrue(anonymizeOffset.isEqual(offsetDateTimeArgumentCaptor.getAllValues().get(1)));
+        order.verify(playerCharacterDAO).anonymizeExpiredCharacters(argThat(m->m.isEqual(anonymizeOffset)));
     }
 
     @Test
@@ -321,7 +320,7 @@ public class BlizzardPrivacyServiceTest
                 .thenReturn(ladders);
         for(int i = 1; i < globalContext.getActiveRegions().size(); i++)
             stub = stub.thenReturn(Flux.empty());
-        privacyService.update();
+        privacyService.updateOldSeasons();
 
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
         PlayerCharacter character2 = new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2");
@@ -347,7 +346,7 @@ public class BlizzardPrivacyServiceTest
         privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(Instant.now());
         stubLadderApi();
 
-        privacyService.update();
+        privacyService.updateOldSeasons();
 
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> argChars =
@@ -370,7 +369,7 @@ public class BlizzardPrivacyServiceTest
 
         stubLadderApi();
         //update current season
-        privacyService.update();
+        privacyService.updateOldSeasons();
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         //true because season is the current season and alternative update route is disabled
         assertTrue(accountPlayerCaptor.getValue().get(0).getT3());
@@ -396,9 +395,9 @@ public class BlizzardPrivacyServiceTest
             return task;
         }).when(executor).execute(any(Runnable.class));
         //update current season
-        privacyService.update();
+        privacyService.updateOldSeasons();
         //second update is ignored
-        privacyService.update();
+        privacyService.updateOldSeasons();
         MiscUtil.awaitAndThrowException(tasks, false, false);
         //executed once
         verify(playerCharacterDAO, times(1)).updateAccountsAndCharacters(accountPlayerCaptor.capture());
