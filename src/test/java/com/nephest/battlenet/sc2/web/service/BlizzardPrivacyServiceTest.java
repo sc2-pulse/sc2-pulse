@@ -13,6 +13,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.argThat;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
@@ -388,12 +389,12 @@ public class BlizzardPrivacyServiceTest
         for(int i = 0; i < globalContext.getActiveRegions().size(); i++)
             stub = stub.thenReturn(Flux.empty());
         List<Future<Void>> tasks = new ArrayList<>(2);
-        when(executor.submit(any(Runnable.class))).then(i->{
+        doAnswer(i->{
             Runnable r = i.getArgument(0);
             Future<Void> task = TestUtil.EXECUTOR_SERVICE.submit(r, null);
             tasks.add(task);
             return task;
-        });
+        }).when(executor).execute(any(Runnable.class));
         //update current season
         privacyService.update();
         //second update is ignored
