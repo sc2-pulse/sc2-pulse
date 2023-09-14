@@ -36,6 +36,17 @@ public class LadderUpdateContext
         this.data = data;
     }
 
+    @Override
+    public String toString()
+    {
+        return String.format
+        (
+            "%s[%s %s]",
+            LadderUpdateContext.class.getSimpleName(),
+            getSeason(), getData()
+        );
+    }
+
     public Season getSeason()
     {
         return season;

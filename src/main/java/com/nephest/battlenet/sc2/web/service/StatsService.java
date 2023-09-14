@@ -350,7 +350,7 @@ public class StatsService
 
         updateInstants(data, start);
         long seconds = (System.currentTimeMillis() - start.toEpochMilli()) / 1000;
-        LOG.info("Updated current for {} after {} seconds", data, seconds);
+        LOG.info("Updated current for {} after {} seconds", ctx, seconds);
         return ctx;
     }
 
