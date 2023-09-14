@@ -528,7 +528,7 @@ public class StatsService
             LOG.debug("Cleared FastTeamDAO for {}", season.getRegion());
             return update
             (
-                season, data, updateContext,
+                season, data, updateContext, false,
                 ctx->updateLeagues
                 (
                     bSeason,
@@ -545,7 +545,7 @@ public class StatsService
             LOG.debug("Loaded teams into FastTeamDAO for {}", season);
             return update
             (
-                season, data, updateContext,
+                season, data, updateContext, true,
                 ctx->alternativeLadderService.updateSeason(ctx.getSeason(), data)
             );
         }
@@ -556,10 +556,13 @@ public class StatsService
         Season season,
         Map<QueueType, Set<BaseLeague.LeagueType>> data,
         UpdateContext updateContext,
+        boolean alternative,
         Function<LadderUpdateContext, List<Future<Void>>> updater
     )
     {
-        boolean partialUpdate = isPartialUpdate(season.getRegion(), updateContext);
+        boolean partialUpdate = alternative
+            ? isPartialUpdate(season.getRegion())
+            : isPartialUpdate(season.getRegion(), updateContext);
         LongVar partialUpdateIndex = partialUpdateIndexes.get(season.getRegion());
         LadderUpdateContext context = new LadderUpdateContext
         (
