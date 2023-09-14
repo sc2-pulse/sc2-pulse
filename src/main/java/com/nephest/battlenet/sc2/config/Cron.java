@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.GlobalContext;
 import com.nephest.battlenet.sc2.web.service.LadderUpdateContext;
+import com.nephest.battlenet.sc2.web.service.LadderUpdateTaskContext;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import com.nephest.battlenet.sc2.web.service.StatsService;
@@ -283,6 +284,7 @@ public class Cron
                         false,
                         updateService.getUpdateContext(null)
                     ).values().stream()
+                        .map(LadderUpdateTaskContext::getTasks)
                         .flatMap(Collection::stream)
                         .collect(Collectors.toList()),
                     true

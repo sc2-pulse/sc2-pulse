@@ -335,7 +335,7 @@ public class StatsService
     }
 
     @CacheEvict(cacheNames="fqdn-ladder-scan", allEntries=true)
-    public Map<Region, List<Future<Void>>> updateCurrent
+    public Map<Region, LadderUpdateTaskContext<Void>> updateCurrent
     (
         Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data,
         boolean allStats,
@@ -345,13 +345,13 @@ public class StatsService
         Instant start = Instant.now();
 
         checkStaleData(data.keySet());
-        Map<Region, List<Future<Void>>> tasks
+        Map<Region, LadderUpdateTaskContext<Void>> ctx
             = updateCurrentSeason(data, allStats, updateContext);
 
         updateInstants(data, start);
         long seconds = (System.currentTimeMillis() - start.toEpochMilli()) / 1000;
         LOG.info("Updated current for {} after {} seconds", data, seconds);
-        return tasks;
+        return ctx;
     }
 
     private void updateInstants
@@ -482,14 +482,14 @@ public class StatsService
         LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
 
-    private Map<Region, List<Future<Void>>> updateCurrentSeason
+    private Map<Region, LadderUpdateTaskContext<Void>> updateCurrentSeason
     (
         Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data,
         boolean allStats,
         UpdateContext updateContext
     )
     {
-        Map<Region, List<Future<Void>>> tasks = new EnumMap<>(Region.class);
+        Map<Region, LadderUpdateTaskContext<Void>> ctx = new EnumMap<>(Region.class);
         //there can be two seasons here when a new season starts
         Set<Integer> seasons = new HashSet<>(2);
         for(Map.Entry<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> entry : data.entrySet())
@@ -500,7 +500,7 @@ public class StatsService
             BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
             Season season = seasonDao.merge(Season.of(bSeason, region));
             createLeagues(season);
-            tasks.put
+            ctx.put
             (
                 region,
                 updateOrAlternativeUpdate(bSeason, season, entry.getValue(), true, regionalContext)
@@ -510,10 +510,10 @@ public class StatsService
             LOG.debug("Updated leagues: {} {}", season.getBattlenetId(), region);
         }
         pendingLadderData.getStatsUpdates().addAll(seasons);
-        return tasks;
+        return ctx;
     }
 
-    private List<Future<Void>> updateOrAlternativeUpdate
+    private LadderUpdateTaskContext<Void> updateOrAlternativeUpdate
     (
         BlizzardSeason bSeason,
         Season season,
@@ -522,12 +522,11 @@ public class StatsService
         UpdateContext updateContext
     )
     {
-        List<Future<Void>> tasks;
         if(!isAlternativeUpdate(season.getRegion(), currentSeason))
         {
             fastTeamDAO.remove(season.getRegion());
             LOG.debug("Cleared FastTeamDAO for {}", season.getRegion());
-            tasks = update
+            return update
             (
                 season, data, updateContext,
                 ctx->updateLeagues
@@ -544,16 +543,15 @@ public class StatsService
         {
             fastTeamDAO.load(season.getRegion(), season.getBattlenetId());
             LOG.debug("Loaded teams into FastTeamDAO for {}", season);
-            tasks = update
+            return update
             (
                 season, data, updateContext,
                 ctx->alternativeLadderService.updateSeason(ctx.getSeason(), data)
             );
         }
-        return tasks;
     }
 
-    private List<Future<Void>> update
+    private LadderUpdateTaskContext<Void> update
     (
         Season season,
         Map<QueueType, Set<BaseLeague.LeagueType>> data,
@@ -579,7 +577,7 @@ public class StatsService
                     ? 0
                     : partialUpdateIndex.getValue() + 1
             );
-        return tasks;
+        return new LadderUpdateTaskContext<>(season, data, tasks);
     }
 
     public boolean isPartialUpdate
