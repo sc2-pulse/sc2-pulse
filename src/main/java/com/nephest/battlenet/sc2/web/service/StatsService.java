@@ -107,7 +107,6 @@ public class StatsService
         case.
      */
     public static final int PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD = Integer.MAX_VALUE;
-    public static final int PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE = 2;
     public static final List<Map<QueueType, Set<BaseLeague.LeagueType>>> PARTIAL_UPDATE_DATA =
         List.of
         (
@@ -159,8 +158,6 @@ public class StatsService
 
     @Value("${com.nephest.battlenet.sc2.ladder.forceUpdate:#{'false'}}")
     private boolean forceUpdate;
-
-    private final Map<Region, Integer> partialAlternativeUpdates = new EnumMap<>(Region.class);
 
     private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
@@ -264,10 +261,7 @@ public class StatsService
         this.eventService = eventService;
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
         for(Region r : Region.values())
-        {
             failedLadders.put(r, ConcurrentHashMap.newKeySet());
-            partialAlternativeUpdates.put(r, 0);
-        }
     }
 
     @PostConstruct
@@ -567,7 +561,6 @@ public class StatsService
         Function<LadderUpdateContext, List<Future<Void>>> updater
     )
     {
-        Region region = season.getRegion();
         boolean partialUpdate = isPartialUpdate(season.getRegion(), updateContext);
         LongVar partialUpdateIndex = partialUpdateIndexes.get(season.getRegion());
         LadderUpdateContext context = new LadderUpdateContext
@@ -580,19 +573,12 @@ public class StatsService
         if(partialUpdate) LOG.info("Partially updating {}({})", season, context.getData());
         List<Future<Void>> tasks = updater.apply(context);
         if(partialUpdate)
-        {
-            partialAlternativeUpdates.put(region, partialAlternativeUpdates.get(region) + 1);
             partialUpdateIndex.setValueAndSave
             (
                 partialUpdateIndex.getValue() == PARTIAL_UPDATE_DATA.size() - 1
                     ? 0
                     : partialUpdateIndex.getValue() + 1
             );
-        }
-        else
-        {
-            partialAlternativeUpdates.put(region, 0);
-        }
         return tasks;
     }
 
@@ -608,8 +594,7 @@ public class StatsService
             || Stream.concat(alternativeRegions.stream(), forcedAlternativeRegions.stream())
                 .distinct()
                 .count() >= PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD
-        )
-            && partialAlternativeUpdates.get(region) < PARTIAL_ALTERNATIVE_UPDATES_PER_CYCLE;
+        );
     }
 
     public boolean isPartialUpdate(Region region)
