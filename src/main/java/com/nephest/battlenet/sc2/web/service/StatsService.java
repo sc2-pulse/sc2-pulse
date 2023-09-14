@@ -202,7 +202,7 @@ public class StatsService
                     (
                         Function.identity(),
                         q->Arrays.stream(BaseLeague.LeagueType.values())
-                            .collect(Collectors.toUnmodifiableMap
+                            .collect(Collectors.toMap
                             (
                                 Function.identity(),
                                 l->Instant.now().minus(Duration.ofDays(1))
@@ -348,15 +348,28 @@ public class StatsService
         UpdateContext updateContext
     )
     {
-        long start = System.currentTimeMillis();
+        Instant start = Instant.now();
 
         checkStaleData(data.keySet());
         Map<Region, List<Future<Void>>> tasks
             = updateCurrentSeason(data, allStats, updateContext);
 
-        long seconds = (System.currentTimeMillis() - start) / 1000;
+        updateInstants(data, start);
+        long seconds = (System.currentTimeMillis() - start.toEpochMilli()) / 1000;
         LOG.info("Updated current for {} after {} seconds", data, seconds);
         return tasks;
+    }
+
+    private void updateInstants
+    (
+        Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data,
+        Instant instant
+    )
+    {
+        for(Region region : data.keySet())
+            for(QueueType queue : data.get(region).keySet())
+                for(BaseLeague.LeagueType league : data.get(region).get(queue))
+                    updateInstants.get(region).get(queue).put(league, instant);
     }
 
     public void updateLadders(int seasonId, Region region, Long[] ids)
