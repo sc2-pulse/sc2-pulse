@@ -77,7 +77,7 @@ public class RevealController
     public ResponseEntity<LadderProPlayer> edit(@Valid @RequestBody ProPlayerForm form)
     {
         form.getProPlayer().setUpdated(OffsetDateTime.now());
-        return ResponseEntity.ok(proPlayerService.edit(form));
+        return ResponseEntity.ok(proPlayerService.edit(form).block());
     }
 
 }

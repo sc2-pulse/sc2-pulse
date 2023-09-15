@@ -42,6 +42,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
+import com.nephest.battlenet.sc2.twitch.TwitchTest;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -346,7 +347,7 @@ public class RevealControllerIT
                     new SocialMediaLink
                     (
                         1L, SocialMedia.TWITCH, "https://www.twitch.tv/serral",
-                        minUpdated, null, null
+                        minUpdated, "39775590", null
                     ),
                     new SocialMediaLink
                     (
@@ -381,7 +382,7 @@ public class RevealControllerIT
                     ),
                     List.of
                     (
-                        "https://www.twitch.tv/serral2"
+                        "https://www.twitch.tv/nephest0x"
                     )
                 )))
                 .with(csrf().asHeader())
@@ -415,8 +416,8 @@ public class RevealControllerIT
                     ),
                     new SocialMediaLink
                     (
-                        1L, SocialMedia.TWITCH, "https://www.twitch.tv/serral2",
-                        minUpdated2, null, null
+                        1L, SocialMedia.TWITCH, "https://www.twitch.tv/nephest0x",
+                        minUpdated2, "132530558", null
                     )
                 )
             ));
@@ -483,6 +484,46 @@ public class RevealControllerIT
                 .with(csrf().asHeader())
         )
             .andExpect(status().isForbidden());
+    }
+
+    @Test
+    @TwitchTest
+    @WithBlizzardMockUser
+    (
+        partition =  Partition.GLOBAL,
+        username = "user",
+        roles =
+        {
+            SC2PulseAuthority.USER,
+            SC2PulseAuthority.REVEALER
+        }
+    )
+    public void whenInvalidTwitchLinkFound_thenBadRequest()
+    throws Exception
+    {
+        mvc.perform
+        (
+            post("/api/reveal/player/edit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new ProPlayerForm(
+                    new ProPlayer
+                    (
+                        1L,
+                        1L,
+                        "tag2", "name2", "KR",
+                        LocalDate.now(),
+                        23456,
+                        OffsetDateTime.now(),
+                        4
+                    ),
+                    List.of
+                    (
+                        "https://www.twitch.tv/serral2nonex"
+                    )
+                )))
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isBadRequest());
     }
 
 }

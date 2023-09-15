@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -353,13 +354,13 @@ public class ProPlayerServiceIT
         assertTrue(jEchoLinks.size() > 1);
 
         verifyTypePresent(jEchoLinks, SocialMedia.TWITTER);
-        verifyTypePresent(jEchoLinks, SocialMedia.TWITCH);
+        verifyTypeAbsent(jEchoLinks, SocialMedia.TWITCH);
 
         List<SocialMediaLink> demuslimLinks = socialMediaLinkDAO.find(proPlayer5.getId());
         assertTrue(demuslimLinks.size() >= 3);
         verifyTypePresent(demuslimLinks, SocialMedia.INSTAGRAM);
         verifyTypePresent(demuslimLinks, SocialMedia.TWITTER);
-        verifyTypePresent(demuslimLinks, SocialMedia.TWITCH);
+        verifyTypeAbsent(demuslimLinks, SocialMedia.TWITCH);
     }
 
     private <T extends SocialMediaLink> T verifyTypePresent
@@ -372,6 +373,18 @@ public class ProPlayerServiceIT
             .findAny();
         assertTrue(link.isPresent());
         return link.get();
+    }
+
+    private void verifyTypeAbsent
+    (
+        Collection<? extends SocialMediaLink> links,
+        SocialMedia type
+    )
+    {
+        Optional<? extends SocialMediaLink> link = links.stream()
+            .filter(l->l.getType() == type)
+            .findAny();
+        assertFalse(link.isPresent());
     }
 
 }

@@ -21,6 +21,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
+import com.nephest.battlenet.sc2.web.service.sm.SocialMediaLinkResolver;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -94,6 +95,7 @@ public class ProPlayerService
 
     private AligulacAPI aligulacAPI;
     private final LiquipediaAPI liquipediaAPI;
+    private final Map<SocialMedia, SocialMediaLinkResolver> socialMediaLinkResolvers;
 
     private int aligulacBatchSize = 100;
     private final int linkWebBatchSize = 10;
@@ -113,7 +115,8 @@ public class ProPlayerService
         LadderProPlayerDAO ladderProPlayerDAO,
         SC2RevealedAPI sc2RevealedAPI,
         AligulacAPI aligulacAPI,
-        LiquipediaAPI liquipediaAPI
+        LiquipediaAPI liquipediaAPI,
+        List<SocialMediaLinkResolver> resolvers
     )
     {
         this.proPlayerDAO = proPlayerDAO;
@@ -125,6 +128,8 @@ public class ProPlayerService
         this.sc2RevealedAPI = sc2RevealedAPI;
         this.aligulacAPI = aligulacAPI;
         this.liquipediaAPI = liquipediaAPI;
+        this.socialMediaLinkResolvers = resolvers.stream()
+            .collect(Collectors.toMap(SocialMediaLinkResolver::getSupportedSocialMedia, Function.identity()));
     }
 
     protected ProPlayerService getProPlayerService()
@@ -168,7 +173,14 @@ public class ProPlayerService
 
             proPlayerDAO.merge(proPlayer);
             for(SocialMediaLink link : links) link.setProPlayerId(proPlayer.getId());
-            socialMediaLinkDAO.merge(true, links);
+            socialMediaLinkDAO.merge
+            (
+                true,
+                resolveValidLinks(Arrays.asList(links))
+                    .collectList()
+                    .block()
+                    .toArray(SocialMediaLink[]::new)
+            );
             proPlayerAccountDAO.link(proPlayer.getId(), revealedProPlayer.getBnetTags());
         }
     }
@@ -277,7 +289,8 @@ public class ProPlayerService
         (
             proPlayerData.getLeft(),
             proPlayerData.getRight(),
-            proPlayerData.getMiddle().toArray(SocialMediaLink[]::new)
+            resolveValidLinks(proPlayerData.getMiddle()).collectList().block()
+                .toArray(SocialMediaLink[]::new)
         );
         return Optional.of(proPlayerData.getLeft());
     }
@@ -356,6 +369,8 @@ public class ProPlayerService
     {
         return Mono.fromCallable(()->socialMediaLinkDAO.findByTypes(SocialMedia.LIQUIPEDIA))
             .flatMapMany(links->getSocialMediaLinks(links, ignoreParsingErrors))
+            .collectList()
+            .flatMapMany(this::resolveValidLinks)
             .buffer(linkDbBatchSize)
             .flatMap(smLinks->Mono.fromCallable(()->
             {
@@ -420,30 +435,64 @@ public class ProPlayerService
             .filter(link->SUPPORTED_SOCIAL_MEDIA.contains(link.getType()));
     }
 
-    @Transactional
-    public LadderProPlayer edit(ProPlayerForm form)
+    public Flux<SocialMediaLink> resolveLinks(Collection<SocialMediaLink> links)
+    {
+        return Flux.fromIterable(links.stream()
+            .collect(Collectors.groupingBy(SocialMediaLink::getType)).entrySet())
+            .flatMap(entry->{
+                SocialMediaLinkResolver resolver = socialMediaLinkResolvers.get(entry.getKey());
+                return resolver != null ? resolver.resolve(entry.getValue()) : Mono.empty();
+            })
+            .thenMany(Flux.fromIterable(links));
+    }
+
+    public Flux<SocialMediaLink> resolveValidLinks(Collection<SocialMediaLink> links)
+    {
+        return resolveLinks(links)
+            .filter(l->l.getServiceUserId() != null
+                || !socialMediaLinkResolvers.containsKey(l.getType()));
+    }
+
+    public Mono<LadderProPlayer> edit(ProPlayerForm form)
+    {
+        return getValidLinks(form)
+            .flatMap(links->WebServiceUtil.blockingCallable(()->proPlayerService.edit(form.getProPlayer(), links)));
+    }
+
+    private Mono<List<SocialMediaLink>> getValidLinks(ProPlayerForm form)
     {
         boolean invalidLink = form.getLinks().stream()
             .anyMatch(link->!PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA_PATTERN.matcher(link).matches());
-        if(invalidLink) throw new IllegalArgumentException("Unsupported url");
+        if(invalidLink) return Mono.error(new IllegalArgumentException("Unsupported url"));
 
-        ProPlayer proPlayer = proPlayerDAO.mergeVersioned(form.getProPlayer());
-        SocialMediaLink[] links = form.getLinks().stream()
-            .map(url->new SocialMediaLink(proPlayer.getId(), SocialMedia.fromBaseUrlPrefix(url), url))
-            .toArray(SocialMediaLink[]::new);
-        if(Arrays.stream(links).anyMatch(link->!PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.contains(link.getType())))
-            throw new IllegalArgumentException("Unsupported social media type");
+        List<SocialMediaLink> links = form.getLinks().stream()
+            .map(url->new SocialMediaLink(null, SocialMedia.fromBaseUrlPrefix(url), url))
+            .collect(Collectors.toList());
+        if(links.stream().anyMatch(link->!PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.contains(link.getType())))
+            return Mono.error(new IllegalArgumentException("Unsupported social media type"));
 
-        socialMediaLinkDAO.merge(false, links);
-        Set<SocialMedia> savedMedia = Arrays.stream(links)
+        return resolveValidLinks(links)
+            .collectList()
+            .filter(validLinks->links.size() == validLinks.size())
+            .switchIfEmpty(Mono.error(new IllegalArgumentException("Some of the supplied links are invalid")));
+    }
+
+    @Transactional
+    public LadderProPlayer edit(ProPlayer proPlayer, List<SocialMediaLink> links)
+    {
+        ProPlayer mergedProPlayer = proPlayerDAO.mergeVersioned(proPlayer);
+        links.forEach(l->l.setProPlayerId(mergedProPlayer.getId()));
+
+        socialMediaLinkDAO.merge(false, links.toArray(SocialMediaLink[]::new));
+        Set<SocialMedia> savedMedia = links.stream()
             .map(SocialMediaLink::getType)
             .collect(Collectors.toSet());
         SocialMediaLink[] removedLinks = PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.stream()
             .filter(media->!savedMedia.contains(media))
-            .map(media->new SocialMediaLink(proPlayer.getId(), media, null))
+            .map(media->new SocialMediaLink(mergedProPlayer.getId(), media, null))
             .toArray(SocialMediaLink[]::new);
         socialMediaLinkDAO.remove(removedLinks);
-        return ladderProPlayerDAO.findByIds(proPlayer.getId()).get(0);
+        return ladderProPlayerDAO.findByIds(mergedProPlayer.getId()).get(0);
     }
 
 }
