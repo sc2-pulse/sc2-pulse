@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.helix.domain.User;
+import com.github.twitch4j.helix.domain.Video;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
@@ -34,7 +35,7 @@ public class TwitchService
     public static final int USER_BATCH_SIZE = 100;
     public static final int VIDEO_BATCH_SIZE = 50;
     public static final Duration LINK_VIDEO_OFFSET = Duration.ofDays(1);
-    public static final String VIDEO_TYPE_FILTER = "archive";
+    public static final Video.Type VIDEO_TYPE_FILTER = Video.Type.ARCHIVE;
     public static final String VIDEO_VIEWABLE_FILTER = "public";
 
     private final TwitchUserDAO twitchUserDAO;
@@ -121,9 +122,9 @@ public class TwitchService
             null,
             null,
             VIDEO_TYPE_FILTER,
+            VIDEO_BATCH_SIZE,
             null,
-            null,
-            VIDEO_BATCH_SIZE
+            null
         ).execute().getVideos().stream()
             .filter(v->v.getViewable().equals(VIDEO_VIEWABLE_FILTER))
             .map(v->TwitchVideo.of(user, v))
