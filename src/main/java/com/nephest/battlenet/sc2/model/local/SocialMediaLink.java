@@ -17,9 +17,10 @@ public class SocialMediaLink
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 2L;
+    private static final long serialVersionUID = 3L;
 
     public static final int URL_MAX_LENGTH = 300;
+    public static final int ID_MAX_LENGTH = 500;
 
     public static final Comparator<SocialMediaLink> NATURAL_ID_COMPARATOR = Comparator
         .comparing(SocialMediaLink::getProPlayerId)
@@ -36,6 +37,9 @@ implements java.io.Serializable
 
     @NotNull
     private OffsetDateTime updated = OffsetDateTime.now();
+
+    @Size(max = ID_MAX_LENGTH)
+    private String serviceUserId;
 
     @NotNull
     private Boolean isProtected;
@@ -61,6 +65,7 @@ implements java.io.Serializable
         SocialMedia type,
         String url,
         OffsetDateTime updated,
+        String serviceUserId,
         Boolean isProtected
     )
     {
@@ -69,6 +74,7 @@ implements java.io.Serializable
         this.url = url;
         this.updated = updated;
         this.isProtected = isProtected;
+        this.serviceUserId = serviceUserId;
     }
 
     @Override
@@ -157,6 +163,16 @@ implements java.io.Serializable
     public void setIsProtected(Boolean isProtected)
     {
         this.isProtected = isProtected;
+    }
+
+    public String getServiceUserId()
+    {
+        return serviceUserId;
+    }
+
+    public void setServiceUserId(String serviceUserId)
+    {
+        this.serviceUserId = serviceUserId;
     }
 
 }

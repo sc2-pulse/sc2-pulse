@@ -346,12 +346,12 @@ public class RevealControllerIT
                     new SocialMediaLink
                     (
                         1L, SocialMedia.TWITCH, "https://www.twitch.tv/serral",
-                        minUpdated, null
+                        minUpdated, null, null
                     ),
                     new SocialMediaLink
                     (
                         1L, SocialMedia.TWITTER, "https://twitter.com/Serral_SC2",
-                        minUpdated, null
+                        minUpdated, null, null
                     )
                 )
             ));
@@ -411,12 +411,12 @@ public class RevealControllerIT
                     new SocialMediaLink
                     (
                         1L, SocialMedia.ALIGULAC, "http://aligulac.com/players/485",
-                        minUpdated2, null
+                        minUpdated2, null, null
                     ),
                     new SocialMediaLink
                     (
                         1L, SocialMedia.TWITCH, "https://www.twitch.tv/serral2",
-                        minUpdated2, null
+                        minUpdated2, null, null
                     )
                 )
             ));

@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -128,22 +129,31 @@ public class SocialMediaLinkIT
         ProPlayer proPlayer4 = proPlayerDAO
             .merge(new ProPlayer(null, 4L, "nick4", "name4"));
 
-        socialMediaLinkDAO.merge
-        (
+        OffsetDateTime odt1 = OffsetDateTime.now();
+        SocialMediaLink[] links = new SocialMediaLink[]
+        {
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url1"),
-            new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url2"),
+            new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url2", odt1, "11", false),
             new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "url3"),
             new SocialMediaLink(proPlayer3.getId(), SocialMedia.TWITCH, "url4"),
-            new SocialMediaLink(proPlayer3.getId(), SocialMedia.ALIGULAC, "url5"),
+            new SocialMediaLink(proPlayer3.getId(), SocialMedia.ALIGULAC, "url5", odt1, "55", false),
             new SocialMediaLink(proPlayer4.getId(), SocialMedia.TWITCH, "url6"),
             new SocialMediaLink(proPlayer4.getId(), SocialMedia.ALIGULAC, "url7")
-        );
+        };
+        socialMediaLinkDAO.merge(links);
 
         List<SocialMediaLink> links1 = socialMediaLinkDAO
             .findByIdCursor(null, SocialMedia.ALIGULAC, 2);
         assertEquals(2, links1.size());
-        assertEquals("url2", links1.get(0).getUrl());
-        assertEquals("url5", links1.get(1).getUrl());
+        links1.sort(SocialMediaLink.NATURAL_ID_COMPARATOR);
+        Assertions.assertThat(links1.get(0))
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(links[1]);
+        Assertions.assertThat(links1.get(1))
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(links[4]);
 
         List<SocialMediaLink> links2 = socialMediaLinkDAO
             .findByIdCursor(links1.get(1).getProPlayerId(), SocialMedia.ALIGULAC, 2);
@@ -170,6 +180,7 @@ public class SocialMediaLinkIT
                 SocialMedia.TWITCH,
                 "url1",
                 OffsetDateTime.now(),
+                "123",
                 true
             )
         );
@@ -185,6 +196,7 @@ public class SocialMediaLinkIT
                 SocialMedia.TWITCH,
                 "url2",
                 OffsetDateTime.now(),
+                "123",
                 false
             )
         );
@@ -204,6 +216,7 @@ public class SocialMediaLinkIT
                 SocialMedia.TWITCH,
                 "url1",
                 OffsetDateTime.now(),
+                "123",
                 false
             )
         );
@@ -218,6 +231,7 @@ public class SocialMediaLinkIT
                 SocialMedia.TWITCH,
                 "url2",
                 OffsetDateTime.now(),
+                "123",
                 false
             )
         );
@@ -243,6 +257,7 @@ public class SocialMediaLinkIT
                 SocialMedia.TWITCH,
                 "url1",
                 odt1,
+                "123",
                 true
             )
         );
@@ -258,6 +273,7 @@ public class SocialMediaLinkIT
                 SocialMedia.TWITCH,
                 "url1",
                 odt1.plusSeconds(10),
+                "123",
                 true
             )
         );
@@ -284,6 +300,7 @@ public class SocialMediaLinkIT
                 SocialMedia.TWITCH,
                 "url1",
                 odt1,
+                null,
                 true
             ),
             new SocialMediaLink
@@ -292,6 +309,7 @@ public class SocialMediaLinkIT
                 SocialMedia.YOUTUBE,
                 "url1",
                 odt1,
+                "22",
                 true
             ),
             new SocialMediaLink
@@ -300,6 +318,7 @@ public class SocialMediaLinkIT
                 SocialMedia.ALIGULAC,
                 "url1",
                 odt1,
+                "33",
                 true
             )
         );

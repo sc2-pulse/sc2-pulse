@@ -33,6 +33,7 @@ public class SocialMediaLinkDAO
         + "social_media_link.type AS \"social_media_link.type\", "
         + "social_media_link.url AS \"social_media_link.url\", "
         + "social_media_link.updated AS \"social_media_link.updated\", "
+        + "social_media_link.service_user_id AS \"social_media_link.service_user_id\", "
         + "social_media_link.protected AS \"social_media_link.protected\" ";
 
     public static final String MERGE_QUERY =
@@ -41,6 +42,7 @@ public class SocialMediaLinkDAO
             + "UPDATE social_media_link "
             + "SET url = :url, "
             + "updated = :updated, "
+            + "service_user_id = :serviceUserId, "
             + "protected = :protected "
             + "WHERE pro_player_id = :proPlayerId "
             + "AND type = :type "
@@ -54,8 +56,16 @@ public class SocialMediaLinkDAO
         + "), "
         + "inserted AS "
         + "("
-            + "INSERT INTO social_media_link (pro_player_id, type, url, updated, protected) "
-            + "SELECT :proPlayerId, :type, :url, :updated, :protected "
+            + "INSERT INTO social_media_link "
+            + "("
+                + "pro_player_id, "
+                + "type, "
+                + "url, "
+                + "updated, "
+                + "service_user_id, "
+                + "protected"
+            + ") "
+            + "SELECT :proPlayerId, :type, :url, :updated, :serviceUserId, :protected "
             + "WHERE NOT EXISTS"
             + "("
                 + "SELECT 1 "
@@ -66,6 +76,7 @@ public class SocialMediaLinkDAO
             + "ON CONFLICT(pro_player_id, type) DO UPDATE SET "
             + "url=excluded.url,"
             + "updated=excluded.updated, "
+            + "service_user_id=excluded.service_user_id, "
             + "protected = excluded.protected "
             + "RETURNING pro_player_id "
         + ") "
@@ -126,6 +137,7 @@ public class SocialMediaLinkDAO
             conversionService.convert(rs.getInt("social_media_link.type"), SocialMedia.class),
             rs.getString("social_media_link.url"),
             rs.getObject("social_media_link.updated", OffsetDateTime.class),
+            rs.getString("social_media_link.service_user_id"),
             rs.getBoolean("social_media_link.protected")
         );
 
@@ -156,6 +168,7 @@ public class SocialMediaLinkDAO
             .addValue("type", conversionService.convert(link.getType(), Integer.class))
             .addValue("url", link.getUrl())
             .addValue("updated", link.getUpdated())
+            .addValue("serviceUserId", link.getServiceUserId())
             .addValue("protected", link.isProtected() ? link.isProtected() : null);
     }
 

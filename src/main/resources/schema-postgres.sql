@@ -613,6 +613,7 @@ CREATE TABLE "social_media_link"
     "type" SMALLINT NOT NULL,
     "url" TEXT NOT NULL,
     "updated" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    "service_user_id" TEXT,
     "protected" BOOLEAN,
 
     PRIMARY KEY("pro_player_id", "type"),
