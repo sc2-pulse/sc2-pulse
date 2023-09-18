@@ -66,7 +66,6 @@ public class MatchService
     public static final int FAILED_MATCHES_MAX = 100;
     public static final Duration MATCH_UPDATE_FRAME = Duration.ofMinutes(50);
     public static final String REQUEST_LIMIT_PRIORITY_NAME = "match";
-    public static final Duration REQUEST_LIMIT_PRIORITY_OFFSET = Duration.ofMinutes(5);
 
     private final BlizzardSC2API api;
     private final MatchDAO matchDAO;
@@ -257,9 +256,7 @@ public class MatchService
             .sum();
         int limit = Math.round
         (
-            characterCount / (float) updateMatchesTask.getDurationBetweenRuns()
-                .minus(REQUEST_LIMIT_PRIORITY_OFFSET)
-                .toSeconds()
+            characterCount / (float) updateMatchesTask.getDurationBetweenRuns().toSeconds()
         );
         return Math.min(Math.max(limit, 1),
             (int) (api.getRequestsPerSecondCap(globalContext.getActiveRegions().iterator().next()) / 2));
