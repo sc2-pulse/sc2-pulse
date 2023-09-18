@@ -55,6 +55,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -107,12 +108,24 @@ public class StatsService
         case.
      */
     public static final int PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD = Integer.MAX_VALUE;
+    public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_MAIN_LEAGUES =
+        Collections.unmodifiableSet(EnumSet.of
+        (
+            BaseLeague.LeagueType.BRONZE,
+            //BaseLeague.LeagueType.SILVER,
+            BaseLeague.LeagueType.GOLD,
+            BaseLeague.LeagueType.PLATINUM,
+            BaseLeague.LeagueType.DIAMOND,
+            BaseLeague.LeagueType.MASTER,
+            BaseLeague.LeagueType.GRANDMASTER
+        ));
     public static final List<Map<QueueType, Set<BaseLeague.LeagueType>>> PARTIAL_UPDATE_DATA =
         List.of
         (
+            Map.of(QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES),
             Map.of
             (
-                QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES,
+                QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES,
                 QueueType.LOTV_2V2,
                 Set.of
                 (
@@ -123,7 +136,7 @@ public class StatsService
             ),
             Map.of
             (
-                QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES,
+                QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES,
                 QueueType.LOTV_2V2,
                 Set.of
                 (
@@ -135,12 +148,12 @@ public class StatsService
             ),
             Map.of
             (
-                QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES,
+                QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES,
                 QueueType.LOTV_3V3, LadderUpdateContext.ALL_LEAGUES
             ),
             Map.of
             (
-                QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES,
+                QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES,
                 QueueType.LOTV_4V4, LadderUpdateContext.ALL_LEAGUES,
                 QueueType.LOTV_ARCHON, LadderUpdateContext.ALL_LEAGUES
             )
