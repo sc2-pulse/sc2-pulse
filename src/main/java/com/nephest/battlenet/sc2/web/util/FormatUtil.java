@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.util;
 
+import java.text.DecimalFormat;
 import java.time.Duration;
 import java.util.stream.Collector;
 import java.util.stream.Collectors;
@@ -12,6 +13,8 @@ import org.springframework.stereotype.Service;
 @Service
 public class FormatUtil
 {
+
+    public static DecimalFormat DEFAULT_DECIMAL_FORMAT = new DecimalFormat("#.##");
 
     public Collector<CharSequence, ?, String> joining(CharSequence delimiter)
     {
