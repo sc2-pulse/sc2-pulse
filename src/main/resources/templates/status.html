@@ -94,7 +94,7 @@
         <dl>
             <th:block th:each="flag : ${T(com.nephest.battlenet.sc2.web.service.Status.Flag).values()}">
                 <dt th:class="|text-capitalize font-weight-bold ${flag.getLevel().getCssClass()}|" th:text="${flag.getName()}"></dt>
-                <dd th:text="${flag.getDescription()}"></dd>
+                <dd th:text="${flag.getDescription()}" style="white-space: pre-line"></dd>
             </th:block>
         </dl>
     </section>

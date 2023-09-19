@@ -5,12 +5,12 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static com.nephest.battlenet.sc2.web.service.StatsService.PARTIAL_UPDATE_MAIN_LEAGUES;
 
-import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.web.util.FormatUtil;
 import com.nephest.battlenet.sc2.web.util.Level;
 import java.time.Duration;
 import java.util.EnumSet;
 import java.util.Set;
-import java.util.stream.Collectors;
+import org.apache.commons.lang3.StringUtils;
 
 public class Status
 {
@@ -25,9 +25,10 @@ public class Status
         PRIORITIZED
         (
             "prioritized",
-            "The following 1v1 leagues are prioritized: " + PARTIAL_UPDATE_MAIN_LEAGUES.stream()
-                .map(BaseLeague.LeagueType::getName)
-                .collect(Collectors.joining(", ")) + ". "
+            "1v1 " + StringUtils.join(PARTIAL_UPDATE_MAIN_LEAGUES) + " are prioritized.\n"
+            + StringUtils.join(StatsService.PARTIAL_UPDATE_SECONDARY_QUEUE) + " are updated "
+            + FormatUtil.DEFAULT_DECIMAL_FORMAT.format(StatsService.PARTIAL_UPDATE_DATA.size() / 3.0)
+            + " times slower.\n"
             + "Other data is updated " + StatsService.PARTIAL_UPDATE_DATA.size()  + " times slower.",
             Level.WARNING
         ),

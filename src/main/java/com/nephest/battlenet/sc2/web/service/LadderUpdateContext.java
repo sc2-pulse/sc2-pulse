@@ -18,6 +18,9 @@ public class LadderUpdateContext
 
     public static final Set<BaseLeague.LeagueType> ALL_LEAGUES =
         Collections.unmodifiableSet(EnumSet.allOf(BaseLeague.LeagueType.class));
+    public static final Set<BaseLeague.LeagueType> MGM_LEAGUES
+        = Collections.unmodifiableSet(EnumSet.of(
+            BaseLeague.LeagueType.MASTER, BaseLeague.LeagueType.GRANDMASTER));
     public static final Map<QueueType, Set<BaseLeague.LeagueType>> ALL =
         QueueType.getTypes(StatsService.VERSION).stream()
             .collect(Collectors.toUnmodifiableMap(Function.identity(), t->ALL_LEAGUES));
