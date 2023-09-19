@@ -156,4 +156,17 @@ public class TimerVarTest
         assertEquals(DEFAULT_DURATION_BETWEEN_TASKS, timerVar.getDurationBetweenRuns());
     }
 
+    @Test
+    public void verifyElasticThread()
+    {
+        String[] threadName = new String[1];
+        timerVar = new TimerVar
+        (
+            varDAO, KEY, false, DEFAULT_DURATION_BETWEEN_TASKS,
+            ()->threadName[0] = Thread.currentThread().getName()
+        );
+        timerVar.runIfAvailable().block();
+        assertTrue(threadName[0].toLowerCase().contains("elastic"));
+    }
+
 }

@@ -144,12 +144,13 @@ extends InstantVar
         Instant beforeTask = Instant.now();
         return task
             .get()
+            .subscribeOn(Schedulers.boundedElastic())
             .doOnError(e->active.compareAndSet(true, false))
             .then(Mono.fromRunnable(()->{
                 this.setValueAndSave(isValueBeforeTask() ? beforeTask : Instant.now());
                 LOG.debug("Executed {} timer", getKey());
                 active.compareAndSet(true, false);
-            }).subscribeOn(Schedulers.boundedElastic()))
+            }))
             .thenReturn(true);
     }
 
