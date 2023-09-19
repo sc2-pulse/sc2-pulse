@@ -120,7 +120,7 @@ public class StatsService
             BaseLeague.LeagueType.GRANDMASTER
         ));
     public static final Map<QueueType, Set<BaseLeague.LeagueType>> PARTIAL_UPDATE_SECONDARY_QUEUE =
-        Map.of
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
         (
             QueueType.LOTV_2V2,
             Collections.unmodifiableSet(EnumSet.of(
@@ -131,7 +131,7 @@ public class StatsService
             QueueType.LOTV_3V3, LadderUpdateContext.MGM_LEAGUES,
             QueueType.LOTV_4V4, LadderUpdateContext.MGM_LEAGUES,
             QueueType.LOTV_ARCHON, LadderUpdateContext.MGM_LEAGUES
-        );
+        )));
     private static final Map<QueueType, Set<BaseLeague.LeagueType>> PARTIAL_UPDATE_COMPLETE_SECONDARY_QUEUE;
     static
     {
@@ -143,9 +143,11 @@ public class StatsService
     public static final List<Map<QueueType, Set<BaseLeague.LeagueType>>> PARTIAL_UPDATE_DATA =
         List.of
         (
-            Map.of(QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES),
+            Collections.unmodifiableMap(new EnumMap<>(Map.of(
+                QueueType.LOTV_1V1, LadderUpdateContext.ALL_LEAGUES
+            ))),
             PARTIAL_UPDATE_COMPLETE_SECONDARY_QUEUE,
-            Map.of
+            Collections.unmodifiableMap(new EnumMap<>(Map.of
             (
                 QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES,
                 QueueType.LOTV_2V2,
@@ -155,8 +157,8 @@ public class StatsService
                     BaseLeague.LeagueType.SILVER,
                     BaseLeague.LeagueType.GOLD
                 )
-            ),
-            Map.of
+            ))),
+            Collections.unmodifiableMap(new EnumMap<>(Map.of
             (
                 QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES,
                 QueueType.LOTV_2V2,
@@ -167,19 +169,19 @@ public class StatsService
                     BaseLeague.LeagueType.MASTER,
                     BaseLeague.LeagueType.GRANDMASTER
                 )
-            ),
-            Map.of
+            ))),
+            Collections.unmodifiableMap(new EnumMap<>(Map.of
             (
                 QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES,
                 QueueType.LOTV_3V3, LadderUpdateContext.ALL_LEAGUES
-            ),
+            ))),
             PARTIAL_UPDATE_COMPLETE_SECONDARY_QUEUE,
-            Map.of
+            Collections.unmodifiableMap(new EnumMap<>(Map.of
             (
                 QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES,
                 QueueType.LOTV_4V4, LadderUpdateContext.ALL_LEAGUES,
                 QueueType.LOTV_ARCHON, LadderUpdateContext.ALL_LEAGUES
-            )
+            )))
         );
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
     public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofDays(7);
