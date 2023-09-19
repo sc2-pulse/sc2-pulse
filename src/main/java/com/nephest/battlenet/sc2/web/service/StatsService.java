@@ -111,7 +111,7 @@ public class StatsService
     public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_MAIN_LEAGUES =
         Collections.unmodifiableSet(EnumSet.of
         (
-            BaseLeague.LeagueType.BRONZE,
+            //BaseLeague.LeagueType.BRONZE,
             //BaseLeague.LeagueType.SILVER,
             BaseLeague.LeagueType.GOLD,
             BaseLeague.LeagueType.PLATINUM,
