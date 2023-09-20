@@ -7,5 +7,9 @@ FROM pro_player
 WHERE pro_player_id = id
 AND type = 2;
 
+DELETE FROM social_media_link
+WHERE type = 2
+AND service_user_id IS NULL;
+
 ALTER TABLE pro_player
     DROP COLUMN twitch_user_id;
