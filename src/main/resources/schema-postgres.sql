@@ -577,7 +577,6 @@ CREATE TABLE "pro_player"
 (
     "id" BIGSERIAL,
     "aligulac_id" BIGINT,
-    "twitch_user_id" BIGINT,
     "nickname" TEXT NOT NULL,
     "name" TEXT,
     "country" CHAR(2),
@@ -590,12 +589,7 @@ CREATE TABLE "pro_player"
     PRIMARY KEY ("id"),
 
     CONSTRAINT "uq_pro_player_aligulac_id"
-        UNIQUE("aligulac_id"),
-
-    CONSTRAINT "fk_pro_player_twitch_user_id"
-        FOREIGN KEY ("twitch_user_id")
-        REFERENCES "twitch_user"("id")
-        ON DELETE SET NULL ON UPDATE CASCADE
+        UNIQUE("aligulac_id")
 );
 
 CREATE INDEX "ix_pro_player_updated" ON "pro_player"("updated");

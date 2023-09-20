@@ -4,13 +4,9 @@
 package com.nephest.battlenet.sc2.model.twitch;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
-import com.nephest.battlenet.sc2.model.SocialMedia;
-import com.nephest.battlenet.sc2.model.local.ProPlayer;
-import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchUserDAO;
@@ -138,31 +134,6 @@ public class TwitchIT
         assertEquals("url11", updatedVideo.getUrl());
         assertTrue(newBegin.isEqual(updatedVideo.getBegin()));
         assertTrue(newEnd.isEqual(updatedVideo.getEnd()));
-    }
-
-    @Test
-    public void testLinkProPlayerToTwitchUser()
-    {
-        TwitchUser user = new TwitchUser(1L, "tuser1");
-        twitchUserDAO.merge(user);
-
-        ProPlayer proPlayer1 =
-            proPlayerDAO.merge(new ProPlayer(null, 1L, "nick1", "name1"));
-        ProPlayer proPlayer2 =
-            proPlayerDAO.merge(new ProPlayer(null, 2L, "nic2", "name2"));
-        socialMediaLinkDAO.merge
-        (
-            new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "http://twitch.tv/tuser1"),
-            new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "http://aligulac.com/auser1"),
-            new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "http://twitch.tv/tuser2"),
-            new SocialMediaLink(proPlayer2.getId(), SocialMedia.ALIGULAC, "http://aligulac.com/auser2")
-        );
-
-        assertEquals(1, proPlayerDAO.linkTwitchUsers());
-
-        assertEquals(1L, template.queryForObject(
-            "SELECT twitch_user_id FROM pro_player WHERE id = 1", Long.class));
-        assertNull(template.queryForObject("SELECT twitch_user_id FROM pro_player WHERE id = 2", Long.class));
     }
 
 }

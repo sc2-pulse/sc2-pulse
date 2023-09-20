@@ -81,7 +81,6 @@ public class TwitchService
     private void doUpdate()
     {
         updateTwitchData();
-        proPlayerDAO.linkTwitchUsers();
         OffsetDateTime from = OffsetDateTime.now().minus(LINK_VIDEO_OFFSET);
         matchParticipantDAO.linkTwitchVideo(from);
         matchDAO.updateTwitchVodStats(from);

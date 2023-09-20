@@ -3,7 +3,6 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import java.sql.Types;
 import java.time.LocalDate;
@@ -12,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -125,27 +123,15 @@ public class ProPlayerDAO
 
     private static final String FIND_ALL = "SELECT " + STD_SELECT + " FROM pro_player ORDER BY id";
 
-    private static final String LINK_TWITCH_USERS = "UPDATE pro_player "
-        + "SET twitch_user_id = twitch_user.id "
-        + "FROM pro_player pp "
-        + "INNER JOIN social_media_link ON pp.id = social_media_link.pro_player_id "
-            + "AND social_media_link.type = :twitchMediaType "
-        + "INNER JOIN twitch_user ON LOWER(reverse(split_part(reverse(social_media_link.url), '/', 1))) = LOWER(twitch_user.login) "
-        + "WHERE pro_player.id = pp.id "
-        + "AND pro_player.twitch_user_id IS DISTINCT FROM twitch_user.id";
-
     private final NamedParameterJdbcTemplate template;
-    private final ConversionService conversionService;
 
     @Autowired
     public  ProPlayerDAO
     (
-        @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+        @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
         this.template = template;
-        this.conversionService = conversionService;
         initMappers();
     }
 
@@ -234,13 +220,6 @@ public class ProPlayerDAO
     public List<ProPlayer> findAll()
     {
         return template.query(FIND_ALL, getStdRowMapper());
-    }
-
-    public int linkTwitchUsers()
-    {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("twitchMediaType", conversionService.convert(SocialMedia.TWITCH, Integer.class));
-        return template.update(LINK_TWITCH_USERS, params);
     }
 
 }
