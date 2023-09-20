@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -43,6 +44,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 import reactor.netty.http.client.HttpClient;
 import reactor.netty.resources.ConnectionProvider;
 import reactor.util.retry.RetrySpec;
@@ -245,6 +247,18 @@ public class WebServiceUtil
         {
             LogUtil.log(LOG, logLevelFunction.apply(wcre), ExceptionUtils.getRootCauseMessage(wcre));
         }
+    }
+
+    public static Mono<Void> blockingRunnable(Runnable runnable)
+    {
+        return Mono.fromRunnable(runnable)
+            .subscribeOn(Schedulers.boundedElastic())
+            .then();
+    }
+
+    public static <T> Mono<T> blockingCallable(Callable<T> callable)
+    {
+        return Mono.fromCallable(callable).subscribeOn(Schedulers.boundedElastic());
     }
 
     public static CollectionVar<Set<Region>, Region> loadRegionSetVar(VarDAO varDAO, String key, String error)

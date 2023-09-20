@@ -50,7 +50,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
@@ -264,7 +263,7 @@ public class MatchService
 
     private Mono<Integer> savePendingCharacters()
     {
-        return Mono.fromCallable
+        return WebServiceUtil.blockingCallable
         (
             ()->
             {
@@ -274,13 +273,12 @@ public class MatchService
                     .mapToInt(Collection::size)
                     .sum();
             }
-        )
-            .subscribeOn(Schedulers.boundedElastic());
+        );
     }
 
     private Mono<Map<Region, Set<PlayerCharacter>>> copyAndClearPendingCharacters()
     {
-        return Mono.fromCallable
+        return WebServiceUtil.blockingCallable
         (
             ()->
             {
@@ -295,8 +293,7 @@ public class MatchService
                 });
                 return copy;
             }
-        )
-            .subscribeOn(Schedulers.boundedElastic());
+        );
     }
 
     private UpdateContext getUpdateContext()
@@ -322,7 +319,7 @@ public class MatchService
 
     private Mono<Void> postUpdate(int matchCount)
     {
-        return Mono.fromRunnable
+        return WebServiceUtil.blockingRunnable
         (
             ()->
             {
@@ -334,9 +331,7 @@ public class MatchService
                     for(Region region : pendingCharacters.keySet()) api.setForceRegion(region);
                 }
             }
-        )
-            .subscribeOn(Schedulers.boundedElastic())
-            .then();
+        );
     }
 
     private Flux<Integer> saveMatches(Map<Region, Set<PlayerCharacter>> pendingCharacters)
@@ -381,8 +376,7 @@ public class MatchService
 
     private Mono<Integer> saveMatches(List<Tuple2<BlizzardMatch, PlayerCharacterNaturalId>> matches)
     {
-        return Mono.fromCallable(()->matchService.saveMatchesSync(matches))
-            .subscribeOn(Schedulers.boundedElastic());
+        return WebServiceUtil.blockingCallable(()->matchService.saveMatchesSync(matches));
     }
 
     //This method fails in a rare occasion due to unknown reason. Retry for now, should be properly fixed later.
