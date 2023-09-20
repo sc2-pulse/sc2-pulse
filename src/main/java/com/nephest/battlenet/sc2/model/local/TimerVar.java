@@ -64,7 +64,7 @@ extends InstantVar
             key,
             load,
             defaultDurationBetweenRuns,
-            ()->Mono.fromRunnable(task),
+            ()->Mono.fromRunnable(task).subscribeOn(Schedulers.boundedElastic()),
             valueBeforeTask
         );
     }
@@ -144,7 +144,6 @@ extends InstantVar
         Instant beforeTask = Instant.now();
         return task
             .get()
-            .subscribeOn(Schedulers.boundedElastic())
             .doOnError(e->active.compareAndSet(true, false))
             .then(Mono.fromRunnable(()->{
                 this.setValueAndSave(isValueBeforeTask() ? beforeTask : Instant.now());
