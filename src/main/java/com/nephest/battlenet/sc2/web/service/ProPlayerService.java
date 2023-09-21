@@ -22,6 +22,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
 import com.nephest.battlenet.sc2.web.service.sm.SocialMediaLinkResolver;
+import com.nephest.battlenet.sc2.web.service.sm.SocialMediaLinkUpdater;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -34,6 +35,7 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -96,6 +98,7 @@ public class ProPlayerService
     private AligulacAPI aligulacAPI;
     private final LiquipediaAPI liquipediaAPI;
     private final Map<SocialMedia, SocialMediaLinkResolver> socialMediaLinkResolvers;
+    private final Map<SocialMedia, SocialMediaLinkUpdater> socialMediaLinkUpdaters;
 
     private int aligulacBatchSize = 100;
     private final int linkWebBatchSize = 10;
@@ -116,7 +119,8 @@ public class ProPlayerService
         SC2RevealedAPI sc2RevealedAPI,
         AligulacAPI aligulacAPI,
         LiquipediaAPI liquipediaAPI,
-        List<SocialMediaLinkResolver> resolvers
+        List<SocialMediaLinkResolver> resolvers,
+        List<SocialMediaLinkUpdater> updaters
     )
     {
         this.proPlayerDAO = proPlayerDAO;
@@ -130,6 +134,8 @@ public class ProPlayerService
         this.liquipediaAPI = liquipediaAPI;
         this.socialMediaLinkResolvers = resolvers.stream()
             .collect(Collectors.toMap(SocialMediaLinkResolver::getSupportedSocialMedia, Function.identity()));
+        this.socialMediaLinkUpdaters = updaters.stream()
+            .collect(Collectors.toMap(SocialMediaLinkUpdater::getSupportedSocialMedia, Function.identity()));
     }
 
     protected ProPlayerService getProPlayerService()
@@ -156,6 +162,7 @@ public class ProPlayerService
     {
         return updateAligulac()
             .then(updateSocialMediaLinks())
+            .then(updateSocialMediaLinkMetadata())
             .then()
             .doOnSuccess((s)->LOG.info("Updated pro player data"));
     }
@@ -493,6 +500,25 @@ public class ProPlayerService
             .toArray(SocialMediaLink[]::new);
         socialMediaLinkDAO.remove(removedLinks);
         return ladderProPlayerDAO.findByIds(mergedProPlayer.getId()).get(0);
+    }
+
+    private Mono<Integer> updateSocialMediaLinkMetadata()
+    {
+        return WebServiceUtil.blockingCallable(()->socialMediaLinkDAO
+            .findByTypes(socialMediaLinkUpdaters.keySet().toArray(SocialMedia[]::new)))
+            .flatMapIterable(links->links.stream().collect(Collectors.groupingBy(SocialMediaLink::getType)).entrySet())
+            .flatMap(entry->{
+                SocialMediaLinkUpdater updater = socialMediaLinkUpdaters.get(entry.getKey());
+                return updater != null
+                    ? updater.update(entry.getValue())
+                    : Flux.empty();
+            })
+            .buffer(linkDbBatchSize)
+            .flatMap(links->WebServiceUtil.blockingCallable(()->
+                socialMediaLinkDAO.merge(links.toArray(SocialMediaLink[]::new))))
+            .map(result->IntStream.of(result).sum())
+            .reduce(Integer::sum)
+            .doOnNext(count->{if(count > 0) LOG.info("Updated metadata of {} social media links", count);});
     }
 
 }

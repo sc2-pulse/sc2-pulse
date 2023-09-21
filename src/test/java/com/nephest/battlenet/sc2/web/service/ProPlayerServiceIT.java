@@ -33,10 +33,12 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedPlayers;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
+import com.nephest.battlenet.sc2.twitch.TwitchTest;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -45,6 +47,7 @@ import java.util.Optional;
 import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -181,7 +184,7 @@ public class ProPlayerServiceIT
             assertEquals(SocialMedia.ALIGULAC, ladderProPlayer.getLinks().get(0).getType());
             assertEquals("http://aligulac.com/players/123321", ladderProPlayer.getLinks().get(0).getUrl());
             assertEquals(SocialMedia.TWITCH, ladderProPlayer.getLinks().get(1).getType());
-            assertEquals("https://twitch.tv/serral", ladderProPlayer.getLinks().get(1).getUrl());
+            assertEquals("https://www.twitch.tv/serral", ladderProPlayer.getLinks().get(1).getUrl());
             assertEquals(SocialMedia.LIQUIPEDIA, ladderProPlayer.getLinks().get(2).getType());
             assertEquals("https://liquipedia.net/starcraft2/Lpname2", ladderProPlayer.getLinks().get(2).getUrl());
 
@@ -385,6 +388,89 @@ public class ProPlayerServiceIT
             .filter(l->l.getType() == type)
             .findAny();
         assertFalse(link.isPresent());
+    }
+
+    @Test
+    @TwitchTest
+    public void testUpdateSocialMediaLinkMetadata()
+    {
+        ProPlayer proPlayer1 = proPlayerDAO.merge(new ProPlayer(null, null, "tag1", "name1"));
+        ProPlayer proPlayer2 = proPlayerDAO.merge(new ProPlayer(null, null, "tag2", "name2"));
+        ProPlayer proPlayer3 = proPlayerDAO.merge(new ProPlayer(null, null, "tag3", "name3"));
+        OffsetDateTime updated = OffsetDateTime.now();
+        SocialMediaLink[] links = new SocialMediaLink[]
+        {
+            //noise
+            new SocialMediaLink
+            (
+                proPlayer1.getId(),
+                SocialMedia.BATTLE_NET,
+                "battleNetLink"
+            ),
+            //invalid link with id, update
+            new SocialMediaLink
+            (
+                proPlayer1.getId(),
+                SocialMedia.TWITCH,
+                "https://www.twitch.tv/invalidLink",
+                updated,
+                "132530558",
+                false
+            ),
+
+            //valid link with id, skip
+            new SocialMediaLink
+            (
+                proPlayer2.getId(),
+                SocialMedia.TWITCH,
+                "https://www.twitch.tv/serral",
+                updated,
+                "39775590",
+                false
+            ),
+
+            //invalid link with no id, skip
+            new SocialMediaLink
+            (
+                proPlayer3.getId(),
+                SocialMedia.TWITCH,
+                "invalidLink",
+                updated,
+                null,
+                false
+            ),
+        };
+        socialMediaLinkDAO.merge(false, links);
+
+        proPlayerService.update().block();
+        List<SocialMediaLink> twitchLinks = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH);
+        assertEquals(3, twitchLinks.size());
+        twitchLinks.sort(SocialMediaLink.NATURAL_ID_COMPARATOR);
+        Assertions.assertThat(twitchLinks.get(0))
+            .usingRecursiveComparison()
+            .ignoringFieldsOfTypes(OffsetDateTime.class)
+            .isEqualTo
+            (
+                new SocialMediaLink
+                (
+                    proPlayer1.getId(),
+                    SocialMedia.TWITCH,
+                    "https://www.twitch.tv/nephest0x",
+                    updated,
+                    "132530558",
+                    false
+                )
+            );
+        assertTrue(twitchLinks.get(0).getUpdated().isAfter(updated));
+        Assertions.assertThat(twitchLinks.get(1))
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(links[2]);
+        Assertions.assertThat(twitchLinks.get(2))
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(links[3]);
+
     }
 
 }
