@@ -3,13 +3,12 @@
 
 package com.nephest.battlenet.sc2.web.service.sm;
 
-import com.github.twitch4j.TwitchClient;
 import com.github.twitch4j.helix.domain.User;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.twitch.Twitch;
+import com.nephest.battlenet.sc2.web.service.TwitchAPI;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import rx.RxReactiveStreams;
 
 @Component
 @Twitch
@@ -26,12 +24,12 @@ public class TwitchLinkHandler
 implements SocialMediaLinkResolver, SocialMediaLinkUpdater
 {
 
-    private final TwitchClient twitchClient;
+    private final TwitchAPI api;
 
     @Autowired
-    public TwitchLinkHandler(TwitchClient twitchClient)
+    public TwitchLinkHandler(TwitchAPI api)
     {
-        this.twitchClient = twitchClient;
+        this.api = api;
     }
 
     @Override
@@ -39,11 +37,8 @@ implements SocialMediaLinkResolver, SocialMediaLinkUpdater
     {
         Map<String, List<SocialMediaLink>> loginLinks = links.stream()
             .collect(Collectors.groupingBy(l->l.getUrl().substring(l.getUrl().lastIndexOf("/") + 1)));
-        List<String> twitchLogins = new ArrayList<>(loginLinks.keySet());
 
-        return Flux.from(RxReactiveStreams.toPublisher(
-            twitchClient.getHelix().getUsers(null, null, twitchLogins).toObservable()))
-                .flatMap(u->Flux.fromIterable(u.getUsers()))
+        return api.getUsersByLogins(loginLinks.keySet())
                 .map(u->{
                     loginLinks.get(u.getLogin())
                         .forEach(link->link.setServiceUserId(u.getId()));
@@ -62,11 +57,8 @@ implements SocialMediaLinkResolver, SocialMediaLinkUpdater
         Map<String, List<SocialMediaLink>> idLinks = links.stream()
             .filter(link->link.getServiceUserId() != null)
             .collect(Collectors.groupingBy(SocialMediaLink::getServiceUserId));
-        List<String> twitchIds = new ArrayList<>(idLinks.keySet());
 
-        return Flux.from(RxReactiveStreams.toPublisher(
-                twitchClient.getHelix().getUsers(null, twitchIds, null).toObservable()))
-            .flatMap(u->Flux.fromIterable(u.getUsers()))
+        return api.getUsersByIds(idLinks.keySet())
             .flatMapIterable(user->update(user, idLinks.get(user.getId())));
     }
 
