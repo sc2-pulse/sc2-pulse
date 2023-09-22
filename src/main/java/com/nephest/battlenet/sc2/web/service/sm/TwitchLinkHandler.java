@@ -35,16 +35,22 @@ implements SocialMediaLinkResolver, SocialMediaLinkUpdater
     @Override
     public Mono<Void> resolve(Collection<? extends SocialMediaLink> links)
     {
-        Map<String, List<SocialMediaLink>> loginLinks = links.stream()
-            .collect(Collectors.groupingBy(l->l.getUrl().substring(l.getUrl().lastIndexOf("/") + 1)));
+        Map<String, List<SocialMediaLink>> loginLinks
+            = links.stream().collect(Collectors.groupingBy(l->
+                l.getUrl().substring(l.getUrl().lastIndexOf("/") + 1).toLowerCase()));
 
         return api.getUsersByLogins(loginLinks.keySet())
                 .map(u->{
-                    loginLinks.get(u.getLogin())
-                        .forEach(link->link.setServiceUserId(u.getId()));
+                    loginLinks.get(u.getLogin().toLowerCase()).forEach(link->resolve(u, link));
                     return u;
                 })
                 .then();
+    }
+
+    private void resolve(User user, SocialMediaLink link)
+    {
+        link.setServiceUserId(user.getId());
+        update(user, link);
     }
 
     @Override

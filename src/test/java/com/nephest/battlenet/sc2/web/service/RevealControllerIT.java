@@ -317,7 +317,7 @@ public class RevealControllerIT
                     ),
                     List.of
                     (
-                        "https://www.twitch.tv/serral",
+                        "https://www.twitch.tv/sErRaL",
                         "https://twitter.com/Serral_SC2"
                     )
                 )))
