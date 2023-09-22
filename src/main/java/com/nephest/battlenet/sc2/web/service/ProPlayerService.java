@@ -35,7 +35,6 @@ import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.ImmutableTriple;
@@ -516,7 +515,7 @@ public class ProPlayerService
             .buffer(linkDbBatchSize)
             .flatMap(links->WebServiceUtil.blockingCallable(()->
                 socialMediaLinkDAO.merge(links.toArray(SocialMediaLink[]::new))))
-            .map(result->IntStream.of(result).sum())
+            .map(result->result.length)
             .reduce(Integer::sum)
             .doOnNext(count->{if(count > 0) LOG.info("Updated metadata of {} social media links", count);});
     }

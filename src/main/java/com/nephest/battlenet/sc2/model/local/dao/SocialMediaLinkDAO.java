@@ -172,7 +172,7 @@ public class SocialMediaLinkDAO
             .addValue("protected", link.isProtected() ? link.isProtected() : null);
     }
 
-    public int[] merge(SocialMediaLink... links)
+    public SocialMediaLink[] merge(SocialMediaLink... links)
     {
         return merge(false, links);
     }
@@ -187,11 +187,11 @@ public class SocialMediaLinkDAO
      *
      * @param isProtected protection flag
      * @param links links to merge
-     * @return number of saved links
+     * @return merged links
      */
-    public int[] merge(boolean isProtected, SocialMediaLink... links)
+    public SocialMediaLink[] merge(boolean isProtected, SocialMediaLink... links)
     {
-        if(links.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
+        if(links.length == 0) return links;
 
         links = Arrays.stream(links)
             .filter(Objects::nonNull)
@@ -211,7 +211,8 @@ public class SocialMediaLinkDAO
                 .addValue("protectedMode", isProtected);
         }
 
-        return template.batchUpdate(MERGE_QUERY, params);
+        template.batchUpdate(MERGE_QUERY, params);
+        return links;
     }
 
     public void remove(SocialMediaLink... links)
