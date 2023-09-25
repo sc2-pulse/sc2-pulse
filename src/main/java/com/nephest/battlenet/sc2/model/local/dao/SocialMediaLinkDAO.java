@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
+import com.nephest.battlenet.sc2.model.local.SocialMediaUserId;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -102,6 +103,11 @@ public class SocialMediaLinkDAO
         + "FROM social_media_link "
         + "WHERE pro_player_id IN(:proPlayerIds) "
         + "ORDER BY pro_player_id, type";
+
+    private static final String FIND_BY_TYPE_AND_SERVICE_USER_IDS =
+        "SELECT " + STD_SELECT
+        + "FROM social_media_link "
+        + "WHERE (type, service_user_id) IN(:serviceUserIds)";
 
     private static final String FIND_BY_ID_CURSOR_AND_TYPE =
         "SELECT " + STD_SELECT
@@ -259,6 +265,22 @@ public class SocialMediaLinkDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("proPlayerIds", Set.of(proPlayerIds));
         return template.query(FIND_BY_PRO_PLAYER_IDS, params, STD_ROW_MAPPER);
+    }
+
+    public List<SocialMediaLink> findByServiceUserIds(SocialMediaUserId... serviceUserIds)
+    {
+        if(serviceUserIds.length == 0) return List.of();
+
+        List<Object[]> data = Arrays.stream(serviceUserIds)
+            .distinct()
+            .map(id->new Object[]{
+                conversionService.convert(id.getType(), Integer.class),
+                id.getServiceUserid()
+            })
+            .collect(Collectors.toList());
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("serviceUserIds", data);
+        return template.query(FIND_BY_TYPE_AND_SERVICE_USER_IDS, params, STD_ROW_MAPPER);
     }
 
     public List<SocialMediaLink> findByIdCursor

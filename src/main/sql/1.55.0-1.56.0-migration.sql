@@ -7,6 +7,10 @@ FROM pro_player
 WHERE pro_player_id = id
 AND type = 2;
 
+CREATE INDEX "ix_social_media_link_type_service_user_id"
+ON "social_media_link"("type", "service_user_id")
+WHERE "service_user_id" IS NOT NULL;
+
 DELETE FROM social_media_link
 WHERE type = 2
 AND service_user_id IS NULL;

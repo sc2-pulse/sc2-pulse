@@ -622,6 +622,9 @@ CREATE TABLE "social_media_link"
 );
 
 CREATE INDEX "ix_social_media_link_updated" ON "social_media_link"("updated");
+CREATE INDEX "ix_social_media_link_type_service_user_id"
+ON "social_media_link"("type", "service_user_id")
+WHERE "service_user_id" IS NOT NULL;
 
 CREATE TRIGGER update_parent_version
 AFTER INSERT OR DELETE OR UPDATE

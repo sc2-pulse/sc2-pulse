@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
+import com.nephest.battlenet.sc2.model.local.SocialMediaUserId;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -115,6 +116,40 @@ public class SocialMediaLinkIT
         List<SocialMediaLink> links = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH);
         assertEquals(2, links.size());
         links.forEach(l->assertEquals(SocialMedia.TWITCH, l.getType()));
+    }
+
+    @Test
+    public void testFindByServiceUserId()
+    {
+        ProPlayer proPlayer1 = proPlayerDAO
+            .merge(new ProPlayer(null, 1L, "nick", "name"));
+        ProPlayer proPlayer2 = proPlayerDAO
+            .merge(new ProPlayer(null, 2L, "nick2", "name2"));
+        ProPlayer proPlayer3 = proPlayerDAO
+            .merge(new ProPlayer(null, 3L, "nick3", "name3"));
+        OffsetDateTime odt = OffsetDateTime.now();
+        SocialMediaLink[] links = socialMediaLinkDAO.merge
+        (
+            new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url1", odt, "1", false),
+            new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url2", odt, "1", false),
+
+            new SocialMediaLink(proPlayer2.getId(), SocialMedia.ALIGULAC, "url3", odt, "2", false),
+            new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "url4", odt, "2", false),
+
+            new SocialMediaLink(proPlayer3.getId(), SocialMedia.TWITCH, "url5", odt, "1", false)
+        );
+
+        List<SocialMediaLink> foundLinks = socialMediaLinkDAO.findByServiceUserIds
+        (
+            new SocialMediaUserId(SocialMedia.TWITCH, "1"),
+            new SocialMediaUserId(SocialMedia.ALIGULAC, "2")
+        );
+        assertEquals(3, foundLinks.size());
+        foundLinks.sort(SocialMediaLink.NATURAL_ID_COMPARATOR);
+        Assertions.assertThat(foundLinks)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(List.of(links[1], links[2], links[4]));
     }
 
     @Test
