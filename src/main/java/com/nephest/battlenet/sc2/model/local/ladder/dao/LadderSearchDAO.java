@@ -135,21 +135,8 @@ public class LadderSearchDAO
     private static final String FIND_TEAM_MEMBERS_ANCHOR_REVERSED_QUERY =
         String.format(FIND_TEAM_MEMBERS_ANCHOR_FORMAT, "ASC", ">");
 
-    private static final String FIND_CHARACTER_TEAM_MEMBERS_TEMPLATE =
-        "WITH team_filtered AS "
-        + "( "
-            + "SELECT "
-            + "team.id "
-            + "FROM team "
-            + "INNER JOIN team_member ON team_member.team_id=team.id "
-            + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
-            + "WHERE "
-            + "player_character.id=:playerCharacterId "
-            + "AND (array_length(:seasons::smallint[], 1) IS NULL OR season = ANY(:seasons)) "
-            + "AND (array_length(:queues::smallint[], 1) IS NULL OR queue_type = ANY(:queues)) "
-            + "%1$s"
-        + ") "
-        + "SELECT "
+    private static final String FIND_CHARACTER_TEAM_MEMBERS_TAIL =
+        "SELECT "
         + FIND_TEAM_MEMBERS_BASE
 
         + "FROM team_filtered "
@@ -173,17 +160,28 @@ public class LadderSearchDAO
         + "team.queue_type ASC, team.team_type ASC, team.rating DESC, team.id ASC, "
         + "player_character.id ASC ";
 
+    private static final String CHARACTER_TEAM_IDS_UNORDERED_QUERY =
+        "SELECT DISTINCT(team_id) AS id "
+        + "FROM team_member "
+        + "WHERE player_character_id IN(:playerCharacterIds) "
+        + "AND (array_length(:seasons::smallint[], 1) IS NULL OR team_season = ANY(:seasons)) "
+        + "AND (array_length(:queues::smallint[], 1) IS NULL OR team_queue_type = ANY(:queues)) ";
     private static final String FIND_CHARACTER_TEAM_MEMBERS_QUERY =
-        String.format(FIND_CHARACTER_TEAM_MEMBERS_TEMPLATE, "");
+        "WITH team_filtered AS (" + CHARACTER_TEAM_IDS_UNORDERED_QUERY + ") "
+        + FIND_CHARACTER_TEAM_MEMBERS_TAIL;
 
     private static final String FIND_CHARACTER_TEAM_MEMBERS_LIMIT_QUERY =
-        String.format
-        (
-            FIND_CHARACTER_TEAM_MEMBERS_TEMPLATE,
-            "ORDER BY team.season DESC, "
+        "WITH team_unordered_filter AS (" + CHARACTER_TEAM_IDS_UNORDERED_QUERY + "), "
+        + "team_filtered AS "
+        + "( "
+            + "SELECT team.id "
+            + "FROM team_unordered_filter "
+            + "INNER JOIN team USING(id) "
+            + "ORDER BY team.season DESC, "
             + "team.queue_type ASC, team.team_type ASC, team.rating DESC, team.id ASC "
             + "LIMIT :limit"
-        );
+        + ") "
+        + FIND_CHARACTER_TEAM_MEMBERS_TAIL;
 
     private static final String FIND_LEGACY_TEAM_MEMBERS =
         "SELECT "
@@ -411,7 +409,7 @@ public class LadderSearchDAO
 
     public List<LadderTeam> findCharacterTeams
     (
-        long id,
+        Set<Long> ids,
         Set<Integer> seasons,
         Set<QueueType> queues,
         Integer limit
@@ -423,7 +421,7 @@ public class LadderSearchDAO
                 .map(q->conversionService.convert(q, Integer.class))
                 .toArray(Integer[]::new);
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterId", id)
+            .addValue("playerCharacterIds", ids)
             .addValue("seasons", seasons.isEmpty() ? null : seasons.toArray(Integer[]::new))
             .addValue("queues", queueIds)
             .addValue("limit", limit)
@@ -435,9 +433,25 @@ public class LadderSearchDAO
         return template.query(query, params, LADDER_TEAMS_EXTRACTOR);
     }
 
-    public List<LadderTeam> findCharacterTeams(long id)
+    public List<LadderTeam> findCharacterTeams
+    (
+        Long id,
+        Set<Integer> seasons,
+        Set<QueueType> queues,
+        Integer limit
+    )
     {
-        return findCharacterTeams(id, Set.of(), Set.of(), null);
+        return findCharacterTeams(Set.of(id), seasons, queues, limit);
+    }
+
+    public List<LadderTeam> findCharacterTeams(Set<Long> ids)
+    {
+        return findCharacterTeams(ids, Set.of(), Set.of(), null);
+    }
+
+    public List<LadderTeam> findCharacterTeams(Long... id)
+    {
+        return findCharacterTeams(Set.of(id));
     }
 
     public List<LadderTeam> findFollowingTeams

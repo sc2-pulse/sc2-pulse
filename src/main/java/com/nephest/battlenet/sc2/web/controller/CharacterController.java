@@ -243,8 +243,9 @@ public class CharacterController
         );
     }
 
+    @Hidden
     @GetMapping("/{id}/teams")
-    public List<LadderTeam> getCharacterTeams
+    public List<LadderTeam> getCharacterTeamsLegacy
     (
         @PathVariable("id") long id
     )
