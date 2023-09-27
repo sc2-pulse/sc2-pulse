@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.util.regex.Pattern;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
@@ -39,5 +40,23 @@ public class ModelUtilTest
     {
         assertEquals(out, ModelUtil.trimSingleSpaceNotBlank(in));
     }
+
+    @CsvSource
+    ({
+        "'', false",
+        "'                                 ', false",
+        "'                           d      ', true",
+        "'d                             d                         1', true"
+    })
+    @ParameterizedTest
+    public void testTrimmedNotBlankRegexp(String input, boolean expectedResult)
+    {
+        assertEquals
+        (
+            expectedResult,
+            Pattern.matches(ModelUtil.VALIDATION_REGEXP_TRIMMED_NOT_BLANK, input)
+        );
+    }
+
 
 }
