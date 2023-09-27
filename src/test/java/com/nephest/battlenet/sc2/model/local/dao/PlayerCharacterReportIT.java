@@ -68,10 +68,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -1104,6 +1108,35 @@ public class PlayerCharacterReportIT
         assertEquals(9, nonCheaterTeamState.getTeamState().getGlobalRank());
         assertEquals(9, nonCheaterTeamState.getTeamState().getRegionRank());
         assertEquals(9, nonCheaterTeamState.getTeamState().getLeagueRank());
+    }
+
+    public static Stream<Arguments> testEvidenceValidation()
+    {
+        return Stream.of
+        (
+            Arguments.of("", 400),
+            Arguments.of(" ".repeat(Evidence.MAX_LENGTH), 400),
+            Arguments.of("1".repeat(Evidence.MAX_LENGTH + 1), 400),
+            Arguments.of("1".repeat(Evidence.MAX_LENGTH), 200)
+        );
+    }
+
+    @MethodSource
+    @ParameterizedTest
+    public void testEvidenceValidation(String evidence, int expectedCode)
+    throws Exception
+    {
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+                .param("playerCharacterId", "1")
+                .param("type", "CHEATER")
+                .param("evidence", evidence)
+        )
+            .andExpect(status().is(expectedCode))
+            .andReturn();
     }
 
 }

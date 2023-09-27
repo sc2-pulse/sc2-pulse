@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.config.security.AccountUser;
+import com.nephest.battlenet.sc2.model.local.Evidence;
 import com.nephest.battlenet.sc2.model.local.EvidenceVote;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceDAO;
@@ -18,10 +19,14 @@ import java.net.UnknownHostException;
 import java.time.OffsetDateTime;
 import java.util.List;
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+@Validated
 @Hidden
 @RestController
 @RequestMapping("/api/character/report")
@@ -66,7 +72,7 @@ public class PlayerCharacterReportController
         @RequestParam(name = "playerCharacterId") Long characterId,
         @RequestParam(name = "additionalPlayerCharacterId", required = false) Long additionalCharacterId,
         @RequestParam(name = "type") PlayerCharacterReport.PlayerCharacterReportType type,
-        @RequestParam(name = "evidence") String evidence,
+        @RequestParam(name = "evidence") @Valid @NotBlank @Size(max=Evidence.MAX_LENGTH) String evidence,
         @Autowired HttpServletRequest request
     )
     throws UnknownHostException

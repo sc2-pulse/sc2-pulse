@@ -68,3 +68,7 @@ EXECUTE FUNCTION increase_foreign_version('pro_player');
 UPDATE pro_player
 SET country = 'GB'
 WHERE country = 'UK';
+
+ALTER TABLE evidence
+    ALTER COLUMN description TYPE TEXT;
+
