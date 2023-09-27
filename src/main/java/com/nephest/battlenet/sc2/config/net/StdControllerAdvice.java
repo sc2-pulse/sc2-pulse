@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.config.net;
 
+import javax.validation.ValidationException;
 import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,12 @@ extends ResponseEntityExceptionHandler
     {
         String bodyOfResponse = "Invalid number";
         return handleExceptionInternal(ex, bodyOfResponse, new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
+    }
+
+    @ExceptionHandler({ValidationException.class})
+    protected ResponseEntity<Object> handleValidationError(RuntimeException ex, WebRequest request)
+    {
+        return handleExceptionInternal(ex, ex.getMessage(), new HttpHeaders(), HttpStatus.BAD_REQUEST, request);
     }
 
     @ExceptionHandler({OptimisticLockingFailureException.class })
