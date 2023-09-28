@@ -395,6 +395,8 @@ CREATE INDEX "ix_team_season_queue_type" ON "team"("season", "queue_type") WHERE
 CREATE TABLE "team_member"
 (
     "team_id" BIGINT NOT NULL,
+    "team_season" SMALLINT NOT NULL,
+    "team_queue_type" SMALLINT NOT NULL,
     "player_character_id" BIGINT NOT NULL,
     "terran_games_played" SMALLINT,
     "protoss_games_played" SMALLINT,
@@ -414,6 +416,7 @@ CREATE TABLE "team_member"
 );
 
 CREATE INDEX "ix_fk_team_member_player_character_id" ON "team_member"("player_character_id");
+CREATE INDEX "ix_team_member_group_search" ON "team_member"("player_character_id", "team_season", "team_queue_type");
 
 CREATE TABLE "team_state"
 (
@@ -688,6 +691,25 @@ CREATE TABLE "pro_team_member"
 
 CREATE INDEX "ix_pro_team_member_pro_team_id" ON "pro_team_member"("pro_team_id");
 CREATE INDEX "ix_pro_team_member_updated" ON "pro_team_member"("updated");
+
+CREATE OR REPLACE FUNCTION update_team_member_meta_data()
+RETURNS trigger
+AS
+'
+    BEGIN
+        SELECT team.season, team.queue_type
+        INTO NEW.team_season, NEW.team_queue_type
+        FROM team
+        WHERE team.id = NEW.team_id;
+        return NEW;
+    END
+'
+LANGUAGE plpgsql;
+CREATE TRIGGER update_meta_data
+BEFORE INSERT
+ON team_member
+FOR EACH ROW
+EXECUTE FUNCTION update_team_member_meta_data();
 
 CREATE TABLE "map"
 (

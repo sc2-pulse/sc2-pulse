@@ -20,6 +20,7 @@ import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
@@ -42,6 +43,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -311,6 +313,30 @@ public class StandardDataReadonlyIT
         assertEquals(1, ladderTeamStateDAO.find(1L, seasonStart).size());
         assertEquals(0, ladderTeamStateDAO.find(1L, seasonStart.plusSeconds(1)).size());
 
+    }
+
+    @ValueSource(longs = {1L, 850L})
+    @ParameterizedTest
+    public void testTeamMemberMetaData(long teamId)
+    {
+        Team team = teamDAO.findById(teamId).orElseThrow();
+
+        List<Integer> memberSeasons = template.query
+        (
+            "SELECT team_season FROM team_member WHERE team_id = " + team.getId(),
+            DAOUtils.INT_MAPPER
+        );
+        assertTrue(memberSeasons.stream().allMatch(mSeason->mSeason.equals(team.getSeason())));
+
+        List<QueueType> memberQueues = template.query
+        (
+            "SELECT team_queue_type FROM team_member WHERE team_id = " + team.getId(),
+            DAOUtils.INT_MAPPER
+        )
+            .stream()
+            .map(i->conversionService.convert(i, QueueType.class))
+            .collect(Collectors.toList());
+        assertTrue(memberQueues.stream().allMatch(queue->queue == team.getQueueType()));
     }
 
 }
