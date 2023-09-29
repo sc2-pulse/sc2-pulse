@@ -414,7 +414,8 @@ CREATE TABLE "team_member"
         REFERENCES "player_character"("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
-
+-- This index should be safe to remove, ix_team_member_group_search should work fine in its place, although slightly
+-- slower. Remove it if tests show no difference.
 CREATE INDEX "ix_fk_team_member_player_character_id" ON "team_member"("player_character_id");
 CREATE INDEX "ix_team_member_group_search" ON "team_member"("player_character_id", "team_season", "team_queue_type");
 
