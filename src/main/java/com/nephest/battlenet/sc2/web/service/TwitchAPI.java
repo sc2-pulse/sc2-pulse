@@ -29,6 +29,11 @@ public class TwitchAPI
         this.client = client;
     }
 
+    public TwitchClient getClient()
+    {
+        return client;
+    }
+
     public Flux<User> getUsersByIds(Set<String> ids)
     {
         return Flux.fromIterable(ids)
