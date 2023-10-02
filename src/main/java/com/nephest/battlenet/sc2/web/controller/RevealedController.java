@@ -8,6 +8,8 @@ import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import com.nephest.battlenet.sc2.web.service.community.CommunityService;
+import com.nephest.battlenet.sc2.web.service.community.LadderVideoStream;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,6 +30,9 @@ public class RevealedController
     @Autowired
     private LadderProPlayerDAO ladderProPlayerDAO;
 
+    @Autowired
+    private CommunityService communityService;
+
     @GetMapping("/players")
     public List<ProPlayer> getPlayers()
     {
@@ -38,6 +43,18 @@ public class RevealedController
     public ResponseEntity<List<LadderProPlayer>> getLadderProPlayers(@PathVariable("ids") Set<Long> ids)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderProPlayerDAO.findByIds(ids));
+    }
+
+    @GetMapping("/stream")
+    public ResponseEntity<List<LadderVideoStream>> getStreams()
+    {
+        return WebServiceUtil.notFoundIfEmpty(communityService.getStreams().block());
+    }
+
+    @GetMapping("/stream/featured")
+    public ResponseEntity<List<LadderVideoStream>> getFeaturedStreams()
+    {
+        return WebServiceUtil.notFoundIfEmpty(communityService.getFeaturedStreams().block());
     }
 
 }
