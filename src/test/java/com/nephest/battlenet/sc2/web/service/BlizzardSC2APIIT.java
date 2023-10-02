@@ -323,6 +323,36 @@ public class BlizzardSC2APIIT
 
     @Test
     @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
+    public void testIgnoreSllErrors()
+    throws Exception
+    {
+        assertEquals(false, api.isIgnoreClientSslErrors(Region.EU));
+        assertEquals(false, api.isIgnoreClientSslErrors(Region.US));
+        mvc.perform
+        (
+            post("/admin/blizzard/api/ssl/error/ignore/EU")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        assertEquals(true, api.isIgnoreClientSslErrors(Region.EU));
+        assertEquals(false, api.isIgnoreClientSslErrors(Region.US));
+
+        mvc.perform
+        (
+            delete("/admin/blizzard/api/ssl/error/ignore/EU")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        assertEquals(false, api.isIgnoreClientSslErrors(Region.EU));
+        assertEquals(false, api.isIgnoreClientSslErrors(Region.US));
+    }
+
+    @Test
+    @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
     public void testSetTimeout()
     throws Exception
     {

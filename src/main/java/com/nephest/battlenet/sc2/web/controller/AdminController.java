@@ -166,6 +166,16 @@ public class AdminController
         cron.setShouldUpdateLadder(updateLadder);
     }
 
+    @RequestMapping
+    (
+        value = "/blizzard/api/ssl/error/ignore/{region}",
+        method = {RequestMethod.POST, RequestMethod.DELETE}
+    )
+    public void setTimeout(@PathVariable("region") Region region, HttpServletRequest request)
+    {
+        sc2API.setIgnoreClientSslErrors(region, request.getMethod().equals("POST"));
+    }
+
     @PostMapping("/blizzard/api/timeout/{region}/{timeout}")
     public void setTimeout
     (

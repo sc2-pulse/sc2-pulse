@@ -38,6 +38,7 @@ import com.nephest.battlenet.sc2.model.local.DoubleVar;
 import com.nephest.battlenet.sc2.model.local.DurationVar;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
+import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
@@ -74,6 +75,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.netty.http.client.HttpClient;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
@@ -129,6 +131,7 @@ extends BaseAPI
     private final Map<Region, InstantVar> forceRegionInstants = new EnumMap<>(Region.class);
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
+    private final Map<Region, LongVar> ignoreClientSslErrors = new EnumMap<>(Region.class);
     private final Map<Region, DurationVar> clientTimeouts = new EnumMap<>(Region.class);
     private final Map<Region, DoubleVar> requestsPerSecondCaps = new EnumMap<>(Region.class);
     private final Map<Region, DoubleVar> requestsPerHourCaps = new EnumMap<>(Region.class);
@@ -191,12 +194,14 @@ extends BaseAPI
         {
             requestsPerHourCaps.put(r, new DoubleVar(varDAO, r.getId() + ".blizzard.api.rph", false));
             requestsPerSecondCaps.put(r, new DoubleVar(varDAO, r.getId() + ".blizzard.api.rps", false));
+            ignoreClientSslErrors.put(r, new LongVar(varDAO, r.getId() + ".blizzard.api.ssl.error.ignore", false));
             clientTimeouts.put(r, new DurationVar(varDAO, r.getId() + ".blizzard.api.timeout", false));
         }
         Stream.of
         (
             requestsPerHourCaps.values().stream(),
             requestsPerSecondCaps.values().stream(),
+            ignoreClientSslErrors.values().stream(),
             clientTimeouts.values().stream()
         )
             .flatMap(Function.identity())
@@ -422,14 +427,16 @@ extends BaseAPI
     {
         for(Region region : activeRegions)
         {
+            if(isIgnoreClientSslErrors(region))
+                LOG.warn("Ignoring {} web client ssl errors", region);
             ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
                 new ServletOAuth2AuthorizedClientExchangeFilterFunction(auth2AuthorizedClientManager);
             oauth2Client.setDefaultClientRegistrationId("sc2-sys-" + region.name().toLowerCase());
             oauth2Client.setAuthorizationFailureHandler(failureHandler);
+            HttpClient httpClient = getHttpClient(getTimeout(region), isIgnoreClientSslErrors(region));
             //some endpoints return invalid content type headers, ignore the headers and handle all types
             clients.put(region, WebServiceUtil.getWebClientBuilder(objectMapper, 600 * 1024, ALL)
-                .clientConnector(new ReactorClientHttpConnector(WebServiceUtil
-                    .getHttpClient(WebServiceUtil.CONNECT_TIMEOUT, getTimeout(region))))
+                .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .apply(oauth2Client.oauth2Configuration()).build());
         }
     }
@@ -594,13 +601,42 @@ extends BaseAPI
         }
     }
 
+    private static HttpClient getHttpClient(Duration ioTimeout, boolean ignoreSslErrors)
+    {
+        HttpClient httpClient = WebServiceUtil
+            .getHttpClient(WebServiceUtil.CONNECT_TIMEOUT, ioTimeout);
+        if(ignoreSslErrors) httpClient = httpClient
+            .secure(t->t.sslContext(WebServiceUtil.INSECURE_SSL_CONTEXT));
+        return httpClient;
+    }
+
+    public void setIgnoreClientSslErrors(Region region, boolean ignoreErrors)
+    {
+        boolean currentVal = ignoreClientSslErrors.get(region).getValue() != null;
+        if(currentVal == ignoreErrors) return;
+
+        HttpClient httpClient = getHttpClient(getTimeout(region), ignoreErrors);
+        WebClient client = clients.get(region).mutate()
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .build();
+        clients.put(region, client);
+        ignoreClientSslErrors.get(region).setValueAndSave(ignoreErrors ? 1L : null);
+        LOG.info("Ignoring {} web client ssl errors: {}", region, ignoreErrors);
+    }
+
+    public Boolean isIgnoreClientSslErrors(Region region)
+    {
+        return ignoreClientSslErrors.get(region).getValue() != null;
+    }
+
     public void setTimeout(Region region, Duration timeout)
     {
         timeout = timeout != null ? timeout : IO_TIMEOUT;
         if(getTimeout(region).equals(timeout)) return;
 
+        HttpClient httpClient = getHttpClient(timeout, isIgnoreClientSslErrors(region));
         WebClient client = clients.get(region).mutate()
-            .clientConnector(WebServiceUtil.getClientHttpConnector(WebServiceUtil.CONNECT_TIMEOUT, timeout))
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
             .build();
         clients.put(region, client);
         clientTimeouts.get(region).setValueAndSave(timeout);
