@@ -158,6 +158,7 @@ extends BaseAPI
     )
     {
         this.globalContext = globalContext;
+        initVars(varDAO, globalContext.getActiveRegions());
         initWebClient
         (
             objectMapper,
@@ -170,7 +171,6 @@ extends BaseAPI
         this.separateRequestLimits = separateRequestLimits;
         init(globalContext.getActiveRegions());
         initErrorRates(varDAO, globalContext.getActiveRegions());
-        initVars(varDAO, globalContext.getActiveRegions());
         initRequestLimiters(separateRequestLimits);
         Flux.interval(HEALTH_SAVE_FRAME).doOnNext(i->saveHealth()).subscribe();
     }
