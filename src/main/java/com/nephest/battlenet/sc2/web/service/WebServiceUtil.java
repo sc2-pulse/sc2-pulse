@@ -10,6 +10,9 @@ import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.web.util.RateLimitData;
 import io.netty.channel.ChannelOption;
+import io.netty.handler.ssl.SslContext;
+import io.netty.handler.ssl.SslContextBuilder;
+import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import java.time.Duration;
@@ -21,6 +24,7 @@ import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import javax.net.ssl.SSLException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,6 +85,22 @@ public class WebServiceUtil
         .evictInBackground(Duration.ofSeconds(30))
         .lifo()
         .build();
+    public static final SslContext INSECURE_SSL_CONTEXT;
+    static
+    {
+        try
+        {
+            INSECURE_SSL_CONTEXT = SslContextBuilder
+                .forClient()
+                .trustManager(InsecureTrustManagerFactory.INSTANCE)
+                .build();
+        }
+        catch (SSLException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static Function<? super Throwable,? extends Mono<?>> LOG_ROOT_MESSAGE_AND_RETURN_EMPTY = t->{
         LOG.error(ExceptionUtils.getRootCauseMessage(t));
         return Mono.empty();
