@@ -429,7 +429,7 @@ extends BaseAPI
             //some endpoints return invalid content type headers, ignore the headers and handle all types
             clients.put(region, WebServiceUtil.getWebClientBuilder(objectMapper, 600 * 1024, ALL)
                 .clientConnector(new ReactorClientHttpConnector(WebServiceUtil
-                    .getHttpClient(WebServiceUtil.CONNECT_TIMEOUT, IO_TIMEOUT)))
+                    .getHttpClient(WebServiceUtil.CONNECT_TIMEOUT, getTimeout(region))))
                 .apply(oauth2Client.oauth2Configuration()).build());
         }
     }
