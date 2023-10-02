@@ -121,17 +121,28 @@ public class WebServiceUtil
     }
 
     public static WebClient.Builder getWebClientBuilder
-    (ObjectMapper objectMapper, int inMemorySize, MediaType... codecTypes)
+    (
+        ObjectMapper objectMapper,
+        int inMemorySize,
+        Function<HttpClient, HttpClient> clientCustomizer,
+        MediaType... codecTypes
+    )
     {
         MediaType[] finalTypes = codecTypes.length == 0 ? new MediaType[]{MediaType.APPLICATION_JSON} : codecTypes;
         return WebClient.builder()
-            .clientConnector(new ReactorClientHttpConnector(getHttpClient(CONNECT_TIMEOUT, IO_TIMEOUT)))
+            .clientConnector(new ReactorClientHttpConnector(clientCustomizer.apply(getHttpClient(CONNECT_TIMEOUT, IO_TIMEOUT))))
             .exchangeStrategies(ExchangeStrategies.builder().codecs(conf->
             {
                 conf.defaultCodecs().jackson2JsonDecoder(new Jackson2JsonDecoder(objectMapper, finalTypes));
                 conf.defaultCodecs().jackson2JsonEncoder(new Jackson2JsonEncoder(objectMapper, finalTypes));
                 if(inMemorySize > 0) conf.defaultCodecs().maxInMemorySize(inMemorySize);
             }).build());
+    }
+
+    public static WebClient.Builder getWebClientBuilder
+    (ObjectMapper objectMapper, int inMemorySize, MediaType... codecTypes)
+    {
+        return getWebClientBuilder(objectMapper, inMemorySize, Function.identity(), codecTypes);
     }
 
     public static HttpClient getHttpClient(Duration connectTimeout, Duration ioTimeout)
