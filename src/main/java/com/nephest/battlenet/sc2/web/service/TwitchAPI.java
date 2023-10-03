@@ -4,9 +4,12 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.github.twitch4j.TwitchClient;
+import com.github.twitch4j.helix.domain.Stream;
+import com.github.twitch4j.helix.domain.StreamList;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
 import com.nephest.battlenet.sc2.twitch.Twitch;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +23,7 @@ public class TwitchAPI
 {
 
     public static final int USER_BATCH_SIZE = 100;
+    public static final int STREAM_BATCH_SIZE = 100;
 
     private final TwitchClient client;
 
@@ -51,6 +55,26 @@ public class TwitchAPI
             .flatMap(loginBatch->Flux.from(RxReactiveStreams.toPublisher(
                 client.getHelix().getUsers(null, null, loginBatch).toObservable())))
             .map(UserList::getUsers)
+            .flatMapIterable(Function.identity());
+    }
+
+    public Flux<Stream> getStreamsByGameId(String gameId, int limit)
+    {
+        if(limit < 1) return Flux.empty();
+        if(limit > STREAM_BATCH_SIZE)
+            return Flux.error(new UnsupportedOperationException("Pagination is not supported"));
+
+        return Flux.from(RxReactiveStreams.toPublisher(client.getHelix().getStreams(
+            null,
+            null,
+            null,
+            limit,
+            List.of(gameId),
+            null,
+            null,
+            null
+        ).toObservable()))
+            .map(StreamList::getStreams)
             .flatMapIterable(Function.identity());
     }
 

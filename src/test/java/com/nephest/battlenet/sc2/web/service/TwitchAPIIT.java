@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static com.nephest.battlenet.sc2.web.service.community.TwitchVideoStreamSupplier.SC2_GAME_ID;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.twitch4j.helix.domain.User;
@@ -15,6 +17,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -70,6 +73,17 @@ public class TwitchAPIIT
             u->u.getLogin().equals("nephest0x")
                 && u.getId().equals("132530558"))
         );
+    }
+
+    @Test
+    public void testGetStreamsByGameId()
+    {
+        List<com.github.twitch4j.helix.domain.Stream> streams = api
+            .getStreamsByGameId(SC2_GAME_ID, 100)
+            .collectList()
+            .block();
+        assertFalse(streams.isEmpty());
+        assertTrue(streams.stream().allMatch(s->s.getGameId().equals(SC2_GAME_ID)));
     }
 
 }
