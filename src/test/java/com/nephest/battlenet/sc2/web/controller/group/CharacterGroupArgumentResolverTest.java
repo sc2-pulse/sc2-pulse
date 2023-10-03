@@ -1,12 +1,12 @@
 // Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-package com.nephest.battlenet.sc2.web.controller;
+package com.nephest.battlenet.sc2.web.controller.group;
 
+import static com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver.areIdsInvalid;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -15,7 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
-public class GroupControllerTest
+public class CharacterGroupArgumentResolverTest
 {
 
     private static void verifyBadRequest(ResponseEntity<?> entity, String body)
@@ -29,8 +29,8 @@ public class GroupControllerTest
     {
         verifyBadRequest
         (
-            GroupController.areIdsInvalid(Set.of(), Set.of(), Set.of()).orElseThrow(),
-            "At least one clanId or characterId is required"
+            areIdsInvalid(Set.of(), Set.of(), Set.of()).orElseThrow(),
+            "At least one group id is required"
         );
     }
 
@@ -43,7 +43,7 @@ public class GroupControllerTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            GroupController.areIdsInvalid(bigCharacterSet, Set.of(), Set.of()).orElseThrow(),
+            areIdsInvalid(bigCharacterSet, Set.of(), Set.of()).orElseThrow(),
             "Max size of characters exceeded: " + CharacterGroupArgumentResolver.CHARACTERS_MAX
         );
     }
@@ -57,7 +57,7 @@ public class GroupControllerTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            GroupController.areIdsInvalid(Set.of(), bigClanSet, Set.of()).orElseThrow(),
+            areIdsInvalid(Set.of(), bigClanSet, Set.of()).orElseThrow(),
             "Max size of clans exceeded: " + CharacterGroupArgumentResolver.CLANS_MAX
         );
     }
@@ -71,7 +71,7 @@ public class GroupControllerTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            GroupController.areIdsInvalid(Set.of(), Set.of(), bigProPlayerSet).orElseThrow(),
+            areIdsInvalid(Set.of(), Set.of(), bigProPlayerSet).orElseThrow(),
             "Max size of pro players exceeded: " + CharacterGroupArgumentResolver.PRO_PLAYERS_MAX
         );
     }
@@ -91,7 +91,7 @@ public class GroupControllerTest
             .range(0, CharacterGroupArgumentResolver.PRO_PLAYERS_MAX)
             .boxed()
             .collect(Collectors.toSet());
-        assertTrue(GroupController.areIdsInvalid(characterSet, clanSet, proPlayerSet).isEmpty());
+        assertTrue(areIdsInvalid(characterSet, clanSet, proPlayerSet).isEmpty());
     }
 
 }

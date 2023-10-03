@@ -9,12 +9,14 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import java.lang.reflect.Method;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.MethodParameter;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.ServletRequestBindingException;
@@ -73,12 +75,12 @@ implements HandlerMethodArgumentResolver
         this.clanMemberDAO = clanMemberDAO;
     }
 
-    public static void checkIds
+    public static Optional<String> checkIds
     (
         Set<Long> characterIds,
         Set<Integer> clanIds,
         Set<Long> proPlayerIds
-    ) throws ServletRequestBindingException
+    )
     {
         String msg = null;
         if(characterIds.isEmpty() && clanIds.isEmpty() && proPlayerIds.isEmpty())
@@ -97,7 +99,18 @@ implements HandlerMethodArgumentResolver
         {
             msg = "Max size of pro players exceeded: " + PRO_PLAYERS_MAX;
         }
-        if(msg != null) throw new ServletRequestBindingException(msg);
+        return Optional.ofNullable(msg);
+    }
+
+    public static Optional<ResponseEntity<?>> areIdsInvalid
+    (
+        Set<Long> characterIds,
+        Set<Integer> clanIds,
+        Set<Long> proPlayerIds
+    )
+    {
+        return checkIds(characterIds, clanIds, proPlayerIds)
+            .map(error->ResponseEntity.badRequest().body(error));
     }
 
     @Override
@@ -122,7 +135,9 @@ implements HandlerMethodArgumentResolver
             .resolveArgument(CLAN_PARAMETER, mavContainer, webRequest, binderFactory);
         Set<Long> proPlayerIds = (Set<Long>) paramResolver
             .resolveArgument(PRO_PLAYER_PARAMETER, mavContainer, webRequest, binderFactory);
-        checkIds(characterIds, clanIds, proPlayerIds);
+        String error = checkIds(characterIds, clanIds, proPlayerIds).orElse(null);
+        if(error != null) throw new ServletRequestBindingException(error);
+
         Set<Long> result = resolve(characterIds, clanIds, proPlayerIds);
         CharacterGroup annotation = parameter.getParameterAnnotation(CharacterGroup.class);
         if(annotation.flatRequired() && result.isEmpty())
