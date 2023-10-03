@@ -34,6 +34,15 @@ import java.lang.annotation.Target;
             maxItems = CharacterGroupArgumentResolver.CLANS_MAX,
             schema = @Schema(type = "integer", format = "int32")
         )
+    ),
+    @Parameter
+    (
+        in = ParameterIn.QUERY, name = "proPlayerId",
+        array = @ArraySchema
+        (
+            maxItems = CharacterGroupArgumentResolver.PRO_PLAYERS_MAX,
+            schema = @Schema(type = "integer", format = "int64")
+        )
     )
 })
 public @interface CharacterGroup

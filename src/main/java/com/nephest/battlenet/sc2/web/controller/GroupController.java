@@ -10,9 +10,11 @@ import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
@@ -47,6 +49,9 @@ public class GroupController
     private LadderSearchDAO ladderSearchDAO;
 
     @Autowired
+    private LadderProPlayerDAO ladderProPlayerDAO;
+
+    @Autowired
     private ClanDAO clanDAO;
 
     @Autowired
@@ -55,10 +60,14 @@ public class GroupController
     @Autowired
     private LadderMatchDAO ladderMatchDAO;
 
+    @Autowired
+    private CharacterGroupArgumentResolver resolver;
+
     public static Optional<ResponseEntity<?>> areIdsInvalid
     (
         Set<Long> characterIds,
-        Set<Integer> clanIds
+        Set<Integer> clanIds,
+        Set<Long> proPlayerIds
     )
     {
         if(characterIds.isEmpty() && clanIds.isEmpty())
@@ -85,6 +94,14 @@ public class GroupController
             return Optional.of(entity);
         }
 
+        if(proPlayerIds.size() > CharacterGroupArgumentResolver.PRO_PLAYERS_MAX)
+        {
+            ResponseEntity<?> entity = ResponseEntity
+                .badRequest()
+                .body("Max size of pro players exceeded: " + CharacterGroupArgumentResolver.PRO_PLAYERS_MAX);
+            return Optional.of(entity);
+        }
+
         return Optional.empty();
     }
 
@@ -92,18 +109,21 @@ public class GroupController
     public ResponseEntity<?> getGroup
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
-        @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds
+        @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
+        @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds
     )
     {
-        return areIdsInvalid(characterIds, clanIds)
+        return areIdsInvalid(characterIds, clanIds, proPlayerIds)
             .orElseGet(()->
             {
                 List<LadderDistinctCharacter> characters = ladderCharacterDAO
                     .findDistinctCharactersByCharacterIds(characterIds.toArray(Long[]::new));
                 List<Clan> clans = clanDAO.findByIds(clanIds.toArray(Integer[]::new));
-                return characters.isEmpty() && clans.isEmpty()
+                List<LadderProPlayer> proPlayers = ladderProPlayerDAO
+                    .findByIds(proPlayerIds.toArray(Long[]::new));
+                return characters.isEmpty() && clans.isEmpty() && proPlayerIds.isEmpty()
                     ? ResponseEntity.notFound().build()
-                    : ResponseEntity.ok(new Group(characters, clans));
+                    : ResponseEntity.ok(new Group(characters, clans, proPlayers));
             });
     }
 
@@ -119,6 +139,7 @@ public class GroupController
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
+        @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds,
         @RequestParam(name = "createdCursor", required = false) OffsetDateTime createdCursor,
         @RequestParam(name = "characterIdCursor", required = false, defaultValue = Long.MAX_VALUE + "") Long characterIdCursor,
         @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "") Integer limit
@@ -127,10 +148,10 @@ public class GroupController
         if(limit > CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
             return ResponseEntity.badRequest().body("Max page size exceeded: " + CLAN_MEMBER_EVENT_PAGE_SIZE_MAX);
         OffsetDateTime cCursor = createdCursor != null ? createdCursor : OffsetDateTime.now();
-        return areIdsInvalid(characterIds, clanIds)
+        return areIdsInvalid(characterIds, clanIds, proPlayerIds)
             .orElseGet(()->ResponseEntity.of(ladderClanMemberEventDAO.find
             (
-                characterIds,
+                resolver.resolve(characterIds, Set.of(), proPlayerIds),
                 clanIds,
                 cCursor,
                 characterIdCursor,

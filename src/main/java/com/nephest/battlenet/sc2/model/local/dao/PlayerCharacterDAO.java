@@ -317,6 +317,13 @@ public class PlayerCharacterDAO
         + "INNER JOIN pro_player_account ON account.id = pro_player_account.account_id "
         + "ORDER BY player_character.id";
 
+    private static final String FIND_PLAYER_CHARACTER_IDS_BY_PRO_PLAYER_IDS =
+        "SELECT player_character.id "
+        + "FROM player_character "
+        + "INNER JOIN account ON player_character.account_id = account.id "
+        + "INNER JOIN pro_player_account ON account.id = pro_player_account.account_id "
+        + "WHERE pro_player_account.pro_player_id IN (:proPlayerIds)";
+
     private static final String FIND_PRO_PLAYER_CHARACTERS =
         "SELECT " + PlayerCharacterDAO.STD_SELECT + " FROM player_character "
         + "INNER JOIN account ON player_character.account_id = account.id "
@@ -594,6 +601,19 @@ public class PlayerCharacterDAO
     public List<Long> findProPlayerCharacterIds()
     {
         return template.query(FIND_PRO_PLAYER_CHARACTER_IDS, DAOUtils.LONG_MAPPER);
+    }
+
+    public List<Long> findCharacterIdsByProPlayerIds(Long... proPlayerIds)
+    {
+        if(proPlayerIds.length == 0) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource("proPlayerIds", Set.of(proPlayerIds));
+        return template.query
+        (
+            FIND_PLAYER_CHARACTER_IDS_BY_PRO_PLAYER_IDS,
+            params,
+            DAOUtils.LONG_MAPPER
+        );
     }
 
     public List<PlayerCharacter> findProPlayerCharacters()

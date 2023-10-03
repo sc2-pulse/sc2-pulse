@@ -5,8 +5,10 @@ package com.nephest.battlenet.sc2.web.controller.group;
 
 import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -31,6 +33,7 @@ implements HandlerMethodArgumentResolver
 
     private static final MethodParameter CHARACTER_PARAMETER;
     private static final MethodParameter CLAN_PARAMETER;
+    private static final MethodParameter PRO_PLAYER_PARAMETER;
     static
     {
         try
@@ -38,10 +41,11 @@ implements HandlerMethodArgumentResolver
             Method method = CharacterGroupArgumentResolver.class.getDeclaredMethod
             (
                 "getCharacterIdsDescriptor",
-                Set.class, Set.class
+                Set.class, Set.class, Set.class
             );
             CHARACTER_PARAMETER = new MethodParameter(method, 0);
             CLAN_PARAMETER = new MethodParameter(method, 1);
+            PRO_PLAYER_PARAMETER = new MethodParameter(method, 2);
         }
         catch (NoSuchMethodException e)
         {
@@ -51,25 +55,33 @@ implements HandlerMethodArgumentResolver
 
     public static final int CHARACTERS_MAX = 500;
     public static final int CLANS_MAX = 20;
+    public static final int PRO_PLAYERS_MAX = CHARACTERS_MAX / 10;
 
     private final RequestParamMethodArgumentResolver paramResolver
         = new RequestParamMethodArgumentResolver(true);
+    private final PlayerCharacterDAO playerCharacterDAO;
     private final ClanMemberDAO clanMemberDAO;
 
     @Autowired
-    public CharacterGroupArgumentResolver(ClanMemberDAO clanMemberDAO)
+    public CharacterGroupArgumentResolver
+    (
+        PlayerCharacterDAO playerCharacterDAO,
+        ClanMemberDAO clanMemberDAO
+    )
     {
+        this.playerCharacterDAO = playerCharacterDAO;
         this.clanMemberDAO = clanMemberDAO;
     }
 
     public static void checkIds
     (
         Set<Long> characterIds,
-        Set<Integer> clanIds
+        Set<Integer> clanIds,
+        Set<Long> proPlayerIds
     ) throws ServletRequestBindingException
     {
         String msg = null;
-        if(characterIds.isEmpty() && clanIds.isEmpty())
+        if(characterIds.isEmpty() && clanIds.isEmpty() && proPlayerIds.isEmpty())
         {
             msg = "At least one group id is required";
         }
@@ -80,6 +92,10 @@ implements HandlerMethodArgumentResolver
         else if(clanIds.size() > CLANS_MAX)
         {
             msg = "Max size of clans exceeded: " + CLANS_MAX;
+        }
+        else if(proPlayerIds.size() > PRO_PLAYERS_MAX)
+        {
+            msg = "Max size of pro players exceeded: " + PRO_PLAYERS_MAX;
         }
         if(msg != null) throw new ServletRequestBindingException(msg);
     }
@@ -104,16 +120,33 @@ implements HandlerMethodArgumentResolver
             .resolveArgument(CHARACTER_PARAMETER, mavContainer, webRequest, binderFactory);
         Set<Integer> clanIds = (Set<Integer>) paramResolver
             .resolveArgument(CLAN_PARAMETER, mavContainer, webRequest, binderFactory);
-        checkIds(characterIds, clanIds);
-        Set<Long> result = Stream.of(characterIds, resolveClans(clanIds))
-            .flatMap(Collection::stream)
-            .collect(Collectors.toSet());
+        Set<Long> proPlayerIds = (Set<Long>) paramResolver
+            .resolveArgument(PRO_PLAYER_PARAMETER, mavContainer, webRequest, binderFactory);
+        checkIds(characterIds, clanIds, proPlayerIds);
+        Set<Long> result = resolve(characterIds, clanIds, proPlayerIds);
         CharacterGroup annotation = parameter.getParameterAnnotation(CharacterGroup.class);
         if(annotation.flatRequired() && result.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Flattened character group is empty");
         if(result.size() > CHARACTERS_MAX)
             throw new ServletRequestBindingException("Max size of characters exceeded: " + CHARACTERS_MAX);
         return result;
+    }
+
+    public Set<Long> resolve
+    (
+        Set<Long> characterIds,
+        Set<Integer> clanIds,
+        Set<Long> proPlayerIds
+    )
+    {
+        return Stream.of
+        (
+            characterIds,
+            resolveClans(clanIds),
+            resolveProPlayers(proPlayerIds)
+        )
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
     }
 
     private Set<Long> resolveClans(Set<Integer> clanIds)
@@ -125,10 +158,19 @@ implements HandlerMethodArgumentResolver
             .collect(Collectors.toSet());
     }
 
+    private Set<Long> resolveProPlayers(Set<Long> proPlayerIds)
+    {
+        if(proPlayerIds.isEmpty()) return Set.of();
+
+        return new HashSet<>(playerCharacterDAO
+            .findCharacterIdsByProPlayerIds(proPlayerIds.toArray(Long[]::new)));
+    }
+
     private void getCharacterIdsDescriptor
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
-        @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds
+        @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
+        @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds
     )
     {
     }

@@ -20,17 +20,25 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.ProPlayer;
+import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.web.controller.GroupController;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -65,6 +73,15 @@ public class GroupIT
 
     @Autowired
     private ClanMemberDAO clanMemberDAO;
+
+    @Autowired
+    private ProPlayerDAO proPlayerDAO;
+
+    @Autowired
+    private ProPlayerAccountDAO proPlayerAccountDAO;
+
+    @Autowired
+    private LadderProPlayerDAO ladderProPlayerDAO;
 
     @Autowired
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
@@ -122,6 +139,12 @@ public class GroupIT
                     String.valueOf(initGroup.getClans().get(0).getId()),
                     String.valueOf(initGroup.getClans().get(1).getId())
                 )
+                .queryParam
+                (
+                    "proPlayerId",
+                    String.valueOf(initGroup.getProPlayers().get(0).getProPlayer().getId()),
+                    String.valueOf(initGroup.getProPlayers().get(1).getProPlayer().getId())
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
@@ -160,6 +183,13 @@ public class GroupIT
             .usingRecursiveComparison().isEqualTo(initGroup.getClans().get(0));
         Assertions.assertThat(result.getClans().get(1))
             .usingRecursiveComparison().isEqualTo(initGroup.getClans().get(1));
+
+        assertEquals(2, result.getProPlayers().size());
+        result.getProPlayers().sort(Comparator.comparing(lpp->lpp.getProPlayer().getId()));
+        Assertions.assertThat(result.getProPlayers().get(0))
+            .usingRecursiveComparison().isEqualTo(initGroup.getProPlayers().get(0));
+        Assertions.assertThat(result.getProPlayers().get(1))
+            .usingRecursiveComparison().isEqualTo(initGroup.getProPlayers().get(1));
     }
 
 
@@ -181,12 +211,17 @@ public class GroupIT
                 "clanId",
                 String.valueOf(group.getClans().get(0).getId())
             )
+            .queryParam
+            (
+                "proPlayerId",
+                String.valueOf(group.getProPlayers().get(0).getProPlayer().getId())
+            )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), Long[].class);
         Arrays.sort(result);
-        Long[] expectedResult = new Long[]{1L, 2L, 20L};
+        Long[] expectedResult = new Long[]{1L, 2L, 11L, 12L, 20L};
         assertArrayEquals(expectedResult, result);
     }
 
@@ -213,7 +248,28 @@ public class GroupIT
             new ClanMember(2L, clans[0].getId()),
             new ClanMember(3L, clans[1].getId())
         );
-        return new Group(List.of(), Arrays.asList(clans));
+
+        LocalDate bd1 = LocalDate.now().minusYears(20);
+        OffsetDateTime odt = OffsetDateTime.now();
+        ProPlayer[] proPlayers = new ProPlayer[]
+        {
+            new ProPlayer(null, 1L, "tag1", "name1", "US", bd1, 1, odt, 1),
+            new ProPlayer(null, 2L, "tag2", "name2", "US", bd1.minusDays(2), 2, odt, 2),
+            new ProPlayer(null, 3L, "tag3", "name3", "US", bd1.minusDays(3), 3, odt, 3)
+        };
+        for(ProPlayer proPlayer : proPlayers) proPlayerDAO.merge(proPlayer);
+        proPlayerAccountDAO.merge
+        (
+            new ProPlayerAccount(proPlayers[0].getId(), 11L),
+            new ProPlayerAccount(proPlayers[0].getId(), 12L),
+            new ProPlayerAccount(proPlayers[1].getId(), 13L)
+        );
+        List<LadderProPlayer> ladderProPlayers = ladderProPlayerDAO.findByIds(Arrays
+            .stream(proPlayers)
+            .map(ProPlayer::getId)
+            .toArray(Long[]::new));
+
+        return new Group(List.of(), Arrays.asList(clans), ladderProPlayers);
     }
 
     @Test
@@ -278,6 +334,18 @@ public class GroupIT
         mvc.perform(get("/api/group/clan/history")
                 .queryParam("characterId", "1")
                 .queryParam("limit", String.valueOf(GroupController.CLAN_MEMBER_EVENT_PAGE_SIZE_MAX + 1)))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void whenProPlayerSizeIsExceeded_thenBadRequest()
+    throws Exception
+    {
+        String[] longIdList = LongStream.range(0, CharacterGroupArgumentResolver.PRO_PLAYERS_MAX + 1)
+            .boxed()
+            .map(String::valueOf)
+            .toArray(String[]::new);
+        mvc.perform(get("/api/group/flat").queryParam("proPlayerId", longIdList))
             .andExpect(status().isBadRequest());
     }
 

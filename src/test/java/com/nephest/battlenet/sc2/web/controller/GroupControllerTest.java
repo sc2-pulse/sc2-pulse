@@ -29,7 +29,7 @@ public class GroupControllerTest
     {
         verifyBadRequest
         (
-            GroupController.areIdsInvalid(Set.of(), Set.of()).orElseThrow(),
+            GroupController.areIdsInvalid(Set.of(), Set.of(), Set.of()).orElseThrow(),
             "At least one clanId or characterId is required"
         );
     }
@@ -43,7 +43,7 @@ public class GroupControllerTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            GroupController.areIdsInvalid(bigCharacterSet, Set.of()).orElseThrow(),
+            GroupController.areIdsInvalid(bigCharacterSet, Set.of(), Set.of()).orElseThrow(),
             "Max size of characters exceeded: " + CharacterGroupArgumentResolver.CHARACTERS_MAX
         );
     }
@@ -57,8 +57,22 @@ public class GroupControllerTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            GroupController.areIdsInvalid(Set.of(), bigClanSet).orElseThrow(),
+            GroupController.areIdsInvalid(Set.of(), bigClanSet, Set.of()).orElseThrow(),
             "Max size of clans exceeded: " + CharacterGroupArgumentResolver.CLANS_MAX
+        );
+    }
+
+    @Test
+    public void whenProPlayerSizeIsExceeded_thenBadRequest()
+    {
+        Set<Long> bigProPlayerSet = LongStream
+            .range(0, CharacterGroupArgumentResolver.PRO_PLAYERS_MAX + 1)
+            .boxed()
+            .collect(Collectors.toSet());
+        verifyBadRequest
+        (
+            GroupController.areIdsInvalid(Set.of(), Set.of(), bigProPlayerSet).orElseThrow(),
+            "Max size of pro players exceeded: " + CharacterGroupArgumentResolver.PRO_PLAYERS_MAX
         );
     }
 
@@ -73,7 +87,11 @@ public class GroupControllerTest
             .range(0, CharacterGroupArgumentResolver.CLANS_MAX)
             .boxed()
             .collect(Collectors.toSet());
-        assertTrue(GroupController.areIdsInvalid(characterSet, clanSet).isEmpty());
+        Set<Long> proPlayerSet = LongStream
+            .range(0, CharacterGroupArgumentResolver.PRO_PLAYERS_MAX)
+            .boxed()
+            .collect(Collectors.toSet());
+        assertTrue(GroupController.areIdsInvalid(characterSet, clanSet, proPlayerSet).isEmpty());
     }
 
 }
