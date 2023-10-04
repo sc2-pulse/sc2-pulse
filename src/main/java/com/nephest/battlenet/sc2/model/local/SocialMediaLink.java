@@ -160,7 +160,7 @@ implements java.io.Serializable
         return isProtected;
     }
 
-    public void setIsProtected(Boolean isProtected)
+    public void setProtected(Boolean isProtected)
     {
         this.isProtected = isProtected;
     }
