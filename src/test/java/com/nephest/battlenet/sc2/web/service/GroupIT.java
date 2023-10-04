@@ -41,7 +41,10 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
@@ -236,18 +239,17 @@ public class GroupIT
             BaseLeagueTier.LeagueTierType.FIRST,
             30
         );
-        Clan[] clans = clanDAO.merge
-        (
+        Clan[] clans = clanDAO.merge(new LinkedHashSet<>(List.of(
             new Clan(null, "clan1", Region.EU, "clanName1"),
             new Clan(null, "clan2", Region.EU, "clanName2"),
             new Clan(null, "clan3", Region.EU, "clanName3")
-        );
-        clanMemberDAO.merge
-        (
+        )))
+            .toArray(Clan[]::new);
+        clanMemberDAO.merge(Set.of(
             new ClanMember(1L, clans[0].getId()),
             new ClanMember(2L, clans[0].getId()),
             new ClanMember(3L, clans[1].getId())
-        );
+        ));
 
         LocalDate bd1 = LocalDate.now().minusYears(20);
         OffsetDateTime odt = OffsetDateTime.now();
@@ -258,16 +260,15 @@ public class GroupIT
             new ProPlayer(null, 3L, "tag3", "name3", "US", bd1.minusDays(3), 3, odt, 3)
         };
         for(ProPlayer proPlayer : proPlayers) proPlayerDAO.merge(proPlayer);
-        proPlayerAccountDAO.merge
-        (
+        proPlayerAccountDAO.merge(Set.of(
             new ProPlayerAccount(proPlayers[0].getId(), 11L),
             new ProPlayerAccount(proPlayers[0].getId(), 12L),
             new ProPlayerAccount(proPlayers[1].getId(), 13L)
-        );
+        ));
         List<LadderProPlayer> ladderProPlayers = ladderProPlayerDAO.findByIds(Arrays
             .stream(proPlayers)
             .map(ProPlayer::getId)
-            .toArray(Long[]::new));
+            .collect(Collectors.toSet()));
 
         return new Group(List.of(), Arrays.asList(clans), ladderProPlayers);
     }
@@ -305,11 +306,13 @@ public class GroupIT
             BaseLeagueTier.LeagueTierType.FIRST,
             CharacterGroupArgumentResolver.CHARACTERS_MAX + 1
         );
-        Clan clan = clanDAO.merge(new Clan(null, "clan1", Region.EU, "clanName1"))[0];
-        ClanMember[] members = LongStream.range(1, CharacterGroupArgumentResolver.CHARACTERS_MAX + 2)
+        Clan clan = clanDAO.merge(Set.of(new Clan(null, "clan1", Region.EU, "clanName1")))
+            .iterator().next();
+        Set<ClanMember> members = LongStream
+            .range(1, CharacterGroupArgumentResolver.CHARACTERS_MAX + 2)
             .boxed()
             .map(i->new ClanMember(i, clan.getId()))
-            .toArray(ClanMember[]::new);
+            .collect(Collectors.toSet());
         clanMemberDAO.merge(members);
         mvc.perform(get("/api/group/flat").queryParam("clanId", "1"))
             .andExpect(status().isBadRequest());

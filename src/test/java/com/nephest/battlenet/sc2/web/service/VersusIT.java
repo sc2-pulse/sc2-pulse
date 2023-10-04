@@ -54,6 +54,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -177,8 +178,10 @@ public class VersusIT
             .findDivision(SeasonGenerator.DEFAULT_SEASON_ID, Region.EU, QueueType.LOTV_1V1, TeamType.ARRANGED, 10)
             .orElseThrow();
 
-        clan1 = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
-        clan2 = clanDAO.merge(new Clan(null, "clanTag2", Region.EU, "clanName2"))[0];
+        clan1 = clanDAO.merge(Set.of(new Clan(null, "clanTag1", Region.EU, "clanName1")))
+            .iterator().next();
+        clan2 = clanDAO.merge(Set.of(new Clan(null, "clanTag2", Region.EU, "clanName2")))
+            .iterator() .next();
 
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         Account acc2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#2"));
@@ -190,39 +193,35 @@ public class VersusIT
         PlayerCharacter charEu3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.EU, 3L, 3, "name#3"));
         PlayerCharacter charEu4 = playerCharacterDAO.merge(new PlayerCharacter(null, acc4.getId(), Region.EU, 4L, 4, "name#4"));
 
-        clanMemberDAO.merge
-        (
+        clanMemberDAO.merge(Set.of(
             new ClanMember(charEu1.getId(), clan1.getId()),
             new ClanMember(charEu2.getId(), clan1.getId()),
             new ClanMember(charEu3.getId(), clan2.getId())
-        );
+        ));
 
         team1 = createTeam(teamDAO, charEu1, division1v1);
         team2 = createTeam(teamDAO, charEu2, division1v1);
         team3 = createTeam(teamDAO, charEu3, division1v1);
         team4 = createTeam(teamDAO, charEu4, division1v1);
 
-        teamMemberDAO.merge
-        (
+        teamMemberDAO.merge(Set.of(
             new TeamMember(team1.getId(), charEu1.getId(), 1, 1, 1, 1),
             new TeamMember(team2.getId(), charEu2.getId(), 1, 1, 1, 1),
             new TeamMember(team3.getId(), charEu3.getId(), 1, 1, 1, 1),
             new TeamMember(team4.getId(), charEu4.getId(), 1, 1, 1, 1)
-        );
+        ));
 
         OffsetDateTime now = OffsetDateTime.now();
-        teamStateDAO.saveState
-        (
+        teamStateDAO.saveState(Set.of(
             new TeamState(team1.getId(), now, division1v1.getId(), 1, 1),
             new TeamState(team2.getId(), now, division1v1.getId(), 1, 1),
             new TeamState(team3.getId(), now, division1v1.getId(), 1, 1),
             new TeamState(team4.getId(), now, division1v1.getId(), 1, 1)
-        );
+        ));
 
-        SC2Map map = mapDAO.merge(new SC2Map(null, "map1"))[0];
+        SC2Map map = mapDAO.merge(Set.of(new SC2Map(null, "map1"))).iterator().next();
 
-        matches = matchDAO.merge
-        (
+        matches = matchDAO.merge(new LinkedHashSet<>(List.of(
             new Match(null, now.minusSeconds(1), BaseMatch.MatchType._1V1, map.getId(), Region.EU),
             new Match(null, now.minusSeconds(2), BaseMatch.MatchType._1V1, map.getId(), Region.EU),
             new Match(null, now.minusSeconds(3), BaseMatch.MatchType._1V1, map.getId(), Region.EU),
@@ -231,10 +230,10 @@ public class VersusIT
             new Match(null, now.minusSeconds(6), BaseMatch.MatchType._2V2, map.getId(), Region.EU),
             new Match(null, now.minusSeconds(7), BaseMatch.MatchType._1V1, map.getId(), Region.EU),
             new Match(null, now.minusSeconds(8), BaseMatch.MatchType.COOP, map.getId(), Region.EU) //invalid match type
-        );
+        )))
+            .toArray(Match[]::new);
 
-        matchParticipantDAO.merge
-        (
+        matchParticipantDAO.merge(Set.of(
             new MatchParticipant(matches[0].getId(), charEu2.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(matches[0].getId(), charEu3.getId(), BaseMatch.Decision.LOSS),
 
@@ -260,7 +259,7 @@ public class VersusIT
 
             new MatchParticipant(matches[5].getId(), charEu1.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(matches[5].getId(), charEu4.getId(), BaseMatch.Decision.LOSS)
-        );
+        ));
 
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, OffsetDateTime.MIN);
     }
@@ -277,7 +276,7 @@ public class VersusIT
 
     private static Team createTeam(TeamDAO teamDAO, PlayerCharacter character, Division division)
     {
-        return teamDAO.merge(new Team(
+        return teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -286,7 +285,7 @@ public class VersusIT
             }, Race.TERRAN),
             division.getId(), 1L, 1, 1, 1, 1,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
     }
 
     private <T> T getVersus

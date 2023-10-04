@@ -33,6 +33,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.assertj.core.api.Assertions;
@@ -122,19 +123,21 @@ public class ClanIT
             List.of(QueueType.LOTV_1V1), TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST,
             1
         );
-        Clan clan1 = clanDAO.merge(new Clan(null, "clan1", Region.EU, "clan1Name"))[0];
-        Clan clan2 = clanDAO.merge(new Clan(null, "clan2", Region.EU, "clan2Name"))[0];
-        ClanMember[] cm1 = template
+        Clan clan1 = clanDAO.merge(Set.of(new Clan(null, "clan1", Region.EU, "clan1Name")))
+            .iterator().next();
+        Clan clan2 = clanDAO.merge(Set.of(new Clan(null, "clan2", Region.EU, "clan2Name")))
+            .iterator().next();
+        Set<ClanMember> cm1 = template
             .queryForList("SELECT id FROM player_character", Long.class)
             .stream()
             .map(id->new ClanMember(id, clan1.getId()))
-            .toArray(ClanMember[]::new);
+            .collect(Collectors.toSet());
         clanMemberDAO.merge(cm1);
 
         //only clans with new stats are updated
         assertEquals(1, clanDAO.updateStats(List.of(clan1.getId(), clan2.getId())));
 
-        List<Clan> clans = clanDAO.findByIds(clan1.getId(), clan2.getId());
+        List<Clan> clans = clanDAO.findByIds(Set.of(clan1.getId(), clan2.getId()));
         clans.sort(Comparator.comparing(Clan::getId));
 
         /*
@@ -157,7 +160,7 @@ public class ClanIT
 
         //valid stats are not nullified
         template.execute("DELETE FROM clan_member");
-        ClanMember[] cm2 = template.queryForList
+        Set<ClanMember> cm2 = template.queryForList
         (
             "SELECT id "
             + "FROM player_character "
@@ -166,10 +169,10 @@ public class ClanIT
         )
             .stream()
             .map(id->new ClanMember(id, clan1.getId()))
-            .toArray(ClanMember[]::new);
+            .collect(Collectors.toSet());
         clanMemberDAO.merge(cm2);
         assertEquals(0, clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1));
-        Clan clan1WithStatsValid = clanDAO.findByIds(clan1.getId()).get(0);
+        Clan clan1WithStatsValid = clanDAO.findByIds(Set.of(clan1.getId())).get(0);
         assertEquals(14, clan1WithStatsValid.getMembers()); //all players
         assertEquals(7, clan1WithStatsValid.getActiveMembers()); //7-14 teams
         assertEquals(10, clan1WithStatsValid.getAvgRating()); // (7 + 8 + 9 + 10 + 11 + 12 + 13) / 6
@@ -178,7 +181,7 @@ public class ClanIT
 
         //invalid stats are nullified
         template.execute("DELETE FROM clan_member");
-        ClanMember[] cm3 = template.queryForList
+        Set<ClanMember> cm3 = template.queryForList
         (
             "SELECT id "
             + "FROM player_character "
@@ -187,10 +190,10 @@ public class ClanIT
         )
             .stream()
             .map(id->new ClanMember(id, clan1.getId()))
-            .toArray(ClanMember[]::new);
+            .collect(Collectors.toSet());
         clanMemberDAO.merge(cm3);
         assertEquals(1, clanDAO.nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1));
-        Clan clan1WithStatsNullified = clanDAO.findByIds(clan1.getId()).get(0);
+        Clan clan1WithStatsNullified = clanDAO.findByIds(Set.of(clan1.getId())).get(0);
         assertNull(clan1WithStatsNullified.getMembers());
         assertNull(clan1WithStatsNullified.getActiveMembers());
         assertNull(clan1WithStatsNullified.getAvgRating());
@@ -212,11 +215,11 @@ public class ClanIT
         );
 
         for(int i = 0; i < 10; i++)
-            clanDAO.merge(new Clan(null, "tag" + i, Region.EU, "name" + i));
+            clanDAO.merge(Set.of(new Clan(null, "tag" + i, Region.EU, "name" + i)));
         for(int i = 0; i < 5; i++)
         {
             final int fi = i;
-            ClanMember[] cm = template.queryForList
+            Set<ClanMember> cm = template.queryForList
             (
                 String.format
                 (
@@ -230,7 +233,7 @@ public class ClanIT
             )
                 .stream()
                 .map(id->new ClanMember(id, fi + 1))
-                .toArray(ClanMember[]::new);
+                .collect(Collectors.toSet());
             clanMemberDAO.merge(cm);
         }
 
@@ -339,9 +342,10 @@ public class ClanIT
     @Test
     public void whenUpdatingFromNullToNonNullName_thenUpdate()
     {
-        Clan nullNameClan = clanDAO.merge(new Clan(null, "tag", Region.EU, null))[0];
-        clanDAO.merge(new Clan(null, "tag", Region.EU, "name")); //update name
-        Clan foundClan = clanDAO.findByIds(nullNameClan.getId()).get(0);
+        Clan nullNameClan = clanDAO.merge(Set.of(new Clan(null, "tag", Region.EU, null)))
+            .iterator().next();
+        clanDAO.merge(Set.of(new Clan(null, "tag", Region.EU, "name"))); //update name
+        Clan foundClan = clanDAO.findByIds(Set.of(nullNameClan.getId())).get(0);
         assertEquals("name", foundClan.getName());
     }
 

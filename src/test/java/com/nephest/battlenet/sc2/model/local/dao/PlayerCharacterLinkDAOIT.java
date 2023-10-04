@@ -16,6 +16,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import javax.validation.ConstraintViolationException;
 import org.junit.jupiter.api.AfterAll;
@@ -75,10 +76,9 @@ public class PlayerCharacterLinkDAOIT
         assertThrows
         (
             ConstraintViolationException.class,
-            ()->playerCharacterLinkDAO.merge
-            (
+            ()->playerCharacterLinkDAO.merge(Set.of(
                 new PlayerCharacterLink(character.getId(), SocialMedia.ALIGULAC, "")
-            )
+            ))
         );
     }
 
@@ -89,13 +89,12 @@ public class PlayerCharacterLinkDAOIT
         PlayerCharacter character2 = playerCharacterDAO.merge(
             new PlayerCharacter(null, account.getId(), Region.US, 1L, 1, "name#1"));
 
-        playerCharacterLinkDAO.merge
-        (
+        playerCharacterLinkDAO.merge(Set.of(
             new PlayerCharacterLink(character.getId(), SocialMedia.ALIGULAC, "url11"),
             new PlayerCharacterLink(character.getId(), SocialMedia.LIQUIPEDIA, "url12"),
 
             new PlayerCharacterLink(character2.getId(), SocialMedia.ALIGULAC, "url21")
-        );
+        ));
 
         List<PlayerCharacterLink> links1 = playerCharacterLinkDAO.find(character.getId());
         assertEquals(2, links1.size());
@@ -103,13 +102,12 @@ public class PlayerCharacterLinkDAOIT
         verifyLink(links1.get(0), character.getId(), SocialMedia.ALIGULAC, "url11");
         verifyLink(links1.get(1), character.getId(), SocialMedia.LIQUIPEDIA, "url12");
 
-        playerCharacterLinkDAO.merge
-        (
+        playerCharacterLinkDAO.merge(Set.of(
             //updated
             new PlayerCharacterLink(character.getId(), SocialMedia.ALIGULAC, "url13"),
             //inserted
             new PlayerCharacterLink(character.getId(), SocialMedia.YOUTUBE, "url14")
-        );
+        ));
 
         List<PlayerCharacterLink> links2 = playerCharacterLinkDAO.find(character.getId());
         assertEquals(3, links2.size());
@@ -130,15 +128,14 @@ public class PlayerCharacterLinkDAOIT
         PlayerCharacter character3 = playerCharacterDAO.merge(
             new PlayerCharacter(null, account.getId(), Region.KR, 1L, 1, "name#1"));
 
-        playerCharacterLinkDAO.merge
-        (
+        playerCharacterLinkDAO.merge(Set.of(
             new PlayerCharacterLink(character.getId(), SocialMedia.ALIGULAC, "url1"),
             new PlayerCharacterLink(character.getId(), SocialMedia.LIQUIPEDIA, "url1"),
 
             new PlayerCharacterLink(character2.getId(), SocialMedia.ALIGULAC, "url1"),
 
             new PlayerCharacterLink(character3.getId(), SocialMedia.ALIGULAC, "url3")
-        );
+        ));
 
         List<PlayerCharacterLink> links = playerCharacterLinkDAO.find(SocialMedia.ALIGULAC, "url1");
         assertEquals(2, links.size());

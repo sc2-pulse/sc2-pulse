@@ -15,6 +15,7 @@ import java.net.URL;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserRequest;
 import org.springframework.security.oauth2.client.oidc.userinfo.OidcUserService;
@@ -111,7 +112,7 @@ implements Oauth2UserServiceRegistration<OidcUserRequest, OidcUser>
             .map(c->playerCharacterDAO.find(c.getRegion(), c.getRealm(), c.getBattlenetId()).orElse(null))
             .filter(Objects::nonNull)
             .findAny()
-            .map(c->accountDAO.findByIds(c.getAccountId()).get(0));
+            .map(c->accountDAO.findByIds(Set.of(c.getAccountId())).get(0));
     }
 
     protected void setService(OidcUserService service)

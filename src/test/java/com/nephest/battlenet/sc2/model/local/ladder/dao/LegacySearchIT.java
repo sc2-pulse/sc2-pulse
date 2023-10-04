@@ -33,6 +33,8 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -113,12 +115,12 @@ public class LegacySearchIT
             Team team3 = setupTeam(QueueType.LOTV_1V1, Region.US, 1, LEGACY_ID_3, BaseLeague.LeagueType.BRONZE, 3,
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
             team3.setRating(0L);
-            teamStateDAO.saveState(TeamState.of(team3, ODT.minusSeconds(1)));
+            teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(1))));
             //should be removed from the archive as not a min/max state
             team3.setRating(200L);
-            teamStateDAO.saveState(TeamState.of(team3, ODT.minusSeconds(2)));
+            teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(2))));
             team3.setRating(300L);
-            teamStateDAO.saveState(TeamState.of(team3, ODT.minusSeconds(3)));
+            teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(3))));
         }
     }
 
@@ -138,16 +140,18 @@ public class LegacySearchIT
             1L, wins, 0, 0, 1,
             OffsetDateTime.now()
         );
-        teamDAO.merge(team1);
-        TeamMember[] members = new TeamMember[queueType.getTeamFormat().getMemberCount(TeamType.ARRANGED)];
-        for(int i = 0; i < members.length; i++) members[i] =
-            new TeamMember(team1.getId(), i + 1L, wins, 0, 0, 0);
+        teamDAO.merge(Set.of(team1));
+        Set<TeamMember> members = IntStream
+            .range(0, queueType.getTeamFormat().getMemberCount(TeamType.ARRANGED))
+            .boxed()
+            .map(i->new TeamMember(team1.getId(), i + 1L, wins, 0, 0, 0))
+            .collect(Collectors.toSet());
         teamMemberDAO.merge(members);
-        teamStateDAO.saveState(TeamState.of(team1));
+        teamStateDAO.saveState(Set.of(TeamState.of(team1)));
         team1.setWins(team1.getWins() + 1);
         team1.setLastPlayed(OffsetDateTime.now());
-        teamDAO.merge(team1);
-        teamStateDAO.saveState(TeamState.of(team1));
+        teamDAO.merge(Set.of(team1));
+        teamStateDAO.saveState(Set.of(TeamState.of(team1)));
         return team1;
     }
 

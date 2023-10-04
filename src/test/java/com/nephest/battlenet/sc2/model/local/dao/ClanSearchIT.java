@@ -19,7 +19,11 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
@@ -64,10 +68,11 @@ public class ClanSearchIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
 
-            Clan[] clans = new Clan[CLAN_COUNT];
             Region[] regions = Region.values();
-            for(int i = 0; i < CLAN_COUNT; i++)
-                clans[i] = new Clan(null, "clan" + i, regions[i % regions.length], "clan" + i + "Name");
+            Set<Clan> clans = IntStream.range(0, CLAN_COUNT)
+                .boxed()
+                .map(i->new Clan(null, "clan" + i, regions[i % regions.length], "clan" + i + "Name"))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
             clanDAO.merge(clans);
             template.execute
             (

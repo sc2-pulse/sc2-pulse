@@ -1,9 +1,12 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -11,10 +14,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Repository
 public class AccountRoleDAO
@@ -60,22 +59,27 @@ public class AccountRoleDAO
         return roles;
     }
 
-    public int[] addRoles(long accountId, SC2PulseAuthority... roles)
+    public int[] addRoles(long accountId, Set<SC2PulseAuthority> roles)
     {
-        MapSqlParameterSource[] params = new MapSqlParameterSource[roles.length];
-        for(int i = 0; i < roles.length; i++) params[i] = new MapSqlParameterSource()
-            .addValue("accountId", accountId)
-            .addValue("role", conversionService.convert(roles[i], Integer.class));
+        if(roles.isEmpty()) return DAOUtils.EMPTY_INT_ARRAY;
+
+        MapSqlParameterSource[] params = roles.stream()
+            .map(role->new MapSqlParameterSource()
+                .addValue("accountId", accountId)
+                .addValue("role", conversionService.convert(role, Integer.class)))
+            .toArray(MapSqlParameterSource[]::new);
         return template.batchUpdate(ADD_ROLES_QUERY, params);
     }
 
-    public int removeRoles(long accountId, SC2PulseAuthority... roles)
+    public int removeRoles(long accountId, Set<SC2PulseAuthority> roles)
     {
+        if(roles.isEmpty()) return 0;
+
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("accountId", accountId)
-            .addValue("roles", Arrays.stream(roles)
+            .addValue("roles", roles.stream()
                 .map(r->conversionService.convert(r, Integer.class))
-                .collect(Collectors.toSet()));
+                .collect(Collectors.toList()));
         return template.update(REMOVE_ROLES_QUERY, params);
     }
 

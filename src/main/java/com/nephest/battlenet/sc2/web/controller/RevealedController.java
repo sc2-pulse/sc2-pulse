@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -34,7 +35,7 @@ public class RevealedController
     }
 
     @GetMapping("/player/{ids}/full")
-    public ResponseEntity<List<LadderProPlayer>> getLadderProPlayers(@PathVariable("ids") Long[] ids)
+    public ResponseEntity<List<LadderProPlayer>> getLadderProPlayers(@PathVariable("ids") Set<Long> ids)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderProPlayerDAO.findByIds(ids));
     }

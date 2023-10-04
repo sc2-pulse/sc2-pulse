@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,17 +83,17 @@ public class ProPlayerAccountIT
         proPlayerAccountDAO.merge
         (
             false,
-            new ProPlayerAccount(proPlayer1.getId(), acc1.getId(), OffsetDateTime.now(), true)
+            Set.of(new ProPlayerAccount(proPlayer1.getId(), acc1.getId(), OffsetDateTime.now(), true))
         );
 
         //protected links are not updated
         proPlayerAccountDAO.merge
         (
             true,
-            new ProPlayerAccount(proPlayer2.getId(), acc1.getId(), OffsetDateTime.now(), false)
+            Set.of(new ProPlayerAccount(proPlayer2.getId(), acc1.getId(), OffsetDateTime.now(), false))
         );
         proPlayerAccountDAO.link(proPlayer2.getId(), "tag1");
-        proPlayerAccountDAO.link(proPlayer2.getId(), 1L);
+        proPlayerAccountDAO.link(proPlayer2.getId(), Set.of(1L));
         ProPlayerAccount proPlayerAccount1 = template
             .queryForObject("SELECT " + ProPlayerAccountDAO.STD_SELECT
                     + " FROM pro_player_account", ProPlayerAccountDAO.getStdRowMapper());
@@ -103,12 +104,12 @@ public class ProPlayerAccountIT
         proPlayerAccountDAO.merge
         (
             false,
-            new ProPlayerAccount(proPlayer1.getId(), acc1.getId(), OffsetDateTime.now(), false)
+            Set.of(new ProPlayerAccount(proPlayer1.getId(), acc1.getId(), OffsetDateTime.now(), false))
         );
 
         //unprotected links are updated
         proPlayerAccountDAO.link(proPlayer2.getId(), "tag1");
-        proPlayerAccountDAO.link(proPlayer2.getId(), 1L);
+        proPlayerAccountDAO.link(proPlayer2.getId(), Set.of(1L));
         ProPlayerAccount proPlayerAccount2 = template
             .queryForObject("SELECT " + ProPlayerAccountDAO.STD_SELECT
                 + " FROM pro_player_account", ProPlayerAccountDAO.getStdRowMapper());

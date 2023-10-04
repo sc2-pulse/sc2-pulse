@@ -6,7 +6,6 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -153,12 +152,12 @@ public class ClanMemberEventDAO
         return STD_ROW_MAPPER;
     }
 
-    public int merge(ClanMemberEvent... events)
+    public int merge(Set<ClanMemberEvent> events)
     {
-        if(events.length == 0) return 0;
+        if(events.isEmpty()) return 0;
 
-        Set<Long> characters = new HashSet<>(events.length);
-        List<Object[]> data = Arrays.stream(events)
+        Set<Long> characters = new HashSet<>(events.size());
+        List<Object[]> data = events.stream()
             .filter(e->characters.add(e.getPlayerCharacterId()))
             .map(evt->new Object[]{
                 evt.getPlayerCharacterId(),

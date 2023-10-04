@@ -8,13 +8,13 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.BasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.Team;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashMap;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -88,11 +88,11 @@ implements BasicEntityOperations<Team>
     }
 
     @Override
-    public Team[] merge(Team... teamsToMerge)
+    public Set<Team> merge(Set<Team> teamsToMerge)
     {
-        if(teamsToMerge.length == 0) return new Team[0];
+        if(teamsToMerge.isEmpty()) return teamsToMerge;
 
-        List<Team> merged = new ArrayList<>();
+        Set<Team> merged = new HashSet<>();
         for(Team team : teamsToMerge)
         {
             Map<Team, Team> regionTeams = teams.get(team.getRegion());
@@ -104,7 +104,7 @@ implements BasicEntityOperations<Team>
             }
         }
 
-        return merged.toArray(Team[]::new);
+        return merged;
     }
 
     private static boolean mustUpdate(Team existingTeam, Team newTeam)

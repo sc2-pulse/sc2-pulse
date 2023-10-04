@@ -14,6 +14,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -366,12 +367,11 @@ public class ClanDAO
             .addValue("name", clan.getName());
     }
 
-    public Clan[] merge(Clan... clans)
+    public Set<Clan> merge(Set<Clan> clans)
     {
-        if(clans.length == 0) return new Clan[0];
+        if(clans.isEmpty()) return clans;
 
-        List<Object[]> clanData = Arrays.stream(clans)
-            .distinct()
+        List<Object[]> clanData = clans.stream()
             .map(clan->new Object[]{
                 clan.getTag(),
                 conversionService.convert(clan.getRegion(), Integer.class),
@@ -417,11 +417,11 @@ public class ClanDAO
         return template.query(GET_COUNT_BY_MIN_MEMBER_COUNT, params, DAOUtils.INT_EXTRACTOR);
     }
 
-    public List<Clan> findByIds(Integer... ids)
+    public List<Clan> findByIds(Set<Integer> ids)
     {
-        if(ids.length == 0) return List.of();
+        if(ids.isEmpty()) return List.of();
 
-        MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", List.of(ids));
+        MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", ids);
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 

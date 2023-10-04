@@ -13,6 +13,7 @@ import discord4j.common.util.Snowflake;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -44,12 +45,11 @@ public class DiscordCursorSearchIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            discordUserDAO.merge
-            (
+            discordUserDAO.merge(Set.of(
                 new DiscordUser(Snowflake.of(1L), "name1", 1),
                 new DiscordUser(Snowflake.of(2L), "name2", 2),
                 new DiscordUser(Snowflake.of(3L), "name3", 3)
-            );
+            ));
         }
     }
 

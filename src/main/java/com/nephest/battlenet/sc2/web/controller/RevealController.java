@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.web.service.ProPlayerForm;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
+import java.util.Set;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -52,7 +53,7 @@ public class RevealController
             OffsetDateTime.now(),
             false
         );
-        proPlayerAccountDAO.merge(proPlayerAccount);
+        proPlayerAccountDAO.merge(Set.of(proPlayerAccount));
     }
 
     @DeleteMapping("/{accountId}/{proPlayerId}")

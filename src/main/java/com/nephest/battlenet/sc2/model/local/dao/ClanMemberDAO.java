@@ -6,7 +6,6 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -91,29 +90,30 @@ extends StandardDAO
         super(template, "clan_member", TTL.toDays() + " days");
     }
 
-    public List<ClanMember> find(Long... playerCharacterIds)
+    public List<ClanMember> find(Set<Long> playerCharacterIds)
     {
+        if(playerCharacterIds.isEmpty()) return List.of();
+
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterIds", List.of(playerCharacterIds));
+            .addValue("playerCharacterIds", playerCharacterIds);
         return getTemplate().query(FIND_BY_CHARACTER_IDS, params, STD_ROW_MAPPER);
     }
 
-    public List<ClanMember> findByClanIds(Integer... clanIds)
+    public List<ClanMember> findByClanIds(Set<Integer> clanIds)
     {
-        if(clanIds.length == 0) return List.of();
+        if(clanIds.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("clanIds", Set.of(clanIds));
+            .addValue("clanIds", clanIds);
         return getTemplate().query(FIND_BY_CLAN_IDS, params, STD_ROW_MAPPER);
     }
 
-    public ClanMember[] merge(ClanMember... clans)
+    public Set<ClanMember> merge(Set<ClanMember> clans)
     {
-        if(clans.length == 0) return clans;
+        if(clans.isEmpty()) return clans;
 
-        List<Object[]> data = Arrays.stream(clans)
+        List<Object[]> data = clans.stream()
             .filter(Objects::nonNull)
-            .distinct()
             .map(clan->new Object[]{
                 clan.getPlayerCharacterId(),
                 clan.getClanId()
@@ -124,15 +124,12 @@ extends StandardDAO
         return clans;
     }
 
-    public int remove(Long... playerCharacterIds)
+    public int remove(Set<Long> playerCharacterIds)
     {
-        if(playerCharacterIds.length == 0) return 0;
+        if(playerCharacterIds.isEmpty()) return 0;
 
-        List<Long> uniqueIds = Arrays.stream(playerCharacterIds)
-            .distinct()
-            .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterIds", uniqueIds);
+            .addValue("playerCharacterIds", playerCharacterIds);
         return getTemplate().update(REMOVE_BY_CHARACTER_IDS, params);
     }
 

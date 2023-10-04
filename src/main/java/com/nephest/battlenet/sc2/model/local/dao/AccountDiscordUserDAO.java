@@ -6,7 +6,6 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.DiscordUserMeta;
 import discord4j.common.util.Snowflake;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Objects;
@@ -72,13 +71,12 @@ public class AccountDiscordUserDAO
     }
 
     @CacheEvict(allEntries = true, cacheNames = "discord-account-ids")
-    public int[] create(AccountDiscordUser... users)
+    public int[] create(Set<AccountDiscordUser> users)
     {
-        if(users.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
+        if(users.isEmpty()) return DAOUtils.EMPTY_INT_ARRAY;
 
-        MapSqlParameterSource[] params = Arrays.stream(users)
+        MapSqlParameterSource[] params = users.stream()
             .filter(Objects::nonNull)
-            .distinct()
             .map
             (
                 u->new MapSqlParameterSource()

@@ -1,18 +1,18 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.EvidenceVote;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.time.OffsetDateTime;
-import java.util.List;
 
 @Repository
 public class EvidenceVoteDAO
@@ -74,13 +74,14 @@ public class EvidenceVoteDAO
         return template.query(GET_ALL_QUERY, STD_ROW_MAPPER);
     }
 
-    public List<EvidenceVote> findByEvidenceIds(Integer... evidenceIds)
+    public List<EvidenceVote> findByEvidenceIds(Set<Integer> evidenceIds)
     {
-        if(evidenceIds.length == 0) return List.of();
+        if(evidenceIds.isEmpty()) return List.of();
+
         return template.query
         (
             GET_BY_EVIDENCE_IDS,
-            new MapSqlParameterSource().addValue("evidenceIds", List.of(evidenceIds)),
+            new MapSqlParameterSource().addValue("evidenceIds", evidenceIds),
             STD_ROW_MAPPER
         );
     }

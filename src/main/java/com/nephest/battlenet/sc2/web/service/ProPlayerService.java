@@ -27,6 +27,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -182,10 +184,9 @@ public class ProPlayerService
             socialMediaLinkDAO.merge
             (
                 true,
-                resolveValidLinks(Arrays.asList(links))
+                new LinkedHashSet<>(resolveValidLinks(Arrays.asList(links))
                     .collectList()
-                    .block()
-                    .toArray(SocialMediaLink[]::new)
+                    .block())
             );
             proPlayerAccountDAO.link(proPlayer.getId(), revealedProPlayer.getBnetTags());
         }
@@ -210,9 +211,9 @@ public class ProPlayerService
         List<ProPlayer> proPlayers
     )
     {
-        Long[] aligulacIds = proPlayers.stream()
+        Set<Long> aligulacIds = proPlayers.stream()
             .map(ProPlayer::getAligulacId)
-            .toArray(Long[]::new);
+            .collect(Collectors.toSet());
         return aligulacAPI.getPlayers(aligulacIds)
             .map(AligulacProPlayerRoot::getObjects)
             .map(Arrays::asList)
@@ -230,8 +231,8 @@ public class ProPlayerService
         List<AligulacProPlayer> aligulacProPlayers
     )
     {
-        ArrayList<ProTeamMember> members = new ArrayList<>();
-        ArrayList<Long> notMembers = new ArrayList<>();
+        Set<ProTeamMember> members = new HashSet<>();
+        Set<Long> notMembers = new HashSet<>();
         ArrayList<SocialMediaLink> links = new ArrayList<>(aligulacProPlayers.size() * 2);
         Map<Long, ProPlayer> aligulacIdMap = proPlayers.stream()
             .collect(Collectors.toMap(ProPlayer::getAligulacId, Function.identity()));
@@ -256,9 +257,9 @@ public class ProPlayerService
             links.addAll(extractLinks(proPlayer, aligulacProPlayer));
         }
         proPlayerDAO.mergeWithoutIds(proPlayers.toArray(ProPlayer[]::new));
-        proTeamMemberDAO.merge(members.toArray(new ProTeamMember[0]));
-        proTeamMemberDAO.remove(notMembers.toArray(Long[]::new));
-        socialMediaLinkDAO.merge(false, links.toArray(SocialMediaLink[]::new));
+        proTeamMemberDAO.merge(members);
+        proTeamMemberDAO.remove(notMembers);
+        socialMediaLinkDAO.merge(false, new LinkedHashSet<>(links));
         return aligulacProPlayers.size();
     }
 
@@ -286,7 +287,7 @@ public class ProPlayerService
     public Optional<ProPlayer> importProfile(String url)
     {
         Long aligulacId = getAligulacProfileId(url);
-        AligulacProPlayerRoot root = aligulacAPI.getPlayers(aligulacId).block();
+        AligulacProPlayerRoot root = aligulacAPI.getPlayers(Set.of(aligulacId)).block();
         if(root == null || root.getObjects().length == 0) return Optional.empty();
 
         Triple<ProPlayer, List<SocialMediaLink>, ProTeam> proPlayerData =
@@ -296,7 +297,6 @@ public class ProPlayerService
             proPlayerData.getLeft(),
             proPlayerData.getRight(),
             resolveValidLinks(proPlayerData.getMiddle()).collectList().block()
-                .toArray(SocialMediaLink[]::new)
         );
         return Optional.of(proPlayerData.getLeft());
     }
@@ -340,15 +340,15 @@ public class ProPlayerService
     }
 
     @Transactional
-    public void importProfile(ProPlayer proPlayer, ProTeam proTeam, SocialMediaLink... links)
+    public void importProfile(ProPlayer proPlayer, ProTeam proTeam, List<SocialMediaLink> links)
     {
         proPlayerDAO.merge(proPlayer);
         for(SocialMediaLink link : links) link.setProPlayerId(proPlayer.getId());
-        socialMediaLinkDAO.merge(false, links);
+        socialMediaLinkDAO.merge(false, new LinkedHashSet<>(links));
         if(proTeam != null)
         {
             proTeamDAO.merge(proTeam);
-            proTeamMemberDAO.merge(new ProTeamMember(proTeam.getId(), proPlayer.getId()));
+            proTeamMemberDAO.merge(Set.of(new ProTeamMember(proTeam.getId(), proPlayer.getId())));
         }
     }
 
@@ -373,14 +373,15 @@ public class ProPlayerService
      */
     public Mono<Integer> updateSocialMediaLinks(boolean ignoreParsingErrors)
     {
-        return Mono.fromCallable(()->socialMediaLinkDAO.findByTypes(SocialMedia.LIQUIPEDIA))
+        return Mono
+            .fromCallable(()->socialMediaLinkDAO.findByTypes(EnumSet.of(SocialMedia.LIQUIPEDIA)))
             .flatMapMany(links->getSocialMediaLinks(links, ignoreParsingErrors))
             .collectList()
             .flatMapMany(this::resolveValidLinks)
             .buffer(linkDbBatchSize)
             .flatMap(smLinks->Mono.fromCallable(()->
             {
-                socialMediaLinkDAO.merge(false, smLinks.toArray(SocialMediaLink[]::new));
+                socialMediaLinkDAO.merge(false, new LinkedHashSet<>(smLinks));
                 return smLinks.size();
             }))
             .reduce(0, Integer::sum)
@@ -414,7 +415,7 @@ public class ProPlayerService
             .flatMap(lpNames->
             {
                 Flux<LiquipediaPlayer> lpPlayers
-                    = liquipediaAPI.parsePlayers(lpNames.toArray(String[]::new));
+                    = liquipediaAPI.parsePlayers(Set.copyOf(lpNames));
                 return ignoreParsingErrors
                     ? lpPlayers.doOnError(ex->LOG.error(ex.getMessage(), ex)).onErrorComplete()
                     : lpPlayers;
@@ -489,22 +490,22 @@ public class ProPlayerService
         ProPlayer mergedProPlayer = proPlayerDAO.mergeVersioned(proPlayer);
         links.forEach(l->l.setProPlayerId(mergedProPlayer.getId()));
 
-        socialMediaLinkDAO.merge(false, links.toArray(SocialMediaLink[]::new));
+        socialMediaLinkDAO.merge(false, new LinkedHashSet<>(links));
         Set<SocialMedia> savedMedia = links.stream()
             .map(SocialMediaLink::getType)
             .collect(Collectors.toSet());
-        SocialMediaLink[] removedLinks = PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.stream()
+        Set<SocialMediaLink> removedLinks = PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.stream()
             .filter(media->!savedMedia.contains(media))
             .map(media->new SocialMediaLink(mergedProPlayer.getId(), media, null))
-            .toArray(SocialMediaLink[]::new);
+            .collect(Collectors.toCollection(LinkedHashSet::new));
         socialMediaLinkDAO.remove(removedLinks);
-        return ladderProPlayerDAO.findByIds(mergedProPlayer.getId()).get(0);
+        return ladderProPlayerDAO.findByIds(Set.of(mergedProPlayer.getId())).get(0);
     }
 
     private Mono<Integer> updateSocialMediaLinkMetadata()
     {
         return WebServiceUtil.blockingCallable(()->socialMediaLinkDAO
-            .findByTypes(socialMediaLinkUpdaters.keySet().toArray(SocialMedia[]::new)))
+            .findByTypes(socialMediaLinkUpdaters.keySet()))
             .flatMapIterable(links->links.stream().collect(Collectors.groupingBy(SocialMediaLink::getType)).entrySet())
             .flatMap(entry->{
                 SocialMediaLinkUpdater updater = socialMediaLinkUpdaters.get(entry.getKey());
@@ -514,8 +515,8 @@ public class ProPlayerService
             })
             .buffer(linkDbBatchSize)
             .flatMap(links->WebServiceUtil.blockingCallable(()->
-                socialMediaLinkDAO.merge(links.toArray(SocialMediaLink[]::new))))
-            .map(result->result.length)
+                socialMediaLinkDAO.merge(new LinkedHashSet<>(links))))
+            .map(Collection::size)
             .reduce(Integer::sum)
             .doOnNext(count->{if(count > 0) LOG.info("Updated metadata of {} social media links", count);});
     }

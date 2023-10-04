@@ -52,12 +52,14 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -112,6 +114,9 @@ public class BlizzardPrivacyServiceTest
 
     @Captor
     private ArgumentCaptor<OffsetDateTime> offsetDateTimeArgumentCaptor;
+
+    @Captor
+    private ArgumentCaptor<Set<PlayerCharacter>> characterArgumentCaptor;
 
     @Mock
     private ExecutorService executor;
@@ -263,9 +268,13 @@ public class BlizzardPrivacyServiceTest
             .thenReturn(Flux.just(Tuples.of(profile1, character1), Tuples.of(profile2, character2)));
 
         privacyService.update();
-        ArgumentCaptor<PlayerCharacter> characterArgumentCaptor = ArgumentCaptor.forClass(PlayerCharacter.class);
         verify(playerCharacterDAO).updateCharacters(characterArgumentCaptor.capture());
-        List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues();
+        List<PlayerCharacter> argChars = characterArgumentCaptor
+            .getAllValues()
+            .stream()
+            .flatMap(Collection::stream)
+            .sorted(PlayerCharacter.NATURAL_ID_COMPARATOR)
+            .collect(Collectors.toList());
         assertEquals(2, argChars.size());
         assertEquals(character1, argChars.get(0));
         assertEquals(character2, argChars.get(1));
@@ -324,9 +333,12 @@ public class BlizzardPrivacyServiceTest
 
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
         PlayerCharacter character2 = new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2");
-        ArgumentCaptor<PlayerCharacter> characterArgumentCaptor = ArgumentCaptor.forClass(PlayerCharacter.class);
         verify(playerCharacterDAO).updateCharacters(characterArgumentCaptor.capture());
-        List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues();
+        List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues()
+            .stream()
+            .flatMap(Collection::stream)
+            .sorted(PlayerCharacter.NATURAL_ID_COMPARATOR)
+            .collect(Collectors.toList());
         assertEquals(2, argChars.size());
         assertEquals(character1, argChars.get(0));
         assertEquals(character2, argChars.get(1));

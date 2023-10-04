@@ -59,6 +59,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -231,9 +232,10 @@ public class MatchIT
         //data should be updated
         proTeamDAO.merge(new ProTeam(null, 2L, "proTeamNam e", "proTeamShortName_remove"));
         ProTeam proTeam = proTeamDAO.merge(new ProTeam(null, 1L, "proTeamName", "proTeamShortName"));
-        proTeamMemberDAO.merge(new ProTeamMember(proTeam.getId(), proPlayer.getId()));
+        proTeamMemberDAO.merge(Set.of(new ProTeamMember(proTeam.getId(), proPlayer.getId())));
         proPlayerAccountDAO.link(proPlayer.getId(), "tag#1");
-        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
+        Clan clan = clanDAO.merge(Set.of(new Clan(null, "clanTag", Region.EU, "clanName")))
+            .iterator().next();
         PlayerCharacter charEu1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
         PlayerCharacter charEu2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2"));
         PlayerCharacter charEu3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.EU, 3L, 3, "name#3"));
@@ -260,12 +262,11 @@ public class MatchIT
             .map(PlayerCharacter::getId)
             .map(String::valueOf)
             .collect(Collectors.joining(","));
-        clanMemberDAO.merge
-        (
+        clanMemberDAO.merge(Set.of(
             new ClanMember(charEu1.getId(), clan.getId()),
             new ClanMember(charEu2.getId(), clan.getId())
-        );
-        Team team4v4Win = teamDAO.merge(new Team(
+        ));
+        Team team4v4Win = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -277,8 +278,8 @@ public class MatchIT
             }),
             division4v4.getId(), 1L, 1, 1, 1, 1,
             OffsetDateTime.now()
-        ))[0];
-        Team team4v4Loss = teamDAO.merge(new Team(
+        ))).iterator().next();
+        Team team4v4Loss = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_4V4, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -290,8 +291,8 @@ public class MatchIT
             }),
             division4v4_2.getId(), 2L, 2, 2, 2, 2,
             OffsetDateTime.now()
-        ))[0];
-        Team team2v2Win1 = teamDAO.merge(new Team(
+        ))).iterator().next();
+        Team team2v2Win1 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -300,8 +301,8 @@ public class MatchIT
             }),
             division2v2.getId(), 1L, 1, 1, 1, 1,
             OffsetDateTime.now()
-        ))[0];
-        Team team2v2Win2 = teamDAO.merge(new Team(
+        ))).iterator().next();
+        Team team2v2Win2 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -310,8 +311,8 @@ public class MatchIT
             }),
             division2v2.getId(), 1L, 1, 1, 1, 1,
             OffsetDateTime.now()
-        ))[0];
-        Team team2v2Loss1 = teamDAO.merge(new Team(
+        ))).iterator().next();
+        Team team2v2Loss1 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -320,8 +321,8 @@ public class MatchIT
             }),
             division2v2.getId(), 2L, 2, 2, 2, 2,
             OffsetDateTime.now()
-        ))[0];
-        Team team2v2Loss2 = teamDAO.merge(new Team(
+        ))).iterator().next();
+        Team team2v2Loss2 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.RANDOM),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -330,9 +331,9 @@ public class MatchIT
             }),
             division2v2.getId(), 2L, 2, 2, 2, 2,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
 
-        Team team1v1Win = teamDAO.merge(new Team(
+        Team team1v1Win = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.KR,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -341,8 +342,8 @@ public class MatchIT
             }, Race.TERRAN),
             division1v1.getId(), 1L, 1, 1, 1, 1,
             OffsetDateTime.now()
-        ))[0];
-        Team team1v1Loss = teamDAO.merge(new Team(
+        ))).iterator().next();
+        Team team1v1Loss = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.KR,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -351,9 +352,9 @@ public class MatchIT
             }, Race.PROTOSS),
             division1v1.getId(), 2L, 2, 2, 2, 2,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
 
-        Team team1v1Win4 = teamDAO.merge(new Team(
+        Team team1v1Win4 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -362,8 +363,8 @@ public class MatchIT
             }, Race.TERRAN),
             division1v1_2.getId(), 1L, 1, 1, 1, 1,
             OffsetDateTime.now()
-        ))[0];
-        Team team1v1Loss4 = teamDAO.merge(new Team(
+        ))).iterator().next();
+        Team team1v1Loss4 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -372,9 +373,9 @@ public class MatchIT
             }, Race.PROTOSS),
             division1v1_2.getId(), 2L, 2, 2, 2, 2,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
 
-        Team team1v1WinInvalidState = teamDAO.merge(new Team(
+        Team team1v1WinInvalidState = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -383,8 +384,8 @@ public class MatchIT
             }, Race.TERRAN),
             division1v1.getId(), 1L, 1, 1, 1, 1,
             OffsetDateTime.now()
-        ))[0];
-        Team team1v1LossInvalidState = teamDAO.merge(new Team(
+        ))).iterator().next();
+        Team team1v1LossInvalidState = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -393,9 +394,8 @@ public class MatchIT
             }, Race.PROTOSS),
             division1v1.getId(), 1L, 1, 1, 1, 1,
             OffsetDateTime.now()
-        ))[0];
-        teamMemberDAO.merge
-        (
+        ))).iterator().next();
+        teamMemberDAO.merge(Set.of(
             new TeamMember(team4v4Win.getId(), charEu1.getId(), 1, 0, 0, 0),
             new TeamMember(team4v4Win.getId(), charEu2.getId(), 1, 0, 0, 0),
             new TeamMember(team4v4Win.getId(), charEu3.getId(), 1, 0, 0, 0),
@@ -419,25 +419,24 @@ public class MatchIT
 
             new TeamMember(team1v1WinInvalidState.getId(), charKr3.getId(), 1, 0, 0, 0),
             new TeamMember(team1v1LossInvalidState.getId(), charKr4.getId(), 1, 0, 0, 0)
-        );
+        ));
         OffsetDateTime now = OffsetDateTime.now().minusSeconds(1);
-        SC2Map map1v1_1 = mapDAO.merge(new SC2Map(null, "map1v1_1"))[0];
-        SC2Map map1v1_2 = mapDAO.merge(new SC2Map(null, "map1v1_2"))[0];
-        SC2Map map1v1_3 = mapDAO.merge(new SC2Map(null, "map1v1_3"))[0];
-        SC2Map map1v1_4 = mapDAO.merge(new SC2Map(null, "map1v1_4"))[0];
-        SC2Map map1v1_5 = mapDAO.merge(new SC2Map(null, "map1v1_5"))[0];
-        SC2Map map1v1_6 =mapDAO.merge(new SC2Map(null, "map1v1_6"))[0];
-        SC2Map map2v2 = mapDAO.merge(new SC2Map(null, "map2v2"))[0];
-        SC2Map map4v4 = mapDAO.merge(new SC2Map(null, "map4v4"))[0];
-        Match[] matches1 = matchDAO.merge
-        (
+        SC2Map map1v1_1 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_1"))).iterator().next();
+        SC2Map map1v1_2 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_2"))).iterator().next();
+        SC2Map map1v1_3 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_3"))).iterator().next();
+        SC2Map map1v1_4 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_4"))).iterator().next();
+        SC2Map map1v1_5 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_5"))).iterator().next();
+        SC2Map map1v1_6 =mapDAO.merge(Set.of(new SC2Map(null, "map1v1_6"))).iterator().next();
+        SC2Map map2v2 = mapDAO.merge(Set.of(new SC2Map(null, "map2v2"))).iterator().next();
+        SC2Map map4v4 = mapDAO.merge(Set.of(new SC2Map(null, "map4v4"))).iterator().next();
+        Match[] matches1 = matchDAO.merge(new LinkedHashSet<>(List.of(
             new Match(null, now, BaseMatch.MatchType._4V4, map4v4.getId(), Region.EU), //insert
             new Match(null, now, BaseMatch.MatchType._4V4, map4v4.getId(), Region.EU), //identical, insert without errors
             new Match(null, now, BaseMatch.MatchType._2V2, map2v2.getId(), Region.US) //insert
-        );
+        )))
+            .toArray(Match[]::new);
         Arrays.sort(matches1, Match.NATURAL_ID_COMPARATOR);
-        assertEquals(3, matches1.length);
-        assertEquals(matches1[1].getId(), matches1[2].getId()); //clone object is updated, ASC order
+        assertEquals(2, matches1.length);
         Match match4v4 = new Match(null, now, BaseMatch.MatchType._4V4, map4v4.getId(), Region.EU);
         Match match2v2 = new Match(null, now, BaseMatch.MatchType._2V2, map2v2.getId(), Region.US);
         Match match1v1_1 = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.KR);
@@ -449,8 +448,7 @@ public class MatchIT
         Match match1v1InvalidCount =  new Match(null, now, BaseMatch.MatchType._1V1, map1v1_4.getId(), Region.KR);
         Match match1v1InvalidDecision = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_5.getId(), Region.KR);
         Match match1v1UnidentifiedMembers = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_6.getId(), Region.KR);
-        matchDAO.merge
-        (
+        matchDAO.merge(Set.of(
             match4v4, //update
             match2v2, //update
             match1v1_1, //insert...
@@ -461,16 +459,12 @@ public class MatchIT
             match1v1InvalidCount,
             match1v1InvalidDecision,
             match1v1UnidentifiedMembers
-        );
-        matchParticipantDAO.merge
-        (
-            //skip duplicate, order by decision ASC
+        ));
+        matchParticipantDAO.merge(Set.of(
             new MatchParticipant(match4v4.getId(), charEu1.getId(), BaseMatch.Decision.LOSS),
-            new MatchParticipant(match4v4.getId(), charEu1.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(match4v4.getId(), charEu2.getId(), BaseMatch.Decision.LOSS)
-        );
-        matchParticipantDAO.merge
-        (
+        ));
+        matchParticipantDAO.merge(Set.of(
             new MatchParticipant(match4v4.getId(), charEu1.getId(), BaseMatch.Decision.WIN), //nothing
             new MatchParticipant(match4v4.getId(), charEu2.getId(), BaseMatch.Decision.WIN), //update, was loss
             new MatchParticipant(match4v4.getId(), charEu3.getId(), BaseMatch.Decision.WIN),
@@ -507,7 +501,7 @@ public class MatchIT
 
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr1.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr2.getId(), BaseMatch.Decision.LOSS)
-        );
+        ));
         TeamState state4v4Win = TeamState.of(team4v4Win, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         TeamState state4v4Loss = TeamState.of(team4v4Loss, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES));
         TeamState state4v4Loss2 = TeamState.of(team4v4Loss, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES - 1));
@@ -524,21 +518,21 @@ public class MatchIT
         TeamState state1v1Loss3 = TeamState.of(team1v1Loss, now.plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1));
         TeamState state1v1Win4 = TeamState.of(team1v1Win4, now);
         TeamState state1v1Loss4 = TeamState.of(team1v1Loss4, now);
-        teamStateDAO.saveState(
+        teamStateDAO.saveState(Set.of(
             state4v4Win, state4v4Loss, state4v4Loss2,
             state2v2Win1, state2v2Win2, state2v2Loss1, state2v2Loss2,
             state1v1Win0, state1v1Win1, state1v1Loss1, state1v1Win2, state1v1Win3, state1v1Loss3, state1v1Win4, state1v1Loss4,
             TeamState.of(team1v1WinInvalidState, now.minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES + 1)),
             TeamState.of(team1v1LossInvalidState, now.minusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES + 1))
-        );
+        ));
 
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, now);
         //merging eralier will prevent all participants from identifying. Merging here to simulate partly
         //unidentified team
-        matchParticipantDAO.merge(
+        matchParticipantDAO.merge(Set.of(
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr3.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(match1v1UnidentifiedMembers.getId(), charKr4.getId(), BaseMatch.Decision.LOSS)
-        );
+        ));
 
         List<LadderMatch> matches4v4 = WebServiceTestUtil.getObject
         (
@@ -785,7 +779,7 @@ public class MatchIT
         PlayerCharacter charEu2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2"));
         PlayerCharacter charEu3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.EU, 3L, 3, "name#3"));
 
-        SC2Map map1v1_1 = mapDAO.merge(new SC2Map(null, "map1v1_1"))[0];
+        SC2Map map1v1_1 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_1"))).iterator().next();
 
         OffsetDateTime now = OffsetDateTime.now();
         Match match1v1_1 = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
@@ -796,17 +790,15 @@ public class MatchIT
         //null duration, there is no previous match
         Match match1v1_5 = new Match(null, match1v1_4.getDate().minusSeconds(MatchDAO.DURATION_MAX + 1), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
 
-        matchDAO.merge
-        (
+        matchDAO.merge(Set.of(
             match1v1_1,
             match1v1_2,
             match1v1_3,
             match1v1_4,
             match1v1_5
-        );
+        ));
 
-        matchParticipantDAO.merge
-        (
+        matchParticipantDAO.merge(Set.of(
             new MatchParticipant(match1v1_1.getId(), charEu1.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(match1v1_1.getId(), charEu2.getId(), BaseMatch.Decision.LOSS),
 
@@ -820,7 +812,7 @@ public class MatchIT
 
             new MatchParticipant(match1v1_5.getId(), charEu1.getId(), BaseMatch.Decision.WIN),
             new MatchParticipant(match1v1_5.getId(), charEu2.getId(), BaseMatch.Decision.LOSS)
-        );
+        ));
 
         assertEquals(3, matchDAO.updateDuration(now.minusDays(1)));
 

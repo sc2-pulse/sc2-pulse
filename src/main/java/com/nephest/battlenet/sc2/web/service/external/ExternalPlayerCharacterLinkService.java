@@ -8,9 +8,9 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -67,7 +67,7 @@ public class ExternalPlayerCharacterLinkService
             .map(PlayerCharacterLink::getType)
             .collect(Collectors.toSet());
 
-        List<PlayerCharacterLink> validResolvedLinks = new ArrayList<>(resolvedLinks.size());
+        Set<PlayerCharacterLink> validResolvedLinks = new LinkedHashSet<>(resolvedLinks.size());
         for(PlayerCharacterLink link : resolvedLinks)
             if(link.getRelativeUrl() != null)
                 validResolvedLinks.add(link);
@@ -110,14 +110,14 @@ public class ExternalPlayerCharacterLinkService
             .flatMap(Function.identity());
     }
 
-    private void saveStaticLinks(List<PlayerCharacterLink> missingLinks)
+    private void saveStaticLinks(Set<PlayerCharacterLink> missingLinks)
     {
         if(missingLinks.isEmpty()) return;
 
-        List<PlayerCharacterLink> linksToSave = missingLinks.stream()
+        Set<PlayerCharacterLink> linksToSave = missingLinks.stream()
             .filter(link->resolvers.get(link.getType()).isStatic())
-            .collect(Collectors.toList());
-        playerCharacterLinkDAO.merge(linksToSave.toArray(PlayerCharacterLink[]::new));
+            .collect(Collectors.toCollection(LinkedHashSet::new));
+        playerCharacterLinkDAO.merge(linksToSave);
     }
 
 }

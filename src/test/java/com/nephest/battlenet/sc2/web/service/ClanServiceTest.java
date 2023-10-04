@@ -28,12 +28,14 @@ import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Instant;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
@@ -71,6 +73,9 @@ public class ClanServiceTest
 
     @Mock
     private ExecutorService executor;
+
+    @Captor
+    private ArgumentCaptor<Set<ClanMember>> clanMemberCaptor;
 
     private ClanService clanService;
     private ClanService nestedClanService;
@@ -166,7 +171,7 @@ public class ClanServiceTest
         update();
         assertEquals(33, clanService.getStatsCursor().getValue());
     }
-    
+
     @Test
     public void testUpdateInactiveClanMembers()
     {
@@ -196,22 +201,21 @@ public class ClanServiceTest
         when(api.getLegacyProfiles(inactiveMembers, false)).thenReturn(apiData);
         when(clanDAO.merge(any())).thenAnswer(inv->{
             for(int i = 0; i < inv.getArguments().length; i++)
-                inv.getArgument(i, Clan.class).setId(i);
-            return new Clan[]{};
+                ((Clan)(inv.getArgument(i, Set.class).iterator().next())).setId(i);
+            return Set.of();
         });
         clanService.getInactiveClanMembersUpdated().setValue(Instant.now().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME));
 
-        ArgumentCaptor<ClanMember> clanMemberCaptor = ArgumentCaptor.forClass(ClanMember.class);
         Instant beforeUpdate = Instant.now();
         update();
         verify(clanMemberDAO).removeExpired();
         //clan membership dropped
-        verify(clanMemberDAO).remove(2L);
+        verify(clanMemberDAO).remove(Set.of(2L));
         verify(clanMemberDAO).merge(clanMemberCaptor.capture());
         assertEquals(1, clanMemberCaptor.getAllValues().size());
 
         //clan membership updated
-        ClanMember cm1 = clanMemberCaptor.getValue();
+        ClanMember cm1 = clanMemberCaptor.getValue().iterator().next();
         assertEquals(inactiveMembers.get(0).getId(), cm1.getPlayerCharacterId());
         assertEquals(0, cm1.getClanId());
 

@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -104,7 +105,7 @@ public class ProPlayerAccountDAO
             .addValue("protected", proPlayerAccount.isProtected() ? true : null);
     }
 
-    public int[] merge(ProPlayerAccount... proPlayerAccounts)
+    public int[] merge(Set<ProPlayerAccount> proPlayerAccounts)
     {
         return merge(false, proPlayerAccounts);
     }
@@ -118,16 +119,14 @@ public class ProPlayerAccountDAO
      * @param proPlayerAccounts links to merge
      * @return number of merged links
      */
-    public int[] merge(boolean isProtected, ProPlayerAccount... proPlayerAccounts)
+    public int[] merge(boolean isProtected, Set<ProPlayerAccount> proPlayerAccounts)
     {
-        if(proPlayerAccounts.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
+        if(proPlayerAccounts.isEmpty()) return DAOUtils.EMPTY_INT_ARRAY;
 
-        MapSqlParameterSource[] params = new MapSqlParameterSource[proPlayerAccounts.length];
-        for(int i = 0; i < proPlayerAccounts.length; i++)
-        {
-            proPlayerAccounts[i].setUpdated(OffsetDateTime.now());
-            params[i] = createParameterSource(proPlayerAccounts[i]);
-        }
+        MapSqlParameterSource[] params = proPlayerAccounts.stream()
+            .peek(proPlayerAccount->proPlayerAccount.setUpdated(OffsetDateTime.now()))
+            .map(this::createParameterSource)
+            .toArray(MapSqlParameterSource[]::new);
 
         return template.batchUpdate(isProtected ? PROTECTED_MERGE_QUERY : MERGE_QUERY, params);
     }
@@ -157,15 +156,18 @@ public class ProPlayerAccountDAO
      * @param playerCharacterBattlenetIds character battle net id array
      * @return number of merged links
      */
-    public int[] link(Long proPlayerId, Long... playerCharacterBattlenetIds)
+    public int[] link(Long proPlayerId, Set<Long> playerCharacterBattlenetIds)
     {
-        MapSqlParameterSource[] params = new MapSqlParameterSource[playerCharacterBattlenetIds.length];
-        for(int i = 0; i < playerCharacterBattlenetIds.length; i++)
-            params[i] = new MapSqlParameterSource()
+        if(playerCharacterBattlenetIds.isEmpty()) return new int[0];
+
+        Integer globalPartition = conversionService.convert(Partition.GLOBAL, Integer.class);
+        MapSqlParameterSource[] params = playerCharacterBattlenetIds.stream()
+            .map(playerCharacterBattlenetId->new MapSqlParameterSource()
                 .addValue("proPlayerId", proPlayerId)
-                .addValue("playerCharacterBattlenetId", playerCharacterBattlenetIds[i])
+                .addValue("playerCharacterBattlenetId", playerCharacterBattlenetId)
                 //sc2revealed has global partition only
-                .addValue("partition", conversionService.convert(Partition.GLOBAL, Integer.class));
+                .addValue("partition", globalPartition))
+            .toArray(MapSqlParameterSource[]::new);
 
         return template.batchUpdate(LINK_BY_PLAYER_CHARACTER_ID_QUERY, params);
     }

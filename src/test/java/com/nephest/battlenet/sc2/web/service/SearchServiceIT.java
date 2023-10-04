@@ -23,6 +23,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -101,8 +102,8 @@ public class SearchServiceIT
             );
 
             for(int i = 0; i < CharacterController.SEARCH_SUGGESTIONS_SIZE + 1; i++)
-                clanDAO.merge(new Clan(null, "a" + Character.toString('a' + i), Region.EU, null));
-            clanDAO.merge(new Clan(null, "b" + Character.toString('a' + (int) bIx), Region.EU, null));
+                clanDAO.merge(Set.of(new Clan(null, "a" + Character.toString('a' + i), Region.EU, null)));
+            clanDAO.merge(Set.of(new Clan(null, "b" + Character.toString('a' + (int) bIx), Region.EU, null)));
             template.update("UPDATE clan SET active_members = id");
         }
     }

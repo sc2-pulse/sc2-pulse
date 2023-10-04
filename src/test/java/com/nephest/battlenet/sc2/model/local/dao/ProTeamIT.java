@@ -12,6 +12,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
@@ -60,7 +61,7 @@ public class ProTeamIT
         ProTeam team2 = proTeamDAO.merge(new ProTeam(null, 2L, "name2", "sn2"));
         ProTeam team3 = proTeamDAO.merge(new ProTeam(null, 3L, "name3", "sn3"));
 
-        List<ProTeam> teams = proTeamDAO.find(team1.getId(), team3.getId());
+        List<ProTeam> teams = proTeamDAO.find(Set.of(team1.getId(), team3.getId()));
         assertEquals(2, teams.size());
         teams.sort(Comparator.comparing(ProTeam::getId));
         Assertions.assertThat(teams.get(0))

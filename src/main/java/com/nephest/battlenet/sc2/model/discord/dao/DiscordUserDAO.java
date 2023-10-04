@@ -7,10 +7,10 @@ import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import discord4j.common.util.Snowflake;
 import java.sql.Types;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -117,12 +117,12 @@ public class DiscordUserDAO
         this.template = template;
     }
 
-    public List<DiscordUser> find(Snowflake... ids)
+    public List<DiscordUser> find(Set<Snowflake> ids)
     {
-        if(ids.length == 0) return List.of();
+        if(ids.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("ids", Arrays.stream(ids).map(Snowflake::asLong).collect(Collectors.toList()));
+            .addValue("ids", ids.stream().map(Snowflake::asLong).collect(Collectors.toList()));
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
@@ -150,13 +150,12 @@ public class DiscordUserDAO
         return template.query(FIND_IDS_BY_ID_CURSOR, params, DiscordDAOUtil.SNOWFLAKE_MAPPER);
     }
 
-    public DiscordUser[] merge(DiscordUser... users)
+    public Set<DiscordUser> merge(Set<DiscordUser> users)
     {
-        if(users.length == 0) return new DiscordUser[0];
+        if(users.isEmpty()) return users;
 
-        MapSqlParameterSource[] params = Arrays.stream(users)
+        MapSqlParameterSource[] params = users.stream()
             .filter(Objects::nonNull)
-            .distinct()
             .map(u->new MapSqlParameterSource()
                     .addValue("id", u.getId().asLong(), Types.BIGINT)
                     .addValue("name", u.getName(), Types.VARCHAR)

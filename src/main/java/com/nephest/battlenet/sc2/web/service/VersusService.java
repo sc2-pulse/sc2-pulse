@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.Versus;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -69,9 +70,9 @@ public class VersusService
         return new Versus
         (
             findTeams(teams1, matches.getResult()),
-            findClans(clans1, matches.getResult()),
+            findClans(Set.copyOf(Arrays.asList(clans1)), matches.getResult()),
             findTeams(teams2, matches.getResult()),
-            findClans(clans2, matches.getResult()),
+            findClans(Set.copyOf(Arrays.asList(clans2)), matches.getResult()),
             ladderMatchDAO.getVersusSummary(clans1, teams1, clans2, teams2, types),
             matches
         );
@@ -95,19 +96,18 @@ public class VersusService
         return teams.size() == teamIds.size() ? teams : ladderSearchDAO.findLegacyTeams(teamIds, false);
     }
 
-    private List<Clan> findClans(Integer[] clanIds, List<LadderMatch> matches)
+    private List<Clan> findClans(Set<Integer> clanIds, List<LadderMatch> matches)
     {
-        if(clanIds.length == 0) return List.of();
+        if(clanIds.isEmpty()) return List.of();
 
-        Set<Integer> idSet = Set.of(clanIds);
         List<Clan> clans = matches.stream()
             .flatMap(m->m.getParticipants().stream())
             .flatMap(p->p.getTeam() != null ? p.getTeam().getMembers().stream() : Stream.empty())
             .map(LadderTeamMember::getClan)
             .distinct()
-            .filter(c->c != null && idSet.contains(c.getId()))
+            .filter(c->c != null && clanIds.contains(c.getId()))
             .collect(Collectors.toList());
-        return clans.size() == clanIds.length ? clans : clanDAO.findByIds(clanIds);
+        return clans.size() == clanIds.size() ? clans : clanDAO.findByIds(clanIds);
     }
 
 }

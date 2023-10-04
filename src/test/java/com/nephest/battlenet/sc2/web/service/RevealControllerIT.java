@@ -49,6 +49,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -234,7 +235,7 @@ public class RevealControllerIT
                 )
             }
         );
-        when(mockApi.getPlayers(10L))
+        when(mockApi.getPlayers(Set.of(10L)))
             .thenReturn(Mono.just(new AligulacProPlayerRoot(new AligulacProPlayer[]{aligulacProPlayer})));
 
         ProPlayer importedPlayer = objectMapper.readValue(mvc.perform
@@ -262,9 +263,9 @@ public class RevealControllerIT
             BaseLeagueTier.LeagueTierType.FIRST,
             1
         );
-        proPlayerAccountDAO.merge(false, new ProPlayerAccount(importedPlayer.getId(), 1L));
+        proPlayerAccountDAO.merge(false, Set.of(new ProPlayerAccount(importedPlayer.getId(), 1L)));
         LadderProPlayer ladderProPlayer = ladderProPlayerDAO
-            .findByCharacterIds(1L).stream().findFirst().orElseThrow();
+            .findByCharacterIds(Set.of(1L)).stream().findFirst().orElseThrow();
 
         List<SocialMediaLink> links = ladderProPlayer.getLinks();
         assertEquals(2, links.size());
@@ -363,7 +364,7 @@ public class RevealControllerIT
         socialMediaLinkDAO.merge
         (
             false,
-            new SocialMediaLink(1L, SocialMedia.ALIGULAC, "http://aligulac.com/players/485")
+            Set.of(new SocialMediaLink(1L, SocialMedia.ALIGULAC, "http://aligulac.com/players/485"))
         );
         String strResp2 = mvc.perform
         (

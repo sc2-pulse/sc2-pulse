@@ -17,8 +17,6 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -426,13 +424,12 @@ public class LadderCharacterDAO
         );
     }
 
-    public List<LadderDistinctCharacter> findDistinctCharactersByCharacterIds(Long... playerCharacterIds)
+    public List<LadderDistinctCharacter> findDistinctCharactersByCharacterIds(Set<Long> playerCharacterIds)
     {
-        if(playerCharacterIds.length == 0) return List.of();
+        if(playerCharacterIds.isEmpty()) return List.of();
 
-        Set<Long> ids = new HashSet<>(Arrays.asList(playerCharacterIds));
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterIds", ids)
+            .addValue("playerCharacterIds", playerCharacterIds)
             .addValue("season", seasonDAO.getMaxBattlenetId())
             .addValue("queueType", conversionService.convert(CURRENT_STATS_QUEUE_TYPE, Integer.class))
             .addValue("cheaterReportType", conversionService

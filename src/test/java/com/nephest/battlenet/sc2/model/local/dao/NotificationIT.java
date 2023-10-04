@@ -71,12 +71,12 @@ public class NotificationIT
         assertArrayEquals
         (
             new int[]{-2, -2},
-            notificationDAO.create(msg, account1.getId(), account2.getId())
+            notificationDAO.create(msg, Set.of(account1.getId(), account2.getId()))
         );
         assertArrayEquals
         (
             new int[]{1},
-            notificationDAO.create(msg, account1.getId())
+            notificationDAO.create(msg, Set.of(account1.getId()))
         );
         List<Notification> notifications = notificationDAO.findAll();
         assertEquals(3, notifications.size());
@@ -108,12 +108,12 @@ public class NotificationIT
         assertArrayEquals
         (
             new int[]{1},
-            notificationDAO.create("msg", account1.getId())
+            notificationDAO.create("msg", Set.of(account1.getId()))
         );
         assertArrayEquals
         (
             new int[]{1},
-            notificationDAO.create("msg", account1.getId())
+            notificationDAO.create("msg", Set.of(account1.getId()))
         );
 
         assertEquals(1, template.update(

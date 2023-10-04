@@ -15,7 +15,10 @@ import com.nephest.battlenet.sc2.model.local.SocialMediaUserId;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -84,15 +87,15 @@ public class SocialMediaLinkIT
             .merge(new ProPlayer(null, 2L, "nick2", "name2"));
         ProPlayer proPlayer3 = proPlayerDAO
             .merge(new ProPlayer(null, 3L, "nick3", "name3"));
-        socialMediaLinkDAO.merge
-        (
+        socialMediaLinkDAO.merge(Set.of(
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url1"),
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url2"),
             new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "url3"),
             new SocialMediaLink(proPlayer3.getId(), SocialMedia.TWITCH, "url4")
-        );
+        ));
 
-        List<SocialMediaLink> links = socialMediaLinkDAO.find(proPlayer1.getId(), proPlayer2.getId());
+        List<SocialMediaLink> links = socialMediaLinkDAO
+            .find(Set.of(proPlayer1.getId(), proPlayer2.getId()));
         assertEquals(3, links.size());
         verifyLink(links.get(0), proPlayer1.getId(), SocialMedia.ALIGULAC, "url2", false);
         verifyLink(links.get(1), proPlayer1.getId(), SocialMedia.TWITCH, "url1", false);
@@ -106,14 +109,13 @@ public class SocialMediaLinkIT
             .merge(new ProPlayer(null, 1L, "nick", "name"));
         ProPlayer proPlayer2 = proPlayerDAO
             .merge(new ProPlayer(null, 2L, "nick2", "name2"));
-        socialMediaLinkDAO.merge
-        (
+        socialMediaLinkDAO.merge(Set.of(
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url1"),
             new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "url2"),
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url3")
-        );
+        ));
 
-        List<SocialMediaLink> links = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH);
+        List<SocialMediaLink> links = socialMediaLinkDAO.findByTypes(EnumSet.of(SocialMedia.TWITCH));
         assertEquals(2, links.size());
         links.forEach(l->assertEquals(SocialMedia.TWITCH, l.getType()));
     }
@@ -128,8 +130,7 @@ public class SocialMediaLinkIT
         ProPlayer proPlayer3 = proPlayerDAO
             .merge(new ProPlayer(null, 3L, "nick3", "name3"));
         OffsetDateTime odt = OffsetDateTime.now();
-        SocialMediaLink[] links = socialMediaLinkDAO.merge
-        (
+        SocialMediaLink[] links = socialMediaLinkDAO.merge(new LinkedHashSet<>(List.of(
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url1", odt, "1", false),
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url2", odt, "1", false),
 
@@ -137,13 +138,13 @@ public class SocialMediaLinkIT
             new SocialMediaLink(proPlayer2.getId(), SocialMedia.TWITCH, "url4", odt, "2", false),
 
             new SocialMediaLink(proPlayer3.getId(), SocialMedia.TWITCH, "url5", odt, "1", false)
-        );
+        )))
+            .toArray(SocialMediaLink[]::new);
 
-        List<SocialMediaLink> foundLinks = socialMediaLinkDAO.findByServiceUserIds
-        (
+        List<SocialMediaLink> foundLinks = socialMediaLinkDAO.findByServiceUserIds(Set.of(
             new SocialMediaUserId(SocialMedia.TWITCH, "1"),
             new SocialMediaUserId(SocialMedia.ALIGULAC, "2")
-        );
+        ));
         assertEquals(3, foundLinks.size());
         foundLinks.sort(SocialMediaLink.NATURAL_ID_COMPARATOR);
         Assertions.assertThat(foundLinks)
@@ -175,7 +176,7 @@ public class SocialMediaLinkIT
             new SocialMediaLink(proPlayer4.getId(), SocialMedia.TWITCH, "url6"),
             new SocialMediaLink(proPlayer4.getId(), SocialMedia.ALIGULAC, "url7")
         };
-        socialMediaLinkDAO.merge(links);
+        socialMediaLinkDAO.merge(Set.copyOf(List.of(links)));
 
         List<SocialMediaLink> links1 = socialMediaLinkDAO
             .findByIdCursor(null, SocialMedia.ALIGULAC, 2);
@@ -209,7 +210,7 @@ public class SocialMediaLinkIT
         socialMediaLinkDAO.merge
         (
             true,
-            new SocialMediaLink
+            Set.of(new SocialMediaLink
             (
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
@@ -217,7 +218,7 @@ public class SocialMediaLinkIT
                 OffsetDateTime.now(),
                 "123",
                 true
-            )
+            ))
         );
         //pro player version was updated because link was updated
         assertEquals(2,  proPlayerDAO.findAll().get(0).getVersion());
@@ -225,7 +226,7 @@ public class SocialMediaLinkIT
         socialMediaLinkDAO.merge
         (
             true,
-            new SocialMediaLink
+            Set.of(new SocialMediaLink
             (
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
@@ -233,10 +234,11 @@ public class SocialMediaLinkIT
                 OffsetDateTime.now(),
                 "123",
                 false
-            )
+            ))
         );
         //protected links are not updated
-        SocialMediaLink link = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH).get(0);
+        SocialMediaLink link = socialMediaLinkDAO
+            .findByTypes(EnumSet.of(SocialMedia.TWITCH)).get(0);
         assertEquals("url1", link.getUrl());
         assertTrue(link.isProtected());
         assertEquals(2,  proPlayerDAO.findAll().get(0).getVersion());
@@ -245,7 +247,7 @@ public class SocialMediaLinkIT
         socialMediaLinkDAO.merge
         (
             false,
-            new SocialMediaLink
+            Set.of(new SocialMediaLink
             (
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
@@ -253,14 +255,14 @@ public class SocialMediaLinkIT
                 OffsetDateTime.now(),
                 "123",
                 false
-            )
+            ))
         );
         assertEquals(3,  proPlayerDAO.findAll().get(0).getVersion());
 
         socialMediaLinkDAO.merge
         (
             true,
-            new SocialMediaLink
+            Set.of(new SocialMediaLink
             (
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
@@ -268,9 +270,10 @@ public class SocialMediaLinkIT
                 OffsetDateTime.now(),
                 "123",
                 false
-            )
+            ))
         );
-        SocialMediaLink link2 = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH).get(0);
+        SocialMediaLink link2 = socialMediaLinkDAO
+            .findByTypes(EnumSet.of(SocialMedia.TWITCH)).get(0);
         assertEquals("url2", link2.getUrl());
         assertFalse(link2.isProtected());
         assertEquals(4,  proPlayerDAO.findAll().get(0).getVersion());
@@ -286,7 +289,7 @@ public class SocialMediaLinkIT
         socialMediaLinkDAO.merge
         (
             true,
-            new SocialMediaLink
+            Set.of(new SocialMediaLink
             (
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
@@ -294,7 +297,7 @@ public class SocialMediaLinkIT
                 odt1,
                 "123",
                 true
-            )
+            ))
         );
         assertEquals(2,  proPlayerDAO.findAll().get(0).getVersion());
 
@@ -302,7 +305,7 @@ public class SocialMediaLinkIT
         socialMediaLinkDAO.merge
         (
             true,
-            new SocialMediaLink
+            Set.of(new SocialMediaLink
             (
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
@@ -310,9 +313,10 @@ public class SocialMediaLinkIT
                 odt1.plusSeconds(10),
                 "123",
                 true
-            )
+            ))
         );
-        SocialMediaLink link = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH).get(0);
+        SocialMediaLink link = socialMediaLinkDAO
+            .findByTypes(EnumSet.of(SocialMedia.TWITCH)).get(0);
         assertTrue(link.getUpdated().isEqual(odt1));
         assertEquals(2,  proPlayerDAO.findAll().get(0).getVersion());
     }
@@ -324,46 +328,48 @@ public class SocialMediaLinkIT
             .merge(new ProPlayer(null, 1L, "nick", "name"));
         ProPlayer proPlayer2 = proPlayerDAO
             .merge(new ProPlayer(null, 2L, "nick2", "name2"));
-        assertEquals(1, proPlayerDAO.find(proPlayer1.getId()).get(0).getVersion());
+        assertEquals(1, proPlayerDAO.find(Set.of(proPlayer1.getId())).get(0).getVersion());
         OffsetDateTime odt1 = OffsetDateTime.now();
         socialMediaLinkDAO.merge
         (
             true,
-            new SocialMediaLink
+            Set.of
             (
-                proPlayer1.getId(),
-                SocialMedia.TWITCH,
-                "url1",
-                odt1,
-                null,
-                true
-            ),
-            new SocialMediaLink
-            (
-                proPlayer1.getId(),
-                SocialMedia.YOUTUBE,
-                "url1",
-                odt1,
-                "22",
-                true
-            ),
-            new SocialMediaLink
-            (
-                proPlayer1.getId(),
-                SocialMedia.ALIGULAC,
-                "url1",
-                odt1,
-                "33",
-                true
+                new SocialMediaLink
+                (
+                    proPlayer1.getId(),
+                    SocialMedia.TWITCH,
+                    "url1",
+                    odt1,
+                    null,
+                    true
+                ),
+                new SocialMediaLink
+                (
+                    proPlayer1.getId(),
+                    SocialMedia.YOUTUBE,
+                    "url1",
+                    odt1,
+                    "22",
+                    true
+                ),
+                new SocialMediaLink
+                (
+                    proPlayer1.getId(),
+                    SocialMedia.ALIGULAC,
+                    "url1",
+                    odt1,
+                    "33",
+                    true
+                )
             )
         );
-        assertEquals(4, proPlayerDAO.find(proPlayer1.getId()).get(0).getVersion());
-        socialMediaLinkDAO.remove
-        (
+        assertEquals(4, proPlayerDAO.find(Set.of(proPlayer1.getId())).get(0).getVersion());
+        socialMediaLinkDAO.remove(Set.of(
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, null),
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, null)
-        );
-        List<SocialMediaLink> links = socialMediaLinkDAO.find(proPlayer1.getId());
+        ));
+        List<SocialMediaLink> links = socialMediaLinkDAO.find(Set.of(proPlayer1.getId()));
         assertEquals(1, links.size());
         assertEquals(SocialMedia.YOUTUBE, links.get(0).getType());
         assertEquals(6,  proPlayerDAO.findAll().get(0).getVersion());

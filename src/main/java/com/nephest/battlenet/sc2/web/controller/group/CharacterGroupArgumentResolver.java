@@ -168,7 +168,7 @@ implements HandlerMethodArgumentResolver
     {
         if(clanIds.isEmpty()) return Set.of();
 
-        return clanMemberDAO.findByClanIds(clanIds.toArray(Integer[]::new)).stream()
+        return clanMemberDAO.findByClanIds(clanIds).stream()
             .map(ClanMember::getPlayerCharacterId)
             .collect(Collectors.toSet());
     }
@@ -178,7 +178,7 @@ implements HandlerMethodArgumentResolver
         if(proPlayerIds.isEmpty()) return Set.of();
 
         return new HashSet<>(playerCharacterDAO
-            .findCharacterIdsByProPlayerIds(proPlayerIds.toArray(Long[]::new)));
+            .findCharacterIdsByProPlayerIds(proPlayerIds));
     }
 
     private void getCharacterIdsDescriptor

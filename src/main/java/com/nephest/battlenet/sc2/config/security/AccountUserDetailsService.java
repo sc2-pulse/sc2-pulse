@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountPropertyDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -42,7 +43,7 @@ implements UserDetailsService
     public UserDetails loadUserByUsername(String s)
     throws UsernameNotFoundException
     {
-        List<Account> accs = accountDAO.findByIds(Long.valueOf(s));
+        List<Account> accs = accountDAO.findByIds(Set.of(Long.valueOf(s)));
         if(accs.isEmpty()) throw new UsernameNotFoundException("User not found");
         Account acc = accs.get(0);
         String password = accountPropertyDAO.find(acc.getId(), AccountProperty.PropertyType.PASSWORD)

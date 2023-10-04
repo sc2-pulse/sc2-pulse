@@ -212,11 +212,11 @@ public class PlayerCharacterStatsDAOIT
             OffsetDateTime.now()
         );
         teamDAO.create(team);
-        teamStateDAO.saveState(TeamState.of(team));
+        teamStateDAO.saveState(Set.of(TeamState.of(team)));
         TeamState maxState = TeamState.of(team, OffsetDateTime.now().minusDays(
             (queueType == QueueType.LOTV_1V1 ? teamStateDAO.getMaxDepthDaysMain() : teamStateDAO.getMaxDepthDaysSecondary()) + 1));
         maxState.setRating((int) (team.getRating() + 1));
-        teamStateDAO.saveState(maxState);
+        teamStateDAO.saveState(Set.of(maxState));
         TeamMember member;
         if (race != null)
         {

@@ -449,11 +449,6 @@ public class LadderSearchDAO
         return findCharacterTeams(ids, Set.of(), Set.of(), null);
     }
 
-    public List<LadderTeam> findCharacterTeams(Long... id)
-    {
-        return findCharacterTeams(Set.of(id));
-    }
-
     public List<LadderTeam> findFollowingTeams
     (
         Long accountId,

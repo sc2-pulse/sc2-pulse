@@ -136,7 +136,7 @@ public class MatchService
                     ? new HashSet<>()
                     : Flux.fromStream(Arrays.stream(str.split(",")).map(Long::valueOf))
                         .buffer(500)
-                        .flatMapIterable(batch->playerCharacterDAO.find(batch.toArray(Long[]::new)))
+                        .flatMapIterable(batch->playerCharacterDAO.find(Set.copyOf(batch)))
                         .collect(Collectors.toSet())
                         .block(),
                 false
@@ -400,10 +400,10 @@ public class MatchService
             meta.add(Tuples.of(map, localMatch, match.getT1().getDecision(), match.getT2()));
         }
         Arrays.sort(mapBatch, SC2Map.NATURAL_ID_COMPARATOR);
-        mapDAO.merge(mapBatch);
+        mapDAO.merge(Set.copyOf(Arrays.asList(mapBatch)));
         meta.forEach(t->t.getT2().setMapId(t.getT1().getId()));
         Arrays.sort(matchBatch, Match.NATURAL_ID_COMPARATOR);
-        matchDAO.merge(matchBatch);
+        matchDAO.merge(Set.copyOf(Arrays.asList(matchBatch)));
         for(int i = 0; i < meta.size(); i++)
         {
             Tuple4<SC2Map, Match, BaseMatch.Decision, PlayerCharacterNaturalId> participant = meta.get(i);
@@ -414,7 +414,7 @@ public class MatchService
                 participant.getT3()
             );
         }
-        matchParticipantDAO.merge(participantBatch);
+        matchParticipantDAO.merge(Set.copyOf(Arrays.asList(participantBatch)));
         LOG.debug("Saved {} matches", matches.size());
         return matches.size();
     }

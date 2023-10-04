@@ -5,8 +5,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -110,11 +110,11 @@ public class PlayerCharacterLinkDAO
         return STD_EXTRACTOR;
     }
 
-    public int merge(@Valid PlayerCharacterLink... links)
+    public int merge(@Valid Set<@Valid PlayerCharacterLink> links)
     {
-        if(links.length == 0) return 0;
+        if(links.isEmpty()) return 0;
 
-        List<Object[]> data = Arrays.stream(links)
+        List<Object[]> data = links.stream()
             .map(link->new Object[]
             {
                 link.getPlayerCharacterId(),

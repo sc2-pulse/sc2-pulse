@@ -33,6 +33,8 @@ import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -120,9 +122,9 @@ public class CharacterController
     }
 
     @GetMapping("/{ids}")
-    public ResponseEntity<List<PlayerCharacter>> getPlayerCharacters(@PathVariable("ids") Long[] ids)
+    public ResponseEntity<List<PlayerCharacter>> getPlayerCharacters(@PathVariable("ids") Set<Long> ids)
     {
-        if(ids.length > PLAYER_CHARACTERS_MAX)
+        if(ids.size() > PLAYER_CHARACTERS_MAX)
             return ResponseEntity.badRequest().build();
 
         return ResponseEntity.of(Optional.of(playerCharacterDAO.find(ids)));
@@ -146,12 +148,13 @@ public class CharacterController
                 .findAny()
                 .orElseThrow();
 
+        Set<Long> idSet = Set.of(id);
         return ResponseEntity.ok(new CommonCharacter
         (
-            ladderSearch.findCharacterTeams(id),
+            ladderSearch.findCharacterTeams(idSet),
             linkedCharacters,
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
-            ladderProPlayerDAO.findByCharacterIds(id).stream().findFirst().orElse(null),
+            ladderProPlayerDAO.findByCharacterIds(idSet).stream().findFirst().orElse(null),
             discordUserDAO
                 .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
                 .orElse(null),
@@ -164,7 +167,7 @@ public class CharacterController
                     .map(LadderDistinctCharacter::getMembers)
                     .map(LadderTeamMember::getCharacter)
                     .map(PlayerCharacter::getId)
-                    .toArray(Long[]::new)
+                    .collect(Collectors.toSet())
             )
         ));
     }
@@ -188,12 +191,13 @@ public class CharacterController
             .findAny()
             .orElseThrow();
 
+        Set<Long> idSet = Set.of(id);
         return ResponseEntity.ok(new CommonCharacter
         (
-            ladderSearch.findCharacterTeams(id),
+            ladderSearch.findCharacterTeams(idSet),
             linkedCharacters,
             ladderPlayerCharacterStatsDAO.findGlobalList(id),
-            ladderProPlayerDAO.findByCharacterIds(id).stream().findFirst().orElse(null),
+            ladderProPlayerDAO.findByCharacterIds(idSet).stream().findFirst().orElse(null),
             discordUserDAO
                 .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
                 .orElse(null),
@@ -206,7 +210,7 @@ public class CharacterController
                     .map(LadderDistinctCharacter::getMembers)
                     .map(LadderTeamMember::getCharacter)
                     .map(PlayerCharacter::getId)
-                    .toArray(Long[]::new)
+                    .collect(Collectors.toSet())
             )
         ));
     }
@@ -250,7 +254,7 @@ public class CharacterController
         @PathVariable("id") long id
     )
     {
-        return ladderSearch.findCharacterTeams(id);
+        return ladderSearch.findCharacterTeams(Set.of(id));
     }
 
     @GetMapping("/{id}/stats")
@@ -289,7 +293,7 @@ public class CharacterController
         @PathVariable("id") long id
     )
     {
-        List<PlayerCharacter> characters = playerCharacterDAO.find(id);
+        List<PlayerCharacter> characters = playerCharacterDAO.find(Set.of(id));
         if(characters.isEmpty()) return ResponseEntity.notFound().build();
 
         ExternalLinkResolveResult result = externalPlayerCharacterLinkService.getLinks(characters.get(0));

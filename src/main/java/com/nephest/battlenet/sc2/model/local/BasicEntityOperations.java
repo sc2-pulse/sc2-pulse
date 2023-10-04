@@ -4,11 +4,12 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import java.util.Optional;
+import java.util.Set;
 
 public interface BasicEntityOperations<T>
 {
 
-    T[] merge(T[] entities);
+    Set<T> merge(Set<T> entities);
 
     Optional<T> find(T t);
 

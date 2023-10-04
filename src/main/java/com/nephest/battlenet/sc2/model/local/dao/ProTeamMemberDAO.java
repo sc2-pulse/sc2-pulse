@@ -5,10 +5,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.ProTeamMember;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.ResultSetExtractor;
@@ -75,37 +73,33 @@ public class ProTeamMemberDAO
             .addValue("updated", proTeamMember.getUpdated());
     }
 
-    public int[] merge(ProTeamMember... proTeamMembers)
+    public int[] merge(Set<ProTeamMember> proTeamMembers)
     {
-        if(proTeamMembers.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
+        if(proTeamMembers.isEmpty()) return DAOUtils.EMPTY_INT_ARRAY;
 
-        MapSqlParameterSource[] params = new MapSqlParameterSource[proTeamMembers.length];
-        for(int i = 0; i < proTeamMembers.length; i++)
-        {
-            proTeamMembers[i].setUpdated(OffsetDateTime.now());
-            params[i] = createParameterSource(proTeamMembers[i]);
-        }
+        MapSqlParameterSource[] params = proTeamMembers.stream()
+            .peek(proTeamMember->proTeamMember.setUpdated(OffsetDateTime.now()))
+            .map(this::createParameterSource)
+            .toArray(MapSqlParameterSource[]::new);
 
         return template.batchUpdate(MERGE_QUERY, params);
     }
 
-    public int remove(Long... proPlayerIds)
+    public int remove(Set<Long> proPlayerIds)
     {
-        if(proPlayerIds.length == 0) return 0;
+        if(proPlayerIds.isEmpty()) return 0;
 
-        Set<Long> uniqueIds = Arrays.stream(proPlayerIds)
-            .collect(Collectors.toSet());
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("proPlayerIds", uniqueIds);
+            .addValue("proPlayerIds", proPlayerIds);
         return template.update(REMOVE_BY_PRO_PLAYER_IDS, params);
     }
 
-    public List<ProTeamMember> findByProPlayerIds(Long... proPlayerIds)
+    public List<ProTeamMember> findByProPlayerIds(Set<Long> proPlayerIds)
     {
-        if(proPlayerIds.length == 0) return List.of();
+        if(proPlayerIds.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("pro_player_ids", Set.of(proPlayerIds));
+            .addValue("pro_player_ids", proPlayerIds);
         return template.query(FIND_BY_PRO_PLAYER_IDS, params, STD_ROW_MAPPER);
     }
 

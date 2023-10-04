@@ -34,6 +34,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.slf4j.Logger;
@@ -452,11 +453,11 @@ implements BasicEntityOperations<Team>
     }
 
     @Override
-    public Team[] merge(Team... teams)
+    public Set<Team> merge(Set<Team> teams)
     {
-        if(teams.length == 0) return new Team[0];
+        if(teams.isEmpty()) return teams;
 
-        List<Object[]> data = Arrays.stream(teams)
+        List<Object[]> data = teams.stream()
             .map(t->new Object[]{
                 t.getLegacyId(),
                 t.getDivisionId(),
@@ -477,9 +478,10 @@ implements BasicEntityOperations<Team>
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("teams", data);
         List<Team> mergedTeams = template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, STD_ROW_MAPPER);
 
-        return Arrays.stream(DAOUtils.updateOriginals(teams, mergedTeams, (o, m)->o.setId(m.getId()), o->o.setId(null)))
+        return DAOUtils.updateOriginals(teams, mergedTeams, (o, m)->o.setId(m.getId()), o->o.setId(null))
+            .stream()
             .filter(t->t.getId() != null)
-            .toArray(Team[]::new);
+            .collect(Collectors.toSet());
     }
 
     @Override

@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.AccountProperty;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -59,13 +60,10 @@ public class AccountPropertyIT
     public void testChain()
     {
         Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "btag", 3);
-        accountPropertyDAO.merge
-        (
+        accountPropertyDAO.merge(Set.of(
             new AccountProperty(accounts[0].getId(), AccountProperty.PropertyType.PASSWORD, "p1"),
-            //duplicate, ignore
-            new AccountProperty(accounts[0].getId(), AccountProperty.PropertyType.PASSWORD, "p10"),
             new AccountProperty(accounts[1].getId(), AccountProperty.PropertyType.PASSWORD, "p2")
-        );
+        ));
 
         AccountProperty property1 = accountPropertyDAO
             .find(accounts[0].getId(), AccountProperty.PropertyType.PASSWORD)
@@ -77,13 +75,12 @@ public class AccountPropertyIT
             .orElseThrow();
         verify(property2, accounts[1].getId(), AccountProperty.PropertyType.PASSWORD, "p2");
 
-        accountPropertyDAO.merge
-        (
+        accountPropertyDAO.merge(Set.of(
             //updated
             new AccountProperty(accounts[0].getId(), AccountProperty.PropertyType.PASSWORD, "p11"),
             //inserted
             new AccountProperty(accounts[2].getId(), AccountProperty.PropertyType.PASSWORD, "p3")
-        );
+        ));
 
         AccountProperty property11 = accountPropertyDAO
             .find(accounts[0].getId(), AccountProperty.PropertyType.PASSWORD)

@@ -37,6 +37,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -147,7 +148,7 @@ public class LadderSeasonStateDAOIT
             1L, 1, 1, 1, 0,
             OffsetDateTime.now()
         );
-        teamDAO.merge(team1);
+        teamDAO.merge(Set.of(team1));
         Team team2 = new Team
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -156,7 +157,7 @@ public class LadderSeasonStateDAOIT
             1L, 1, 1, 1, 0,
             OffsetDateTime.now()
         );
-        teamDAO.merge(team2);
+        teamDAO.merge(Set.of(team2));
         Team team3 = new Team
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
@@ -165,9 +166,8 @@ public class LadderSeasonStateDAOIT
             1L, 1, 1, 1, 0,
             OffsetDateTime.now()
         );
-        teamDAO.merge(team3);
-        teamMemberDAO.merge
-        (
+        teamDAO.merge(Set.of(team3));
+        teamMemberDAO.merge(Set.of(
             new TeamMember(team1.getId(), character1.getId(), 1, 1, 1, 0),
             new TeamMember(team1.getId(), character2.getId(), 1, 1, 1, 0),
             new TeamMember(team1.getId(), character3.getId(), 1, 1, 1, 0),
@@ -177,7 +177,7 @@ public class LadderSeasonStateDAOIT
             new TeamMember(team2.getId(), character3.getId(), 1, 1, 1, 0),
             new TeamMember(team2.getId(), character5.getId(), 1, 1, 1, 0),
             new TeamMember(team3.getId(), character6.getId(), 1, 1, 1, 0)
-        );
+        ));
 
         //hour1: only 1 4v4 US team
         OffsetDateTime time1 = OffsetDateTime.now().withMinute(0).withSecond(0).withNano(0);
@@ -186,7 +186,7 @@ public class LadderSeasonStateDAOIT
         //this state has no effect on stats
         TeamState state2 = TeamState.of(team1);
         state2.setDateTime(time1.plusSeconds(1));
-        teamStateDAO.saveState(state1, state2);
+        teamStateDAO.saveState(Set.of(state1, state2));
         seasonStateDAO.merge(time1, SeasonGenerator.DEFAULT_SEASON_ID);
 
         List<LadderSeasonState> states1 = ladderSeasonStateDAO.find(time1.plusSeconds(1), Period.DAY);
@@ -202,7 +202,7 @@ public class LadderSeasonStateDAOIT
         //hour2: 2 4v4 US teams, 1 1v1 EU team
         team1.setWins(2); // + 1 win
         team1.setLastPlayed(OffsetDateTime.now());
-        teamDAO.merge(team1);
+        teamDAO.merge(Set.of(team1));
         OffsetDateTime time2 = time1.plusHours(1);
         TeamState state21 = TeamState.of(team1);
         state21.setDateTime(time2.plusMinutes(59));
@@ -210,7 +210,7 @@ public class LadderSeasonStateDAOIT
         state22.setDateTime(time2.plusMinutes(30));
         TeamState state23 = TeamState.of(team3);
         state23.setDateTime(time2.plusSeconds(1));
-        teamStateDAO.saveState(state21, state22, state23);
+        teamStateDAO.saveState(Set.of(state21, state22, state23));
         seasonStateDAO.merge(time2, SeasonGenerator.DEFAULT_SEASON_ID);
 
         List<LadderSeasonState> states2 = ladderSeasonStateDAO.find(time2.plusSeconds(1), Period.DAY);

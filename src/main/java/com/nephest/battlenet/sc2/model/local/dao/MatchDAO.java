@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -7,8 +7,8 @@ import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Match;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -264,12 +264,11 @@ extends StandardDAO
             .addValue("updated", match.getUpdated());
     }
 
-    public Match[] merge(Match... matches)
+    public Set<Match> merge(Set<Match> matches)
     {
-        if(matches.length == 0) return new Match[0];
+        if(matches.isEmpty()) return matches;
 
-        List<Object[]> matchUids = Arrays.stream(matches)
-            .distinct()
+        List<Object[]> matchUids = matches.stream()
             .map(match->new Object[]{
                 match.getDate(),
                 conversionService.convert(match.getType(), Integer.class),

@@ -17,6 +17,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -164,12 +165,12 @@ public class SearchService
             .map(Optional::get)
             .doOnNext
             (
-                c->playerCharacterLinkDAO.merge(new PlayerCharacterLink
+                c->playerCharacterLinkDAO.merge(Set.of(new PlayerCharacterLink
                 (
                     c.getMembers().getCharacter().getId(),
                     type,
                     relativeUrl
-                ))
+                )))
             )
             .flux()
             .collectList()

@@ -53,6 +53,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
@@ -185,18 +186,18 @@ public class LadderSearchIndependentIT
         ProPlayer proPlayer = new ProPlayer(null, 1L, "refnickname", "pro name");
         proPlayerDAO.merge(proPlayer);
         proPlayerAccountDAO.link(proPlayer.getId(), acc.getBattleTag(), acc2.getBattleTag());
-        Clan clan = clanDAO.merge(new Clan(null, "clanTag", Region.EU, "clanName"))[0];
+        Clan clan = clanDAO.merge(Set.of(new Clan(null, "clanTag", Region.EU, "clanName")))
+            .iterator().next();
         PlayerCharacter character1 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc.getId(), region, 9998L, 1, "refchar1#123"));
         PlayerCharacter character2 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc.getId(), region, 9999L, 1, "refchar2#123"));
         PlayerCharacter character3 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc2.getId(), region, 9997L, 1, "refchar3#123"));
-        clanMemberDAO.merge
-        (
+        clanMemberDAO.merge(Set.of(
             new ClanMember(character1.getId(), clan.getId()),
             new ClanMember(character2.getId(), clan.getId())
-        );
+        ));
         Team team1 = new Team
         (
             null, season1.getBattlenetId(), region,
@@ -496,13 +497,12 @@ public class LadderSearchIndependentIT
             1L, 100, 0, 0, 0,
             OffsetDateTime.now()
         );
-        teamDAO.merge(team1, team2, team3);
-        teamMemberDAO.merge
-        (
+        teamDAO.merge(Set.of(team1, team2, team3));
+        teamMemberDAO.merge(Set.of(
             new TeamMember(team1.getId(), character.getId(), 100, 0, 0, 0),
             new TeamMember(team2.getId(), character.getId(), 0, 100, 0, 0),
             new TeamMember(team3.getId(), character.getId(), 20, 30, 40, 10)
-        );
+        ));
 
         playerCharacterStatsDAO.mergeCalculate();
 

@@ -18,7 +18,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -82,23 +84,19 @@ public class ClanMemberIT
             .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 2L, 2, "name#2"));
         PlayerCharacter char3 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 3L, 3, "name#3"));
-        Clan[] clans = clanDAO.merge
-        (
+        Clan[] clans = clanDAO.merge(new LinkedHashSet<>(List.of(
             new Clan(null, "clan1", Region.EU, "name1"),
             new Clan(null, "clan2", Region.EU, "name2")
-        );
+        )))
+            .toArray(Clan[]::new);
 
-        clanMemberDAO.merge
-        (
-            null, //nulls should be skipped
-            new ClanMember(char1.getId(), clans[0].getId()),
-            //duplicates should be skipped
+        clanMemberDAO.merge(Set.of(
             new ClanMember(char1.getId(), clans[0].getId()),
             new ClanMember(char2.getId(), clans[1].getId())
-        );
+        ));
 
         List<ClanMember> foundClans1 = clanMemberDAO
-            .find(char1.getId(), char2.getId(), char3.getId());
+            .find(Set.of(char1.getId(), char2.getId(), char3.getId()));
         foundClans1.sort(Comparator.comparing(ClanMember::getPlayerCharacterId));
         assertEquals(2, foundClans1.size());
 
@@ -112,14 +110,13 @@ public class ClanMemberIT
 
         OffsetDateTime beforeSecondMerge = OffsetDateTime.now();
         //2nd merge
-        clanMemberDAO.merge
-        (
+        clanMemberDAO.merge(Set.of(
             new ClanMember(char2.getId(), clans[0].getId()), //updated
             new ClanMember(char3.getId(), clans[1].getId()) //new
-        );
+        ));
 
         List<ClanMember> foundClans2 = clanMemberDAO
-            .find(char1.getId(), char2.getId(), char3.getId());
+            .find(Set.of(char1.getId(), char2.getId(), char3.getId()));
         foundClans2.sort(Comparator.comparing(ClanMember::getPlayerCharacterId));
         assertEquals(3, foundClans2.size());
 
@@ -169,19 +166,19 @@ public class ClanMemberIT
             .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 2L, 2, "name#2"));
         PlayerCharacter char3 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 3L, 3, "name#3"));
-        Clan clan = clanDAO.merge(new Clan(null, "clan1", Region.EU, "name1"))[0];
+        Clan clan = clanDAO.merge(Set.of(new Clan(null, "clan1", Region.EU, "name1")))
+            .iterator().next();
 
-        clanMemberDAO.merge
-        (
+        clanMemberDAO.merge(Set.of(
             new ClanMember(char1.getId(), clan.getId()),
             new ClanMember(char2.getId(), clan.getId()),
             new ClanMember(char3.getId(), clan.getId())
-        );
+        ));
 
-        assertEquals(3, clanMemberDAO.find(1L, 2L, 3L).size());
+        assertEquals(3, clanMemberDAO.find(Set.of(1L, 2L, 3L)).size());
 
-        assertEquals(2, clanMemberDAO.remove(2L, 3L));
-        List<ClanMember> foundMembers = clanMemberDAO.find(1L, 2L, 3L);
+        assertEquals(2, clanMemberDAO.remove(Set.of(2L, 3L)));
+        List<ClanMember> foundMembers = clanMemberDAO.find(Set.of(1L, 2L, 3L));
         assertEquals(1, foundMembers.size());
 
         ClanMember pcc1 = foundMembers.get(0);
@@ -197,12 +194,12 @@ public class ClanMemberIT
             .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
         PlayerCharacter char2 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 2L, 2, "name#2"));
-        Clan clan = clanDAO.merge(new Clan(null, "clan1", Region.EU, "name1"))[0];
-        clanMemberDAO.merge
-        (
+        Clan clan = clanDAO.merge(Set.of(new Clan(null, "clan1", Region.EU, "name1")))
+            .iterator().next();
+        clanMemberDAO.merge(Set.of(
             new ClanMember(char1.getId(), clan.getId()),
             new ClanMember(char2.getId(), clan.getId())
-        );
+        ));
 
         template.update
         (
@@ -214,14 +211,8 @@ public class ClanMemberIT
         OffsetDateTime expiredOdt = OffsetDateTime.now().minus(ClanMemberDAO.TTL);
         assertEquals(1, clanMemberDAO.getInactiveCount(expiredOdt));
         assertEquals(1, clanMemberDAO.removeExpired());
-        assertTrue(clanMemberDAO.find(char1.getId()).isEmpty());
-        assertFalse(clanMemberDAO.find(char2.getId()).isEmpty());
-    }
-
-    @Test
-    public void whenRemoveDuplicateIds_thenIgnoreDuplicates()
-    {
-        clanMemberDAO.remove(1L, 1L); //no exception is thrown
+        assertTrue(clanMemberDAO.find(Set.of(char1.getId())).isEmpty());
+        assertFalse(clanMemberDAO.find(Set.of(char2.getId())).isEmpty());
     }
 
 }

@@ -20,6 +20,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -83,14 +84,17 @@ public class LadderProPlayerAccountIT
         proPlayerAccountDAO.merge
         (
             false,
-            new ProPlayerAccount(proPlayer.getId(), accounts[0].getId(), accounts[0].getId(), odt, false),
-            new ProPlayerAccount(proPlayer.getId(), accounts[1].getId(), accounts[0].getId(), odt, false),
-            new ProPlayerAccount(proPlayer.getId(), accounts[2].getId(), accounts[0].getId(), odt, false),
+            Set.of
+            (
+                new ProPlayerAccount(proPlayer.getId(), accounts[0].getId(), accounts[0].getId(), odt, false),
+                new ProPlayerAccount(proPlayer.getId(), accounts[1].getId(), accounts[0].getId(), odt, false),
+                new ProPlayerAccount(proPlayer.getId(), accounts[2].getId(), accounts[0].getId(), odt, false),
 
-            new ProPlayerAccount(proPlayer.getId(), accounts[3].getId(), accounts[1].getId(), odt, false),
-            new ProPlayerAccount(proPlayer.getId(), accounts[4].getId(), accounts[1].getId(), odt, false),
+                new ProPlayerAccount(proPlayer.getId(), accounts[3].getId(), accounts[1].getId(), odt, false),
+                new ProPlayerAccount(proPlayer.getId(), accounts[4].getId(), accounts[1].getId(), odt, false),
 
-            new ProPlayerAccount(proPlayer.getId(), accounts[5].getId(), accounts[2].getId(), odt, false)
+                new ProPlayerAccount(proPlayer.getId(), accounts[5].getId(), accounts[2].getId(), odt, false)
+            )
         );
 
         List<RevealerStats> stats = ladderProPlayerAccountDAO.findRevealerStats(2);

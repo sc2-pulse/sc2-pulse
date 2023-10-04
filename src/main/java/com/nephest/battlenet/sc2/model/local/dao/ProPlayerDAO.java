@@ -204,11 +204,11 @@ public class ProPlayerDAO
         return proPlayer;
     }
 
-    public List<ProPlayer> find(Long... ids)
+    public List<ProPlayer> find(Set<Long> ids)
     {
-        if(ids.length == 0) return List.of();
+        if(ids.isEmpty()) return List.of();
 
-        MapSqlParameterSource params = new MapSqlParameterSource("ids", Set.of(ids));
+        MapSqlParameterSource params = new MapSqlParameterSource("ids", ids);
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 

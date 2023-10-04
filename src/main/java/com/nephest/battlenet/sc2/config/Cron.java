@@ -36,6 +36,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -343,13 +344,12 @@ public class Cron
 
     private void commenceFrequentMaintenance()
     {
-        postgreSQLUtils.reindex("ix_match_updated");
+        postgreSQLUtils.reindex(Set.of("ix_match_updated"));
     }
 
     private void commenceInfrequentMaintenance()
     {
-        postgreSQLUtils.reindex
-        (
+        postgreSQLUtils.reindex(Set.of(
             "ix_team_state_team_id_archived",
             "uq_match_date_type_map_id_region",
             "match_pkey",
@@ -358,7 +358,7 @@ public class Cron
             "ix_account_updated",
             "ix_player_character_updated",
             "ix_clan_member_updated"
-        );
+        ));
     }
 
 }

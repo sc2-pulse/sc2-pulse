@@ -135,9 +135,9 @@ public class PlayerCharacterReportService
             .map(Account::getId)
             .collect(Collectors.toSet());
         PlayerCharacter accusedPlayer1 =
-            playerCharacterDAO.find(report.getPlayerCharacterId()).get(0);
+            playerCharacterDAO.find(Set.of(report.getPlayerCharacterId())).get(0);
         PlayerCharacter accusedPlayer2 = report.getAdditionalPlayerCharacterId() != null
-            ? playerCharacterDAO.find(report.getAdditionalPlayerCharacterId()).get(0)
+            ? playerCharacterDAO.find(Set.of(report.getAdditionalPlayerCharacterId())).get(0)
             : null;
         notificationRecipientIds.add(accusedPlayer1.getAccountId());
         if(accusedPlayer2 != null) notificationRecipientIds.add(accusedPlayer2.getAccountId());
@@ -146,7 +146,7 @@ public class PlayerCharacterReportService
 
         String msg = renderReportNotification(report, evidence, accusedPlayer1, accusedPlayer2);
 
-        notificationService.enqueueNotifications(msg, notificationRecipientIds.toArray(Long[]::new));
+        notificationService.enqueueNotifications(msg, notificationRecipientIds);
     }
 
     private String renderReportNotification
@@ -162,7 +162,7 @@ public class PlayerCharacterReportService
         sb.append("**Reporter:** ");
         if(evidence.getReporterAccountId() != null)
         {
-            Account reporter = accountDAO.findByIds(evidence.getReporterAccountId()).get(0);
+            Account reporter = accountDAO.findByIds(Set.of(evidence.getReporterAccountId())).get(0);
             sb.append("BattleTag: ")
                 .append(reporter.getBattleTag())
                 .append("\n");
@@ -223,7 +223,7 @@ public class PlayerCharacterReportService
         Map<Long, List<LadderTeamMember>> additionalMembers = ladderTeamMemberDAO.findByCharacterIds(reports.stream()
             .map(r->r.getReport().getAdditionalPlayerCharacterId())
             .filter(Objects::nonNull)
-            .toArray(Long[]::new)).stream()
+            .collect(Collectors.toSet())).stream()
                 .collect(groupingBy(m->m.getCharacter().getId()));
         Map<Integer, List<Evidence>> evidences = evidenceDAO.findAll(true).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
@@ -246,20 +246,22 @@ public class PlayerCharacterReportService
         return clearSensitiveData(reports, personalService.getAuthentication());
     }
 
-    public List<LadderPlayerCharacterReport> findReportsByCharacterIds(Long... characterIds)
+    public List<LadderPlayerCharacterReport> findReportsByCharacterIds(Set<Long> characterIds)
     {
+        if(characterIds.isEmpty()) return List.of();
+
         List<LadderPlayerCharacterReport> reports = ladderPlayerCharacterReportDAO.findByCharacterIds(characterIds);
         Map<Long, List<LadderTeamMember>> additionalMembers = ladderTeamMemberDAO.findByCharacterIds(reports.stream()
             .map(r->r.getReport().getAdditionalPlayerCharacterId())
             .filter(Objects::nonNull)
-            .toArray(Long[]::new)).stream()
+            .collect(Collectors.toSet())).stream()
                 .collect(groupingBy(m->m.getCharacter().getId()));
         Map<Integer, List<Evidence>> evidences = evidenceDAO
-            .findByReportIds(true, reports.stream().map(r->r.getReport().getId()).toArray(Integer[]::new)).stream()
+            .findByReportIds(true, reports.stream().map(r->r.getReport().getId()).collect(Collectors.toSet())).stream()
             .collect(groupingBy(Evidence::getPlayerCharacterReportId));
         Map<Long, List<Account>> reporters = getReporters(evidences);
         Map<Integer, List<LadderEvidenceVote>> evidenceVotes =
-            ladderEvidenceVoteDAO.findByEvidenceIds(evidences.values().stream().flatMap(l->l.stream().map(Evidence::getId)).toArray(Integer[]::new)).stream()
+            ladderEvidenceVoteDAO.findByEvidenceIds(evidences.values().stream().flatMap(l->l.stream().map(Evidence::getId)).collect(Collectors.toSet())).stream()
             .collect(groupingBy(v->v.getVote().getEvidenceId()));
         Comparator<LadderPlayerCharacterReport> comparator = Comparator.comparing(r->r.getEvidence().stream()
             .max(Comparator.comparing(e->e.getEvidence().getCreated())).get().getEvidence().getCreated());
@@ -283,8 +285,7 @@ public class PlayerCharacterReportService
             .flatMap(Collection::stream)
             .map(Evidence::getReporterAccountId)
             .filter(Objects::nonNull)
-            .distinct()
-            .toArray(Long[]::new)).stream()
+            .collect(Collectors.toSet())).stream()
                 .collect(groupingBy(Account::getId));
     }
 

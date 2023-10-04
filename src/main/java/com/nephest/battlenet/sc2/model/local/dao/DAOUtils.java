@@ -6,10 +6,9 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -113,20 +112,20 @@ public final class DAOUtils
         };
     }
 
-    public static <T>  T[] updateOriginals
+    public static <T> Set<T> updateOriginals
     (
-        T[] originalArray,
+        Set<T> originalSet,
         List<T> mergedList,
         BiConsumer<T, T> originalUpdater,
         Consumer<T> originalNullifier
     )
     {
-        if(originalNullifier != null) for(T t : originalArray) originalNullifier.accept(t);
-        if(mergedList.isEmpty()) return originalArray;
+        if(originalNullifier != null) for(T t : originalSet) originalNullifier.accept(t);
+        if(mergedList.isEmpty()) return originalSet;
 
         Map<T, T> mergedMap = mergedList.stream()
             .collect(Collectors.toMap(Function.identity(), Function.identity()));
-        for(T original : originalArray)
+        for(T original : originalSet)
         {
             T merged = mergedMap.get(original);
             if(merged == null)
@@ -138,30 +137,13 @@ public final class DAOUtils
                 originalUpdater.accept(original, merged);
             }
         }
-        return originalArray;
+        return originalSet;
     }
 
-    public static <T>  T[] updateOriginals
-    (T[] originalArray, List<T> mergedList, BiConsumer<T, T> originalUpdater)
+    public static <T> Set<T> updateOriginals
+    (Set<T> originalSet, List<T> mergedList, BiConsumer<T, T> originalUpdater)
     {
-        return updateOriginals(originalArray, mergedList, originalUpdater, null);
-    }
-
-    public static <T, K>  T[] updateOriginalIds
-    (
-        T[] originalArray,
-        List<K> mergedList,
-        Comparator<T> comparator,
-        BiConsumer<T, K> originalUpdater
-    )
-    {
-        Arrays.sort(originalArray, comparator);
-        for(int i = 0, mergedIx = -1; i < originalArray.length; i++)
-        {
-            if(i == 0 || !originalArray[i].equals(originalArray[i - 1])) mergedIx++;
-            originalUpdater.accept(originalArray[i], mergedList.get(mergedIx));
-        }
-        return originalArray;
+        return updateOriginals(originalSet, mergedList, originalUpdater, null);
     }
 
     public static <T> Predicate<T> beanValidationPredicate(Validator validator){

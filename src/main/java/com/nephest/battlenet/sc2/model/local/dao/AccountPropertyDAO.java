@@ -4,9 +4,9 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.AccountProperty;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -92,12 +92,11 @@ public class AccountPropertyDAO
         return STD_EXTRACTOR;
     }
 
-    public int merge(AccountProperty... properties)
+    public int merge(Set<AccountProperty> properties)
     {
-        if(properties.length == 0) return 0;
+        if(properties.isEmpty()) return 0;
 
-        List<Object[]> data = Arrays.stream(properties)
-            .distinct()
+        List<Object[]> data = properties.stream()
             .map(p->new Object[]{
                 p.getAccountId(),
                 conversionService.convert(p.getType(), Integer.class),

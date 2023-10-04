@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -64,9 +65,9 @@ extends BaseAPI
         rateLimiter.refreshSlots(REQUESTS_PER_PERIOD);
     }
 
-    public Mono<LiquipediaMediaWikiRevisionQueryResult> getPlayer(String... names)
+    public Mono<LiquipediaMediaWikiRevisionQueryResult> getPlayer(Set<String> names)
     {
-        if(names.length == 0) return Mono.empty();
+        if(names.isEmpty()) return Mono.empty();
 
         return getWebClient()
             .get()
@@ -87,7 +88,7 @@ extends BaseAPI
             .delaySubscription(rateLimiter.requestSlot());
     }
 
-    public Flux<LiquipediaPlayer> parsePlayers(String... names)
+    public Flux<LiquipediaPlayer> parsePlayers(Set<String> names)
     {
         return getPlayer(names)
             .map(LiquipediaParser::parse)
@@ -105,7 +106,7 @@ extends BaseAPI
             .collect(Collectors.toMap(LiquipediaPlayer::getRedirect, LiquipediaPlayer::getQueryName));
         if(redirects.isEmpty()) return Mono.just(players);
 
-        return getPlayer(redirects.keySet().toArray(String[]::new))
+        return getPlayer(redirects.keySet())
             .map(LiquipediaParser::parse)
             .map(redirectedPlayers->
             {

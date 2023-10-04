@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -17,6 +17,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -86,7 +87,7 @@ public class AccountIT
             .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
         Account mergedAcc = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#2"), character);
         assertEquals(acc.getId(), mergedAcc.getId());
-        Account foundAcc = accountDAO.findByIds(mergedAcc.getId()).get(0);
+        Account foundAcc = accountDAO.findByIds(Set.of(mergedAcc.getId())).get(0);
         //btag is updated
         assertEquals("tag#2", foundAcc.getBattleTag());
         //nothing is inserted
@@ -118,7 +119,7 @@ public class AccountIT
             .updateAccountsAndCharacters(List.of(Tuples.of(acc2, char1, false, -1)));
 
         //the data hasn't been updated
-        assertEquals("tag#1", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
+        assertEquals("tag#1", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
         OffsetDateTime updatedAt = accountDAO.getUpdated(acc1.getId());
         assertTrue(beforeUpdate.isAfter(updatedAt));
     }
@@ -137,7 +138,7 @@ public class AccountIT
             .updateAccountsAndCharacters(List.of(Tuples.of(acc2, char1, false, seasonOffset)));
 
         //the data has been updated
-        assertEquals("tag#2", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
+        assertEquals("tag#2", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
         OffsetDateTime updatedAt = accountDAO.getUpdated(acc1.getId());
         assertTrue(beforeUpdate.isBefore(updatedAt));
     }
@@ -156,7 +157,7 @@ public class AccountIT
             .updateAccountsAndCharacters(List.of(Tuples.of(acc2, char1, false, seasonOffset)));
 
         //the data has been updated
-        assertEquals("tag#1", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
+        assertEquals("tag#1", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
         OffsetDateTime updatedAt = accountDAO.getUpdated(acc1.getId());
         assertTrue(beforeUpdate.isBefore(updatedAt));
     }
@@ -166,7 +167,7 @@ public class AccountIT
     {
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         OffsetDateTime newUpdated = OffsetDateTime.now().plusDays(1);
-        accountDAO.updateUpdated(newUpdated, account.getId());
+        accountDAO.updateUpdated(newUpdated, Set.of(account.getId()));
         assertTrue(accountDAO.getUpdated(account.getId()).isEqual(newUpdated));
     }
 
@@ -187,7 +188,7 @@ public class AccountIT
             .updateAccountsAndCharacters(List.of(Tuples.of(newAccount, pc, true, 1)));
 
         //entity wasn't updated due to anonymous flag
-        Account foundAccount = accountDAO.findByIds(acc.getId()).get(0);
+        Account foundAccount = accountDAO.findByIds(Set.of(acc.getId())).get(0);
         assertEquals(acc, foundAccount);
         assertEquals("tag#1", foundAccount.getBattleTag());
         OffsetDateTime afterUpdate = template

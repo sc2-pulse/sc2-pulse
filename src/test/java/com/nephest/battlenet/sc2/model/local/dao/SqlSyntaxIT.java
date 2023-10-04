@@ -35,7 +35,10 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
+import java.util.EnumSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -204,13 +207,6 @@ public class SqlSyntaxIT
             1L, 1, 1, 1, 1,
             OffsetDateTime.now()
         );
-        Team mergedTeam = new Team
-        (
-            null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
-            BigInteger.ONE, division.getId(),
-            2L, 2, 2, 2, 2,
-            OffsetDateTime.now()
-        );
         Team sameTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
@@ -250,24 +246,33 @@ public class SqlSyntaxIT
         teamDAO.create(zergTeam);
         teamDAO.create(mergeTestTeam2);
         teamDAO.create(mergeTestTeam3);
-        //zergTeamClone is existing, merged is updated, same is a clone, newTeam is inserted
-        Team[] teams = teamDAO.merge(zergTeamClone, mergedTeam, newTeam2, sameTeam);
+        //zergTeamClone is existing, same is updated, newTeam is inserted
+        Team[] teams = teamDAO.merge(new LinkedHashSet<>(List.of(
+                zergTeamClone, newTeam2, sameTeam)))
+            .toArray(Team[]::new);
         Arrays.sort(teams, Team.NATURAL_ID_COMPARATOR);
         //existing team is excluded
-        assertEquals(3, teams.length);
-        assertEquals(teams[0], mergedTeam);
-        assertEquals(teams[1], sameTeam);
-        assertEquals(teams[2], newTeam2);
+        assertEquals(2, teams.length);
+        assertEquals(teams[0], sameTeam);
+        assertEquals(teams[1], newTeam2);
         assertNull(zergTeamClone.getId());
-        assertNotNull(mergedTeam.getId());
         assertNotNull(sameTeam.getId());
         assertNotNull(newTeam2.getId());
-        assertEquals(mergedTeam.getId(), sameTeam.getId());
-        assertNotEquals(mergedTeam.getId(), newTeam2.getId());
+        assertEquals(newTeam.getId(), sameTeam.getId());
+        assertNotEquals(newTeam.getId(), newTeam2.getId());
 
         //test correct id setting for nullable entities
-        Team[] mergeTestTeams = teamDAO.merge(mergeTestTeam1, mergeTestTeam2, mergeTestTeam3, mergeTestTeam4,
-            mergeTestTeam5, mergeTestTeam6);
+        Team[] mergeTestTeams = teamDAO.merge(new LinkedHashSet<>(List.of(
+            mergeTestTeam1,
+            mergeTestTeam2,
+            mergeTestTeam3,
+            mergeTestTeam4,
+            mergeTestTeam5,
+            mergeTestTeam6
+        )))
+            .stream()
+            .sorted(Team.NATURAL_ID_COMPARATOR)
+            .toArray(Team[]::new);
         assertEquals(4, mergeTestTeams.length);
         assertEquals(mergeTestTeams[0], mergeTestTeam1);
         assertEquals(mergeTestTeams[1], mergeTestTeam4);
@@ -281,17 +286,21 @@ public class SqlSyntaxIT
         assertEquals(2, team.getLosses());
         assertEquals(2, team.getTies());
         assertEquals(2, team.getPoints());
-        assertEquals(0, teamDAO.merge(team).length); //do not update a team when games played or division is the same
+        //do not update a team when games played or division is the same
+        assertEquals(0, teamDAO.merge(Set.of(team)).size());
         team.setDivisionId(division2.getId());
         team.setLastPlayed(OffsetDateTime.now());
-        assertEquals(1, teamDAO.merge(team).length);
+        assertEquals(1, teamDAO.merge(Set.of(team)).size());
         team.setDivisionId(division.getId());
         team.setLastPlayed(OffsetDateTime.now());
-        assertEquals(1, teamDAO.merge(team).length);
+        assertEquals(1, teamDAO.merge(Set.of(team)).size());
         sameTeam.setLastPlayed(OffsetDateTime.now());
-        assertEquals(0, teamDAO.merge(sameTeam).length);
+        assertEquals(0, teamDAO.merge(Set.of(sameTeam)).size());
+        sameTeam.setDivisionId(division2.getId());
+        sameTeam.setLastPlayed(OffsetDateTime.now());
+        assertEquals(1, teamDAO.merge(Set.of(sameTeam)).size());
         updatedTeam.setLastPlayed(OffsetDateTime.now());
-        teamDAO.merge(updatedTeam);
+        teamDAO.merge(Set.of(updatedTeam));
         Team foundTeam = teamDAO.findById(updatedTeam.getId()).orElse(null);
         assertEquals(updatedTeam.getId(), foundTeam.getId());
         assertNotNull(foundTeam);
@@ -314,7 +323,7 @@ public class SqlSyntaxIT
         assertEquals(account, accountDAO.find(Partition.GLOBAL, "newtag#2").get());
         Account account2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "newtag#3"));
 
-        accountRoleDAO.addRoles(account.getId(), SC2PulseAuthority.MODERATOR);
+        accountRoleDAO.addRoles(account.getId(), EnumSet.of(SC2PulseAuthority.MODERATOR));
         List<SC2PulseAuthority> roles = accountRoleDAO.getRoles(account.getId());
         assertEquals(2, roles.size());
         assertTrue(roles.contains(SC2PulseAuthority.MODERATOR));
@@ -324,7 +333,7 @@ public class SqlSyntaxIT
         assertEquals(1, mods.size());
         assertEquals(account.getId(), mods.get(0).getId());
 
-        accountRoleDAO.addRoles(account.getId(), SC2PulseAuthority.NONE);
+        accountRoleDAO.addRoles(account.getId(), EnumSet.of(SC2PulseAuthority.NONE));
         List<SC2PulseAuthority> roles2 = accountRoleDAO.getRoles(account.getId());
         assertEquals(1, roles2.size());
         assertTrue(roles2.contains(SC2PulseAuthority.NONE));
@@ -332,39 +341,36 @@ public class SqlSyntaxIT
         Clan[] clans = new Clan[]
         {
             new Clan(null, "clanTag1", Region.EU, "clanName1"),
-            new Clan(null, "clanTag2", Region.EU, "clanName2"),
-            new Clan(null, "clanTag1", Region.EU, "clanName1")//duplicate
+            new Clan(null, "clanTag2", Region.EU, "clanName2")
         };
-        Clan[] mergedClans = clanDAO.merge(clans);
-        Arrays.sort(mergedClans, Clan.NATURAL_ID_COMPARATOR);
-        assertEquals(3, mergedClans.length);
+        Clan[] mergedClans = clanDAO.merge(new LinkedHashSet<>(Arrays.asList(clans)))
+            .toArray(Clan[]::new);
+        assertEquals(2, mergedClans.length);
         for(Clan clan : mergedClans) assertNotNull(clan.getId());
         for(Clan clan : clans) assertNotNull(clan.getId());
-        assertEquals(clans[0].getId(), clans[1].getId());
-        Clan[] mergedClans2 = clanDAO.merge
-        (
+        Clan[] mergedClans2 = clanDAO.merge(new LinkedHashSet<>(List.of(
             new Clan(null, "clanTag1", Region.EU, "clanName1"), //nothing
             new Clan(null, "clanTag2", Region.EU, "clanAnotherName2"), //update
             new Clan(null, "clanTag3", Region.EU, "clanName3") //insert
-        );
+        )))
+            .toArray(Clan[]::new);
         Arrays.sort(mergedClans2, Clan.NATURAL_ID_COMPARATOR);
         assertEquals(clans[0].getId(), mergedClans2[0].getId());
-        assertEquals(clans[2].getId(), mergedClans2[1].getId());
+        assertEquals(clans[1].getId(), mergedClans2[1].getId());
         assertEquals(clans[0], clanDAO.findByTag(clans[0].getTag()).get(0));
 
-        SC2Map map2 = mapDAO.merge(new SC2Map(null, "map2v2"))[0];
-        SC2Map[] maps = mapDAO.merge
-        (
+        SC2Map map2 = mapDAO.merge(Set.of(new SC2Map(null, "map2v2"))).iterator().next();
+        SC2Map[] maps = mapDAO.merge(new LinkedHashSet<>(List.of(
             new SC2Map(null, "map1v1_1"), //insert
-            new SC2Map(null, "map1v1_1"), //identical, insert without errors
             new SC2Map(null, "map1v1_2"), //insert
             new SC2Map(null, "map2v2") //existing
-        );
+        )))
+            .toArray(SC2Map[]::new);
         Arrays.sort(maps, SC2Map.NATURAL_ID_COMPARATOR);
-        assertEquals(4, maps.length);
-        assertEquals(maps[0].getId(), maps[1].getId());
-        assertNotNull(maps[2].getId());
-        assertEquals(maps[3].getId(), map2.getId());
+        assertEquals(3, maps.length);
+        assertNotNull(maps[0].getId());
+        assertNotNull(maps[1].getId());
+        assertEquals(maps[2].getId(), map2.getId());
 
         PlayerCharacter createdCharacter = new PlayerCharacter(null, account.getId(), season.getRegion(), 1L, 1, "name#1");
         playerCharacterDAO.merge(createdCharacter);
@@ -404,7 +410,7 @@ public class SqlSyntaxIT
             teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
         zergTeam.setWins(zergTeam.getWins() + 1);
         zergTeam.setLastPlayed(OffsetDateTime.now());
-        teamDAO.merge(zergTeam);
+        teamDAO.merge(Set.of(zergTeam));
         assertEquals(zergTeam.getWins(), teamDAO.find1v1TeamByFavoriteRace(season.getBattlenetId(), character, Race.ZERG)
             .get().getKey().getWins());
         assertEquals(team.getId(),teamDAO.find1v1TeamByFavoriteRace(40, character, Race.TERRAN).get().getKey().getId());

@@ -57,6 +57,8 @@ import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
 import java.math.BigInteger;
 import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -74,6 +76,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -129,6 +132,9 @@ public class DiscordServiceTest
 
     @Mock
     private RolesSlashCommand rolesSlashCommand;
+
+    @Captor
+    private ArgumentCaptor<Set<DiscordUser>> userCaptor;
 
     private DiscordService discordService;
 
@@ -216,7 +222,6 @@ public class DiscordServiceTest
         discordService.update();
         verify(discordUserDAO).removeUsersWithNoAccountLinked();
 
-        ArgumentCaptor<DiscordUser> userCaptor = ArgumentCaptor.forClass(DiscordUser.class);
         double userBatches = Math.ceil(DB_CURSOR_BATCH_SIZE / (double) USER_UPDATE_BATCH_SIZE)
             +  Math.ceil(Math.ceil(DB_CURSOR_BATCH_SIZE / 2.0d) / USER_UPDATE_BATCH_SIZE);
         int batchCount = (int) userBatches;
@@ -224,7 +229,11 @@ public class DiscordServiceTest
         verify(discordUserDAO, times(batchCount)).merge(userCaptor.capture());
 
         //all users are saved
-        List<DiscordUser> users = userCaptor.getAllValues();
+        List<DiscordUser> users = userCaptor.getAllValues()
+            .stream()
+            .flatMap(Collection::stream)
+            .sorted(Comparator.comparing(u->u.getId().asLong()))
+            .collect(Collectors.toList());
         assertEquals(DB_CURSOR_BATCH_SIZE + DB_CURSOR_BATCH_SIZE / 2, users.size());
         for(int i = 0; i < users.size(); i++)
         {
@@ -243,7 +252,7 @@ public class DiscordServiceTest
         when(spy.findMainTeam(any())).thenReturn(Optional.empty());
         String tag = "tag#123";
         Account account = new Account(1L, Partition.GLOBAL, tag);
-        when(accountDAO.findByIds(1L)).thenReturn(List.of(account));
+        when(accountDAO.findByIds(Set.of(1L))).thenReturn(List.of(account));
         PulseMappings<Role> roleMappings = PulseMappings.empty();
         Tuple2<Guild, Member> member1 = stubRoleMember(roleMappings);
         Tuple2<Guild, Member> member2 = stubRoleMember(roleMappings);

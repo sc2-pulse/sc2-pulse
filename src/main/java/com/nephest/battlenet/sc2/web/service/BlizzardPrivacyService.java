@@ -350,7 +350,7 @@ public class BlizzardPrivacyService
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
             .forEach(l->dbTasks.add(secondaryDbExecutorService.submit(()->
-                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(l.toArray(PlayerCharacter[]::new))),
+                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(Set.copyOf(l))),
                     null)));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
@@ -429,10 +429,9 @@ public class BlizzardPrivacyService
             .map(this::extractCharacter)
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
-            .map(l->l.toArray(PlayerCharacter[]::new))
             .forEach(l->{
                 dbTasks.add(dbExecutorService.submit(()->
-                    LOG.info("Updated {} characters that are about to expire", playerCharacterDAO.updateCharacters(l))));
+                    LOG.info("Updated {} characters that are about to expire", playerCharacterDAO.updateCharacters(Set.copyOf(l)))));
             });
         lastUpdatedCharacterInstant.setValueAndSave(Instant.now());
         lastUpdatedCharacterId.setValueAndSave(batch.get(batch.size() - 1).getId());

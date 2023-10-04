@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.EvidenceVoteDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidenceVote;
+import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -13,8 +15,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 @Repository
 public class LadderEvidenceVoteDAO
@@ -62,13 +62,14 @@ public class LadderEvidenceVoteDAO
         return template.query(FIND_ALL, STD_ROW_MAPPER);
     }
 
-    public List<LadderEvidenceVote> findByEvidenceIds(Integer... evidenceIds)
+    public List<LadderEvidenceVote> findByEvidenceIds(Set<Integer> evidenceIds)
     {
-        if(evidenceIds.length == 0) return List.of();
+        if(evidenceIds.isEmpty()) return List.of();
+
         return template.query
         (
             FIND_BY_EVIDENCE_IDS,
-            new MapSqlParameterSource().addValue("evidenceIds", List.of(evidenceIds)),
+            new MapSqlParameterSource().addValue("evidenceIds", evidenceIds),
             STD_ROW_MAPPER
         );
     }

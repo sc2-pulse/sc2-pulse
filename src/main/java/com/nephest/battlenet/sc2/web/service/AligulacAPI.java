@@ -8,6 +8,8 @@ import static org.springframework.http.MediaType.APPLICATION_JSON;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -46,18 +48,18 @@ extends BaseAPI
             .build());
     }
 
-    public Mono<AligulacProPlayerRoot> getPlayers(Long... ids)
+    public Mono<AligulacProPlayerRoot> getPlayers(Set<Long> ids)
     {
-        StringBuilder sb = new StringBuilder("/player/set/");
-        for(int i = 0; i < ids.length; i++)
-        {
-            if(i > 0) sb.append(";");
-            sb.append(ids[i]);
-        }
-        sb.append("/");
+        if(ids.isEmpty()) return Mono.empty();
+
+        String url = "/player/set/"
+            + ids.stream()
+                .map(String::valueOf)
+                .collect(Collectors.joining(";"))
+            + "/";
         return getWebClient()
             .get()
-            .uri(b->b.path(sb.toString()).queryParam("apikey", apiKey).build())
+            .uri(b->b.path(url).queryParam("apikey", apiKey).build())
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(AligulacProPlayerRoot.class)

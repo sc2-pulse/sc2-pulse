@@ -41,9 +41,11 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -167,9 +169,9 @@ public class ProPlayerServiceIT
             assertNull(nullMember.getProTeam());
 
             //skip character id link
-            assertNull(ladderProPlayerDAO.findByCharacterIds(2L).stream().findFirst().orElse(null));
+            assertNull(ladderProPlayerDAO.findByCharacterIds(Set.of(2L)).stream().findFirst().orElse(null));
             LadderProPlayer ladderProPlayer = ladderProPlayerDAO
-                .findByBattletags("battletag#30").stream().findFirst().orElseThrow();
+                .findByBattletags(Set.of("battletag#30")).stream().findFirst().orElseThrow();
             assertEquals(123321L, ladderProPlayer.getProPlayer().getAligulacId());
             assertEquals("Aligulac Romanized Name2", ladderProPlayer.getProPlayer().getName());
             assertEquals("Aligulac nickname2", ladderProPlayer.getProPlayer().getNickname());
@@ -199,7 +201,7 @@ public class ProPlayerServiceIT
             proPlayerService.setAligulacBatchSize(prevBatchSize);
             proPlayerService.update().block();
             LadderProPlayer ladderProPlayer2 = ladderProPlayerDAO
-                .findByBattletags("battletag#30").stream().findFirst().orElseThrow();
+                .findByBattletags(Set.of("battletag#30")).stream().findFirst().orElseThrow();
             assertNull(ladderProPlayer2.getProTeam());
             server.shutdown();
         }
@@ -296,44 +298,47 @@ public class ProPlayerServiceIT
         socialMediaLinkDAO.merge
         (
             false,
-            new SocialMediaLink
+            Set.of
             (
-                proPlayer2.getId(),
-                SocialMedia.LIQUIPEDIA,
-                "https://liquipedia.net/starcraft2/Serral"
-            ),
-            new SocialMediaLink
-            (
-                proPlayer2.getId(),
-                SocialMedia.TWITTER,
-                "oldTwitterLink"
-            ),
+                new SocialMediaLink
+                (
+                    proPlayer2.getId(),
+                    SocialMedia.LIQUIPEDIA,
+                    "https://liquipedia.net/starcraft2/Serral"
+                ),
+                new SocialMediaLink
+                (
+                    proPlayer2.getId(),
+                    SocialMedia.TWITTER,
+                    "oldTwitterLink"
+                ),
 
-            new SocialMediaLink
-            (
-                proPlayer3.getId(),
-                SocialMedia.LIQUIPEDIA,
-                "https://liquipedia.net/starcraft2/Maru"
-            ),
+                new SocialMediaLink
+                (
+                    proPlayer3.getId(),
+                    SocialMedia.LIQUIPEDIA,
+                    "https://liquipedia.net/starcraft2/Maru"
+                ),
 
-            new SocialMediaLink
-            (
-                proPlayer4.getId(),
-                SocialMedia.LIQUIPEDIA,
-                "https://liquipedia.net/starcraft2/jEcho"
-            ),
+                new SocialMediaLink
+                (
+                    proPlayer4.getId(),
+                    SocialMedia.LIQUIPEDIA,
+                    "https://liquipedia.net/starcraft2/jEcho"
+                ),
 
-            new SocialMediaLink
-            (
-                proPlayer5.getId(),
-                SocialMedia.LIQUIPEDIA,
-                "https://liquipedia.net/starcraft2/DeMusliM"
+                new SocialMediaLink
+                (
+                    proPlayer5.getId(),
+                    SocialMedia.LIQUIPEDIA,
+                    "https://liquipedia.net/starcraft2/DeMusliM"
+                )
             )
         );
         assertTrue(proPlayerService.updateSocialMediaLinks().block() >= 3);
 
         //links were updated
-        List<SocialMediaLink> serralLinks = socialMediaLinkDAO.find(proPlayer2.getId());
+        List<SocialMediaLink> serralLinks = socialMediaLinkDAO.find(Set.of(proPlayer2.getId()));
         assertTrue(serralLinks.size() > 1);
 
         verifyTypePresent(serralLinks, SocialMedia.TWITCH);
@@ -347,19 +352,19 @@ public class ProPlayerServiceIT
             .findAny();
         assertTrue(aligulacLink.isEmpty());
 
-        List<SocialMediaLink> maruLinks = socialMediaLinkDAO.find(proPlayer3.getId());
+        List<SocialMediaLink> maruLinks = socialMediaLinkDAO.find(Set.of(proPlayer3.getId()));
         assertTrue(maruLinks.size() > 1);
 
         verifyTypePresent(maruLinks, SocialMedia.INSTAGRAM);
         verifyTypePresent(maruLinks, SocialMedia.TWITCH);
 
-        List<SocialMediaLink> jEchoLinks = socialMediaLinkDAO.find(proPlayer4.getId());
+        List<SocialMediaLink> jEchoLinks = socialMediaLinkDAO.find(Set.of(proPlayer4.getId()));
         assertTrue(jEchoLinks.size() > 1);
 
         verifyTypePresent(jEchoLinks, SocialMedia.TWITTER);
         verifyTypeAbsent(jEchoLinks, SocialMedia.TWITCH);
 
-        List<SocialMediaLink> demuslimLinks = socialMediaLinkDAO.find(proPlayer5.getId());
+        List<SocialMediaLink> demuslimLinks = socialMediaLinkDAO.find(Set.of(proPlayer5.getId()));
         assertTrue(demuslimLinks.size() >= 3);
         verifyTypePresent(demuslimLinks, SocialMedia.INSTAGRAM);
         verifyTypePresent(demuslimLinks, SocialMedia.TWITTER);
@@ -440,10 +445,11 @@ public class ProPlayerServiceIT
                 false
             ),
         };
-        socialMediaLinkDAO.merge(false, links);
+        socialMediaLinkDAO.merge(false, Set.of(links));
 
         proPlayerService.update().block();
-        List<SocialMediaLink> twitchLinks = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH);
+        List<SocialMediaLink> twitchLinks = socialMediaLinkDAO
+            .findByTypes(EnumSet.of(SocialMedia.TWITCH));
         assertEquals(3, twitchLinks.size());
         twitchLinks.sort(SocialMediaLink.NATURAL_ID_COMPARATOR);
         Assertions.assertThat(twitchLinks.get(0))

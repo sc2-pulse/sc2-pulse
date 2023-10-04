@@ -30,6 +30,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -130,7 +131,7 @@ public class BlizzardOidcUserServiceTest
         ));
         when(playerCharacterDAO.find(Region.EU, 1, 10L))
             .thenReturn(Optional.of(new PlayerCharacter(1L, 123L, Region.EU, 10L, 1, "name#1")));
-        when(accountDAO.findByIds(123L)).thenReturn(List.of(expectedResult));
+        when(accountDAO.findByIds(Set.of(123L))).thenReturn(List.of(expectedResult));
 
         assertSame(expectedResult, ((BlizzardOidcUser) service.loadUser(null)).getAccount());
         verifyNoMoreInteractions(accountDAO);

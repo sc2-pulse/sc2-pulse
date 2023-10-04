@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.util;
 
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
@@ -48,7 +49,7 @@ public class PostgreSQLUtils
     }
 
     //use carefully, sql injection is possible
-    public void reindex(String... indexes)
+    public void reindex(Set<String> indexes)
     {
         for(String ix : indexes) template.execute("REINDEX INDEX " + ix);
     }

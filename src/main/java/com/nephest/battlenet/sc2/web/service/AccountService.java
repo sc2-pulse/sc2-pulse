@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.config.security.AccountUser;
 import com.nephest.battlenet.sc2.model.local.AccountProperty;
 import com.nephest.battlenet.sc2.model.local.dao.AccountPropertyDAO;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +65,7 @@ public class AccountService
             AccountProperty.PropertyType.PASSWORD,
             passwordEncoder.encode(password)
         );
-        accountPropertyDAO.merge(property);
+        accountPropertyDAO.merge(Set.of(property));
         return property.getValue();
     }
 

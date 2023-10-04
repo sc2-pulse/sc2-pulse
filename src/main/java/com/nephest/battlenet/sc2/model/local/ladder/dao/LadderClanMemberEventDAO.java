@@ -11,6 +11,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
@@ -54,14 +55,12 @@ public class LadderClanMemberEventDAO
         );
         if(events.isEmpty()) return Optional.empty();
 
-        Long[] eventChars = events.stream()
+        Set<Long> eventChars = events.stream()
             .map(ClanMemberEvent::getPlayerCharacterId)
-            .distinct()
-            .toArray(Long[]::new);
-        Integer[] eventClans = events.stream()
+            .collect(Collectors.toSet());
+        Set<Integer> eventClans = events.stream()
             .map(ClanMemberEvent::getClanId)
-            .distinct()
-            .toArray(Integer[]::new);
+            .collect(Collectors.toSet());
         return Optional.of(new LadderClanMemberEvents
         (
             ladderCharacterDAO.findDistinctCharactersByCharacterIds(eventChars),

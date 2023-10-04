@@ -12,8 +12,10 @@ import com.nephest.battlenet.sc2.model.local.ProTeamMember;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
@@ -78,10 +80,10 @@ public class ProTeamMemberIT
             new ProTeamMember(team2.getId(), proPlayer2.getId()),
             new ProTeamMember(team3.getId(), proPlayer3.getId())
         };
-        proTeamMemberDAO.merge(members);
+        proTeamMemberDAO.merge(Set.copyOf(Arrays.asList(members)));
 
         List<ProTeamMember> foundMembers = proTeamMemberDAO
-            .findByProPlayerIds(proPlayer1.getId(), proPlayer3.getId());
+            .findByProPlayerIds(Set.of(proPlayer1.getId(), proPlayer3.getId()));
         assertEquals(2, foundMembers.size());
         foundMembers.sort(Comparator.comparing(ProTeamMember::getProPlayerId));
         Assertions.assertThat(foundMembers.get(0))

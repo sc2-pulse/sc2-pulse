@@ -64,6 +64,7 @@ import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -184,8 +185,8 @@ public class PlayerCharacterReportIT
                 List.of(QueueType.LOTV_1V1),
                 TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST, 10
             );
-            accountRoleDAO.addRoles(10L, SC2PulseAuthority.ADMIN);
-            accountRoleDAO.addRoles(11L, SC2PulseAuthority.MODERATOR);
+            accountRoleDAO.addRoles(10L, EnumSet.of(SC2PulseAuthority.ADMIN));
+            accountRoleDAO.addRoles(11L, EnumSet.of(SC2PulseAuthority.MODERATOR));
             mvc = MockMvcBuilders
                 .webAppContextSetup(webApplicationContext)
                 .apply(springSecurity())
@@ -217,13 +218,14 @@ public class PlayerCharacterReportIT
         byte[] localhost = InetAddress.getByName("127.0.0.1").getAddress();
         ZoneOffset offset = OffsetDateTime.now().getOffset();
         OffsetDateTime matchDateTime = SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay(offset).toOffsetDateTime();
-        SC2Map map = mapDAO.merge(new SC2Map(null, "map"))[0];
-        Match match = matchDAO.merge(new Match(null, matchDateTime, BaseMatch.MatchType._1V1, map.getId(), Region.EU))[0];
-        matchParticipantDAO.merge
-        (
+        SC2Map map = mapDAO.merge(Set.of(new SC2Map(null, "map"))).iterator().next();
+        Match match = matchDAO
+            .merge(Set.of(new Match(null, matchDateTime, BaseMatch.MatchType._1V1, map.getId(), Region.EU)))
+            .iterator().next();
+        matchParticipantDAO.merge(Set.of(
             new MatchParticipant(match.getId(), 1L, BaseMatch.Decision.WIN),
             new MatchParticipant(match.getId(), 5L, BaseMatch.Decision.LOSS)
-        );
+        ));
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, matchDateTime.minusDays(10));
         playerCharacterStatsDAO.mergeCalculate();
 
@@ -710,14 +712,14 @@ public class PlayerCharacterReportIT
         assertTrue(endReports.stream().anyMatch(r->r.getId().equals(expiredConfirmedReport.getId())));
         assertTrue(endEvidences.stream().anyMatch(e->e.getId().equals(expiredConfirmedEvidence.getId())));
 
-        Team secondCheaterTeam = teamDAO.merge(new Team
+        Team secondCheaterTeam = teamDAO.merge(Set.of(new Team
         (
             null,
             SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("12344"), 1, 10L, 10, 0, 0, 0,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
         template.update("UPDATE player_character_report SET restrictions = true");
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
@@ -729,11 +731,10 @@ public class PlayerCharacterReportIT
         assertNotNull(foundSecondCheaterTeamPreCheat.getLeagueRank());
 
         //cheater team is a team where at least on of its members is a cheater, add cheaters
-        teamMemberDAO.merge
-        (
+        teamMemberDAO.merge(Set.of(
             new TeamMember(secondCheaterTeam.getId(), 1L, 0, 0, 0, 10),
             new TeamMember(secondCheaterTeam.getId(), 2L, 0, 0, 0, 10)
-        );
+        ));
 
         //cheaters are excluded from ranking
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);

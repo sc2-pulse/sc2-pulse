@@ -15,6 +15,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
@@ -259,7 +260,8 @@ public class ProPlayerIT
             OffsetDateTime.now(),
             1
         ));
-        List<ProPlayer> proPlayers = proPlayerDAO.find(proPlayer1.getId(), proPlayer3.getId());
+        List<ProPlayer> proPlayers = proPlayerDAO
+            .find(Set.of(proPlayer1.getId(), proPlayer3.getId()));
         assertEquals(2, proPlayers.size());
         Assertions.assertThat(proPlayers.get(0))
             .usingRecursiveComparison()

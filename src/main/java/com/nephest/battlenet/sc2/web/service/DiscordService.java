@@ -190,13 +190,13 @@ public class DiscordService
     public void linkAccountToDiscordUser(Long accountId, Snowflake discordUserId)
     {
         accountDiscordUserDAO.remove(accountId, discordUserId);
-        accountDiscordUserDAO.create(new AccountDiscordUser(accountId, discordUserId));
+        accountDiscordUserDAO.create(Set.of(new AccountDiscordUser(accountId, discordUserId)));
     }
 
     @Transactional
     public void linkAccountToNewDiscordUser(Long accountId, DiscordUser discordUser)
     {
-        discordUserDAO.merge(discordUser);
+        discordUserDAO.merge(Set.of(discordUser));
         discordService.linkAccountToDiscordUser(accountId, discordUser.getId());
     }
 
@@ -279,7 +279,8 @@ public class DiscordService
             discordAPI.getUsers(toUpdate)
                 .buffer(USER_UPDATE_BATCH_SIZE)
                 .toStream()
-                .forEach(batch->tasks.add(dbExecutorService.submit(()->updateUsers(batch), null)));
+                .forEach(batch->tasks.add(
+                    dbExecutorService.submit(()->updateUsers(Set.copyOf(batch)), null)));
             MiscUtil.awaitAndThrowException(tasks, true, true);
 
             count += toUpdate.size();
@@ -290,9 +291,9 @@ public class DiscordService
         return count;
     }
 
-    private void updateUsers(List<DiscordUser> users)
+    private void updateUsers(Set<DiscordUser> users)
     {
-        discordUserDAO.merge(users.toArray(DiscordUser[]::new));
+        discordUserDAO.merge(users);
     }
 
     public Optional<LadderTeam> findMainTeam(Long accountId)
@@ -355,7 +356,7 @@ public class DiscordService
                     pulseConnectionParameters.getParameters(),
                     conversionService
                 )
-            : ApplicationRoleConnection.empty(accountDAO.findByIds(accountId).get(0).getBattleTag());
+            : ApplicationRoleConnection.empty(accountDAO.findByIds(Set.of(accountId)).get(0).getBattleTag());
 
         return Flux.concat
         (

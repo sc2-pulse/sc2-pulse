@@ -24,8 +24,9 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -340,21 +341,20 @@ public class ClanService
         if(clans.isEmpty()) return;
         List<Pair<PlayerCharacter, Clan>> nonNullClans = clans.stream()
             .filter(p->p.getValue() != null)
-            .sorted(Map.Entry.comparingByValue(Clan.NATURAL_ID_COMPARATOR))
             .collect(Collectors.toList());
 
-        clanDAO.merge(nonNullClans.stream().map(Pair::getValue).toArray(Clan[]::new));
+        clanDAO.merge(nonNullClans.stream().map(Pair::getValue).collect(Collectors.toSet()));
 
-        ClanMember[] members = nonNullClans.stream()
+        Set<ClanMember> members = nonNullClans.stream()
             .map(t->new ClanMember(t.getKey().getId(), t.getValue().getId()))
-            .toArray(ClanMember[]::new);
+            .collect(Collectors.toSet());
         clanMemberDAO.merge(members);
 
-        Long[] charactersWithNoClan = clans.stream()
+        Set<Long> charactersWithNoClan = clans.stream()
             .filter(c->c.getValue() == null)
             .map(Pair::getKey)
             .map(PlayerCharacter::getId)
-            .toArray(Long[]::new);
+            .collect(Collectors.toSet());
         clanMemberDAO.remove(charactersWithNoClan);
         createClanEvents(clans);
     }
@@ -363,11 +363,11 @@ public class ClanService
     {
         if(clans.isEmpty()) return;
 
-        ClanMemberEvent[] events = clans.stream()
+        Set<ClanMemberEvent> events = clans.stream()
             .map(p->ClanMemberEvent.from(p.getKey(), p.getValue()))
-            .toArray(ClanMemberEvent[]::new);
+            .collect(Collectors.toCollection(LinkedHashSet::new));
         clanMemberEventDAO.merge(events);
-        LOG.debug("Created {} clan events", events.length);
+        LOG.debug("Created {} clan events", events.size());
     }
 
 }

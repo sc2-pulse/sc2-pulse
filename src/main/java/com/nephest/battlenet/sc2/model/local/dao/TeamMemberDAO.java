@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.TeamMember;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.RowMapper;
@@ -71,15 +72,13 @@ public class TeamMemberDAO
         return member;
     }
 
-    public int[] merge(TeamMember... members)
+    public int[] merge(Set<TeamMember> members)
     {
-        if(members.length == 0) return DAOUtils.EMPTY_INT_ARRAY;
+        if(members.isEmpty()) return DAOUtils.EMPTY_INT_ARRAY;
 
-        MapSqlParameterSource[] params = new MapSqlParameterSource[members.length];
-        for(int i = 0; i < members.length; i++)
-        {
-            params[i] = createParameterSource(members[i]);
-        }
+        MapSqlParameterSource[] params = members.stream()
+            .map(this::createParameterSource)
+            .toArray(MapSqlParameterSource[]::new);
 
         return template.batchUpdate(MERGE_QUERY, params);
     }

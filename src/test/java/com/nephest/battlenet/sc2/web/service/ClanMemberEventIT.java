@@ -34,7 +34,9 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
@@ -101,24 +103,23 @@ public class ClanMemberEventIT
         seasonGenerator.generateDefaultSeason(0);
         seasonGenerator.createTeams(characters);
         playerCharacterStatsDAO.mergeCalculate();
-        clans = clanDAO.merge
-        (
+        clans = clanDAO.merge(new LinkedHashSet<>(List.of(
             new Clan(null, "tag1", Region.EU, "name1"),
             new Clan(null, "tag2", Region.EU, "name2"),
             new Clan(null, "tag3", Region.EU, "name3"),
             new Clan(null, "tag4", Region.EU, "name4"),
             new Clan(null, "tag5", Region.EU, "name5")
-        );
+        )))
+            .toArray(Clan[]::new);
 
-        clanMemberDAO.merge
-        (
+        clanMemberDAO.merge(Set.of(
             new ClanMember(characters[0].getId(), clans[0].getId()),
             new ClanMember(characters[1].getId(), clans[0].getId()),
             new ClanMember(characters[2].getId(), clans[1].getId()),
             new ClanMember(characters[3].getId(), clans[2].getId()),
             new ClanMember(characters[4].getId(), clans[3].getId()),
             new ClanMember(characters[5].getId(), clans[4].getId())
-        );
+        ));
     }
 
     @AfterAll
@@ -136,8 +137,7 @@ public class ClanMemberEventIT
     {
         OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1)
             .withOffsetSameInstant(ZoneOffset.UTC);
-        assertEquals(6, clanMemberEventDAO.merge
-        (
+        assertEquals(6, clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1),
             new ClanMemberEvent(characters[1].getId(), clans[0].getId(), JOIN, odt1),
             new ClanMemberEvent(characters[2].getId(), clans[1].getId(), JOIN, odt1),
@@ -146,19 +146,18 @@ public class ClanMemberEventIT
             new ClanMemberEvent(characters[5].getId(), clans[4].getId(), JOIN, odt1),
             //ignored, player is not in a clan, nothing has changed
             new ClanMemberEvent(characters[6].getId(), null, LEAVE, odt1)
-        ));
+        )));
 
         int secondsSincePrevious = 10;
         OffsetDateTime odt2 = odt1.plusSeconds(secondsSincePrevious)
             .withOffsetSameInstant(ZoneOffset.UTC);
-        clanMemberEventDAO.merge
-        (
+        clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt2),
             //inject "left" evt for clan[0]
             new ClanMemberEvent(characters[1].getId(), clans[1].getId(), JOIN, odt2),
             //ignored, nothing has changed
             new ClanMemberEvent(characters[2].getId(), clans[1].getId(), JOIN, odt2)
-        );
+        ));
 
         LadderClanMemberEvents evts1 = objectMapper.readValue(mvc.perform
         (
@@ -356,25 +355,22 @@ public class ClanMemberEventIT
     public void whenLeavingClanWithoutBeingInClanButWasInClanPreviously_thenIgnoreEvent() throws Exception
     {
         OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
-        assertEquals(1, clanMemberEventDAO.merge
-        (
+        assertEquals(1, clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1)
-        ));
+        )));
 
         int secondsSincePrevious = 10;
         OffsetDateTime odt2 = odt1.plusSeconds(secondsSincePrevious);
-        clanMemberEventDAO.merge
-        (
+        clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt2)
-        );
+        ));
 
         //should be ignored because player is not in a clan
         int secondsSincePrevious3 = 20;
         OffsetDateTime odt3 = odt2.plusSeconds(secondsSincePrevious3);
-        clanMemberEventDAO.merge
-        (
+        clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt3)
-        );
+        ));
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
@@ -425,11 +421,10 @@ public class ClanMemberEventIT
     throws Exception
     {
         OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
-        assertEquals(1, clanMemberEventDAO.merge
-        (
+        assertEquals(1, clanMemberEventDAO.merge(new LinkedHashSet<>(List.of(
             new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1),
             new ClanMemberEvent(characters[0].getId(), clans[1].getId(), JOIN, odt1.plusSeconds(1))
-        ));
+        ))));
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
@@ -474,19 +469,16 @@ public class ClanMemberEventIT
         OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
         OffsetDateTime odt2 = odt1.plusSeconds(20);
         OffsetDateTime odt3 = odt2.plusSeconds(30);
-        assertEquals(1, clanMemberEventDAO.merge
-        (
+        assertEquals(1, clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1)
-        ));
-        clanMemberDAO.merge(new ClanMember(characters[0].getId(), clans[1].getId()));
-        assertEquals(1, clanMemberEventDAO.merge
-        (
+        )));
+        clanMemberDAO.merge(Set.of(new ClanMember(characters[0].getId(), clans[1].getId())));
+        assertEquals(1, clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), null, LEAVE, odt2)
-        ));
-        assertEquals(1, clanMemberEventDAO.merge
-        (
+        )));
+        assertEquals(1, clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), clans[1].getId(), JOIN, odt3)
-        ));
+        )));
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (

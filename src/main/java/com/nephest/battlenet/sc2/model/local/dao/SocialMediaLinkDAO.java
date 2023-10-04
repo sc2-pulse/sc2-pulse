@@ -8,7 +8,6 @@ import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.SocialMediaUserId;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -178,7 +177,7 @@ public class SocialMediaLinkDAO
             .addValue("protected", link.isProtected() ? link.isProtected() : null);
     }
 
-    public SocialMediaLink[] merge(SocialMediaLink... links)
+    public Set<SocialMediaLink> merge(Set<SocialMediaLink> links)
     {
         return merge(false, links);
     }
@@ -195,39 +194,29 @@ public class SocialMediaLinkDAO
      * @param links links to merge
      * @return merged links
      */
-    public SocialMediaLink[] merge(boolean isProtected, SocialMediaLink... links)
+    public Set<SocialMediaLink> merge(boolean isProtected, Set<SocialMediaLink> links)
     {
-        if(links.length == 0) return links;
+        if(links.isEmpty()) return links;
 
-        links = Arrays.stream(links)
+        MapSqlParameterSource[] params = links.stream()
             .filter(Objects::nonNull)
-            .distinct()
             .sorted(SocialMediaLink.NATURAL_ID_COMPARATOR)
-            .toArray(SocialMediaLink[]::new);
-        MapSqlParameterSource[] params = new MapSqlParameterSource[links.length];
-        for(int i = 0; i < links.length; i++)
-        {
-            links[i].setUpdated
-            (
-                links[i].getUpdated() != null
-                    ? links[i].getUpdated()
-                    : OffsetDateTime.now()
-            );
-            params[i] = createParameterSource(links[i])
-                .addValue("protectedMode", isProtected);
-        }
+            .peek(link->link.setUpdated(link.getUpdated() != null
+                ? link.getUpdated()
+                : OffsetDateTime.now()))
+            .map(link->createParameterSource(link).addValue("protectedMode", isProtected))
+            .toArray(MapSqlParameterSource[]::new);
 
         template.batchUpdate(MERGE_QUERY, params);
         return links;
     }
 
-    public void remove(SocialMediaLink... links)
+    public void remove(Set<SocialMediaLink> links)
     {
-        if(links.length == 0) return;
+        if(links.isEmpty()) return;
 
-        MapSqlParameterSource[] params = Arrays.stream(links)
+        MapSqlParameterSource[] params = links.stream()
             .filter(Objects::nonNull)
-            .distinct()
             .sorted(SocialMediaLink.NATURAL_ID_COMPARATOR)
             .map
             (
@@ -246,11 +235,11 @@ public class SocialMediaLinkDAO
         return template.query(FIND_LIST_BY_TYPE, params, getGroupFetchMapper());
     }
 
-    public List<SocialMediaLink> findByTypes(SocialMedia... types)
+    public List<SocialMediaLink> findByTypes(Set<SocialMedia> types)
     {
-        if(types.length == 0) return List.of();
+        if(types.isEmpty()) return List.of();
 
-        List<Integer> typeInts = Arrays.stream(types)
+        List<Integer> typeInts = types.stream()
             .map(t->conversionService.convert(t, Integer.class))
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -258,21 +247,20 @@ public class SocialMediaLinkDAO
         return template.query(FIND_LIST_BY_TYPES, params, STD_ROW_MAPPER);
     }
 
-    public List<SocialMediaLink> find(Long... proPlayerIds)
+    public List<SocialMediaLink> find(Set<Long> proPlayerIds)
     {
-        if(proPlayerIds.length == 0) return List.of();
+        if(proPlayerIds.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("proPlayerIds", Set.of(proPlayerIds));
+            .addValue("proPlayerIds", proPlayerIds);
         return template.query(FIND_BY_PRO_PLAYER_IDS, params, STD_ROW_MAPPER);
     }
 
-    public List<SocialMediaLink> findByServiceUserIds(SocialMediaUserId... serviceUserIds)
+    public List<SocialMediaLink> findByServiceUserIds(Set<SocialMediaUserId> serviceUserIds)
     {
-        if(serviceUserIds.length == 0) return List.of();
+        if(serviceUserIds.isEmpty()) return List.of();
 
-        List<Object[]> data = Arrays.stream(serviceUserIds)
-            .distinct()
+        List<Object[]> data = serviceUserIds.stream()
             .map(id->new Object[]{
                 conversionService.convert(id.getType(), Integer.class),
                 id.getServiceUserid()

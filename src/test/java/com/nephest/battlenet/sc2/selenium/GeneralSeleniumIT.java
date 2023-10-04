@@ -44,6 +44,8 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -516,14 +518,16 @@ public class GeneralSeleniumIT
             BaseLeagueTier.LeagueTierType.FIRST,
             10
         );
-        Clan clan1 = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
+        Clan clan1 = clanDAO.merge(Set.of(new Clan(null, "clanTag1", Region.EU, "clanName1")))
+            .iterator().next();
         setupClanData
         (
             template
                 .queryForList("SELECT id FROM player_character WHERE id <= 140", Long.class),
             clan1
         );
-        Clan clan2 = clanDAO.merge(new Clan(null, "clanTag2", Region.EU, "clanName2"))[0];
+        Clan clan2 = clanDAO.merge(Set.of(new Clan(null, "clanTag2", Region.EU, "clanName2")))
+            .iterator().next();
         setupClanData
         (
             template
@@ -553,15 +557,15 @@ public class GeneralSeleniumIT
     
     private void setupClanData(List<Long> charIds, Clan clan)
     {
-        ClanMember[] cm = charIds
+        Set<ClanMember> cm = charIds
             .stream()
             .map(id->new ClanMember(id, clan.getId()))
-            .toArray(ClanMember[]::new);
+            .collect(Collectors.toSet());
         clanMemberDAO.merge(cm);
-        ClanMemberEvent[] cme = charIds.stream()
+        Set<ClanMemberEvent> cme = charIds.stream()
             .map(id->new ClanMemberEvent(
                 id, clan.getId(), ClanMemberEvent.EventType.JOIN, OffsetDateTime.now()))
-            .toArray(ClanMemberEvent[]::new);
+            .collect(Collectors.toSet());
         clanMemberEventDAO.merge(cme);
     }
 

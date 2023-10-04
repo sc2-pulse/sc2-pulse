@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -60,11 +61,12 @@ public class LadderTeamMemberDAO
         this.conversionService = conversionService;
     }
 
-    public List<LadderTeamMember> findByCharacterIds(Long... characterIds)
+    public List<LadderTeamMember> findByCharacterIds(Set<Long> characterIds)
     {
-        if(characterIds.length == 0) return List.of();
+        if(characterIds.isEmpty()) return List.of();
+
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("playerCharacterIds", List.of(characterIds))
+            .addValue("playerCharacterIds", characterIds)
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template.query(FIND_BY_CHARACTER_IDS, params, LadderSearchDAO.getLadderTeamMemberMapper());

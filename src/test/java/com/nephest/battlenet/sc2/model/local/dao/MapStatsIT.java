@@ -37,6 +37,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -165,7 +166,8 @@ public class MapStatsIT
         List<League> leagues = leagueDAO.find(IntStream.rangeClosed(1, 14).boxed().collect(Collectors.toList()));
         leagues.sort(Comparator.comparing(League::getId));
         List<SC2Map> maps = new ArrayList<>();
-        for(int i = 0; i < 7; i++) maps.add(mapDAO.merge(new SC2Map(null, "map" + i))[0]);
+        for(int i = 0; i < 7; i++)
+            maps.add(mapDAO.merge(Set.of(new SC2Map(null, "map" + i))).iterator().next());
         List<SC2Map> statsMaps =  List.of(maps.get(1), maps.get(2));
         OffsetDateTime start = OffsetDateTime.now().minusHours(10);
         generateMatches(regions, start, leagueTypes.size(), teamsPerLeague, 2);
@@ -292,12 +294,12 @@ public class MapStatsIT
                 }
             }
         }
-        matchDAO.merge(matches.stream().map(Tuple2::getT1).toArray(Match[]::new));
+        matchDAO.merge(matches.stream().map(Tuple2::getT1).collect(Collectors.toSet()));
         matches.forEach(m->{
             m.getT2()[0].setMatchId(m.getT1().getId());
             m.getT2()[1].setMatchId(m.getT1().getId());
         });
-        matchParticipantDAO.merge(matches.stream().flatMap(m->Arrays.stream(m.getT2())).toArray(MatchParticipant[]::new));
+        matchParticipantDAO.merge(matches.stream().flatMap(m->Arrays.stream(m.getT2())).collect(Collectors.toSet()));
         matchDAO.updateDuration(odt);
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));

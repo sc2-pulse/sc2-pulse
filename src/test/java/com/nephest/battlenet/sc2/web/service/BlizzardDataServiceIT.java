@@ -30,6 +30,7 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
@@ -162,7 +163,7 @@ public class BlizzardDataServiceIT
         }
         controller.waitForLastAction();
 
-        Account foundAcc1 = accountDAO.findByIds(acc1.getId()).get(0);
+        Account foundAcc1 = accountDAO.findByIds(Set.of(acc1.getId())).get(0);
         assertEquals("user#22", foundAcc1.getBattleTag());
         assertFalse(accountDAO.getAnonymousFlag(acc1.getId()));
         assertTrue(updatedMin.isBefore(accountDAO.getUpdated(acc1.getId())));
@@ -200,7 +201,7 @@ public class BlizzardDataServiceIT
         OffsetDateTime updatedMax = OffsetDateTime.now()
             .minus(BlizzardPrivacyService.DATA_TTL);
 
-        Account foundAcc1 = accountDAO.findByIds(acc1.getId()).get(0);
+        Account foundAcc1 = accountDAO.findByIds(Set.of(acc1.getId())).get(0);
         assertEquals("user#1", foundAcc1.getBattleTag());
         assertTrue(accountDAO.getAnonymousFlag(acc1.getId()));
         assertTrue(updatedMax.isAfter(accountDAO.getUpdated(acc1.getId())));
@@ -215,7 +216,7 @@ public class BlizzardDataServiceIT
     private void verifyCharacter
     (long id, long accountId, String name, boolean anonymous, OffsetDateTime updatedMax)
     {
-        PlayerCharacter foundChar = playerCharacterDAO.find(id).get(0);
+        PlayerCharacter foundChar = playerCharacterDAO.find(Set.of(id)).get(0);
         assertEquals(accountId, foundChar.getAccountId());
         assertEquals(name, foundChar.getName());
         assertEquals(anonymous, playerCharacterDAO.getAnonymousFlag(id));
@@ -230,7 +231,7 @@ public class BlizzardDataServiceIT
 
     private void verifyOtherDataWasNotChanged()
     {
-        Account foundAcc2 = accountDAO.findByIds(acc2.getId()).get(0);
+        Account foundAcc2 = accountDAO.findByIds(Set.of(acc2.getId())).get(0);
         assertEquals("user#2", foundAcc2.getBattleTag());
         verifyCharacter(char2_1.getId(), acc2.getId(), "name#3", false);
     }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.twitch.dao;
@@ -7,8 +7,8 @@ import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.StandardDAO;
 import com.nephest.battlenet.sc2.model.twitch.TwitchVideo;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -84,12 +84,11 @@ extends StandardDAO
         this.template = template;
     }
 
-    public TwitchVideo[] merge(TwitchVideo... videos)
+    public Set<TwitchVideo> merge(Set<TwitchVideo> videos)
     {
-        if(videos.length == 0) return videos;
+        if(videos.isEmpty()) return videos;
 
-        List<Object[]> data = Arrays.stream(videos)
-            .distinct()
+        List<Object[]> data = videos.stream()
             .map(v->new Object[]
             {
                 v.getId(),
@@ -105,12 +104,12 @@ extends StandardDAO
         return videos;
     }
 
-    public List<TwitchVideo> findById(Long... ids)
+    public List<TwitchVideo> findById(Set<Long> ids)
     {
-        if(ids.length == 0) return List.of();
+        if(ids.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("ids", List.of(ids));
+            .addValue("ids", ids);
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 

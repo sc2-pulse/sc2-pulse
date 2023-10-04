@@ -768,7 +768,7 @@ public class StatsService
             .collect(Collectors.toList());
         if(validTeams.isEmpty()) return;
 
-        teamDao.merge(validTeams.stream().map(Tuple2::getT1).toArray(Team[]::new));
+        teamDao.merge(validTeams.stream().map(Tuple2::getT1).collect(Collectors.toSet()));
         validTeams.stream()
             .filter(t->t.getT1().getId() != null)
             .forEach(t->{
@@ -855,7 +855,7 @@ public class StatsService
             teamMembers.add(curMembers.getT3());
         }
 
-        if(teamMembers.size() > 0) teamMemberDao.merge(teamMembers.toArray(teamMembers.toArray(new TeamMember[0])));
+        if(teamMembers.size() > 0) teamMemberDao.merge(teamMembers);
     }
 
 

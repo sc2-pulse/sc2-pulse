@@ -1,11 +1,11 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.twitch.dao;
 
 import com.nephest.battlenet.sc2.model.twitch.TwitchUser;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -85,12 +85,11 @@ public class TwitchUserDAO
      * @param users users to merge
      * @return merged users
      */
-    public TwitchUser[] merge(TwitchUser... users)
+    public Set<TwitchUser> merge(Set<TwitchUser> users)
     {
-        if(users.length == 0) return users;
+        if(users.isEmpty()) return users;
 
-        List<Object[]> data = Arrays.stream(users)
-            .distinct()
+        List<Object[]> data = users.stream()
             .map(u->new Object[]{u.getId(), u.getLogin()})
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -99,12 +98,12 @@ public class TwitchUserDAO
         return users;
     }
 
-    public List<TwitchUser> findById(Long... ids)
+    public List<TwitchUser> findById(Set<Long> ids)
     {
-        if(ids.length == 0) return List.of();
+        if(ids.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("ids", List.of(ids));
+            .addValue("ids", ids);
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 

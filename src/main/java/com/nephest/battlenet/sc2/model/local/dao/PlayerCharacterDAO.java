@@ -508,11 +508,11 @@ public class PlayerCharacterDAO
         updateCharacters and updateAccountsAndCharacters methods are primarily used to update historical BattleTags,
         names, and timestamps. This ensures full compliance with the Blizzard ToS.
      */
-    public int updateCharacters(PlayerCharacter... characters)
+    public int updateCharacters(Set<PlayerCharacter> characters)
     {
-        if(characters.length == 0) return 0;
+        if(characters.isEmpty()) return 0;
 
-        List<Object[]> data = Arrays.stream(characters)
+        List<Object[]> data = characters.stream()
             .map(c->new Object[]
             {
                 conversionService.convert(c.getRegion(), Integer.class),
@@ -569,12 +569,12 @@ public class PlayerCharacterDAO
         return template.update(ANONYMIZE_EXPIRED_CHARACTERS, params);
     }
 
-    public int updateUpdated(OffsetDateTime updated, Long... ids)
+    public int updateUpdated(OffsetDateTime updated, Set<Long> ids)
     {
-        if(ids.length == 0) return 0;
+        if(ids.isEmpty()) return 0;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("ids", Set.of(ids))
+            .addValue("ids", ids)
             .addValue("updated", updated);
         return template.update(UPDATE_UPDATED, params);
     }
@@ -603,11 +603,11 @@ public class PlayerCharacterDAO
         return template.query(FIND_PRO_PLAYER_CHARACTER_IDS, DAOUtils.LONG_MAPPER);
     }
 
-    public List<Long> findCharacterIdsByProPlayerIds(Long... proPlayerIds)
+    public List<Long> findCharacterIdsByProPlayerIds(Set<Long> proPlayerIds)
     {
-        if(proPlayerIds.length == 0) return List.of();
+        if(proPlayerIds.isEmpty()) return List.of();
 
-        MapSqlParameterSource params = new MapSqlParameterSource("proPlayerIds", Set.of(proPlayerIds));
+        MapSqlParameterSource params = new MapSqlParameterSource("proPlayerIds", proPlayerIds);
         return template.query
         (
             FIND_PLAYER_CHARACTER_IDS_BY_PRO_PLAYER_IDS,
@@ -706,12 +706,12 @@ public class PlayerCharacterDAO
         return template.query(FIND_BY_UPDATED_AND_ID_MAX_EXCLUDED, params, getStdRowMapper());
     }
 
-    public List<PlayerCharacter> find(Long... ids)
+    public List<PlayerCharacter> find(Set<Long> ids)
     {
-        if(ids.length == 0) return List.of();
+        if(ids.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("ids", List.of(ids));
+            .addValue("ids", ids);
         return template.query(FIND_BY_IDS, params, getStdRowMapper());
     }
 

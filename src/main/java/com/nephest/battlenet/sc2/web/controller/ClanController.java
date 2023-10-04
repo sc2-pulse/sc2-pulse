@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -87,9 +88,9 @@ public class ClanController
     }
 
     @GetMapping("/id/{ids}")
-    public List<Clan> findByIds(@PathVariable("ids") Integer[] ids)
+    public List<Clan> findByIds(@PathVariable("ids") Set<Integer> ids)
     {
-        if(ids.length > ID_LIST_SIZE_MAX)
+        if(ids.size() > ID_LIST_SIZE_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                 String.format("Ids list is too big, %1$s allowed", ID_LIST_SIZE_MAX));
         return clanDAO.findByIds(ids);

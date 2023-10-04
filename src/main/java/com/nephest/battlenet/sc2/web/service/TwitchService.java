@@ -19,8 +19,10 @@ import com.nephest.battlenet.sc2.model.twitch.dao.TwitchVideoDAO;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Duration;
 import java.time.OffsetDateTime;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,7 +91,8 @@ public class TwitchService
 
     private void updateTwitchData()
     {
-        List<String> twitchIds = socialMediaLinkDAO.findByTypes(SocialMedia.TWITCH).stream()
+        List<String> twitchIds = socialMediaLinkDAO.findByTypes(EnumSet.of(SocialMedia.TWITCH))
+            .stream()
             .map(SocialMediaLink::getServiceUserId)
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
@@ -104,7 +107,7 @@ public class TwitchService
             List<TwitchUser> localUserBatch = userBatch.stream()
                 .map(TwitchUser::of)
                 .collect(Collectors.toList());
-            twitchUserDAO.merge(localUserBatch.toArray(TwitchUser[]::new));
+            twitchUserDAO.merge(Set.copyOf(localUserBatch));
             userBatch.forEach(this::updateVideos);
             batchIx += batch.size();
             LOG.trace("Twitch users progress: {}/{} ", batchIx, twitchIds.size());
@@ -114,7 +117,7 @@ public class TwitchService
 
     private void updateVideos(User user)
     {
-        TwitchVideo[] videos = twitchClient.getHelix().getVideos
+        Set<TwitchVideo> videos = twitchClient.getHelix().getVideos
         (
             null,
             null,
@@ -130,9 +133,9 @@ public class TwitchService
         ).execute().getVideos().stream()
             .filter(v->v.getViewable().equals(VIDEO_VIEWABLE_FILTER))
             .map(v->TwitchVideo.of(user, v))
-            .toArray(TwitchVideo[]::new);
+            .collect(Collectors.toSet());
         twitchVideoDAO.merge(videos);
-        LOG.debug("Saved {} twitch videos for user {}", videos.length, user.getLogin());
+        LOG.debug("Saved {} twitch videos for user {}", videos.size(), user.getLogin());
     }
 
 }

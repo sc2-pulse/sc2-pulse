@@ -32,7 +32,7 @@ public class LiquipediaAPIIT
     {
         Set<String> names = Set.of("Serral", "Maru", "Harstem", "DeMusliM");
         Set<String> urls = new HashSet<>();
-        List<LiquipediaPlayer> players = api.parsePlayers(names.toArray(String[]::new))
+        List<LiquipediaPlayer> players = api.parsePlayers(names)
             .collectList()
             .block();
         assertEquals(names.size(), players.size());

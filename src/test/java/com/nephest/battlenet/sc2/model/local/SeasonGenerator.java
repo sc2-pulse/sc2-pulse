@@ -34,6 +34,7 @@ import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -226,7 +227,7 @@ public class SeasonGenerator
         );
         LeagueTier tier = leagueTierDAO.create(newTier);
         Division division = divisionDAO.create(new Division(null, tier.getId(),
-            Long.valueOf((teamsPerLeague > 0 ? teamCount / teamsPerLeague : 0) + "" + season.getRegion().ordinal() + "" + type.ordinal())));
+            Long.valueOf((teamsPerLeague > 0 ? teamCount / teamsPerLeague : 0) + String.valueOf(season.getRegion().ordinal()) + type.ordinal())));
         Race[] races = Race.values();
         for(int teamIx = 0; teamIx < teamsPerLeague; teamIx++)
         {
@@ -236,7 +237,7 @@ public class SeasonGenerator
             BlizzardProfileTeam bTeam = new BlizzardProfileTeam();
             bTeam.setTeamMembers(bCharacters);
             for(int memberIx = 0; memberIx < queueType.getTeamFormat().getMemberCount(teamType); memberIx++) {
-                int accId = Integer.parseInt(teamCount + "" + memberIx);
+                int accId = Integer.parseInt(teamCount + String.valueOf(memberIx));
                 Account account = accountDAO.create(
                     new Account(null, Partition.of(season.getRegion()), "battletag#" + (long) accId));
                 PlayerCharacter character = playerCharacterDAO.create(
@@ -261,7 +262,7 @@ public class SeasonGenerator
             Team team = teamDAO.create(newTeam);
             TeamState teamState = TeamState.of(team);
             teamState.setDateTime(seasonStart);
-            teamStateDAO.saveState(teamState);
+            teamStateDAO.saveState(Set.of(teamState));
 
             for(int memberIx = 0; memberIx < queueType.getTeamFormat().getMemberCount(teamType); memberIx++)
             {
@@ -394,17 +395,17 @@ public class SeasonGenerator
         int rating1, int rating2
     )
     {
-        teamStateDAO.saveState
-        (
+        teamStateDAO.saveState(Set.of(
             new TeamState(teamId1, date, division, 1, rating1),
             new TeamState(teamId2, date, division, 1, rating2)
-        );
-        SC2Map map = mapDAO.merge(new SC2Map(null, "map"))[0];
-        Match match = matchDAO.merge(new Match(null, date, matchType, map.getId(), region, duration))[0];
+        ));
+        SC2Map map = mapDAO.merge(Set.of(new SC2Map(null, "map"))).iterator().next();
+        Match match = matchDAO.merge(Set.of(new Match(null, date, matchType, map.getId(), region, duration)))
+            .iterator().next();
         for(long charId : characterIds1)
-            matchParticipantDAO.merge(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.WIN));
+            matchParticipantDAO.merge(Set.of(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.WIN)));
         for(long charId : characterIds2)
-            matchParticipantDAO.merge(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.LOSS));
+            matchParticipantDAO.merge(Set.of(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.LOSS)));
     }
 
     public static Account defaultAccount(int ix)
@@ -413,14 +414,14 @@ public class SeasonGenerator
         (
             (long) ix + 1 ,
             Partition.GLOBAL,
-            "battletag#" + Integer.parseInt(ix + "" + 0)
+            "battletag#" + Integer.parseInt(ix + String.valueOf(0))
         );
     }
 
     public static PlayerCharacter defaultCharacter(int ix)
     {
         long id = (long) ix + 1;
-        int accId = Integer.parseInt(ix + "" + 0);
+        int accId = Integer.parseInt(ix + String.valueOf(0));
         return new PlayerCharacter
         (
             id,

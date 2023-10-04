@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -247,12 +247,12 @@ public class AccountDAO
         return template.update(ANONYMIZE_EXPIRED_ACCOUNTS, params);
     }
 
-    public int updateUpdated(OffsetDateTime updated, Long... ids)
+    public int updateUpdated(OffsetDateTime updated, Set<Long> ids)
     {
-        if(ids.length == 0) return 0;
+        if(ids.isEmpty()) return 0;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("ids", Set.of(ids))
+            .addValue("ids", ids)
             .addValue("updated", updated);
         return template.update(UPDATE_UPDATED, params);
     }
@@ -297,12 +297,12 @@ public class AccountDAO
         return Optional.ofNullable(template.query(FIND_BY_DISCORD_USER_ID, params, STD_EXTRACTOR));
     }
 
-    public List<Account> findByIds(Long... ids)
+    public List<Account> findByIds(Set<Long> ids)
     {
-        if(ids.length == 0) return List.of();
+        if(ids.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("ids", List.of(ids));
+            .addValue("ids", ids);
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 

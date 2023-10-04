@@ -36,6 +36,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
@@ -144,7 +145,7 @@ public class PlayerCharacterSummaryIT
         PlayerCharacter charEu1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
         PlayerCharacter charEu2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2"));
 
-        Team team1v1_p_s2 = teamDAO.merge(new Team(
+        Team team1v1_p_s2 = teamDAO.merge(Set.of(new Team(
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -153,9 +154,9 @@ public class PlayerCharacterSummaryIT
             }, Race.PROTOSS),
             division1v1_2.getId(), 9L, 3, 3, 3, 1,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
 
-        Team team1v1_z_s3 = teamDAO.merge(new Team(
+        Team team1v1_z_s3 = teamDAO.merge(Set.of(new Team(
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -164,9 +165,9 @@ public class PlayerCharacterSummaryIT
             }, Race.ZERG),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
 
-        Team team1v1_t_s1 = teamDAO.merge(new Team(
+        Team team1v1_t_s1 = teamDAO.merge(Set.of(new Team(
             null, 1, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -175,9 +176,9 @@ public class PlayerCharacterSummaryIT
             }, Race.TERRAN),
             division1v1_1.getId(), 10L, 3, 3, 3, 1,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
 
-        Team team1v1_t_s2 = teamDAO.merge(new Team(
+        Team team1v1_t_s2 = teamDAO.merge(Set.of(new Team(
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -186,9 +187,9 @@ public class PlayerCharacterSummaryIT
             }, Race.TERRAN),
             division1v1_2.getId(), 10L, 3, 3, 3, 1,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
 
-        Team team1v1_t_s3 = teamDAO.merge(new Team(
+        Team team1v1_t_s3 = teamDAO.merge(Set.of(new Team(
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.SILVER, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -197,9 +198,9 @@ public class PlayerCharacterSummaryIT
             }, Race.TERRAN),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
 
-        Team team1v1_2_z_s3 = teamDAO.merge(new Team(
+        Team team1v1_2_z_s3 = teamDAO.merge(Set.of(new Team(
             null, 3, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST,
@@ -208,27 +209,25 @@ public class PlayerCharacterSummaryIT
             }, Race.ZERG),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
             OffsetDateTime.now()
-        ))[0];
+        ))).iterator().next();
 
-        teamMemberDAO.merge
-        (
+        teamMemberDAO.merge(Set.of(
             new TeamMember(team1v1_p_s2.getId(), charEu1.getId(), 0, 1, 0, 0),
             new TeamMember(team1v1_z_s3.getId(), charEu1.getId(), 0, 0, 1, 0),
             new TeamMember(team1v1_t_s3.getId(), charEu1.getId(), 1, 0, 0, 0),
             new TeamMember(team1v1_t_s2.getId(), charEu1.getId(), 1, 0, 0, 0),
             new TeamMember(team1v1_t_s1.getId(), charEu1.getId(), 1, 0, 0, 0),
             new TeamMember(team1v1_2_z_s3.getId(), charEu2.getId(), 0, 0, 1, 0)
-        );
+        ));
 
-        teamStateDAO.saveState
-        (
+        teamStateDAO.saveState(Set.of(
             new TeamState(team1v1_t_s1.getId(), OffsetDateTime.now().minusDays(61), team1v1_t_s1.getDivisionId(), 8, 7),
             new TeamState(team1v1_p_s2.getId(), OffsetDateTime.now().minusDays(32), team1v1_p_s2.getDivisionId(), 8, 7),
             new TeamState(team1v1_t_s2.getId(), OffsetDateTime.now().minusDays(40), team1v1_t_s2.getDivisionId(), 3, 4),
             new TeamState(team1v1_t_s2.getId(), OffsetDateTime.now().minusDays(39), team1v1_t_s2.getDivisionId(), 4, 3),
             new TeamState(team1v1_t_s2.getId(), OffsetDateTime.now().minusDays(38), team1v1_t_s2.getDivisionId(), 3, 5),
             new TeamState(team1v1_t_s3.getId(), OffsetDateTime.now().minusDays(31), team1v1_t_s3.getDivisionId(), 3, 5)
-        );
+        ));
         teamDAO.updateRanks(1);
         teamDAO.updateRanks(2);
         teamDAO.updateRanks(3);

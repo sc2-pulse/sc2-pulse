@@ -20,7 +20,10 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.Comparator;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
@@ -100,8 +103,7 @@ public class TeamIT
             BaseLeagueTier.LeagueTierType.FIRST,
             0
         );
-        Team[] teams = teamDAO.merge
-        (
+        Team[] teams = teamDAO.merge(new LinkedHashSet<>(List.of(
             new Team
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
@@ -136,7 +138,10 @@ public class TeamIT
                 1L, 1, 1, 1, 1,
                 OffsetDateTime.now()
             )
-        );
+        )))
+            .stream()
+            .sorted(Comparator.comparing(Team::getId))
+            .toArray(Team[]::new);
 
         try(Stream<Team> foundTeamStream = teamDAO.find(Region.EU, 1))
         {
@@ -160,8 +165,7 @@ public class TeamIT
             BaseLeagueTier.LeagueTierType.FIRST,
             0
         );
-        Team team = teamDAO.merge
-        (
+        Team team = teamDAO.merge(Set.of(
             new Team
             (
                 null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
@@ -170,7 +174,7 @@ public class TeamIT
                 1L, 10, 0, 0, 1,
                 OffsetDateTime.now()
             )
-        )[0];
+        )).iterator().next();
         //invalid team state, should be used because it's the last state of the team
         teamStateDAO.takeSnapshot(List.of(team.getId()));
         //9 games in a new team, 9 minutes per game
@@ -178,8 +182,7 @@ public class TeamIT
             .update("UPDATE team_state SET timestamp = NOW() - INTERVAL '"
                 + (9 * 9) + "minutes'");
         //valid team state to ensure correct ordering
-        teamStateDAO.saveState
-        (
+        teamStateDAO.saveState(Set.of(
             new TeamState
             (
                 team.getId(),
@@ -188,14 +191,13 @@ public class TeamIT
                 8,
                 3
             )
-        );
+        ));
 
         //Player couldn't play 9 games is such a short period of time, ignore it
         assertEquals
         (
             validReset ? 1 : 0,
-            teamDAO.merge
-            (
+            teamDAO.merge(Set.of(
                 new Team
                 (
                     null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
@@ -204,7 +206,7 @@ public class TeamIT
                     1L, 9, 0, 0, 1,
                     OffsetDateTime.now()
                 )
-            ).length
+            )).size()
         );
     }
 
@@ -387,7 +389,7 @@ public class TeamIT
             lastPlayed
         );
         if(originalModifier != null) originalModifier.accept(team);
-        operations.merge(new Team[]{team});
+        operations.merge(Set.of(team));
         assertFullyEquals(team, operations.find(team).orElseThrow());
 
         Team team1_2 = SerializationUtils.clone(team);
@@ -400,7 +402,7 @@ public class TeamIT
             5L, 6, 7, 8, 9,
             lastPlayed.plusSeconds(2)
         );
-        assertEquals(updated ? 2 : 1, operations.merge(new Team[]{team1_2, team2}).length);
+        assertEquals(updated ? 2 : 1, operations.merge(Set.of(team1_2, team2)).size());
         assertFullyEquals(updated ? team1_2 : team, operations.find(team).orElseThrow());
         assertFullyEquals(team2, operations.find(team2).orElseThrow()); //inserted
     }

@@ -10,8 +10,8 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterReportDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
 import java.time.OffsetDateTime;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -109,12 +109,12 @@ public class LadderPlayerCharacterReportDAO
         return template.query(FIND_REPORTS, params, STD_MAPPER);
     }
 
-    public List<LadderPlayerCharacterReport> findByCharacterIds(Long... characterIds)
+    public List<LadderPlayerCharacterReport> findByCharacterIds(Set<Long> characterIds)
     {
-        if(characterIds.length == 0) return List.of();
+        if(characterIds.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("characterIds",  Arrays.asList(characterIds))
+            .addValue("characterIds",  characterIds)
             .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_REPORTS_DAYS))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));

@@ -19,6 +19,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.LinkedHashSet;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
@@ -140,7 +141,10 @@ public class FastTeamIT
             2L, 2, 2, 2, 2,
             OffsetDateTime.now()
         );
-        Team[] merge1 = fastTeamDAO.merge(team1, team2);
+        Team[] merge1 = fastTeamDAO.merge(new LinkedHashSet<>(List.of(team1, team2)))
+            .stream()
+            .sorted(Team.NATURAL_ID_COMPARATOR)
+            .toArray(Team[]::new);
         assertEquals(2, merge1.length);
         assertEquals(team1, merge1[0]);
         assertEquals(team2, merge1[1]);
@@ -155,7 +159,8 @@ public class FastTeamIT
             OffsetDateTime.now()
         );
         //no changes in team2
-        Team[] merge2 = fastTeamDAO.merge(team1_1, team2);
+        Team[] merge2 = fastTeamDAO.merge(new LinkedHashSet<>(List.of(team1_1, team2)))
+            .toArray(Team[]::new);
         assertEquals(1, merge2.length);
         assertEquals(team1_1, merge2[0]);
 

@@ -18,6 +18,7 @@ import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Set;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import javax.validation.constraints.NotBlank;
@@ -60,7 +61,7 @@ public class PlayerCharacterReportController
     }
 
     @GetMapping("/list/{id}")
-    public List<LadderPlayerCharacterReport> findReportsByCharacterIds(@PathVariable("id") Long[] ids)
+    public List<LadderPlayerCharacterReport> findReportsByCharacterIds(@PathVariable("id") Set<Long> ids)
     {
         return reportService.findReportsByCharacterIds(ids);
     }
@@ -113,7 +114,7 @@ public class PlayerCharacterReportController
             vote,
             OffsetDateTime.now()
         ));
-        return ladderEvidenceVoteDAO.findByEvidenceIds(evidenceId);
+        return ladderEvidenceVoteDAO.findByEvidenceIds(Set.of(evidenceId));
     }
 
 }

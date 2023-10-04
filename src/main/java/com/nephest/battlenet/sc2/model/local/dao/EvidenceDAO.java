@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.local.Evidence;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -226,13 +227,13 @@ public class EvidenceDAO
         return template.query(GET_BY_ID_CURSOR, params, STD_ROW_MAPPER);
     }
 
-    public List<Evidence> findByReportIds(boolean hideDenied, Integer... reportIds)
+    public List<Evidence> findByReportIds(boolean hideDenied, Set<Integer> reportIds)
     {
-        if(reportIds.length == 0) return List.of();
+        if(reportIds.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
-            .addValue("reportIds", List.of(reportIds));
+            .addValue("reportIds", reportIds);
         return template.query(hideDenied ? GET_BY_REPORT_IDS_HIDE_DENIED : GET_BY_REPORT_IDS, params, STD_ROW_MAPPER);
     }
 

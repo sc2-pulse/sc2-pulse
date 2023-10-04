@@ -98,7 +98,7 @@ public class PersonalController
     public Account getAccount(@AuthenticationPrincipal AccountUser user)
     {
         //Spring security nullifies battletags, fetching account by id until I figure out how to fix the issue
-        return accountDAO.findByIds(user.getAccount().getId()).get(0);
+        return accountDAO.findByIds(Set.of(user.getAccount().getId())).get(0);
     }
 
     @GetMapping("/characters")

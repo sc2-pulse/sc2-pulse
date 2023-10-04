@@ -41,6 +41,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
@@ -161,31 +162,30 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char1 = playerCharacterDAO.merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
         PlayerCharacter char2 = playerCharacterDAO.merge(new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 2, "name#2"));
         PlayerCharacter char3 = playerCharacterDAO.merge(new PlayerCharacter(null, acc3.getId(), Region.EU, 3L, 3, "name#3"));
-        Team team1 = teamDAO.merge(new Team(
+        Team team1 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("1"), division.getId(), 1L, 1, 1, 1, 1,
             OffsetDateTime.now()
-        ))[0];
-        Team team2 = teamDAO.merge(new Team(
+        ))).iterator().next();
+        Team team2 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("2"), division.getId(), 2L, 2, 2, 2, 2,
             OffsetDateTime.now()
-        ))[0];
-        teamMemberDAO.merge
-        (
+        ))).iterator().next();
+        teamMemberDAO.merge(Set.of(
             new TeamMember(team1.getId(), char1.getId(), 1, 0, 0, 0),
             new TeamMember(team1.getId(), char2.getId(), 0, 1, 0, 0),
             new TeamMember(team2.getId(), char1.getId(), 0, 0, 1, 0),
             new TeamMember(team2.getId(), char3.getId(), 0, 0, 0, 1)
-        );
+        ));
         OffsetDateTime now = OffsetDateTime.now();
         TeamState state1 = TeamState.of(team1);
         state1.setDateTime(now.minusHours(1));
         TeamState state2 = TeamState.of(team2);
         state2.setDateTime(now.minusHours(2));
-        teamStateDAO.saveState(state1, state2);
+        teamStateDAO.saveState(Set.of(state1, state2));
 
         assertTrue(playerCharacterDAO.findRecentlyActiveCharacters(now.minusMinutes(59), Region.values()).isEmpty());
 
@@ -222,11 +222,12 @@ public class PlayerCharacterDAOIT
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 3, "name#3"));
         PlayerCharacter char4 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 4, "name#4"));
-        Clan clan1 = clanDAO.merge(new Clan(null, "tag1", Region.EU, "name1"))[0];
-        clanMemberDAO.merge(new ClanMember(char1.getId(), clan1.getId()));
-        clanMemberDAO.merge(new ClanMember(char2.getId(), clan1.getId()));
-        clanMemberDAO.merge(new ClanMember(char3.getId(), clan1.getId()));
-        clanMemberDAO.merge(new ClanMember(char4.getId(), clan1.getId()));
+        Clan clan1 = clanDAO.merge(Set.of(new Clan(null, "tag1", Region.EU, "name1")))
+            .iterator().next();
+        clanMemberDAO.merge(Set.of(new ClanMember(char1.getId(), clan1.getId())));
+        clanMemberDAO.merge(Set.of(new ClanMember(char2.getId(), clan1.getId())));
+        clanMemberDAO.merge(Set.of(new ClanMember(char3.getId(), clan1.getId())));
+        clanMemberDAO.merge(Set.of(new ClanMember(char4.getId(), clan1.getId())));
 
         OffsetDateTime now = OffsetDateTime.now();
 
@@ -258,8 +259,9 @@ public class PlayerCharacterDAOIT
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         PlayerCharacter char1 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
-        Clan clan1 = clanDAO.merge(new Clan(null, "tag1", Region.EU, "name1"))[0];
-        clanMemberDAO.merge(new ClanMember(char1.getId(), clan1.getId()));
+        Clan clan1 = clanDAO.merge(Set.of(new Clan(null, "tag1", Region.EU, "name1")))
+            .iterator().next();
+        clanMemberDAO.merge(Set.of(new ClanMember(char1.getId(), clan1.getId())));
 
         List<PlayerCharacter> cms1 = playerCharacterDAO
             .findInactiveClanMembers(start, Long.MAX_VALUE, 100);
@@ -270,7 +272,8 @@ public class PlayerCharacterDAOIT
     public void updateCharacters()
     {
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
-        Clan clan = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
+        Clan clan = clanDAO.merge(Set.of(new Clan(null, "clanTag1", Region.EU, "clanName1")))
+            .iterator().next();
         PlayerCharacter char1 = playerCharacterDAO
             .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#123"));
         PlayerCharacter char2 = playerCharacterDAO
@@ -278,12 +281,10 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char3 = playerCharacterDAO
             .merge(new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name3#123"));
 
-        PlayerCharacter[] updatedCharacters = new PlayerCharacter[]
-        {
-            new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name2#123"),
+        Set<PlayerCharacter> updatedCharacters = Set.copyOf(List.of(
             new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name2#123"),
             new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name4#123")
-        };
+        ));
 
         OffsetDateTime minTimeAllowed = OffsetDateTime.now();
         assertEquals(2, playerCharacterDAO.updateCharacters(updatedCharacters));
@@ -304,7 +305,7 @@ public class PlayerCharacterDAOIT
         playerCharacterDAO.updateUpdated
         (
             OffsetDateTime.now().minus(BlizzardPrivacyService.DATA_TTL.plusDays(2)),
-            1L
+            Set.of(1L)
         );
         playerCharacterDAO.anonymizeExpiredCharacters(OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
         //character is excluded due to "from' param
@@ -320,7 +321,8 @@ public class PlayerCharacterDAOIT
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
         Account acc2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag2#123"));
         Account acc3 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag10#123"));
-        Clan clan = clanDAO.merge(new Clan(null, "clanTag1", Region.EU, "clanName1"))[0];
+        Clan clan = clanDAO.merge(Set.of(new Clan(null, "clanTag1", Region.EU, "clanName1")))
+            .iterator().next();
         PlayerCharacter char1 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123"));
         PlayerCharacter char2 = playerCharacterDAO
@@ -384,29 +386,29 @@ public class PlayerCharacterDAOIT
         OffsetDateTime char5Updated = playerCharacterDAO.getUpdated(char5.getId());
         assertTrue(char5Updated.isAfter(minTimeAllowed));
 
-        playerCharacterDAO.updateUpdated(OffsetDateTime.now(), char4.getId());
+        playerCharacterDAO.updateUpdated(OffsetDateTime.now(), Set.of(char4.getId()));
 
         verifyUpdatedCharacters(minTimeAllowed);
         OffsetDateTime minAccTime =
             template.query("SELECT MIN(updated) FROM account", DAOUtils.OFFSET_DATE_TIME_RESULT_SET_EXTRACTOR);
         assertTrue(minAccTime.isAfter(minTimeAllowed));
 
-        assertEquals("tag3#123", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
-        assertEquals("tag4#123", accountDAO.findByIds(acc2.getId()).get(0).getBattleTag());
+        assertEquals("tag3#123", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
+        assertEquals("tag4#123", accountDAO.findByIds(Set.of(acc2.getId())).get(0).getBattleTag());
         //character is rebound to another account
         assertEquals(acc3.getId(), playerCharacterDAO.find(Region.EU, 1, 3L).orElseThrow().getAccountId());
 
         accountDAO.updateUpdated
         (
             OffsetDateTime.now().minus(BlizzardPrivacyService.DATA_TTL.plusDays(2)),
-            acc1.getId()
+            Set.of(acc1.getId())
         );
         accountDAO.anonymizeExpiredAccounts(OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
         //the account is excluded due to "from" param
-        assertEquals("tag3#123", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
+        assertEquals("tag3#123", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
 
         accountDAO.anonymizeExpiredAccounts(OffsetDateTime.MIN);
-        assertEquals(BasePlayerCharacter.DEFAULT_FAKE_NAME + "#211", accountDAO.findByIds(acc1.getId()).get(0).getBattleTag());
+        assertEquals(BasePlayerCharacter.DEFAULT_FAKE_NAME + "#211", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
     }
 
     @Test
@@ -422,8 +424,8 @@ public class PlayerCharacterDAOIT
         accountFollowingDAO.create(new AccountFollowing(1L, 1L));
         accountFollowingDAO.create(new AccountFollowing(2L, 2L));
         accountFollowingDAO.create(new AccountFollowing(3L, 3L));
-        accountRoleDAO.addRoles(1, SC2PulseAuthority.ADMIN);
-        accountRoleDAO.addRoles(2, SC2PulseAuthority.ADMIN, SC2PulseAuthority.MODERATOR);
+        accountRoleDAO.addRoles(1, EnumSet.of(SC2PulseAuthority.ADMIN));
+        accountRoleDAO.addRoles(2, EnumSet.of(SC2PulseAuthority.ADMIN, SC2PulseAuthority.MODERATOR));
 
         //rebind character2 to account 1
         playerCharacterDAO.merge(new PlayerCharacter(null, 1L, Region.EU, 2L, 2, "name2"));
@@ -438,7 +440,7 @@ public class PlayerCharacterDAOIT
         assertEquals(2L, followings.get(0).getAccountId());
         assertEquals(2L, followings.get(0).getFollowingAccountId());
 
-        evidenceVoteDAO.findByEvidenceIds(1).stream()
+        evidenceVoteDAO.findByEvidenceIds(Set.of(1)).stream()
             .filter(v->v.getVoterAccountId() == 2)
             .findAny()
             .orElseThrow();
@@ -475,7 +477,7 @@ public class PlayerCharacterDAOIT
 
         assertEquals(4, evidenceDAO.findById(false, 3).orElseThrow().getReporterAccountId());
 
-        List<EvidenceVote> reboundVotes = evidenceVoteDAO.findByEvidenceIds(3);
+        List<EvidenceVote> reboundVotes = evidenceVoteDAO.findByEvidenceIds(Set.of(3));
         assertEquals(1, reboundVotes.size());
         assertEquals(4L, reboundVotes.get(0).getVoterAccountId());
 
@@ -487,7 +489,8 @@ public class PlayerCharacterDAOIT
     private Account stubCharacterChain(int num, boolean bind)
     {
         DiscordUser discordUser = discordUserDAO
-            .merge(new DiscordUser(Snowflake.of(num), "name" + num, num))[0];
+            .merge(Set.of(new DiscordUser(Snowflake.of(num), "name" + num, num)))
+            .iterator().next();
         ProPlayer proPlayer = proPlayerDAO
             .merge(new ProPlayer(null, (long) num, "proTag" + num, "proName" + num));
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag" + num));
@@ -496,7 +499,8 @@ public class PlayerCharacterDAOIT
         if(bind)
         {
             proPlayerAccountDAO.link(proPlayer.getId(), "tag" + num);
-            accountDiscordUserDAO.create(new AccountDiscordUser(acc1.getId(), discordUser.getId()));
+            accountDiscordUserDAO
+                .create(Set.of(new AccountDiscordUser(acc1.getId(), discordUser.getId())));
         }
         return acc1;
     }
@@ -573,7 +577,7 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char1 = playerCharacterDAO
             .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#1"));
         OffsetDateTime newUpdated = OffsetDateTime.now().plusDays(1);
-        playerCharacterDAO.updateUpdated(newUpdated, char1.getId());
+        playerCharacterDAO.updateUpdated(newUpdated, Set.of(char1.getId()));
         assertTrue(playerCharacterDAO.getUpdated(char1.getId()).isEqual(newUpdated));
     }
 
@@ -591,12 +595,12 @@ public class PlayerCharacterDAOIT
         PlayerCharacter newPlayerCharacter =
             new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#2");
         playerCharacterDAO.merge(newPlayerCharacter);
-        playerCharacterDAO.updateCharacters(newPlayerCharacter);
+        playerCharacterDAO.updateCharacters(Set.of(newPlayerCharacter));
         playerCharacterDAO
             .updateAccountsAndCharacters(List.of(Tuples.of(acc, newPlayerCharacter, true, 1)));
 
         //entity wasn't updated due to anonymous flag
-        PlayerCharacter foundCharacter = playerCharacterDAO.find(pc.getId()).get(0);
+        PlayerCharacter foundCharacter = playerCharacterDAO.find(Set.of(pc.getId())).get(0);
         assertEquals(pc, foundCharacter);
         assertEquals("name#1", foundCharacter.getName());
         OffsetDateTime afterUpdate = template
@@ -637,7 +641,7 @@ public class PlayerCharacterDAOIT
         assertEquals(2, playerCharacterDAO
             .countByUpdatedMax(OffsetDateTime.now(), Set.of(Region.EU)));
         assertEquals(1, playerCharacterDAO
-            .updateUpdated(OffsetDateTime.now().plusDays(1), pc1.getId()));
+            .updateUpdated(OffsetDateTime.now().plusDays(1), Set.of(pc1.getId())));
         assertEquals(3, playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now(), Set.of()));
         assertEquals(1, playerCharacterDAO
             .countByUpdatedMax(OffsetDateTime.now(), Set.of(Region.EU)));

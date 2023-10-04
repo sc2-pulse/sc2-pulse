@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -13,6 +13,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -63,7 +64,7 @@ public class BlizzardDataService
             .map(c->Tuples.of(account, c, true, curSeason))
             .collect(Collectors.toList());
         playerCharacterDAO.updateAccountsAndCharacters(importedData);
-        accountDAO.updateUpdated(OffsetDateTime.now().plus(ACCOUNT_IMPORT_DURATION), account.getId());
+        accountDAO.updateUpdated(OffsetDateTime.now().plus(ACCOUNT_IMPORT_DURATION), Set.of(account.getId()));
     }
 
     @Transactional
@@ -75,12 +76,12 @@ public class BlizzardDataService
             .map(c->playerCharacterDAO.find(c.getRegion(), c.getRealm(), c.getBattlenetId()).orElse(null))
             .filter(Objects::nonNull)
             .collect(Collectors.toList());
-        Long[] characterIds = characters
+        Set<Long> characterIds = characters
             .stream()
             .map(PlayerCharacter::getId)
-            .toArray(Long[]::new);
+            .collect(Collectors.toSet());
 
-        accountDAO.updateUpdated(expiredOdt, account.getId());
+        accountDAO.updateUpdated(expiredOdt, Set.of(account.getId()));
         playerCharacterDAO.updateUpdated(expiredOdt, characterIds);
 
         accountDAO.updateAnonymousFlag(account.getId(), true);

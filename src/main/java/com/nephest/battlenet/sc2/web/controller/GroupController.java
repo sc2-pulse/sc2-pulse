@@ -76,10 +76,10 @@ public class GroupController
             .orElseGet(()->
             {
                 List<LadderDistinctCharacter> characters = ladderCharacterDAO
-                    .findDistinctCharactersByCharacterIds(characterIds.toArray(Long[]::new));
-                List<Clan> clans = clanDAO.findByIds(clanIds.toArray(Integer[]::new));
+                    .findDistinctCharactersByCharacterIds(characterIds);
+                List<Clan> clans = clanDAO.findByIds(clanIds);
                 List<LadderProPlayer> proPlayers = ladderProPlayerDAO
-                    .findByIds(proPlayerIds.toArray(Long[]::new));
+                    .findByIds(proPlayerIds);
                 return characters.isEmpty() && clans.isEmpty() && proPlayerIds.isEmpty()
                     ? ResponseEntity.notFound().build()
                     : ResponseEntity.ok(new Group(characters, clans, proPlayers));
@@ -90,7 +90,7 @@ public class GroupController
     public ResponseEntity<List<LadderDistinctCharacter>> getFullPlayerCharacters(@CharacterGroup Set<Long> characterIds)
     {
         return WebServiceUtil.notFoundIfEmpty(ladderCharacterDAO
-            .findDistinctCharactersByCharacterIds(characterIds.toArray(Long[]::new)));
+            .findDistinctCharactersByCharacterIds(characterIds));
     }
 
     @GetMapping("/clan/history")

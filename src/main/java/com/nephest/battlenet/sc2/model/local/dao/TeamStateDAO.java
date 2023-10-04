@@ -249,12 +249,13 @@ public class TeamStateDAO
      * @param states states to save
      * @return batch numbers of saves states
      */
-    public int[] saveState(TeamState... states)
+    public int[] saveState(Set<TeamState> states)
     {
-        if(states.length == 0) return new int[0];
+        if(states.isEmpty()) return DAOUtils.EMPTY_INT_ARRAY;
 
-        MapSqlParameterSource[] params = new MapSqlParameterSource[states.length];
-        for(int i = 0; i < states.length; i++) params[i] = createParameterSource(states[i]);
+        MapSqlParameterSource[] params = states.stream()
+            .map(TeamStateDAO::createParameterSource)
+            .toArray(MapSqlParameterSource[]::new);
 
         return template.batchUpdate(CREATE_QUERY, params);
     }

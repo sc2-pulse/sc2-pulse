@@ -48,15 +48,15 @@ extends StandardDAO
         super(template, "notification", "created", "6 HOURS");
     }
 
-    public int[] create(String message, Long... recipientAccountIds)
+    public int[] create(String message, Set<Long> recipientAccountIds)
     {
-        if(recipientAccountIds.length == 0) return new int[0];
+        if(recipientAccountIds.isEmpty()) return new int[0];
 
-        MapSqlParameterSource[] params = new MapSqlParameterSource[recipientAccountIds.length];
-        for(int i = 0; i < recipientAccountIds.length; i++)
-            params[i] = new MapSqlParameterSource()
-                .addValue("accountId", recipientAccountIds[i])
-                .addValue("message", message);
+        MapSqlParameterSource[] params = recipientAccountIds.stream()
+            .map(id->new MapSqlParameterSource()
+                .addValue("accountId", id)
+                .addValue("message", message))
+            .toArray(MapSqlParameterSource[]::new);
         return getTemplate().batchUpdate(CREATE, params);
     }
 

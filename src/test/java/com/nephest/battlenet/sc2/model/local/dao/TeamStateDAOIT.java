@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -125,7 +125,7 @@ public class TeamStateDAOIT
         TeamState state2Secondary = TeamState.of(team2, OffsetDateTime.now().minusDays(targetLengthSecondary + 1));
         //should be deleted as expired main
         TeamState state2Main = TeamState.of(team2, OffsetDateTime.now().minusDays(targetLengthMain + 1));
-        teamStateDAO.saveState(state1, state2Secondary, state2Main);
+        teamStateDAO.saveState(Set.of(state1, state2Secondary, state2Main));
 
         Set<TeamLegacyUid> legacyIds1 = Set.of(
             new TeamLegacyUid(QueueType.LOTV_4V4, Region.EU, LEGACY_ID_1)
@@ -168,11 +168,10 @@ public class TeamStateDAOIT
             1
         );
         OffsetDateTime from = OffsetDateTime.now();
-        teamStateDAO.saveState
-        (
+        teamStateDAO.saveState(Set.of(
             new TeamState(1L, from, 1, 1, 1),
             new TeamState(3L, from.plusSeconds(1), 1, 1, 1)
-        );
+        ));
 
         assertEquals(2, teamStateDAO.getCount(Region.EU, from));
         assertEquals(0, teamStateDAO.getCount(Region.US, from));

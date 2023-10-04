@@ -8,6 +8,8 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.LongStream;
 import okhttp3.mockwebserver.MockWebServer;
 import org.junit.jupiter.api.AfterAll;
@@ -49,11 +51,11 @@ public class AligulacAPIIT
     @Order(1)
     public void testFetch()
     {
-        Long[] batch = LongStream.range(1L, proPlayerService.getAligulacBatchSize() + 1)
+        Set<Long> batch = LongStream.range(1L, proPlayerService.getAligulacBatchSize() + 1)
             .boxed()
-            .toArray(Long[]::new);
+            .collect(Collectors.toSet());
         AligulacProPlayer[] players = api.getPlayers(batch).block().getObjects();
-        assertEquals(players.length, batch.length);
+        assertEquals(players.length, batch.size());
         for(AligulacProPlayer player : players)
         {
             assertNotNull(player.getId());
@@ -69,7 +71,7 @@ public class AligulacAPIIT
         MockWebServer server = new MockWebServer();
         server.start();
         api.setWebClient(WebServiceTestUtil.createTimeoutClient().mutate().baseUrl(server.url("/").uri().toString()).build());
-        WebServiceTestUtil.testRetrying(api.getPlayers(), "{\"objects\": []}", server, WebServiceUtil.RETRY_COUNT - 1);
+        WebServiceTestUtil.testRetrying(api.getPlayers(Set.of(1L)), "{\"objects\": []}", server, WebServiceUtil.RETRY_COUNT - 1);
         server.shutdown();
     }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -10,9 +10,9 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.SC2Map;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderUtil;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -106,12 +106,11 @@ public class SC2MapDAO
         this.conversionService = conversionService;
     }
 
-    public SC2Map[] merge(SC2Map... maps)
+    public Set<SC2Map> merge(Set<SC2Map> maps)
     {
-        if(maps.length == 0) return maps;
+        if(maps.isEmpty()) return maps;
 
-        List<Object[]> data = Arrays.stream(maps)
-            .distinct()
+        List<Object[]> data = maps.stream()
             .map(t->new Object[]{t.getName()})
             .collect(Collectors.toList());
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("maps", data);

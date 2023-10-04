@@ -64,12 +64,12 @@ public class LadderProPlayerDAO
         this.template = template;
     }
 
-    public List<LadderProPlayer> findByIds(Long... ids)
+    public List<LadderProPlayer> findByIds(Set<Long> ids)
     {
         List<ProPlayer> players = proPlayerDAO.find(ids);
         Map<Long, Long> teamMembers = proTeamMemberDAO.findByProPlayerIds(ids).stream()
             .collect(Collectors.toMap(ProTeamMember::getProPlayerId, ProTeamMember::getProTeamId));
-        Long[] teamIds = teamMembers.values().toArray(Long[]::new);
+        Set<Long> teamIds = Set.copyOf(teamMembers.values());
         Map<Long, ProTeam> teams = proTeamDAO.find(teamIds).stream()
             .collect(Collectors.toMap(ProTeam::getId, Function.identity()));
         Map<Long, List<SocialMediaLink>> links = socialMediaLinkDAO.find(ids).stream()
@@ -83,27 +83,31 @@ public class LadderProPlayerDAO
             .collect(Collectors.toList());
     }
 
-    public List<LadderProPlayer> findByCharacterIds(Long... ids)
+    public List<LadderProPlayer> findByCharacterIds(Set<Long> ids)
     {
-        MapSqlParameterSource params = new MapSqlParameterSource("playerCharacterIds", Set.of(ids));
-        Long[] proPlayerIds = template.query
+        if(ids.isEmpty()) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource("playerCharacterIds", ids);
+        Set<Long> proPlayerIds = Set.copyOf(template.query
         (
             FIND_PRO_PLAYER_ID_BY_CHARACTER_ID,
             params,
             DAOUtils.LONG_MAPPER
-        ).toArray(Long[]::new);
+        ));
         return findByIds(proPlayerIds);
     }
 
-    public List<LadderProPlayer> findByBattletags(String... btags)
+    public List<LadderProPlayer> findByBattletags(Set<String> btags)
     {
-        MapSqlParameterSource params = new MapSqlParameterSource("battletags", Set.of(btags));
-        Long[] proPlayerIds = template.query
+        if(btags.isEmpty()) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource("battletags", btags);
+        Set<Long> proPlayerIds = Set.copyOf(template.query
         (
             FIND_PRO_PLAYER_BY_BATTLE_TAG,
             params,
             DAOUtils.LONG_MAPPER
-        ).toArray(Long[]::new);
+        ));
         return findByIds(proPlayerIds);
     }
 

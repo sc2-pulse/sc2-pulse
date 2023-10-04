@@ -128,11 +128,11 @@ public class ProTeamDAO
         return template.batchUpdate(MERGE_QUERY, params);
     }
 
-    public List<ProTeam> find(Long... ids)
+    public List<ProTeam> find(Set<Long> ids)
     {
-        if(ids.length == 0) return List.of();
+        if(ids.isEmpty()) return List.of();
 
-        MapSqlParameterSource params = new MapSqlParameterSource("ids", Set.of(ids));
+        MapSqlParameterSource params = new MapSqlParameterSource("ids", ids);
         return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 

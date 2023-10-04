@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -12,8 +12,8 @@ import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -320,12 +320,11 @@ public class MatchParticipantDAO
             .addValue("decision", conversionService.convert(participant.getDecision(), Integer.class));
     }
 
-    public void merge(MatchParticipant... participants)
+    public void merge(Set<MatchParticipant> participants)
     {
-        if(participants.length == 0) return;
+        if(participants.isEmpty()) return;
 
-        List<Object[]> participantsData = Arrays.stream(participants)
-            .distinct()
+        List<Object[]> participantsData = participants.stream()
             .map(participant->new Object[]{
                 participant.getMatchId(),
                 participant.getPlayerCharacterId(),

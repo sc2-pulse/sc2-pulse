@@ -541,15 +541,15 @@ public class AlternativeLadderService
                 )
             )
             .collect(Collectors.toList());
-        Team[] changedTeams = fastTeamDAO
-            .merge(validTeams.stream().map(Tuple2::getT1).toArray(Team[]::new));
+        Set<Team> changedTeams = fastTeamDAO
+            .merge(validTeams.stream().map(Tuple2::getT1).collect(Collectors.toSet()));
         teamDao.merge(changedTeams);
         validTeams.stream()
             .filter(t->t.getT1().getId() != null)
             .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, members));
         saveNewCharacterData(newTeams, members);
         savePlayerCharacters(characters);
-        teamMemberDao.merge(members.toArray(TeamMember[]::new));
+        teamMemberDao.merge(members);
         clanService.saveClans(clans);
         pendingLadderData.getCharacters().addAll(characters);
         pendingLadderData.getCharacters().addAll
@@ -562,7 +562,7 @@ public class AlternativeLadderService
         (
             "Ladder saved: {} {} {}({}/{} teams)",
             id.getT1(), id.getT3(), ladder.getLeague(),
-            changedTeams.length, validTeams.size()
+            changedTeams.size(), validTeams.size()
         );
     }
 

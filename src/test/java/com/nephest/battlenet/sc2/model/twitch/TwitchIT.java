@@ -16,6 +16,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -77,8 +78,8 @@ public class TwitchIT
         TwitchUser user3 = new TwitchUser(3L, "login3");
 
         //new users
-        twitchUserDAO.merge(user1, user2);
-        List<TwitchUser> users1 = twitchUserDAO.findById(1L, 2L);
+        twitchUserDAO.merge(Set.of(user1, user2));
+        List<TwitchUser> users1 = twitchUserDAO.findById(Set.of(1L, 2L));
         users1.sort(Comparator.comparing(TwitchUser::getId));
         assertEquals(2, users1.size());
 
@@ -88,10 +89,10 @@ public class TwitchIT
 
         assertTrue(users1.contains(user2));
 
-        //duplicate, already existing user, new
-        twitchUserDAO.merge(user2, user2, user3);
+        //already existing user, new
+        twitchUserDAO.merge(Set.of(user2, user3));
 
-        List<TwitchUser> users2 = twitchUserDAO.findById(1L, 2L, 3L);
+        List<TwitchUser> users2 = twitchUserDAO.findById(Set.of(1L, 2L, 3L));
         assertEquals(3, users2.size());
         assertTrue(users2.contains(user1));
         assertTrue(users2.contains(user2));
@@ -104,8 +105,8 @@ public class TwitchIT
         TwitchVideo video3 = new TwitchVideo(3L, 3L, "url3", begin, end);
 
         //new videos
-        twitchVideoDAO.merge(video1, video2);
-        List<TwitchVideo> videos1 = twitchVideoDAO.findById(1L, 2L);
+        twitchVideoDAO.merge(Set.of(video1, video2));
+        List<TwitchVideo> videos1 = twitchVideoDAO.findById(Set.of(1L, 2L));
         videos1.sort(Comparator.comparing(TwitchVideo::getId));
         assertEquals(2, videos1.size());
         TwitchVideo foundVideo1 = videos1.get(0);
@@ -117,9 +118,9 @@ public class TwitchIT
 
         assertTrue(videos1.contains(video2));
 
-        //duplicate, already existing, new
-        twitchVideoDAO.merge(video2, video2, video3);
-        List<TwitchVideo> videos2 = twitchVideoDAO.findById(1L, 2L, 3L);
+        //already existing, new
+        twitchVideoDAO.merge(Set.of(video2, video3));
+        List<TwitchVideo> videos2 = twitchVideoDAO.findById(Set.of(1L, 2L, 3L));
         assertEquals(3, videos2.size());
         assertTrue(videos2.contains(video1));
         assertTrue(videos2.contains(video2));
@@ -129,8 +130,8 @@ public class TwitchIT
         OffsetDateTime newBegin = begin.plusMinutes(1);
         OffsetDateTime newEnd = end.plusMinutes(1);
         TwitchVideo video4 = new TwitchVideo(1L, 1L, "url11", newBegin, newEnd);
-        twitchVideoDAO.merge(video4);
-        TwitchVideo updatedVideo = twitchVideoDAO.findById(1L).get(0);
+        twitchVideoDAO.merge(Set.of(video4));
+        TwitchVideo updatedVideo = twitchVideoDAO.findById(Set.of(1L)).get(0);
         assertEquals("url11", updatedVideo.getUrl());
         assertTrue(newBegin.isEqual(updatedVideo.getBegin()));
         assertTrue(newEnd.isEqual(updatedVideo.getEnd()));
