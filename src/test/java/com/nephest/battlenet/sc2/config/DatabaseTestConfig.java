@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.Startup;
-import com.nephest.battlenet.sc2.cache.CacheConfig;
 import com.nephest.battlenet.sc2.config.openapi.SpringDocConfig;
 import com.nephest.battlenet.sc2.config.security.BlizzardOidcUserService;
 import com.nephest.battlenet.sc2.config.security.DiscordOauth2UserService;
@@ -43,7 +42,6 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Application.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SecurityConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SecurityBeanConfig.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = CacheConfig.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DiscordOauth2UserService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = DiscordBootstrap.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SpringDocConfig.class),

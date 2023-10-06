@@ -171,8 +171,6 @@ limiter. False by default.
 * `contacts.discord.server.name`
 * `contacts.twitter`
 * `contacts.github`
-* `cache.ttl` TTL(duration) of cache entries, 7 days by default
-* `cache.size` max size of the cache, 20000 by default
 * `security.remember-me.token.key` key for signing remember-me tokens
 * `security.remember-me.token.max-age` Max age(duration) of the cookie, P3650D(~10 years) by default
 ## Contributing
