@@ -248,8 +248,8 @@ class StatsUtil
 
     static enhanceRaceControls()
     {
-        const typeCrl = document.querySelector("#stats-race-type");
-        if(typeCrl) typeCrl.addEventListener("change", e=>window.setTimeout(StatsUtil.updateLadderStatsView, 1));
+        const typeCrl = document.querySelectorAll(".stats-race-ctl")
+            .forEach(ctl=>ctl.addEventListener("change", e=>window.setTimeout(StatsUtil.updateLadderStatsView, 1)));
     }
 
     static applyUserSettings(globalResult)
@@ -270,12 +270,34 @@ class StatsUtil
         StatsUtil.updateLadderStatsCurrentLeagueView(stats);
     }
 
+    static calculateLadderStatsCurrentRaceRegionValues(stats, raceStatsType)
+    {
+        const result = new Map();
+        Object.values(RACE).forEach(race=>{
+            const raceValues = new Map();
+            result.set(race.name, raceValues);
+            for(const [region, regionStats] of stats) {
+                let games = 0;
+                for(const leagueStats of regionStats)
+                    games += leagueStats.leagueStats[race.name + raceStatsType.parameterSuffix];
+                raceValues.set(region, games);
+            }
+        });
+        return result;
+    }
+
     static updateLadderStatsCurrentRaceView(stats)
     {
         document.querySelectorAll("#stats-race .table-race-league-region").forEach(t=>t.closest("section").classList.add("d-none"));
+        const normalized = localStorage.getItem("stats-race-normalize") == "true";
+        const deviation = localStorage.getItem("stats-race-deviation") == "true";
         const formattedLeagueStats = {};
         const formattedStatsPercentage = {};
         const raceStatsType = StatsUtil.getRaceStatsType();
+        const raceRegionGames = StatsUtil.calculateLadderStatsCurrentRaceRegionValues(stats, raceStatsType);
+        const raceGames = new Map(Array.from(raceRegionGames.entries())
+            .map(entry=>[entry[0], Array.from(entry[1].values()).reduce((a, b) => a + b, 0)]));
+        const raceOffset = normalized && deviation ? 100 / Object.values(RACE).length : 0;
         for(const [region, regionStats] of stats)
         {
             const regionStatsPercentage = {};
@@ -294,15 +316,28 @@ class StatsUtil
                         formattedLeagueStats[league][race.name] = formattedLeagueStats[league][race.name] == null
                             ? leagueStats.leagueStats[raceGamesStr]
                             : formattedLeagueStats[league][race.name] + leagueStats.leagueStats[raceGamesStr];
-                        regionStatsPercentage[league][race.name] =
-                            (leagueStats.leagueStats[raceGamesStr] / totalGamesPlayed) * 100;
+                        regionStatsPercentage[league][race.name] = normalized
+                            ? (leagueStats.leagueStats[raceGamesStr] / raceRegionGames.get(race.name).get(region))
+                            : (leagueStats.leagueStats[raceGamesStr] / totalGamesPlayed) * 100;
                     } 
+                }
+                if(normalized) {
+                    const summ = Object.values(regionStatsPercentage[league]).reduce((a, b) => a + b, 0);
+                    for(const race of Object.values(RACE))
+                        regionStatsPercentage[league][race.name]
+                            = (regionStatsPercentage[league][race.name] / summ) * 100 - raceOffset;
                 }
             }
         }
+        if(normalized) {
+            for(const [league, lStats] of Object.entries(formattedLeagueStats))
+                for(const [race, games] of Object.entries(lStats))
+                    lStats[race] = lStats[race] / raceGames.get(race)
+        }
         for(const [league, lStats] of Object.entries(formattedLeagueStats)) {
             const totalGamesPlayed = Object.values(lStats).reduce((a, b)=>a+b, 0);
-            for(const [race, games] of Object.entries(lStats)) lStats[race] = (games / totalGamesPlayed) * 100;
+            for(const [race, games] of Object.entries(lStats)) lStats[race]
+                = (games / totalGamesPlayed) * 100 - raceOffset;
         }
 
         if(!StatsUtil.setRaceStatsStatus(raceStatsType, document.querySelectorAll('[id^="games-played-race-league"]')))

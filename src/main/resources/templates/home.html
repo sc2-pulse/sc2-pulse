@@ -351,10 +351,34 @@
             <section id="stats-race" class="tab-pane fade c-height-linked" data-view-title="Race distribution">
                 <h3>Race distribution</h3>
                 <form class="form-inline flex-center-wrap-gap mb-3">
-                    <select id="stats-race-type" class="form-control serializable">
+                    <select id="stats-race-type" class="form-control serializable stats-race-ctl">
                         <option value="games-played" selected="selected">Games</option>
                         <option value="team-count">Teams</option>
                     </select>
+                    <div class="form-check form-check-inline">
+                        <input type="checkbox"
+                               id="stats-race-normalize"
+                               name="stats-race-normalize"
+                               class="form-check-input serializable stats-race-ctl"
+                        />
+                        <label for="stats-race-normalize" class="text-nowrap form-check-label">Normalize</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input
+                                type="checkbox"
+                                id="stats-race-deviation"
+                                name="stats-race-deviation"
+                                class="form-check-input serializable stats-race-ctl"
+                                data-state-link-id="stats-race-normalize"
+                                data-state-link-values="1"
+                        />
+                        <label for="stats-race-deviation" class="text-nowrap form-check-label mr-1">Deviation</label>
+                        <span
+                             class="icofont-info text-primary"
+                             title="Deviation from ideal distribution. Normalized stats are required."
+                             data-toggle="tooltip"
+                        ></span>
+                    </div>
                 </form>
                 <div class="row no-gutters ml-3">
                     <section id="games-played-race" class="col-lg-6 mb-3"
