@@ -19,7 +19,6 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToSC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
 import java.time.Duration;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
@@ -55,12 +54,6 @@ public class CoreTestConfig
         service.addConverter(new IntegerToClanMemberEventTypeConverter());
         service.addConverter(new IntegerToAccountPropertyTypeConverter());
         return service;
-    }
-
-    @Bean
-    public Random simpleRng()
-    {
-        return new Random();
     }
 
     @Bean

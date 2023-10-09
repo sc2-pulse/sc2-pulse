@@ -20,7 +20,6 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
-import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
@@ -101,12 +100,6 @@ extends SpringBootServletInitializer
     @Bean
     public RestTemplateCustomizer restTemplateCustomizer() {
         return new GlobalRestTemplateCustomizer();
-    }
-
-    @Bean
-    public Random simpleRng()
-    {
-        return new Random();
     }
 
     @Bean

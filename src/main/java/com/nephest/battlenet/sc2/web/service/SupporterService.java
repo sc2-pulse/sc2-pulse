@@ -1,14 +1,14 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.local.CollectionVar;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.Random;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -31,7 +30,7 @@ public class SupporterService
 
     public static final String DEFAULT_DELIMITER = ", ";
 
-    private final Random rng;
+    private final ThreadLocalRandomSupplier rng;
     private CollectionVar<List<String>, String> supporters;
     private CollectionVar<List<String>, String> donors;
     private final String sponsor;
@@ -49,7 +48,7 @@ public class SupporterService
     public SupporterService
     (
         VarDAO varDAO,
-        @Qualifier("simpleRng") Random rng,
+        ThreadLocalRandomSupplier rng,
         @Value("${com.nephest.battlenet.sc2.sponsor:#{''}}") String sponsor,
         @Value("${com.nephest.battlenet.sc2.sponsor.link:#{''}}") String sponsoredLink,
         @Value("${com.nephest.battlenet.sc2.sponsor.t2:#{''}}") List<String> sponsorsT2,
@@ -116,20 +115,20 @@ public class SupporterService
     {
         return patrons.isEmpty()
             ? null
-            : patrons.get(rng.nextInt(patrons.size()));
+            : patrons.get(rng.get().nextInt(patrons.size()));
     }
 
     public String getRandomSupporter()
     {
         return supporters.getValue().isEmpty()
             ? null
-            : supporters.getValue().get(rng.nextInt(supporters.getValue().size()));
+            : supporters.getValue().get(rng.get().nextInt(supporters.getValue().size()));
     }
 
     public String getRandomSupporters(int count)
     {
         int maxSubListIx = supporters.getValue().size() / count;
-        int randomSublist = rng.nextInt(maxSubListIx + 1);
+        int randomSublist = rng.get().nextInt(maxSubListIx + 1);
         return supporterService.getRandomSupporters(count, randomSublist);
     }
 
