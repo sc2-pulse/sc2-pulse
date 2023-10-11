@@ -177,6 +177,7 @@
     </script>
     <th:block  id="script-additional" th:switch="${#arrays.contains(@environment.getActiveProfiles(), 'dev')}">
         <th:block th:case="true">
+            <script th:src="@{/static/script/IntervalExecutor.js}"></script>
             <script th:src="@{/static/script/BootstrapUtil.js}"></script>
             <script th:src="@{/static/script/CharacterUtil.js}"></script>
             <script th:src="@{/static/script/ChartUtil.js}"></script>
