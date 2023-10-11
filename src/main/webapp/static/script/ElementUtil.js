@@ -455,7 +455,7 @@ class ElementUtil
     {
         const elem = document.createElement(tag);
         if(id) elem.id = id;
-        elem.setAttribute("class", clazz);
+        if(clazz) elem.setAttribute("class", clazz);
         if(textContent != null) elem.textContent = textContent;
         for(const [name, val] of attributes) elem.setAttribute(name, val);
         return elem;
