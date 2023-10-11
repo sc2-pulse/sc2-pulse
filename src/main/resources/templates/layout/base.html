@@ -48,8 +48,11 @@
     <div class="d-flex">
     <div id="section-side-left" class="section-side">
         <div class="sponsor-desktop-side-container" th:if="${showAds == true}">
-            <div id="dd-desktop-left" class="dd-block sponsor-desktop-side mt-5" >
+            <div id="dd-desktop-left" class="dd-block sponsor-desktop-side">
                 <!-- desktop-left -->
+                <h2 class="mb-3 text-break"><a th:href="@{/?#search-stream}" class="link-stream-search">Featured streams</a></h2>
+                <div class="streams-featured d-flex flex-wrap-gap-1-5 justify-content-center">
+                </div>
             </div>
         </div>
     </div>
@@ -207,6 +210,7 @@
             <script th:src="@{/static/script/VODUtil.js}"></script>
             <script th:src="@{/static/script/RevealUtil.js}"></script>
             <script th:src="@{/static/script/GroupUtil.js}"></script>
+            <script th:src="@{/static/script/CommunityUtil.js}"></script>
         </th:block>
         <th:block th:case="false">
             <script th:src="@{/static/script/sc2-restful.min.js(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"></script>
@@ -215,6 +219,7 @@
     <script>SC2Restful.baseStart();</script>
     <th:block th:replace="${script}" />
     <script>Session.refreshTheme();</script>
+    <script th:if="${showAds}">CommunityUtil.enhanceFeaturedStreams();</script>
 </body>
 </html>
 

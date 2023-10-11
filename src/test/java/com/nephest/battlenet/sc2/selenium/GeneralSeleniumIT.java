@@ -412,6 +412,17 @@ public class GeneralSeleniumIT
         checkJsErrors();
     }
 
+    @Test
+    public void testStreamUI()
+    {
+        loadMainPage(driver, wait);
+        clickAndWait(driver, wait, "#search-all-tab", "#search.show.active");
+        clickAndWait(driver, wait, "#search-stream-tab",
+            "#search-stream.show.active.loading-complete");
+        toggleInputs(driver, "#search-stream");
+        checkJsErrors();
+    }
+
     public static void switchTabsAndToggleInputs(WebDriver driver, WebDriverWait wait, String tabContainerSelector)
     {
         driver.findElement(By.cssSelector(tabContainerSelector))

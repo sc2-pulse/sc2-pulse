@@ -218,7 +218,7 @@ body.theme-dark img[loading="lazy"]:not(.loaded)
     background-color: #22272a;
 }
 
-#sponsor-desktop-right h2
+#dd-desktop-left h2, #sponsor-desktop-right h2
 {
     font-size: 1.2rem;
     margin-top: 0.5rem;
@@ -1345,6 +1345,236 @@ body.modal-open.modal-open-no-popup
 .container-loading.loading-error .indicator-loading:not(.loading-error)
 {
     display: none;
+}
+
+.stream
+{
+    position: relative;
+}
+
+.stream, .stream .thumbnail
+{
+    width: 19rem;
+    min-width: 8rem;
+    text-align: left;
+}
+
+.streams-featured .stream, .streams-featured .stream .thumbnail
+{
+    width: 14rem;
+}
+
+.streams-featured .stream .thumbnail
+{
+    display: none;
+}
+
+.stream img
+{
+    display: inline-block;
+}
+
+.stream .thumbnail
+{
+    aspect-ratio: 16/9;
+    margin-bottom: 0.6rem;
+    width: 100%;
+}
+
+.stream .body
+{
+    gap: 0.6rem;
+}
+
+.stream .body-text
+{
+    min-width: 0;
+    flex-shrink: 99;
+}
+
+.stream header
+{
+    position: relative;
+}
+
+.stream .profile
+{
+    width: 2.5rem;
+    height: 2.5rem;
+    aspect-ratio: 1/1;
+    flex-basis: max-content;
+    border-radius: 100%;
+}
+
+.stream .title
+{
+    line-height: normal !important;
+    font-size: 1em;
+    margin-bottom: 0;
+}
+
+.stream .streamer
+{
+    margin-bottom: 0;
+}
+
+.stream .viewers::after
+{
+    content: " viewers";
+}
+
+.stream .team img
+{
+    vertical-align: initial;
+}
+
+.stream .team .race-percentage-container
+{
+    height: 1.2em;
+}
+
+.stream .team .invisible
+{
+    display: none;
+}
+
+.streams-featured .stream .team .table-image-additional
+{
+    display: none;
+}
+
+.streams-featured .stream .body-text
+{
+    display: grid;
+    grid-template-columns: 3fr 1fr 0fr;
+}
+
+.streams-featured .stream header
+{
+    display: grid;
+    grid-template-columns: subgrid;
+}
+
+.streams-featured .stream .body-text > *,
+.streams-featured .stream header > *
+{
+    grid-column: 1/3;
+}
+
+.streams-featured .stream .streamer
+{
+    grid-column: 1;
+}
+
+.streams-featured .stream .viewers
+{
+    grid-column: 2;
+    text-align: right;
+}
+
+.streams-featured .stream .viewers::after
+{
+    content: none;
+}
+
+.streams .stream .viewers
+{
+    position: absolute;
+    bottom: 3.7rem;
+    left: -2.5rem;
+    color: white;
+    background-color: rgba(0, 0, 0, 0.65);
+    padding: 0.4em;
+    line-height: 1;
+    border-radius: 0.25em;
+    font-size: 0.9em;
+}
+
+.stream .team,
+.stream .streamer,
+.streams-featured .stream .viewers
+{
+    font-size: 0.9em;
+}
+
+.stream .featured
+{
+    text-transform: lowercase;
+}
+
+.streams.compact
+{
+    display: grid !important;
+    grid-template-columns: repeat(4, auto);
+    align-items: center;
+    gap: 1em 1.5em;
+    min-width: 15em;
+}
+
+.streams.compact .stream
+{
+    display: grid !important;
+    grid-template-columns: subgrid;
+    grid-column: 1/-1;
+}
+
+.streams.compact .stream *
+{
+    display: grid !important;
+    grid-template-columns: subgrid;
+    grid-template-rows: subgrid;
+    grid-column: 1/-1;
+    grid-row: 1/-1;
+    align-items: center;
+}
+
+.streams.compact .stream .thumbnail,
+.streams.compact .stream .title
+{
+    display: none !important;
+}
+
+.streams.compact .stream .profile
+{
+    grid-column: 1/1;
+    min-width: 0;
+    min-height: 0;
+}
+
+.streams.compact .stream .streamer
+{
+    grid-column: 2/2;
+    min-width: 5em;
+    max-width: 15em;
+    overflow-wrap: anywhere;
+    white-space: normal !important;
+}
+
+.streams.compact .stream .viewers
+{
+    grid-column: 3/3;
+    position: initial;
+    display: block !important;
+    padding: 0;
+    color: inherit;
+    background-color: unset;
+}
+
+.streams.compact .stream .viewers:after
+{
+    display: none;
+}
+
+.streams.compact .stream .meta
+{
+    grid-column: 4/4;
+    display: flex !important;
+}
+
+.streams.compact .stream .meta *
+{
+    grid-column: 4/4;
+    display: inline-flex !important;
 }
 
 @media (min-width: 576px) {

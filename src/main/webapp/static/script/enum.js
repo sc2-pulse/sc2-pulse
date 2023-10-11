@@ -86,7 +86,8 @@ const VIEW = Object.freeze
     CLAN_BUFFER: {name: "clan-buffer", order: 13},
     VERSUS: {name: "versus", order: 14},
     VOD_SEARCH: {name: "vod-search", order: 15},
-    GROUP: {name: "group", order: 16}
+    GROUP: {name: "group", order: 16},
+    STREAM_SEARCH: {name: "stream-search", order: 17}
 });
 
 const VIEW_DATA = Object.freeze

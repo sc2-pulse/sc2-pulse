@@ -40,6 +40,20 @@
         </li>
         <li class="nav-item">
             <a
+                    id="search-stream-tab"
+                    class="nav-link"
+                    data-toggle="pill"
+                    data-target="#search-stream"
+                    href="#search-stream"
+                    role="tab"
+                    aria-controls="search-stream"
+                    aria-selected="false"
+            >
+                Stream
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
                     id="search-vod-tab"
                     class="nav-link"
                     data-toggle="pill"
@@ -162,6 +176,37 @@
                 </ul>
             </nav>
         </div>
+    </section>
+    <section id="search-stream" class="container-loading loading-none tab-pane fade root"
+             data-view-name="stream-search"
+             data-view-title="Stream search"
+             data-view-description="Find live streams enhanced with ranked ladder data."
+    >
+        <header class="mb-4">
+            <h2>Stream search</h2>
+            <form class="form-inline d-flex flex-wrap-gap justify-content-center mb-3">
+                <div class="form-group d-flex flex-wrap-gap-05">
+                    <label for="stream-sort-by">Sort by</label>
+                    <select class="form-control serializable" id="stream-sort-by">
+                        <option value="viewers" selected="selected">Viewers</option>
+                        <option value="mmr">MMR</option>
+                    </select>
+                </div>
+                <div class="form-group d-flex flex-wrap-gap-05">
+                    <label for="stream-layout">Layout</label>
+                    <select class="form-control serializable class-ctl"
+                            id="stream-layout"
+                            data-class-ctl-target="#search-stream .streams"
+                    >
+                        <option value="twitch" selected="selected">Twitch</option>
+                        <option value="compact" data-class-ctl-class="compact">Compact</option>
+                    </select>
+                </div>
+            </form>
+        </header>
+        <div class="streams d-flex flex-wrap-gap-1-5 justify-content-center">
+        </div>
+        <div th:replace="~{fragments/section :: loading-indicator}"></div>
     </section>
     <section id="search-vod" class="tab-pane fade root"
              data-view-name="vod-search"
