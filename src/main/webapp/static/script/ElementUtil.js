@@ -635,10 +635,23 @@ class ElementUtil
     {
         root.querySelectorAll(':scope [data-action="remove-element"]').forEach(e=>e.addEventListener("click", ElementUtil.onRemoveElement));
     }
+
+    static enhanceDocumentVisibilityTasks()
+    {
+        document.addEventListener("visibilitychange", ElementUtil.executeDocumentVisibilityTask);
+    }
+
+    static executeDocumentVisibilityTask()
+    {
+        const task = ElementUtil.DOCUMENT_VISIBILITY_TASKS.get(window.location.hash);
+        if(task) task(document.visibilityState == "visible");
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
 ElementUtil.ELEMENT_TASKS = new Map();
+ElementUtil.DOCUMENT_VISIBILITY_TASKS = new Map();
 ElementUtil.ELEMENT_TASK_QUEUE = new Map();
 ElementUtil.INPUT_TIMEOUTS = new Map();
 ElementUtil.INPUT_TIMESTAMPS = new Map();

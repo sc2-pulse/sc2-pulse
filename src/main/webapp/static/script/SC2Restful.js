@@ -119,6 +119,7 @@ class SC2Restful
                 ChartUtil.enhanceTimeAxisToggles();
                 ChartUtil.updateHeightFromLocalStorage();
                 Session.refreshTheme();
+                ElementUtil.enhanceDocumentVisibilityTasks();
         }
     }
 
