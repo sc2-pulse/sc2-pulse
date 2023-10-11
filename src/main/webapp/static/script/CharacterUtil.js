@@ -1636,6 +1636,12 @@ class CharacterUtil
             && ((term.startsWith("[") && term.length >= 2) || term.includes("#") || term.length >= 4);
     }
 
+    static renderLadderProPlayer(proPlayer)
+    {
+        return (proPlayer.proTeam != null ? "[" + proPlayer.proTeam.shortName + "]" : "")
+            + proPlayer.proPlayer.nickname;
+    }
+
 }
 CharacterUtil.TEAM_SNAPSHOT_SEASON_END_OFFSET_MILLIS = 2 * 24 * 60 * 60 * 1000;
 CharacterUtil.MMR_Y_VALUE_GETTERS = new Map([
