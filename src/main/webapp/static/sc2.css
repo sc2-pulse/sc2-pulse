@@ -471,9 +471,19 @@ label.required::after
     gap: 0.3em;
 }
 
+.gap-05
+{
+    gap: 0.5em;
+}
+
 .gap-1
 {
     gap: 1em;
+}
+
+.gap-1-5
+{
+    gap: 1.5em;
 }
 
 .dl-gap-05 dt
