@@ -192,9 +192,7 @@ public class CommunityService
         LadderVideoStream mostSkilled = getMostSkilledStream(streamsRemaining);
         if(mostSkilled != null) streamsRemaining.remove(mostSkilled);
 
-        LadderVideoStream randomStream = getRandomStream(streamsRemaining);
-        currentRandomStream = randomStream;
-        currentRandomStreamAssigned = Instant.now();
+        LadderVideoStream randomStream = getSameOrNewRandomStream(streamsRemaining);
 
         List<LadderVideoStream> featured = new ArrayList<>(3);
         mostViewed.setFeatured(Featured.POPULAR);
@@ -221,19 +219,35 @@ public class CommunityService
             .orElse(null);
     }
 
-    private LadderVideoStream getRandomStream(List<LadderVideoStream> streams)
+    private LadderVideoStream getSameOrNewRandomStream(List<LadderVideoStream> streams)
     {
-        if(streams.isEmpty()) return null;
-
+        LadderVideoStream updatedCurrentStream;
         if
         (
             currentRandomStream != null
-            && Duration.between(currentRandomStreamAssigned, Instant.now())
-                .compareTo(RANDOM_STREAM_MAX_DURATION) < 0
-            && streams.stream()
-                .anyMatch(s->s.getStream().equals(currentRandomStream.getStream()))
+                && Duration.between(currentRandomStreamAssigned, Instant.now())
+                    .compareTo(RANDOM_STREAM_MAX_DURATION) < 0
+                &&
+                (
+                    updatedCurrentStream = streams.stream()
+                        .filter(s->s.getStream().equals(currentRandomStream.getStream()))
+                        .findAny()
+                        .orElse(null)
+                ) != null
         )
+        {
+            currentRandomStream = updatedCurrentStream;
             return currentRandomStream;
+        }
+
+        currentRandomStream = getRandomStream(streams);
+        currentRandomStreamAssigned = Instant.now();
+        return currentRandomStream;
+    }
+
+    private LadderVideoStream getRandomStream(List<LadderVideoStream> streams)
+    {
+        if(streams.isEmpty()) return null;
 
         List<LadderVideoStream> eligibleStreams = streams.stream()
             .filter(stream -> stream.getTeam() != null)
@@ -241,6 +255,11 @@ public class CommunityService
         return  eligibleStreams.isEmpty()
             ? null
             : eligibleStreams.get(randomSupplier.get().nextInt(eligibleStreams.size()));
+    }
+
+    public Instant getCurrentRandomStreamAssigned()
+    {
+        return currentRandomStreamAssigned;
     }
 
     protected void setCurrentRandomStreamAssigned(Instant currentRandomStreamAssigned)

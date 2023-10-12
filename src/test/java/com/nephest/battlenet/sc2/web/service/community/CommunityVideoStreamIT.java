@@ -3,6 +3,9 @@
 
 package com.nephest.battlenet.sc2.web.service.community;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
@@ -464,6 +467,8 @@ public class CommunityVideoStreamIT
         when(rng.nextInt(anyInt())).thenReturn(1);
         when(randomSupplier.get()).thenReturn(rng);
 
+        assertNull(communityService.getCurrentRandomStreamAssigned());
+        Instant beforeRandomStreamReassignment1 = Instant.now();
         List<LadderVideoStream> featuredStreams1 = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream/featured")
@@ -527,8 +532,14 @@ public class CommunityVideoStreamIT
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("proPlayer.proPlayer.version")
             .isEqualTo(featuredStreams);
+        assertTrue(beforeRandomStreamReassignment1
+            .isBefore(communityService.getCurrentRandomStreamAssigned()));
 
         //the same random stream is picked, despite different rng
+        Instant maxRandomStreamInstant = Instant.now()
+            .minus(CommunityService.RANDOM_STREAM_MAX_DURATION)
+            .plusSeconds(5); //offset for test execution
+        communityService.setCurrentRandomStreamAssigned(maxRandomStreamInstant);
         lenient().when(rng.nextInt(anyInt())).thenReturn(0);
         List<LadderVideoStream> featuredStreams2 = objectMapper.readValue(mvc.perform
         (
@@ -542,6 +553,7 @@ public class CommunityVideoStreamIT
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("proPlayer.proPlayer.version")
             .isEqualTo(featuredStreams);
+        assertEquals(maxRandomStreamInstant, communityService.getCurrentRandomStreamAssigned());
 
         //random stream slot has expired, should pick a new stream due to different rng
         communityService.setCurrentRandomStreamAssigned(
@@ -565,6 +577,7 @@ public class CommunityVideoStreamIT
                 CommunityService.Featured.RANDOM
             )
         );
+        Instant beforeRandomStreamReassignment2 = Instant.now();
         List<LadderVideoStream> featuredStreams3 = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream/featured")
@@ -577,6 +590,8 @@ public class CommunityVideoStreamIT
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("proPlayer.proPlayer.version")
             .isEqualTo(featuredStreams);
+        assertTrue(beforeRandomStreamReassignment2
+            .isBefore(communityService.getCurrentRandomStreamAssigned()));
     }
 
 }
