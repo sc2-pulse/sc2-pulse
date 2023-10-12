@@ -16,7 +16,7 @@ implements VideoStream
 {
 
     private final SocialMedia service;
-    private final String id, userId, userName, title, url, thumbnailUrl;
+    private final String id, userId, userName, title, url, profileImageUrl, thumbnailUrl;
 
     @JsonSerialize(converter = LocaleToBCP47StringConverter.class)
     @JsonDeserialize(converter = LanguageStringToLocaleConverter.class)
@@ -32,6 +32,7 @@ implements VideoStream
         String title,
         Locale language,
         String url,
+        String profileImageUrl,
         String thumbnailUrl,
         int viewerCount
     )
@@ -43,6 +44,7 @@ implements VideoStream
         this.title = title;
         this.language = language;
         this.url = url;
+        this.profileImageUrl = profileImageUrl;
         this.thumbnailUrl = thumbnailUrl;
         this.viewerCount = viewerCount;
     }
@@ -102,6 +104,12 @@ implements VideoStream
     public String getUrl()
     {
         return url;
+    }
+
+    @Override
+    public String getProfileImageUrl()
+    {
+        return profileImageUrl;
     }
 
     @Override

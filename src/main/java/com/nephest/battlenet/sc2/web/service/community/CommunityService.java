@@ -60,6 +60,8 @@ public class CommunityService
             <= 0;
 
     //twitch baseline dimensions
+    public static final int STREAM_PROFILE_IMAGE_WIDTH = 50;
+    public static final int STREAM_PROFILE_IMAGE_HEIGHT = 50;
     public static final int STREAM_THUMBNAIL_TARGET_WIDTH = 440;
     public static final int STREAM_THUMBNAIL_TARGET_HEIGHT = 248;
     public static final Duration STREAM_CACHE_EXPIRE_AFTER = Duration.ofMinutes(5);

@@ -25,6 +25,8 @@ public interface VideoStream
 
     String getUrl();
 
+    String getProfileImageUrl();
+
     String getThumbnailUrl();
 
     int getViewerCount();

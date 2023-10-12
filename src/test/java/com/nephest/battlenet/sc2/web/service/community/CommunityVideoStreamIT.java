@@ -246,6 +246,7 @@ public class CommunityVideoStreamIT
                 "title1",
                 Locale.ENGLISH,
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/profile",
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/thumbnail",
                 3
             ),
@@ -258,6 +259,7 @@ public class CommunityVideoStreamIT
                 "title4",
                 Locale.FRENCH,
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser4",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser4/profile",
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser4/thumbnail",
                 2
             ),
@@ -270,6 +272,7 @@ public class CommunityVideoStreamIT
                 "title5",
                 Locale.FRENCH,
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser5",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser5/profile",
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser5/thumbnail",
                 2
             ),
@@ -282,6 +285,7 @@ public class CommunityVideoStreamIT
                 "title6",
                 Locale.FRENCH,
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser6",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser6/profile",
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser6/thumbnail",
                 2
             ),
@@ -294,6 +298,7 @@ public class CommunityVideoStreamIT
                 "title7",
                 Locale.FRENCH,
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser7",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser7/profile",
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser7/thumbnail",
                 2
             ),
@@ -306,6 +311,7 @@ public class CommunityVideoStreamIT
                 "title3",
                 Locale.FRENCH,
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser3",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser3/profile",
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser3/thumbnail",
                 2
             ),
@@ -319,6 +325,7 @@ public class CommunityVideoStreamIT
                 "title2",
                 Locale.CHINESE,
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2/profile",
                 SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2/thumbnail",
                 1
             )

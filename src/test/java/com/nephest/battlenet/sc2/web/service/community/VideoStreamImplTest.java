@@ -25,6 +25,7 @@ public class VideoStreamImplTest
                 "title1",
                 Locale.ENGLISH,
                 "url1",
+                "profileImageUrl1",
                 "thumnailUrl1",
                 1
             ),
@@ -37,6 +38,7 @@ public class VideoStreamImplTest
                 "title2",
                 Locale.FRENCH,
                 "url2",
+                "profileImageUrl2",
                 "thumnailUrl2",
                 2
             ),
@@ -50,6 +52,7 @@ public class VideoStreamImplTest
                 "title1",
                 Locale.ENGLISH,
                 "url1",
+                "profileImageUrl1",
                 "thumnailUrl1",
                 1
             ),
@@ -62,6 +65,7 @@ public class VideoStreamImplTest
                 "title1",
                 Locale.ENGLISH,
                 "url1",
+                "profileImageUrl1",
                 "thumnailUrl1",
                 1
             )
