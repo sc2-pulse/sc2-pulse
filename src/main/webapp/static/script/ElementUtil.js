@@ -647,6 +647,45 @@ class ElementUtil
         if(task) task(document.visibilityState == "visible");
     }
 
+    static enhanceClassCtl()
+    {
+        document.querySelectorAll(".class-ctl")
+            .forEach(ctl=>ctl.addEventListener("change", ElementUtil.onChangeClassCtl));
+    }
+
+    static onChangeClassCtl(evt)
+    {
+        ElementUtil.applyClassCtl(evt.target);
+    }
+
+    static applyClassCtl(ctl)
+    {
+        const val = ElementUtil.getClassCtlValue(ctl);
+        document.querySelectorAll(ctl.getAttribute("data-class-ctl-target")).forEach(target=>{
+            target.classList.add(...val.add);
+            target.classList.remove(...val.remove);
+        });
+    }
+
+    static getClassCtlValue(ctl)
+    {
+        let result = {};
+        if(ctl.tagName == "SELECT") {
+            const selectedOption = ctl.options[ctl.selectedIndex];
+            result.add = selectedOption.getAttribute("data-class-ctl-class");
+            result.add = result.add != null ? result.add.split(" ") : [];
+            result.remove = Array.from(ctl.options)
+                .filter(o=>o.value != selectedOption.value)
+                .map(o=>o.getAttribute("data-class-ctl-class"))
+                .filter(clazz=>clazz != null)
+                .map(clazz=>clazz.split(" "))
+                .reduce((a, b)=>a.concat(b), []);
+        } else {
+            result = {add: [], remove: []};
+        }
+        return result;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();

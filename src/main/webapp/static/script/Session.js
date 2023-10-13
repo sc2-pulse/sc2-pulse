@@ -156,6 +156,7 @@ class Session
                 elem.value = savedState;
             }
         }
+        document.querySelectorAll(".class-ctl").forEach(ElementUtil.applyClassCtl);
     }
 
     static enhanceSerializable()

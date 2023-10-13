@@ -114,6 +114,7 @@ class SC2Restful
                 ElementUtil.enhanceCopyToClipboard();
                 ElementUtil.enhanceCloneCtl();
                 ElementUtil.enhanceRemoveCtl(document);
+                ElementUtil.enhanceClassCtl();
                 Session.enhanceSerializable();
                 ChartUtil.enhanceZoomToggles();
                 ChartUtil.enhanceTimeAxisToggles();
