@@ -52,7 +52,7 @@ public class CommunityService
             .thenComparing(VideoStream::getService);
     public static final Comparator<LadderTeam> CURRENT_TEAM_COMPARATOR
         = Comparator.comparing(Team::getLastPlayed);
-    public static final Duration CURRENT_TEAM_MAX_DURATION_OFFSET = Duration.ofMinutes(30);
+    public static final Duration CURRENT_TEAM_MAX_DURATION_OFFSET = Duration.ofMinutes(60);
     public static final Predicate<LadderTeam> CURRENT_TEAM_PREDICATE = t->
         t.getLastPlayed() != null
         && Duration.between(t.getLastPlayed(), OffsetDateTime.now())
