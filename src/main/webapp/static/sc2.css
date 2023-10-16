@@ -206,12 +206,14 @@ caption
     z-index: 99 !important;
 }
 
-ins.adsbygoogle[data-ad-status="unfilled"]
+ins.adsbygoogle[data-ad-status="unfilled"],
+img[loading="lazy"]:not(.loaded)
 {
     background-color: #f1f3f4;
 }
 
-body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"]
+body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"],
+body.theme-dark img[loading="lazy"]:not(.loaded)
 {
     background-color: #22272a;
 }
