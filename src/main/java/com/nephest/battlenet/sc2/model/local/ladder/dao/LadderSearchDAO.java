@@ -415,6 +415,8 @@ public class LadderSearchDAO
         Integer limit
     )
     {
+        if(ids.isEmpty()) return List.of();
+
         Integer[] queueIds = queues.isEmpty()
             ? null
             : queues.stream()
