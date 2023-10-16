@@ -49,6 +49,7 @@ import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptExecutor;
@@ -81,9 +82,6 @@ public class GeneralSeleniumIT
 {
 
     public static final int TIMEOUT_MILLIS = 10000;
-
-    @Autowired
-    private ServletWebServerApplicationContext webServerAppCtxt;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -125,16 +123,21 @@ public class GeneralSeleniumIT
     private JdbcTemplate template;
 
     private static WebDriver driver;
+    private static WebDriverWait wait;
     private static JavascriptExecutor js;
 
     private static boolean failed = false;
     private static String root;
+
+    private static boolean dataReady = false;
+    private static int port;
 
     @BeforeAll
     public static void init
     (
         @Autowired DataSource dataSource,
         @Autowired AccountDAO accountDAO,
+        @Autowired ServletWebServerApplicationContext webServerAppCtxt,
         @Value("${selenium.driver}") String seleniumDriver
     )
     throws Exception
@@ -144,12 +147,25 @@ public class GeneralSeleniumIT
                 .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
                 .getDeclaredConstructor()
                 .newInstance();
+        wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
         js = (JavascriptExecutor) driver;
+        port = webServerAppCtxt.getWebServer().getPort();
+        root = "http://localhost:" + port;
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
+    }
+
+    //setup data in before each for easier auto wiring.
+    @BeforeEach
+    public void setupDataOnce()
+    {
+        if(dataReady) return;
+
+        setupData();
+        dataReady = true;
     }
 
     public static String getDriverPackage(String driver)
@@ -168,21 +184,11 @@ public class GeneralSeleniumIT
         }
     }
 
-
     @Test
     public void testUI()
     {
-        setupData();
-        testUI(driver);
-    }
-
-    private void testUI(WebDriver driver)
-    {
         try
         {
-            int port = webServerAppCtxt.getWebServer().getPort();
-            WebDriverWait wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
-            root = "http://localhost:" + port;
             testGroup(driver, wait);
             loadMainPage(driver, wait);
             testVersus(driver, wait);
