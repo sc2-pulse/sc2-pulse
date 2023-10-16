@@ -686,6 +686,17 @@ class ElementUtil
         return result;
     }
 
+    static addLoadClassWatcher(element)
+    {
+        element.addEventListener("load", ElementUtil.onLoad);
+        return element;
+    }
+
+    static onLoad(evt)
+    {
+        evt.target.classList.add("loaded");
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
