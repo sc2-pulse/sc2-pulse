@@ -126,7 +126,6 @@ public class GeneralSeleniumIT
     private static WebDriverWait wait;
     private static JavascriptExecutor js;
 
-    private static boolean failed = false;
     private static String root;
 
     private static boolean dataReady = false;
@@ -177,7 +176,7 @@ public class GeneralSeleniumIT
     public static void afterAll(@Autowired DataSource dataSource)
     throws SQLException
     {
-        if(!failed) driver.close();
+        driver.close();
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
@@ -185,33 +184,33 @@ public class GeneralSeleniumIT
     }
 
     @Test
-    public void testUI()
+    public void testAboutUI()
     {
-        try
-        {
-            testGroup(driver, wait);
-            loadMainPage(driver, wait);
-            testVersus(driver, wait);
-            testLadderUI(driver, wait);
-            testOnline(driver, wait);
-            testSearch(driver, wait);
-            testSettings(driver, wait);
-            testMmrHistory(driver, wait);
-            checkJsErrors();
-            getAndWaitAndCheckJsErrors(driver, wait, root + "/about", "#about");
-            getAndWaitAndCheckJsErrors(driver, wait, root + "/privacy-policy", "#privacy");
-            getAndWaitAndCheckJsErrors(driver, wait, root + "/status", "#status");
-            getAndWaitAndCheckJsErrors(driver, wait, root + "/contacts", "#contacts");
-        }
-        catch(Exception ex)
-        {
-            failed = true;
-            fail(ex);
-        }
+        getAndWaitAndCheckJsErrors(driver, wait, root + "/about", "#about");
     }
 
-    private static void testLadderUI(WebDriver driver, WebDriverWait wait)
+    @Test
+    public void testPrivacyUI()
     {
+        getAndWaitAndCheckJsErrors(driver, wait, root + "/privacy-policy", "#privacy");
+    }
+
+    @Test
+    public void testStatusUI()
+    {
+        getAndWaitAndCheckJsErrors(driver, wait, root + "/status", "#status");
+    }
+
+    @Test
+    public void testContactsUI()
+    {
+        getAndWaitAndCheckJsErrors(driver, wait, root + "/contacts", "#contacts");
+    }
+
+    @Test
+    public void testLadderUI()
+    {
+        loadMainPage(driver, wait);
         clickAndWait(driver, wait, "#stats-tab", "#stats.show.active");
         clickAndWait(driver, wait, "#form-ladder button[type=\"submit\"]", "tr[data-team-id]");
 
@@ -235,6 +234,8 @@ public class GeneralSeleniumIT
 
         //population
         switchTabsAndToggleInputs(driver, wait, "#stats-tabs");
+
+        checkJsErrors();
     }
 
     private static void testCharacterMatches(WebDriver driver, WebDriverWait wait)
@@ -244,16 +245,22 @@ public class GeneralSeleniumIT
         clickAndWait(driver, wait, "#load-more-matches", "#matches tbody tr:nth-child(25)");
     }
 
-    private static void testOnline(WebDriver driver, WebDriverWait wait)
+    @Test
+    public void testOnline()
     {
+        loadMainPage(driver, wait);
         clickAndWait(driver, wait, "#online-tab", "#online.show.active");
         driver.findElement(By.cssSelector("#online-to")).sendKeys(SeasonGenerator.DEFAULT_SEASON_START.plusDays(1).toString());
         clickAndWait(driver, wait, "#form-online button[type=\"submit\"]", "#online-data:not(.d-none)");
         clickCanvases(driver, "#online-data");
+        checkJsErrors();
     }
 
-    private static void testSearch(WebDriver driver, WebDriverWait wait)
+
+    @Test
+    public void testSearch()
     {
+        loadMainPage(driver, wait);
         clickAndWait(driver, wait, "#search-all-tab", "#search-all.show.active");
 
         WebElement searchInput = driver.findElement(By.cssSelector("#search-player-name"));
@@ -269,6 +276,8 @@ public class GeneralSeleniumIT
 
         //clan
         testClanCursorSearch(driver, wait);
+
+        checkJsErrors();
     }
 
     private static void testClanCursorSearch(WebDriver driver, WebDriverWait wait)
@@ -289,16 +298,20 @@ public class GeneralSeleniumIT
         clickAndWait(driver, wait, "#search-result-clan .clan-auto-search", "#search-result-all:not(.d-none)");
     }
 
-    private static void testSettings(WebDriver driver, WebDriverWait wait)
+    @Test
+    public void testSettings()
     {
+        loadMainPage(driver, wait);
         clickAndWait(driver, wait, "#settings-tab", "#settings.show.active");
         toggleInputs(driver, "#settings");
+        checkJsErrors();
     }
 
-    private static void testMmrHistory(WebDriver driver, WebDriverWait wait)
+    @Test
+    public void testMmrHistory()
     {
+        loadMainPage(driver, wait);
         clickAndWait(driver, wait, "#stats-tab", "#stats.show.active");
-        clickAndWait(driver, wait, "#ladder-tab", "#ladder-top.show.active");
         clickAndWait(driver, wait, "#form-ladder button[type=\"submit\"]", "tr[data-team-id]");
         driver.findElements(By.cssSelector("#ladder .team-buffer-toggle")).stream()
             .limit(3)
@@ -312,10 +325,13 @@ public class GeneralSeleniumIT
         driver.get(mmrHistoryUrl);
         wait.until(presenceOfElementLocated(By.cssSelector("tr[data-team-id]")));
         switchTabsAndToggleInputs(driver, wait, "#team-mmr-tabs");
+        checkJsErrors();
     }
 
-    private static void testVersus(WebDriver driver, WebDriverWait wait)
+    @Test
+    public void testVersus()
     {
+        loadMainPage(driver, wait);
         clickAndWait(driver, wait, "#search-all-tab", "#search-all.show.active");
 
         clickAndWait(driver, wait, "#search-clan-tab", "#search-clan.show.active");
@@ -334,11 +350,14 @@ public class GeneralSeleniumIT
         clickAndWait(driver, wait, "#load-more-matches-versus", "#matches-versus tbody tr:nth-child(25)");
         toggleInputs(driver, "[data-view-name=\"versus\"]");
         clickAndWait(driver, wait, "#versus-modal .close:not(.close-left)", ".tab-content-main:not(.d-none)");
+        checkJsErrors();
     }
 
-    private static void testGroup(WebDriver driver, WebDriverWait wait)
+    @Test
+    public void testGroup()
     {
         testClanGroup(driver, wait);
+        checkJsErrors();
     }
 
     private static void testClanGroup(WebDriver driver, WebDriverWait wait)
@@ -393,7 +412,6 @@ public class GeneralSeleniumIT
     {
         if(driver.findElement(By.cssSelector("body")).getAttribute("class").contains("js-error-detected"))
         {
-            failed = true;
             fail("JavaScript errors detected");
         }
     }
