@@ -799,6 +799,28 @@ th.hoverable span
     border: 0.15em solid gray;
 }
 
+.form-inline-flex
+{
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 1em;
+    justify-content: center;
+}
+
+.form-inline-flex .form-group
+{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5em;
+}
+
+.form-inline-flex .form-group > *
+{
+    margin: 0;
+    margin-bottom: 0;
+    margin-right: 0;
+}
+
 .c-dropdown:after
 {
     display: inline-block;
