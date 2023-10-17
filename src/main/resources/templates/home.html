@@ -350,11 +350,14 @@
             </section>
             <section id="stats-race" class="tab-pane fade c-height-linked" data-view-title="Race distribution">
                 <h3>Race distribution</h3>
-                <form class="form-inline flex-center-wrap-gap mb-3">
-                    <select id="stats-race-type" class="form-control serializable stats-race-ctl">
-                        <option value="games-played" selected="selected">Games</option>
-                        <option value="team-count">Teams</option>
-                    </select>
+                <form class="form-inline form-inline-flex flex-center-wrap-gap mb-3">
+                    <div class="form-group">
+                        <label for="stats-race-type" class="text-nowrap">Y axis</label>
+                        <select id="stats-race-type" class="form-control serializable stats-race-ctl">
+                            <option value="games-played" selected="selected">Games</option>
+                            <option value="team-count">Teams</option>
+                        </select>
+                    </div>
                     <div class="form-check form-check-inline">
                         <input type="checkbox"
                                id="stats-race-normalize"
