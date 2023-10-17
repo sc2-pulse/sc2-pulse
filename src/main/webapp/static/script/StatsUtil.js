@@ -225,7 +225,7 @@ class StatsUtil
 
     static getRaceStatsType()
     {
-        return EnumUtil.enumOfName(localStorage.getItem("stats-race-type") || "games-played", LADDER_RACE_STATS_TYPE);
+        return EnumUtil.enumOfName(localStorage.getItem("stats-race-type") || "team-count", LADDER_RACE_STATS_TYPE);
     }
 
     static setRaceStatsStatus(raceStatsType, raceContainers)
