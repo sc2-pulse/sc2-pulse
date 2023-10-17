@@ -424,6 +424,7 @@ public class BlizzardPrivacyService
             (
                 entry.getValue(),
                 alternativeLadderService.isProfileLadderWebRegion(entry.getKey())
+                    || alternativeLadderService.isDiscoveryWebRegion(entry.getKey())
             ))
             .filter(c->legacyProfilePredicate.test(c.getT1()))
             .map(this::extractCharacter)

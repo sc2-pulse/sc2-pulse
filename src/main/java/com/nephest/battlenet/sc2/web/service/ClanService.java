@@ -301,6 +301,7 @@ public class ClanService
             (
                 entry.getValue(),
                 alternativeLadderService.isProfileLadderWebRegion(entry.getKey())
+                    || alternativeLadderService.isDiscoveryWebRegion(entry.getKey())
             ))
             .map(this::extractClanMembers)
             .buffer(INACTIVE_CLAN_MEMBER_BATCH_SIZE)
