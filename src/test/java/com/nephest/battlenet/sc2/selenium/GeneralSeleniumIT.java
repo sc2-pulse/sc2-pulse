@@ -56,6 +56,8 @@ import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeOptions;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -137,15 +139,13 @@ public class GeneralSeleniumIT
         @Autowired DataSource dataSource,
         @Autowired AccountDAO accountDAO,
         @Autowired ServletWebServerApplicationContext webServerAppCtxt,
-        @Value("${selenium.driver}") String seleniumDriver
+        @Value("${selenium.driver}") String seleniumDriver,
+        @Value("${selenium.driver.headless:#{'true'}}") boolean headless
     )
     throws Exception
     {
         WebDriverManager.getInstance(seleniumDriver).setup();
-        driver = (WebDriver) Class
-                .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
-                .getDeclaredConstructor()
-                .newInstance();
+        driver = initDriver(seleniumDriver, headless);
         wait = new WebDriverWait(driver, Duration.ofMillis(TIMEOUT_MILLIS));
         js = (JavascriptExecutor) driver;
         port = webServerAppCtxt.getWebServer().getPort();
@@ -155,6 +155,47 @@ public class GeneralSeleniumIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
+    }
+
+    public static WebDriver initDriver(String seleniumDriver, boolean headless)
+    throws Exception
+    {
+        String lowerCase = seleniumDriver.toLowerCase();
+        switch (lowerCase)
+        {
+            case "firefox":
+                return initFirefoxDriver(seleniumDriver, headless);
+            case "chrome":
+            case "chromium":
+                return initChromeDriver(seleniumDriver, headless);
+            default:
+                return (WebDriver) Class
+                    .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
+                    .getDeclaredConstructor()
+                    .newInstance();
+        }
+    }
+
+    private static WebDriver initFirefoxDriver(String seleniumDriver, boolean headless)
+    throws Exception
+    {
+        FirefoxOptions options = new FirefoxOptions();
+        options.setHeadless(headless);
+        return (WebDriver) Class
+            .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
+            .getDeclaredConstructor(FirefoxOptions.class)
+            .newInstance(options);
+    }
+
+    private static WebDriver initChromeDriver(String seleniumDriver, boolean headless)
+    throws Exception
+    {
+        ChromeOptions options = new ChromeOptions();
+        options.setHeadless(headless);
+        return (WebDriver) Class
+            .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
+            .getDeclaredConstructor(ChromeOptions.class)
+            .newInstance(options);
     }
 
     //setup data in before each for easier auto wiring.
