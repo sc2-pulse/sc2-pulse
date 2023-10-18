@@ -26,10 +26,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.ImmutablePair;
 import org.apache.commons.lang3.tuple.Pair;
@@ -344,7 +346,11 @@ public class ClanService
             .filter(p->p.getValue() != null)
             .collect(Collectors.toList());
 
-        clanDAO.merge(nonNullClans.stream().map(Pair::getValue).collect(Collectors.toSet()));
+        Map<Clan, Clan> updatedClans =
+            clanDAO.merge(nonNullClans.stream().map(Pair::getValue).collect(Collectors.toSet()))
+                .stream()
+                .collect(Collectors.toMap(Function.identity(), Function.identity()));
+        nonNullClans.forEach(c->c.getValue().setId(updatedClans.get(c.getValue()).getId()));
 
         Set<ClanMember> members = nonNullClans.stream()
             .map(t->new ClanMember(t.getKey().getId(), t.getValue().getId()))

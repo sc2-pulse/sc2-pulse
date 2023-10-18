@@ -36,6 +36,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -400,16 +401,20 @@ public class MatchService
             meta.add(Tuples.of(map, localMatch, match.getT1().getDecision(), match.getT2()));
         }
         Arrays.sort(mapBatch, SC2Map.NATURAL_ID_COMPARATOR);
-        mapDAO.merge(Set.copyOf(Arrays.asList(mapBatch)));
-        meta.forEach(t->t.getT2().setMapId(t.getT1().getId()));
+        Map<SC2Map, SC2Map> updatedMaps = mapDAO.merge(Set.copyOf(Arrays.asList(mapBatch)))
+            .stream()
+            .collect(Collectors.toMap(Function.identity(), Function.identity()));
+        meta.forEach(t->t.getT2().setMapId(updatedMaps.get(t.getT1()).getId()));
         Arrays.sort(matchBatch, Match.NATURAL_ID_COMPARATOR);
-        matchDAO.merge(Set.copyOf(Arrays.asList(matchBatch)));
+        Map<Match, Match> updatedMatches = matchDAO.merge(Set.copyOf(Arrays.asList(matchBatch)))
+            .stream()
+            .collect(Collectors.toMap(Function.identity(), Function.identity()));
         for(int i = 0; i < meta.size(); i++)
         {
             Tuple4<SC2Map, Match, BaseMatch.Decision, PlayerCharacterNaturalId> participant = meta.get(i);
             participantBatch[i] = new MatchParticipant
             (
-                participant.getT2().getId(),
+                updatedMatches.get(participant.getT2()).getId(),
                 ((PlayerCharacter) participant.getT4()).getId(),
                 participant.getT3()
             );
