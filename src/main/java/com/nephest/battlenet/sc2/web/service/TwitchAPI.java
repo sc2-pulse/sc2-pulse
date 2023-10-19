@@ -8,6 +8,8 @@ import com.github.twitch4j.helix.domain.Stream;
 import com.github.twitch4j.helix.domain.StreamList;
 import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.UserList;
+import com.github.twitch4j.helix.domain.Video;
+import com.github.twitch4j.helix.domain.VideoList;
 import com.nephest.battlenet.sc2.twitch.Twitch;
 import java.util.List;
 import java.util.Set;
@@ -75,6 +77,31 @@ public class TwitchAPI
             null
         ).toObservable()))
             .map(StreamList::getStreams)
+            .flatMapIterable(Function.identity());
+    }
+
+    public Flux<Video> getVideosByUserId
+    (
+        String userId,
+        Video.Type typeFilter,
+        int size
+    )
+    {
+        return Flux.from(RxReactiveStreams.toPublisher(client.getHelix().getVideos
+        (
+            null,
+            null,
+            userId,
+            null,
+            null,
+            null,
+            null,
+            typeFilter,
+            size,
+            null,
+            null
+        ).toObservable()))
+            .map(VideoList::getVideos)
             .flatMapIterable(Function.identity());
     }
 

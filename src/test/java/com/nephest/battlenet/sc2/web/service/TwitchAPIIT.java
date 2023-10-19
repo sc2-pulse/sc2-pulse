@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.twitch4j.helix.domain.User;
+import com.github.twitch4j.helix.domain.Video;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.twitch.TwitchTest;
 import java.util.List;
@@ -84,6 +85,17 @@ public class TwitchAPIIT
             .block();
         assertFalse(streams.isEmpty());
         assertTrue(streams.stream().allMatch(s->s.getGameId().equals(SC2_GAME_ID)));
+    }
+
+    @Test
+    public void testGetVideosByUserId()
+    {
+        String userId = "21635116"; //heromarine
+        Video.Type type = Video.Type.ARCHIVE;
+        List<Video> videos = api.getVideosByUserId(userId, type, 10).collectList().block();
+        assertFalse(videos.isEmpty());
+        assertTrue(videos.stream().allMatch(s->
+            s.getUserId().equals(userId) && s.getType().equalsIgnoreCase(type.toString())));
     }
 
 }
