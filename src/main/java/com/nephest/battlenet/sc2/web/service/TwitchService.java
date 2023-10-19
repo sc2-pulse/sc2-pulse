@@ -36,7 +36,7 @@ public class TwitchService
 
     public static final int USER_BATCH_SIZE = 100;
     public static final int VIDEO_BATCH_SIZE = 50;
-    public static final int CONCURRENCY = 1;
+    public static final int CONCURRENCY = 2;
     public static final Duration LINK_VIDEO_OFFSET = Duration.ofDays(1);
     public static final Video.Type VIDEO_TYPE_FILTER = Video.Type.ARCHIVE;
     public static final String VIDEO_VIEWABLE_FILTER = "public";
