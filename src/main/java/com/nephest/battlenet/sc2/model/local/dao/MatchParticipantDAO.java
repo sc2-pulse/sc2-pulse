@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
@@ -244,7 +245,9 @@ public class MatchParticipantDAO
         + "INNER JOIN account ON player_character.account_id = account.id "
         + "INNER JOIN pro_player_account ON account.id = pro_player_account.account_id "
         + "INNER JOIN pro_player ON pro_player_account.pro_player_id = pro_player.id "
-        + "INNER JOIN twitch_user ON pro_player.twitch_user_id = twitch_user.id "
+        + "INNER JOIN social_media_link ON pro_player.id = social_media_link.pro_player_id "
+            + "AND social_media_link.type = " + SocialMedia.TWITCH.getId() + " "
+        + "INNER JOIN twitch_user ON social_media_link.service_user_id::bigint = twitch_user.id "
         + "INNER JOIN twitch_video ON match.date - make_interval(secs => match.duration::double precision) "
         + "BETWEEN twitch_video.begin AND twitch_video.\"end\" "
             + "AND twitch_user.id = twitch_video.twitch_user_id "
