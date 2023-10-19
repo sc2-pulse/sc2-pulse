@@ -1,9 +1,8 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2023 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.twitch;
 
-import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.Video;
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -60,13 +59,13 @@ public class TwitchVideo
         return "TwitchVideo{" + "id=" + id + '}';
     }
 
-    public static TwitchVideo of(User user, Video video)
+    public static TwitchVideo of(Video video)
     {
         OffsetDateTime start = video.getCreatedAtInstant().atOffset(OffsetDateTime.now().getOffset());
         return new TwitchVideo
         (
             Long.parseLong(video.getId()),
-            Long.parseLong(user.getId()),
+            Long.parseLong(video.getUserId()),
             video.getUrl(),
             start,
             start.plus(Duration.parse("PT" + video.getDuration().toUpperCase()))

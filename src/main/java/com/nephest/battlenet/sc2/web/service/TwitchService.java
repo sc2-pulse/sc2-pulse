@@ -3,8 +3,6 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import com.github.twitch4j.TwitchClient;
-import com.github.twitch4j.helix.domain.User;
 import com.github.twitch4j.helix.domain.Video;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
@@ -16,20 +14,21 @@ import com.nephest.battlenet.sc2.model.twitch.TwitchVideo;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchUserDAO;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchVideoDAO;
 import com.nephest.battlenet.sc2.service.EventService;
+import com.nephest.battlenet.sc2.twitch.Twitch;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.EnumSet;
-import java.util.List;
+import java.util.HashSet;
 import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.scheduler.Schedulers;
+import reactor.core.publisher.Mono;
 
 @Service
+@Twitch
 public class TwitchService
 {
 
@@ -37,6 +36,7 @@ public class TwitchService
 
     public static final int USER_BATCH_SIZE = 100;
     public static final int VIDEO_BATCH_SIZE = 50;
+    public static final int CONCURRENCY = 1;
     public static final Duration LINK_VIDEO_OFFSET = Duration.ofDays(1);
     public static final Video.Type VIDEO_TYPE_FILTER = Video.Type.ARCHIVE;
     public static final String VIDEO_VIEWABLE_FILTER = "public";
@@ -46,7 +46,7 @@ public class TwitchService
     private final SocialMediaLinkDAO socialMediaLinkDAO;
     private final MatchDAO matchDAO;
     private final MatchParticipantDAO matchParticipantDAO;
-    private final TwitchClient twitchClient;
+    private final TwitchAPI twitchAPI;
 
     @Autowired
     public TwitchService
@@ -56,7 +56,7 @@ public class TwitchService
         SocialMediaLinkDAO socialMediaLinkDAO,
         MatchDAO matchDAO,
         MatchParticipantDAO matchParticipantDAO,
-        TwitchClient twitchClient,
+        TwitchAPI twitchAPI,
         EventService eventService
     )
     {
@@ -65,73 +65,58 @@ public class TwitchService
         this.socialMediaLinkDAO = socialMediaLinkDAO;
         this.matchDAO = matchDAO;
         this.matchParticipantDAO = matchParticipantDAO;
-        this.twitchClient = twitchClient;
+        this.twitchAPI = twitchAPI;
         subToEvents(eventService);
     }
 
     private void subToEvents(EventService eventService)
     {
         eventService.getMatchUpdateEvent()
-            .publishOn(Schedulers.boundedElastic())
-            .subscribe(uc->doUpdate());
+            .doOnNext(uc->LOG.trace("Received match update event, updating twitch data"))
+            .flatMap(uc->updateTwitchData())
+            .subscribe();
     }
 
-    private void doUpdate()
+    private Mono<Void> updateTwitchData()
     {
-        updateTwitchData();
+        return WebServiceUtil
+            .blockingCallable(()->socialMediaLinkDAO.findByTypes(EnumSet.of(SocialMedia.TWITCH)))
+            .flatMapIterable(Function.identity())
+            .map(SocialMediaLink::getServiceUserId)
+            .filter(Objects::nonNull)
+            .buffer(USER_BATCH_SIZE, HashSet::new)
+            .flatMap(twitchAPI::getUsersByIds, CONCURRENCY)
+            .map(TwitchUser::of)
+            .buffer(USER_BATCH_SIZE, HashSet::new)
+            .flatMap(users->WebServiceUtil.blockingCallable(()->twitchUserDAO.merge(users)))
+            .doOnNext(users->LOG.trace("Saved {} users", users.size()))
+            .flatMapIterable(Function.identity())
+            .flatMap
+            (
+                user->
+                twitchAPI.getVideosByUserId
+                (
+                    Long.toUnsignedString(user.getId()),
+                    VIDEO_TYPE_FILTER,
+                    VIDEO_BATCH_SIZE
+                ),
+                CONCURRENCY
+            )
+            .filter(video->video.getViewable().equals(VIDEO_VIEWABLE_FILTER))
+            .map(TwitchVideo::of)
+            .buffer(VIDEO_BATCH_SIZE, HashSet::new)
+            .flatMap(videos->WebServiceUtil.blockingCallable(()->twitchVideoDAO.merge(videos)))
+            .doOnNext(videos->LOG.trace("Saved {} videos", videos.size()))
+            .then(WebServiceUtil.blockingCallable(twitchVideoDAO::removeExpired))
+            .then(WebServiceUtil.blockingRunnable(this::updateVod))
+            .doOnSuccess(v->LOG.info("Updated twitch data"));
+    }
+
+    private void updateVod()
+    {
         OffsetDateTime from = OffsetDateTime.now().minus(LINK_VIDEO_OFFSET);
         matchParticipantDAO.linkTwitchVideo(from);
         matchDAO.updateTwitchVodStats(from);
-        LOG.info("Updated twitch data");
-    }
-
-    private void updateTwitchData()
-    {
-        List<String> twitchIds = socialMediaLinkDAO.findByTypes(EnumSet.of(SocialMedia.TWITCH))
-            .stream()
-            .map(SocialMediaLink::getServiceUserId)
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
-        if(twitchIds.isEmpty()) return;
-
-        int batchIx = 0;
-        while(batchIx < twitchIds.size())
-        {
-            List<String> batch = twitchIds.subList(batchIx, Math.min(batchIx + USER_BATCH_SIZE, twitchIds.size()));
-            List<User> userBatch = twitchClient.getHelix().getUsers(null, batch, null)
-                .execute().getUsers();
-            List<TwitchUser> localUserBatch = userBatch.stream()
-                .map(TwitchUser::of)
-                .collect(Collectors.toList());
-            twitchUserDAO.merge(Set.copyOf(localUserBatch));
-            userBatch.forEach(this::updateVideos);
-            batchIx += batch.size();
-            LOG.trace("Twitch users progress: {}/{} ", batchIx, twitchIds.size());
-        }
-        twitchVideoDAO.removeExpired();
-    }
-
-    private void updateVideos(User user)
-    {
-        Set<TwitchVideo> videos = twitchClient.getHelix().getVideos
-        (
-            null,
-            null,
-            user.getId(),
-            null,
-            null,
-            null,
-            null,
-            VIDEO_TYPE_FILTER,
-            VIDEO_BATCH_SIZE,
-            null,
-            null
-        ).execute().getVideos().stream()
-            .filter(v->v.getViewable().equals(VIDEO_VIEWABLE_FILTER))
-            .map(v->TwitchVideo.of(user, v))
-            .collect(Collectors.toSet());
-        twitchVideoDAO.merge(videos);
-        LOG.debug("Saved {} twitch videos for user {}", videos.size(), user.getLogin());
     }
 
 }
