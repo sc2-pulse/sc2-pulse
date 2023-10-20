@@ -195,7 +195,7 @@ public class WebServiceUtil
                 }
                 else
                 {
-                    LogUtil.log(LOG, logLevelFunction.apply(t), ExceptionUtils.getRootCauseMessage(t));
+                    LogUtil.log(LOG, logLevelFunction.apply(t), t);
                 }
                 return Mono.empty();
             },
