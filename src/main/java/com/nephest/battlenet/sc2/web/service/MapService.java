@@ -17,7 +17,6 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import reactor.core.scheduler.Schedulers;
 
 @Service
 public class MapService
@@ -54,8 +53,7 @@ public class MapService
     private void subscribeToEvents(EventService eventService)
     {
         eventService.getMatchUpdateEvent()
-            .publishOn(Schedulers.boundedElastic())
-            .subscribe(this::update);
+            .subscribe(muc->WebServiceUtil.getOnErrorLogAndSkipMono(WebServiceUtil.blockingRunnable(()->update(muc))));
     }
 
     public OffsetDateTime getMapStatsStart()

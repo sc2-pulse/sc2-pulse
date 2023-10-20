@@ -176,15 +176,18 @@ public class MatchService
         eventService.getLadderCharacterActivityEvent()
             .subscribe(character->pendingCharacters.get(character.getRegion()).getValue().add(character));
         eventService.getLadderUpdateEvent()
-            .flatMap(allStats->savePendingCharacters())
+            .flatMap(allStats->WebServiceUtil.getOnErrorLogAndSkipMono(savePendingCharacters()))
             .doOnNext(characters->LOG.debug("Pending characters: {}", characters))
             .flatMap
             (
                 characters->
                 {
                     UpdateContext uc = updateService.getUpdateContext(null);
-                    return updateMatchesTask.runIfAvailable()
-                        .doOnNext(ran->updateContext = ran ? uc : updateContext);
+                    return WebServiceUtil.getOnErrorLogAndSkipMono
+                    (
+                        updateMatchesTask.runIfAvailable()
+                            .doOnNext(ran->updateContext = ran ? uc : updateContext)
+                    );
                 }
 
             )

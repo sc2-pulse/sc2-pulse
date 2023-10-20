@@ -146,7 +146,7 @@ public class DiscordService
         this.conversionService = conversionService;
         eventService.getLadderCharacterActivityEvent()
             .publishOn(Schedulers.boundedElastic())
-            .flatMap(c->updateRoles(c.getAccountId()))
+            .flatMap(c->WebServiceUtil.getOnErrorLogAndSkipMono(updateRoles(c.getAccountId()).then()))
             .subscribe();
     }
 

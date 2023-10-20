@@ -43,6 +43,7 @@ import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 
 @Service
@@ -144,7 +145,9 @@ public class ClanService
 
     private void subscribeToEvents(EventService eventService)
     {
-        eventService.getLadderUpdateEvent().subscribe(allStats->this.update());
+        eventService.getLadderUpdateEvent()
+            .flatMap(allStats->WebServiceUtil.getOnErrorLogAndSkipMono(Mono.fromRunnable(this::update)))
+            .subscribe();
     }
 
     protected InstantVar getStatsUpdated()

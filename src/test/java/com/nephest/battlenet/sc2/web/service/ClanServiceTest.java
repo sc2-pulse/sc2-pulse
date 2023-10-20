@@ -138,7 +138,9 @@ public class ClanServiceTest
     @Test
     public void testUpdateStats()
     {
-        when(clanDAO.getCountByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS)).thenReturn(100);
+        when(clanDAO.getCountByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS))
+            .thenThrow(new IllegalStateException("test")) //simulate error
+            .thenReturn(100);
         List<Integer> firstList = List.of(22);
         when(clanDAO.findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS, 0, 50))
             .thenReturn(firstList);
@@ -146,6 +148,7 @@ public class ClanServiceTest
         Instant beforeStart = Instant.now();
 
         update();
+        update(); //error recovery
         verify(clanDAO).updateStats(firstList);
         assertTrue(beforeStart.isBefore(clanService.getStatsUpdated().getValue()));
         assertEquals(22, clanService.getStatsCursor().getValue());

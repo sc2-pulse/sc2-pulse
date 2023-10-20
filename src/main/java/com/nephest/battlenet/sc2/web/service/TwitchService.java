@@ -75,7 +75,7 @@ public class TwitchService
     {
         eventService.getMatchUpdateEvent()
             .doOnNext(uc->LOG.trace("Received match update event, updating twitch data"))
-            .flatMap(this::updateTwitchData)
+            .flatMap(uc->WebServiceUtil.getOnErrorLogAndSkipMono(updateTwitchData(uc)))
             .subscribe();
     }
 
