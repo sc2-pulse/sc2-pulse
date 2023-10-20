@@ -78,7 +78,7 @@ public class LadderProPlayerDAO
             .map(player -> new LadderProPlayer(
                 player,
                 teams.get(teamMembers.get(player.getId())),
-                links.get(player.getId())
+                links.getOrDefault(player.getId(), List.of())
             ))
             .collect(Collectors.toList());
     }
