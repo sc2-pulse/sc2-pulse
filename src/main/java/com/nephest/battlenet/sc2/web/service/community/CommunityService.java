@@ -27,6 +27,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
@@ -37,6 +39,8 @@ import reactor.core.publisher.Mono;
 @Service
 public class CommunityService
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(CommunityService.class);
 
     public enum Featured
     {
@@ -237,11 +241,31 @@ public class CommunityService
         )
         {
             currentRandomStream = updatedCurrentStream;
+            LOG.trace
+            (
+                "Same random featured stream: {}, user {}, assigned {}",
+                currentRandomStream.getStream().getId(),
+                currentRandomStream.getStream().getUserId(),
+                currentRandomStreamAssigned
+            );
             return currentRandomStream;
         }
 
         currentRandomStream = getRandomStream(streams);
         currentRandomStreamAssigned = Instant.now();
+        if(currentRandomStream != null)
+        {
+            LOG.trace
+            (
+                "New random featured stream: {}, user {}",
+                currentRandomStream.getStream().getId(),
+                currentRandomStream.getStream().getUserId()
+            );
+        }
+        else
+        {
+            LOG.trace("Random featured stream not found");
+        }
         return currentRandomStream;
     }
 
