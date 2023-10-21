@@ -46,6 +46,7 @@ import java.util.Set;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -77,6 +78,9 @@ public class CommunityVideoStreamIT
     private MockMvc mvc;
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired
+    private JdbcTemplate jdbcTemplate;
 
     @MockBean
     private VideoStreamSupplier videoStreamSupplier;
@@ -346,6 +350,12 @@ public class CommunityVideoStreamIT
         }
     }
 
+    @AfterEach
+    public void afterEach()
+    {
+        communityService.resetRandomFeaturedStream();
+    }
+
     @Test
     public void testStreams()
     throws Exception
@@ -459,11 +469,9 @@ public class CommunityVideoStreamIT
             ));
     }
 
-    @Test
-    public void testFeaturedStreams()
+    private List<LadderVideoStream> testFeaturedStreamsStart(Random rng)
     throws Exception
     {
-        Random rng = mock(Random.class);
         when(rng.nextInt(anyInt())).thenReturn(1);
         when(randomSupplier.get()).thenReturn(rng);
 
@@ -534,7 +542,15 @@ public class CommunityVideoStreamIT
             .isEqualTo(featuredStreams);
         assertTrue(beforeRandomStreamReassignment1
             .isBefore(communityService.getCurrentRandomStreamAssigned()));
+        return featuredStreams;
+    }
 
+    @Test
+    public void testFeaturedStreams()
+    throws Exception
+    {
+        Random rng = mock(Random.class);
+        List<LadderVideoStream> featuredStreams = testFeaturedStreamsStart(rng);
         //the same random stream is picked, despite different rng
         Instant maxRandomStreamInstant = Instant.now()
             .minus(CommunityService.RANDOM_STREAM_MAX_DURATION)
@@ -592,6 +608,66 @@ public class CommunityVideoStreamIT
             .isEqualTo(featuredStreams);
         assertTrue(beforeRandomStreamReassignment2
             .isBefore(communityService.getCurrentRandomStreamAssigned()));
+    }
+
+    @Test
+    public void whenSameFeaturedRandomStreamLostTeam_thenPickAnotherStream()
+    throws Exception
+    {
+        Random rng = mock(Random.class);
+        List<LadderVideoStream> featuredStreams = testFeaturedStreamsStart(rng);
+
+        featuredStreams.set
+        (
+            2,
+            new LadderVideoStream
+            (
+                streams[3],
+                new LadderProPlayer
+                (
+                    proPlayers[5],
+                    null,
+                    List.of(links[5])
+                ),
+                ladderSearchDAO.findCharacterTeams(Set.of(6L)).stream()
+                    .filter(t->t.getId() == 7L)
+                    .findAny()
+                    .orElseThrow(),
+                CommunityService.Featured.RANDOM
+            )
+        );
+        try
+        {
+            jdbcTemplate.update
+            (
+                "UPDATE team SET last_played = ? WHERE id IN(6)",
+                OffsetDateTime.now()
+                    .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
+                    .minusSeconds(10)
+            );
+            List<LadderVideoStream> featuredStreams2 = objectMapper.readValue(mvc.perform
+            (
+                get("/api/revealed/stream/featured")
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+            Assertions.assertThat(featuredStreams2)
+                .usingRecursiveComparison()
+                .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+                .ignoringFields("proPlayer.proPlayer.version")
+                .isEqualTo(featuredStreams);
+        }
+        finally
+        {
+            jdbcTemplate.update
+            (
+                "UPDATE team SET last_played = ? WHERE id IN(6)",
+                OffsetDateTime.now()
+                    .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
+                    .plusSeconds(10)
+            );
+        }
     }
 
 }

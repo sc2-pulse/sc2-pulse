@@ -238,6 +238,7 @@ public class CommunityService
                         .findAny()
                         .orElse(null)
                 ) != null
+                && updatedCurrentStream.getTeam() != null
         )
         {
             currentRandomStream = updatedCurrentStream;
@@ -289,6 +290,12 @@ public class CommunityService
     protected void setCurrentRandomStreamAssigned(Instant currentRandomStreamAssigned)
     {
         this.currentRandomStreamAssigned = currentRandomStreamAssigned;
+    }
+
+    protected void resetRandomFeaturedStream()
+    {
+        currentRandomStream = null;
+        currentRandomStreamAssigned = null;
     }
 
 }
