@@ -62,6 +62,13 @@ public class CommunityService
         && Duration.between(t.getLastPlayed(), OffsetDateTime.now())
             .compareTo(CURRENT_TEAM_MAX_DURATION_OFFSET)
             <= 0;
+    public static final Duration CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET = Duration.ofMinutes(40);
+    public static final Predicate<LadderTeam> CURRENT_FEATURED_TEAM_PREDICATE = t->
+        t != null
+        && t.getLastPlayed() != null
+        && Duration.between(t.getLastPlayed(), OffsetDateTime.now())
+            .compareTo(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
+            <= 0;
 
     //twitch baseline dimensions
     public static final int STREAM_PROFILE_IMAGE_WIDTH = 50;
@@ -221,7 +228,8 @@ public class CommunityService
 
     private LadderVideoStream getMostSkilledStream(List<LadderVideoStream> streams)
     {
-        return streams.stream().filter(stream -> stream.getTeam() != null)
+        return streams.stream()
+            .filter(stream->CURRENT_FEATURED_TEAM_PREDICATE.test(stream.getTeam()))
             .max(Comparator.comparing((LadderVideoStream stream)->stream.getTeam().getRating())
                 .thenComparing((LadderVideoStream stream)->stream.getStream().getId())
                 .thenComparing((LadderVideoStream stream)->stream.getStream().getService()))
@@ -243,7 +251,7 @@ public class CommunityService
                         .findAny()
                         .orElse(null)
                 ) != null
-                && updatedCurrentStream.getTeam() != null
+                && CURRENT_FEATURED_TEAM_PREDICATE.test(updatedCurrentStream.getTeam())
         )
         {
             currentRandomStream = updatedCurrentStream;
@@ -280,7 +288,7 @@ public class CommunityService
         if(streams.isEmpty()) return null;
 
         List<LadderVideoStream> eligibleStreams = streams.stream()
-            .filter(stream -> stream.getTeam() != null)
+            .filter(stream->CURRENT_FEATURED_TEAM_PREDICATE.test(stream.getTeam()))
             .collect(Collectors.toList());
         return  eligibleStreams.isEmpty()
             ? null

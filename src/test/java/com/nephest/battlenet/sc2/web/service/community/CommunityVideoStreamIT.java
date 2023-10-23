@@ -34,6 +34,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -68,10 +69,22 @@ public class CommunityVideoStreamIT
 {
 
     @Autowired
+    private ProPlayerDAO proPlayerDAO;
+
+    @Autowired
+    private ProPlayerAccountDAO proPlayerAccountDAO;
+
+    @Autowired
+    private SocialMediaLinkDAO socialMediaLinkDAO;
+
+    @Autowired
     private CommunityService communityService;
 
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
+
+    @Autowired
+    private SeasonGenerator seasonGenerator;
 
     @Autowired
     private MockMvc mvc;
@@ -94,12 +107,7 @@ public class CommunityVideoStreamIT
     @BeforeEach
     public void beforeEach
     (
-        @Autowired DataSource dataSource,
-        @Autowired ProPlayerDAO proPlayerDAO,
-        @Autowired ProPlayerAccountDAO proPlayerAccountDAO,
-        @Autowired SocialMediaLinkDAO socialMediaLinkDAO,
-        @Autowired SeasonGenerator seasonGenerator,
-        @Autowired JdbcTemplate jdbcTemplate
+        @Autowired DataSource dataSource
     )
     throws SQLException
     {
@@ -108,6 +116,10 @@ public class CommunityVideoStreamIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
+    }
+
+    private void init(Duration teamLastPlayedOffset)
+    {
         seasonGenerator.generateDefaultSeason(0);
 
         Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "btag", 7);
@@ -121,7 +133,7 @@ public class CommunityVideoStreamIT
         (
             "UPDATE team SET last_played = ?",
             OffsetDateTime.now()
-                .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .minus(teamLastPlayedOffset)
                 .minusSeconds(1)
         );
         //valid
@@ -129,14 +141,14 @@ public class CommunityVideoStreamIT
         (
             "UPDATE team SET last_played = ?, rating = 97 WHERE id IN(1, 5, 6)",
             OffsetDateTime.now()
-                .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .minus(teamLastPlayedOffset)
                 .plusSeconds(10)
         );
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ?, rating = 98 WHERE id IN(7, 8)",
             OffsetDateTime.now()
-                .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .minus(teamLastPlayedOffset)
                 .plusSeconds(10)
         );
         //valid, newer team
@@ -144,7 +156,7 @@ public class CommunityVideoStreamIT
         (
             "UPDATE team SET last_played = ?, rating = 99 WHERE id = 2",
             OffsetDateTime.now()
-                .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .minus(teamLastPlayedOffset)
                 .plusSeconds(11)
         );
 
@@ -359,6 +371,7 @@ public class CommunityVideoStreamIT
     public void testStreams()
     throws Exception
     {
+        init(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET);
         List<LadderVideoStream> ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream")
@@ -471,6 +484,7 @@ public class CommunityVideoStreamIT
     private List<LadderVideoStream> testFeaturedStreamsStart(Random rng)
     throws Exception
     {
+        init(CommunityService.CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET);
         when(rng.nextInt(anyInt())).thenReturn(1);
         when(randomSupplier.get()).thenReturn(rng);
 
@@ -639,7 +653,7 @@ public class CommunityVideoStreamIT
         (
             "UPDATE team SET last_played = ? WHERE id IN(6)",
             OffsetDateTime.now()
-                .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .minus(CommunityService.CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .minusSeconds(10)
         );
         List<LadderVideoStream> featuredStreams2 = objectMapper.readValue(mvc.perform
