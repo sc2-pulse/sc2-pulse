@@ -1445,6 +1445,11 @@ body.modal-open.modal-open-no-popup
     content: " viewers";
 }
 
+.stream .meta *
+{
+    display: inline-flex !important;
+}
+
 .stream .team img
 {
     vertical-align: initial;
@@ -1457,12 +1462,12 @@ body.modal-open.modal-open-no-popup
 
 .stream .team .invisible
 {
-    display: none;
+    display: none !important;
 }
 
 .streams-featured .stream .team .table-image-additional
 {
-    display: none;
+    display: none !important;
 }
 
 .streams-featured .stream .body-text
