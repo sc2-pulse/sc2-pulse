@@ -14,6 +14,7 @@ import io.netty.handler.ssl.SslContext;
 import io.netty.handler.ssl.SslContextBuilder;
 import io.netty.handler.ssl.util.InsecureTrustManagerFactory;
 import io.netty.handler.timeout.ReadTimeoutHandler;
+import io.netty.handler.timeout.TimeoutException;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import java.time.Duration;
 import java.time.Instant;
@@ -102,6 +103,9 @@ public class WebServiceUtil
             throw new RuntimeException(e);
         }
     }
+
+    public static final Set<Class<? extends Throwable>> SIMPLE_EXCEPTIONS =
+        Set.of(TimeoutException.class);
 
     public static Function<? super Throwable,? extends Mono<?>> LOG_ROOT_MESSAGE_AND_RETURN_EMPTY = t->{
         LOG.error(ExceptionUtils.getRootCauseMessage(t));
@@ -195,11 +199,42 @@ public class WebServiceUtil
                 }
                 else
                 {
-                    LogUtil.log(LOG, logLevelFunction.apply(t), t);
+                    if(shouldLogStackTrace(t))
+                    {
+                        LogUtil.log(LOG, logLevelFunction.apply(t), t);
+                    }
+                    else
+                    {
+                        LogUtil.log
+                        (
+                            LOG,
+                            logLevelFunction.apply(t),
+                            ExceptionUtils.getRootCauseMessage(t)
+                        );
+                    }
                 }
                 return Mono.empty();
             },
             onError);
+    }
+
+    /**
+     * Checks if supplied {@link java.lang.Throwable} is simple from the logging perspective.
+     * Simple throwable is a throwable which has all useful information contained in its message,
+     * and there is no point in logging its stack trace.
+     *
+     * @param throwable in
+     * @return true if simple, false otherwise
+     */
+    public static boolean isSimple(Throwable throwable)
+    {
+        return SIMPLE_EXCEPTIONS.stream()
+            .anyMatch(simple->ExceptionUtils.indexOfType(throwable, simple) != -1);
+    }
+
+    private static boolean shouldLogStackTrace(Throwable throwable)
+    {
+        return !isSimple(throwable);
     }
 
     public static <T> Mono<T> getOnErrorLogAndSkipLogLevelMono
