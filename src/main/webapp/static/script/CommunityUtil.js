@@ -257,6 +257,9 @@ class CommunityUtil
             "div",
             null,
             "team d-flex flex-wrap-gap-05 align-items-center container-m-0"
+                + (team.lastPlayed == null
+                    || Date.now() - Util.parseIsoDateTime(team.lastPlayed).getTime()
+                        > CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET ? " text-secondary" : "")
         );
         const format = ElementUtil.createElement
         (
