@@ -30,7 +30,10 @@ class CommunityUtil
         ElementUtil.ELEMENT_TASKS.set("search-stream-tab", streamUpdater.executeAndReschedule.bind(streamUpdater));
 
         const sortCtl = document.querySelector("#stream-sort-by");
-        if(sortCtl) sortCtl.addEventListener("change", streamUpdater.executeAndReschedule.bind(streamUpdater));
+        if(sortCtl) sortCtl.addEventListener("change", e=>window.setTimeout(()=>{
+            CommunityUtil.updateStreamSorting();
+            CommunityUtil.updateStreamView();
+        }, 1));
 
         CommunityUtil.enhanceStreamSearchLinks();
     }
@@ -93,12 +96,23 @@ class CommunityUtil
     {
         return CommunityUtil.getStreams()
             .then(streams=>{
-                if(localStorage.getItem("stream-sort-by") === "mmr")
-                    streams.sort((a, b)=>(b.team != null ? b.team.rating : -Infinity)
-                        - (a.team != null ? a.team.rating : -Infinity));
                 Model.DATA.get(VIEW.STREAM_SEARCH).set(VIEW_DATA.SEARCH, streams);
+                CommunityUtil.updateStreamSorting();
                 return {data: streams, status: LOADING_STATUS.COMPLETE};
             });
+    }
+
+    static updateStreamSorting()
+    {
+        const data = Model.DATA.get(VIEW.STREAM_SEARCH).get(VIEW_DATA.SEARCH);
+        if(!data) return;
+
+        if(localStorage.getItem("stream-sort-by") === "mmr") {
+            data.sort((a, b)=>(b.team != null ? b.team.rating : -Infinity)
+                - (a.team != null ? a.team.rating : -Infinity));
+        } else {
+            data.sort((a, b)=>b.stream.viewerCount - a.stream.viewerCount);
+        }
     }
 
     static updateStreamView()
