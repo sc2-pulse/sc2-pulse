@@ -45,7 +45,6 @@ import java.util.Random;
 import java.util.Set;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
-import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -88,12 +87,12 @@ public class CommunityVideoStreamIT
     @MockBean
     private ThreadLocalRandomSupplier randomSupplier;
 
-    private static SocialMediaLink[] links;
-    private static VideoStream[] streams;
-    private static ProPlayer[] proPlayers;
+    private SocialMediaLink[] links;
+    private VideoStream[] streams;
+    private ProPlayer[] proPlayers;
 
     @BeforeEach
-    public void beforeAll
+    public void beforeEach
     (
         @Autowired DataSource dataSource,
         @Autowired ProPlayerDAO proPlayerDAO,
@@ -340,8 +339,8 @@ public class CommunityVideoStreamIT
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
     }
 
-    @AfterAll
-    public static void afterAll(@Autowired DataSource dataSource)
+    @AfterEach
+    public void afterEach(@Autowired DataSource dataSource)
     throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
@@ -636,38 +635,25 @@ public class CommunityVideoStreamIT
                 CommunityService.Featured.RANDOM
             )
         );
-        try
-        {
-            jdbcTemplate.update
-            (
-                "UPDATE team SET last_played = ? WHERE id IN(6)",
-                OffsetDateTime.now()
-                    .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
-                    .minusSeconds(10)
-            );
-            List<LadderVideoStream> featuredStreams2 = objectMapper.readValue(mvc.perform
-            (
-                get("/api/revealed/stream/featured")
-                    .contentType(MediaType.APPLICATION_JSON)
-            )
-                .andExpect(status().isOk())
-                .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-            Assertions.assertThat(featuredStreams2)
-                .usingRecursiveComparison()
-                .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-                .ignoringFields("proPlayer.proPlayer.version")
-                .isEqualTo(featuredStreams);
-        }
-        finally
-        {
-            jdbcTemplate.update
-            (
-                "UPDATE team SET last_played = ? WHERE id IN(6)",
-                OffsetDateTime.now()
-                    .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
-                    .plusSeconds(10)
-            );
-        }
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ? WHERE id IN(6)",
+            OffsetDateTime.now()
+                .minus(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .minusSeconds(10)
+        );
+        List<LadderVideoStream> featuredStreams2 = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream/featured")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(featuredStreams2)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("proPlayer.proPlayer.version")
+            .isEqualTo(featuredStreams);
     }
 
 }
