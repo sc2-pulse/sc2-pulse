@@ -1453,16 +1453,12 @@ body.modal-open.modal-open-no-popup
 .stream .team
 {
     z-index: 1;
+    line-height: normal !important;
 }
 
 .stream .team img
 {
     vertical-align: initial;
-}
-
-.stream .team .race-percentage-container
-{
-    height: 1.2em;
 }
 
 .stream .team .invisible
