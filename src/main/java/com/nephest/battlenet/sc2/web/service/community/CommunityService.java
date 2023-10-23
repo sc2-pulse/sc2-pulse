@@ -176,7 +176,12 @@ public class CommunityService
     public Mono<List<LadderVideoStream>> getFeaturedStreamsNoCache()
     {
         return communityService.getStreams()
-            .map(this::getFeaturedStreams);
+            .map(this::getFeaturedStreams)
+            .cache((m)->
+                FEATURED_STREAM_CACHE_EXPIRE_AFTER,
+                (t)->Duration.ZERO,
+                ()->FEATURED_STREAM_CACHE_EXPIRE_AFTER
+            );
     }
 
     private List<LadderVideoStream> getFeaturedStreams(List<LadderVideoStream> streams)
