@@ -251,6 +251,7 @@ class FormUtil
 
     static getFormInputGroupLabelByValue(group, value)
     {
+        if(value == null) return null;
         const inputId = group.querySelector(':scope input[value="' + value + '"]').id;
         return document.querySelector('label[for="' + inputId + '"]').textContent;
     }

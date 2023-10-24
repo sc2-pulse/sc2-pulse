@@ -169,8 +169,7 @@ class RevealUtil
     {
         const form = document.querySelector("#reveal-player-edit-form");
         FormUtil.setFormStateFromObject(form, player.proPlayer, "pro-player-");
-        if(player.proPlayer.country != null)
-            FormUtil.setInputGroupFilterByValue(form.querySelector(':scope [name="country-search"]'), player.proPlayer.country);
+        FormUtil.setInputGroupFilterByValue(form.querySelector(':scope [name="country-search"]'), player.proPlayer.country);
         const links = player.links != null
             ? player.links
                 .filter(link=>PRO_PLAYER_EDIT_ALLOWED_LINK_TYPES.has(link.type))
