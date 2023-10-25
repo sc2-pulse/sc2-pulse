@@ -11,6 +11,7 @@ import org.springframework.cache.caffeine.CaffeineCache;
 import org.springframework.cache.caffeine.CaffeineCacheManager;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import reactor.core.publisher.Mono;
 
 @Configuration
 public class CacheConfig
@@ -31,7 +32,7 @@ public class CacheConfig
             Caffeine.newBuilder()
                 .refreshAfterWrite(CommunityService.STREAM_CACHE_REFRESH_AFTER)
                 .expireAfterAccess(CommunityService.STREAM_CACHE_EXPIRE_AFTER)
-                .build(b->communityService.getStreamsNoCache())
+                .build(b->preheat(communityService.getStreamsNoCache()))
         );
     }
 
@@ -44,8 +45,14 @@ public class CacheConfig
             Caffeine.newBuilder()
                 .refreshAfterWrite(CommunityService.STREAM_CACHE_REFRESH_AFTER)
                 .expireAfterAccess(CommunityService.FEATURED_STREAM_CACHE_EXPIRE_AFTER)
-                .build(b->communityService.getFeaturedStreamsNoCache())
+                .build(b->preheat(communityService.getFeaturedStreamsNoCache()))
         );
+    }
+
+    public static <T> Mono<T> preheat(Mono<T> mono)
+    {
+        mono.block();
+        return mono;
     }
 
 }
