@@ -42,8 +42,8 @@ public class LadderCharacterDAO
         + "FROM player_character_filtered "
         + "INNER JOIN team_member ON player_character_filtered.id = team_member.player_character_id "
         + "INNER JOIN team ON team_member.team_id = team.id "
-        + "WHERE team.season = :season %1$s "
-        + "AND queue_type = :queueType "
+        + "WHERE team_member.team_season = :season %1$s "
+        + "AND team_member.team_queue_type = :queueType "
         + "GROUP BY player_character_filtered.id";
 
     private static final String FIND_DISTINCT_CHARACTER_FORMAT =
@@ -92,8 +92,8 @@ public class LadderCharacterDAO
         + "FROM player_character_filtered "
         + "INNER JOIN team_member ON player_character_filtered.id = team_member.player_character_id "
         + "INNER JOIN team ON team_member.team_id = team.id "
-        + "WHERE team.season >= :season - 1 "
-        + "ORDER BY player_character_filtered.id DESC, team.season DESC, team.rating DESC "
+        + "WHERE team_member.team_season >= :season - 1 "
+        + "ORDER BY player_character_filtered.id DESC, team_member.team_season DESC, team.rating DESC "
     + ") "
 
     + "SELECT "
