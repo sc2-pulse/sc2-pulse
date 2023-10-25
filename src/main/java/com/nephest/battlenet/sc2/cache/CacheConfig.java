@@ -31,7 +31,7 @@ public class CacheConfig
             "community-video-stream",
             Caffeine.newBuilder()
                 .refreshAfterWrite(CommunityService.STREAM_CACHE_REFRESH_AFTER)
-                .expireAfterAccess(CommunityService.STREAM_CACHE_EXPIRE_AFTER)
+                .expireAfterWrite(CommunityService.STREAM_CACHE_EXPIRE_AFTER)
                 .build(b->preheat(communityService.getStreamsNoCache()))
         );
     }
@@ -44,7 +44,7 @@ public class CacheConfig
             "community-video-stream-featured",
             Caffeine.newBuilder()
                 .refreshAfterWrite(CommunityService.STREAM_CACHE_REFRESH_AFTER)
-                .expireAfterAccess(CommunityService.FEATURED_STREAM_CACHE_EXPIRE_AFTER)
+                .expireAfterWrite(CommunityService.FEATURED_STREAM_CACHE_EXPIRE_AFTER)
                 .build(b->preheat(communityService.getFeaturedStreamsNoCache()))
         );
     }
