@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service.community;
 
 import static com.nephest.battlenet.sc2.web.service.community.CommunityService.CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET;
 import static com.nephest.battlenet.sc2.web.service.community.CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET;
+import static com.nephest.battlenet.sc2.web.service.community.CommunityService.FEATURED_STREAM_SKILLED_SLOT_COUNT;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -421,7 +422,7 @@ public class CommunityVideoStreamIT
         //too old for the random slot
         jdbcTemplate.update
         (
-            "UPDATE team SET last_played = ? WHERE id = 7",
+            "UPDATE team SET last_played = ? WHERE id = " + (8 - FEATURED_STREAM_SKILLED_SLOT_COUNT),
             OffsetDateTime.now()
                 .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .minusSeconds(1)
@@ -446,7 +447,13 @@ public class CommunityVideoStreamIT
         (
             createIndexedLadderVideoStream(9, CommunityService.Featured.POPULAR),
             createIndexedLadderVideoStream(8, CommunityService.Featured.SKILLED),
-            createIndexedLadderVideoStream(5, CommunityService.Featured.RANDOM)
+            createIndexedLadderVideoStream(7, CommunityService.Featured.SKILLED),
+            createIndexedLadderVideoStream(6, CommunityService.Featured.SKILLED),
+            createIndexedLadderVideoStream
+            (
+                6 - FEATURED_STREAM_SKILLED_SLOT_COUNT,
+                CommunityService.Featured.RANDOM
+            )
         ));
 
         Assertions.assertThat(featuredStreams1)
@@ -490,8 +497,12 @@ public class CommunityVideoStreamIT
             Instant.now().minus(CommunityService.RANDOM_STREAM_MAX_DURATION).minusSeconds(1));
         featuredStreams.set
         (
-            2,
-            createIndexedLadderVideoStream(7, CommunityService.Featured.RANDOM)
+            featuredStreams.size() - 1,
+            createIndexedLadderVideoStream
+            (
+                8 - FEATURED_STREAM_SKILLED_SLOT_COUNT,
+                CommunityService.Featured.RANDOM
+            )
         );
         Instant beforeRandomStreamReassignment2 = Instant.now();
         List<LadderVideoStream> featuredStreams3 = objectMapper.readValue(mvc.perform
@@ -519,12 +530,16 @@ public class CommunityVideoStreamIT
 
         featuredStreams.set
         (
-            2,
-            createIndexedLadderVideoStream(4, CommunityService.Featured.RANDOM)
+            featuredStreams.size() - 1,
+            createIndexedLadderVideoStream
+            (
+                5 - FEATURED_STREAM_SKILLED_SLOT_COUNT,
+                CommunityService.Featured.RANDOM
+            )
         );
         jdbcTemplate.update
         (
-            "UPDATE team SET last_played = ? WHERE id = 6",
+            "UPDATE team SET last_played = ? WHERE id = " + (7 - FEATURED_STREAM_SKILLED_SLOT_COUNT),
             OffsetDateTime.now()
                 .minus(CommunityService.CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .minusSeconds(10)

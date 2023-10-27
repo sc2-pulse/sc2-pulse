@@ -78,6 +78,7 @@ public class CommunityService
     public static final Duration STREAM_CACHE_EXPIRE_AFTER = Duration.ofMinutes(5);
     public static final Duration STREAM_CACHE_REFRESH_AFTER = Duration.ofMinutes(1);
     public static final Duration FEATURED_STREAM_CACHE_EXPIRE_AFTER = Duration.ofMinutes(2);
+    public static final int FEATURED_STREAM_SKILLED_SLOT_COUNT = 3;
 
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SocialMediaLinkDAO socialMediaLinkDAO;
@@ -205,19 +206,17 @@ public class CommunityService
         if(mostViewed == null) return List.of();
         streamsRemaining.remove(mostViewed);
 
-        LadderVideoStream mostSkilled = getMostSkilledStream(streamsRemaining);
-        if(mostSkilled != null) streamsRemaining.remove(mostSkilled);
+        List<LadderVideoStream> mostSkilled
+            = getMostSkilledStream(streamsRemaining, FEATURED_STREAM_SKILLED_SLOT_COUNT);
+        mostSkilled.forEach(s->s.setFeatured(Featured.SKILLED));
+        streamsRemaining.removeAll(mostSkilled);
 
         LadderVideoStream randomStream = getSameOrNewRandomStream(streamsRemaining);
 
         List<LadderVideoStream> featured = new ArrayList<>(3);
         mostViewed.setFeatured(Featured.POPULAR);
         featured.add(mostViewed);
-        if(mostSkilled != null)
-        {
-            mostSkilled.setFeatured(Featured.SKILLED);
-            featured.add(mostSkilled);
-        }
+        featured.addAll(mostSkilled);
         if(randomStream != null)
         {
             randomStream.setFeatured(Featured.RANDOM);
@@ -226,14 +225,16 @@ public class CommunityService
         return featured;
     }
 
-    private LadderVideoStream getMostSkilledStream(List<LadderVideoStream> streams)
+    private List<LadderVideoStream> getMostSkilledStream(List<LadderVideoStream> streams, int limit)
     {
         return streams.stream()
             .filter(stream->CURRENT_FEATURED_TEAM_PREDICATE.test(stream.getTeam()))
-            .max(Comparator.comparing((LadderVideoStream stream)->stream.getTeam().getRating())
+            .sorted(Comparator.comparing((LadderVideoStream stream)->stream.getTeam().getRating())
+                .reversed()
                 .thenComparing((LadderVideoStream stream)->stream.getStream().getId())
                 .thenComparing((LadderVideoStream stream)->stream.getStream().getService()))
-            .orElse(null);
+            .limit(limit)
+            .collect(Collectors.toList());
     }
 
     private LadderVideoStream getSameOrNewRandomStream(List<LadderVideoStream> streams)
