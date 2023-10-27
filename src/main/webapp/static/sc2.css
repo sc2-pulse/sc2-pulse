@@ -1612,6 +1612,17 @@ body.modal-open.modal-open-no-popup
     height: 100%;
 }
 
+.new:after
+{
+    content: 'NEW';
+    color: #28a745;
+    border: 1px solid #28a745;
+    border-radius: 0.5em;
+    margin-left: 0.3em;
+    padding: 0 0.3em;
+    font-weight: bold;
+}
+
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;

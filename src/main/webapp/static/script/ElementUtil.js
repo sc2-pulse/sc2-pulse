@@ -697,6 +697,13 @@ class ElementUtil
         evt.target.classList.add("loaded");
     }
 
+    static processFlags()
+    {
+        Array.from(document.querySelectorAll("[data-feature-timestamp]"))
+            .filter(element=>Date.now() - element.getAttribute("data-feature-timestamp") <= ElementUtil.NEW_FLAG_DURATION)
+            .forEach(element=>element.classList.add("new"));
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
@@ -711,4 +718,5 @@ ElementUtil.AFTER_CLONE_ELEMENT = new Map([["dynamic-clone-element", ElementUtil
 ElementUtil.NEGATION_PREFIX = "neg-";
 ElementUtil.INPUT_TIMEOUT = 1000;
 ElementUtil.MANUAL_TOOLTIP_TIMEOUT = 1000;
-ElementUtil.INFINITE_SCROLL_OPTIONS = {rootMargin: "10% 0px"}
+ElementUtil.INFINITE_SCROLL_OPTIONS = {rootMargin: "10% 0px"};
+ElementUtil.NEW_FLAG_DURATION = 60 * 60 * 24 * 14 * 100;
