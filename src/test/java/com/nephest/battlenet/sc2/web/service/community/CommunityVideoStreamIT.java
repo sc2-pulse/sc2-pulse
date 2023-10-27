@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.web.service.community;
 
+import static com.nephest.battlenet.sc2.web.service.community.CommunityService.CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET;
+import static com.nephest.battlenet.sc2.web.service.community.CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -34,7 +36,6 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -44,6 +45,9 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Random;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -118,237 +122,47 @@ public class CommunityVideoStreamIT
         }
     }
 
-    private void init(Duration teamLastPlayedOffset)
+    private void init
+    (
+        int count, 
+        BiConsumer<PlayerCharacter[], List<PlayerCharacter>> teamCustomizer
+    )
     {
         seasonGenerator.generateDefaultSeason(0);
 
-        Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "btag", 7);
+        Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "btag", count);
         PlayerCharacter[] characters = seasonGenerator.generateCharacters("char", accounts, Region.EU, 1L);
         ArrayList<PlayerCharacter> teamCharacters = new ArrayList<>(Arrays.asList(characters));
-        teamCharacters.add(0, characters[0]);
+        teamCustomizer.accept(characters, teamCharacters);
         List<Team> teams = seasonGenerator
             .createTeams(teamCharacters.toArray(PlayerCharacter[]::new));
-        //invalid teams due to old last_played timestamp
-        jdbcTemplate.update
-        (
-            "UPDATE team SET last_played = ?",
-            OffsetDateTime.now()
-                .minus(teamLastPlayedOffset)
-                .minusSeconds(1)
-        );
-        //valid
-        jdbcTemplate.update
-        (
-            "UPDATE team SET last_played = ?, rating = 97 WHERE id IN(1, 5, 6)",
-            OffsetDateTime.now()
-                .minus(teamLastPlayedOffset)
-                .plusSeconds(10)
-        );
-        jdbcTemplate.update
-        (
-            "UPDATE team SET last_played = ?, rating = 98 WHERE id IN(7, 8)",
-            OffsetDateTime.now()
-                .minus(teamLastPlayedOffset)
-                .plusSeconds(10)
-        );
-        //valid, newer team
-        jdbcTemplate.update
-        (
-            "UPDATE team SET last_played = ?, rating = 99 WHERE id = 2",
-            OffsetDateTime.now()
-                .minus(teamLastPlayedOffset)
-                .plusSeconds(11)
-        );
 
         LocalDate bd1 = LocalDate.now().minusYears(20);
         OffsetDateTime odt = OffsetDateTime.now();
-        proPlayers = new ProPlayer[]
-        {
-            new ProPlayer(null, 1L, "tag1", "name1", "US", bd1, 1, odt, 1),
-            new ProPlayer(null, 2L, "tag2", "name2", "US", bd1.minusDays(2), 2, odt, 2),
-            new ProPlayer(null, 3L, "tag3", "name3", "US", bd1.minusDays(3), 3, odt, 3),
-            new ProPlayer(null, 4L, "tag4", "name4", "US", bd1.minusDays(4), 4, odt, 4),
-            new ProPlayer(null, 5L, "tag5", "name5", "US", bd1.minusDays(5), 5, odt, 5),
-            new ProPlayer(null, 6L, "tag6", "name6", "US", bd1.minusDays(6), 6, odt, 6),
-            new ProPlayer(null, 7L, "tag7", "name7", "US", bd1.minusDays(7), 7, odt, 7)
-        };
+        proPlayers = IntStream.range(0, count)
+            .boxed()
+            .map(i->new ProPlayer(null, (long) i, "tag" + i, "name" + i, "US",
+                bd1.minusDays(i), i, odt, i))
+            .toArray(ProPlayer[]::new);
         for(ProPlayer proPlayer : proPlayers) proPlayerDAO.merge(proPlayer);
-        links = new SocialMediaLink[]
-        {
-            new SocialMediaLink
-            (
-                proPlayers[0].getId(),
+        links = IntStream.range(0, count)
+            .boxed()
+            .map(i->new SocialMediaLink(
+                proPlayers[i].getId(),
                 SocialMedia.TWITCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser" + i,
                 OffsetDateTime.now(),
-                "twitchServiceUserId1",
+                "twitchServiceUserId" + i,
                 false
-            ),
-            new SocialMediaLink
-            (
-                proPlayers[0].getId(),
-                SocialMedia.TWITTER,
-                SocialMedia.TWITTER.getBaseUserUrl() + "/twitterUser1",
-                OffsetDateTime.now(),
-                "twitchServiceUserId1", //same as first link for the test
-                false
-            ),
-
-            new SocialMediaLink
-            (
-                proPlayers[1].getId(),
-                SocialMedia.TWITCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2",
-                OffsetDateTime.now(),
-                "twitchServiceUserId2",
-                false
-            ),
-            new SocialMediaLink
-            (
-                proPlayers[3].getId(),
-                SocialMedia.TWITCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser4",
-                OffsetDateTime.now(),
-                "twitchServiceUserId4",
-                false
-            ),
-            new SocialMediaLink
-            (
-                proPlayers[4].getId(),
-                SocialMedia.TWITCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser5",
-                OffsetDateTime.now(),
-                "twitchServiceUserId5",
-                false
-            ),
-            new SocialMediaLink
-            (
-                proPlayers[5].getId(),
-                SocialMedia.TWITCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser6",
-                OffsetDateTime.now(),
-                "twitchServiceUserId6",
-                false
-            ),
-            new SocialMediaLink
-            (
-                proPlayers[6].getId(),
-                SocialMedia.TWITCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser7",
-                OffsetDateTime.now(),
-                "twitchServiceUserId7",
-                false
-            )
-        };
+            ))
+            .toArray(SocialMediaLink[]::new);
         socialMediaLinkDAO.merge(Set.of(links));
 
-        proPlayerAccountDAO.merge(Set.of(
-            new ProPlayerAccount(proPlayers[0].getId(), accounts[0].getId()),
-            new ProPlayerAccount(proPlayers[1].getId(), accounts[1].getId()),
-            new ProPlayerAccount(proPlayers[2].getId(), accounts[2].getId()),
-            new ProPlayerAccount(proPlayers[3].getId(), accounts[3].getId()),
-            new ProPlayerAccount(proPlayers[4].getId(), accounts[4].getId()),
-            new ProPlayerAccount(proPlayers[5].getId(), accounts[5].getId()),
-            new ProPlayerAccount(proPlayers[6].getId(), accounts[6].getId())
-        ));
-
-        streams = new VideoStream[]
-        {
-            //linked to proPlayer[0]
-            new VideoStreamImpl
-            (
-                SocialMedia.TWITCH,
-                "twitchStreamId1",
-                "twitchServiceUserId1",
-                "twitchUserName1",
-                "title1",
-                Locale.ENGLISH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/profile",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/thumbnail",
-                3
-            ),
-            new VideoStreamImpl
-            (
-                SocialMedia.TWITCH,
-                "twitchStreamId4",
-                "twitchServiceUserId4",
-                "twitchUserName4",
-                "title4",
-                Locale.FRENCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser4",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser4/profile",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser4/thumbnail",
-                2
-            ),
-            new VideoStreamImpl
-            (
-                SocialMedia.TWITCH,
-                "twitchStreamId5",
-                "twitchServiceUserId5",
-                "twitchUserName5",
-                "title5",
-                Locale.FRENCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser5",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser5/profile",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser5/thumbnail",
-                2
-            ),
-            new VideoStreamImpl
-            (
-                SocialMedia.TWITCH,
-                "twitchStreamId6",
-                "twitchServiceUserId6",
-                "twitchUserName6",
-                "title6",
-                Locale.FRENCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser6",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser6/profile",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser6/thumbnail",
-                2
-            ),
-            new VideoStreamImpl
-            (
-                SocialMedia.TWITCH,
-                "twitchStreamId7",
-                "twitchServiceUserId7",
-                "twitchUserName7",
-                "title7",
-                Locale.FRENCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser7",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser7/profile",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser7/thumbnail",
-                2
-            ),
-            new VideoStreamImpl
-            (
-                SocialMedia.TWITCH,
-                "twitchStreamId3",
-                "twitchServiceUserId3",
-                "twitchUserName3",
-                "title3",
-                Locale.FRENCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser3",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser3/profile",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser3/thumbnail",
-                2
-            ),
-            //linked to proPlayer[1]
-            new VideoStreamImpl
-            (
-                SocialMedia.TWITCH,
-                "twitchStreamId2",
-                "twitchServiceUserId2",
-                "twitchUserName2",
-                "title2",
-                Locale.CHINESE,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2/profile",
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2/thumbnail",
-                1
-            )
-        };
-        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+        proPlayerAccountDAO.merge(IntStream.range(0, count)
+            .boxed()
+            .map(i->new ProPlayerAccount(proPlayers[i].getId(), accounts[i].getId()))
+            .collect(Collectors.toSet())
+        );
     }
 
     @AfterEach
@@ -371,7 +185,60 @@ public class CommunityVideoStreamIT
     public void testStreams()
     throws Exception
     {
-        init(CommunityService.CURRENT_TEAM_MAX_DURATION_OFFSET);
+        init(3, (c, c1)->{});
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ?",
+            OffsetDateTime.now()
+                .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .plusSeconds(10)
+        );
+
+        streams = new VideoStream[]
+        {
+            new VideoStreamImpl
+            (
+                SocialMedia.TWITCH,
+                "twitchStreamId1",
+                "twitchServiceUserId1",
+                "twitchUserName1",
+                "title1",
+                Locale.ENGLISH,
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/profile",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/thumbnail",
+                3
+            ),
+            new VideoStreamImpl
+            (
+                SocialMedia.TWITCH,
+                "twitchStreamId2",
+                "twitchServiceUserId2",
+                "twitchUserName2",
+                "title2",
+                Locale.FRENCH,
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2/profile",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2/thumbnail",
+                2
+            ),
+            //identified, but no team
+            new VideoStreamImpl
+            (
+                SocialMedia.TWITCH,
+                "twitchStreamId0",
+                "twitchServiceUserId0",
+                "twitchUserName0",
+                "title0",
+                Locale.ENGLISH,
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser0",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser0/profile",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser0/thumbnail",
+                2
+            )
+        };
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+        
         List<LadderVideoStream> ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream")
@@ -384,109 +251,186 @@ public class CommunityVideoStreamIT
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("proPlayer.proPlayer.version")
             .isEqualTo(List.of(
-                //fully identified stream
                 new LadderVideoStream
                 (
                     streams[0],
                     new LadderProPlayer
                     (
-                        proPlayers[0],
+                        proPlayers[1],
                         null,
-                        List.of(links[0], links[1])
+                        List.of(links[1])
                     ),
-                    ladderSearchDAO.findCharacterTeams(Set.of(1L)).stream()
-                        .filter(t->t.getId() == 2L)
+                    ladderSearchDAO.findCharacterTeams(Set.of(2L)).stream()
                         .findAny()
                         .orElseThrow()
                 ),
-                //unidentified stream
-                new LadderVideoStream
-                (
-                    streams[5],
-                    null,
-                    null
-                ),
-                //fully identified stream
-                new LadderVideoStream
-                (
-                    streams[1],
-                    new LadderProPlayer
-                    (
-                        proPlayers[3],
-                        null,
-                        List.of(links[3])
-                    ),
-                    ladderSearchDAO.findCharacterTeams(Set.of(4L)).stream()
-                        .filter(t->t.getId() == 5L)
-                        .findAny()
-                        .orElseThrow()
-                ),
-                //fully identified stream
                 new LadderVideoStream
                 (
                     streams[2],
                     new LadderProPlayer
                     (
-                        proPlayers[4],
+                        proPlayers[0],
                         null,
-                        List.of(links[4])
+                        List.of(links[0])
                     ),
-                    ladderSearchDAO.findCharacterTeams(Set.of(5L)).stream()
-                        .filter(t->t.getId() == 6L)
+                    ladderSearchDAO.findCharacterTeams(Set.of(1L)).stream()
                         .findAny()
                         .orElseThrow()
                 ),
-                //fully identified stream
                 new LadderVideoStream
                 (
-                    streams[3],
+                    streams[1],
                     new LadderProPlayer
                     (
-                        proPlayers[5],
-                        null,
-                        List.of(links[5])
-                    ),
-                    ladderSearchDAO.findCharacterTeams(Set.of(6L)).stream()
-                        .filter(t->t.getId() == 7L)
-                        .findAny()
-                        .orElseThrow()
-                ),
-                //fully identified stream
-                new LadderVideoStream
-                (
-                    streams[4],
-                    new LadderProPlayer
-                    (
-                        proPlayers[6],
-                        null,
-                        List.of(links[6])
-                    ),
-                    ladderSearchDAO.findCharacterTeams(Set.of(7L)).stream()
-                        .filter(t->t.getId() == 8L)
-                        .findAny()
-                        .orElseThrow()
-                ),
-                //linked to a player, but there is no team
-                new LadderVideoStream
-                (
-                    streams[6],
-                    new LadderProPlayer
-                    (
-                        proPlayers[1],
+                        proPlayers[2],
                         null,
                         List.of(links[2])
                     ),
-                    null
+                    ladderSearchDAO.findCharacterTeams(Set.of(3L)).stream()
+                        .findAny()
+                        .orElseThrow()
                 )
             ));
+    }
+    
+    @Test
+    public void whenPlayerHasMultipleTeams_thenUseMostRecentTeam()
+    throws Exception
+    {
+        //3 teams
+        init(1, (chars, teamChars)->{
+            teamChars.add(chars[0]);
+            teamChars.add(chars[0]);
+        });
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ? WHERE id = 1",
+            OffsetDateTime.now()
+                .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .plusSeconds(10)
+        );
+        //most recent
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ? WHERE id = 2",
+            OffsetDateTime.now()
+                .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .plusSeconds(12)
+        );
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ? WHERE id = 3",
+            OffsetDateTime.now()
+                .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .plusSeconds(11)
+        );
+        
+        VideoStream stream = new VideoStreamImpl
+        (
+            SocialMedia.TWITCH,
+            "twitchStreamId0",
+            "twitchServiceUserId0",
+            "twitchUserName0",
+            "title0",
+            Locale.ENGLISH,
+            SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser0",
+            SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser0/profile",
+            SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser0/thumbnail",
+            0
+        );
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.just(stream));
+
+        List<LadderVideoStream> ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(ladderStreams)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("proPlayer.proPlayer.version")
+            .isEqualTo(List.of(
+                new LadderVideoStream
+                (
+                    stream,
+                    new LadderProPlayer
+                    (
+                        proPlayers[0],
+                        null,
+                        List.of(links[0])
+                    ),
+                    ladderSearchDAO.findCharacterTeams(Set.of(1L)).stream()
+                        .filter(t->t.getId() == 2L)
+                        .findAny()
+                        .orElseThrow()
+                )
+            ));
+    }
+
+    public static VideoStream createIndexedVideoStream(int ix)
+    {
+        return new VideoStreamImpl
+        (
+            SocialMedia.TWITCH,
+            "twitchStreamId" + ix,
+            "twitchServiceUserId" + ix,
+            "twitchUserName" + ix,
+            "title" + ix,
+            Locale.ENGLISH,
+            SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser" + ix,
+            SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser" + ix + "/profile",
+            SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser" + ix + "/thumbnail",
+            ix
+        );
+    }
+
+    private LadderVideoStream createIndexedLadderVideoStream(int ix, CommunityService.Featured featured)
+    {
+        return new LadderVideoStream
+        (
+            streams[ix],
+            new LadderProPlayer
+            (
+                proPlayers[ix],
+                null,
+                List.of(links[ix])
+            ),
+            ladderSearchDAO.findCharacterTeams(Set.of(ix + 1L)).stream()
+                .findAny()
+                .orElseThrow(),
+            featured
+        );
     }
 
     private List<LadderVideoStream> testFeaturedStreamsStart(Random rng)
     throws Exception
     {
-        init(CommunityService.CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET);
+        init(10, (c, c1)->{});
         when(rng.nextInt(anyInt())).thenReturn(1);
         when(randomSupplier.get()).thenReturn(rng);
+
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ?",
+            OffsetDateTime.now()
+                .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
+                .plusSeconds(10)
+        );
+        //too old for the random slot
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ? WHERE id = 7",
+            OffsetDateTime.now()
+                .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
+                .minusSeconds(1)
+        );
+        streams = IntStream.range(0, 10)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
 
         assertNull(communityService.getCurrentRandomStreamAssigned());
         Instant beforeRandomStreamReassignment1 = Instant.now();
@@ -500,52 +444,9 @@ public class CommunityVideoStreamIT
 
         List<LadderVideoStream> featuredStreams = new ArrayList<>(List.of
         (
-            new LadderVideoStream
-            (
-                streams[0],
-                new LadderProPlayer
-                (
-                    proPlayers[0],
-                    null,
-                    List.of(links[0], links[1])
-                ),
-                ladderSearchDAO.findCharacterTeams(Set.of(1L)).stream()
-                    .filter(t->t.getId() == 2L)
-                    .findAny()
-                    .orElseThrow(),
-                CommunityService.Featured.POPULAR
-            ),
-            new LadderVideoStream
-            (
-                streams[4],
-                new LadderProPlayer
-                (
-                    proPlayers[6],
-                    null,
-                    List.of(links[6])
-                ),
-                ladderSearchDAO.findCharacterTeams(Set.of(7L)).stream()
-                    .filter(t->t.getId() == 8L)
-                    .findAny()
-                    .orElseThrow(),
-                CommunityService.Featured.SKILLED
-            ),
-            //random slots are only for fully identified streams
-            new LadderVideoStream
-            (
-                streams[2],
-                new LadderProPlayer
-                (
-                    proPlayers[4],
-                    null,
-                    List.of(links[4])
-                ),
-                ladderSearchDAO.findCharacterTeams(Set.of(5L)).stream()
-                    .filter(t->t.getId() == 6L)
-                    .findAny()
-                    .orElseThrow(),
-                CommunityService.Featured.RANDOM
-            )
+            createIndexedLadderVideoStream(9, CommunityService.Featured.POPULAR),
+            createIndexedLadderVideoStream(8, CommunityService.Featured.SKILLED),
+            createIndexedLadderVideoStream(5, CommunityService.Featured.RANDOM)
         ));
 
         Assertions.assertThat(featuredStreams1)
@@ -590,21 +491,7 @@ public class CommunityVideoStreamIT
         featuredStreams.set
         (
             2,
-            new LadderVideoStream
-            (
-                streams[1],
-                new LadderProPlayer
-                (
-                    proPlayers[3],
-                    null,
-                    List.of(links[3])
-                ),
-                ladderSearchDAO.findCharacterTeams(Set.of(4L)).stream()
-                    .filter(t->t.getId() == 5L)
-                    .findAny()
-                    .orElseThrow(),
-                CommunityService.Featured.RANDOM
-            )
+            createIndexedLadderVideoStream(7, CommunityService.Featured.RANDOM)
         );
         Instant beforeRandomStreamReassignment2 = Instant.now();
         List<LadderVideoStream> featuredStreams3 = objectMapper.readValue(mvc.perform
@@ -633,25 +520,11 @@ public class CommunityVideoStreamIT
         featuredStreams.set
         (
             2,
-            new LadderVideoStream
-            (
-                streams[3],
-                new LadderProPlayer
-                (
-                    proPlayers[5],
-                    null,
-                    List.of(links[5])
-                ),
-                ladderSearchDAO.findCharacterTeams(Set.of(6L)).stream()
-                    .filter(t->t.getId() == 7L)
-                    .findAny()
-                    .orElseThrow(),
-                CommunityService.Featured.RANDOM
-            )
+            createIndexedLadderVideoStream(4, CommunityService.Featured.RANDOM)
         );
         jdbcTemplate.update
         (
-            "UPDATE team SET last_played = ? WHERE id IN(6)",
+            "UPDATE team SET last_played = ? WHERE id = 6",
             OffsetDateTime.now()
                 .minus(CommunityService.CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .minusSeconds(10)
