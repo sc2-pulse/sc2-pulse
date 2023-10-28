@@ -154,7 +154,7 @@ class CommunityUtil
         (
             "a",
             null,
-            "unstyled" + (featured ? " analytics-featured-" + stream.featured.toLowerCase() : ""),
+            "unstyled" + (featured && stream.featured != null ? " analytics-featured-" + stream.featured.toLowerCase() : ""),
             null,
             [["href", stream.stream.url], ["target", "_blank"]]
         );
