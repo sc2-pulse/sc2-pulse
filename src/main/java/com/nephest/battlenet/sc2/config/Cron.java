@@ -362,7 +362,8 @@ public class Cron
             "match_participant_pkey",
             "ix_account_updated",
             "ix_player_character_updated",
-            "ix_clan_member_updated"
+            "ix_clan_member_updated",
+            "ix_recent_team_search"
         ), true));
     }
 

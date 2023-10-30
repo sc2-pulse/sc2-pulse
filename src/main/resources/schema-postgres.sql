@@ -391,6 +391,8 @@ WITH (fillfactor = 50);
 
 CREATE INDEX "ix_team_ladder_search_full" ON "team"("season", "queue_type", "team_type", "rating", "id");
 CREATE INDEX "ix_team_season_queue_type" ON "team"("season", "queue_type") WHERE "queue_type" = 201;
+CREATE INDEX "ix_recent_team_search" ON "team"("queue_type", "league_type", "last_played")
+    WHERE "last_played" IS NOT NULL;
 
 CREATE TABLE "team_member"
 (

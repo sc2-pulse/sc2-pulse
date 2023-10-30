@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Clan;
@@ -30,6 +31,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +43,8 @@ import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
+import org.springframework.lang.NonNull;
+import org.springframework.lang.Nullable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -209,6 +213,28 @@ public class LadderSearchDAO
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id "
         + LADDER_SEARCH_TEAM_FROM_FULL_BODY;
+
+    private static final String FIND_RECENTLY_ACTIVE_TEAMS =
+        "SELECT "
+        + FIND_TEAM_MEMBERS_BASE
+        + LADDER_SEARCH_TEAM_FROM
+        + "WHERE team.queue_type = :queueType "
+        + "AND team.league_type = :leagueType "
+        + "AND team.last_played >= :lastPlayedMin "
+        + "AND (:winsMin::integer IS NULL OR team.wins >= :winsMin::integer) "
+        + "AND (:winsMax::integer IS NULL OR team.wins <= :winsMax::integer) "
+        + "AND (:ratingMin::integer IS NULL OR team.rating >= :ratingMin::integer) "
+        + "AND (:ratingMax::integer IS NULL OR team.rating <= :ratingMax::integer) "
+        + "AND (:race::integer IS NULL "
+            + "OR ("
+                + "team.queue_type = " + QueueType.LOTV_1V1.getId() + " "
+                + "AND substring(team.legacy_id::text from char_length(team.legacy_id::text))::smallint"
+                    + "= :race"
+            + ") "
+        + ") "
+        + "AND (:region::smallint IS NULL OR team.region = :region::smallint) "
+        + "ORDER BY team.queue_type DESC, team.league_type DESC, team.last_played DESC "
+        + "LIMIT :limit";
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
@@ -487,6 +513,47 @@ public class LadderSearchDAO
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         String query = all ? FIND_LEGACY_TEAM_MEMBERS : FIND_FIRST_LEGACY_TEAM_MEMBERS;
         return template.query(query, params, LADDER_TEAMS_EXTRACTOR);
+    }
+
+    public List<LadderTeam> findRecentlyActiveTeams
+    (
+        @NonNull QueueType queueType,
+        @NonNull BaseLeague.LeagueType leagueType,
+        @NonNull OffsetDateTime lastPlayedMin,
+        @Nullable Integer winsMin,
+        @Nullable Integer winsMax,
+        @Nullable Integer ratingMin,
+        @Nullable Integer ratingMax,
+        @Nullable Race race,
+        @Nullable Region region,
+        int limit
+    )
+    {
+        Objects.requireNonNull(queueType);
+        Objects.requireNonNull(leagueType);
+        Objects.requireNonNull(lastPlayedMin);
+        if(winsMin != null && winsMax != null && winsMax < winsMin)
+            throw new IllegalArgumentException("Wins max is less than wins min");
+        if(ratingMin != null && ratingMax != null && ratingMax < ratingMin)
+            throw new IllegalArgumentException("Rating max is less than rating min");
+        if(limit < 0) throw new IllegalArgumentException("Limit must be positive");
+        if(race != null && queueType != QueueType.LOTV_1V1)
+            throw new IllegalArgumentException("Race can only be used with 1v1 queue");
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("queueType", conversionService.convert(queueType, Integer.class))
+            .addValue("leagueType", conversionService.convert(leagueType, Integer.class))
+            .addValue("lastPlayedMin", lastPlayedMin)
+            .addValue("winsMin", winsMin)
+            .addValue("winsMax", winsMax)
+            .addValue("ratingMin", ratingMin)
+            .addValue("ratingMax", ratingMax)
+            .addValue("race", conversionService.convert(race, Integer.class))
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("limit", limit)
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
+        return template.query(FIND_RECENTLY_ACTIVE_TEAMS, params, LADDER_TEAMS_EXTRACTOR);
     }
 
 }

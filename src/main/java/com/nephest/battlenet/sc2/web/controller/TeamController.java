@@ -4,6 +4,10 @@
 package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.config.openapi.TeamLegacyUids;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
@@ -11,25 +15,38 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonTeamHistory;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
+import java.time.Duration;
+import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+@Validated
 @RestController
 @RequestMapping("/api/team")
 public class TeamController
 {
+
+    public static final int RECENT_TEAMS_LIMIT = 250;
+    public static final Duration RECENT_TEAMS_OFFSET = Duration.ofMinutes(60);
 
     @Autowired
     private LadderTeamStateDAO ladderTeamStateDAO;
@@ -81,6 +98,36 @@ public class TeamController
         }
 
         return result;
+    }
+
+    @GetMapping("/{queue}/{league}")
+    public ResponseEntity<?> getRecentTeams
+    (
+        @PathVariable("queue") QueueType queueType,
+        @PathVariable("league") BaseLeague.LeagueType league,
+        @RequestParam(value = "winsMin", required = false) @Valid @Min(0) Integer winsMin,
+        @RequestParam(value = "winsMax", required = false)  @Valid @Min(0) Integer winsMax,
+        @RequestParam(value = "ratingMin", required = false) @Valid @Min(0) Integer ratingMin,
+        @RequestParam(value = "ratingMax", required = false) @Valid @Min(0) Integer ratingMax,
+        @RequestParam(value = "race", required = false) Race race,
+        @RequestParam(value = "region", required = false) Region region,
+        @RequestParam(value = "limit", defaultValue = RECENT_TEAMS_LIMIT + "") @Valid @Min(1) @Max(RECENT_TEAMS_LIMIT) int limit,
+        @RequestParam(value = "recent", defaultValue = "true") boolean recent
+    )
+    {
+        if(!recent) return ResponseEntity.badRequest().body("Only recent teams are supported");
+
+        return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO.findRecentlyActiveTeams
+        (
+            queueType,
+            league,
+            OffsetDateTime.now().minus(RECENT_TEAMS_OFFSET),
+            winsMin, winsMax,
+            ratingMin, ratingMax,
+            race,
+            region,
+            limit
+        ));
     }
 
 }

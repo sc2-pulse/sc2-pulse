@@ -59,3 +59,6 @@ BEFORE INSERT
 ON team_member
 FOR EACH ROW
 EXECUTE FUNCTION update_team_member_meta_data();
+
+CREATE INDEX "ix_recent_team_search" ON "team"("queue_type", "league_type", "last_played")
+    WHERE "last_played" IS NOT NULL;
