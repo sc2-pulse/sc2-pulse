@@ -97,6 +97,9 @@ public class Cron
     @Autowired @Qualifier("webExecutorService")
     private ExecutorService webExecutorService;
 
+    @Autowired @Qualifier("secondaryDbExecutorService")
+    private ExecutorService secondaryDbExecutorService;
+
     @Autowired
     private QueueStatsDAO queueStatsDAO;
 
@@ -344,12 +347,14 @@ public class Cron
 
     private void commenceFrequentMaintenance()
     {
-        postgreSQLUtils.reindex(Set.of("ix_match_updated"));
+        secondaryDbExecutorService.submit(()->
+            postgreSQLUtils.reindex(Set.of("ix_match_updated"), true)
+        );
     }
 
     private void commenceInfrequentMaintenance()
     {
-        postgreSQLUtils.reindex(Set.of(
+        secondaryDbExecutorService.submit(()->postgreSQLUtils.reindex(Set.of(
             "ix_team_state_team_id_archived",
             "uq_match_date_type_map_id_region",
             "match_pkey",
@@ -358,7 +363,7 @@ public class Cron
             "ix_account_updated",
             "ix_player_character_updated",
             "ix_clan_member_updated"
-        ));
+        ), true));
     }
 
 }

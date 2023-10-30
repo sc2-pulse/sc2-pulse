@@ -10,7 +10,8 @@ import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -47,10 +48,11 @@ public class PostgreSQLUtilsIT
         }
     }
 
-    @Test
-    public void testReindex()
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testReindex(boolean concurrently)
     {
-        postgreSQLUtils.reindex(Set.of("ix_match_updated"));
+        postgreSQLUtils.reindex(Set.of("ix_match_updated"), concurrently);
     }
 
 }

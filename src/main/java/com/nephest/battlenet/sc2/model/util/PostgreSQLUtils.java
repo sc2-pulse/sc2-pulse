@@ -49,9 +49,10 @@ public class PostgreSQLUtils
     }
 
     //use carefully, sql injection is possible
-    public void reindex(Set<String> indexes)
+    public void reindex(Set<String> indexes, boolean concurrently)
     {
-        for(String ix : indexes) template.execute("REINDEX INDEX " + ix);
+        String head = concurrently ? "REINDEX INDEX CONCURRENTLY " : "REINDEX INDEX ";
+        for(String ix : indexes) template.execute(head + ix);
     }
 
     public Long getApproximateCount(String table)
