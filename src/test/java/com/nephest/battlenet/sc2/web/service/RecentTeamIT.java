@@ -77,8 +77,8 @@ public class RecentTeamIT
     {
         RecentTeamIT.cs = cs;
         RecentTeamIT.jdbc = jdbc;
-        urlStart1v1 = "/api/team/" + cs.convert(QueueType.LOTV_1V1, String.class)
-            + "/" + cs.convert(BaseLeague.LeagueType.GOLD, String.class);
+        urlStart1v1 = "/api/team?queue=" + cs.convert(QueueType.LOTV_1V1, String.class)
+            + "&league=" + cs.convert(BaseLeague.LeagueType.GOLD, String.class);
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
@@ -120,7 +120,7 @@ public class RecentTeamIT
             "UPDATE team SET last_played = ?",
             OffsetDateTime.now().minus(TeamController.RECENT_TEAMS_OFFSET).plusSeconds(10)
         );
-        String head1v1rr = urlStart1v1 + "?region=" + cs.convert(Region.EU, String.class)
+        String head1v1rr = urlStart1v1 + "&region=" + cs.convert(Region.EU, String.class)
             + "&race=" + cs.convert(Race.PROTOSS, String.class);
         return Stream.of
         (
@@ -166,18 +166,18 @@ public class RecentTeamIT
     {
         return Stream.of
         (
-            Arguments.of(urlStart1v1 + "?winsMin=10&winsMax=9"),
-            Arguments.of(urlStart1v1 + "?winsMin=-1"),
-            Arguments.of(urlStart1v1 + "?winsMax=-1"),
-            Arguments.of(urlStart1v1 + "?ratingMin=10&ratingMax=9"),
-            Arguments.of(urlStart1v1 + "?ratingMin=-1"),
-            Arguments.of(urlStart1v1 + "?ratingMax=-1"),
-            Arguments.of(urlStart1v1 + "?limit=-1"),
-            Arguments.of(urlStart1v1 + "?limit=" + (TeamController.RECENT_TEAMS_LIMIT + 1)),
+            Arguments.of(urlStart1v1 + "&winsMin=10&winsMax=9"),
+            Arguments.of(urlStart1v1 + "&winsMin=-1"),
+            Arguments.of(urlStart1v1 + "&winsMax=-1"),
+            Arguments.of(urlStart1v1 + "&ratingMin=10&ratingMax=9"),
+            Arguments.of(urlStart1v1 + "&ratingMin=-1"),
+            Arguments.of(urlStart1v1 + "&ratingMax=-1"),
+            Arguments.of(urlStart1v1 + "&limit=-1"),
+            Arguments.of(urlStart1v1 + "&limit=" + (TeamController.RECENT_TEAMS_LIMIT + 1)),
             Arguments.of
             (
-                "/api/team/" + cs.convert(QueueType.LOTV_2V2, String.class)
-                    + "/" + cs.convert(BaseLeague.LeagueType.GOLD, String.class)
+                "/api/team?queue=" + cs.convert(QueueType.LOTV_2V2, String.class)
+                    + "&league=" + cs.convert(BaseLeague.LeagueType.GOLD, String.class)
                     + "?race=" + cs.convert(Race.TERRAN, String.class)
             )
         );
