@@ -799,6 +799,18 @@ th.hoverable span
     border: 0.15em solid gray;
 }
 
+.form-flex > *
+{
+    margin: 0;
+    margin-bottom: 0;
+    margin-right: 0;
+}
+
+.form-flex button
+{
+    align-self: end;
+}
+
 .form-inline-flex
 {
     display: inline-flex;
