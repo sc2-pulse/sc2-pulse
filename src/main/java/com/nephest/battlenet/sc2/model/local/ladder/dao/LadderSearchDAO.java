@@ -63,12 +63,14 @@ public class LadderSearchDAO
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\", "
         + "confirmed_cheater_report.restrictions AS \"confirmed_cheater_report.restrictions\" ";
 
-    private static final String LADDER_SEARCH_TEAM_FROM_SHORT =
-        "FROM team_member "
-        + "INNER JOIN team ON team_member.team_id=team.id "
+    private static final String LADDER_SEARCH_TEAM_FROM_HEAD =
+        "INNER JOIN team ON team_member.team_id=team.id "
         + "LEFT JOIN population_state ON team.population_state_id = population_state.id "
         + "INNER JOIN player_character ON team_member.player_character_id=player_character.id "
         + "INNER JOIN account ON player_character.account_id=account.id ";
+    private static final String LADDER_SEARCH_TEAM_FROM_SHORT =
+        "FROM team_member "
+        + LADDER_SEARCH_TEAM_FROM_HEAD;
 
     private static final String LADDER_SEARCH_TEAM_FROM_FULL_BODY =
         "LEFT JOIN clan_member ON player_character.id = clan_member.player_character_id "
@@ -215,26 +217,35 @@ public class LadderSearchDAO
         + LADDER_SEARCH_TEAM_FROM_FULL_BODY;
 
     private static final String FIND_RECENTLY_ACTIVE_TEAMS =
-        "SELECT "
-        + FIND_TEAM_MEMBERS_BASE
-        + LADDER_SEARCH_TEAM_FROM
-        + "WHERE team.queue_type = :queueType "
-        + "AND team.league_type = :leagueType "
-        + "AND team.last_played >= :lastPlayedMin "
-        + "AND (:winsMin::integer IS NULL OR team.wins >= :winsMin::integer) "
-        + "AND (:winsMax::integer IS NULL OR team.wins <= :winsMax::integer) "
-        + "AND (:ratingMin::integer IS NULL OR team.rating >= :ratingMin::integer) "
-        + "AND (:ratingMax::integer IS NULL OR team.rating <= :ratingMax::integer) "
-        + "AND (:race::integer IS NULL "
-            + "OR ("
-                + "team.queue_type = " + QueueType.LOTV_1V1.getId() + " "
-                + "AND substring(team.legacy_id::text from char_length(team.legacy_id::text))::smallint"
-                    + "= :race"
+        "WITH team_filter AS "
+        + "("
+            + "SELECT id AS team_id "
+            + "FROM team "
+            + "WHERE team.queue_type = :queueType "
+            + "AND team.league_type = :leagueType "
+            + "AND team.last_played >= :lastPlayedMin "
+            + "AND (:winsMin::integer IS NULL OR team.wins >= :winsMin::integer) "
+            + "AND (:winsMax::integer IS NULL OR team.wins <= :winsMax::integer) "
+            + "AND (:ratingMin::integer IS NULL OR team.rating >= :ratingMin::integer) "
+            + "AND (:ratingMax::integer IS NULL OR team.rating <= :ratingMax::integer) "
+            + "AND (:race::integer IS NULL "
+                + "OR ("
+                    + "team.queue_type = " + QueueType.LOTV_1V1.getId() + " "
+                    + "AND substring(team.legacy_id::text from char_length(team.legacy_id::text))::smallint"
+                        + "= :race"
+                + ") "
             + ") "
+            + "AND (:region::smallint IS NULL OR team.region = :region::smallint) "
+            + "ORDER BY team.queue_type DESC, team.league_type DESC, team.last_played DESC "
+            + "LIMIT :limit"
         + ") "
-        + "AND (:region::smallint IS NULL OR team.region = :region::smallint) "
-        + "ORDER BY team.queue_type DESC, team.league_type DESC, team.last_played DESC "
-        + "LIMIT :limit";
+        + "SELECT "
+        + FIND_TEAM_MEMBERS_BASE
+        + "FROM team_filter "
+        + "INNER JOIN team_member USING(team_id) "
+        + LADDER_SEARCH_TEAM_FROM_HEAD
+        + LADDER_SEARCH_TEAM_FROM_FULL_BODY
+        + "ORDER BY team.last_played DESC, team.id DESC";
 
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;

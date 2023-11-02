@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -231,6 +232,31 @@ public class RecentTeamIT
         )
             .andExpect(status().isNotFound())
             .andExpect(content().string(""));
+    }
+
+    @Test
+    public void whenSearchingForMultiMemberTeam_thenGetAllMembers()
+    throws Exception
+    {
+        jdbc.update
+        (
+            "UPDATE team SET last_played = ?",
+            OffsetDateTime.now().minus(TeamController.RECENT_TEAMS_OFFSET).plusSeconds(10)
+        );
+
+        LadderTeam[] teams = objectMapper.readValue(mvc.perform
+        (
+            get
+            (
+                "/api/team?queue=" + cs.convert(QueueType.LOTV_2V2, String.class)
+                    + "&league=" + cs.convert(BaseLeague.LeagueType.BRONZE, String.class)
+                    + "&limit=1"
+            )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), LadderTeam[].class);
+        assertEquals(2, teams[0].getMembers().size());
     }
 
 }
