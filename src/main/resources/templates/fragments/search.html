@@ -40,6 +40,21 @@
         </li>
         <li class="nav-item">
             <a
+                    id="search-team-tab"
+                    class="nav-link"
+                    data-toggle="pill"
+                    data-target="#search-team"
+                    href="#search-team"
+                    role="tab"
+                    aria-controls="search-team"
+                    aria-selected="false"
+                    data-feature-timestamp="1698851062000"
+            >
+                Team
+            </a>
+        </li>
+        <li class="nav-item">
+            <a
                     id="search-stream-tab"
                     class="nav-link"
                     data-toggle="pill"
@@ -177,6 +192,65 @@
                 </ul>
             </nav>
         </div>
+    </section>
+    <section id="search-team" class="container-loading loading-none tab-pane fade root"
+             data-view-name="team-search"
+             data-view-title="Team search"
+             data-view-description="Find recent teams by league, race, MMR, and wins."
+    >
+        <header>
+            <h2>Team search</h2>
+            <p>This is a fuzzy search of recently active teams which helps you find barcodes you just played against when
+            their battlenet::// profile is not available.</p>
+            <form id="form-search-team" class="d-flex form-flex flex-wrap-gap justify-content-center mb-3 text-left">
+                <div class="form-group">
+                    <label for="search-team-queue">Format</label>
+                    <select class="form-control serializable" id="search-team-queue" name="queue" required="required">
+                        <option th:replace="~{fragments/form::team-format-options(false)}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="search-team-league">League</label>
+                    <select class="form-control serializable" id="search-team-league" name="league" required="required">
+                        <option th:replace="~{fragments/form::league-options(false)}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="search-team-race">Race</label>
+                    <select class="form-control" id="search-team-race" name="race">
+                        <option th:replace="~{fragments/form::race-options(true)}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="search-team-region">Region</label>
+                    <select class="form-control serializable" id="search-team-region" name="region">
+                        <option th:replace="~{fragments/form::region-options(true)}"></option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="search-team-rating">MMR</label>
+                    <input type="number"
+                           class="form-control"
+                           id="search-team-rating"
+                           name="rating"
+                           min="0"
+                           th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
+                    />
+                </div>
+                <div class="form-group">
+                    <label for="search-team-wins">Wins</label>
+                    <input type="number"
+                           class="form-control"
+                           id="search-team-wins"
+                           name="wins"
+                           min="0"
+                           max="9999"
+                    />
+                </div>
+                <button class="btn btn-primary" type="submit">Find</button>
+            </form>
+        </header>
+        <div th:replace="~{fragments/table::team('team-search-container', 'team-search-teams', 'd-none', false)}"></div>
     </section>
     <section id="search-stream" class="container-loading loading-none tab-pane fade root"
              data-view-name="stream-search"

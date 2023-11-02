@@ -28,5 +28,38 @@
         </label>
     </div>
 </div>
+<div th:fragment="team-format-options(any)">
+    <option th:if="${any}" value="" selected="selected">All</option>
+    <option th:each="queue,ix : ${T(com.nephest.battlenet.sc2.model.QueueType).getTypes(T(com.nephest.battlenet.sc2.web.service.StatsService).VERSION)}"
+            th:value="${queue.name()}"
+            th:text="${queue.getTeamFormat().getName()}"
+            th:attrappend="selected=${!any && ix == 0}?@{selected}"
+    ></option>
+</div>
+<div th:fragment="league-options(any)">
+    <option th:if="${any}" value="" selected="selected">All</option>
+    <option th:each="league,ix : ${T(com.nephest.battlenet.sc2.model.BaseLeague.LeagueType).values()}"
+            th:value="${league.name()}"
+            th:text="${league.getName()}"
+            th:attrappend="selected=${!any && ix == 0}?@{selected}"
+    ></option>
+</div>
+<div th:fragment="race-options(any)">
+    <option th:if="${any}" value="" selected="selected">All</option>
+    <option th:each="race,ix : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
+            th:value="${race.name()}"
+            th:text="${race.getName()}"
+            th:attrappend="selected=${!any && ix == 0}?@{selected}"
+    ></option>
+</div>
+<div th:fragment="region-options(any)">
+    <option th:if="${any}" value="" selected="selected">All</option>
+    <option th:each="region,ix : ${T(com.nephest.battlenet.sc2.model.Region).values()}"
+            th:value="${region.name()}"
+            th:text="${region.getName()}"
+            th:attrappend="selected=${!any && ix == 0}?@{selected}"
+    ></option>
+</div>
+</div>
 </body>
 </html>

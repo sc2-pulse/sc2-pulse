@@ -644,4 +644,82 @@ class TeamUtil
         return teamClone;
     }
 
+    static getTeams(params)
+    {
+        return Session.beforeRequest()
+           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/team?${params.toString()}`))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static fuzzyTeamSearchParams(params)
+    {
+        const rating = parseInt(params.get("rating"));
+        if(rating) {
+            params.delete("rating");
+            params.append("ratingMin", Math.max(rating - TeamUtil.TEAM_SEARCH_MMR_OFFSET, 1));
+            params.append("ratingMax", rating + TeamUtil.TEAM_SEARCH_MMR_OFFSET);
+        }
+        const wins = parseInt(params.get("wins"));
+        if(wins) {
+            params.delete("wins");
+            params.append("winsMin", Math.max(wins - TeamUtil.TEAM_SEARCH_GAMES_OFFSET, 0));
+            params.append("winsMax", wins);
+        }
+        return params;
+    }
+
+    static updateTeamSearchModel(params)
+    {
+        return TeamUtil.getTeams(TeamUtil.fuzzyTeamSearchParams(params))
+            .then(teams=>{
+                if(!teams) teams = [];
+                const model = Model.DATA.get(VIEW.TEAM_SEARCH);
+                model.set(VIEW_DATA.SEARCH, {result: teams});
+                model.set(VIEW_DATA.VAR, teams);
+            });
+    }
+
+    static updateTeamSearchView()
+    {
+        const searchResult = Model.DATA.get(VIEW.TEAM_SEARCH).get(VIEW_DATA.SEARCH);
+        const table = document.querySelector("#team-search-teams");
+        TeamUtil.updateTeamsTable(table, searchResult);
+        table.classList.remove("d-none");
+    }
+
+    static updateTeams(params)
+    {
+        Util.setGeneratingStatus(STATUS.BEGIN);
+        return TeamUtil.updateTeamSearchModel(params)
+            .then(e=>{
+                TeamUtil.updateTeamSearchView();
+                Util.setGeneratingStatus(STATUS.SUCCESS);
+
+                const fullParams = new URLSearchParams(params);
+                fullParams.append("type", "team-search");
+                const stringParams = fullParams.toString();
+                const paramsObj = {params: stringParams};
+                if(!Session.isHistorical) HistoryUtil.pushState(paramsObj, document.title, "?" + stringParams + "#search-team");
+                Session.currentSearchParams = stringParams;
+                if(!Session.isHistorical) HistoryUtil.updateActiveTabs();
+            })
+            .catch(error => Session.onPersonalException(error));
+    }
+
+    static onTeamSearch(evt)
+    {
+        evt.preventDefault();
+        const params = new URLSearchParams(new FormData(evt.target));
+        return TeamUtil.updateTeams(params);
+    }
+
+    static enhanceTeamSearch()
+    {
+        const form = document.querySelector("#form-search-team");
+        if(form) form.addEventListener("submit", TeamUtil.onTeamSearch);
+    }
+
 }
+
+TeamUtil.TEAM_SEARCH_MMR_OFFSET = 50;
+TeamUtil.TEAM_SEARCH_GAMES_OFFSET = 2;

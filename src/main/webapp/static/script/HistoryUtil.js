@@ -294,6 +294,10 @@ class HistoryUtil
                 promises.push(BootstrapUtil.hideActiveModal("error-generation"));
                 lazyPromises.push(e=>BootstrapUtil.showModal(modalId));
                 break;
+            case "team-search":
+                scrollTo = "team-search-container";
+                promises.push(TeamUtil.updateTeams(params));
+                break;
             case null:
                 lazyPromises.push(e=>BootstrapUtil.hideActiveModal());
                 break;

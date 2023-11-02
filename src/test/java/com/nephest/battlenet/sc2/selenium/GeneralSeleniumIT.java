@@ -37,6 +37,7 @@ import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
+import com.nephest.battlenet.sc2.web.service.StatsService;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -423,6 +424,79 @@ public class GeneralSeleniumIT
         checkJsErrors();
     }
 
+    @Test
+    public void testTeamSearchUI()
+    {
+        loadMainPage(driver, wait);
+        clickAndWait(driver, wait, "#search-all-tab", "#search.show.active");
+        clickAndWait(driver, wait, "#search-team-tab", "#search-team.show.active");
+
+        testTeamSearchSelects();
+        testTeamSearchRating();
+        testTeamSearchWins();
+    }
+
+    private void testTeamSearchSelects()
+    {
+        Select queue = new Select(driver.findElement(By.cssSelector("#search-team-queue")));
+        Select league = new Select(driver.findElement(By.cssSelector("#search-team-league")));
+        Select region = new Select(driver.findElement(By.cssSelector("#search-team-region")));
+        for(int qi = 0; qi < queue.getOptions().size(); qi++)
+        {
+            queue.selectByIndex(qi);
+            for(int li = 0; li < league.getOptions().size(); li++)
+            {
+                league.selectByIndex(li);
+                for(int ri = 0; ri < region.getOptions().size(); ri++)
+                {
+                    region.selectByIndex(ri);
+                    clickAndWait
+                    (
+                        driver,
+                        wait,
+                        "#search-team button[type=\"submit\"]",
+                        "#team-search-teams *[data-team-id]"
+                    );
+                    js.executeScript("document.querySelector(\"#team-search-teams\").classList.add(\"d-none\");");
+                }
+            }
+        }
+        queue.selectByIndex(0);
+        league.selectByIndex(0);
+        region.selectByIndex(0);
+        checkJsErrors();
+    }
+
+    private void testTeamSearchRating()
+    {
+        WebElement mmrInput = driver.findElement(By.cssSelector("#search-team-rating"));
+        mmrInput.sendKeys("10");
+        clickAndWait
+        (
+            driver,
+            wait,
+            "#search-team button[type=\"submit\"]",
+            "#team-search-teams *[data-team-id]"
+        );
+        js.executeScript("document.querySelector(\"#team-search-teams\").classList.add(\"d-none\");");
+        checkJsErrors();
+    }
+
+    private void testTeamSearchWins()
+    {
+        WebElement winsInput = driver.findElement(By.cssSelector("#search-team-wins"));
+        winsInput.sendKeys("30");
+        clickAndWait
+        (
+            driver,
+            wait,
+            "#search-team button[type=\"submit\"]",
+            "#team-search-teams *[data-team-id]"
+        );
+        js.executeScript("document.querySelector(\"#team-search-teams\").classList.add(\"d-none\");");
+        checkJsErrors();
+    }
+
     public static void switchTabsAndToggleInputs(WebDriver driver, WebDriverWait wait, String tabContainerSelector)
     {
         driver.findElement(By.cssSelector(tabContainerSelector))
@@ -589,7 +663,7 @@ public class GeneralSeleniumIT
         (
             List.of(Region.values()),
             List.of(BaseLeague.LeagueType.values()),
-            List.of(QueueType.LOTV_1V1),
+            List.copyOf(QueueType.getTypes(StatsService.VERSION)),
             TeamType.ARRANGED,
             BaseLeagueTier.LeagueTierType.FIRST,
             10
@@ -606,8 +680,11 @@ public class GeneralSeleniumIT
             .iterator().next();
         setupClanData
         (
-            template
-                .queryForList("SELECT id FROM player_character WHERE id > 140", Long.class),
+            template.queryForList
+            (
+                "SELECT id FROM player_character WHERE id BETWEEN 141 AND 280",
+                Long.class
+            ),
             clan2
         );
         OffsetDateTime startDateTime = OffsetDateTime.now();

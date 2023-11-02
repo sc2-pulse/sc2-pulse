@@ -359,7 +359,8 @@ body.theme-dark img[loading="lazy"]:not(.loaded)
 }
 
 #form-search-clan input[type="number"],
-#form-search-vod input[type="number"]
+#form-search-vod input[type="number"],
+#form-search-team input[type="number"]
 {
     max-width: 6em !important;
 }

@@ -66,6 +66,7 @@ class SC2Restful
                 LadderUtil.enhanceLadderForm();
                 CharacterUtil.enhanceSearchForm();
                 ClanUtil.enhanceClanSearchForm();
+                TeamUtil.enhanceTeamSearch();
                 VODUtil.enhance();
                 CharacterUtil.enhanceAutoClanSearch();
                 CharacterUtil.enhanceAllCharacterReportsControls();

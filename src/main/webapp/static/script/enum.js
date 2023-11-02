@@ -87,7 +87,8 @@ const VIEW = Object.freeze
     VERSUS: {name: "versus", order: 14},
     VOD_SEARCH: {name: "vod-search", order: 15},
     GROUP: {name: "group", order: 16},
-    STREAM_SEARCH: {name: "stream-search", order: 17}
+    STREAM_SEARCH: {name: "stream-search", order: 17},
+    TEAM_SEARCH: {name: "team-search", order: 18},
 });
 
 const VIEW_DATA = Object.freeze
