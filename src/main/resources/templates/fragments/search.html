@@ -217,7 +217,11 @@
                 </div>
                 <div class="form-group">
                     <label for="search-team-race">Race</label>
-                    <select class="form-control" id="search-team-race" name="race">
+                    <select class="form-control"
+                            id="search-team-race"
+                            name="race"
+                            data-state-link-id="search-team-queue"
+                            data-state-link-values="LOTV_1V1">
                         <option th:replace="~{fragments/form::race-options(true)}"></option>
                     </select>
                 </div>
