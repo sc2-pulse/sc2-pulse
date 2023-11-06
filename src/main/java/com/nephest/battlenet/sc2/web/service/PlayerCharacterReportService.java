@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static com.nephest.battlenet.sc2.web.service.PersonalService.getAuthentication;
 import static java.util.stream.Collectors.groupingBy;
 
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
@@ -67,7 +68,6 @@ public class PlayerCharacterReportService
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
     private final NotificationService notificationService;
-    private final PersonalService personalService;
     private final String characterUrlTemplate;
 
     @Autowired
@@ -93,7 +93,6 @@ public class PlayerCharacterReportService
         this.accountDAO = accountDAO;
         this.playerCharacterDAO = playerCharacterDAO;
         this.notificationService = notificationService;
-        this.personalService = personalService;
         this.characterUrlTemplate = webContextUtil.getCharacterUrlTemplate() + "#player-stats-player";
     }
 
@@ -243,7 +242,7 @@ public class PlayerCharacterReportService
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
         if(!reports.isEmpty()) reports.sort(comparator.reversed());
-        return clearSensitiveData(reports, personalService.getAuthentication().orElseThrow());
+        return clearSensitiveData(reports, getAuthentication().orElseThrow());
     }
 
     public List<LadderPlayerCharacterReport> findReportsByCharacterIds(Set<Long> characterIds)
@@ -276,7 +275,7 @@ public class PlayerCharacterReportService
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
         if(!reports.isEmpty()) reports.sort(comparator.reversed());
-        return clearSensitiveData(reports, personalService.getAuthentication().orElseThrow());
+        return clearSensitiveData(reports, getAuthentication().orElseThrow());
     }
 
     private Map<Long, List<Account>> getReporters(Map<Integer, List<Evidence>> evidences)

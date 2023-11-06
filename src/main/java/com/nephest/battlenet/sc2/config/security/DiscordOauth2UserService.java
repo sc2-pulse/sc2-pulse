@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.config.security;
 
+import static com.nephest.battlenet.sc2.web.service.PersonalService.getPrincipal;
+
 import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.local.Account;
@@ -34,7 +36,6 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
     private final AccountService accountService;
     private final DiscordService discordService;
     private final DiscordAPI discordAPI;
-    private final PersonalService personalService;
 
     public DiscordOauth2UserService
     (
@@ -49,7 +50,6 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
         this.accountService = accountService;
         this.discordService = discordService;
         this.discordAPI = discordAPI;
-        this.personalService = personalService;
     }
 
     @Override
@@ -65,7 +65,7 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
             .withLimiter(Mono.fromCallable(()->service.loadUser(userRequest)), true)
             .blockLast();
         DiscordUser discordUser = from(user);
-        AccountUser accountUser = personalService.getPrincipal()
+        AccountUser accountUser = getPrincipal()
             .orElseThrow(()->new IllegalStateException("Authentication not found"));
 
         Account account = accountUser.getAccount();

@@ -52,21 +52,18 @@ public class PersonalService
             .orElse(List.of());
     }
 
-    /**
-     * A getter to mask static access for tests.
-     */
-    public Optional<Authentication> getAuthentication()
+    public static Optional<Authentication> getAuthentication()
     {
         return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication());
     }
 
-    public Optional<AccountUser> getPrincipal()
+    public static Optional<AccountUser> getPrincipal()
     {
         return getAuthentication()
             .map(authentication->(AccountUser) authentication.getPrincipal());
     }
 
-    public Optional<Long> getAccountId()
+    public static Optional<Long> getAccountId()
     {
         return getPrincipal()
             .map(AccountUser::getAccount)
