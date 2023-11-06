@@ -139,7 +139,7 @@ class FormUtil
 
     static linkInputStateBindings()
     {
-        document.querySelectorAll("input[data-state-link-id]").forEach(i=>{
+        document.querySelectorAll("[data-state-link-id]").forEach(i=>{
             const linkedInput = document.getElementById(i.getAttribute("data-state-link-id"));
             linkedInput.addEventListener("change", FormUtil.onInputStateLinkChange);
             linkedInput.addEventListener("input", FormUtil.onInputStateLinkChange);
@@ -148,7 +148,7 @@ class FormUtil
 
     static onInputStateLinkChange(evt)
     {
-        const linkedInput = document.querySelectorAll('input[data-state-link-id="' + evt.target.id +  '"]').
+        const linkedInput = document.querySelectorAll('[data-state-link-id="' + evt.target.id +  '"]').
             forEach(i=>FormUtil.setInputLinkState(i, evt.target));
     }
 
@@ -160,7 +160,7 @@ class FormUtil
 
     static initInputStateLinks()
     {
-        for(const entry of Util.groupBy(document.querySelectorAll('input[data-state-link-id]'), i=>i.getAttribute("data-state-link-id")).entries()) {
+        for(const entry of Util.groupBy(document.querySelectorAll('[data-state-link-id]'), i=>i.getAttribute("data-state-link-id")).entries()) {
             const linkedInput = document.getElementById(entry[0]);
             entry[1].forEach(input=>FormUtil.setInputLinkState(input, linkedInput));
         }
