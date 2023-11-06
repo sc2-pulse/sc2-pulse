@@ -3,10 +3,12 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.nephest.battlenet.sc2.config.security.AccountUser;
 import com.nephest.battlenet.sc2.config.security.BlizzardOidcUser;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.Account;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -30,7 +32,9 @@ public class PersonalService
 
     public Optional<BlizzardOidcUser> getOidcUser()
     {
-        Object principal = getAuthentication().getPrincipal();
+        Object principal = getAuthentication()
+            .map(Authentication::getPrincipal)
+            .orElseThrow();
         if(!(principal instanceof BlizzardOidcUser)) return Optional.empty();
 
         return Optional.of((BlizzardOidcUser) principal);
@@ -51,9 +55,22 @@ public class PersonalService
     /**
      * A getter to mask static access for tests.
      */
-    public Authentication getAuthentication()
+    public Optional<Authentication> getAuthentication()
     {
-        return SecurityContextHolder.getContext().getAuthentication();
+        return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication());
+    }
+
+    public Optional<AccountUser> getPrincipal()
+    {
+        return getAuthentication()
+            .map(authentication->(AccountUser) authentication.getPrincipal());
+    }
+
+    public Optional<Long> getAccountId()
+    {
+        return getPrincipal()
+            .map(AccountUser::getAccount)
+            .map(Account::getId);
     }
 
 }

@@ -13,7 +13,6 @@ import com.nephest.battlenet.sc2.web.service.DiscordService;
 import com.nephest.battlenet.sc2.web.service.PersonalService;
 import discord4j.common.util.Snowflake;
 import java.util.List;
-import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
@@ -66,10 +65,9 @@ implements Oauth2UserServiceRegistration<OAuth2UserRequest, OAuth2User>
             .withLimiter(Mono.fromCallable(()->service.loadUser(userRequest)), true)
             .blockLast();
         DiscordUser discordUser = from(user);
-        Authentication authentication = personalService.getAuthentication();
-        if(authentication == null) throw new IllegalStateException("Authentication not found");
+        AccountUser accountUser = personalService.getPrincipal()
+            .orElseThrow(()->new IllegalStateException("Authentication not found"));
 
-        AccountUser accountUser = (AccountUser) authentication.getPrincipal();
         Account account = accountUser.getAccount();
         discordService.linkAccountToNewDiscordUser(account.getId(), discordUser);
 

@@ -243,7 +243,7 @@ public class PlayerCharacterReportService
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
         if(!reports.isEmpty()) reports.sort(comparator.reversed());
-        return clearSensitiveData(reports, personalService.getAuthentication());
+        return clearSensitiveData(reports, personalService.getAuthentication().orElseThrow());
     }
 
     public List<LadderPlayerCharacterReport> findReportsByCharacterIds(Set<Long> characterIds)
@@ -276,7 +276,7 @@ public class PlayerCharacterReportService
                     r.setAdditionalMember(additionalMembers.get(r.getReport().getAdditionalPlayerCharacterId()).get(0));
             });
         if(!reports.isEmpty()) reports.sort(comparator.reversed());
-        return clearSensitiveData(reports, personalService.getAuthentication());
+        return clearSensitiveData(reports, personalService.getAuthentication().orElseThrow());
     }
 
     private Map<Long, List<Account>> getReporters(Map<Integer, List<Evidence>> evidences)
