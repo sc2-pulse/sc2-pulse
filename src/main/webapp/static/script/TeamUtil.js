@@ -7,6 +7,7 @@ class TeamUtil
     static updateTeamsTable(table, searchResult, clear = true, multiRow = "lg")
     {
         const fullMode = table.getAttribute("data-ladder-format-show") == "true";
+        const showLastPlayed = table.getAttribute("data-ladder-last-played-show") !== "false";
         const ladderBody = table.getElementsByTagName("tbody")[0];
         if(clear) ElementUtil.removeChildren(ladderBody);
 
@@ -32,6 +33,7 @@ class TeamUtil
             row.appendChild(TeamUtil.createMembersCell(team, multiRow));
             TeamUtil.appendGamesInfo(row.insertCell(), team);
             row.insertCell().textContent = Math.round( team.wins / (team.wins + team.losses) * 100);
+            if(showLastPlayed) row.appendChild(TeamUtil.createLastPlayedCell(team));
             row.appendChild(TeamUtil.createMiscCell(team));
             if(isCheater) {
                 row.classList.add("team-cheater");
@@ -69,6 +71,9 @@ class TeamUtil
                 break;
             case "league":
                 content = TeamUtil.createDynamicLeagueTable(parent);
+                break;
+            case "last-played":
+                content = TeamUtil.createDynamicLastPlayedContent(parent);
                 break;
             default:
                 throw new Error("invalid popover data type");
@@ -199,6 +204,18 @@ class TeamUtil
         tr.insertCell().appendChild(TeamUtil.createLeagueDivFromEnum(regionRange.league, regionRange.tierType));
 
         return leagueTable;
+    }
+
+    static createDynamicLastPlayedContent(parent)
+    {
+        const team = TeamUtil.getTeamFromElement(parent);
+        return ElementUtil.createElement(
+            "span",
+            null,
+            "last-played-details",
+            team.lastPlayed
+                ? Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(team.lastPlayed))
+                : "unknown");
     }
 
     static getRegionLeagueRange(team)
@@ -370,6 +387,24 @@ class TeamUtil
             leagueDiv.appendChild(ElementUtil.createImage("league/", "tier-" + (tierType != null ? tierType + 1 : 1),
                 "table-image-additional" + (tierType == null ? " invisible" : "")));
         return leagueDiv;
+    }
+
+    static createLastPlayedCell(team)
+    {
+        const cell = document.createElement("td");
+        if(!team.lastPlayed) return cell;
+
+        cell.classList.add("last-played", "text-truncate");
+        const sinceLastPlayed = luxon.Duration.fromMillis(Date.now() - Util.parseIsoDateTime(team.lastPlayed));
+        cell.textContent = sinceLastPlayed.toLargestUnitString();
+        cell.setAttribute("data-ctype", "last-played");
+        cell.setAttribute("data-toggle", "popover");
+        if(sinceLastPlayed.milliseconds <= TeamUtil.TEAM_ONLINE_DURATION) {
+            cell.classList.add("text-success");
+        } else if(sinceLastPlayed.milliseconds >= TeamUtil.TEAM_OLD_DURATION) {
+            cell.classList.add("text-secondary");
+        }
+        return cell;
     }
 
     static createMiscCell(team)
@@ -636,6 +671,7 @@ class TeamUtil
         teamClone.league = snapshot.league;
         teamClone.leagueType = snapshot.league.type;
         teamClone.tierType = snapshot.tier;
+        teamClone.lastPlayed = snapshot.teamState.dateTime;
         if(snapshot.teamState.wins) {
             teamClone.losses = snapshot.teamState.games - snapshot.teamState.wins;
         } else {
@@ -723,3 +759,5 @@ class TeamUtil
 
 TeamUtil.TEAM_SEARCH_MMR_OFFSET = 50;
 TeamUtil.TEAM_SEARCH_GAMES_OFFSET = 2;
+TeamUtil.TEAM_ONLINE_DURATION = 60 * 40 * 1000;
+TeamUtil.TEAM_OLD_DURATION = 60 * 60 * 24 * 14 * 1000;

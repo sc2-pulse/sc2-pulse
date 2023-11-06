@@ -81,6 +81,13 @@
                 <span>Games</span>
             </th>
             <th scope="col">Win%</th>
+            <th scope="col"
+                class="hoverable"
+                title="Hover over this column values to get a more detailed view"
+                data-toggle="tooltip"
+            >
+                <span>Last played</span>
+            </th>
             <th scope="col">Misc</th>
         </tr>
         </thead>
@@ -137,7 +144,7 @@
     </table>
 </div>
 <div class="table-responsive" th:fragment="match (id, class)">
-    <table th:id="${id}" th:class="${'table table-sm table-hover matches ' + class}">
+    <table th:id="${id}" th:class="${'table table-sm table-hover matches ' + class}" data-ladder-last-played-show="false">
         <thead>
         <tr>
             <th scope="col">Date</th>
