@@ -1635,6 +1635,7 @@ body.modal-open.modal-open-no-popup
     margin-left: 0.3em;
     padding: 0 0.3em;
     font-weight: bold;
+    font-size: 0.9em;
 }
 
 @media (min-width: 576px) {
