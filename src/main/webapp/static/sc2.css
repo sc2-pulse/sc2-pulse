@@ -1425,6 +1425,7 @@ body.modal-open.modal-open-no-popup
 {
     min-width: 0;
     flex-shrink: 99;
+    width: 100%;
 }
 
 .stream header
