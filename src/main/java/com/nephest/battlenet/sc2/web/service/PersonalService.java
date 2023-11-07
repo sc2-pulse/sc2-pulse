@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardFullPlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -22,12 +23,14 @@ public class PersonalService
 {
 
     private final BlizzardSC2API api;
+    private final PostgreSQLUtils postgreSQLUtils;
 
 
     @Autowired
-    public PersonalService(BlizzardSC2API api)
+    public PersonalService(BlizzardSC2API api, PostgreSQLUtils postgreSQLUtils)
     {
         this.api = api;
+        this.postgreSQLUtils = postgreSQLUtils;
     }
 
     public Optional<BlizzardOidcUser> getOidcUser()
@@ -50,6 +53,16 @@ public class PersonalService
                     .block()
                 : new ArrayList<BlizzardFullPlayerCharacter>())
             .orElse(List.of());
+    }
+
+    public void setDbTransactionUserId(Long id)
+    {
+        postgreSQLUtils.setTransactionUserId(String.valueOf(id));
+    }
+
+    public void setDbTransactionUserId()
+    {
+        getAccountId().ifPresent(this::setDbTransactionUserId);
     }
 
     public static Optional<Authentication> getAuthentication()
