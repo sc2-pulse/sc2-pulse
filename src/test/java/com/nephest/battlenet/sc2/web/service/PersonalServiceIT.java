@@ -66,4 +66,17 @@ public class PersonalServiceIT
         assertNull(postgreSQLUtils.getTransactionUserId());
     }
 
+    @Test
+    @WithBlizzardMockUser(partition = Partition.GLOBAL, username = "btag")
+    public void testConvenienceAccountIdCasts()
+    {
+        assertEquals
+        (
+            1L,
+            PersonalService.getAccountId(PersonalService.getAuthentication().orElseThrow())
+                .orElseThrow()
+        );
+        assertEquals(1L, PersonalService.getAccountId().orElseThrow());
+    }
+
 }

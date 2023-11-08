@@ -65,6 +65,19 @@ public class PersonalService
         getAccountId().ifPresent(this::setDbTransactionUserId);
     }
 
+    public static Optional<AccountUser> getPrincipal(Authentication authentication)
+    {
+        return Optional.ofNullable(authentication)
+            .map(auth->(AccountUser) auth.getPrincipal());
+    }
+
+    public static Optional<Long> getAccountId(Authentication authentication)
+    {
+        return getPrincipal(authentication)
+            .map(AccountUser::getAccount)
+            .map(Account::getId);
+    }
+
     public static Optional<Authentication> getAuthentication()
     {
         return Optional.ofNullable(SecurityContextHolder.getContext().getAuthentication());
@@ -72,15 +85,12 @@ public class PersonalService
 
     public static Optional<AccountUser> getPrincipal()
     {
-        return getAuthentication()
-            .map(authentication->(AccountUser) authentication.getPrincipal());
+        return getAuthentication().flatMap(PersonalService::getPrincipal);
     }
 
     public static Optional<Long> getAccountId()
     {
-        return getPrincipal()
-            .map(AccountUser::getAccount)
-            .map(Account::getId);
+        return getAuthentication().flatMap(PersonalService::getAccountId);
     }
 
 }
