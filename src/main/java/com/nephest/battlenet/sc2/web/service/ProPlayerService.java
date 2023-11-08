@@ -3,12 +3,15 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static com.nephest.battlenet.sc2.web.service.PersonalService.getAccountId;
+
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayerRoot;
 import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
+import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.ProTeam;
 import com.nephest.battlenet.sc2.model.local.ProTeamMember;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
@@ -23,6 +26,7 @@ import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
 import com.nephest.battlenet.sc2.web.service.sm.SocialMediaLinkResolver;
 import com.nephest.battlenet.sc2.web.service.sm.SocialMediaLinkUpdater;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -47,6 +51,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,6 +98,7 @@ public class ProPlayerService
     private final SocialMediaLinkDAO socialMediaLinkDAO;
     private final ProPlayerAccountDAO proPlayerAccountDAO;
     private final LadderProPlayerDAO ladderProPlayerDAO;
+    private final PersonalService personalService;
 
     private final SC2RevealedAPI sc2RevealedAPI;
 
@@ -117,6 +123,7 @@ public class ProPlayerService
         SocialMediaLinkDAO socialMediaLinkDAO,
         ProPlayerAccountDAO proPlayerAccountDAO,
         LadderProPlayerDAO ladderProPlayerDAO,
+        PersonalService personalService,
         SC2RevealedAPI sc2RevealedAPI,
         AligulacAPI aligulacAPI,
         LiquipediaAPI liquipediaAPI,
@@ -130,6 +137,7 @@ public class ProPlayerService
         this.socialMediaLinkDAO = socialMediaLinkDAO;
         this.proPlayerAccountDAO = proPlayerAccountDAO;
         this.ladderProPlayerDAO = ladderProPlayerDAO;
+        this.personalService = personalService;
         this.sc2RevealedAPI = sc2RevealedAPI;
         this.aligulacAPI = aligulacAPI;
         this.liquipediaAPI = liquipediaAPI;
@@ -284,6 +292,26 @@ public class ProPlayerService
         return linkDbBatchSize;
     }
 
+    @Transactional
+    public void link(Long accountId, Long proPlayerId)
+    {
+        personalService.setDbTransactionUserId();
+        proPlayerAccountDAO.merge(Set.of(new ProPlayerAccount(
+            proPlayerId,
+            accountId,
+            PersonalService.getAccountId().orElse(null),
+            OffsetDateTime.now(),
+            false
+        )));
+    }
+
+    @Transactional
+    public void unlink(Long accountId, Long proPlayerId)
+    {
+        personalService.setDbTransactionUserId();
+        proPlayerAccountDAO.unlink(proPlayerId, accountId);
+    }
+
     public Optional<ProPlayer> importProfile(String url)
     {
         Long aligulacId = getAligulacProfileId(url);
@@ -342,6 +370,7 @@ public class ProPlayerService
     @Transactional
     public void importProfile(ProPlayer proPlayer, ProTeam proTeam, List<SocialMediaLink> links)
     {
+        personalService.setDbTransactionUserId();
         proPlayerDAO.merge(proPlayer);
         for(SocialMediaLink link : links) link.setProPlayerId(proPlayer.getId());
         socialMediaLinkDAO.merge(false, new LinkedHashSet<>(links));
@@ -463,7 +492,10 @@ public class ProPlayerService
     public Mono<LadderProPlayer> edit(ProPlayerForm form)
     {
         return getValidLinks(form)
-            .flatMap(links->WebServiceUtil.blockingCallable(()->proPlayerService.edit(form.getProPlayer(), links)));
+            .zipWith(ReactiveSecurityContextHolder.getContext())
+            .flatMap(links->WebServiceUtil.blockingCallable(()->
+                proPlayerService.edit(form.getProPlayer(), links.getT1(),
+                    getAccountId(links.getT2().getAuthentication()).orElse(null))));
     }
 
     private Mono<List<SocialMediaLink>> getValidLinks(ProPlayerForm form)
@@ -485,8 +517,9 @@ public class ProPlayerService
     }
 
     @Transactional
-    public LadderProPlayer edit(ProPlayer proPlayer, List<SocialMediaLink> links)
+    public LadderProPlayer edit(ProPlayer proPlayer, List<SocialMediaLink> links, Long editorId)
     {
+        personalService.setDbTransactionUserId(editorId);
         ProPlayer mergedProPlayer = proPlayerDAO.mergeVersioned(proPlayer);
         links.forEach(l->l.setProPlayerId(mergedProPlayer.getId()));
 

@@ -5,14 +5,13 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.config.security.AccountUser;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
-import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.web.service.ProPlayerForm;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.time.OffsetDateTime;
-import java.util.Set;
 import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -45,15 +44,7 @@ public class RevealController
         @PathVariable("proPlayerId") long proPlayerId
     )
     {
-        ProPlayerAccount proPlayerAccount = new ProPlayerAccount
-        (
-            proPlayerId,
-            accountId,
-            revealer.getAccount().getId(),
-            OffsetDateTime.now(),
-            false
-        );
-        proPlayerAccountDAO.merge(Set.of(proPlayerAccount));
+        proPlayerService.link(accountId, proPlayerId);
     }
 
     @DeleteMapping("/{accountId}/{proPlayerId}")
@@ -63,7 +54,7 @@ public class RevealController
         @PathVariable("proPlayerId") long proPlayerId
     )
     {
-        proPlayerAccountDAO.unlink(proPlayerId, accountId);
+        proPlayerService.unlink(accountId, proPlayerId);
     }
 
     @PostMapping("/import")
@@ -78,7 +69,7 @@ public class RevealController
     public ResponseEntity<LadderProPlayer> edit(@Valid @RequestBody ProPlayerForm form)
     {
         form.getProPlayer().setUpdated(OffsetDateTime.now());
-        return ResponseEntity.ok(proPlayerService.edit(form).block());
+        return ResponseEntity.ok(WebServiceUtil.wrapSecurity(proPlayerService.edit(form)).block());
     }
 
 }
