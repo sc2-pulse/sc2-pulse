@@ -38,6 +38,8 @@ import org.springframework.http.client.reactive.ClientHttpConnector;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.http.codec.json.Jackson2JsonDecoder;
 import org.springframework.http.codec.json.Jackson2JsonEncoder;
+import org.springframework.security.core.context.ReactiveSecurityContextHolder;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeStrategies;
@@ -402,6 +404,18 @@ public class WebServiceUtil
         return errorOnErrorCode(response, clazz)
             .flux()
             .switchIfEmpty(response.bodyToFlux(clazz));
+    }
+
+    public static <T> Mono<T> wrapSecurity(Mono<T> mono)
+    {
+        return mono.contextWrite(ReactiveSecurityContextHolder.withAuthentication(
+            SecurityContextHolder.getContext().getAuthentication()));
+    }
+
+    public static <T> Flux<T> wrapSecurity(Flux<T> flux)
+    {
+        return flux.contextWrite(ReactiveSecurityContextHolder.withAuthentication(
+            SecurityContextHolder.getContext().getAuthentication()));
     }
 
     public static boolean isRestricted(HttpStatus status)
