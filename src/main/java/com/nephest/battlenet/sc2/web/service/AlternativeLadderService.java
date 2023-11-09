@@ -497,7 +497,8 @@ public class AlternativeLadderService
             if(batchSize - discovered.get() > errorThreshold) break;
             lastDivision+=batchSize;
         }
-        Season seasonAfterScan = Season.of(sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(season.getRegion()), season.getRegion());
+        Season seasonAfterScan = Season.of(sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(
+            season.getRegion(), season.getBattlenetId()), season.getRegion());
         if(!Objects.equals(season.getBattlenetId(), seasonAfterScan.getBattlenetId()))
             throw new IllegalStateException("Season changed when ladder discovery was in progress");
         return profileLadderIds;
