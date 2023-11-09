@@ -697,7 +697,12 @@ class ChartUtil
                 {
                     data.datasets[i]["backgroundColor"] = Util.changeFullRgbaAlpha(primaryColor, "0.7");
                     data.datasets[i]["borderColor"] = secondaryColor;
-                    data.datasets[i]["borderWidth"] = 1;
+                    data.datasets[i]["borderWidth"] = {
+                        top: 1,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                    }
                 }
             }
         }
