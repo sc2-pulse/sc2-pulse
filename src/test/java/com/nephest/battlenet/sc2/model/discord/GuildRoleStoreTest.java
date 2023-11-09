@@ -123,6 +123,7 @@ public class GuildRoleStoreTest
     public static ImmutableRoleData.Builder roleBuilder()
     {
         return RoleData.builder()
+            .flags(1)
             .color(1)
             .hoist(true)
             .permissions(1L)
