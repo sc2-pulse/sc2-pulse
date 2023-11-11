@@ -403,7 +403,7 @@ public class AlternativeLadderService
     {
         long lastDivision = divisionDao.findLastDivision(season.getBattlenetId() - 1, season.getRegion())
             .orElse(BlizzardSC2API.LAST_LADDER_IDS.get(season.getRegion())) + 1;
-        return discoverSeason(season, lastDivision, web, null);
+        return discoverSeason(season, lastDivision, web, null, true);
     }
 
     private long getLastDivision(Season season)
@@ -418,7 +418,14 @@ public class AlternativeLadderService
     private List<Future<Void>> continueSeasonDiscovery(Season season)
     {
         long lastDivision = getLastDivision(season) - CONTINUE_SEASON_DISCOVERY_LADDER_OFFSET;
-        return discoverSeason(season, lastDivision, isDiscoveryWebRegion(season.getRegion()), CONTINUE_SEASON_DISCOVERY_BATCH_SIZE);
+        return discoverSeason
+        (
+            season,
+            lastDivision,
+            isDiscoveryWebRegion(season.getRegion()),
+            CONTINUE_SEASON_DISCOVERY_BATCH_SIZE,
+            false
+        );
     }
 
     public void updateThenContinueDiscoverSeason
@@ -436,7 +443,8 @@ public class AlternativeLadderService
         Season season,
         long lastDivision,
         boolean web,
-        @Nullable Integer batchSize
+        @Nullable Integer batchSize,
+        boolean updateInstant
     )
     {
         LOG.info("Discovering {} ladders", season);
@@ -446,7 +454,7 @@ public class AlternativeLadderService
         LOG.info("{} {} ladders found", profileIds.size(), season);
         List<Future<Void>> tasks =
             updateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds, web);
-        discoveryInstants.get(season.getRegion()).setValueAndSave(Instant.now());
+        if(updateInstant) discoveryInstants.get(season.getRegion()).setValueAndSave(Instant.now());
         return tasks;
     }
 
