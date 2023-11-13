@@ -74,6 +74,61 @@ class GroupUtil
             });
     }
 
+    static getTeams(params)
+    {
+        const request = `${ROOT_CONTEXT_PATH}api/group/team?${params.toString()}`;
+        return Session.beforeRequest()
+           .then(n=>fetch(request))
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static createTeamParams(groupParams, queue, season)
+    {
+        const params = new URLSearchParams(groupParams);
+        params.append("queue", queue);
+        params.append("season", season);
+        return params;
+    }
+
+    static updateTeamModel(view, params)
+    {
+        return GroupUtil.getTeams(params)
+            .then(teams=>{
+                Model.DATA.get(view).get(VIEW_DATA.SEARCH).teams = teams;
+                const teamData = Model.DATA.get(view).get(VIEW_DATA.TEAMS);
+                teamData.result = teamData.result ? teamData.result.concat(teams) : teams;
+                return teams;
+            });
+    }
+
+    static updateTeamView(container)
+    {
+        const view = ViewUtil.getView(container);
+        const teams = Model.DATA.get(view).get(VIEW_DATA.SEARCH).teams;
+        TeamUtil.updateTeamsTable(container.querySelector(":scope .table-team"), {result: teams});
+    }
+
+    static updateTeams(section, queue, season)
+    {
+        const view = ViewUtil.getView(section);
+        const varModel = Model.DATA.get(view).get(VIEW_DATA.VAR);
+        const params = GroupUtil.createTeamParams(varModel.groupParams, queue, season);
+        const container = section.querySelector(":scope .group-teams");
+        return GroupUtil.updateTeamModel(view, params)
+            .then(teams=>{
+                GroupUtil.updateTeamView(container);
+                return {data: teams, status: LOADING_STATUS.COMPLETE};
+            });
+    }
+
+    static resetTeams(container)
+    {
+        Util.resetLoadingIndicator(container);
+        const view = ViewUtil.getView(container);
+        Model.DATA.get(view).get(VIEW_DATA.SEARCH).teams = [];
+        ElementUtil.removeChildren(container.querySelector(":scope .teams tbody"));
+    }
+
     static getCharacters(groupParams)
     {
         const request = `${ROOT_CONTEXT_PATH}api/group/character/full?${groupParams.toString()}`;
@@ -176,7 +231,6 @@ class GroupUtil
         const view = ViewUtil.getView(section);
         ElementUtil.removeChildren(section.querySelector(":scope .matches tbody"));
         Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = [];
-        Model.DATA.get(view).get(VIEW_DATA.TEAMS).result = [];
     }
 
     static getClanHistory(params)
@@ -265,9 +319,30 @@ class GroupUtil
 
     static enhance()
     {
+        GroupUtil.enhanceTeams();
         ElementUtil.ELEMENT_TASKS.set("group-characters-tab", e=>GroupUtil.updateCharacters(Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.VAR).groupParams, document.querySelector("#group")));
         GroupUtil.enhanceMatches();
         GroupUtil.enhanceClanHistory();
+    }
+
+    static updateGroupTeams()
+    {
+        const groupSection = document.querySelector("#group");
+        const teamsContainer = groupSection.querySelector(":scope .group-teams");
+        const fd = new FormData(document.querySelector("#group-teams-form"));
+        return Util.load(teamsContainer, ()=>GroupUtil.updateTeams(groupSection, fd.get("queue"), fd.get("season")));
+    }
+
+    static enhanceTeams()
+    {
+        ElementUtil.ELEMENT_TASKS.set("group-teams-tab", GroupUtil.updateGroupTeams);
+        document.querySelectorAll("#group-teams-form .form-control").forEach(ctl=>ctl.addEventListener("change", e=>{
+            const container = e.target.closest(".group-teams");
+            ElementUtil.executeTask(container.id, ()=>{
+                GroupUtil.resetTeams(container);
+                GroupUtil.updateGroupTeams();
+            });
+        }));
     }
 
     static enhanceMatches()

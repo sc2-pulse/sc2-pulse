@@ -49,6 +49,20 @@
                         </li>
                         <li class="nav-item">
                             <a
+                                    id="group-teams-tab"
+                                    class="nav-link"
+                                    data-toggle="pill"
+                                    data-target="#group-teams"
+                                    href="#group-teams"
+                                    role="tab"
+                                    aria-controls="group-teams"
+                                    aria-selected="false"
+                            >
+                                Teams
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a
                                     id="group-characters-tab"
                                     class="nav-link"
                                     data-toggle="pill"
@@ -110,6 +124,26 @@
                             <h4>Clans</h4>
                             <div th:replace="~{fragments/table :: clan('group-group-clans-table-container', 'group-group-clans-table', 'table-clan table-selectable-row')}"></div>
                         </section>
+                    </section>
+                    <section id="group-teams" class="group-teams container-loading loading-none tab-pane fade" data-view-title="Teams">
+                        <header>
+                            <h3>Teams</h3>
+                            <form id="group-teams-form" class="d-flex form-flex flex-wrap-gap justify-content-center mb-3">
+                                <div class="form-group">
+                                    <label for="group-teams-queue">Mode</label>
+                                    <select class="form-control serializable" id="group-teams-queue" name="queue" required="required">
+                                        <option th:replace="~{fragments/form::team-format-options(false)}"></option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label for="group-teams-season">Season</label>
+                                    <select class="form-control season-picker" id="group-teams-season" name="season" required="required">
+                                    </select>
+                                </div>
+                            </form>
+                        </header>
+                        <div th:replace="~{fragments/table :: team('group-teams-table-container', 'group-teams-table', 'table-team teams table-selectable-row', false)}"></div>
+                        <div th:replace="~{fragments/section :: loading-indicator}"></div>
                     </section>
                     <section id="group-characters" class="group-characters container-loading loading-none tab-pane fade" data-view-title="Characters">
                         <div th:replace="~{fragments/table :: player-search('group-characters-table', 'Characters', 'table-character table-selectable-row')}"></div>
