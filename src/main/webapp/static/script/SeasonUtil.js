@@ -51,6 +51,7 @@ class SeasonUtil
                 option.setAttribute("value", season.battlenetId);
                 seasonPicker.appendChild(option);
             }
+            seasonPicker.value = Session.currentSeasons[0].battlenetId;
         }
     }
 
