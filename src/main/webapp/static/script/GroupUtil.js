@@ -172,12 +172,11 @@ class GroupUtil
 
     static resetMatches(section)
     {
-        return ElementUtil.executeTask(section.id, ()=>{
-            const view = ViewUtil.getView(section);
-            ElementUtil.removeChildren(section.querySelector(":scope .matches tbody"));
-            Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = [];
-            Model.DATA.get(view).get(VIEW_DATA.TEAMS).result = [];
-        });
+        Util.resetLoadingIndicator(section);
+        const view = ViewUtil.getView(section);
+        ElementUtil.removeChildren(section.querySelector(":scope .matches tbody"));
+        Model.DATA.get(view).get(VIEW_DATA.SEARCH).matches = [];
+        Model.DATA.get(view).get(VIEW_DATA.TEAMS).result = [];
     }
 
     static getClanHistory(params)
@@ -291,11 +290,13 @@ class GroupUtil
             1));
         document.querySelector("#matches-type-group").addEventListener("change",
             evt=>window.setTimeout(timeout=>{
-                GroupUtil.resetMatches(matchContainer);
-                Util.load(matchContainer, ()=>GroupUtil.updateMatches(
-                    groupSection,
-                    localStorage.getItem("matches-type-group") || "all"
-                ));
+                ElementUtil.executeTask(matchContainer.id, ()=>{
+                    GroupUtil.resetMatches(matchContainer);
+                    Util.load(matchContainer, ()=>GroupUtil.updateMatches(
+                        groupSection,
+                        localStorage.getItem("matches-type-group") || "all"
+                    ));
+                });
             }, 1));
     }
 
