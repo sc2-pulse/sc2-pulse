@@ -105,7 +105,7 @@ class GroupUtil
     {
         const view = ViewUtil.getView(container);
         const teams = Model.DATA.get(view).get(VIEW_DATA.SEARCH).teams;
-        TeamUtil.updateTeamsTable(container.querySelector(":scope .table-team"), {result: teams});
+        TeamUtil.updateTeamsTable(container.querySelector(":scope .table-team"), {result: teams || []});
     }
 
     static updateTeams(section, queue, season)
