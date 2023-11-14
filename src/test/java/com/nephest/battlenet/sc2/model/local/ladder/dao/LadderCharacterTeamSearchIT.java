@@ -54,6 +54,7 @@ public class LadderCharacterTeamSearchIT
 {
 
     public static final TeamType TEAM_TYPE = TeamType.ARRANGED;
+    public static final TeamType OTHER_TEAM_TYPE = TeamType.RANDOM;
     public static final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
 
     @Autowired
@@ -112,7 +113,7 @@ public class LadderCharacterTeamSearchIT
         );
         team2 = seasonGenerator.createTeam
         (
-            season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE, bronze1,
+            season1, new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, OTHER_TEAM_TYPE), TIER_TYPE, bronze1,
             BigInteger.valueOf(10000L), 2L, 1, 2, 3, 4, characters
         );
         team3 = seasonGenerator.createTeam
@@ -163,7 +164,7 @@ public class LadderCharacterTeamSearchIT
         assertEquals(4, teams.size());
 
         // order by team.season DESC
-        // team.queue_type ASC, team.team_type ASC, team.league_type DESC
+        // team.queue_type ASC, team.league_type DESC
         // team.rating DESC, team.id ASC
 
         assertEquals(team3.getId(), teams.get(0).getId());
@@ -198,7 +199,7 @@ public class LadderCharacterTeamSearchIT
         assertEquals(3, teams.size());
 
         // order by team.season DESC
-        // team.queue_type ASC, team.team_type ASC, team.league_type DESC
+        // team.queue_type ASC, team.league_type DESC
         // team.rating DESC, team.id ASC
 
         assertEquals(team4.getId(), teams.get(0).getId());
@@ -229,7 +230,7 @@ public class LadderCharacterTeamSearchIT
         assertEquals(3, teams.size());
 
         // order by team.season DESC
-        // team.queue_type ASC, team.team_type ASC, team.league_type DESC
+        // team.queue_type ASC, team.league_type DESC
         // team.rating DESC, team.id ASC
 
         assertEquals(team3.getId(), teams.get(0).getId());

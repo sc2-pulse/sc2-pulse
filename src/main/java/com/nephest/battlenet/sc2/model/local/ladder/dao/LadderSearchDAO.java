@@ -160,10 +160,13 @@ public class LadderSearchDAO
         + "LEFT JOIN player_character_report AS confirmed_cheater_report "
             + "ON player_character.id = confirmed_cheater_report.player_character_id "
             + "AND confirmed_cheater_report.type = :cheaterReportType "
-            + "AND confirmed_cheater_report.status = true "
+            + "AND confirmed_cheater_report.status = true ";
 
-        + "ORDER BY team.season DESC, "
+    private static final String SEARCH_ORDER = "ORDER BY team.season DESC, "
         + "team.queue_type ASC, team.team_type ASC, team.rating DESC, team.id ASC, "
+        + "player_character.id ASC ";
+    private static final String QUEUE_ORDER = "ORDER BY team.season DESC, "
+        + "team.queue_type ASC, team.rating DESC, team.id ASC, "
         + "player_character.id ASC ";
 
     private static final String CHARACTER_TEAM_IDS_UNORDERED_QUERY =
@@ -174,7 +177,8 @@ public class LadderSearchDAO
         + "AND (array_length(:queues::smallint[], 1) IS NULL OR team_queue_type = ANY(:queues)) ";
     private static final String FIND_CHARACTER_TEAM_MEMBERS_QUERY =
         "WITH team_filtered AS (" + CHARACTER_TEAM_IDS_UNORDERED_QUERY + ") "
-        + FIND_CHARACTER_TEAM_MEMBERS_TAIL;
+        + FIND_CHARACTER_TEAM_MEMBERS_TAIL
+        + QUEUE_ORDER;
 
     private static final String FIND_CHARACTER_TEAM_MEMBERS_LIMIT_QUERY =
         "WITH team_unordered_filter AS (" + CHARACTER_TEAM_IDS_UNORDERED_QUERY + "), "
@@ -187,7 +191,8 @@ public class LadderSearchDAO
             + "team.queue_type ASC, team.team_type ASC, team.rating DESC, team.id ASC "
             + "LIMIT :limit"
         + ") "
-        + FIND_CHARACTER_TEAM_MEMBERS_TAIL;
+        + FIND_CHARACTER_TEAM_MEMBERS_TAIL
+        + QUEUE_ORDER;
 
     private static final String FIND_LEGACY_TEAM_MEMBERS =
         "SELECT "
