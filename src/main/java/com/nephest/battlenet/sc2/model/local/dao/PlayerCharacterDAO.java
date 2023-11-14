@@ -441,6 +441,12 @@ public class PlayerCharacterDAO
         + "WHERE updated <= :updatedMax "
         + "AND (array_length(:regions::smallint[], 1) IS NULL OR region = ANY(:regions)) ";
 
+    private static final String FIND_IDS_BY_ACCOUNT_IDS =
+        "SELECT id "
+        + "FROM player_character "
+        + "WHERE account_id IN(:accountIds)";
+
+
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
     private static ResultSetExtractor<PlayerCharacter> STD_EXTRACTOR;
     private static ResultSetExtractor<BookmarkedResult<List<PlayerCharacter>>> BOOKMARKED_STD_ROW_EXTRACTOR;
@@ -756,6 +762,15 @@ public class PlayerCharacterDAO
             .addValue("nameLike", nameLike)
             .addValue("limit", limit);
         return template.queryForList(FIND_NAMES_WITHOUT_DISCRIMINATOR_BY_NAME_LIKE, params, String.class);
+    }
+
+    public List<Long> findIdsByAccountIds(Set<Long> accountIds)
+    {
+        if(accountIds.isEmpty()) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("accountIds", accountIds);
+        return template.queryForList(FIND_IDS_BY_ACCOUNT_IDS, params, Long.class);
     }
 
 }
