@@ -36,6 +36,7 @@ implements HandlerMethodArgumentResolver
     private static final MethodParameter CHARACTER_PARAMETER;
     private static final MethodParameter CLAN_PARAMETER;
     private static final MethodParameter PRO_PLAYER_PARAMETER;
+    private static final MethodParameter ACCOUNT_PARAMETER;
     static
     {
         try
@@ -43,11 +44,12 @@ implements HandlerMethodArgumentResolver
             Method method = CharacterGroupArgumentResolver.class.getDeclaredMethod
             (
                 "getCharacterIdsDescriptor",
-                Set.class, Set.class, Set.class
+                Set.class, Set.class, Set.class, Set.class
             );
             CHARACTER_PARAMETER = new MethodParameter(method, 0);
             CLAN_PARAMETER = new MethodParameter(method, 1);
             PRO_PLAYER_PARAMETER = new MethodParameter(method, 2);
+            ACCOUNT_PARAMETER = new MethodParameter(method, 3);
         }
         catch (NoSuchMethodException e)
         {
@@ -58,6 +60,7 @@ implements HandlerMethodArgumentResolver
     public static final int CHARACTERS_MAX = 500;
     public static final int CLANS_MAX = 20;
     public static final int PRO_PLAYERS_MAX = CHARACTERS_MAX / 10;
+    public static final int ACCOUNTS_MAX = CHARACTERS_MAX;
 
     private final RequestParamMethodArgumentResolver paramResolver
         = new RequestParamMethodArgumentResolver(true);
@@ -79,11 +82,18 @@ implements HandlerMethodArgumentResolver
     (
         Set<Long> characterIds,
         Set<Integer> clanIds,
-        Set<Long> proPlayerIds
+        Set<Long> proPlayerIds,
+        Set<Long> accountIds
     )
     {
         String msg = null;
-        if(characterIds.isEmpty() && clanIds.isEmpty() && proPlayerIds.isEmpty())
+        if
+        (
+            characterIds.isEmpty()
+                && clanIds.isEmpty()
+                && proPlayerIds.isEmpty()
+                && accountIds.isEmpty()
+        )
         {
             msg = "At least one group id is required";
         }
@@ -98,6 +108,9 @@ implements HandlerMethodArgumentResolver
         else if(proPlayerIds.size() > PRO_PLAYERS_MAX)
         {
             msg = "Max size of pro players exceeded: " + PRO_PLAYERS_MAX;
+        } else if(accountIds.size() > ACCOUNTS_MAX)
+        {
+            msg = "Max size of accounts exceeded: " + ACCOUNTS_MAX;
         }
         return Optional.ofNullable(msg);
     }
@@ -106,10 +119,11 @@ implements HandlerMethodArgumentResolver
     (
         Set<Long> characterIds,
         Set<Integer> clanIds,
-        Set<Long> proPlayerIds
+        Set<Long> proPlayerIds,
+        Set<Long> accountIds
     )
     {
-        return checkIds(characterIds, clanIds, proPlayerIds)
+        return checkIds(characterIds, clanIds, proPlayerIds, accountIds)
             .map(error->ResponseEntity.badRequest().body(error));
     }
 
@@ -135,10 +149,12 @@ implements HandlerMethodArgumentResolver
             .resolveArgument(CLAN_PARAMETER, mavContainer, webRequest, binderFactory);
         Set<Long> proPlayerIds = (Set<Long>) paramResolver
             .resolveArgument(PRO_PLAYER_PARAMETER, mavContainer, webRequest, binderFactory);
-        String error = checkIds(characterIds, clanIds, proPlayerIds).orElse(null);
+        Set<Long> accountIds = (Set<Long>) paramResolver
+            .resolveArgument(ACCOUNT_PARAMETER, mavContainer, webRequest, binderFactory);
+        String error = checkIds(characterIds, clanIds, proPlayerIds, accountIds).orElse(null);
         if(error != null) throw new ServletRequestBindingException(error);
 
-        Set<Long> result = resolve(characterIds, clanIds, proPlayerIds);
+        Set<Long> result = resolve(characterIds, clanIds, proPlayerIds, accountIds);
         CharacterGroup annotation = parameter.getParameterAnnotation(CharacterGroup.class);
         if(annotation.flatRequired() && result.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Flattened character group is empty");
@@ -151,14 +167,16 @@ implements HandlerMethodArgumentResolver
     (
         Set<Long> characterIds,
         Set<Integer> clanIds,
-        Set<Long> proPlayerIds
+        Set<Long> proPlayerIds,
+        Set<Long> accountIds
     )
     {
         return Stream.of
         (
             characterIds,
             resolveClans(clanIds),
-            resolveProPlayers(proPlayerIds)
+            resolveProPlayers(proPlayerIds),
+            resolveAccounts(accountIds)
         )
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
@@ -181,11 +199,19 @@ implements HandlerMethodArgumentResolver
             .findCharacterIdsByProPlayerIds(proPlayerIds));
     }
 
+    private Set<Long> resolveAccounts(Set<Long> accountIds)
+    {
+        if(accountIds.isEmpty()) return Set.of();
+
+        return new HashSet<>(playerCharacterDAO.findIdsByAccountIds(accountIds));
+    }
+
     private void getCharacterIdsDescriptor
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
-        @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds
+        @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds,
+        @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds
     )
     {
     }

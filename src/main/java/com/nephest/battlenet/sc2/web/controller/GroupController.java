@@ -8,7 +8,9 @@ import static com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgum
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.inner.Group;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
@@ -56,6 +58,9 @@ public class GroupController
     private ClanDAO clanDAO;
 
     @Autowired
+    private AccountDAO accountDAO;
+
+    @Autowired
     private LadderClanMemberEventDAO ladderClanMemberEventDAO;
 
     @Autowired
@@ -69,10 +74,11 @@ public class GroupController
     (
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
-        @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds
+        @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds,
+        @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds
     )
     {
-        return areIdsInvalid(characterIds, clanIds, proPlayerIds)
+        return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds)
             .orElseGet(()->
             {
                 List<LadderDistinctCharacter> characters = ladderCharacterDAO
@@ -80,9 +86,14 @@ public class GroupController
                 List<Clan> clans = clanDAO.findByIds(clanIds);
                 List<LadderProPlayer> proPlayers = ladderProPlayerDAO
                     .findByIds(proPlayerIds);
-                return characters.isEmpty() && clans.isEmpty() && proPlayerIds.isEmpty()
-                    ? ResponseEntity.notFound().build()
-                    : ResponseEntity.ok(new Group(characters, clans, proPlayers));
+                List<Account> accounts = accountDAO.findByIds(accountIds);
+                accounts.sort(Account.NATURAL_ID_COMPARATOR);
+                return characters.isEmpty()
+                    && clans.isEmpty()
+                    && proPlayerIds.isEmpty()
+                    && accounts.isEmpty()
+                        ? ResponseEntity.notFound().build()
+                        : ResponseEntity.ok(new Group(characters, clans, proPlayers, accounts));
             });
     }
 
@@ -99,6 +110,7 @@ public class GroupController
         @RequestParam(name = "characterId", required = false, defaultValue = "") Set<Long> characterIds,
         @RequestParam(name = "clanId", required = false, defaultValue = "") Set<Integer> clanIds,
         @RequestParam(name = "proPlayerId", required = false, defaultValue = "") Set<Long> proPlayerIds,
+        @RequestParam(name = "accountId", required = false, defaultValue = "") Set<Long> accountIds,
         @RequestParam(name = "createdCursor", required = false) OffsetDateTime createdCursor,
         @RequestParam(name = "characterIdCursor", required = false, defaultValue = Long.MAX_VALUE + "") Long characterIdCursor,
         @RequestParam(name = "limit", required = false, defaultValue = CLAN_MEMBER_EVENT_PAGE_SIZE + "") Integer limit
@@ -107,10 +119,10 @@ public class GroupController
         if(limit > CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
             return ResponseEntity.badRequest().body("Max page size exceeded: " + CLAN_MEMBER_EVENT_PAGE_SIZE_MAX);
         OffsetDateTime cCursor = createdCursor != null ? createdCursor : OffsetDateTime.now();
-        return areIdsInvalid(characterIds, clanIds, proPlayerIds)
+        return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds)
             .orElseGet(()->ResponseEntity.of(ladderClanMemberEventDAO.find
             (
-                resolver.resolve(characterIds, Set.of(), proPlayerIds),
+                resolver.resolve(characterIds, Set.of(), proPlayerIds, accountIds),
                 clanIds,
                 cCursor,
                 characterIdCursor,

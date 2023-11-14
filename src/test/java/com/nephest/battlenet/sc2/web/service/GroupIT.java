@@ -148,6 +148,12 @@ public class GroupIT
                     String.valueOf(initGroup.getProPlayers().get(0).getProPlayer().getId()),
                     String.valueOf(initGroup.getProPlayers().get(1).getProPlayer().getId())
                 )
+                .queryParam
+                (
+                    "accountId",
+                    String.valueOf(5L),
+                    String.valueOf(15L)
+                )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
@@ -193,6 +199,14 @@ public class GroupIT
             .usingRecursiveComparison().isEqualTo(initGroup.getProPlayers().get(0));
         Assertions.assertThat(result.getProPlayers().get(1))
             .usingRecursiveComparison().isEqualTo(initGroup.getProPlayers().get(1));
+
+        assertEquals(2, result.getAccounts().size());
+        Assertions.assertThat(result.getAccounts())
+            .usingRecursiveComparison()
+            .isEqualTo(List.of(
+                new Account(15L, Partition.GLOBAL, "battletag#140"),
+                new Account(5L, Partition.GLOBAL, "battletag#40")
+            ));
     }
 
 
@@ -219,12 +233,17 @@ public class GroupIT
                 "proPlayerId",
                 String.valueOf(group.getProPlayers().get(0).getProPlayer().getId())
             )
+            .queryParam
+            (
+                "accountId",
+                String.valueOf(7)
+            )
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), Long[].class);
         Arrays.sort(result);
-        Long[] expectedResult = new Long[]{1L, 2L, 11L, 12L, 20L};
+        Long[] expectedResult = new Long[]{1L, 2L, 7L, 11L, 12L, 20L};
         assertArrayEquals(expectedResult, result);
     }
 
@@ -270,7 +289,7 @@ public class GroupIT
             .map(ProPlayer::getId)
             .collect(Collectors.toSet()));
 
-        return new Group(List.of(), Arrays.asList(clans), ladderProPlayers);
+        return new Group(List.of(), Arrays.asList(clans), ladderProPlayers, List.of());
     }
 
     @Test
@@ -349,6 +368,18 @@ public class GroupIT
             .map(String::valueOf)
             .toArray(String[]::new);
         mvc.perform(get("/api/group/flat").queryParam("proPlayerId", longIdList))
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    public void whenAccountSizeIsExceeded_thenBadRequest()
+    throws Exception
+    {
+        String[] longIdList = LongStream.range(0, CharacterGroupArgumentResolver.ACCOUNTS_MAX + 1)
+            .boxed()
+            .map(String::valueOf)
+            .toArray(String[]::new);
+        mvc.perform(get("/api/group/flat").queryParam("accountId", longIdList))
             .andExpect(status().isBadRequest());
     }
 

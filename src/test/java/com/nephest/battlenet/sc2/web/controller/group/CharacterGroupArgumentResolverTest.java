@@ -29,7 +29,7 @@ public class CharacterGroupArgumentResolverTest
     {
         verifyBadRequest
         (
-            areIdsInvalid(Set.of(), Set.of(), Set.of()).orElseThrow(),
+            areIdsInvalid(Set.of(), Set.of(), Set.of(), Set.of()).orElseThrow(),
             "At least one group id is required"
         );
     }
@@ -43,7 +43,7 @@ public class CharacterGroupArgumentResolverTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            areIdsInvalid(bigCharacterSet, Set.of(), Set.of()).orElseThrow(),
+            areIdsInvalid(bigCharacterSet, Set.of(), Set.of(), Set.of()).orElseThrow(),
             "Max size of characters exceeded: " + CharacterGroupArgumentResolver.CHARACTERS_MAX
         );
     }
@@ -57,7 +57,7 @@ public class CharacterGroupArgumentResolverTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            areIdsInvalid(Set.of(), bigClanSet, Set.of()).orElseThrow(),
+            areIdsInvalid(Set.of(), bigClanSet, Set.of(), Set.of()).orElseThrow(),
             "Max size of clans exceeded: " + CharacterGroupArgumentResolver.CLANS_MAX
         );
     }
@@ -71,8 +71,22 @@ public class CharacterGroupArgumentResolverTest
             .collect(Collectors.toSet());
         verifyBadRequest
         (
-            areIdsInvalid(Set.of(), Set.of(), bigProPlayerSet).orElseThrow(),
+            areIdsInvalid(Set.of(), Set.of(), bigProPlayerSet, Set.of()).orElseThrow(),
             "Max size of pro players exceeded: " + CharacterGroupArgumentResolver.PRO_PLAYERS_MAX
+        );
+    }
+
+    @Test
+    public void whenAccountSizeIsExceeded_thenBadRequest()
+    {
+        Set<Long> bigAccountSet = LongStream
+            .range(0, CharacterGroupArgumentResolver.ACCOUNTS_MAX + 1)
+            .boxed()
+            .collect(Collectors.toSet());
+        verifyBadRequest
+        (
+            areIdsInvalid(Set.of(), Set.of(), Set.of(), bigAccountSet).orElseThrow(),
+            "Max size of accounts exceeded: " + CharacterGroupArgumentResolver.ACCOUNTS_MAX
         );
     }
 
@@ -91,7 +105,11 @@ public class CharacterGroupArgumentResolverTest
             .range(0, CharacterGroupArgumentResolver.PRO_PLAYERS_MAX)
             .boxed()
             .collect(Collectors.toSet());
-        assertTrue(areIdsInvalid(characterSet, clanSet, proPlayerSet).isEmpty());
+        Set<Long> accountSet = LongStream
+            .range(0, CharacterGroupArgumentResolver.ACCOUNTS_MAX)
+            .boxed()
+            .collect(Collectors.toSet());
+        assertTrue(areIdsInvalid(characterSet, clanSet, proPlayerSet, accountSet).isEmpty());
     }
 
 }
