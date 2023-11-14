@@ -12,6 +12,7 @@ class TeamUtil
         if(clear) ElementUtil.removeChildren(ladderBody);
 
         let nonCheaterIx = 0;
+        let lastQueue = null;
         for(let i = 0; i < searchResult.result.length; i++)
         {
             const team = searchResult.result[i];
@@ -25,7 +26,10 @@ class TeamUtil
             row.setAttribute("data-team-id", team.id);
             if(team.dateTime) row.setAttribute("data-team-date-time", team.dateTime);
             const isCheater = TeamUtil.isCheaterTeam(team);
-            if(fullMode) row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
+            if(fullMode) {
+                row.insertCell().appendChild(TeamUtil.createTeamFormatInfo(team));
+                if(lastQueue != null && team.league.queueType != lastQueue) row.classList.add("section-splitter");
+            }
             TeamUtil.appendRankInfo(TableUtil.createRowTh(row), searchResult, team, isCheater ? -1 : nonCheaterIx);
             TableUtil.insertCell(row, "rating").textContent = team.rating;
             TeamUtil.appendLeagueDiv(row.insertCell(), team);
@@ -40,6 +44,7 @@ class TeamUtil
             } else {
                 nonCheaterIx++;
             }
+            lastQueue = team.league.queueType;
         }
 
         $(table).popover
