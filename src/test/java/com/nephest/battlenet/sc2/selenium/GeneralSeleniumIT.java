@@ -396,19 +396,25 @@ public class GeneralSeleniumIT
     }
 
     @Test
-    public void testGroup()
-    {
-        testClanGroup(driver, wait);
-        checkJsErrors();
-    }
-
-    private static void testClanGroup(WebDriver driver, WebDriverWait wait)
+    public void testClanGroup()
     {
         loadMainPage(driver, wait);
         clickAndWait(driver, wait, "#search-all-tab", "#search.show.active");
         clickAndWait(driver, wait, "#search-clan-tab", "#search-clan.show.active");
         clickAndWait(driver, wait, "#form-search-clan button[type=\"submit\"]", "#search-result-clan-all:not(.d-none)");
         clickAndWait(driver, wait, "#search-result-clan .clan-auto-search", "#group:not(.d-none)");
+        switchTabsAndToggleInputs(driver, wait, "#group-tabs");
+        checkJsErrors();
+    }
+
+    @Test
+    public void testAccountGroup()
+    {
+        loadMainPage(driver, wait);
+        clickAndWait(driver, wait, "#stats-tab", "#stats.show.active");
+        clickAndWait(driver, wait, "#form-ladder button[type=\"submit\"]", "tr[data-team-id]");
+        clickAndWait(driver, wait, "#ladder a.player-link", "#player-info.modal.show");
+        clickAndWait(driver, wait, "#player-info .group-link", "#group:not(.d-none)");
         switchTabsAndToggleInputs(driver, wait, "#group-tabs");
         checkJsErrors();
     }

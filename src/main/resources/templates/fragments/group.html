@@ -124,6 +124,14 @@
                             <h4>Clans</h4>
                             <div th:replace="~{fragments/table :: clan('group-group-clans-table-container', 'group-group-clans-table', 'table-clan table-selectable-row')}"></div>
                         </section>
+                        <section>
+                            <h4>Players</h4>
+                            <div th:replace="~{fragments/section :: container-generic('players')}"></div>
+                        </section>
+                        <section>
+                            <h4>Accounts</h4>
+                            <div th:replace="~{fragments/section :: container-generic('accounts')}"></div>
+                        </section>
                     </section>
                     <section id="group-teams" class="group-teams container-loading loading-none tab-pane fade" data-view-title="Teams">
                         <header>

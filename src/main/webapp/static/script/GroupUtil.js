@@ -33,6 +33,16 @@ class GroupUtil
             table=>ClanUtil.updateClanTable(table,  group.clans),
             section.querySelector(":scope .table-clan")
         );
+        if(group.proPlayers && group.proPlayers.length > 0) GroupUtil.updateGroupSection(
+            container=>ElementUtil.updateGenericContainer(container, group.proPlayers
+                .map(CharacterUtil.renderLadderProPlayerGroupLink)),
+            section.querySelector(":scope .players")
+        );
+        if(group.accounts && group.accounts.length > 0) GroupUtil.updateGroupSection(
+            container=>ElementUtil.updateGenericContainer(container, group.accounts
+                .map(CharacterUtil.createAccountGroupLink)),
+            section.querySelector(":scope .accounts")
+        );
     }
 
     static updateGroupSection(updater, section)
@@ -46,10 +56,16 @@ class GroupUtil
         let text;
         if(group.clans && group.clans.length > 0) {
             text = ClanUtil.generateClanName(group.clans[0], true);
+        } else if(group.proPlayers && group.proPlayers.length > 0) {
+            text = CharacterUtil.renderLadderProPlayer(group.proPlayers[0]);
+        } else if(group.accounts && group.accounts.length > 0) {
+            text = CharacterUtil.renderAccount(group.accounts[0]);
         } else if(group.characters && group.characters.length > 0) {
             text = Util.unmaskName(group.characters[0].members).unmaskedName;
         }
         const count = (group.clans && group.clans.length || 0)
+            + (group.proPlayers && group.proPlayers.length || 0)
+            + (group.accounts && group.accounts.length || 0)
             + (group.characters && group.characters.length || 0)
             - 1;
         if(count > 0) text += `(+${count})`;
@@ -317,12 +333,28 @@ class GroupUtil
         return GroupUtil.loadAndShowGroup(Util.deleteSearchParams(Util.getHrefUrlSearchParams(evt.target.closest("a"))));
     }
 
+    static createGroupLink(params, text = "")
+    {
+        const a = document.createElement("a");
+        a.textContent = text;
+        const fullParams = GroupUtil.fullUrlSearchParams(params);
+        a.setAttribute("href", `${ROOT_CONTEXT_PATH}?${fullParams.toString()}#group-group`);
+        a.addEventListener("click", GroupUtil.onGroupLinkClick);
+        return a;
+    }
+
     static enhance()
     {
+        GroupUtil.enhanceMisc();
         GroupUtil.enhanceTeams();
         ElementUtil.ELEMENT_TASKS.set("group-characters-tab", e=>GroupUtil.updateCharacters(Model.DATA.get(VIEW.GROUP).get(VIEW_DATA.VAR).groupParams, document.querySelector("#group")));
         GroupUtil.enhanceMatches();
         GroupUtil.enhanceClanHistory();
+    }
+
+    static enhanceMisc()
+    {
+        document.querySelectorAll(".group-link").forEach(link=>link.addEventListener("click", GroupUtil.onGroupLinkClick));
     }
 
     static updateGroupTeams()

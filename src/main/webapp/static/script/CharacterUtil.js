@@ -149,6 +149,11 @@ class CharacterUtil
                 CharacterUtil.updateCharacterLinkedCharactersView(id);
                 CharacterUtil.updateCharacterMmrHistoryView();
                 CharacterUtil.updateCharacterReportsView();
+                CharacterUtil.updateCharacterGroupLink(
+                    document.querySelector("#player-info .group-link"),
+                    Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH),
+                    Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR)
+                );
                 for(const link of document.querySelectorAll(".character-link-follow-only[rel~=nofollow]")) link.relList.remove("nofollow");
                 Util.setGeneratingStatus(STATUS.SUCCESS);
             })
@@ -1318,6 +1323,18 @@ class CharacterUtil
             .then(r=>window.scrollTo(0, 0));
     }
 
+    static updateCharacterGroupLink(link, commonCharacter, character)
+    {
+        const params = new URLSearchParams();
+        if(commonCharacter.proPlayer != null) {
+            params.append("proPlayerId", commonCharacter.proPlayer.proPlayer.id);
+        } else {
+            params.append("accountId", character.accountId);
+        }
+        const fullParams = GroupUtil.fullUrlSearchParams(params);
+        link.setAttribute("href", `${ROOT_CONTEXT_PATH}?${fullParams.toString()}#group-group`);
+    }
+
     static updateCharacterReportsView()
     {
         const reportsContainer = document.querySelector("#character-reports");
@@ -1640,6 +1657,27 @@ class CharacterUtil
     {
         return (proPlayer.proTeam != null ? "[" + proPlayer.proTeam.shortName + "]" : "")
             + proPlayer.proPlayer.nickname;
+    }
+
+    static renderLadderProPlayerGroupLink(ladderProPlayer)
+    {
+        return GroupUtil.createGroupLink(
+            new URLSearchParams([["proPlayerId", ladderProPlayer.proPlayer.id]]),
+            CharacterUtil.renderLadderProPlayer(ladderProPlayer)
+        );
+    }
+
+    static renderAccount(account)
+    {
+        return Util.isFakeBattleTag(account.battleTag) ? account.id : account.battleTag;
+    }
+
+    static createAccountGroupLink(account)
+    {
+        return GroupUtil.createGroupLink(
+            new URLSearchParams([["accountId", account.id]]),
+            CharacterUtil.renderAccount(account)
+        );
     }
 
 }
