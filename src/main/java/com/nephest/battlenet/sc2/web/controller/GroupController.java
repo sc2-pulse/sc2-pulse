@@ -25,6 +25,7 @@ import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentReso
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import java.time.OffsetDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -69,6 +70,11 @@ public class GroupController
     @Autowired
     private CharacterGroupArgumentResolver resolver;
 
+    private static final Comparator<Clan> CLAN_COMPARATOR = Comparator
+        .comparing(Clan::getActiveMembers, Comparator.nullsLast(Comparator.reverseOrder()))
+        .thenComparing(Clan::getMembers, Comparator.nullsLast(Comparator.reverseOrder()))
+        .thenComparing(Clan::getId);
+
     @GetMapping
     public ResponseEntity<?> getGroup
     (
@@ -84,10 +90,11 @@ public class GroupController
                 List<LadderDistinctCharacter> characters = ladderCharacterDAO
                     .findDistinctCharactersByCharacterIds(characterIds);
                 List<Clan> clans = clanDAO.findByIds(clanIds);
+                if(!clans.isEmpty()) clans.sort(CLAN_COMPARATOR);
                 List<LadderProPlayer> proPlayers = ladderProPlayerDAO
                     .findByIds(proPlayerIds);
                 List<Account> accounts = accountDAO.findByIds(accountIds);
-                accounts.sort(Account.NATURAL_ID_COMPARATOR);
+                if(!accounts.isEmpty()) accounts.sort(Account.NATURAL_ID_COMPARATOR);
                 return characters.isEmpty()
                     && clans.isEmpty()
                     && proPlayerIds.isEmpty()

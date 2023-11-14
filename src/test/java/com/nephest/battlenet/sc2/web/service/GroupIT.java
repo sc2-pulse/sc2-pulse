@@ -187,14 +187,12 @@ public class GroupIT
             ));
 
         assertEquals(2, result.getClans().size());
-        result.getClans().sort(Comparator.comparing(Clan::getId));
         Assertions.assertThat(result.getClans().get(0))
             .usingRecursiveComparison().isEqualTo(initGroup.getClans().get(0));
         Assertions.assertThat(result.getClans().get(1))
             .usingRecursiveComparison().isEqualTo(initGroup.getClans().get(1));
 
         assertEquals(2, result.getProPlayers().size());
-        result.getProPlayers().sort(Comparator.comparing(lpp->lpp.getProPlayer().getId()));
         Assertions.assertThat(result.getProPlayers().get(0))
             .usingRecursiveComparison().isEqualTo(initGroup.getProPlayers().get(0));
         Assertions.assertThat(result.getProPlayers().get(1))
