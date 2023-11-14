@@ -56,11 +56,7 @@ implements SlashCommand, AutoComplete
             .description("League, games played; Last, avg, and max MMR; 1v1 only")
             .addOption(ApplicationCommandOptionData.builder()
                 .name("name")
-                .description
-                (
-                    "name, btag#123, [cLaNtAg], battlenet:://, starcraft2.blizzard.com. "
-                    + "Clan tag is case sensitive."
-                )
+                .description("name, btag#123, [clantag], battlenet:://, starcraft2.blizzard.com.")
                 .type(ApplicationCommandOption.Type.STRING.getValue())
                 .required(true)
                 .autocomplete(true)

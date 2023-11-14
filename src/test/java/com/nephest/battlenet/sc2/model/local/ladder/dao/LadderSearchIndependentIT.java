@@ -304,7 +304,7 @@ public class LadderSearchIndependentIT
         verifyProCharacterAccountStats(byProNickname);
         List<LadderDistinctCharacter> byFullAccountName = ladderCharacterDAO.findDistinctCharacters("rEfaccount#123");
         verifyCharacterAccountStats(byFullAccountName);
-        List<LadderDistinctCharacter> byClanTag = ladderCharacterDAO.findDistinctCharacters("[clanTag]");
+        List<LadderDistinctCharacter> byClanTag = ladderCharacterDAO.findDistinctCharacters("[cLantag]");
         verifyCharacterAccountStats(byClanTag);
         LadderDistinctCharacter byProfileLink = ladderCharacterDAO
             .findDistinctCharacterByProfileLink("https://starcraft2.blizzard.com/en-us/profile/2/1/9998")

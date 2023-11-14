@@ -188,7 +188,7 @@ public class LadderCharacterDAO
         FIND_DISTINCT_CHARACTER_FORMAT,
         "INNER JOIN clan_member ON player_character.id = clan_member.player_character_id "
         + "INNER JOIN clan ON clan_member.clan_id = clan.id "
-        + "WHERE clan.tag = :clanTag ", ""
+        + "WHERE LOWER(clan.tag) = LOWER(:clanTag) ", ""
     );
 
     private static final String FIND_DISTINCT_CHARACTER_BY_FOLLOWING_QUERY = String.format
