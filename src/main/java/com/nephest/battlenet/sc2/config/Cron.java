@@ -286,8 +286,7 @@ public class Cron
                     statsService.updateCurrent
                     (
                         Map.of(region, LadderUpdateContext.ALL),
-                        false,
-                        updateService.getUpdateContext(null)
+                        false
                     ).values().stream()
                         .map(LadderUpdateTaskContext::getTasks)
                         .flatMap(Collection::stream)
