@@ -704,6 +704,13 @@ class ElementUtil
             .forEach(element=>element.classList.add("new"));
     }
 
+    static updateGenericContainer(container, elements, clear = true)
+    {
+        if(clear) ElementUtil.removeChildren(container);
+
+        elements.forEach(e=>container.appendChild(e));
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();
