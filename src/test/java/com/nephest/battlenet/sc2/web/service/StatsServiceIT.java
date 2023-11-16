@@ -37,7 +37,6 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
@@ -147,7 +146,7 @@ public class StatsServiceIT
 
         statsService.updateTeams(new BlizzardTeam[]{noBattletagTeam}, mock(Season.class),
             new League(1, 1, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            mock(LeagueTier.class), mock(Division.class), Instant.now());
+            mock(LeagueTier.class), mock(Division.class));
 
         verify(teamDAO, never()).merge(any());
     }

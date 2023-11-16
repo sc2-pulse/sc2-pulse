@@ -173,7 +173,7 @@ public class StatsServiceTest
 
         ss.updateTeams(new BlizzardTeam[]{noMembersTeam, zeroGamesTeam}, mock(Season.class),
             new League(1, 1, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            mock(LeagueTier.class), mock(Division.class), Instant.now());
+            mock(LeagueTier.class), mock(Division.class));
 
         verify(teamDAO, never()).merge(any());
     }
