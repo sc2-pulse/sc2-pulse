@@ -22,6 +22,7 @@ import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.PersonalService;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.ProPlayerService;
+import com.nephest.battlenet.sc2.web.service.SC2MetaService;
 import com.nephest.battlenet.sc2.web.service.SC2WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.StatusService;
@@ -53,6 +54,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardSC2API.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = BlizzardPrivacyService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = PersonalService.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = SC2MetaService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ProPlayerService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = StatsService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = ClanService.class),

@@ -31,6 +31,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -528,6 +529,22 @@ public class BlizzardSC2APIIT
         assertEquals(expectedRealm, character.getRealm());
         assertEquals(expectedId, character.getId());
         assertNotNull(character.getName());
+    }
+
+    @Test
+    public void testFetchPatches()
+    {
+        List<Patch> patches = api
+            .getPatches(Region.US, 0L, 2)
+            .collectList()
+            .block();
+        assertEquals(2, patches.size());
+        for(Patch patch : patches)
+        {
+            assertNotNull(patch.getId());
+            assertNotNull(patch.getVersion());
+            assertNotNull(patch.getPublished());
+        }
     }
 
 

@@ -1232,6 +1232,17 @@ CREATE TABLE "notification"
         ON DELETE CASCADE ON UPDATE CASCADE
 );
 
+CREATE TABLE "patch"
+(
+    "id" BIGINT NOT NULL,
+    "version" TEXT NOT NULL,
+    "published" TIMESTAMP WITH TIME ZONE NOT NULL,
+
+    PRIMARY KEY ("id")
+);
+
+CREATE INDEX "ix_patch_published" ON "patch"("published");
+
 CREATE TYPE player_character_summary AS
 (
     player_character_id BIGINT,

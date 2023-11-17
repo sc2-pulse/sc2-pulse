@@ -34,11 +34,13 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardProfileTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
+import com.nephest.battlenet.sc2.model.blizzard.cache.BlizzardCachePatchRoot;
 import com.nephest.battlenet.sc2.model.local.DoubleVar;
 import com.nephest.battlenet.sc2.model.local.DurationVar;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LongVar;
+import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.util.LogUtil;
@@ -131,6 +133,7 @@ extends BaseAPI
     private final Map<Region, InstantVar> forceRegionInstants = new EnumMap<>(Region.class);
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
+    private WebClient unauthorizedClient;
     private final Map<Region, LongVar> ignoreClientSslErrors = new EnumMap<>(Region.class);
     private final Map<Region, DurationVar> clientTimeouts = new EnumMap<>(Region.class);
     private final Map<Region, DoubleVar> requestsPerSecondCaps = new EnumMap<>(Region.class);
@@ -439,6 +442,10 @@ extends BaseAPI
                 .clientConnector(new ReactorClientHttpConnector(httpClient))
                 .apply(oauth2Client.oauth2Configuration()).build());
         }
+        HttpClient httpClient = getHttpClient(IO_TIMEOUT, false);
+        unauthorizedClient = WebServiceUtil.getWebClientBuilder(objectMapper, 1024 * 1024, ALL)
+            .clientConnector(new ReactorClientHttpConnector(httpClient))
+            .build();
     }
 
     protected void setRegionUri(String uri)
@@ -1396,6 +1403,44 @@ extends BaseAPI
                 ? getPlayerCharacters(region, profileId, true)
                 : getPlayerCharacters(region, profileId, false)
                     .onErrorResume(e->getPlayerCharacters(region, profileId, true));
+    }
+
+    public Flux<Patch> getPatches(Region region, Long minId, int limit)
+    {
+        ApiContext context = getContext(region, true);
+        return unauthorizedClient
+            .get()
+            .uri(region.getCacheUrl(),
+                b->b
+                .path("system/cms/oauth/api/patchnote/list")
+                .queryParam("program", "s2")
+                .queryParam("region", region.name())
+                .queryParam("locale", "enUS")
+                .queryParam("type", "RETAIL")
+                .queryParam("page", "1")
+                .queryParam("pageSize", limit)
+                .queryParam("orderBy", "buildNumber")
+                .queryParam("buildNumberMin", minId)
+                .build()
+            )
+            .accept(ALL)
+            .retrieve()
+            .bodyToMono(BlizzardCachePatchRoot.class)
+            .flatMapMany
+            (
+                root->root.getPatchNotes() != null
+                    ? Flux.fromArray(root.getPatchNotes())
+                    : Flux.empty()
+            )
+            .map(Patch::from)
+            .retryWhen(ReactorRateLimiter.retryWhen(
+                context.getRateLimiters(),
+                getRetry(region, WebServiceUtil.RETRY, true),
+                SYSTEM_REQUEST_LIMIT_PRIORITY_NAME))
+            .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters(),
+                SYSTEM_REQUEST_LIMIT_PRIORITY_NAME))
+            .doOnRequest(s->context.getHealthMonitor().addRequest())
+            .doOnError(t->context.getHealthMonitor().addError());
     }
 
 }
