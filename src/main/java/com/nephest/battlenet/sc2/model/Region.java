@@ -18,28 +18,36 @@ implements Identifiable, MultiAliasName
         1,
         "NA",
         Set.of("US", "United States", "America", "Americas", "North America"),
-        "https://us.api.blizzard.com/", "https://starcraft2.blizzard.com/en-us/api/"
+        "https://us.api.blizzard.com/",
+        "https://starcraft2.blizzard.com/en-us/api/",
+        "https://cache-us.battle.net"
     ),
     EU
     (
         2,
         "EU",
         Set.of("Europe"),
-        "https://eu.api.blizzard.com/", "https://starcraft2.blizzard.com/en-gb/api/"
+        "https://eu.api.blizzard.com/",
+        "https://starcraft2.blizzard.com/en-gb/api/",
+        "https://cache-eu.battle.net"
     ),
     KR
     (
         3,
         "KR",
         Set.of("Korea", "South Korea", "TW", "Taiwan", "Asia"),
-        "https://kr.api.blizzard.com/", "https://starcraft2.blizzard.com/ko-kr/api/"
+        "https://kr.api.blizzard.com/",
+        "https://starcraft2.blizzard.com/ko-kr/api/",
+        "https://cache-kr.battle.net"
     ),
     CN
     (
         5,
         "CN",
         Set.of("China"),
-        "https://gateway.battlenet.com.cn/", null
+        "https://gateway.battlenet.com.cn/",
+        null,
+        null
     );
 
     public static final Map<Region, Set<String>> ALL_NAMES_MAP =
@@ -50,14 +58,24 @@ implements Identifiable, MultiAliasName
     private final Set<String> additionalNames;
     private final String baseUrl;
     private final String baseWebUrl;
+    private final String cacheUrl;
 
-    Region(int id, String name, Set<String> additionalNames, String baseUrl, String baseWebUrl)
+    Region
+    (
+        int id,
+        String name,
+        Set<String> additionalNames,
+        String baseUrl,
+        String baseWebUrl,
+        String cacheUrl
+    )
     {
         this.id = id;
         this.name = name;
         this.additionalNames = additionalNames;
         this.baseUrl = baseUrl;
         this.baseWebUrl = baseWebUrl;
+        this.cacheUrl = cacheUrl;
     }
 
     public static Region from(String name)
@@ -115,6 +133,11 @@ implements Identifiable, MultiAliasName
     public String getBaseWebUrl()
     {
         return baseWebUrl;
+    }
+
+    public String getCacheUrl()
+    {
+        return cacheUrl;
     }
 
 }
