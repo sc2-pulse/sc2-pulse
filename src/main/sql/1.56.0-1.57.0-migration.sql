@@ -8,3 +8,6 @@ CREATE TABLE "patch"
 );
 
 CREATE INDEX "ix_patch_published" ON "patch"("published");
+
+ALTER TABLE "patch"
+    RENAME COLUMN "id" TO "build";

@@ -1234,11 +1234,11 @@ CREATE TABLE "notification"
 
 CREATE TABLE "patch"
 (
-    "id" BIGINT NOT NULL,
+    "build" BIGINT NOT NULL,
     "version" TEXT NOT NULL,
     "published" TIMESTAMP WITH TIME ZONE NOT NULL,
 
-    PRIMARY KEY ("id")
+    PRIMARY KEY ("build")
 );
 
 CREATE INDEX "ix_patch_published" ON "patch"("published");

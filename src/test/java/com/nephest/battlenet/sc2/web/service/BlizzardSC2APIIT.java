@@ -541,7 +541,7 @@ public class BlizzardSC2APIIT
         assertEquals(2, patches.size());
         for(Patch patch : patches)
         {
-            assertNotNull(patch.getId());
+            assertNotNull(patch.getBuild());
             assertNotNull(patch.getVersion());
             assertNotNull(patch.getPublished());
         }

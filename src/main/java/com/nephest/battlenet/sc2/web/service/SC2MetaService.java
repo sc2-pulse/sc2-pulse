@@ -77,7 +77,7 @@ public class SC2MetaService
     {
         int count = 0;
         long minId = patchDAO.findByPublishedMin(PATCH_START).stream()
-            .mapToLong(Patch::getId)
+            .mapToLong(Patch::getBuild)
             .max()
             .orElse(-1)
             + 1;
@@ -88,7 +88,7 @@ public class SC2MetaService
 
             count += patches.size();
             minId = patches.stream()
-                .mapToLong(Patch::getId)
+                .mapToLong(Patch::getBuild)
                 .max()
                 .orElseThrow()
                 + 1;

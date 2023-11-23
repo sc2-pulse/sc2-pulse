@@ -15,7 +15,7 @@ implements java.io.Serializable
     private static final long serialVersionUID = 1L;
 
     @NotNull
-    public Long id;
+    public Long build;
 
     @NotNull
     private String version;
@@ -27,9 +27,9 @@ implements java.io.Serializable
     {
     }
 
-    public Patch(Long id, String version, OffsetDateTime published)
+    public Patch(Long build, String version, OffsetDateTime published)
     {
-        this.id = id;
+        this.build = build;
         this.version = version;
         this.published = published;
     }
@@ -40,13 +40,13 @@ implements java.io.Serializable
         if (this == o) {return true;}
         if (!(o instanceof Patch)) {return false;}
         Patch patch = (Patch) o;
-        return Objects.equals(getId(), patch.getId());
+        return Objects.equals(getBuild(), patch.getBuild());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getId());
+        return Objects.hash(getBuild());
     }
 
     @Override
@@ -56,7 +56,7 @@ implements java.io.Serializable
         (
             "%s[%s]",
             Patch.class.getSimpleName(),
-            getId()
+            getBuild()
         );
     }
 
@@ -65,14 +65,14 @@ implements java.io.Serializable
         return new Patch(patch.getBuildNumber(), patch.getVersion(), patch.getPublish());
     }
 
-    public Long getId()
+    public Long getBuild()
     {
-        return id;
+        return build;
     }
 
-    public void setId(Long id)
+    public void setBuild(Long build)
     {
-        this.id = id;
+        this.build = build;
     }
 
     public String getVersion()

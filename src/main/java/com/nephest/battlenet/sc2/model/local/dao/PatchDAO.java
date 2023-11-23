@@ -23,7 +23,7 @@ public class PatchDAO
 {
 
     public static final String STD_SELECT =
-        "patch.id AS \"patch.id\", "
+        "patch.build AS \"patch.build\", "
         + "patch.version AS \"patch.version\", "
         + "patch.published AS \"patch.published\" ";
 
@@ -33,11 +33,11 @@ public class PatchDAO
             + "UPDATE patch "
             + "SET version = :version, "
             + "published = :published "
-            + "WHERE id = :id "
-            + "RETURNING id "
+            + "WHERE build = :build "
+            + "RETURNING build "
         + ") "
-        + "INSERT INTO patch(id, version, published) "
-        + "SELECT :id, :version, :published "
+        + "INSERT INTO patch(build, version, published) "
+        + "SELECT :build, :version, :published "
         + "WHERE NOT EXISTS (SELECT 1 FROM updated) ";
 
     private static final String FIND_BY_PUBLISHED_MIN =
@@ -48,7 +48,7 @@ public class PatchDAO
 
     public static final RowMapper<Patch> STD_ROW_MAPPER = (rs, i)->new Patch
     (
-        rs.getLong("patch.id"),
+        rs.getLong("patch.build"),
         rs.getString("patch.version"),
         rs.getObject("patch.published", OffsetDateTime.class)
     );
