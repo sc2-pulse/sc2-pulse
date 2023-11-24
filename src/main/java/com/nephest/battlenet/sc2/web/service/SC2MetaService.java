@@ -19,6 +19,7 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import reactor.core.publisher.Flux;
 
 @Service
 public class SC2MetaService
@@ -73,38 +74,46 @@ public class SC2MetaService
 
     @Scheduled(cron="0 15 5 * * *")
     @CacheEvict(cacheNames = "meta-patch", allEntries = true)
-    public int updatePatches()
+    public Set<Patch> updatePatches()
     {
-        int count = 0;
         long minId = patchDAO.findByPublishedMin(PATCH_START).stream()
             .mapToLong(Patch::getBuild)
             .max()
             .orElse(-1)
             + 1;
-        while(true)
-        {
-            Set<Patch> patches = updatePatches(minId);
-            if(patches.isEmpty()) break;
-
-            count += patches.size();
-            minId = patches.stream()
-                .mapToLong(Patch::getBuild)
-                .max()
-                .orElseThrow()
-                + 1;
-        }
-
-        if(count > 0) LOG.info("Updated {} patches", count);
-        return count;
-    }
-
-    private Set<Patch> updatePatches(long minId)
-    {
-        Set<Patch> patches = blizzardSC2API.getPatches(Region.US, minId, null, PATCH_BATCH_SIZE)
+        Set<Patch> patches = getPatches(minId, null)
             .collect(Collectors.toSet())
             .block();
         patchDAO.merge(patches);
+        if(!patches.isEmpty()) LOG.info("Updated {} patches", patches.size());
+
         return patches;
+    }
+
+    private Flux<Patch> getPatches(Long minId, Long maxId)
+    {
+        return blizzardSC2API
+            .getPatches(Region.US, minId, maxId, PATCH_BATCH_SIZE)
+            .collectList()
+            .flatMapMany(patches->getPatchesRecursively(patches, minId));
+    }
+
+    private Flux<Patch> getPatchesRecursively(List<Patch> patches, Long minId)
+    {
+        if(patches.isEmpty()) return Flux.empty();
+
+        long curMaxId = patches.stream()
+            .mapToLong(Patch::getBuild)
+            .min()
+            .orElseThrow()
+            - 1;
+        if(minId >= curMaxId) return Flux.fromIterable(patches);
+
+        return Flux.concat
+        (
+            Flux.fromIterable(patches),
+            getPatches(minId, curMaxId)
+        );
     }
 
 }

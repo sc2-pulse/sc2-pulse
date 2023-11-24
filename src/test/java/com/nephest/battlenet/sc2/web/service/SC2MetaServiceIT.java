@@ -15,8 +15,10 @@ import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.dao.PatchDAO;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
@@ -78,10 +80,12 @@ public class SC2MetaServiceIT
     public void testPatch()
     throws Exception
     {
-        List<Patch> recentPatches = api.getPatches(Region.US, 0L, null, 3)
+        int testBatchSize = SC2MetaService.PATCH_BATCH_SIZE * 2 + 1;
+        List<Patch> recentPatches = api
+            .getPatches(Region.US, null, null, testBatchSize)
             .collectList()
             .block();
-        assertEquals(3, recentPatches.size());
+        assertEquals(testBatchSize, recentPatches.size());
 
         mvc.perform
         (
@@ -91,7 +95,7 @@ public class SC2MetaServiceIT
             .andExpect(status().isNotFound())
             .andReturn();
 
-        Patch firstPatch = recentPatches.get(2);
+        Patch firstPatch = recentPatches.get(recentPatches.size() - 1);
         patchDAO.merge(Set.of(firstPatch));
         List<Patch> foundPatches1 = objectMapper.readValue(mvc.perform
         (
@@ -109,7 +113,14 @@ public class SC2MetaServiceIT
             .usingRecursiveComparison()
             .isEqualTo(List.of(firstPatch));
 
-        assertEquals(2, sc2MetaService.updatePatches());
+        Assertions.assertThat
+        (
+            sc2MetaService.updatePatches().stream()
+                .sorted(Comparator.comparing(Patch::getPublished, Comparator.reverseOrder()))
+                .collect(Collectors.toUnmodifiableList())
+        )
+            .usingRecursiveComparison()
+            .isEqualTo(recentPatches.subList(0, recentPatches.size() - 1));
 
         List<Patch> foundPatches2 = objectMapper.readValue(mvc.perform
         (
