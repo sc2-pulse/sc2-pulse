@@ -21,6 +21,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.util.UriBuilder;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
@@ -65,23 +66,24 @@ extends BaseAPI
         rateLimiter.refreshSlots(REQUESTS_PER_PERIOD);
     }
 
+    public static UriBuilder wikiContentQuery(UriBuilder builder, Set<String> names)
+    {
+        return builder.queryParam("action", "query")
+            .queryParam("titles", String.join("|", names))
+            .queryParam("prop", "revisions")
+            .queryParam("rvslots", "*")
+            .queryParam("rvprop", "content")
+            .queryParam("formatversion", "2")
+            .queryParam("format", "json");
+    }
+
     public Mono<LiquipediaMediaWikiRevisionQueryResult> getPlayer(Set<String> names)
     {
         if(names.isEmpty()) return Mono.empty();
 
         return getWebClient()
             .get()
-            .uri
-            (
-                b->b.queryParam("action", "query")
-                    .queryParam("titles", String.join("|", names))
-                    .queryParam("prop", "revisions")
-                    .queryParam("rvslots", "*")
-                    .queryParam("rvprop", "content")
-                    .queryParam("formatversion", "2")
-                    .queryParam("format", "json")
-                    .build()
-            )
+            .uri(builder->wikiContentQuery(builder, names).build())
             .accept(APPLICATION_JSON)
             .retrieve()
             .bodyToMono(LiquipediaMediaWikiRevisionQueryResult.class)
