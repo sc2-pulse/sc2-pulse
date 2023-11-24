@@ -100,7 +100,7 @@ public class SC2MetaService
 
     private Set<Patch> updatePatches(long minId)
     {
-        Set<Patch> patches = blizzardSC2API.getPatches(Region.US, minId, PATCH_BATCH_SIZE)
+        Set<Patch> patches = blizzardSC2API.getPatches(Region.US, minId, null, PATCH_BATCH_SIZE)
             .collect(Collectors.toSet())
             .block();
         patchDAO.merge(patches);

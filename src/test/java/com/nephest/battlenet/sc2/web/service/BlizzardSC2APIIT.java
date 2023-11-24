@@ -535,7 +535,7 @@ public class BlizzardSC2APIIT
     public void testFetchPatches()
     {
         List<Patch> patches = api
-            .getPatches(Region.US, 0L, 2)
+            .getPatches(Region.US, null, null, 2)
             .collectList()
             .block();
         assertEquals(2, patches.size());

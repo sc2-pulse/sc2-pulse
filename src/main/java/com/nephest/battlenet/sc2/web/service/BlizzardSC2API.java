@@ -1405,7 +1405,7 @@ extends BaseAPI
                     .onErrorResume(e->getPlayerCharacters(region, profileId, true));
     }
 
-    public Flux<Patch> getPatches(Region region, Long minId, int limit)
+    public Flux<Patch> getPatches(Region region, Long minId, Long maxId, int limit)
     {
         ApiContext context = getContext(region, true);
         return unauthorizedClient
@@ -1421,6 +1421,7 @@ extends BaseAPI
                 .queryParam("pageSize", limit)
                 .queryParam("orderBy", "buildNumber")
                 .queryParam("buildNumberMin", minId)
+                .queryParam("buildNumberMax", maxId)
                 .build()
             )
             .accept(ALL)

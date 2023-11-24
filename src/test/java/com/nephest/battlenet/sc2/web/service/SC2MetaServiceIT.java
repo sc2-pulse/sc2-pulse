@@ -78,7 +78,7 @@ public class SC2MetaServiceIT
     public void testPatch()
     throws Exception
     {
-        List<Patch> recentPatches = api.getPatches(Region.US, 0L, 3)
+        List<Patch> recentPatches = api.getPatches(Region.US, 0L, null, 3)
             .collectList()
             .block();
         assertEquals(3, recentPatches.size());
