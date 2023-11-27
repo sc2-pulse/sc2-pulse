@@ -77,7 +77,7 @@ extends BaseAPI
             .queryParam("format", "json");
     }
 
-    public Mono<LiquipediaMediaWikiRevisionQueryResult> getPlayer(Set<String> names)
+    public Mono<LiquipediaMediaWikiRevisionQueryResult> getPage(Set<String> names)
     {
         if(names.isEmpty()) return Mono.empty();
 
@@ -92,7 +92,7 @@ extends BaseAPI
 
     public Flux<LiquipediaPlayer> parsePlayers(Set<String> names)
     {
-        return getPlayer(names)
+        return getPage(names)
             .map(LiquipediaParser::parse)
             .flatMap(this::processRedirects)
             .flatMapIterable(Function.identity());
@@ -108,7 +108,7 @@ extends BaseAPI
             .collect(Collectors.toMap(LiquipediaPlayer::getRedirect, LiquipediaPlayer::getQueryName));
         if(redirects.isEmpty()) return Mono.just(players);
 
-        return getPlayer(redirects.keySet())
+        return getPage(redirects.keySet())
             .map(LiquipediaParser::parse)
             .map(redirectedPlayers->
             {
