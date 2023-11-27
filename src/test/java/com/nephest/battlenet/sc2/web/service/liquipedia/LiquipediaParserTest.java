@@ -5,13 +5,18 @@ package com.nephest.battlenet.sc2.web.service.liquipedia;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPatch;
 import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
 import com.nephest.battlenet.sc2.model.liquipedia.query.revision.LiquipediaMediaWikiRevisionQueryResult;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -152,6 +157,118 @@ public class LiquipediaParserTest
     public void testSanitizeUserUrl(String input, String expectedResult)
     {
         assertEquals(expectedResult, LiquipediaParser.sanitizeUserUrl(input));
+    }
+
+    @Test
+    public void testParsePatchList()
+    throws URISyntaxException, IOException
+    {
+        LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
+        (
+            LiquipediaParserTest.class,
+            "liquipedia/liquipedia-query-patches.json",
+            LiquipediaMediaWikiRevisionQueryResult.class
+        );
+
+        List<LiquipediaPatch> patches = LiquipediaParser.parsePatchList(result);
+        assertEquals(179, patches.size());
+
+        Assertions.assertThat(patches.get(0))
+            .usingRecursiveComparison()
+            .isEqualTo(new LiquipediaPatch(
+                91115L,
+                "5.0.12",
+                Map.of(Region.US, LocalDate.of(2023, 9, 29)),
+                null
+            ));
+        Assertions.assertThat(patches.get(178))
+            .usingRecursiveComparison()
+            .isEqualTo(new LiquipediaPatch(
+                16195L,
+                "1.0.1",
+                Map.of(Region.US, LocalDate.of(2010, 7, 30)),
+                null
+            ));
+        Assertions.assertThat(patches.get(10))
+            .usingRecursiveComparison()
+            .isEqualTo(new LiquipediaPatch(
+                81102L,
+                "5.0.2 BU",
+                Map.of
+                (
+                    Region.US, LocalDate.of(2020, 8, 20),
+                    Region.EU, LocalDate.of(2020, 8, 20),
+                    Region.KR, LocalDate.of(2020, 8, 20)
+                ),
+                true
+            ));
+    }
+
+    @Test
+    public void testParsePatchDetails()
+    throws URISyntaxException, IOException
+    {
+        LiquipediaMediaWikiRevisionQueryResult result = TestUtil.readResource
+        (
+            LiquipediaParserTest.class,
+            "liquipedia/liquipedia-query-patches-details.json",
+            LiquipediaMediaWikiRevisionQueryResult.class
+        );
+        List<LiquipediaPatch> patches = LiquipediaParser.parsePatches(result);
+        patches.sort(Comparator.comparing(LiquipediaPatch::getBuild,
+            Comparator.nullsFirst(Comparator.reverseOrder())));
+        Assertions.assertThat(patches)
+            .usingRecursiveComparison()
+            .isEqualTo(List.of(
+                new LiquipediaPatch
+                (
+                    null,
+                    "5.0.12",
+                    Map.of
+                    (
+                        Region.US, LocalDate.of(2023, 9, 29),
+                        Region.EU, LocalDate.of(2023, 10, 2),
+                        Region.KR, LocalDate.of(2023, 10, 2)
+                    ),
+                    true
+                ),
+                new LiquipediaPatch
+                (
+                    88500L,
+                    "5.0.10",
+                    Map.of
+                    (
+                        Region.US, LocalDate.of(2022, 7, 20),
+                        Region.EU, LocalDate.of(2022, 7, 20),
+                        Region.KR, LocalDate.of(2022, 7, 21)
+                    ),
+                    true
+                ),
+                new LiquipediaPatch
+                (
+                    83830L,
+                    "5.0.6",
+                    Map.of
+                    (
+                        Region.US, LocalDate.of(2021, 2, 2),
+                        Region.EU, LocalDate.of(2021, 2, 3),
+                        Region.KR, LocalDate.of(2021, 2, 3)
+                    ),
+                    false
+                ),
+                new LiquipediaPatch
+                (
+                    81102L,
+                    "5.0.2",
+                    Map.of
+                    (
+                        Region.US, LocalDate.of(2020, 8, 6),
+                        Region.EU, LocalDate.of(2020, 8, 6),
+                        Region.KR, LocalDate.of(2020, 8, 7)
+                    ),
+                    false
+                )
+            ));
     }
 
 }

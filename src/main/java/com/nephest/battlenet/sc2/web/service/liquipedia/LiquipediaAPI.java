@@ -6,16 +6,20 @@ package com.nephest.battlenet.sc2.web.service.liquipedia;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPatch;
 import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
 import com.nephest.battlenet.sc2.model.liquipedia.query.revision.LiquipediaMediaWikiRevisionQueryResult;
 import com.nephest.battlenet.sc2.web.service.BaseAPI;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
@@ -34,6 +38,7 @@ extends BaseAPI
     public static final int REQUESTS_PER_PERIOD = 1;
     private final ReactorRateLimiter rateLimiter = new ReactorRateLimiter();
     private final String userAgent;
+    private final int PATCH_BATCH_SIZE = 20;
 
     @Autowired
     public LiquipediaAPI
@@ -96,6 +101,32 @@ extends BaseAPI
             .map(LiquipediaParser::parse)
             .flatMap(this::processRedirects)
             .flatMapIterable(Function.identity());
+    }
+
+    public Flux<LiquipediaPatch> parsePatches()
+    {
+        return getPage(Set.of("Patches"))
+            .flatMapIterable(LiquipediaParser::parsePatchList);
+    }
+
+    public Flux<LiquipediaPatch> parsePatches(Iterable<? extends LiquipediaPatch> patchList)
+    {
+        LiquipediaPatch[] balanceUpdates = StreamSupport.stream(patchList.spliterator(), false)
+            .filter(LiquipediaPatch::isBalanceUpdate)
+            .toArray(LiquipediaPatch[]::new);
+        Map<String, LiquipediaPatch> patches = StreamSupport.stream(patchList.spliterator(), false)
+            .collect(Collectors.toMap(LiquipediaPatch::getVersion, Function.identity()));
+        return Flux.fromIterable(patchList)
+            .filter(patch->!patch.isBalanceUpdate())
+            .map(LiquipediaPatch::getVersion)
+            .distinct()
+            .map(version->"Patch_" + version)
+            .buffer(PATCH_BATCH_SIZE, HashSet::new)
+            .flatMap(this::getPage)
+            .flatMapIterable(LiquipediaParser::parsePatches)
+            .map(patch->LiquipediaParser.mergePatch(patches.get(patch.getVersion()), patch))
+            .concatWithValues(balanceUpdates)
+            .sort(Comparator.comparing(LiquipediaPatch::getBuild, Comparator.reverseOrder()));
     }
 
     private Mono<Collection<LiquipediaPlayer>> processRedirects

@@ -9,10 +9,14 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPatch;
 import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPlayer;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -46,6 +50,44 @@ public class LiquipediaAPIIT
             links.forEach(link->assertFalse(urls.contains(link)));
             urls.addAll(links);
         });
+    }
+
+    @Test
+    public void testParsePatchList()
+    {
+        List<LiquipediaPatch> patches = api.parsePatches().collectList().block();
+        assertTrue(patches.size() >= 179);
+        Set<String> versions = new HashSet<>();
+        for(LiquipediaPatch patch : patches)
+        {
+            assertTrue(patch.getBuild() > 0);
+            assertTrue(versions.add(patch.getVersion()));
+            assertFalse(patch.getReleases().isEmpty());
+            assertEquals(patch.isBalanceUpdate() ? true : null, patch.isVersus());
+        }
+
+        LiquipediaPatch balanceUpdate = patches.stream()
+            .filter(LiquipediaPatch::isBalanceUpdate)
+            .findFirst()
+            .orElseThrow();
+        List<LiquipediaPatch> detailsUpdate = patches.stream()
+            .filter(patch->!patch.isBalanceUpdate())
+            .limit(3)
+            .collect(Collectors.toList());
+        detailsUpdate.add(balanceUpdate);
+        List<LiquipediaPatch> detailsPatches = api.parsePatches(detailsUpdate).collectList().block();
+        assertEquals(4, detailsPatches.size());
+        detailsUpdate.sort(Comparator.comparing(LiquipediaPatch::getBuild, Comparator.reverseOrder()));
+        for(int i = 0; i < detailsPatches.size(); i++)
+        {
+            LiquipediaPatch detailsPatch = detailsPatches.get(i);
+            Assertions.assertThat(detailsUpdate.get(i))
+                .usingRecursiveComparison()
+                .ignoringFields("releases", "versus")
+                .isEqualTo(detailsPatch);
+            assertEquals(3, detailsPatch.getReleases().size());
+            assertNotNull(detailsPatch.isVersus());
+        }
     }
 
 }
