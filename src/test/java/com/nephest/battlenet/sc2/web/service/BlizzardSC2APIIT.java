@@ -543,7 +543,6 @@ public class BlizzardSC2APIIT
         {
             assertNotNull(patch.getBuild());
             assertNotNull(patch.getVersion());
-            assertNotNull(patch.getPublished());
         }
     }
 

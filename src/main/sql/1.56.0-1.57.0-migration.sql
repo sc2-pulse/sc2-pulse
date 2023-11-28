@@ -1,13 +1,22 @@
 CREATE TABLE "patch"
 (
-    "id" BIGINT NOT NULL,
+    "build" BIGINT NOT NULL,
     "version" TEXT NOT NULL,
-    "published" TIMESTAMP WITH TIME ZONE NOT NULL,
 
-    PRIMARY KEY ("id")
+    PRIMARY KEY ("build")
 );
 
-CREATE INDEX "ix_patch_published" ON "patch"("published");
+CREATE TABLE "patch_release"
+(
+    "patch_build" BIGINT NOT NULL,
+    "region" SMALLINT NOT NULL,
+    "released" TIMESTAMP WITH TIME ZONE NOT NULL,
 
-ALTER TABLE "patch"
-    RENAME COLUMN "id" TO "build";
+    PRIMARY KEY ("patch_build", "region"),
+
+     CONSTRAINT "fk_patch_release_patch_build"
+        FOREIGN KEY ("patch_build")
+        REFERENCES "patch"("build")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+

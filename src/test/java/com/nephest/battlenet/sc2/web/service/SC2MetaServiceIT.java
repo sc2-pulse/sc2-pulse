@@ -9,8 +9,9 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.dao.PatchDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PatchReleaseDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderPatch;
 import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -42,6 +43,9 @@ public class SC2MetaServiceIT
 
     @Autowired
     private PatchDAO patchDAO;
+
+    @Autowired
+    private PatchReleaseDAO patchReleaseDAO;
 
     @Autowired
     private SC2MetaService sc2MetaService;
@@ -80,10 +84,12 @@ public class SC2MetaServiceIT
     public void testPatch()
     throws Exception
     {
-        List<Patch> recentPatches = api
+        List<LadderPatch> recentPatches = api
             .parsePatches()
             .take(5)
-            .map(SC2MetaService::convert)
+            .collectList()
+            .flatMapMany(patches->api.parsePatches(patches))
+            .map(SC2MetaService::convertToLadderPatch)
             .collectList()
             .block();
 
@@ -95,41 +101,24 @@ public class SC2MetaServiceIT
             .andExpect(status().isNotFound())
             .andReturn();
 
-        Patch firstPatch = recentPatches.get(recentPatches.size() - 1);
-        patchDAO.merge(Set.of(firstPatch));
-        List<Patch> foundPatches1 = objectMapper.readValue(mvc.perform
-        (
-            get("/api/meta/patch")
-                .queryParam
-                (
-                    "buildMin",
-                    String.valueOf(firstPatch.getBuild())
-                )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        Assertions.assertThat(foundPatches1)
-            .usingRecursiveComparison()
-            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .isEqualTo(List.of(firstPatch));
-
+        LadderPatch firstPatch = recentPatches.get(recentPatches.size() - 1);
+        patchDAO.merge(Set.of(firstPatch.getPatch()));
         Assertions.assertThat
         (
             sc2MetaService.updatePatches().stream()
-                .sorted(Comparator.comparing(Patch::getPublished, Comparator.reverseOrder()))
+                .sorted(Comparator.comparing(p->p.getPatch().getBuild(), Comparator.reverseOrder()))
                 .collect(Collectors.toUnmodifiableList())
         )
             .usingRecursiveComparison()
             .isEqualTo(recentPatches);
 
-        List<Patch> foundPatches2 = objectMapper.readValue(mvc.perform
+        List<LadderPatch> foundPatches2 = objectMapper.readValue(mvc.perform
         (
             get("/api/meta/patch")
                 .queryParam
                 (
                     "buildMin",
-                    String.valueOf(recentPatches.get(1).getBuild())
+                    String.valueOf(recentPatches.get(1).getPatch().getBuild())
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )

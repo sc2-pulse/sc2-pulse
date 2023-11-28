@@ -4,7 +4,6 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.Patch;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,20 +23,18 @@ public class PatchDAO
 
     public static final String STD_SELECT =
         "patch.build AS \"patch.build\", "
-        + "patch.version AS \"patch.version\", "
-        + "patch.published AS \"patch.published\" ";
+        + "patch.version AS \"patch.version\" ";
 
     private static final String MERGE =
         "WITH updated AS "
         + "("
             + "UPDATE patch "
-            + "SET version = :version, "
-            + "published = :published "
+            + "SET version = :version "
             + "WHERE build = :build "
             + "RETURNING build "
         + ") "
-        + "INSERT INTO patch(build, version, published) "
-        + "SELECT :build, :version, :published "
+        + "INSERT INTO patch(build, version) "
+        + "SELECT :build, :version "
         + "WHERE NOT EXISTS (SELECT 1 FROM updated) ";
 
     private static final String FIND_BY_BUILD_MIN =
@@ -49,8 +46,7 @@ public class PatchDAO
     public static final RowMapper<Patch> STD_ROW_MAPPER = (rs, i)->new Patch
     (
         rs.getLong("patch.build"),
-        rs.getString("patch.version"),
-        rs.getObject("patch.published", OffsetDateTime.class)
+        rs.getString("patch.version")
     );
 
     public static final ResultSetExtractor<Patch> STD_EXTRACTOR =

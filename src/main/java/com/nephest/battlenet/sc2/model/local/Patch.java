@@ -4,7 +4,6 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.blizzard.cache.BlizzardCachePatch;
-import java.time.OffsetDateTime;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -20,18 +19,14 @@ implements java.io.Serializable
     @NotNull
     private String version;
 
-    @NotNull
-    private OffsetDateTime published;
-
     public Patch()
     {
     }
 
-    public Patch(Long build, String version, OffsetDateTime published)
+    public Patch(Long build, String version)
     {
         this.build = build;
         this.version = version;
-        this.published = published;
     }
 
     @Override
@@ -62,7 +57,7 @@ implements java.io.Serializable
 
     public static Patch from(BlizzardCachePatch patch)
     {
-        return new Patch(patch.getBuildNumber(), patch.getVersion(), patch.getPublish());
+        return new Patch(patch.getBuildNumber(), patch.getVersion());
     }
 
     public Long getBuild()
@@ -83,16 +78,6 @@ implements java.io.Serializable
     public void setVersion(String version)
     {
         this.version = version;
-    }
-
-    public OffsetDateTime getPublished()
-    {
-        return published;
-    }
-
-    public void setPublished(OffsetDateTime published)
-    {
-        this.published = published;
     }
 
 }
