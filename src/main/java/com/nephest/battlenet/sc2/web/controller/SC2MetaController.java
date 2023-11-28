@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.web.controller;
 
 import com.nephest.battlenet.sc2.web.service.SC2MetaService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
-import java.time.OffsetDateTime;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,11 +23,11 @@ public class SC2MetaController
     @GetMapping("/patch")
     public ResponseEntity<?> getPatches
     (
-        @RequestParam(value = "publishedMin", required = false) OffsetDateTime publishedMin
+        @RequestParam(value = "buildMin", required = false) Long buildMin
     )
     {
         return WebServiceUtil.notFoundIfEmpty(sc2MetaService
-            .getPatches(publishedMin != null ? publishedMin : SC2MetaService.PATCH_START));
+            .getPatches(buildMin != null ? buildMin : SC2MetaService.PATCH_START));
     }
 
 }

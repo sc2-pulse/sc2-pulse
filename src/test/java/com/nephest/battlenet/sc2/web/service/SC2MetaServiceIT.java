@@ -102,8 +102,8 @@ public class SC2MetaServiceIT
             get("/api/meta/patch")
                 .queryParam
                 (
-                    "publishedMin",
-                    firstPatch.getPublished().toString()
+                    "buildMin",
+                    String.valueOf(firstPatch.getBuild())
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )
@@ -128,8 +128,8 @@ public class SC2MetaServiceIT
             get("/api/meta/patch")
                 .queryParam
                 (
-                    "publishedMin",
-                    recentPatches.get(1).getPublished().toString()
+                    "buildMin",
+                    String.valueOf(recentPatches.get(1).getBuild())
                 )
                 .contentType(MediaType.APPLICATION_JSON)
         )

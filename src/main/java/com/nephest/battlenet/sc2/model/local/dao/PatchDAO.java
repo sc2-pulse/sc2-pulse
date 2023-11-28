@@ -40,12 +40,6 @@ public class PatchDAO
         + "SELECT :build, :version, :published "
         + "WHERE NOT EXISTS (SELECT 1 FROM updated) ";
 
-    private static final String FIND_BY_PUBLISHED_MIN =
-        "SELECT " + STD_SELECT
-        + "FROM patch "
-        + "WHERE published >= :publishedMin "
-        + "ORDER BY published DESC";
-
     private static final String FIND_BY_BUILD_MIN =
         "SELECT " + STD_SELECT
         + "FROM patch "
@@ -82,12 +76,6 @@ public class PatchDAO
             .map(BeanPropertySqlParameterSource::new)
             .toArray(SqlParameterSource[]::new);
         return template.batchUpdate(MERGE, params);
-    }
-
-    public List<Patch> findByPublishedMin(OffsetDateTime publishedMin)
-    {
-        MapSqlParameterSource params = new MapSqlParameterSource("publishedMin", publishedMin);
-        return template.query(FIND_BY_PUBLISHED_MIN, params, STD_ROW_MAPPER);
     }
 
     public List<Patch> findByBuildMin(Long buildMin)

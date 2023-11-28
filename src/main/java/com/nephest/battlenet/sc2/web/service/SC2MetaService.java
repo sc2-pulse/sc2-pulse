@@ -9,8 +9,6 @@ import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.dao.PatchDAO;
 import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
 import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaParser;
-import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -30,8 +28,7 @@ public class SC2MetaService
 
     private static final Logger LOG = LoggerFactory.getLogger(SC2MetaService.class);
 
-    public static final OffsetDateTime PATCH_START = OffsetDateTime
-        .of(2009, 1, 1, 0, 0, 0, 0, ZoneOffset.UTC);
+    public static final long PATCH_START = 16195L;
     public static final int PATCH_BATCH_SIZE = 2;
 
     private final PatchDAO patchDAO;
@@ -55,21 +52,21 @@ public class SC2MetaService
     @Cacheable(cacheNames = "meta-patch")
     public List<Patch> getPatches()
     {
-        return patchDAO.findByPublishedMin(PATCH_START);
+        return patchDAO.findByBuildMin(PATCH_START);
     }
 
-    public List<Patch> getPatches(OffsetDateTime publishedMin)
+    public List<Patch> getPatches(Long buildMin)
     {
         List<Patch> existingPatches = sc2MetaService.getPatches();
         if(existingPatches.isEmpty()) return List.of();
 
-        if(existingPatches.get(existingPatches.size() - 1).getPublished().isAfter(publishedMin))
+        if(existingPatches.get(existingPatches.size() - 1).getBuild() > buildMin)
             return existingPatches;
 
         int ix = 0;
         for(Patch patch : existingPatches)
         {
-            if(patch.getPublished().isBefore(publishedMin)) break;
+            if(patch.getBuild() < buildMin) break;
             ix++;
         }
         return existingPatches.subList(0, ix);
@@ -79,11 +76,11 @@ public class SC2MetaService
     @CacheEvict(cacheNames = "meta-patch", allEntries = true)
     public Set<Patch> updatePatches()
     {
-        long minId = patchDAO.findByPublishedMin(PATCH_START).stream()
+        long minId = patchDAO.findByBuildMin(PATCH_START).stream()
             .mapToLong(Patch::getBuild)
             .max()
             .orElse(0);
-        Set<Patch> patches = getPatches(minId)
+        Set<Patch> patches = pullPatches(minId)
             .collect(Collectors.toSet())
             .block();
         patchDAO.merge(patches);
@@ -92,7 +89,7 @@ public class SC2MetaService
         return patches;
     }
 
-    private Flux<Patch> getPatches(Long minId)
+    private Flux<Patch> pullPatches(Long minId)
     {
         return liquipediaAPI.parsePatches()
             .filter(patch->patch.getBuild() >= minId)
