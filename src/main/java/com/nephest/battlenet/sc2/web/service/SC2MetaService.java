@@ -4,8 +4,11 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.liquipedia.LiquipediaPatch;
 import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.dao.PatchDAO;
+import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
+import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaParser;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
@@ -32,16 +35,16 @@ public class SC2MetaService
     public static final int PATCH_BATCH_SIZE = 2;
 
     private final PatchDAO patchDAO;
-    private final BlizzardSC2API blizzardSC2API;
+    private final LiquipediaAPI liquipediaAPI;
 
     @Autowired @Lazy
     private SC2MetaService sc2MetaService;
 
     @Autowired
-    public SC2MetaService(PatchDAO patchDAO, BlizzardSC2API blizzardSC2API)
+    public SC2MetaService(PatchDAO patchDAO, LiquipediaAPI liquipediaAPI)
     {
         this.patchDAO = patchDAO;
-        this.blizzardSC2API = blizzardSC2API;
+        this.liquipediaAPI = liquipediaAPI;
     }
 
     protected void setSc2MetaService(SC2MetaService sc2MetaService)
@@ -79,9 +82,8 @@ public class SC2MetaService
         long minId = patchDAO.findByPublishedMin(PATCH_START).stream()
             .mapToLong(Patch::getBuild)
             .max()
-            .orElse(-1)
-            + 1;
-        Set<Patch> patches = getPatches(minId, null)
+            .orElse(0);
+        Set<Patch> patches = getPatches(minId)
             .collect(Collectors.toSet())
             .block();
         patchDAO.merge(patches);
@@ -90,29 +92,22 @@ public class SC2MetaService
         return patches;
     }
 
-    private Flux<Patch> getPatches(Long minId, Long maxId)
+    private Flux<Patch> getPatches(Long minId)
     {
-        return blizzardSC2API
-            .getPatches(Region.US, minId, maxId, PATCH_BATCH_SIZE)
+        return liquipediaAPI.parsePatches()
+            .filter(patch->patch.getBuild() >= minId)
             .collectList()
-            .flatMapMany(patches->getPatchesRecursively(patches, minId));
+            .flatMapMany(liquipediaAPI::parsePatches)
+            .map(SC2MetaService::convert);
     }
 
-    private Flux<Patch> getPatchesRecursively(List<Patch> patches, Long minId)
+    public static Patch convert(LiquipediaPatch liquipediaPatch)
     {
-        if(patches.isEmpty()) return Flux.empty();
-
-        long curMaxId = patches.stream()
-            .mapToLong(Patch::getBuild)
-            .min()
-            .orElseThrow()
-            - 1;
-        if(minId >= curMaxId) return Flux.fromIterable(patches);
-
-        return Flux.concat
+        return new Patch
         (
-            Flux.fromIterable(patches),
-            getPatches(minId, curMaxId)
+            liquipediaPatch.getBuild(),
+            liquipediaPatch.getVersion(),
+            LiquipediaParser.convert(liquipediaPatch.getReleases().get(Region.US), Region.US)
         );
     }
 

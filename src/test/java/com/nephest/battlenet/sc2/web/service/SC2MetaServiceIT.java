@@ -3,18 +3,18 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
-import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.dao.PatchDAO;
+import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
@@ -47,7 +47,7 @@ public class SC2MetaServiceIT
     private SC2MetaService sc2MetaService;
 
     @Autowired
-    private BlizzardSC2API api;
+    private LiquipediaAPI api;
 
     @Autowired
     private MockMvc mvc;
@@ -80,12 +80,12 @@ public class SC2MetaServiceIT
     public void testPatch()
     throws Exception
     {
-        int testBatchSize = SC2MetaService.PATCH_BATCH_SIZE * 2 + 1;
         List<Patch> recentPatches = api
-            .getPatches(Region.US, null, null, testBatchSize)
+            .parsePatches()
+            .take(5)
+            .map(SC2MetaService::convert)
             .collectList()
             .block();
-        assertEquals(testBatchSize, recentPatches.size());
 
         mvc.perform
         (
@@ -111,6 +111,7 @@ public class SC2MetaServiceIT
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
         Assertions.assertThat(foundPatches1)
             .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .isEqualTo(List.of(firstPatch));
 
         Assertions.assertThat
@@ -120,7 +121,7 @@ public class SC2MetaServiceIT
                 .collect(Collectors.toUnmodifiableList())
         )
             .usingRecursiveComparison()
-            .isEqualTo(recentPatches.subList(0, recentPatches.size() - 1));
+            .isEqualTo(recentPatches);
 
         List<Patch> foundPatches2 = objectMapper.readValue(mvc.perform
         (
@@ -138,6 +139,7 @@ public class SC2MetaServiceIT
 
         Assertions.assertThat(foundPatches2)
             .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .isEqualTo(recentPatches.subList(0, 2));
     }
 
