@@ -12,6 +12,8 @@ import com.nephest.battlenet.sc2.model.liquipedia.query.revision.Normalization;
 import com.nephest.battlenet.sc2.model.liquipedia.query.revision.RevisionPage;
 import com.nephest.battlenet.sc2.model.liquipedia.query.revision.RevisionSlot;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,6 +67,15 @@ public final class LiquipediaParser
         names.put(Region.EU, "eu");
         names.put(Region.KR, "kor");
         REGION_NAMES = Collections.unmodifiableMap(names);
+    }
+    private static final Map<Region, ZoneId> REGION_ZONE_IDS;
+    static
+    {
+        Map<Region, ZoneId> offsets = new EnumMap<>(Region.class);
+        offsets.put(Region.US, ZoneId.of("America/New_York"));
+        offsets.put(Region.EU, ZoneId.of("UTC"));
+        offsets.put(Region.KR, ZoneId.of("Asia/Seoul"));
+        REGION_ZONE_IDS = Collections.unmodifiableMap(offsets);
     }
 
     private LiquipediaParser(){}
@@ -244,6 +255,11 @@ public final class LiquipediaParser
         }
 
         throw new IllegalArgumentException(str);
+    }
+
+    public static OffsetDateTime convert(LocalDate date, Region region)
+    {
+        return date.atStartOfDay().atZone(REGION_ZONE_IDS.get(region)).toOffsetDateTime();
     }
 
     public static List<LiquipediaPatch> parsePatches(LiquipediaMediaWikiRevisionQueryResult patchList)
