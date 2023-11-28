@@ -46,6 +46,12 @@ public class PatchDAO
         + "WHERE published >= :publishedMin "
         + "ORDER BY published DESC";
 
+    private static final String FIND_BY_BUILD_MIN =
+        "SELECT " + STD_SELECT
+        + "FROM patch "
+        + "WHERE build >= :buildMin "
+        + "ORDER BY build DESC";
+
     public static final RowMapper<Patch> STD_ROW_MAPPER = (rs, i)->new Patch
     (
         rs.getLong("patch.build"),
@@ -82,6 +88,12 @@ public class PatchDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource("publishedMin", publishedMin);
         return template.query(FIND_BY_PUBLISHED_MIN, params, STD_ROW_MAPPER);
+    }
+
+    public List<Patch> findByBuildMin(Long buildMin)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource("buildMin", buildMin);
+        return template.query(FIND_BY_BUILD_MIN, params, STD_ROW_MAPPER);
     }
 
 }
