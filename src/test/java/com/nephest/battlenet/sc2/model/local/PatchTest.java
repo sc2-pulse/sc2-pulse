@@ -14,9 +14,9 @@ public class PatchTest
     {
         TestUtil.testUniqueness
         (
-            new Patch(1L, "1.1.1"),
-            new Patch(1L, "2.2.2"),
-            new Patch(2L, "1.1.1")
+            new Patch(1L, "1.1.1", true),
+            new Patch(1L, "2.2.2", false),
+            new Patch(2L, "1.1.1", true)
         );
     }
 

@@ -138,7 +138,8 @@ public class SC2MetaService
         return new Patch
         (
             liquipediaPatch.getBuild(),
-            liquipediaPatch.getVersion()
+            liquipediaPatch.getVersion(),
+            liquipediaPatch.isVersus()
         );
     }
 

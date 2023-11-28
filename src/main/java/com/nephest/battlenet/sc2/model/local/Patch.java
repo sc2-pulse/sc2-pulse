@@ -19,14 +19,17 @@ implements java.io.Serializable
     @NotNull
     private String version;
 
+    private Boolean versus;
+
     public Patch()
     {
     }
 
-    public Patch(Long build, String version)
+    public Patch(Long build, String version, Boolean versus)
     {
         this.build = build;
         this.version = version;
+        this.versus = versus;
     }
 
     @Override
@@ -57,7 +60,7 @@ implements java.io.Serializable
 
     public static Patch from(BlizzardCachePatch patch)
     {
-        return new Patch(patch.getBuildNumber(), patch.getVersion());
+        return new Patch(patch.getBuildNumber(), patch.getVersion(), null);
     }
 
     public Long getBuild()
@@ -78,6 +81,16 @@ implements java.io.Serializable
     public void setVersion(String version)
     {
         this.version = version;
+    }
+
+    public Boolean getVersus()
+    {
+        return versus;
+    }
+
+    public void setVersus(Boolean versus)
+    {
+        this.versus = versus;
     }
 
 }

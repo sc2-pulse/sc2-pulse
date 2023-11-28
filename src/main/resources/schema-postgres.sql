@@ -1236,6 +1236,7 @@ CREATE TABLE "patch"
 (
     "build" BIGINT NOT NULL,
     "version" TEXT NOT NULL,
+    "versus" BOOLEAN,
 
     PRIMARY KEY ("build")
 );

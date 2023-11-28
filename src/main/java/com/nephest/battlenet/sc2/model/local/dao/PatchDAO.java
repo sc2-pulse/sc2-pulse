@@ -23,18 +23,20 @@ public class PatchDAO
 
     public static final String STD_SELECT =
         "patch.build AS \"patch.build\", "
-        + "patch.version AS \"patch.version\" ";
+        + "patch.version AS \"patch.version\", "
+        + "patch.versus AS \"patch.versus\" ";
 
     private static final String MERGE =
         "WITH updated AS "
         + "("
             + "UPDATE patch "
-            + "SET version = :version "
+            + "SET version = :version, "
+            + "versus = :versus "
             + "WHERE build = :build "
             + "RETURNING build "
         + ") "
-        + "INSERT INTO patch(build, version) "
-        + "SELECT :build, :version "
+        + "INSERT INTO patch(build, version, versus) "
+        + "SELECT :build, :version, :versus "
         + "WHERE NOT EXISTS (SELECT 1 FROM updated) ";
 
     private static final String FIND_BY_BUILD_MIN =
@@ -46,7 +48,8 @@ public class PatchDAO
     public static final RowMapper<Patch> STD_ROW_MAPPER = (rs, i)->new Patch
     (
         rs.getLong("patch.build"),
-        rs.getString("patch.version")
+        rs.getString("patch.version"),
+        DAOUtils.getBoolean(rs, "patch.versus")
     );
 
     public static final ResultSetExtractor<Patch> STD_EXTRACTOR =
