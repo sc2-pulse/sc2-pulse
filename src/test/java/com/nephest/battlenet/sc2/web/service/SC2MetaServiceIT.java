@@ -110,6 +110,7 @@ public class SC2MetaServiceIT
                 .collect(Collectors.toUnmodifiableList())
         )
             .usingRecursiveComparison()
+            .ignoringFields("patch.id")
             .isEqualTo(recentPatches);
 
         List<LadderPatch> foundPatches2 = objectMapper.readValue(mvc.perform
@@ -129,6 +130,7 @@ public class SC2MetaServiceIT
         Assertions.assertThat(foundPatches2)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("patch.id")
             .isEqualTo(recentPatches.subList(0, 2));
     }
 

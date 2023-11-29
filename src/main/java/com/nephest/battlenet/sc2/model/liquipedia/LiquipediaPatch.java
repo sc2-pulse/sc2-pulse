@@ -37,13 +37,14 @@ public class LiquipediaPatch
         if (this == o) {return true;}
         if (!(o instanceof LiquipediaPatch)) {return false;}
         LiquipediaPatch patch = (LiquipediaPatch) o;
-        return Objects.equals(getBuild(), patch.getBuild());
+        return Objects.equals(getBuild(), patch.getBuild())
+            && Objects.equals(getVersion(), patch.getVersion());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getBuild());
+        return Objects.hash(getBuild(), getVersion());
     }
 
     public Long getBuild()

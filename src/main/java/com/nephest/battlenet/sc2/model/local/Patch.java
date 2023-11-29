@@ -11,7 +11,9 @@ public class Patch
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = 2L;
+
+    Integer id;
 
     @NotNull
     public Long build;
@@ -23,6 +25,14 @@ implements java.io.Serializable
 
     public Patch()
     {
+    }
+
+    public Patch(Integer id, Long build, String version, Boolean versus)
+    {
+        this.id = id;
+        this.build = build;
+        this.version = version;
+        this.versus = versus;
     }
 
     public Patch(Long build, String version, Boolean versus)
@@ -38,13 +48,14 @@ implements java.io.Serializable
         if (this == o) {return true;}
         if (!(o instanceof Patch)) {return false;}
         Patch patch = (Patch) o;
-        return Objects.equals(getBuild(), patch.getBuild());
+        return Objects.equals(getBuild(), patch.getBuild())
+            && Objects.equals(getVersion(), patch.getVersion());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getBuild());
+        return Objects.hash(getBuild(), getVersion());
     }
 
     @Override
@@ -52,15 +63,26 @@ implements java.io.Serializable
     {
         return String.format
         (
-            "%s[%s]",
+            "%s[%s %s]",
             Patch.class.getSimpleName(),
-            getBuild()
+            getBuild(),
+            getVersion()
         );
     }
 
     public static Patch from(BlizzardCachePatch patch)
     {
         return new Patch(patch.getBuildNumber(), patch.getVersion(), null);
+    }
+
+    public Integer getId()
+    {
+        return id;
+    }
+
+    public void setId(Integer id)
+    {
+        this.id = id;
     }
 
     public Long getBuild()

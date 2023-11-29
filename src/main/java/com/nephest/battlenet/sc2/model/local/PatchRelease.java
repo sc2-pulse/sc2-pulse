@@ -12,7 +12,7 @@ public class PatchRelease
 {
 
     @NotNull
-    private Long patchBuild;
+    private Integer patchId;
 
     @NotNull
     private Region region;
@@ -24,9 +24,9 @@ public class PatchRelease
     {
     }
 
-    public PatchRelease(Long patchBuild, Region region, OffsetDateTime released)
+    public PatchRelease(Integer patchId, Region region, OffsetDateTime released)
     {
-        this.patchBuild = patchBuild;
+        this.patchId = patchId;
         this.region = region;
         this.released = released;
     }
@@ -37,29 +37,29 @@ public class PatchRelease
         if (this == o) {return true;}
         if (!(o instanceof PatchRelease)) {return false;}
         PatchRelease that = (PatchRelease) o;
-        return Objects.equals(patchBuild, that.patchBuild) && region == that.region;
+        return Objects.equals(patchId, that.patchId) && region == that.region;
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(patchBuild, region);
+        return Objects.hash(patchId, region);
     }
 
     @Override
     public String toString()
     {
-        return "PatchRelease{" + "patchBuild=" + patchBuild + ", region=" + region + '}';
+        return "PatchRelease{" + "patchId=" + patchId + ", region=" + region + '}';
     }
 
-    public Long getPatchBuild()
+    public Integer getPatchId()
     {
-        return patchBuild;
+        return patchId;
     }
 
-    public void setPatchBuild(Long patchBuild)
+    public void setPatchId(Integer patchId)
     {
-        this.patchBuild = patchBuild;
+        this.patchId = patchId;
     }
 
     public Region getRegion()

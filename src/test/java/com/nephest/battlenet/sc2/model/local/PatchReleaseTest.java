@@ -17,11 +17,11 @@ public class PatchReleaseTest
         OffsetDateTime equalOdt = OffsetDateTime.now();
         TestUtil.testUniqueness
         (
-            new PatchRelease(1L, Region.US, equalOdt),
-            new PatchRelease(1L, Region.US, equalOdt.minusSeconds(1)),
+            new PatchRelease(1, Region.US, equalOdt),
+            new PatchRelease(1, Region.US, equalOdt.minusSeconds(1)),
 
-            new PatchRelease(2L, Region.US, equalOdt),
-            new PatchRelease(1L, Region.EU, equalOdt)
+            new PatchRelease(2, Region.US, equalOdt),
+            new PatchRelease(1, Region.EU, equalOdt)
         );
     }
 

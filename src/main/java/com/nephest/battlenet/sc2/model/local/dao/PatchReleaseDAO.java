@@ -24,7 +24,7 @@ public class PatchReleaseDAO
 {
 
     public static final String STD_SELECT =
-        "patch_release.patch_build AS \"patch_release.patch_build\", "
+        "patch_release.patch_id AS \"patch_release.patch_id\", "
         + "patch_release.region AS \"patch_release.region\", "
         + "patch_release.released AS \"patch_release.released\" ";
 
@@ -33,24 +33,24 @@ public class PatchReleaseDAO
         + "("
             + "UPDATE patch_release "
             + "SET released = :released "
-            + "WHERE patch_build = :patchBuild "
+            + "WHERE patch_id = :patchId "
             + "AND region = :region "
             + "AND released != :released "
         + ") "
-        + "INSERT INTO patch_release(patch_build, region, released) "
-        + "SELECT :patchBuild, :region, :released "
+        + "INSERT INTO patch_release(patch_id, region, released) "
+        + "SELECT :patchId, :region, :released "
         + "WHERE NOT EXISTS"
         + "("
             + "SELECT 1 "
             + "FROM patch_release "
-            + "WHERE patch_build = :patchBuild "
+            + "WHERE patch_id = :patchId "
             + "AND region = :region "
         + ") ";
 
-    private static final String FIND_BY_PATCH_BUILDS =
+    private static final String FIND_BY_PATCH_IDS =
         "SELECT " + STD_SELECT
         + "FROM patch_release "
-        + "WHERE patch_build IN(:patchBuilds)";
+        + "WHERE patch_id IN(:patchIds)";
 
     private static RowMapper<PatchRelease> STD_ROW_MAPPER;
     private static ResultSetExtractor<PatchRelease> STD_EXTRACTOR;
@@ -74,7 +74,7 @@ public class PatchReleaseDAO
     {
         if(STD_ROW_MAPPER == null) STD_ROW_MAPPER = (rs, i)->new PatchRelease
         (
-            rs.getLong("patch_release.patch_build"),
+            rs.getInt("patch_release.patch_id"),
             conversionService.convert(rs.getInt("patch_release.region"), Region.class),
             rs.getObject("patch_release.released", OffsetDateTime.class)
         );
@@ -100,7 +100,7 @@ public class PatchReleaseDAO
             .map
             (
                 release->new MapSqlParameterSource()
-                    .addValue("patchBuild", release.getPatchBuild())
+                    .addValue("patchId", release.getPatchId())
                     .addValue
                     (
                         "region",
@@ -112,12 +112,12 @@ public class PatchReleaseDAO
         return template.batchUpdate(MERGE, params);
     }
 
-    public List<PatchRelease> findByPatchBuilds(Set<Long> builds)
+    public List<PatchRelease> findByPatchIds(Set<Integer> ids)
     {
-        if(builds.isEmpty()) return List.of();
+        if(ids.isEmpty()) return List.of();
 
-        SqlParameterSource params = new MapSqlParameterSource("patchBuilds", builds);
-        return template.query(FIND_BY_PATCH_BUILDS, params, getStdRowMapper());
+        SqlParameterSource params = new MapSqlParameterSource("patchIds", ids);
+        return template.query(FIND_BY_PATCH_IDS, params, getStdRowMapper());
     }
 
 }

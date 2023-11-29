@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,10 +70,10 @@ public class SC2MetaService
     public List<LadderPatch> getPatches()
     {
         List<Patch> patches =  patchDAO.findByBuildMin(PATCH_START);
-        Set<Long> builds = patches.stream()
-            .map(Patch::getBuild)
+        Set<Integer> ids = patches.stream()
+            .map(Patch::getId)
             .collect(Collectors.toSet());
-        List<PatchRelease> releases = patchReleaseDAO.findByPatchBuilds(builds);
+        List<PatchRelease> releases = patchReleaseDAO.findByPatchIds(ids);
         return merge(patches, releases);
     }
 
@@ -113,14 +114,14 @@ public class SC2MetaService
     @Transactional
     public List<LadderPatch> savePatches(Collection<? extends LiquipediaPatch> liquipediaPatches)
     {
-        Set<Patch> patches = liquipediaPatches.stream()
-            .map(SC2MetaService::convert)
-            .collect(Collectors.toSet());
+        Map<LiquipediaPatch, Patch> patchMap = liquipediaPatches.stream()
+            .collect(Collectors.toMap(Function.identity(), SC2MetaService::convert));
+        Set<Patch> patches = patchDAO.merge(Set.copyOf(patchMap.values()));
+
         Set<PatchRelease> releases = liquipediaPatches.stream()
-            .map(SC2MetaService::convertReleases)
+            .map(lpPatch->SC2MetaService.convertReleases(lpPatch, patchMap.get(lpPatch).getId()))
             .flatMap(Collection::stream)
             .collect(Collectors.toSet());
-        patchDAO.merge(patches);
         patchReleaseDAO.merge(releases);
         return merge(patches, releases);
     }
@@ -143,11 +144,11 @@ public class SC2MetaService
         );
     }
 
-    public static Set<PatchRelease> convertReleases(LiquipediaPatch liquipediaPatch)
+    public static Set<PatchRelease> convertReleases(LiquipediaPatch liquipediaPatch, Integer patchId)
     {
         return liquipediaPatch.getReleases().entrySet().stream()
             .map(entry->new PatchRelease(
-                liquipediaPatch.getBuild(),
+                patchId,
                 entry.getKey(),
                 LiquipediaParser.convert(entry.getValue(), entry.getKey())
             ))
@@ -160,12 +161,12 @@ public class SC2MetaService
         Collection<? extends PatchRelease> releases
     )
     {
-        Map<Long, List<PatchRelease>> groupedReleases = releases.stream()
-            .collect(Collectors.groupingBy(PatchRelease::getPatchBuild));
+        Map<Integer, List<PatchRelease>> groupedReleases = releases.stream()
+            .collect(Collectors.groupingBy(PatchRelease::getPatchId));
         return patches.stream()
             .map(patch->new LadderPatch(
                 patch,
-                Optional.ofNullable(groupedReleases.get(patch.getBuild()))
+                Optional.ofNullable(groupedReleases.get(patch.getId()))
                     .map(SC2MetaService::convertReleases)
                     .orElse(Map.of())
             ))
@@ -190,7 +191,7 @@ public class SC2MetaService
         return new LadderPatch
         (
             convert(liquipediaPatch),
-            convertReleases(convertReleases(liquipediaPatch))
+            convertReleases(convertReleases(liquipediaPatch, null))
         );
     }
 
