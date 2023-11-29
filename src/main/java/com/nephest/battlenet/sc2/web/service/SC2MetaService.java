@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaParser;
 import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.EnumMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -39,7 +40,7 @@ public class SC2MetaService
     private static final Logger LOG = LoggerFactory.getLogger(SC2MetaService.class);
 
     public static final long PATCH_START = 16195L;
-    public static final int PATCH_BATCH_SIZE = 2;
+    public static final int PATCH_BATCH_SIZE = 100;
 
     private final PatchDAO patchDAO;
     private final PatchReleaseDAO patchReleaseDAO;
@@ -116,7 +117,13 @@ public class SC2MetaService
     {
         Map<LiquipediaPatch, Patch> patchMap = liquipediaPatches.stream()
             .collect(Collectors.toMap(Function.identity(), SC2MetaService::convert));
-        Set<Patch> patches = patchDAO.merge(Set.copyOf(patchMap.values()));
+        List<Patch> patches = Flux.fromIterable(patchMap.values())
+            .distinct()
+            .buffer(PATCH_BATCH_SIZE, HashSet::new)
+            .flatMap(patchBatch->WebServiceUtil.blockingCallable(()->patchDAO.merge(patchBatch)))
+            .flatMapIterable(Function.identity())
+            .collect(Collectors.toList())
+            .block();
 
         Set<PatchRelease> releases = liquipediaPatches.stream()
             .map(lpPatch->SC2MetaService.convertReleases(lpPatch, patchMap.get(lpPatch).getId()))
