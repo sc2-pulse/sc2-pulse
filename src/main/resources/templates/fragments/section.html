@@ -207,6 +207,16 @@
         <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon" title="Time axis required" data-toggle="tooltip"/>
     </div>
     <div class="form-check form-check-inline mb-3">
+        <input th:id="|${id}-patches|"
+               class="form-check-input serializable patches-ctl"
+               type="checkbox"
+               th:data-state-link-id="|${id}-x-type|"
+               data-state-link-values="1"
+        />
+        <label th:for="|${id}-patches|" class="text-nowrap form-check-label mr-1">Patches</label>
+        <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon" title="Time axis required" data-toggle="tooltip"/>
+    </div>
+    <div class="form-check form-check-inline mb-3">
         <input th:id="|${id}-leagues|" class="form-check-input serializable" type="checkbox" checked="checked"/>
         <label th:for="|${id}-leagues|" class="text-nowrap form-check-label">Leagues</label>
     </div>

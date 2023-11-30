@@ -178,6 +178,7 @@
         const SERVER_DOUBLE_MAX_VALUE = /*[[${T(java.lang.Double).MAX_VALUE}]]*/ '';
         const PRO_PLAYER_EDIT_ALLOWED_LINK_TYPES = new Set(new String(/*[[${T(com.nephest.battlenet.sc2.web.service.ProPlayerService).PLAYER_EDIT_ALLOWED_SOCIAL_MEDIA.![name()].stream.collect(@formatUtil.joining(','))}]]*/).split(","));
         const CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET = /*[[${T(com.nephest.battlenet.sc2.web.service.community.CommunityService).CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET.toMillis()}]]*/ '';
+        const PATCH_LAST_BUILD = /*[[${@SC2MetaService.getPatches().isEmpty() ? 0 : @SC2MetaService.getPatches().get(0).getPatch().getBuild()}]]*/ '';
     </script>
     <th:block  id="script-additional" th:switch="${#arrays.contains(@environment.getActiveProfiles(), 'dev')}">
         <th:block th:case="true">
@@ -197,6 +198,7 @@
             <script th:src="@{/static/script/PaginationUtil.js}"></script>
             <script th:src="@{/static/script/SC2Restful.js}"></script>
             <script th:src="@{/static/script/SeasonUtil.js}"></script>
+            <script th:src="@{/static/script/MetaUtil.js}"></script>
             <script th:src="@{/static/script/Session.js}"></script>
             <script th:src="@{/static/script/StatsUtil.js}"></script>
             <script th:src="@{/static/script/TableUtil.js}"></script>

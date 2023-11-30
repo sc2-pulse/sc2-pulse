@@ -33,7 +33,15 @@ class ChartUtil
 
     static loadAdditionalChartData(config)
     {
-        return Promise.resolve(config);
+        return ChartUtil.loadPatches(config);
+    }
+
+    static loadPatches(config)
+    {
+        return config.customAnnotations == "mmr-meta"
+            && localStorage.getItem(config.id + "-patches") == "true"
+                ? MetaUtil.loadPatchesIfNeeded().catch(Session.onPersonalException)
+                : Promise.resolve();
     }
 
     static createGenericChart(config)
@@ -1113,8 +1121,8 @@ class ChartUtil
 
     static enhanceMmrAnnotationControls()
     {
-        document.querySelectorAll(".tier-thresholds-ctl").forEach(c=>c.addEventListener("change", ChartUtil.updateChartFromCtlGroup));
-        document.querySelectorAll(".seasons-ctl").forEach(c=>c.addEventListener("change", ChartUtil.updateChartFromCtlGroup));
+        document.querySelectorAll(".tier-thresholds-ctl, .seasons-ctl, .patches-ctl")
+            .forEach(c=>c.addEventListener("change", ChartUtil.updateChartFromCtlGroup));
     }
 
     static isTierThresholdApplicable(yAxis)
@@ -1137,19 +1145,26 @@ class ChartUtil
         return {};
     }
 
+    static getAnnotationLineBorderWidth(config)
+    {
+        return (localStorage.getItem(config.id + "-tier-thresholds") != "false"
+                && ChartUtil.isTierThresholdApplicable(localStorage.getItem(config.id + "-y-axis")))
+                    ? ChartUtil.THICK_LINE_BORDER_WIDTH
+                    : ChartUtil.getLineBorderWidth(config);
+    }
+
     static createMmrMetaAnnotations(config)
     {
         const annotations = {};
         const chart = ChartUtil.CHARTS.get(config.chartable);
+        const borderWidth = ChartUtil.getAnnotationLineBorderWidth(config);
+        config.data.datasets.forEach(ds=>ds["borderWidth"] = borderWidth);
         if(localStorage.getItem(config.id + "-tier-thresholds") != "false"
             && ChartUtil.isTierThresholdApplicable(localStorage.getItem(config.id + "-y-axis"))) {
                 if(!ChartUtil.TIER_ANNOTATIONS) ChartUtil.TIER_ANNOTATIONS = ChartUtil.addTierAnnotations({});
                 Object.entries(ChartUtil.TIER_ANNOTATIONS).forEach(e=>annotations[e[0]] = e[1]);
-                config.data.datasets.forEach(ds=>ds["borderWidth"] = ChartUtil.THICK_LINE_BORDER_WIDTH);
                 if(chart) chart.options.scales.y.grid.display = false;
         } else {
-            const borderWidth = ChartUtil.getLineBorderWidth(config);
-            config.data.datasets.forEach(ds=>ds["borderWidth"] = borderWidth);
             if(chart) chart.options.scales.y.grid.display = true;
         }
         if(localStorage.getItem(config.id + "-seasons") != "false" && localStorage.getItem(config.id + "-x-type") != "false") {
@@ -1161,6 +1176,20 @@ class ChartUtil
             const position = ChartUtil.getSeasonAnnotationPosition(ChartUtil.CHARTS.get(config.chartable));
             Object.values(seasonAnnotations).forEach(s=>s.label.position = position);
             Object.entries(seasonAnnotations).forEach(e=>annotations[e[0]] = e[1]);
+        }
+        if(localStorage.getItem(config.id + "-patches") == "true" && localStorage.getItem(config.id + "-x-type") != "false") {
+            let patchAnnotations = ChartUtil.PATCH_ANNOTATIONS.get(config.region);
+            const patchPosition = ChartUtil.getPatchAnnotationPosition(chart);
+            if(!patchAnnotations) {
+                patchAnnotations = {};
+                MetaUtil.PATCHES
+                    .filter(patch=>patch.patch.build >= ChartUtil.PATCH_ANNOTATION_BUILD_MIN && patch.patch.versus == true)
+                    .forEach(patch=>patchAnnotations[patch.patch.build + "" + patch.patch.id]
+                        = ChartUtil.createPatchAnnotation(patch, config.region, patchPosition));
+                ChartUtil.PATCH_ANNOTATIONS.set(config.region, patchAnnotations);
+            }
+            Object.values(patchAnnotations).forEach(s=>s.label.position = patchPosition);
+            Object.entries(patchAnnotations).forEach(e=>annotations[e[0]] = e[1]);
         }
         return annotations;
     }
@@ -1222,6 +1251,36 @@ class ChartUtil
         return annotations;
     }
 
+    static getPatchAnnotationPosition(chart)
+    {
+        return chart ? chart.options.scales.y.reverse ? "start" : "end" : "end";
+    }
+
+    static createPatchAnnotation(patch, region, position)
+    {
+        const release = patch.releases ? patch.releases[region] || Object.values(patch.releases).find(t=>true) : null;
+        const dateTime = release ? Util.parseIsoDateTime(release) : null;
+        return {
+            type: "line",
+            xMin: dateTime,
+            xMax: dateTime,
+            borderColor: "rgba(40, 167, 69, 0.4)",
+            borderWidth: 1,
+            adjustScaleRange: false,
+            drawTime: "beforeDatasetsDraw",
+            label: {
+                content: patch.patch.version,
+                display: true,
+                position: position,
+                padding: 3,
+                backgroundColor: 'rgba(40, 167, 69, 0.9)',
+                borderWidth: 1,
+                font: {weight: "normal"},
+                drawTime: "afterDatasetsDraw"
+            }
+        };
+    }
+
     static init()
     {
         if(Util.isMobile() && !localStorage.getItem("chart-tooltip-position"))
@@ -1276,6 +1335,8 @@ ChartUtil.DEFAULT_GROUP_CONFIG = new Map([
 ]);
 ChartUtil.TIER_ANNOTATIONS = null;
 ChartUtil.SEASON_ANNOTATIONS = new Map();
+ChartUtil.PATCH_ANNOTATIONS = new Map();
+ChartUtil.PATCH_ANNOTATION_BUILD_MIN = 39576;
 ChartUtil.CURSOR_PLUGIN =
 {
     id: "nephest-cursor",
