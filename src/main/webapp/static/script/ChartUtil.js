@@ -18,8 +18,8 @@ class ChartUtil
         config["id"] = chartable.id.substring(0, chartable.id.length - 6);
         if (Util.isMobile()) config["zoom"] = null;
         config["data"] = ChartUtil.collectChartJSData(chartable);
-
-        ChartUtil.CHARTS.set(chartable.id, ChartUtil.createGenericChart(config));
+        return ChartUtil.loadAdditionalChartData(config)
+            .then(e=>ChartUtil.CHARTS.set(chartable.id, ChartUtil.createGenericChart(config)));
     }
 
     static collectChartConfig(chartable)
@@ -29,6 +29,11 @@ class ChartUtil
             if(attr.name.startsWith("data-chart-"))
                 config[Util.kebabCaseToCamelCase(attr.name.substring(11))] = attr.value;
         return config;
+    }
+
+    static loadAdditionalChartData(config)
+    {
+        return Promise.resolve(config);
     }
 
     static createGenericChart(config)
@@ -826,15 +831,24 @@ class ChartUtil
 
     static updateChartable(chartable)
     {
-        const chart = ChartUtil.CHARTS.get(chartable.id);
-        if (chart === undefined)
-        {
-            ChartUtil.createChart(chartable);
-        }
-        else
-        {
-            ChartUtil.updateChart(chart, ChartUtil.collectChartJSData(chartable))
-        }
+        ElementUtil.executeTask(chartable.id, ()=>new Promise((res, rej)=>{
+            const chart = ChartUtil.CHARTS.get(chartable.id);
+            if (chart === undefined)
+            {
+                res(ChartUtil.createChart(chartable));
+            }
+            else
+            {
+                ChartUtil.updateChart(chart, ChartUtil.collectChartJSData(chartable));
+                res();
+            }
+        }));
+    }
+
+    static refresh(chart)
+    {
+        ElementUtil.executeTask(chart.config.chartable, ()=>ChartUtil.loadAdditionalChartData(chart.customConfig)
+            .then(e=>chart.update()));
     }
 
     static updateChartableTab(tab)
@@ -1094,7 +1108,7 @@ class ChartUtil
 
     static updateChartFromCtlGroup(evt)
     {
-        window.setTimeout(e=>ChartUtil.CHARTS.get(evt.target.closest(".chart-input-group").getAttribute("data-chartable")).update(), 1);
+        window.setTimeout(e=>ChartUtil.refresh(ChartUtil.CHARTS.get(evt.target.closest(".chart-input-group").getAttribute("data-chartable"))), 1);
     }
 
     static enhanceMmrAnnotationControls()
