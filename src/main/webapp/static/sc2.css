@@ -936,7 +936,7 @@ body.theme-dark .spinner-border
 
 .link-tile
 {
-    padding: 1em;
+    padding: 0.7em;
     border-radius: 1em;
 }
 
@@ -948,7 +948,23 @@ body.theme-dark .spinner-border
 
 .link-tile .logo
 {
-    width: 4em;
+    width: 2.5em;
+}
+
+.link-tile-discord-bot
+{
+    flex-direction: row;
+    margin-bottom: 0.3em;
+}
+
+.link-tile-discord-bot .feature
+{
+    display: none;
+}
+
+.link-tile-discord-bot .usage
+{
+    text-transform: lowercase;
 }
 
 .copy-to-clipboard

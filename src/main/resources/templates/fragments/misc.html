@@ -8,13 +8,13 @@
     <title>Pulse</title>
 </head>
 <body>
-<a th:fragment="discord-bot-tile" th:href="@{/discord/bot}" class="d-inline-block link-tile">
+<a th:fragment="discord-bot-tile" th:href="@{/discord/bot}" class="d-inline-block link-tile link-tile-discord-bot">
     <img src="#" th:src="@{/static/icon/logo/discord.svg}" alt="Discord Logo" class="logo">
-    <div class="mb-2">Discord bot</div>
-    <div class="d-inline-flex flex-column flex-center-wrap-gap text-secondary gap-tiny mb-0">
-        <div>1v1 stats</div>
-        <div>Role management</div>
-        <div>Used in <span th:text="${@discordAPI.getBotGuilds()?.size()}"></span> servers</div>
+    <div class="d-inline-flex flex-center-wrap-gap gap-tiny mb-0">
+        <div>Bot</div>
+        <div class="feature text-secondary">1v1 stats</div>
+        <div class="feature text-secondary">Role management</div>
+        <div class="usage text-secondary">Used in <span th:text="${@discordAPI.getBotGuilds()?.size()}"></span> servers</div>
     </div>
 </a>
 </body>
