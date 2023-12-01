@@ -951,13 +951,15 @@ body.theme-dark .spinner-border
     width: 2.5em;
 }
 
-.link-tile-discord-bot
+.link-tile-discord-bot,
+.link-tile-discord-server
 {
     flex-direction: row;
     margin-bottom: 0.3em;
 }
 
-.link-tile-discord-bot .feature
+.link-tile-discord-bot .feature,
+.link-tile-discord-server .feature
 {
     display: none;
 }

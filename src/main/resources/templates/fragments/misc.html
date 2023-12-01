@@ -17,5 +17,13 @@
         <div class="usage text-secondary">Used in <span th:text="${@discordAPI.getBotGuilds()?.size()}"></span> servers</div>
     </div>
 </a>
+<a th:fragment="discord-server-tile" th:href="${@environment.getProperty('contacts.discord.server')}" class="d-inline-block link-tile link-tile-discord-server">
+    <img src="#" th:src="@{/static/icon/logo/discord.svg}" alt="Discord" class="logo">
+    <div class="d-inline-flex flex-center-wrap-gap gap-tiny mb-0">
+        <div>Server</div>
+        <div class="feature text-secondary">Support</div>
+        <div class="feature text-secondary">Feature requests</div>
+    </div>
+</a>
 </body>
 </html>
