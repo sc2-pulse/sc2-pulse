@@ -50,6 +50,9 @@
         <div class="sponsor-desktop-side-container" th:if="${showAds == true}">
             <div id="dd-desktop-left" class="dd-block sponsor-desktop-side">
                 <!-- desktop-left -->
+                <div th:if="${@environment.getProperty('discord.bot.invite.url') != null}"
+                     th:replace="~{fragments/misc :: discord-bot-tile}">
+                </div>
                 <h2 class="mb-3 text-break"><a th:href="@{/?#search-stream}" class="link-stream-search">Featured streams</a></h2>
                 <div class="streams-featured d-flex flex-wrap-gap-1-5 justify-content-center">
                 </div>
