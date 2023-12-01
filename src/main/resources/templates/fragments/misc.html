@@ -14,7 +14,10 @@
         <div>Bot</div>
         <div class="feature text-secondary">1v1 stats</div>
         <div class="feature text-secondary">Role management</div>
-        <div class="usage text-secondary">Used in <span th:text="${@discordAPI.getBotGuilds()?.size()}"></span> servers</div>
+        <div class="usage text-secondary">
+            <span class="description">Used in</span>
+            <span th:text="${@discordAPI.getBotGuilds()?.size()}"></span> servers
+        </div>
     </div>
 </a>
 <a th:fragment="discord-server-tile" th:href="${@environment.getProperty('contacts.discord.server')}" class="d-inline-block link-tile link-tile-discord-server">

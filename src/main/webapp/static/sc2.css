@@ -959,6 +959,7 @@ body.theme-dark .spinner-border
 }
 
 .link-tile-discord-bot .feature,
+.link-tile-discord-bot .usage .description,
 .link-tile-discord-server .feature
 {
     display: none;
