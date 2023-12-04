@@ -140,6 +140,23 @@ public class BlizzardSC2APITest
     }
 
     @Test
+    public void testOptionalErrorCollection()
+    {
+        Region region = Region.EU;
+        long id = 1L;
+        long seconds = 2L;
+        Mono<BlizzardLadder> filteredLadder = Mono.error(new IllegalStateException("test"));
+        BlizzardTierDivision division = new BlizzardTierDivision(id);
+        BlizzardSC2API spy = spy(api);
+        doReturn(filteredLadder).when(spy).getFilteredLadder(region, id, seconds, null);
+
+        List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> list
+            = List.of(Tuples.of(new BlizzardLeague(), region, new BlizzardLeagueTier(), division));
+
+        spy.getLadders(list, seconds, Map.of()).blockLast();
+    }
+
+    @Test
     public void whenRedirectingToHealthyRegion_thenRedirect()
     {
         Region targetRegion = Region.KR;

@@ -911,10 +911,14 @@ extends BaseAPI
         return Flux.fromIterable(ladderIds)
             .flatMap(d->WebServiceUtil.getOnErrorLogAndSkipMono
             (
-                startingFromEpochSeconds < 1 || errors.get(d.getT2()).contains(d.getT4().getLadderId())
-                    ? getLadder(d.getT2(), d.getT4(), priorityName).zipWith(Mono.just(d))
-                    : getFilteredLadder(d.getT2(), d.getT4().getLadderId(), startingFromEpochSeconds, priorityName).zipWith(Mono.just(d)),
-                t->errors.get(d.getT2()).add(d.getT4().getLadderId())
+                startingFromEpochSeconds < 1
+                    || (
+                        !errors.isEmpty()
+                        && errors.get(d.getT2()).contains(d.getT4().getLadderId())
+                    )
+                        ? getLadder(d.getT2(), d.getT4(), priorityName).zipWith(Mono.just(d))
+                        : getFilteredLadder(d.getT2(), d.getT4().getLadderId(), startingFromEpochSeconds, priorityName).zipWith(Mono.just(d)),
+                !errors.isEmpty() ? t->errors.get(d.getT2()).add(d.getT4().getLadderId()) : t->{}
             ));
     }
 
