@@ -60,7 +60,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicLong;
@@ -196,7 +195,6 @@ public class StatsService
     @Value("${com.nephest.battlenet.sc2.ladder.forceUpdate:#{'false'}}")
     private boolean forceUpdate;
 
-    private final Map<Region, Set<Long>> failedLadders = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdates = new EnumMap<>(Region.class);
@@ -280,8 +278,6 @@ public class StatsService
         this.clanService = clanService;
         this.eventService = eventService;
         this.teamValidationPredicate = DAOUtils.beanValidationPredicate(validator);
-        for(Region r : Region.values())
-            failedLadders.put(r, ConcurrentHashMap.newKeySet());
     }
 
     @PostConstruct
@@ -618,7 +614,7 @@ public class StatsService
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds
     )
     {
-        return api.getLadders(ladderIds, -1, failedLadders)
+        return api.getLadders(ladderIds, -1, Map.of())
             .buffer(LADDER_BATCH_SIZE)
             .map(l->dbExecutorService.submit(()->statsService.saveLadders(season, l), (Void) null))
             .collectList()
