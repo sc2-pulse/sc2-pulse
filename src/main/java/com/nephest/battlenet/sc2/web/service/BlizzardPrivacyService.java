@@ -302,7 +302,7 @@ public class BlizzardPrivacyService
         List<Future<Void>> dbTasks = new ArrayList<>();
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, UPDATE_DATA), currentSeason);
-        api.getLadders(ladderIds, -1, null, REQUEST_LIMIT_PRIORITY_NAME)
+        api.getLadders(ladderIds, -1, Map.of(), REQUEST_LIMIT_PRIORITY_NAME)
             .flatMap(l->Flux.fromStream(extractPrivateInfo(l, seasonId, currentSeason)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()

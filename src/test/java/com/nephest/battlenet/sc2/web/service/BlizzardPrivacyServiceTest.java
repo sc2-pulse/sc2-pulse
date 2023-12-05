@@ -10,7 +10,6 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.argThat;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.anyBoolean;
 import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.doAnswer;
@@ -54,6 +53,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -420,7 +420,7 @@ public class BlizzardPrivacyServiceTest
     private OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>> stubLadderApi(Duration delay)
     {
         OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>> stub
-            = when(api.getLadders(any(), eq(-1L), isNull(), eq(REQUEST_LIMIT_PRIORITY_NAME)))
+            = when(api.getLadders(any(), eq(-1L), argThat(Map::isEmpty), eq(REQUEST_LIMIT_PRIORITY_NAME)))
                 .thenReturn(createLadder().delayElements(delay));
         for(int i = 0; i < globalContext.getActiveRegions().size(); i++)
             stub = stub.thenReturn(Flux.empty());
