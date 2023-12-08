@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'sc2pulse';
-  src: url('font/sc2pulse.woff?mcmq7') format('woff');
+  src: url('font/sc2pulse.woff?liymny') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -21,6 +21,33 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
+.icofont-bilibili:before {
+  content: "\e907";
+  color: #00a1d6;
+}
+.icofont-battlenet:before {
+  content: "\e900";
+  color: #1186cb;
+}
+.icofont-discord:before {
+  content: "\e901";
+  color: #5865f2;
+}
+.icofont-github:before {
+  content: "\e902";
+}
+.icofont-twitch:before {
+  content: "\e90b";
+  color: #9147ff;
+}
+.icofont-twitter:before {
+  content: "\e90c";
+  color: #1da1f2;
+}
+.icofont-youtube:before {
+  content: "\e90d";
+  color: #f00;
+}
 .icofont-copy:before {
   content: "\e92c";
 }
@@ -892,6 +919,12 @@ th.hoverable span
 body.theme-light .social-media
 {
   color: black;
+}
+
+.social-media .icofont
+{
+    font-size: 2em;
+    vertical-align: middle;
 }
 
 body.theme-light .spinner-border,
