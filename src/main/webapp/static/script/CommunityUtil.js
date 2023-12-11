@@ -198,7 +198,7 @@ class CommunityUtil
 
     static renderStreamThumbnail(stream)
     {
-        return ElementUtil.addLoadClassWatcher(ElementUtil.createElement
+        return CommunityUtil.addRegionalCdnAttributes(stream, ElementUtil.addLoadClassWatcher(ElementUtil.createElement
         (
             "img",
              null,
@@ -209,12 +209,12 @@ class CommunityUtil
                 ["src", stream.stream.thumbnailUrl],
                 ["alt", "Stream preview"]
              ]
-        ));
+        )));
     }
 
     static renderStreamProfile(stream)
     {
-        return ElementUtil.addLoadClassWatcher(ElementUtil.createElement
+        return CommunityUtil.addRegionalCdnAttributes(stream, ElementUtil.addLoadClassWatcher(ElementUtil.createElement
         (
             "img",
              null,
@@ -225,7 +225,13 @@ class CommunityUtil
                 ["src", stream.stream.profileImageUrl],
                 ["alt", "Profile img"]
              ]
-        ));
+        )));
+    }
+
+    static addRegionalCdnAttributes(stream, img)
+    {
+        if(stream.stream.service == "BILIBILI") img.setAttribute("referrerpolicy", "same-origin");
+        return img;
     }
 
     static renderStreamStreamer(stream)

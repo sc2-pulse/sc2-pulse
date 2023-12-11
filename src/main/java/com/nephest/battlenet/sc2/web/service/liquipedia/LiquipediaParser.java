@@ -39,7 +39,8 @@ public final class LiquipediaParser
         SocialMedia.TWITTER, "twitter",
         SocialMedia.DISCORD, "discord",
         SocialMedia.YOUTUBE, "youtube",
-        SocialMedia.INSTAGRAM, "instagram"
+        SocialMedia.INSTAGRAM, "instagram",
+        SocialMedia.BILIBILI, "bilibili"
     );
 
     public static final List<DateTimeFormatter> DATE_TIME_FORMATTERS = List.of

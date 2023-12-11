@@ -16,7 +16,8 @@ implements Identifiable
     YOUTUBE(7, "youtube", "https://www.youtube.com", "/channel"),
     UNKNOWN(8, "", null, null),
     BATTLE_NET(9, "battlenet", "battlenet:://starcraft", "/profile"),
-    REPLAY_STATS(10, "replaystats", "https://sc2replaystats.com", "/player");
+    REPLAY_STATS(10, "replaystats", "https://sc2replaystats.com", "/player"),
+    BILIBILI(11, "bilibili", "https://space.bilibili.com", "/");
 
     private final int id;
     private final String name;

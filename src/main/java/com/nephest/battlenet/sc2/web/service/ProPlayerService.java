@@ -73,6 +73,7 @@ public class ProPlayerService
     (
         SocialMedia.TWITCH,
         SocialMedia.YOUTUBE,
+        SocialMedia.BILIBILI,
         SocialMedia.TWITTER,
         SocialMedia.DISCORD,
         SocialMedia.INSTAGRAM
@@ -82,6 +83,7 @@ public class ProPlayerService
         SocialMedia.LIQUIPEDIA,
         SocialMedia.TWITCH,
         SocialMedia.YOUTUBE,
+        SocialMedia.BILIBILI,
         SocialMedia.TWITTER,
         SocialMedia.DISCORD,
         SocialMedia.INSTAGRAM

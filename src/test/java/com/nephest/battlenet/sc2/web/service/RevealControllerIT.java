@@ -319,6 +319,7 @@ public class RevealControllerIT
                     List.of
                     (
                         "https://www.twitch.tv/sErRaL",
+                        "https://space.bilibili.com/1234/",
                         "https://twitter.com/Serral_SC2"
                     )
                 )))
@@ -340,7 +341,7 @@ public class RevealControllerIT
                     bd1,
                     12345,
                     minUpdated,
-                    3
+                    4
                 ),
                 null,
                 List.of
@@ -354,6 +355,11 @@ public class RevealControllerIT
                     (
                         1L, SocialMedia.TWITTER, "https://twitter.com/Serral_SC2",
                         minUpdated, null, false
+                    ),
+                    new SocialMediaLink
+                    (
+                        1L, SocialMedia.BILIBILI, "https://space.bilibili.com/1234",
+                        minUpdated, "1234", false
                     )
                 )
             ));
@@ -379,7 +385,7 @@ public class RevealControllerIT
                         bd2,
                         23456,
                         minUpdated2.minusDays(1),
-                        4
+                        5
                     ),
                     List.of
                     (
@@ -404,7 +410,7 @@ public class RevealControllerIT
                     bd2,
                     23456,
                     minUpdated2,
-                    7
+                    9
                 ),
                 null,
                 List.of
@@ -520,6 +526,45 @@ public class RevealControllerIT
                     List.of
                     (
                         "https://www.twitch.tv/serral2nonex"
+                    )
+                )))
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    @WithBlizzardMockUser
+    (
+        partition =  Partition.GLOBAL,
+        username = "user",
+        roles =
+        {
+            SC2PulseAuthority.USER,
+            SC2PulseAuthority.REVEALER
+        }
+    )
+    public void whenInvalidBilibiliLinkFound_thenBadRequest()
+    throws Exception
+    {
+        mvc.perform
+        (
+            post("/api/reveal/player/edit")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(new ProPlayerForm(
+                    new ProPlayer
+                    (
+                        1L,
+                        1L,
+                        "tag2", "name2", "KR",
+                        LocalDate.now(),
+                        23456,
+                        OffsetDateTime.now(),
+                        4
+                    ),
+                    List.of
+                    (
+                        "https://space.bilibili.com/invalidId/"
                     )
                 )))
                 .with(csrf().asHeader())

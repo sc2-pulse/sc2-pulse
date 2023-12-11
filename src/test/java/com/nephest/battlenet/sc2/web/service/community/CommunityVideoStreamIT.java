@@ -99,8 +99,11 @@ public class CommunityVideoStreamIT
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @MockBean
+    @MockBean(classes = {TwitchVideoStreamSupplier.class})
     private VideoStreamSupplier videoStreamSupplier;
+
+    @MockBean(classes = {BilibiliVideoStreamSupplier.class})
+    private VideoStreamSupplier otherStreamSupplier;
 
     @MockBean
     private ThreadLocalRandomSupplier randomSupplier;
@@ -120,6 +123,7 @@ public class CommunityVideoStreamIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
+            when(otherStreamSupplier.getStreams()).thenReturn(Flux.empty());
         }
     }
 
