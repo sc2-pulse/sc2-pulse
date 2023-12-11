@@ -122,6 +122,22 @@ public class AdminController
         sc2API.setForceRegion(region, null);
     }
 
+    @PostMapping("/blizzard/api/region/{region}/force/{force}/profile")
+    public void setForceProfileAPIRegion
+    (
+        @PathVariable("region") Region region,
+        @PathVariable("force") Region force
+    )
+    {
+        sc2API.setForceProfileRegion(region, force);
+    }
+
+    @DeleteMapping("/blizzard/api/region/{region}/force/profile")
+    public void removeForceProfileAPIRegion(@PathVariable("region") Region region)
+    {
+        sc2API.setForceProfileRegion(region, null);
+    }
+
     @PostMapping("/blizzard/api/match/web/region/{region}")
     public void addMatchWebRegion(@PathVariable("region") Region region)
     {

@@ -84,8 +84,8 @@ public class StatusService
 
     private boolean updateRedirectedFlag(Region region, Status status)
     {
-        return api.getForceRegion(region) != null
-            && api.getForceRegion(region) != region
+        return (api.getForceRegion(region) != null && api.getForceRegion(region) != region)
+            || (api.getForceProfileRegion(region) != null && api.getForceProfileRegion(region) != region)
                 ? status.getFlags().add(Status.Flag.REDIRECTED)
                 : status.getFlags().remove(Status.Flag.REDIRECTED);
     }

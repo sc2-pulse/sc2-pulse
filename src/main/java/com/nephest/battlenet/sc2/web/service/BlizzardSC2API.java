@@ -56,6 +56,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
@@ -131,6 +133,8 @@ extends BaseAPI
     private String regionUri;
     private final Map<Region, Var<Region>> forceRegions = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forceRegionInstants = new EnumMap<>(Region.class);
+    private final Map<Region, Var<Region>> forceProfileRegions = new EnumMap<>(Region.class);
+    private final Map<Region, InstantVar> forceProfileRegionInstants = new EnumMap<>(Region.class);
     private final ObjectMapper objectMapper;
     private final Map<Region, WebClient> clients = new EnumMap<>(Region.class);
     private WebClient unauthorizedClient;
@@ -276,6 +280,17 @@ extends BaseAPI
                 );
                 forceRegionInstants.put(region,
                     new InstantVar(varDAO, region.getId() + ".blizzard.api.region.force.timestamp", false));
+                forceProfileRegions.put(region, new Var<>
+                    (
+                        varDAO,
+                        region.getId() + ".blizzard.api.region.profile.force",
+                        r->r == null ? null : String.valueOf(r.getId()),
+                        s->s == null || s.isEmpty() ? null : Region.from(Integer.parseInt(s)),
+                        false
+                    )
+                );
+                forceProfileRegionInstants.put(region,
+                    new InstantVar(varDAO, region.getId() + ".blizzard.api.region.profile.force.timestamp", false));
             }
             for(Map.Entry<Region, Var<Region>> e : forceRegions.entrySet())
             {
@@ -287,6 +302,16 @@ extends BaseAPI
                 Instant timestamp = e.getValue().load();
                 if(timestamp != null) LOG.debug("Force region timestamp loaded: {} {}", e.getKey(), timestamp);
             }
+            for(Map.Entry<Region, Var<Region>> e : forceProfileRegions.entrySet())
+            {
+                Region force = e.getValue().load();
+                if(force != null) LOG.warn("Force profile region loaded: {}->{}", e.getKey(), force);
+            }
+            for(Map.Entry<Region, InstantVar> e : forceProfileRegionInstants.entrySet())
+            {
+                Instant timestamp = e.getValue().load();
+                if(timestamp != null) LOG.debug("Force profile region timestamp loaded: {} {}", e.getKey(), timestamp);
+            }
         }
         catch(RuntimeException ex)
         {
@@ -297,6 +322,25 @@ extends BaseAPI
     protected void autoForceRegion()
     {
         if(!isAutoForceRegion()) return;
+
+        autoForceRegion(forceRegions, forceRegionInstants, this::setForceRegion, this::setForceRegion);
+        autoForceRegion
+        (
+            forceProfileRegions,
+            forceProfileRegionInstants,
+            this::setForceProfileRegion,
+            this::setForceProfileRegion
+        );
+    }
+
+    private void autoForceRegion
+    (
+        Map<Region, Var<Region>> forceRegions,
+        Map<Region, InstantVar> forceRegionInstants,
+        BiConsumer<Region, Region> setForceRegion,
+        Consumer<Region> setDefaultRegion
+    )
+    {
         for(Region region : globalContext.getActiveRegions())
         {
             if(forceRegions.get(region).getValue() != null)
@@ -306,7 +350,7 @@ extends BaseAPI
                     || Instant.now().getEpochSecond() - ts.getEpochSecond() > AUTO_FORCE_REGION_MAX_DURATION.toSeconds())
                 {
                     LOG.info("{} API host redirect timeout reached, removing redirect", region);
-                    setForceRegion(region, null);
+                    setForceRegion.accept(region, null);
                 }
             }
             else
@@ -320,7 +364,7 @@ extends BaseAPI
                     healthMonitors.get(region).getErrorRate(),
                     FORCE_REGION_ERROR_RATE_THRESHOLD
                 );
-                setForceRegion(region);
+                setDefaultRegion.accept(region);
             }
         }
     }
@@ -489,6 +533,34 @@ extends BaseAPI
     public Region getForceRegion(Region region)
     {
         return forceRegions.get(region).getValue();
+    }
+
+    public void setForceProfileRegion(Region target)
+    {
+        setForceProfileRegion(target, getDefaultOrHealthyForceRegion(target));
+    }
+
+    public void setForceProfileRegion(Region target, Region force)
+    {
+        forceProfileRegions.get(target).setValueAndSave(force);
+        forceProfileRegionInstants.get(target).setValueAndSave(force == null ? null : Instant.now());
+        LOG.warn("Redirecting API host(profile): {}->{}", target, force);
+    }
+
+    protected void setForceProfileRegionInstant(Region region, Instant instant)
+    {
+        forceProfileRegionInstants.get(region).setValueAndSave(instant);
+    }
+
+    protected Region getProfileRegion(Region targetRegion)
+    {
+        Region forceRegion = forceProfileRegions.get(targetRegion).getValue();
+        return forceRegion != null ? forceRegion : targetRegion;
+    }
+
+    protected Region getForceProfileRegion(Region targetRegion)
+    {
+        return forceProfileRegions.get(targetRegion).getValue();
     }
 
     private void setRequestCap
@@ -1236,7 +1308,7 @@ extends BaseAPI
         String priorityName
     )
     {
-        Region region = getRegion(playerCharacter.getRegion());
+        Region region = getProfileRegion(playerCharacter.getRegion());
         ApiContext context = getContext(region, web);
         return getWebClient(region)
             .get()
@@ -1294,7 +1366,7 @@ extends BaseAPI
     public Mono<Tuple2<BlizzardLegacyProfile, PlayerCharacterNaturalId>> getLegacyProfile
     (PlayerCharacterNaturalId playerCharacter, boolean web)
     {
-        Region region = getRegion(playerCharacter.getRegion());
+        Region region = getProfileRegion(playerCharacter.getRegion());
         ApiContext context = getContext(region, web);
         return getWebClient(region)
             .get()
@@ -1328,7 +1400,7 @@ extends BaseAPI
     public Mono<Tuple2<BlizzardProfile, PlayerCharacterNaturalId>> getProfile
     (PlayerCharacterNaturalId playerCharacter, boolean web)
     {
-        Region region = getRegion(playerCharacter.getRegion());
+        Region region = getProfileRegion(playerCharacter.getRegion());
         ApiContext context = getContext(region, web);
         return getWebClient(region)
             .get()

@@ -324,6 +324,35 @@ public class BlizzardSC2APIIT
 
     @Test
     @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
+    public void testForceProfileRegion()
+    throws Exception
+    {
+        mvc.perform
+        (
+            post("/admin/blizzard/api/region/US/force/EU/profile")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertEquals(Region.EU, api.getProfileRegion(Region.US));
+        assertEquals(Region.KR, api.getProfileRegion(Region.KR));
+
+        mvc.perform
+        (
+            delete("/admin/blizzard/api/region/US/force/profile")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        assertEquals(Region.US, api.getProfileRegion(Region.US));
+    }
+
+    @Test
+    @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
     public void testIgnoreSllErrors()
     throws Exception
     {
