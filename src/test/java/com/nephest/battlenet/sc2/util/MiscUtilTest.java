@@ -162,4 +162,39 @@ public class MiscUtilTest
         assertEquals(out, MiscUtil.convertReservedISO3166Alpha2Code(in));
     }
 
+    @CsvSource
+    ({
+        "'',",
+        "' ',",
+        "'asd',",
+        "'12a34',",
+
+        "'1234', 1234",
+        "'-1234', -1234",
+        Long.MAX_VALUE + ", " + Long.MAX_VALUE
+    })
+    @ParameterizedTest
+    public void testTryParseUnsignedLong(String in, Long out)
+    {
+        assertEquals(out, MiscUtil.tryParseLong(in));
+    }
+
+    @CsvSource
+    ({
+        "'',",
+        "' ',",
+        "'asd',",
+        "'12a34',",
+        "'-1',",
+
+        "'1234', '1234'",
+        "'18446744073709551615', '18446744073709551615'"
+    })
+    @ParameterizedTest
+    public void testTryParseUnsignedLong(String in, String out)
+    {
+        Long result = MiscUtil.tryParseUnsignedLong(in);
+        assertEquals(out, result != null ? Long.toUnsignedString(result) : null);
+    }
+
 }

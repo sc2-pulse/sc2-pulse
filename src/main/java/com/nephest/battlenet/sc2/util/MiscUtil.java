@@ -206,4 +206,42 @@ public final class MiscUtil
         return code.equals("UK") ? "GB" : code;
     }
 
+    /**
+     *
+     * @param text input text
+     * @return {@link Long#parseLong(String)} if possible, null otherwise
+     */
+    public static Long tryParseLong(String text)
+    {
+        if(text == null) return null;
+
+        try
+        {
+            return Long.parseLong(text);
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
+    /**
+     *
+     * @param text input text
+     * @return {@link Long#parseUnsignedLong(String)} if possible, null otherwise
+     */
+    public static Long tryParseUnsignedLong(String text)
+    {
+        if(text == null) return null;
+
+        try
+        {
+            return Long.parseUnsignedLong(text);
+        }
+        catch (Exception ex)
+        {
+            return null;
+        }
+    }
+
 }
