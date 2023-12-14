@@ -187,37 +187,43 @@ public class WebServiceUtil
         return decorateMono(
             mono,
             t->{
-                if(t instanceof TemplatedException) {
-                    TemplatedException te = (TemplatedException) t;
-                    LogUtil.log(LOG, logLevelFunction.apply(t), te.getLogTemplate(), te.getLogArgs());
-                }
-                else if(t instanceof WebClientResponseException)
-                {
-                    logWebClientException((WebClientResponseException) t, logLevelFunction);
-                }
-                else if(ExceptionUtils.getRootCause(t) instanceof WebClientResponseException)
-                {
-                    logWebClientException((WebClientResponseException) ExceptionUtils.getRootCause(t), logLevelFunction);
-                }
-                else
-                {
-                    if(shouldLogStackTrace(t))
-                    {
-                        LogUtil.log(LOG, logLevelFunction.apply(t), t);
-                    }
-                    else
-                    {
-                        LogUtil.log
-                        (
-                            LOG,
-                            logLevelFunction.apply(t),
-                            ExceptionUtils.getRootCauseMessage(t)
-                        );
-                    }
-                }
+                logException(t, logLevelFunction.apply(t));
                 return Mono.empty();
             },
             onError);
+    }
+
+    private static void logException(Throwable t, LogUtil.LogLevel logLevel)
+    {
+        if(t instanceof TemplatedException)
+        {
+            TemplatedException te = (TemplatedException) t;
+            LogUtil.log(LOG, logLevel, te.getLogTemplate(), te.getLogArgs());
+        }
+        else if(t instanceof WebClientResponseException)
+        {
+            logWebClientException((WebClientResponseException) t, logLevel);
+        }
+        else if(ExceptionUtils.getRootCause(t) instanceof WebClientResponseException)
+        {
+            logWebClientException((WebClientResponseException) ExceptionUtils.getRootCause(t), logLevel);
+        }
+        else
+        {
+            if(shouldLogStackTrace(t))
+            {
+                LogUtil.log(LOG, logLevel, t);
+            }
+            else
+            {
+                LogUtil.log
+                (
+                    LOG,
+                    logLevel,
+                    ExceptionUtils.getRootCauseMessage(t)
+                );
+            }
+        }
     }
 
     /**
@@ -266,7 +272,7 @@ public class WebServiceUtil
     }
 
     public static void logWebClientException
-    (WebClientResponseException wcre, Function<Throwable, LogUtil.LogLevel> logLevelFunction)
+    (WebClientResponseException wcre, LogUtil.LogLevel logLevel)
     {
         if
         (
@@ -275,14 +281,14 @@ public class WebServiceUtil
             && wcre.getHeaders().containsKey("x-trace-parentspanid")
         )
         {
-            LogUtil.log(LOG, logLevelFunction.apply(wcre), TRACE_EXCEPTION_LOG_TEMPLATE,
+            LogUtil.log(LOG, logLevel, TRACE_EXCEPTION_LOG_TEMPLATE,
                 ExceptionUtils.getRootCauseMessage(wcre),
                 wcre.getHeaders().get("x-trace-traceid").get(0),
                 wcre.getHeaders().get("x-trace-spanid").get(0),
                 wcre.getHeaders().get("x-trace-parentspanid").get(0));
         } else
         {
-            LogUtil.log(LOG, logLevelFunction.apply(wcre), ExceptionUtils.getRootCauseMessage(wcre));
+            LogUtil.log(LOG, logLevel, ExceptionUtils.getRootCauseMessage(wcre));
         }
     }
 
