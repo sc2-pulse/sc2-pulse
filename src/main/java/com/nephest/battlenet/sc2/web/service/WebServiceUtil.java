@@ -193,6 +193,26 @@ public class WebServiceUtil
             onError);
     }
 
+    public static <T> Flux<T> getOnErrorLogAndSkipFlux(Flux<T> flux)
+    {
+        return getOnErrorLogAndSkipFlux(flux, null, t->LogUtil.LogLevel.ERROR);
+    }
+
+    public static <T> Flux<T> getOnErrorLogAndSkipFlux
+    (
+        Flux<T> flux,
+        Consumer<? super Throwable> onError,
+        Function<Throwable, LogUtil.LogLevel> logLevelFunction
+    )
+    {
+        return flux
+            .doOnError(t->{
+                logException(t, logLevelFunction.apply(t));
+                if(onError != null) onError.accept(t);
+            })
+            .onErrorComplete();
+    }
+
     private static void logException(Throwable t, LogUtil.LogLevel logLevel)
     {
         if(t instanceof TemplatedException)

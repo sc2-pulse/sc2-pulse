@@ -5,7 +5,12 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.nephest.battlenet.sc2.util.LogUtil;
+import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import reactor.core.publisher.Flux;
 
 public class WebServiceUtilTest
 {
@@ -30,6 +35,22 @@ public class WebServiceUtilTest
                 .toLowerCase()
                 .contains("elastic")
         );
+    }
+
+    @Test
+    public void whenExceptionIsThrownInSkipErrorsFlux_thenComplete()
+    {
+        AtomicBoolean run = new AtomicBoolean(false);
+        List<Integer> ints = WebServiceUtil.getOnErrorLogAndSkipFlux(Flux.concat(
+            Flux.just(1, 2),
+            Flux.error(new IllegalStateException("test")),
+            Flux.just(4)
+        ), t->run.set(true), t-> LogUtil.LogLevel.ERROR)
+            .collectList()
+            .block();
+        Assertions.assertThat(ints)
+            .isEqualTo(List.of(1, 2));
+        assertTrue(run.get());
     }
 
 }
