@@ -9,10 +9,11 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
-import com.nephest.battlenet.sc2.web.service.community.LadderVideoStream;
+import com.nephest.battlenet.sc2.web.service.community.CommunityStreamResult;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -46,15 +47,26 @@ public class RevealedController
     }
 
     @GetMapping("/stream")
-    public ResponseEntity<List<LadderVideoStream>> getStreams()
+    public ResponseEntity<CommunityStreamResult> getStreams()
     {
-        return WebServiceUtil.notFoundIfEmpty(communityService.getStreams().block());
+        CommunityStreamResult result = communityService.getStreams().block();
+        return ResponseEntity.status(getStatus(result)).body(result);
     }
 
     @GetMapping("/stream/featured")
-    public ResponseEntity<List<LadderVideoStream>> getFeaturedStreams()
+    public ResponseEntity<CommunityStreamResult> getFeaturedStreams()
     {
-        return WebServiceUtil.notFoundIfEmpty(communityService.getFeaturedStreams().block());
+        CommunityStreamResult result = communityService.getFeaturedStreams().block();
+        return ResponseEntity.status(getStatus(result)).body(result);
+    }
+
+    private static HttpStatus getStatus(CommunityStreamResult result)
+    {
+        return !result.getErrors().isEmpty()
+            ? HttpStatus.BAD_GATEWAY
+            : result.getStreams().isEmpty()
+                ? HttpStatus.NOT_FOUND
+                : HttpStatus.OK;
     }
 
 }

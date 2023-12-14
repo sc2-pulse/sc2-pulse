@@ -82,14 +82,14 @@ class CommunityUtil
     {
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream`))
-            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
     static getFeaturedStreams()
     {
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream/featured`))
-            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
     static updateStreamModel()
@@ -98,7 +98,7 @@ class CommunityUtil
             .then(streams=>{
                 Model.DATA.get(VIEW.STREAM_SEARCH).set(VIEW_DATA.SEARCH, streams);
                 CommunityUtil.updateStreamSorting();
-                return {data: streams, status: LOADING_STATUS.COMPLETE};
+                return {data: streams, status: streams.errors.length == 0 ? LOADING_STATUS.COMPLETE : LOADING_STATUS.ERROR};
             });
     }
 
@@ -108,10 +108,10 @@ class CommunityUtil
         if(!data) return;
 
         if(localStorage.getItem("stream-sort-by") === "mmr") {
-            data.sort((a, b)=>(b.team != null ? b.team.rating : -Infinity)
+            data.streams.sort((a, b)=>(b.team != null ? b.team.rating : -Infinity)
                 - (a.team != null ? a.team.rating : -Infinity));
         } else {
-            data.sort((a, b)=>b.stream.viewerCount - a.stream.viewerCount);
+            data.streams.sort((a, b)=>b.stream.viewerCount - a.stream.viewerCount);
         }
     }
 
@@ -119,7 +119,7 @@ class CommunityUtil
     {
         const data = Model.DATA.get(VIEW.STREAM_SEARCH).get(VIEW_DATA.SEARCH);
         CommunityUtil.updateStreamContainer(data, document.querySelector("#search-stream .streams"));
-        return {data: data, status: LOADING_STATUS.COMPLETE};
+        return {data: data, status: data.errors.length == 0 ? LOADING_STATUS.COMPLETE : LOADING_STATUS.ERROR};
     }
     
     static updateStreams()
@@ -138,7 +138,9 @@ class CommunityUtil
     {
         if(clear) ElementUtil.removeChildren(container);
 
-        for(const stream of streams) container.appendChild(CommunityUtil.renderStream(stream, featured));
+        if(streams.streams)
+            for(const stream of streams.streams)
+                container.appendChild(CommunityUtil.renderStream(stream, featured));
     }
 
     static renderStream(stream, featured = false)

@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service.community;
 
+import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.SocialMediaUserId;
@@ -13,6 +14,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.time.Duration;
@@ -20,6 +22,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -114,18 +117,24 @@ public class CommunityService
     }
 
     @Cacheable(cacheNames = "community-video-stream")
-    public Mono<List<LadderVideoStream>> getStreams()
+    public Mono<CommunityStreamResult> getStreams()
     {
         return getStreamsNoCache();
     }
 
-    public Mono<List<LadderVideoStream>> getStreamsNoCache()
+    public Mono<CommunityStreamResult> getStreamsNoCache()
     {
+        Set<SocialMedia> errors = EnumSet.noneOf(SocialMedia.class);
         return Flux.fromIterable(streamSuppliers)
-            .flatMap(VideoStreamSupplier::getStreams)
+            .flatMap(supplier->WebServiceUtil.getOnErrorLogAndSkipFlux(
+                supplier.getStreams(),
+                t->errors.add(supplier.getService()),
+                t->LogUtil.LogLevel.ERROR
+            ))
             .sort(STREAM_COMPARATOR)
             .collectList()
             .flatMap(streams->WebServiceUtil.blockingCallable(()->enrich(streams)))
+            .map(streams->new CommunityStreamResult(streams, errors))
             .cache((m)->STREAM_CACHE_EXPIRE_AFTER, (t)->Duration.ZERO, ()->STREAM_CACHE_EXPIRE_AFTER);
     }
 
@@ -176,15 +185,16 @@ public class CommunityService
     }
 
     @Cacheable(cacheNames = "community-video-stream-featured")
-    public Mono<List<LadderVideoStream>> getFeaturedStreams()
+    public Mono<CommunityStreamResult> getFeaturedStreams()
     {
         return getFeaturedStreamsNoCache();
     }
 
-    public Mono<List<LadderVideoStream>> getFeaturedStreamsNoCache()
+    public Mono<CommunityStreamResult> getFeaturedStreamsNoCache()
     {
         return communityService.getStreams()
-            .map(this::getFeaturedStreams)
+            .map(result->new CommunityStreamResult(
+                getFeaturedStreams(result.getStreams()), result.getErrors()))
             .cache((m)->
                 FEATURED_STREAM_CACHE_EXPIRE_AFTER,
                 (t)->Duration.ZERO,

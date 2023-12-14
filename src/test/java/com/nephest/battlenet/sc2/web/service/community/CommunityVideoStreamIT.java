@@ -42,6 +42,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Random;
@@ -244,7 +245,7 @@ public class CommunityVideoStreamIT
         };
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
         
-        List<LadderVideoStream> ladderStreams = objectMapper.readValue(mvc.perform
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -254,8 +255,8 @@ public class CommunityVideoStreamIT
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .ignoringFields("proPlayer.proPlayer.version")
-            .isEqualTo(List.of(
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(List.of(
                 new LadderVideoStream
                 (
                     streams[0],
@@ -295,7 +296,7 @@ public class CommunityVideoStreamIT
                         .findAny()
                         .orElseThrow()
                 )
-            ));
+            ), Set.of()));
     }
     
     @Test
@@ -345,7 +346,7 @@ public class CommunityVideoStreamIT
         );
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.just(stream));
 
-        List<LadderVideoStream> ladderStreams = objectMapper.readValue(mvc.perform
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -355,8 +356,8 @@ public class CommunityVideoStreamIT
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .ignoringFields("proPlayer.proPlayer.version")
-            .isEqualTo(List.of(
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(List.of(
                 new LadderVideoStream
                 (
                     stream,
@@ -371,7 +372,7 @@ public class CommunityVideoStreamIT
                         .findAny()
                         .orElseThrow()
                 )
-            ));
+            ), Set.of()));
     }
 
     public static VideoStream createIndexedVideoStream(int ix)
@@ -439,7 +440,7 @@ public class CommunityVideoStreamIT
 
         assertNull(communityService.getCurrentRandomStreamAssigned());
         Instant beforeRandomStreamReassignment1 = Instant.now();
-        List<LadderVideoStream> featuredStreams1 = objectMapper.readValue(mvc.perform
+        CommunityStreamResult featuredStreams1 = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream/featured")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -463,8 +464,8 @@ public class CommunityVideoStreamIT
         Assertions.assertThat(featuredStreams1)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .ignoringFields("proPlayer.proPlayer.version")
-            .isEqualTo(featuredStreams);
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(featuredStreams, Set.of()));
         assertTrue(beforeRandomStreamReassignment1
             .isBefore(communityService.getCurrentRandomStreamAssigned()));
         return featuredStreams;
@@ -482,7 +483,7 @@ public class CommunityVideoStreamIT
             .plusSeconds(5); //offset for test execution
         communityService.setCurrentRandomStreamAssigned(maxRandomStreamInstant);
         lenient().when(rng.nextInt(anyInt())).thenReturn(0);
-        List<LadderVideoStream> featuredStreams2 = objectMapper.readValue(mvc.perform
+        CommunityStreamResult featuredStreams2 = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream/featured")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -492,8 +493,8 @@ public class CommunityVideoStreamIT
         Assertions.assertThat(featuredStreams2)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .ignoringFields("proPlayer.proPlayer.version")
-            .isEqualTo(featuredStreams);
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(featuredStreams, Set.of()));
         assertEquals(maxRandomStreamInstant, communityService.getCurrentRandomStreamAssigned());
 
         //random stream slot has expired, should pick a new stream due to different rng
@@ -509,7 +510,7 @@ public class CommunityVideoStreamIT
             )
         );
         Instant beforeRandomStreamReassignment2 = Instant.now();
-        List<LadderVideoStream> featuredStreams3 = objectMapper.readValue(mvc.perform
+        CommunityStreamResult featuredStreams3 = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream/featured")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -519,8 +520,8 @@ public class CommunityVideoStreamIT
         Assertions.assertThat(featuredStreams3)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .ignoringFields("proPlayer.proPlayer.version")
-            .isEqualTo(featuredStreams);
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(featuredStreams, Set.of()));
         assertTrue(beforeRandomStreamReassignment2
             .isBefore(communityService.getCurrentRandomStreamAssigned()));
     }
@@ -548,7 +549,7 @@ public class CommunityVideoStreamIT
                 .minus(CommunityService.CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .minusSeconds(10)
         );
-        List<LadderVideoStream> featuredStreams2 = objectMapper.readValue(mvc.perform
+        CommunityStreamResult featuredStreams2 = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream/featured")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -558,8 +559,54 @@ public class CommunityVideoStreamIT
         Assertions.assertThat(featuredStreams2)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .ignoringFields("proPlayer.proPlayer.version")
-            .isEqualTo(featuredStreams);
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(featuredStreams, Set.of()));
+    }
+
+    @Test
+    public void whenStreamProviderReturnsError_thenAddErrorInfoAndIgnoreIt()
+    {
+        List<VideoStream> streams = List.of
+        (
+            new VideoStreamImpl
+            (
+                SocialMedia.TWITCH,
+                "twitchStreamId1",
+                "twitchServiceUserId1",
+                "twitchUserName1",
+                "title1",
+                Locale.ENGLISH,
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/profile",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/thumbnail",
+                3
+            ),
+            new VideoStreamImpl
+            (
+                SocialMedia.TWITCH,
+                "twitchStreamId2",
+                "twitchServiceUserId2",
+                "twitchUserName2",
+                "title2",
+                Locale.FRENCH,
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2/profile",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser2/thumbnail",
+                2
+            )
+        );
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromIterable(streams));
+        when(otherStreamSupplier.getStreams())
+            .thenReturn(Flux.error(new IllegalStateException("test")));
+        when(otherStreamSupplier.getService()).thenReturn(SocialMedia.BILIBILI);
+        Assertions.assertThat(communityService.getStreams().block())
+            .usingRecursiveComparison()
+            .isEqualTo(new CommunityStreamResult(
+                streams.stream()
+                    .map(stream->new LadderVideoStream(stream, null, null))
+                    .collect(Collectors.toList()),
+                EnumSet.of(SocialMedia.BILIBILI)
+            ));
     }
 
 }
