@@ -43,6 +43,12 @@ implements VideoStreamSupplier
     }
 
     @Override
+    public SocialMedia getService()
+    {
+        return SocialMedia.TWITCH;
+    }
+
+    @Override
     public Flux<VideoStream> getStreams()
     {
         return api.getStreamsByGameId(SC2_GAME_ID, LIMIT)

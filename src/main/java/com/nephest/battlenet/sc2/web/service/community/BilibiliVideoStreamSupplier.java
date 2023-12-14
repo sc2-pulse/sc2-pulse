@@ -28,6 +28,12 @@ implements VideoStreamSupplier
     }
 
     @Override
+    public SocialMedia getService()
+    {
+        return SocialMedia.BILIBILI;
+    }
+
+    @Override
     public Flux<VideoStream> getStreams()
     {
         return api.getStreams(STAR_CRAFT_2_PARENT_AREA_ID, STAR_CRAFT_2_AREA_ID)

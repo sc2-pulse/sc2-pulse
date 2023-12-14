@@ -3,10 +3,13 @@
 
 package com.nephest.battlenet.sc2.web.service.community;
 
+import com.nephest.battlenet.sc2.model.SocialMedia;
 import reactor.core.publisher.Flux;
 
 public interface VideoStreamSupplier
 {
+
+    SocialMedia getService();
 
     Flux<VideoStream> getStreams();
 
