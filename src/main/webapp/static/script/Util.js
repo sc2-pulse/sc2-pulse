@@ -464,3 +464,4 @@ Util.ERROR_MESSAGES = new Map([
         + "The entity has already been modified by someone else. "
         + "Please reload the entity and verify changes."]
 ]);
+Util.LANGUAGE_NAMES = new Intl.DisplayNames([], { type: "language" });
