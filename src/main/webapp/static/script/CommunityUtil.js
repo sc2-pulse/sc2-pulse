@@ -257,6 +257,8 @@ class CommunityUtil
         if(stream.team != null) container.appendChild(CommunityUtil.renderStreamTeamLink(stream));
 
         const tags = ElementUtil.createElement("div", null, "tags");
+        tags.appendChild(ElementUtil.createElement(
+            "div", null, "icofont-" + stream.stream.service.toLowerCase(), null, [["title", stream.stream.service]]));
         if(stream.stream.language != null) tags.appendChild(ElementUtil.createElement(
             "div",
             null,
