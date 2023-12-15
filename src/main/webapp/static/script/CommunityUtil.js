@@ -255,8 +255,18 @@ class CommunityUtil
     {
         const container = ElementUtil.createElement("footer", null, "meta");
         if(stream.team != null) container.appendChild(CommunityUtil.renderStreamTeamLink(stream));
+
+        const tags = ElementUtil.createElement("div", null, "tags");
+        if(stream.stream.language != null) tags.appendChild(ElementUtil.createElement(
+            "div",
+            null,
+            "language text-secondary",
+            Util.LANGUAGE_NAMES.of(stream.stream.language),
+            [["title", "language"]]
+        ));
         if(featured && stream.featured != null)
-            container.appendChild(ElementUtil.createElement("div", null, "featured text-info", stream.featured));
+            tags.appendChild(ElementUtil.createElement("div", null, "featured text-info", stream.featured));
+        container.appendChild(tags);
 
         return container;
     }
@@ -264,7 +274,7 @@ class CommunityUtil
     static renderStreamTeamLink(stream)
     {
         const url = TeamUtil.getTeamMmrHistoryHref([stream.team]);
-        const link = ElementUtil.createElement("a", null, "unstyled", null, [["href", url], ["target", "_blank"]]);
+        const link = ElementUtil.createElement("a", null, "unstyled team-link", null, [["href", url], ["target", "_blank"]]);
         link.appendChild(CommunityUtil.renderStreamTeam(stream));
         return link;
     }

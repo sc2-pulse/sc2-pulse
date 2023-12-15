@@ -1517,7 +1517,15 @@ body.modal-open.modal-open-no-popup
     display: inline-flex !important;
 }
 
-.stream .team
+.stream .meta .tags
+{
+    display: flex;
+    gap: 0.5em;
+    align-items: center;
+}
+
+.stream .team,
+.stream .tags
 {
     z-index: 1;
     line-height: normal !important;
@@ -1600,7 +1608,7 @@ body.modal-open.modal-open-no-popup
 .streams.compact
 {
     display: grid !important;
-    grid-template-columns: repeat(4, auto);
+    grid-template-columns: repeat(5, auto);
     align-items: center;
     gap: 1em 1.5em;
     min-width: 15em;
@@ -1662,13 +1670,11 @@ body.modal-open.modal-open-no-popup
 
 .streams.compact .stream .meta
 {
-    grid-column: 4/4;
     display: flex !important;
 }
 
 .streams.compact .stream .meta *
 {
-    grid-column: 4/4;
     display: inline-flex !important;
 }
 
@@ -1677,6 +1683,23 @@ body.modal-open.modal-open-no-popup
 .streams.compact .stream .meta .team
 {
     height: 100%;
+}
+
+.streams.compact .stream .meta,
+.streams.compact .stream .meta tags
+{
+    display: grid !important;
+    grid-template-columns: subgrid;
+}
+
+.streams.compact .stream .meta .tags
+{
+    grid-column: 4/4;
+}
+
+.streams.compact .stream .meta .team-link
+{
+    grid-column: 5/5;
 }
 
 .new:after
