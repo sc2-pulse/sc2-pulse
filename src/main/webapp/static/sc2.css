@@ -1480,7 +1480,7 @@ body.modal-open.modal-open-no-popup
     width: 100%;
 }
 
-.stream header
+.stream .body
 {
     position: relative;
 }
@@ -1574,8 +1574,8 @@ body.modal-open.modal-open-no-popup
 .streams .stream .viewers
 {
     position: absolute;
-    bottom: 3.7rem;
-    left: -2.5rem;
+    top: -2.5rem;
+    left: 0.5rem;
     color: white;
     background-color: rgba(0, 0, 0, 0.65);
     padding: 0.4em;
