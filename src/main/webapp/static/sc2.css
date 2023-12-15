@@ -1511,7 +1511,8 @@ body.modal-open.modal-open-no-popup
     content: " viewers";
 }
 
-.stream .meta *
+.stream .meta .team,
+.stream .meta .team *
 {
     display: inline-flex !important;
 }
