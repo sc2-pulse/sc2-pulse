@@ -1541,6 +1541,11 @@ body.modal-open.modal-open-no-popup
     display: none !important;
 }
 
+.stream .meta .tags .language-code
+{
+    display: none;
+}
+
 .streams-featured .stream .team .table-image-additional
 {
     display: none !important;
@@ -1635,6 +1640,16 @@ body.modal-open.modal-open-no-popup
 .streams.compact .stream .title
 {
     display: none !important;
+}
+
+.streams.compact .stream .meta .tags .language-name
+{
+    display: none !important;
+}
+
+.streams.compact .stream .meta .tags .language-code
+{
+    display: inherit;
 }
 
 .streams.compact .stream .profile

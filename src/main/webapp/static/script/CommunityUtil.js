@@ -259,13 +259,23 @@ class CommunityUtil
         const tags = ElementUtil.createElement("div", null, "tags");
         tags.appendChild(ElementUtil.createElement(
             "div", null, "icofont-" + stream.stream.service.toLowerCase(), null, [["title", stream.stream.service]]));
-        if(stream.stream.language != null) tags.appendChild(ElementUtil.createElement(
-            "div",
-            null,
-            "language text-secondary",
-            Util.LANGUAGE_NAMES.of(stream.stream.language),
-            [["title", "language"]]
-        ));
+        if(stream.stream.language != null) {
+            const languageName = Util.LANGUAGE_NAMES.of(stream.stream.language);
+            tags.appendChild(ElementUtil.createElement(
+                "div",
+                null,
+                "language language-code text-secondary",
+                stream.stream.language,
+                [["title", languageName]]
+            ));
+            tags.appendChild(ElementUtil.createElement(
+                "div",
+                null,
+                "language language-name text-secondary",
+                languageName,
+                [["title", "language"]]
+            ));
+        }
         if(featured && stream.featured != null)
             tags.appendChild(ElementUtil.createElement("div", null, "featured text-info", stream.featured));
         container.appendChild(tags);
