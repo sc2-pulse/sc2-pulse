@@ -258,7 +258,7 @@ class CommunityUtil
 
         const tags = ElementUtil.createElement("div", null, "tags");
         tags.appendChild(ElementUtil.createElement(
-            "div", null, "icofont-" + stream.stream.service.toLowerCase(), null, [["title", stream.stream.service]]));
+            "div", null, "service icofont-" + stream.stream.service.toLowerCase(), null, [["title", stream.stream.service]]));
         if(stream.stream.language != null) {
             const languageName = Util.LANGUAGE_NAMES.of(stream.stream.language);
             tags.appendChild(ElementUtil.createElement(

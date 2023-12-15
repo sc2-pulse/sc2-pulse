@@ -1589,13 +1589,25 @@ body.modal-open.modal-open-no-popup
 {
     position: absolute;
     top: -2.5rem;
-    left: 0.5rem;
+    left: 2.3rem;
     color: white;
+    font-size: 0.9em;
+}
+
+.streams.twitch .stream .service
+{
+    position: absolute;
+    top: -2.57rem;
+    left: 0.5rem;
+}
+
+.streams .stream .viewers,
+.streams.twitch .stream .service
+{
     background-color: rgba(0, 0, 0, 0.65);
     padding: 0.4em;
     line-height: 1;
     border-radius: 0.25em;
-    font-size: 0.9em;
 }
 
 .stream .team,
