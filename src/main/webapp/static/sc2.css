@@ -921,6 +921,11 @@ body.theme-light .social-media
   color: black;
 }
 
+label .icofont
+{
+    font-size: 2em;
+}
+
 .social-media .icofont
 {
     font-size: 2em;
