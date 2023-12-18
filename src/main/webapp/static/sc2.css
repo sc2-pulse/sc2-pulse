@@ -834,7 +834,13 @@ th.hoverable span
     margin-right: 0;
 }
 
-.form-flex button
+.form-flex .form-group
+{
+    min-height: calc(1.5em + .75rem + 2px);
+}
+
+.form-flex button,
+.form-flex .form-group
 {
     align-self: end;
 }
