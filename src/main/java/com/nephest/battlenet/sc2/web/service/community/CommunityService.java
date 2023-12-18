@@ -20,7 +20,6 @@ import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -207,32 +206,10 @@ public class CommunityService
         if(streams.isEmpty()) return List.of();
 
         streams.forEach(stream->stream.setFeatured(null));
-        List<LadderVideoStream> streamsRemaining = new ArrayList<>(streams);
-        LadderVideoStream mostViewed = streamsRemaining.stream()
-            .max(Comparator.comparing((LadderVideoStream stream)->stream.getStream().getViewerCount())
-                .thenComparing((LadderVideoStream stream)->stream.getStream().getId())
-                .thenComparing((LadderVideoStream stream)->stream.getStream().getService()))
-            .orElse(null);
-        if(mostViewed == null) return List.of();
-        streamsRemaining.remove(mostViewed);
-
         List<LadderVideoStream> mostSkilled
-            = getMostSkilledStream(streamsRemaining, FEATURED_STREAM_SKILLED_SLOT_COUNT);
+            = getMostSkilledStream(streams, FEATURED_STREAM_SKILLED_SLOT_COUNT);
         mostSkilled.forEach(s->s.setFeatured(Featured.SKILLED));
-        streamsRemaining.removeAll(mostSkilled);
-
-        LadderVideoStream randomStream = getSameOrNewRandomStream(streamsRemaining);
-
-        List<LadderVideoStream> featured = new ArrayList<>(3);
-        mostViewed.setFeatured(Featured.POPULAR);
-        featured.add(mostViewed);
-        featured.addAll(mostSkilled);
-        if(randomStream != null)
-        {
-            randomStream.setFeatured(Featured.RANDOM);
-            featured.add(randomStream);
-        }
-        return featured;
+        return mostSkilled;
     }
 
     private List<LadderVideoStream> getMostSkilledStream(List<LadderVideoStream> streams, int limit)

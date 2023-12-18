@@ -54,6 +54,7 @@ import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -410,6 +411,47 @@ public class CommunityVideoStreamIT
         );
     }
 
+    @Test
+    public void testFeaturedSkilledStreams()
+    throws Exception
+    {
+        init(10, (c, c1)->{});
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ?",
+            OffsetDateTime.now()
+                .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
+                .plusSeconds(10)
+        );
+        streams = IntStream.range(0, 10)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        streams[streams.length - 1] = streams[0];
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+
+        CommunityStreamResult featuredStreams1 = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream/featured")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+
+        List<LadderVideoStream> featuredStreams = new ArrayList<>(List.of
+        (
+            createIndexedLadderVideoStream(8, CommunityService.Featured.SKILLED),
+            createIndexedLadderVideoStream(7, CommunityService.Featured.SKILLED),
+            createIndexedLadderVideoStream(6, CommunityService.Featured.SKILLED)
+        ));
+
+        Assertions.assertThat(featuredStreams1)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(featuredStreams, Set.of()));
+    }
+
     private List<LadderVideoStream> testFeaturedStreamsStart(Random rng)
     throws Exception
     {
@@ -471,6 +513,7 @@ public class CommunityVideoStreamIT
         return featuredStreams;
     }
 
+    @Disabled("Popular and random slots are disabled")
     @Test
     public void testFeaturedStreams()
     throws Exception
@@ -526,6 +569,7 @@ public class CommunityVideoStreamIT
             .isBefore(communityService.getCurrentRandomStreamAssigned()));
     }
 
+    @Disabled("Popular and random slots are disabled")
     @Test
     public void whenSameFeaturedRandomStreamLostTeam_thenPickAnotherStream()
     throws Exception
