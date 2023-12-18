@@ -20,6 +20,7 @@ class CommunityUtil
             60000,
             3
         );
+        CommunityUtil.STREAM_UPDATER = streamUpdater;
         ElementUtil.DOCUMENT_VISIBILITY_TASKS.set("#search-stream", (visible)=>{
             if(!visible) {
                 streamUpdater.stop();
@@ -46,6 +47,7 @@ class CommunityUtil
             60000,
             3
         );
+        CommunityUtil.FEATURED_STREAM_UPDATER = featuredStreamUpdater;
         featuredStreamUpdater.executeAndReschedule();
         document.addEventListener("visibilitychange", () => {
             if(document.hidden){
@@ -70,6 +72,12 @@ class CommunityUtil
         evt.preventDefault();
         BootstrapUtil.showTab("search-all-tab")
             .then(e=>BootstrapUtil.showTab("search-stream-tab"));
+    }
+
+    static updateAllStreams()
+    {
+        if(CommunityUtil.STREAM_UPDATER) CommunityUtil.STREAM_UPDATER.executeAndReschedule();
+        if(CommunityUtil.FEATURED_STREAM_UPDATER) CommunityUtil.FEATURED_STREAM_UPDATER.executeAndReschedule();
     }
 
     static updateFeaturedStreams()
