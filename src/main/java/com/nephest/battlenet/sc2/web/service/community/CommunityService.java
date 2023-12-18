@@ -80,7 +80,7 @@ public class CommunityService
     public static final Duration STREAM_CACHE_EXPIRE_AFTER = Duration.ofMinutes(5);
     public static final Duration STREAM_CACHE_REFRESH_AFTER = Duration.ofMinutes(1);
     public static final Duration FEATURED_STREAM_CACHE_EXPIRE_AFTER = Duration.ofMinutes(2);
-    public static final int FEATURED_STREAM_SKILLED_SLOT_COUNT = 3;
+    public static final int FEATURED_STREAM_SKILLED_SLOT_COUNT = 5;
 
     private final PlayerCharacterDAO playerCharacterDAO;
     private final SocialMediaLinkDAO socialMediaLinkDAO;

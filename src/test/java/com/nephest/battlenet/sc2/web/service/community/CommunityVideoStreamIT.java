@@ -42,6 +42,7 @@ import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
@@ -438,12 +439,10 @@ public class CommunityVideoStreamIT
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
 
-        List<LadderVideoStream> featuredStreams = new ArrayList<>(List.of
-        (
-            createIndexedLadderVideoStream(8, CommunityService.Featured.SKILLED),
-            createIndexedLadderVideoStream(7, CommunityService.Featured.SKILLED),
-            createIndexedLadderVideoStream(6, CommunityService.Featured.SKILLED)
-        ));
+        List<LadderVideoStream> featuredStreams = IntStream.range(9 - 5, 9)
+            .mapToObj(i->createIndexedLadderVideoStream(i, CommunityService.Featured.SKILLED))
+            .sorted(Comparator.comparing(s->s.getTeam().getId(), Comparator.reverseOrder()))
+            .collect(Collectors.toList());
 
         Assertions.assertThat(featuredStreams1)
             .usingRecursiveComparison()
