@@ -261,7 +261,21 @@
     >
         <header>
             <h2>Stream search</h2>
-            <form class="form-inline d-flex flex-wrap-gap justify-content-center mb-3">
+            <form class="form-inline d-flex form-flex flex-wrap-gap justify-content-center mb-3">
+                    <div class="form-group checkbox d-flex flex-wrap-gap-05"
+                         th:each="type : ${@communityService.getStreamServices()}"
+                    >
+                        <input th:id="|stream-service-${type.name()}|"
+                               class="stream-service-ctl serializable"
+                               type="checkbox"
+                               name="service"
+                               value="${type.name()}"
+                               checked="checked"
+                        />
+                        <label class="form-check-label" th:for="|stream-service-${type.name()}|">
+                            <div th:class="|icofont icofont-${type.name().toLowerCase} form-font|" th:title="${type.name()}"></div>
+                        </label>
+                    </div>
                 <div class="form-group d-flex flex-wrap-gap-05">
                     <label for="stream-sort-by">Sort by</label>
                     <select class="form-control serializable" id="stream-sort-by">

@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -47,16 +49,22 @@ public class RevealedController
     }
 
     @GetMapping("/stream")
-    public ResponseEntity<CommunityStreamResult> getStreams()
+    public ResponseEntity<CommunityStreamResult> getStreams
+    (
+        @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services
+    )
     {
-        CommunityStreamResult result = communityService.getStreams().block();
+        CommunityStreamResult result = communityService.getStreams(services).block();
         return ResponseEntity.status(getStatus(result)).body(result);
     }
 
     @GetMapping("/stream/featured")
-    public ResponseEntity<CommunityStreamResult> getFeaturedStreams()
+    public ResponseEntity<CommunityStreamResult> getFeaturedStreams
+    (
+        @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services
+    )
     {
-        CommunityStreamResult result = communityService.getFeaturedStreams().block();
+        CommunityStreamResult result = communityService.getFeaturedStreams(services).block();
         return ResponseEntity.status(getStatus(result)).body(result);
     }
 

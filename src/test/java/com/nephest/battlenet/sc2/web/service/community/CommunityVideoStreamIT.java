@@ -51,6 +51,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -58,9 +59,12 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -69,7 +73,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import reactor.core.publisher.Flux;
 
-@SpringBootTest(classes = {AllTestConfig.class})
+@SpringBootTest(classes = {CommunityVideoStreamIT.InitConfiguration.class, AllTestConfig.class})
 @AutoConfigureMockMvc
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
@@ -102,10 +106,13 @@ public class CommunityVideoStreamIT
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
-    @MockBean(classes = {TwitchVideoStreamSupplier.class})
+    @Autowired @Qualifier("mvcConversionService")
+    private ConversionService conversionService;
+
+    @Autowired @Qualifier("twitchVideoStreamSupplier")
     private VideoStreamSupplier videoStreamSupplier;
 
-    @MockBean(classes = {BilibiliVideoStreamSupplier.class})
+    @Autowired @Qualifier("bilibiliVideoStreamSupplier")
     private VideoStreamSupplier otherStreamSupplier;
 
     @MockBean
@@ -114,6 +121,22 @@ public class CommunityVideoStreamIT
     private SocialMediaLink[] links;
     private VideoStream[] streams;
     private ProPlayer[] proPlayers;
+
+    @TestConfiguration
+    static class InitConfiguration {
+
+        @MockBean(classes = {TwitchVideoStreamSupplier.class})
+        private VideoStreamSupplier videoStreamSupplier;
+
+        @MockBean(classes = {BilibiliVideoStreamSupplier.class})
+        private VideoStreamSupplier otherStreamSupplier;
+
+        @PostConstruct
+        public void initMock(){
+            when(videoStreamSupplier.getService()).thenReturn(SocialMedia.TWITCH);
+            when(otherStreamSupplier.getService()).thenReturn(SocialMedia.BILIBILI);
+        }
+    }
 
     @BeforeEach
     public void beforeEach
@@ -132,8 +155,18 @@ public class CommunityVideoStreamIT
 
     private void init
     (
-        int count, 
+        int count,
         BiConsumer<PlayerCharacter[], List<PlayerCharacter>> teamCustomizer
+    )
+    {
+        init(count, teamCustomizer, List.of(SocialMedia.TWITCH));
+    }
+
+    private void init
+    (
+        int count, 
+        BiConsumer<PlayerCharacter[], List<PlayerCharacter>> teamCustomizer,
+        List<SocialMedia> services
     )
     {
         seasonGenerator.generateDefaultSeason(0);
@@ -157,8 +190,8 @@ public class CommunityVideoStreamIT
             .boxed()
             .map(i->new SocialMediaLink(
                 proPlayers[i].getId(),
-                SocialMedia.TWITCH,
-                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser" + i,
+                services.get(i % services.size()),
+                services.get(i % services.size()) + "/twitchUser" + i,
                 OffsetDateTime.now(),
                 "twitchServiceUserId" + i,
                 false
@@ -302,6 +335,134 @@ public class CommunityVideoStreamIT
     }
     
     @Test
+    public void testServiceFilter()
+    throws Exception
+    {
+        List<VideoStream> twitchStreams = List.of
+        (
+            new VideoStreamImpl
+            (
+                SocialMedia.TWITCH,
+                "twitchStreamId1",
+                "twitchServiceUserId1",
+                "twitchUserName1",
+                "title1",
+                Locale.ENGLISH,
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/profile",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser1/thumbnail",
+                3
+            ),
+            new VideoStreamImpl
+            (
+                SocialMedia.TWITCH,
+                "twitchStreamId0",
+                "twitchServiceUserId0",
+                "twitchUserName0",
+                "title0",
+                Locale.FRENCH,
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser0",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser0/profile",
+                SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser0/thumbnail",
+                1
+            )
+        );
+        List<VideoStream> bilibiliStreams = List.of
+        (
+            new VideoStreamImpl
+            (
+                SocialMedia.BILIBILI,
+                "bilibiliStreamId4",
+                "bilibiliServiceUserId4",
+                "bilibiliUserName4",
+                "title4",
+                Locale.CHINESE,
+                SocialMedia.BILIBILI.getBaseUserUrl() + "/bilibiliUser4",
+                SocialMedia.BILIBILI.getBaseUserUrl() + "/bilibiliUser4/profile",
+                SocialMedia.BILIBILI.getBaseUserUrl() + "/bilibiliUser4/thumbnail",
+                4
+            ),
+            new VideoStreamImpl
+            (
+                SocialMedia.BILIBILI,
+                "bilibiliStreamId2",
+                "bilibiliServiceUserId2",
+                "bilibiliUserName2",
+                "title2",
+                Locale.CHINESE,
+                SocialMedia.BILIBILI.getBaseUserUrl() + "/bilibiliUser2",
+                SocialMedia.BILIBILI.getBaseUserUrl() + "/bilibiliUser2/profile",
+                SocialMedia.BILIBILI.getBaseUserUrl() + "/bilibiliUser2/thumbnail",
+                2
+            )
+        );
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromIterable(twitchStreams));
+        when(otherStreamSupplier.getStreams()).thenReturn(Flux.fromIterable(bilibiliStreams));
+
+        CommunityStreamResult streams1 = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("service", conversionService.convert(SocialMedia.BILIBILI, String.class))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(streams1)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(new CommunityStreamResult(
+                bilibiliStreams.stream()
+                    .map(stream->new LadderVideoStream(stream, null, null))
+                    .collect(Collectors.toList()),
+                Set.of()));
+    }
+    
+    @Test
+    public void testFeaturedServiceFilter()
+    throws Exception
+    {
+        init
+        (
+            10,
+            (c, c1)->{},
+            List.of
+            (
+                SocialMedia.TWITCH, SocialMedia.TWITCH,
+                SocialMedia.BILIBILI, SocialMedia.BILIBILI
+            )
+        );
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ?",
+            OffsetDateTime.now()
+                .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
+                .plusSeconds(10)
+        );
+        List<VideoStream> twitchStreams = IntStream.range(0, 2)
+            .boxed()
+            .map(i->createIndexedVideoStream(i, SocialMedia.TWITCH))
+            .collect(Collectors.toList());
+        List<VideoStream> bilibiliStreams = IntStream.range(2, 4)
+            .boxed()
+            .map(i->createIndexedVideoStream(i, SocialMedia.BILIBILI))
+            .collect(Collectors.toList());
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromIterable(twitchStreams));
+        when(otherStreamSupplier.getStreams()).thenReturn(Flux.fromIterable(bilibiliStreams));
+
+        CommunityStreamResult featuredStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream/featured")
+                .queryParam("service", conversionService.convert(SocialMedia.BILIBILI, String.class))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertTrue(featuredStreams.getStreams().stream()
+            .allMatch(s->s.getStream().getService() == SocialMedia.BILIBILI)
+        );
+    }
+    
+    @Test
     public void whenPlayerHasMultipleTeams_thenUseMostRecentTeam()
     throws Exception
     {
@@ -379,17 +540,22 @@ public class CommunityVideoStreamIT
 
     public static VideoStream createIndexedVideoStream(int ix)
     {
+        return createIndexedVideoStream(ix, SocialMedia.TWITCH);
+    }
+
+    public static VideoStream createIndexedVideoStream(int ix, SocialMedia socialMedia)
+    {
         return new VideoStreamImpl
         (
-            SocialMedia.TWITCH,
+            socialMedia,
             "twitchStreamId" + ix,
             "twitchServiceUserId" + ix,
             "twitchUserName" + ix,
             "title" + ix,
             Locale.ENGLISH,
-            SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser" + ix,
-            SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser" + ix + "/profile",
-            SocialMedia.TWITCH.getBaseUserUrl() + "/twitchUser" + ix + "/thumbnail",
+            socialMedia.getBaseUserUrl() + "/twitchUser" + ix,
+            socialMedia.getBaseUserUrl() + "/twitchUser" + ix + "/profile",
+            socialMedia.getBaseUserUrl() + "/twitchUser" + ix + "/thumbnail",
             ix
         );
     }

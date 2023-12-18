@@ -37,6 +37,8 @@ class CommunityUtil
         }, 1));
 
         CommunityUtil.enhanceStreamSearchLinks();
+        document.querySelectorAll(".stream-service-ctl").forEach(ctl=>ctl.addEventListener(
+            "click", e=>window.setTimeout(CommunityUtil.updateAllStreams, 1)));
     }
 
     static enhanceFeaturedStreams()
@@ -82,27 +84,41 @@ class CommunityUtil
 
     static updateFeaturedStreams()
     {
-        return CommunityUtil.getFeaturedStreams()
+        return CommunityUtil.getFeaturedStreams(CommunityUtil.getStreamServices())
             .then(CommunityUtil.updateFeaturedStreamView);
     }
 
-    static getStreams()
+    static createStreamUrlParameters(services)
     {
+        const params = new URLSearchParams();
+        if(services != null) services.forEach(service=>params.append("service", service));
+        return params;
+    }
+
+    static getStreamServices()
+    {
+        return STREAM_SERVICES.filter(service=>localStorage.getItem("stream-service-" + service) !== "false");
+    }
+
+    static getStreams(services)
+    {
+        const params = CommunityUtil.createStreamUrlParameters(services);
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
-    static getFeaturedStreams()
+    static getFeaturedStreams(services)
     {
+        const params = CommunityUtil.createStreamUrlParameters(services);
         return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream/featured`))
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream/featured?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
-    static updateStreamModel()
+    static updateStreamModel(services)
     {
-        return CommunityUtil.getStreams()
+        return CommunityUtil.getStreams(services)
             .then(streams=>{
                 Model.DATA.get(VIEW.STREAM_SEARCH).set(VIEW_DATA.SEARCH, streams);
                 CommunityUtil.updateStreamSorting();
@@ -132,7 +148,7 @@ class CommunityUtil
     
     static updateStreams()
     {
-        return CommunityUtil.updateStreamModel()
+        return CommunityUtil.updateStreamModel(CommunityUtil.getStreamServices())
             .then(CommunityUtil.updateStreamView);
     }
 

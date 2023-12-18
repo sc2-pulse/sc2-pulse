@@ -20,6 +20,7 @@ import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -88,6 +89,7 @@ public class CommunityService
     private final LadderSearchDAO ladderSearchDAO;
     private final ThreadLocalRandomSupplier randomSupplier;
     private final List<VideoStreamSupplier> streamSuppliers;
+    private final Set<SocialMedia> streamServices;
 
     private LadderVideoStream currentRandomStream;
     private Instant currentRandomStreamAssigned;
@@ -113,12 +115,40 @@ public class CommunityService
         this.ladderSearchDAO = ladderSearchDAO;
         this.randomSupplier = randomSupplier;
         this.streamSuppliers = streamSuppliers;
+        this.streamServices = Collections.unmodifiableSet(streamSuppliers.stream()
+            .map(VideoStreamSupplier::getService)
+            .collect(Collectors.toCollection(()->EnumSet.noneOf(SocialMedia.class))));
+    }
+
+    public Set<SocialMedia> getStreamServices()
+    {
+        return streamServices;
     }
 
     @Cacheable(cacheNames = "community-video-stream")
     public Mono<CommunityStreamResult> getStreams()
     {
         return getStreamsNoCache();
+    }
+
+    public Mono<CommunityStreamResult> getStreams(Set<SocialMedia> services)
+    {
+        if(!getStreamServices().containsAll(services))
+            return Mono.error(new IllegalArgumentException("Unsupported service"));
+
+        Mono<CommunityStreamResult> fResult = communityService.getStreams();
+        if(!services.isEmpty() && !services.containsAll(getStreamServices())) fResult = fResult
+            .map(result->new CommunityStreamResult(
+                result.getStreams().stream()
+                    .filter(stream->services.contains(stream.getStream().getService()))
+                    .collect(Collectors.toList()),
+                result.getErrors().isEmpty()
+                    ? result.getErrors()
+                    : result.getErrors().stream()
+                        .filter(services::contains)
+                        .collect(Collectors.toSet())
+            ));
+        return fResult;
     }
 
     public Mono<CommunityStreamResult> getStreamsNoCache()
@@ -199,6 +229,25 @@ public class CommunityService
                 (t)->Duration.ZERO,
                 ()->FEATURED_STREAM_CACHE_EXPIRE_AFTER
             );
+    }
+
+    public Mono<CommunityStreamResult> getFeaturedStreams(Set<SocialMedia> services)
+    {
+        if(!getStreamServices().containsAll(services))
+            return Mono.error(new IllegalArgumentException("Unsupported service"));
+
+        if(services.isEmpty() || services.containsAll(getStreamServices()))
+            return communityService.getFeaturedStreams();
+
+        return communityService.getStreams(services)
+            .map(result->new CommunityStreamResult(
+                getFeaturedStreams(result.getStreams()),
+                result.getErrors().isEmpty()
+                    ? result.getErrors()
+                    : result.getErrors().stream()
+                        .filter(services::contains)
+                        .collect(Collectors.toSet())
+            ));
     }
 
     private List<LadderVideoStream> getFeaturedStreams(List<LadderVideoStream> streams)
