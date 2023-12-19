@@ -23,6 +23,7 @@ import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -30,6 +31,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -255,8 +257,26 @@ public class CommunityService
         if(streams.isEmpty()) return List.of();
 
         streams.forEach(stream->stream.setFeatured(null));
+        List<LadderVideoStream> foldedStreams = Stream.concat
+        (
+            streams.stream()
+                .filter(stream->stream.getProPlayer() == null),
+            streams.stream()
+                .filter(stream->stream.getProPlayer() != null)
+                .collect(Collectors.toMap(
+                    stream->stream.getProPlayer().getProPlayer().getId(),
+                    Function.identity(),
+                    (l, r)->l,
+                    HashMap::new
+                ))
+                .values()
+                .stream()
+        )
+            .sorted(Comparator.comparing(LadderVideoStream::getStream, STREAM_COMPARATOR))
+            .collect(Collectors.toList());
+
         List<LadderVideoStream> mostSkilled
-            = getMostSkilledStream(streams, FEATURED_STREAM_SKILLED_SLOT_COUNT);
+            = getMostSkilledStream(foldedStreams, FEATURED_STREAM_SKILLED_SLOT_COUNT);
         mostSkilled.forEach(s->s.setFeatured(Featured.SKILLED));
         return mostSkilled;
     }

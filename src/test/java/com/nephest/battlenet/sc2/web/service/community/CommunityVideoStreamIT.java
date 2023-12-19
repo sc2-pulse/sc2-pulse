@@ -617,6 +617,64 @@ public class CommunityVideoStreamIT
             .isEqualTo(new CommunityStreamResult(featuredStreams, Set.of()));
     }
 
+    @Test
+    public void whenPlayerStreamsToMultiplePlatforms_thenUseMostPopularStreamForFeaturedStreams()
+    throws Exception
+    {
+        init(1, (c, c1)->{});
+        SocialMediaLink bilibiliLink = socialMediaLinkDAO.merge(false, Set.of(new SocialMediaLink(
+            1L,
+            SocialMedia.BILIBILI,
+            SocialMedia.BILIBILI.getBaseUserUrl() + "/twitchUser" + 1,
+            OffsetDateTime.now(),
+            "twitchServiceUserId" + 1,
+            false
+        ))).iterator().next();
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ?",
+            OffsetDateTime.now()
+                .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
+                .plusSeconds(10)
+        );
+
+        VideoStream twitchStream = createIndexedVideoStream(0, SocialMedia.TWITCH);
+        VideoStream bilibiliStream = createIndexedVideoStream(1, SocialMedia.BILIBILI);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.just(twitchStream));
+        when(otherStreamSupplier.getStreams()).thenReturn(Flux.just(bilibiliStream));
+
+        CommunityStreamResult streams1 = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream/featured")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(streams1)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(
+                List.of
+                (
+                    new LadderVideoStream
+                    (
+                        bilibiliStream,
+                        new LadderProPlayer
+                        (
+                            proPlayers[0],
+                            null,
+                            List.of(links[0], bilibiliLink)
+                        ),
+                        ladderSearchDAO.findCharacterTeams(Set.of(1L)).stream()
+                            .findAny()
+                            .orElseThrow(),
+                        CommunityService.Featured.SKILLED
+                    )
+                ),
+                Set.of()));
+    }
+
     private List<LadderVideoStream> testFeaturedStreamsStart(Random rng)
     throws Exception
     {
