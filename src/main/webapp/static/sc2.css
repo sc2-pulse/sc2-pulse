@@ -1552,7 +1552,8 @@ body.modal-open.modal-open-no-popup
     display: none !important;
 }
 
-.stream .meta .tags .language-code
+.stream .meta .tags .language-code,
+.stream .meta .featured
 {
     display: none;
 }
