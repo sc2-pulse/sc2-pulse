@@ -72,6 +72,7 @@ extends BaseAPI
             .bodyToMono(BilibiliStreamSearch.class)
             .map(BilibiliStreamSearch::getData)
             .flatMapMany(data->getStreamsRecursively(parentAreaId, areaId, page, data))
+            .map(BilibiliAPI::fix)
             .sort(COMPARATOR)
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
             .delaySubscription(rateLimiter.requestSlot());
@@ -90,6 +91,22 @@ extends BaseAPI
                 Flux.fromIterable(data.getStreams()),
                 getStreams(parentAreaId, areaId, page + 1))
             : Flux.fromIterable(data.getStreams());
+    }
+
+    private static BilibiliStream fix(BilibiliStream stream)
+    {
+        if(stream.getUserCover() != null)
+            stream.setUserCover(fixUrlScheme(stream.getUserCover()));
+        if(stream.getSystemCover() != null)
+            stream.setSystemCover(fixUrlScheme(stream.getSystemCover()));
+        if(stream.getFace() != null)
+            stream.setFace(fixUrlScheme(stream.getFace()));
+        return stream;
+    }
+
+    private static String fixUrlScheme(String url)
+    {
+        return url.replaceFirst("http://", "https://");
     }
 
 }
