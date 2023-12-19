@@ -197,7 +197,7 @@ public class BilibiliStream
 
     public String getUrl()
     {
-        return "https://live.bilibili.com/" + getRoomId();
+        return "https://space.bilibili.com/" + getuId();
     }
 
 }
