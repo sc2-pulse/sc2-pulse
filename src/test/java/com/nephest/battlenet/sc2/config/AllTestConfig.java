@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.config;
 import com.nephest.battlenet.sc2.Application;
 import com.nephest.battlenet.sc2.Startup;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.FilterType;
 import org.springframework.context.annotation.Import;
@@ -24,7 +25,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
     {
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Application.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class),
-        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class)
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class),
+        @ComponentScan.Filter(type = FilterType.ANNOTATION, value = TestConfiguration.class)
     }
 )
 @Import(CoreTestConfig.class)
