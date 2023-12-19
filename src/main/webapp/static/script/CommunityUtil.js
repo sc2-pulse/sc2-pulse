@@ -131,7 +131,7 @@ class CommunityUtil
         const data = Model.DATA.get(VIEW.STREAM_SEARCH).get(VIEW_DATA.SEARCH);
         if(!data) return;
 
-        if(localStorage.getItem("stream-sort-by") === "mmr") {
+        if((localStorage.getItem("stream-sort-by") || "mmr") === "mmr") {
             data.streams.sort((a, b)=>(b.team != null ? b.team.rating : -Infinity)
                 - (a.team != null ? a.team.rating : -Infinity));
         } else {
