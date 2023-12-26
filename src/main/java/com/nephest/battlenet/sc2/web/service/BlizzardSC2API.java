@@ -109,7 +109,7 @@ extends BaseAPI
     public static final Duration IO_TIMEOUT = Duration.ofSeconds(50);
     public static final Duration SHORT_IO_TIMEOUT = Duration.ofSeconds(20);
     public static final String SYSTEM_REQUEST_LIMIT_PRIORITY_NAME = "system";
-    public static final int SYSTEM_HOURLY_REQUEST_LIMIT_PRIORITY_SLOTS = 200;
+    public static final int SYSTEM_HOURLY_REQUEST_LIMIT_PRIORITY_SLOTS = 600;
     /*
         This data is mainly used in ladder discovery process when starting with an empty DB. The values should be
         manually updated when a new season begins.
