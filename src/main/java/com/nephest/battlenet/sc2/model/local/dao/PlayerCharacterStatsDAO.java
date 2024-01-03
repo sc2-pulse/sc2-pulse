@@ -26,6 +26,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.core.namedparam.SqlParameterSource;
+import org.springframework.retry.annotation.Backoff;
+import org.springframework.retry.annotation.Retryable;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -298,6 +300,7 @@ public class PlayerCharacterStatsDAO
         return count;
     }
 
+    @Retryable(backoff = @Backoff(10_000L))
     public int mergeCalculate(Set<Long> playerCharacterIds)
     {
         if(playerCharacterIds.isEmpty()) return 0;
