@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.service.EventService;
+import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
@@ -74,7 +75,6 @@ public class MapServiceTest
 
     @Test
     public void whenCreatingBean_thenUpdateOnMatchUpdateEvent()
-    throws InterruptedException
     {
         LocalDate oldDate = LocalDate.now().minusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays());
         when(seasonDAO.findLast())
@@ -88,7 +88,8 @@ public class MapServiceTest
         when(eventService.getMatchUpdateEvent()).thenReturn(Flux.just(ctx, ctx));
         mapService = new MapService(seasonDAO, mapStatsDAO, varDAO, eventService);
 
-        Thread.sleep(100);
+        mapService.getUpdateEvent().blockFirst(Duration.ofMillis(100));
+        mapService.getUpdateEvent().blockFirst(Duration.ofMillis(100));
         verify(mapStatsDAO, times(2)).add(any(), any());
     }
 
