@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -113,13 +113,13 @@ extends BaseAPI
     /*
         This data is mainly used in ladder discovery process when starting with an empty DB. The values should be
         manually updated when a new season begins.
-        Season 50
+        Season 57
      */
     public static final Map<Region, Long> LAST_LADDER_IDS = Map.of
     (
-        Region.US, 307074L,
-        Region.EU, 244849L,
-        Region.KR, 77775L,
+        Region.US, 320596L,
+        Region.EU, 257022L,
+        Region.KR, 82269L,
         Region.CN, 67627L
     );
     public static final Map<Region, Region> DEFAULT_REGION_REDIRECTS = Map.of
