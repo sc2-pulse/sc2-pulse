@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.util;
@@ -11,6 +11,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.OffsetDateTime;
@@ -22,6 +23,7 @@ public final class TestUtil
 {
 
     private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    public static final Charset DEFAULT_CHARSET = StandardCharsets.UTF_8;
     public static final ScheduledExecutorService EXECUTOR_SERVICE = Executors.newScheduledThreadPool(4);
 
     static
@@ -61,7 +63,7 @@ public final class TestUtil
     public static String readResource(Class<?> loader, String path)
     throws URISyntaxException, IOException
     {
-        return readResource(loader, path, Charset.defaultCharset());
+        return readResource(loader, path, DEFAULT_CHARSET);
     }
 
     public static <T> T readResource
@@ -79,7 +81,7 @@ public final class TestUtil
     public static <T> T readResource(Class<?> loader, String path, Class<T> targetClass)
     throws URISyntaxException, IOException
     {
-        return readResource(loader, path, Charset.defaultCharset(), targetClass);
+        return readResource(loader, path, DEFAULT_CHARSET, targetClass);
     }
 
 }
