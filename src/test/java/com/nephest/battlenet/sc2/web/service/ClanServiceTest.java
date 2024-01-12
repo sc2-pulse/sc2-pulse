@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -128,7 +128,7 @@ public class ClanServiceTest
         update();
         verify(clanDAO, never()).nullifyStats(anyInt());
 
-        Instant beforeStart = Instant.now();
+        Instant beforeStart = Instant.now().minusSeconds(1);
         clanService.getNullifyStatsTask().setValue(Instant.now().minus(ClanService.STATS_UPDATE_FRAME));
         update();
         verify(clanDAO).nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
@@ -145,7 +145,7 @@ public class ClanServiceTest
         when(clanDAO.findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS, 0, 50))
             .thenReturn(firstList);
         clanService.getStatsUpdated().setValue(Instant.now().minus(ClanService.STATS_UPDATE_FRAME.dividedBy(2)));
-        Instant beforeStart = Instant.now();
+        Instant beforeStart = Instant.now().minusSeconds(1);
 
         update();
         update(); //error recovery
@@ -222,7 +222,7 @@ public class ClanServiceTest
         });
         clanService.getInactiveClanMembersUpdated().setValue(Instant.now().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME));
 
-        Instant beforeUpdate = Instant.now();
+        Instant beforeUpdate = Instant.now().minusSeconds(1);
         update();
         verify(clanMemberDAO).removeExpired();
         //clan membership dropped

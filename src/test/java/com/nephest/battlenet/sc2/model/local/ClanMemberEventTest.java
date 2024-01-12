@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -50,7 +50,7 @@ public class ClanMemberEventTest
     {
         PlayerCharacter playerCharacter
             = new PlayerCharacter(1L, 2L, Region.EU, 3L, 4, "name#1");
-        OffsetDateTime before = OffsetDateTime.now();
+        OffsetDateTime before = OffsetDateTime.now().minusSeconds(1);
         ClanMemberEvent evt = ClanMemberEvent.from(playerCharacter, null);
         assertEquals(playerCharacter.getId(), evt.getPlayerCharacterId());
         assertNull(evt.getClanId());
@@ -64,7 +64,7 @@ public class ClanMemberEventTest
         PlayerCharacter playerCharacter
             = new PlayerCharacter(1L, 2L, Region.EU, 3L, 4, "name#1");
         Clan clan = new Clan(1, "tag", Region.EU, "name");
-        OffsetDateTime before = OffsetDateTime.now();
+        OffsetDateTime before = OffsetDateTime.now().minusSeconds(1);
         ClanMemberEvent evt = ClanMemberEvent.from(playerCharacter, clan);
         assertEquals(playerCharacter.getId(), evt.getPlayerCharacterId());
         assertEquals(clan.getId(), evt.getClanId());
