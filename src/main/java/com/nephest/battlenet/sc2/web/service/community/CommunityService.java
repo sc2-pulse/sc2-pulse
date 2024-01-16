@@ -62,6 +62,10 @@ public class CommunityService
         RATING(Comparator.comparing(
             s->s.getTeam() != null ? s.getTeam().getRating() : null,
             Comparator.nullsLast(Comparator.reverseOrder())
+        )),
+        RANK_REGION(Comparator.comparing(
+            s->s.getTeam() != null ? s.getTeam().getRegionRank() : null,
+            Comparator.nullsLast(Comparator.naturalOrder())
         ));
 
         private final Comparator<LadderVideoStream> comparator;

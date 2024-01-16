@@ -29,9 +29,11 @@ import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
@@ -97,6 +99,12 @@ public class CommunityVideoStreamIT
 
     @Autowired
     private LadderSearchDAO ladderSearchDAO;
+
+    @Autowired
+    private PopulationStateDAO populationStateDAO;
+
+    @Autowired
+    private TeamDAO teamDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -358,6 +366,43 @@ public class CommunityVideoStreamIT
             get("/api/revealed/stream")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.RATING, String.class))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(ladderStreams)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(List.of(
+                createIndexedLadderVideoStream(1, null),
+                createIndexedLadderVideoStream(2, null),
+                createIndexedLadderVideoStream(0, null),
+                createIndexedLadderVideoStream(3, null)
+            ), Set.of()));
+    }
+
+    @Test
+    public void testStreamRegionalRankSorting()
+    throws Exception
+    {
+        init(4, (c, c1)->{});
+        jdbcTemplate.update("UPDATE team SET rating = 99 WHERE id = 2");
+        jdbcTemplate.update("DELETE FROM team WHERE id = 4");
+        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
+        populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
+        jdbcTemplate.update("UPDATE team SET rating = 0 WHERE id = 2");
+        streams = IntStream.range(0, 4)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.RANK_REGION, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
