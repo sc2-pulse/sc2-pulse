@@ -31,10 +31,7 @@ class CommunityUtil
         ElementUtil.ELEMENT_TASKS.set("search-stream-tab", streamUpdater.executeAndReschedule.bind(streamUpdater));
 
         const sortCtl = document.querySelector("#stream-sort-by");
-        if(sortCtl) sortCtl.addEventListener("change", e=>window.setTimeout(()=>{
-            CommunityUtil.updateStreamSorting();
-            CommunityUtil.updateStreamView();
-        }, 1));
+        if(sortCtl) sortCtl.addEventListener("change", e=>CommunityUtil.updateAllStreams(), 1);
 
         document.querySelectorAll(".stream-service-ctl").forEach(ctl=>ctl.addEventListener(
             "click", e=>window.setTimeout(CommunityUtil.updateAllStreams, 1)));
@@ -71,10 +68,11 @@ class CommunityUtil
             .then(CommunityUtil.updateFeaturedStreamView);
     }
 
-    static createStreamUrlParameters(services)
+    static createStreamUrlParameters(services, sorting)
     {
         const params = new URLSearchParams();
         if(services != null) services.forEach(service=>params.append("service", service));
+        if(sorting != null) params.append("sort", sorting);
         return params;
     }
 
@@ -83,9 +81,9 @@ class CommunityUtil
         return STREAM_SERVICES.filter(service=>localStorage.getItem("stream-service-" + service) !== "false");
     }
 
-    static getStreams(services)
+    static getStreams(services, sorting)
     {
-        const params = CommunityUtil.createStreamUrlParameters(services);
+        const params = CommunityUtil.createStreamUrlParameters(services, sorting);
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
@@ -99,27 +97,13 @@ class CommunityUtil
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
-    static updateStreamModel(services)
+    static updateStreamModel(services, sorting)
     {
-        return CommunityUtil.getStreams(services)
+        return CommunityUtil.getStreams(services, sorting)
             .then(streams=>{
                 Model.DATA.get(VIEW.STREAM_SEARCH).set(VIEW_DATA.SEARCH, streams);
-                CommunityUtil.updateStreamSorting();
                 return {data: streams, status: streams.errors.length == 0 ? LOADING_STATUS.COMPLETE : LOADING_STATUS.ERROR};
             });
-    }
-
-    static updateStreamSorting()
-    {
-        const data = Model.DATA.get(VIEW.STREAM_SEARCH).get(VIEW_DATA.SEARCH);
-        if(!data) return;
-
-        if((localStorage.getItem("stream-sort-by") || "mmr") === "mmr") {
-            data.streams.sort((a, b)=>(b.team != null ? b.team.rating : -Infinity)
-                - (a.team != null ? a.team.rating : -Infinity));
-        } else {
-            data.streams.sort((a, b)=>b.stream.viewerCount - a.stream.viewerCount);
-        }
     }
 
     static updateStreamView()
@@ -131,7 +115,7 @@ class CommunityUtil
     
     static updateStreams()
     {
-        return CommunityUtil.updateStreamModel(CommunityUtil.getStreamServices())
+        return CommunityUtil.updateStreamModel(CommunityUtil.getStreamServices(), localStorage.getItem("stream-sort-by") || "RATING")
             .then(CommunityUtil.updateStreamView);
     }
 

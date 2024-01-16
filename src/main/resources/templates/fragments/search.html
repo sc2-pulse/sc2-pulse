@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2024 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -279,8 +279,11 @@
                 <div class="form-group d-flex flex-wrap-gap-05">
                     <label for="stream-sort-by">Sort by</label>
                     <select class="form-control serializable" id="stream-sort-by">
-                        <option value="viewers">Viewers</option>
-                        <option value="mmr" selected="selected">MMR</option>
+                        <option th:each="sort : ${T(com.nephest.battlenet.sc2.web.service.community.CommunityService.StreamSorting).values()}"
+                                th:value="${sort.name()}"
+                                th:text="${sort.name()}"
+                                th:attrappend="selected=${sort.name() == 'RATING'} ? selected"
+                        ></option>
                     </select>
                 </div>
                 <div class="form-group d-flex flex-wrap-gap-05">

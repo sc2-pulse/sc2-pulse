@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -51,10 +51,15 @@ public class RevealedController
     @GetMapping("/stream")
     public ResponseEntity<CommunityStreamResult> getStreams
     (
-        @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services
+        @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services,
+        @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting
     )
     {
-        CommunityStreamResult result = communityService.getStreams(services).block();
+        if(sorting == null) sorting = CommunityService.StreamSorting.VIEWERS;
+
+        CommunityStreamResult result = communityService
+            .getStreams(services, sorting.getComparator())
+            .block();
         return ResponseEntity.status(getStatus(result)).body(result);
     }
 

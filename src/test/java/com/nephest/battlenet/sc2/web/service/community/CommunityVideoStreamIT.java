@@ -58,6 +58,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.NullSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -222,8 +225,10 @@ public class CommunityVideoStreamIT
         communityService.resetRandomFeaturedStream();
     }
 
-    @Test
-    public void testStreams()
+    @NullSource
+    @EnumSource(names = {"VIEWERS"})
+    @ParameterizedTest
+    public void testStreams(CommunityService.StreamSorting sorting)
     throws Exception
     {
         init(3, (c, c1)->{});
@@ -283,6 +288,7 @@ public class CommunityVideoStreamIT
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(sorting, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
@@ -331,6 +337,40 @@ public class CommunityVideoStreamIT
                         .findAny()
                         .orElseThrow()
                 )
+            ), Set.of()));
+    }
+
+    @Test
+    public void testStreamRatingSorting()
+    throws Exception
+    {
+        init(4, (c, c1)->{});
+        jdbcTemplate.update("UPDATE team SET rating = 99 WHERE id = 2");
+        jdbcTemplate.update("DELETE FROM team WHERE id = 4");
+        streams = IntStream.range(0, 4)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.RATING, String.class))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(ladderStreams)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(List.of(
+                createIndexedLadderVideoStream(1, null),
+                createIndexedLadderVideoStream(2, null),
+                createIndexedLadderVideoStream(0, null),
+                createIndexedLadderVideoStream(3, null)
             ), Set.of()));
     }
     

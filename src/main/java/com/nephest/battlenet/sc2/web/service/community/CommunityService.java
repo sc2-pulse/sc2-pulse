@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.community;
@@ -53,6 +53,29 @@ public class CommunityService
         SKILLED,
         SPONSORED,
         RANDOM
+    }
+
+    public enum StreamSorting
+    {
+
+        VIEWERS(Comparator.comparing(s->s.getStream().getViewerCount(), Comparator.reverseOrder())),
+        RATING(Comparator.comparing(
+            s->s.getTeam() != null ? s.getTeam().getRating() : null,
+            Comparator.nullsLast(Comparator.reverseOrder())
+        ));
+
+        private final Comparator<LadderVideoStream> comparator;
+
+        StreamSorting(Comparator<LadderVideoStream> comparator)
+        {
+            this.comparator = comparator;
+        }
+
+        public Comparator<LadderVideoStream> getComparator()
+        {
+            return comparator;
+        }
+
     }
 
     public static final Comparator<VideoStream> STREAM_COMPARATOR
@@ -133,16 +156,18 @@ public class CommunityService
         return getStreamsNoCache();
     }
 
-    public Mono<CommunityStreamResult> getStreams(Set<SocialMedia> services)
+    public Mono<CommunityStreamResult> getStreams
+    (
+        Set<SocialMedia> services,
+        Comparator<LadderVideoStream> comparator
+    )
     {
         if(!getStreamServices().containsAll(services))
             return Mono.error(new IllegalArgumentException("Unsupported service"));
 
-        Mono<CommunityStreamResult> fResult = communityService.getStreams();
-        if(!services.isEmpty() && !services.containsAll(getStreamServices())) fResult = fResult
+        return communityService.getStreams()
             .map(result->new CommunityStreamResult(
-                result.getStreams().stream()
-                    .filter(stream->services.contains(stream.getStream().getService()))
+                getStreams(result.getStreams().stream(), services, comparator)
                     .collect(Collectors.toList()),
                 result.getErrors().isEmpty()
                     ? result.getErrors()
@@ -150,7 +175,19 @@ public class CommunityService
                         .filter(services::contains)
                         .collect(Collectors.toSet())
             ));
-        return fResult;
+    }
+
+    public Stream<LadderVideoStream> getStreams
+    (
+        Stream<LadderVideoStream> streams,
+        Set<SocialMedia> services,
+        Comparator<LadderVideoStream> comparator
+    )
+    {
+        if(!services.isEmpty() && !services.containsAll(getStreamServices())) streams
+            = streams.filter(stream->services.contains(stream.getStream().getService()));
+        if(comparator != null) streams = streams.sorted(comparator);
+        return streams;
     }
 
     public Mono<CommunityStreamResult> getStreamsNoCache()
@@ -241,7 +278,7 @@ public class CommunityService
         if(services.isEmpty() || services.containsAll(getStreamServices()))
             return communityService.getFeaturedStreams();
 
-        return communityService.getStreams(services)
+        return communityService.getStreams(services, StreamSorting.RATING.getComparator())
             .map(result->new CommunityStreamResult(
                 getFeaturedStreams(result.getStreams()),
                 result.getErrors().isEmpty()
