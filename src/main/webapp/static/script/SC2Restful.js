@@ -220,3 +220,9 @@ SC2Restful.IMAGES = new Map
     ["kr", ElementUtil.createImage("flag/", "kr", "icon-chart table-image table-image-long", SC2Restful.REM)],
     ["cn", ElementUtil.createImage("flag/", "cn", "icon-chart table-image table-image-long", SC2Restful.REM)]
 ]);
+
+if(localStorage.getItem("s-local-storage-version") !== "1") {
+    if(localStorage.getItem("stream-sort-by") === "mmr") localStorage.setItem("stream-sort-by", "RATING");
+    if(localStorage.getItem("stream-sort-by") === "viewers") localStorage.setItem("stream-sort-by", "VIEWERS");
+    localStorage.setItem("s-local-storage-version", "1");
+}
