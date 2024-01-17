@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -324,7 +324,7 @@ public class SeasonGenerator
     }
 
     @Transactional
-    public List<Team> createTeams(PlayerCharacter... members)
+    public List<Team> createTeams(boolean spreadRaces, PlayerCharacter... members)
     {
         if(members.length == 0) return List.of();
 
@@ -347,9 +347,17 @@ public class SeasonGenerator
             );
             teams.add(team);
             teamDAO.create(team);
-            teamMemberDAO.create(new TeamMember(team.getId(), members[i].getId(), null, null, null, i));
+            TeamMember member = new TeamMember(team.getId(), members[i].getId(), null, null, null, null);
+            member.setGamesPlayed(spreadRaces ? Race.values()[i % Race.values().length] : Race.RANDOM, i);
+            teamMemberDAO.create(member);
         }
         return teams;
+    }
+
+    @Transactional
+    public List<Team> createTeams(PlayerCharacter... members)
+    {
+        return createTeams(false, members);
     }
 
     @Transactional
