@@ -55,18 +55,26 @@ public class CommunityService
         RANDOM
     }
 
+    private static final Comparator<LadderVideoStream> STREAM_VIEWERS_COMPARATOR =
+        Comparator.<LadderVideoStream, Integer>
+            comparing(s->s.getStream().getViewerCount(), Comparator.reverseOrder())
+            .thenComparing(s->s.getStream().getService())
+            .thenComparing(s->s.getStream().getId());
+
     public enum StreamSorting
     {
 
-        VIEWERS(Comparator.comparing(s->s.getStream().getViewerCount(), Comparator.reverseOrder())),
-        RATING(Comparator.comparing(
+        VIEWERS(STREAM_VIEWERS_COMPARATOR),
+        RATING(Comparator.<LadderVideoStream, Long>comparing(
             s->s.getTeam() != null ? s.getTeam().getRating() : null,
             Comparator.nullsLast(Comparator.reverseOrder())
-        )),
-        RANK_REGION(Comparator.comparing(
+        )
+            .thenComparing(STREAM_VIEWERS_COMPARATOR)),
+        RANK_REGION(Comparator.<LadderVideoStream, Integer>comparing(
             s->s.getTeam() != null ? s.getTeam().getRegionRank() : null,
             Comparator.nullsLast(Comparator.naturalOrder())
-        ));
+        )
+            .thenComparing(STREAM_VIEWERS_COMPARATOR));
 
         private final Comparator<LadderVideoStream> comparator;
 

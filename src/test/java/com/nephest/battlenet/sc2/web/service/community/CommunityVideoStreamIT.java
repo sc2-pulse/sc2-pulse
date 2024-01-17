@@ -383,6 +383,37 @@ public class CommunityVideoStreamIT
     }
 
     @Test
+    public void whenSortingStreamsByRatingEndRatingsAreEqual_thenSortByViewers()
+    throws Exception
+    {
+        init(2, (c, c1)->{});
+        jdbcTemplate.update("UPDATE team SET rating = 1");
+        streams = IntStream.range(0, 2)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.RATING, String.class))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(ladderStreams)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(List.of(
+                createIndexedLadderVideoStream(1, null),
+                createIndexedLadderVideoStream(0, null)
+            ), Set.of()));
+    }
+
+    @Test
     public void testStreamRegionalRankSorting()
     throws Exception
     {
