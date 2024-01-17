@@ -52,13 +52,14 @@ public class RevealedController
     public ResponseEntity<CommunityStreamResult> getStreams
     (
         @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services,
-        @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting
+        @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting,
+        @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly
     )
     {
         if(sorting == null) sorting = CommunityService.StreamSorting.VIEWERS;
 
         CommunityStreamResult result = communityService
-            .getStreams(services, sorting.getComparator())
+            .getStreams(services, sorting.getComparator(), identifiedOnly)
             .block();
         return ResponseEntity.status(getStatus(result)).body(result);
     }

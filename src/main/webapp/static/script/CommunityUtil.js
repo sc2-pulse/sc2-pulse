@@ -33,7 +33,7 @@ class CommunityUtil
         const sortCtl = document.querySelector("#stream-sort-by");
         if(sortCtl) sortCtl.addEventListener("change", e=>CommunityUtil.updateAllStreams(), 1);
 
-        document.querySelectorAll(".stream-service-ctl").forEach(ctl=>ctl.addEventListener(
+        document.querySelectorAll(".stream-filter-ctl").forEach(ctl=>ctl.addEventListener(
             "click", e=>window.setTimeout(CommunityUtil.updateAllStreams, 1)));
     }
 
@@ -68,11 +68,12 @@ class CommunityUtil
             .then(CommunityUtil.updateFeaturedStreamView);
     }
 
-    static createStreamUrlParameters(services, sorting)
+    static createStreamUrlParameters(services, sorting, identifiedOnly)
     {
         const params = new URLSearchParams();
         if(services != null) services.forEach(service=>params.append("service", service));
         if(sorting != null) params.append("sort", sorting);
+        if(identifiedOnly != null) params.append("identifiedOnly", identifiedOnly);
         return params;
     }
 
@@ -81,9 +82,9 @@ class CommunityUtil
         return STREAM_SERVICES.filter(service=>localStorage.getItem("stream-service-" + service) !== "false");
     }
 
-    static getStreams(services, sorting)
+    static getStreams(services, sorting, identifiedOnly)
     {
-        const params = CommunityUtil.createStreamUrlParameters(services, sorting);
+        const params = CommunityUtil.createStreamUrlParameters(services, sorting, identifiedOnly);
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
@@ -91,15 +92,15 @@ class CommunityUtil
 
     static getFeaturedStreams(services)
     {
-        const params = CommunityUtil.createStreamUrlParameters(services);
+        const params = CommunityUtil.createStreamUrlParameters(services, null, true);
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream/featured?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
-    static updateStreamModel(services, sorting)
+    static updateStreamModel(services, sorting, identifiedOnly)
     {
-        return CommunityUtil.getStreams(services, sorting)
+        return CommunityUtil.getStreams(services, sorting, identifiedOnly)
             .then(streams=>{
                 Model.DATA.get(VIEW.STREAM_SEARCH).set(VIEW_DATA.SEARCH, streams);
                 return {data: streams, status: streams.errors.length == 0 ? LOADING_STATUS.COMPLETE : LOADING_STATUS.ERROR};
@@ -115,8 +116,11 @@ class CommunityUtil
     
     static updateStreams()
     {
-        return CommunityUtil.updateStreamModel(CommunityUtil.getStreamServices(), localStorage.getItem("stream-sort-by") || "RATING")
-            .then(CommunityUtil.updateStreamView);
+        return CommunityUtil.updateStreamModel(
+            CommunityUtil.getStreamServices(),
+            localStorage.getItem("stream-sort-by") || "RATING",
+            localStorage.getItem("stream-identified-only") || "false")
+                .then(CommunityUtil.updateStreamView);
     }
 
     static updateFeaturedStreamView(streams)

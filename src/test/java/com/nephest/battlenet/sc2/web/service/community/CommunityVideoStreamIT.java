@@ -532,6 +532,44 @@ public class CommunityVideoStreamIT
                     .collect(Collectors.toList()),
                 Set.of()));
     }
+
+    @Test
+    public void testIdentifiedOnlyFilter()
+    throws Exception
+    {
+        init(3, (c, c1)->{});
+        jdbcTemplate.update("DELETE FROM team WHERE id = 3");
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ? WHERE id = 1",
+            OffsetDateTime.now()
+                .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
+                .minusSeconds(1)
+        );
+
+        streams = IntStream.range(0, 3)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam("identifiedOnly", "true")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(ladderStreams)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(List.of(
+                createIndexedLadderVideoStream(1, null)
+            ), Set.of()));
+    }
     
     @Test
     public void testFeaturedServiceFilter()

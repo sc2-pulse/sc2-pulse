@@ -266,7 +266,7 @@
                          th:each="type : ${@communityService.getStreamServices()}"
                     >
                         <input th:id="|stream-service-${type.name()}|"
-                               class="stream-service-ctl serializable"
+                               class="stream-service-ctl stream-filter-ctl serializable"
                                type="checkbox"
                                name="service"
                                value="${type.name()}"
@@ -274,6 +274,21 @@
                         />
                         <label class="form-check-label" th:for="|stream-service-${type.name()}|" data-feature-timestamp="1702976258000">
                             <div th:class="|icofont icofont-${type.name().toLowerCase} form-font|" th:title="${type.name()}"></div>
+                        </label>
+                    </div>
+                    <div class="form-group checkbox d-flex flex-wrap-gap-05">
+                        <input id="stream-identified-only"
+                               class="stream-filter-ctl serializable"
+                               type="checkbox"
+                               name="identifiedOnly"
+                               value="true"
+                        />
+                        <label class="form-check-label d-flex flex-wrap-gap-025" for="stream-identified-only">
+                            <span>Identified only</span>
+                            <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
+                                 title="Only identified streams with identified teams"
+                                 data-toggle="tooltip"
+                             />
                         </label>
                     </div>
                 <div class="form-group d-flex flex-wrap-gap-05">

@@ -171,7 +171,8 @@ public class CommunityService
     public Mono<CommunityStreamResult> getStreams
     (
         Set<SocialMedia> services,
-        Comparator<LadderVideoStream> comparator
+        Comparator<LadderVideoStream> comparator,
+        boolean identifiedOnly
     )
     {
         if(!getStreamServices().containsAll(services))
@@ -179,7 +180,7 @@ public class CommunityService
 
         return communityService.getStreams()
             .map(result->new CommunityStreamResult(
-                getStreams(result.getStreams().stream(), services, comparator)
+                getStreams(result.getStreams().stream(), services, comparator, identifiedOnly)
                     .collect(Collectors.toList()),
                 result.getErrors().isEmpty()
                     ? result.getErrors()
@@ -193,11 +194,14 @@ public class CommunityService
     (
         Stream<LadderVideoStream> streams,
         Set<SocialMedia> services,
-        Comparator<LadderVideoStream> comparator
+        Comparator<LadderVideoStream> comparator,
+        boolean identifiedOnly
     )
     {
         if(!services.isEmpty() && !services.containsAll(getStreamServices())) streams
             = streams.filter(stream->services.contains(stream.getStream().getService()));
+        if(identifiedOnly) streams = streams
+            .filter(s->CURRENT_FEATURED_TEAM_PREDICATE.test(s.getTeam()));
         if(comparator != null) streams = streams.sorted(comparator);
         return streams;
     }
@@ -290,7 +294,7 @@ public class CommunityService
         if(services.isEmpty() || services.containsAll(getStreamServices()))
             return communityService.getFeaturedStreams();
 
-        return communityService.getStreams(services, StreamSorting.RATING.getComparator())
+        return communityService.getStreams(services, StreamSorting.RATING.getComparator(), true)
             .map(result->new CommunityStreamResult(
                 getFeaturedStreams(result.getStreams()),
                 result.getErrors().isEmpty()
