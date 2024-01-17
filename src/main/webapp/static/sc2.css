@@ -470,6 +470,12 @@ label.required::after
     width: 100%;
 }
 
+.flex-wrap-gap-025
+{
+    gap: 0.25em;
+    flex-wrap: wrap;
+}
+
 .flex-wrap-gap-05
 {
     gap: 0.5em;
