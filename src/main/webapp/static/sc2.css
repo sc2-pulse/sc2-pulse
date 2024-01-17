@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'sc2pulse';
-  src: url('font/sc2pulse.woff?liymny') format('woff');
+  src: url('font/sc2pulse.woff?vebtai') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -21,8 +21,24 @@
   -moz-osx-font-smoothing: grayscale;
 }
 
-.icofont-bilibili:before {
+.icofont-random:before {
+  content: "\e904";
+  color: #646464;
+}
+.icofont-zerg:before {
+  content: "\e905";
+  color: #882991;
+}
+.icofont-terran:before {
+  content: "\e906";
+  color: #295a91;
+}
+.icofont-protoss:before {
   content: "\e907";
+  color: #dec93e;
+}
+.icofont-bilibili:before {
+  content: "\e903";
   color: #00a1d6;
 }
 .icofont-battlenet:before {
