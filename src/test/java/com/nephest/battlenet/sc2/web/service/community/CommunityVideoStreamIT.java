@@ -20,6 +20,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.Account;
@@ -187,7 +188,7 @@ public class CommunityVideoStreamIT
         ArrayList<PlayerCharacter> teamCharacters = new ArrayList<>(Arrays.asList(characters));
         teamCustomizer.accept(characters, teamCharacters);
         List<Team> teams = seasonGenerator
-            .createTeams(teamCharacters.toArray(PlayerCharacter[]::new));
+            .createTeams(true, teamCharacters.toArray(PlayerCharacter[]::new));
 
         LocalDate bd1 = LocalDate.now().minusYears(20);
         OffsetDateTime odt = OffsetDateTime.now();
@@ -568,6 +569,42 @@ public class CommunityVideoStreamIT
             .ignoringFields("streams.proPlayer.proPlayer.version")
             .isEqualTo(new CommunityStreamResult(List.of(
                 createIndexedLadderVideoStream(1, null)
+            ), Set.of()));
+    }
+
+    @Test
+    public void testRaceFilter()
+    throws Exception
+    {
+        init(5, (c, c1)->{});
+        streams = IntStream.range(0, 5)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "race",
+                    conversionService.convert(Race.TERRAN, String.class),
+                    conversionService.convert(Race.RANDOM, String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(ladderStreams)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(List.of(
+                createIndexedLadderVideoStream(4, null),
+                createIndexedLadderVideoStream(3, null),
+                createIndexedLadderVideoStream(0, null)
             ), Set.of()));
     }
     

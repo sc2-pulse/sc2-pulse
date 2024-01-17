@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
@@ -53,13 +54,14 @@ public class RevealedController
     (
         @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services,
         @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting,
-        @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly
+        @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
+        @RequestParam(name = "race", defaultValue = "") Set<Race> races
     )
     {
         if(sorting == null) sorting = CommunityService.StreamSorting.VIEWERS;
 
         CommunityStreamResult result = communityService
-            .getStreams(services, sorting.getComparator(), identifiedOnly)
+            .getStreams(services, sorting.getComparator(), identifiedOnly, races)
             .block();
         return ResponseEntity.status(getStatus(result)).body(result);
     }

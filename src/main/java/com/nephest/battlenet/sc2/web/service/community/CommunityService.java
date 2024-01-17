@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service.community;
 
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
@@ -172,7 +173,8 @@ public class CommunityService
     (
         Set<SocialMedia> services,
         Comparator<LadderVideoStream> comparator,
-        boolean identifiedOnly
+        boolean identifiedOnly,
+        Set<Race> races
     )
     {
         if(!getStreamServices().containsAll(services))
@@ -180,7 +182,14 @@ public class CommunityService
 
         return communityService.getStreams()
             .map(result->new CommunityStreamResult(
-                getStreams(result.getStreams().stream(), services, comparator, identifiedOnly)
+                getStreams
+                (
+                    result.getStreams().stream(),
+                    services,
+                    comparator,
+                    identifiedOnly,
+                    races
+                )
                     .collect(Collectors.toList()),
                 result.getErrors().isEmpty()
                     ? result.getErrors()
@@ -195,15 +204,25 @@ public class CommunityService
         Stream<LadderVideoStream> streams,
         Set<SocialMedia> services,
         Comparator<LadderVideoStream> comparator,
-        boolean identifiedOnly
+        boolean identifiedOnly,
+        Set<Race> races
     )
     {
         if(!services.isEmpty() && !services.containsAll(getStreamServices())) streams
             = streams.filter(stream->services.contains(stream.getStream().getService()));
         if(identifiedOnly) streams = streams
             .filter(s->CURRENT_FEATURED_TEAM_PREDICATE.test(s.getTeam()));
+        if(!races.isEmpty()) streams = streams
+            .filter(s->containsFavoriteRace(s, races));
         if(comparator != null) streams = streams.sorted(comparator);
         return streams;
+    }
+
+    private static boolean containsFavoriteRace(LadderVideoStream stream, Set<Race> races)
+    {
+        return stream.getTeam() != null
+            && stream.getTeam().getMembers().stream()
+                .anyMatch(m->races.contains(m.getFavoriteRace()));
     }
 
     public Mono<CommunityStreamResult> getStreamsNoCache()
@@ -294,7 +313,13 @@ public class CommunityService
         if(services.isEmpty() || services.containsAll(getStreamServices()))
             return communityService.getFeaturedStreams();
 
-        return communityService.getStreams(services, StreamSorting.RATING.getComparator(), true)
+        return communityService.getStreams
+            (
+                services,
+                StreamSorting.RATING.getComparator(),
+                true,
+                Set.of()
+            )
             .map(result->new CommunityStreamResult(
                 getFeaturedStreams(result.getStreams()),
                 result.getErrors().isEmpty()
