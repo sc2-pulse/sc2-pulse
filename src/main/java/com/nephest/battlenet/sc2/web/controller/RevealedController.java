@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
 import com.nephest.battlenet.sc2.web.service.community.CommunityStreamResult;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -56,13 +57,22 @@ public class RevealedController
         @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting,
         @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
         @RequestParam(name = "race", defaultValue = "") Set<Race> races,
-        @RequestParam(name = "excludeRace", defaultValue = "") Set<Race> excludeRaces
+        @RequestParam(name = "excludeRace", defaultValue = "") Set<Race> excludeRaces,
+        @RequestParam(name = "language", defaultValue = "") Set<Locale> languages
     )
     {
         if(sorting == null) sorting = CommunityService.StreamSorting.VIEWERS;
 
         CommunityStreamResult result = communityService
-            .getStreams(services, sorting.getComparator(), identifiedOnly, races, excludeRaces)
+            .getStreams
+            (
+                services,
+                sorting.getComparator(),
+                identifiedOnly,
+                races,
+                excludeRaces,
+                languages
+            )
             .block();
         return ResponseEntity.status(getStatus(result)).body(result);
     }

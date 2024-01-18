@@ -305,6 +305,21 @@
                              />
                         </label>
                     </div>
+                <div class="form-group checkbox d-flex flex-wrap-gap-05">
+                    <input id="stream-language-preferred"
+                           class="stream-filter-ctl serializable"
+                           type="checkbox"
+                           name="languagePreferred"
+                           value="true"
+                    />
+                    <label class="form-check-label d-flex flex-wrap-gap-025" for="stream-language-preferred">
+                        <span>Preferred languages</span>
+                        <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
+                             title="Show streams with preferred browser languages"
+                             data-toggle="tooltip"
+                        />
+                    </label>
+                </div>
                 <div class="form-group d-flex flex-wrap-gap-05">
                     <label for="stream-sort-by">Sort by</label>
                     <select class="form-control serializable" id="stream-sort-by">

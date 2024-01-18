@@ -27,6 +27,7 @@ import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -175,7 +176,8 @@ public class CommunityService
         Comparator<LadderVideoStream> comparator,
         boolean identifiedOnly,
         Set<Race> races,
-        Set<Race> excludeRaces
+        Set<Race> excludeRaces,
+        Set<Locale> languages
     )
     {
         if(!getStreamServices().containsAll(services))
@@ -190,7 +192,8 @@ public class CommunityService
                     comparator,
                     identifiedOnly,
                     races,
-                    excludeRaces
+                    excludeRaces,
+                    languages
                 )
                     .collect(Collectors.toList()),
                 result.getErrors().isEmpty()
@@ -208,13 +211,21 @@ public class CommunityService
         Comparator<LadderVideoStream> comparator,
         boolean identifiedOnly,
         Set<Race> races,
-        Set<Race> excludeRaces
+        Set<Race> excludeRaces,
+        Set<Locale> languages
     )
     {
         if(!services.isEmpty() && !services.containsAll(getStreamServices())) streams
             = streams.filter(stream->services.contains(stream.getStream().getService()));
         if(identifiedOnly) streams = streams
             .filter(s->CURRENT_FEATURED_TEAM_PREDICATE.test(s.getTeam()));
+        if(!languages.isEmpty())
+        {
+            Set<String> languageCodes = languages.stream()
+                .map(Locale::getLanguage)
+                .collect(Collectors.toSet());
+            streams = streams.filter(s->containsLanguage(s, languageCodes));
+        }
         if(!races.isEmpty()) streams = streams
             .filter(s->containsFavoriteRace(s, races));
         if(!excludeRaces.isEmpty()) streams = streams
@@ -228,6 +239,12 @@ public class CommunityService
         return stream.getTeam() != null
             && stream.getTeam().getMembers().stream()
                 .anyMatch(m->races.contains(m.getFavoriteRace()));
+    }
+
+    private static boolean containsLanguage(LadderVideoStream stream, Set<String> languages)
+    {
+        return stream.getStream().getLanguage() != null
+            && languages.contains(stream.getStream().getLanguage().getLanguage());
     }
 
     public Mono<CommunityStreamResult> getStreamsNoCache()
@@ -323,6 +340,7 @@ public class CommunityService
                 services,
                 StreamSorting.RATING.getComparator(),
                 true,
+                Set.of(),
                 Set.of(),
                 Set.of()
             )

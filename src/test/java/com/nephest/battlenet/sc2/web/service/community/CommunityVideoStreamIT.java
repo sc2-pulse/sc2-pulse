@@ -133,6 +133,8 @@ public class CommunityVideoStreamIT
     private SocialMediaLink[] links;
     private VideoStream[] streams;
     private ProPlayer[] proPlayers;
+    private static final Locale[] LOCALES
+        = new Locale[]{Locale.ENGLISH, Locale.FRENCH, Locale.CHINESE};
 
     @TestConfiguration
     static class InitConfiguration {
@@ -643,6 +645,37 @@ public class CommunityVideoStreamIT
                 createIndexedLadderVideoStream(0, null)
             ), Set.of()));
     }
+
+    @Test
+    public void testLanguageFilter()
+    throws Exception
+    {
+        init(4, (c, c1)->{});
+        streams = IntStream.range(0, 4)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam("language", "en-US", "zh")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Assertions.assertThat(ladderStreams)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(List.of(
+                createIndexedLadderVideoStream(3, null),
+                createIndexedLadderVideoStream(2, null),
+                createIndexedLadderVideoStream(0, null)
+            ), Set.of()));
+    }
     
     @Test
     public void testFeaturedServiceFilter()
@@ -779,7 +812,7 @@ public class CommunityVideoStreamIT
             "twitchServiceUserId" + ix,
             "twitchUserName" + ix,
             "title" + ix,
-            Locale.ENGLISH,
+            LOCALES[ix % LOCALES.length],
             socialMedia.getBaseUserUrl() + "/twitchUser" + ix,
             socialMedia.getBaseUserUrl() + "/twitchUser" + ix + "/profile",
             socialMedia.getBaseUserUrl() + "/twitchUser" + ix + "/thumbnail",

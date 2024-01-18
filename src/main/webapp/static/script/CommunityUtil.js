@@ -68,13 +68,14 @@ class CommunityUtil
             .then(CommunityUtil.updateFeaturedStreamView);
     }
 
-    static createStreamUrlParameters(services, sorting, identifiedOnly, excludeRaces)
+    static createStreamUrlParameters(services, sorting, identifiedOnly, excludeRaces, languages)
     {
         const params = new URLSearchParams();
         if(services != null) services.forEach(service=>params.append("service", service));
         if(sorting != null) params.append("sort", sorting);
         if(identifiedOnly != null) params.append("identifiedOnly", identifiedOnly);
         if(excludeRaces != null) excludeRaces.forEach(race=>params.append("excludeRace", race));
+        if(languages != null) languages.forEach(language=>params.append("language", language));
         return params;
     }
 
@@ -89,9 +90,9 @@ class CommunityUtil
             .filter(race=>localStorage.getItem("stream-race-" + race) === "false");
     }
 
-    static getStreams(services, sorting, identifiedOnly, excludeRaces)
+    static getStreams(services, sorting, identifiedOnly, excludeRaces, languages)
     {
-        const params = CommunityUtil.createStreamUrlParameters(services, sorting, identifiedOnly, excludeRaces);
+        const params = CommunityUtil.createStreamUrlParameters(services, sorting, identifiedOnly, excludeRaces, languages);
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
@@ -99,15 +100,15 @@ class CommunityUtil
 
     static getFeaturedStreams(services)
     {
-        const params = CommunityUtil.createStreamUrlParameters(services, null, true, null);
+        const params = CommunityUtil.createStreamUrlParameters(services, null, true, null, null);
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream/featured?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
-    static updateStreamModel(services, sorting, identifiedOnly, excludeRaces)
+    static updateStreamModel(services, sorting, identifiedOnly, excludeRaces, languages)
     {
-        return CommunityUtil.getStreams(services, sorting, identifiedOnly, excludeRaces)
+        return CommunityUtil.getStreams(services, sorting, identifiedOnly, excludeRaces, languages)
             .then(streams=>{
                 Model.DATA.get(VIEW.STREAM_SEARCH).set(VIEW_DATA.SEARCH, streams);
                 return {data: streams, status: streams.errors.length == 0 ? LOADING_STATUS.COMPLETE : LOADING_STATUS.ERROR};
@@ -127,8 +128,9 @@ class CommunityUtil
             CommunityUtil.getStreamServices(),
             localStorage.getItem("stream-sort-by") || "RATING",
             localStorage.getItem("stream-identified-only") || "false",
-            CommunityUtil.getStreamExcludeRaces())
-                .then(CommunityUtil.updateStreamView);
+            CommunityUtil.getStreamExcludeRaces(),
+            localStorage.getItem("stream-language-preferred") === "true" ? Util.getPreferredLanguages() : null)
+                    .then(CommunityUtil.updateStreamView);
     }
 
     static updateFeaturedStreamView(streams)
