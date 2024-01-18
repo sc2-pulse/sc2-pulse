@@ -55,13 +55,14 @@ public class RevealedController
         @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services,
         @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting,
         @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
-        @RequestParam(name = "race", defaultValue = "") Set<Race> races
+        @RequestParam(name = "race", defaultValue = "") Set<Race> races,
+        @RequestParam(name = "excludeRace", defaultValue = "") Set<Race> excludeRaces
     )
     {
         if(sorting == null) sorting = CommunityService.StreamSorting.VIEWERS;
 
         CommunityStreamResult result = communityService
-            .getStreams(services, sorting.getComparator(), identifiedOnly, races)
+            .getStreams(services, sorting.getComparator(), identifiedOnly, races, excludeRaces)
             .block();
         return ResponseEntity.status(getStatus(result)).body(result);
     }

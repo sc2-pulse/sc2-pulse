@@ -174,7 +174,8 @@ public class CommunityService
         Set<SocialMedia> services,
         Comparator<LadderVideoStream> comparator,
         boolean identifiedOnly,
-        Set<Race> races
+        Set<Race> races,
+        Set<Race> excludeRaces
     )
     {
         if(!getStreamServices().containsAll(services))
@@ -188,7 +189,8 @@ public class CommunityService
                     services,
                     comparator,
                     identifiedOnly,
-                    races
+                    races,
+                    excludeRaces
                 )
                     .collect(Collectors.toList()),
                 result.getErrors().isEmpty()
@@ -205,7 +207,8 @@ public class CommunityService
         Set<SocialMedia> services,
         Comparator<LadderVideoStream> comparator,
         boolean identifiedOnly,
-        Set<Race> races
+        Set<Race> races,
+        Set<Race> excludeRaces
     )
     {
         if(!services.isEmpty() && !services.containsAll(getStreamServices())) streams
@@ -214,6 +217,8 @@ public class CommunityService
             .filter(s->CURRENT_FEATURED_TEAM_PREDICATE.test(s.getTeam()));
         if(!races.isEmpty()) streams = streams
             .filter(s->containsFavoriteRace(s, races));
+        if(!excludeRaces.isEmpty()) streams = streams
+            .filter(s->!containsFavoriteRace(s, excludeRaces));
         if(comparator != null) streams = streams.sorted(comparator);
         return streams;
     }
@@ -318,6 +323,7 @@ public class CommunityService
                 services,
                 StreamSorting.RATING.getComparator(),
                 true,
+                Set.of(),
                 Set.of()
             )
             .map(result->new CommunityStreamResult(

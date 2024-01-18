@@ -276,6 +276,20 @@
                             <div th:class="|icofont icofont-${type.name().toLowerCase} form-font|" th:title="${type.name()}"></div>
                         </label>
                     </div>
+                    <div class="form-group checkbox d-flex flex-wrap-gap-05"
+                         th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
+                    >
+                        <input th:id="|stream-race-${race.name()}|"
+                               class="stream-race-ctl stream-filter-ctl serializable"
+                               type="checkbox"
+                               name="race"
+                               value="${race.name()}"
+                               checked="checked"
+                        />
+                        <label class="form-check-label" th:for="|stream-race-${race.name()}|">
+                            <div th:class="|icofont icofont-${race.name().toLowerCase} form-font|" th:title="${race.name()}"></div>
+                        </label>
+                    </div>
                     <div class="form-group checkbox d-flex flex-wrap-gap-05">
                         <input id="stream-identified-only"
                                class="stream-filter-ctl serializable"
