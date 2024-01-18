@@ -436,6 +436,11 @@ class Util
         return params;
     }
 
+    static getPreferredLanguages()
+    {
+        return window.navigator.languages || [window.navigator.language || window.navigator.userLanguage];
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
