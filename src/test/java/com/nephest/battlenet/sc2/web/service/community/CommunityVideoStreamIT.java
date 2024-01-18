@@ -725,6 +725,46 @@ public class CommunityVideoStreamIT
             )
         );
     }
+
+    @Test
+    public void testRatingMaxFilter()
+    throws Exception
+    {
+        init(4);
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam("ratingMax", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        verifyIndexedLadderStream
+        (
+            ladderStreams,
+            List.of
+            (
+                createIndexedLadderVideoStream(1, null),
+                createIndexedLadderVideoStream(0, null)
+            )
+        );
+    }
+
+    @Test
+    public void whenRatingMinIsGreaterThanRatingMax_thenBadRequest()
+    throws Exception
+    {
+        mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("ratingMin", "2")
+                .queryParam("ratingMax", "1")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isBadRequest());
+    }
     
     @Test
     public void testFeaturedServiceFilter()

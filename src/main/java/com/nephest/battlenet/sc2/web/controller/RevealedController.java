@@ -58,7 +58,7 @@ public class RevealedController
     }
 
     @GetMapping("/stream")
-    public ResponseEntity<CommunityStreamResult> getStreams
+    public ResponseEntity<?> getStreams
     (
         @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services,
         @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting,
@@ -66,9 +66,14 @@ public class RevealedController
         @RequestParam(name = "race", defaultValue = "") Set<Race> races,
         @RequestParam(name = "excludeRace", defaultValue = "") Set<Race> excludeRaces,
         @RequestParam(name = "language", defaultValue = "") Set<Locale> languages,
-        @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin
+        @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin,
+        @RequestParam(name = "ratingMax", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMax
     )
     {
+        if(ratingMin != null && ratingMax != null && ratingMin > ratingMax) return ResponseEntity
+            .badRequest()
+            .body("ratingMin is greater than ratingMax");
+
         if(sorting == null) sorting = CommunityService.StreamSorting.VIEWERS;
 
         CommunityStreamResult result = communityService
@@ -80,7 +85,7 @@ public class RevealedController
                 races,
                 excludeRaces,
                 languages,
-                ratingMin
+                ratingMin, ratingMax
             )
             .block();
         return ResponseEntity.status(getStatus(result)).body(result);

@@ -327,6 +327,19 @@
                            type="number"
                            min="0"
                            th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
+                           data-name="MMR min"
+                    />
+                </div>
+                <div class="form-group d-flex flex-wrap-gap-05">
+                    <label for="stream-rating-max">MMR max</label>
+                    <input class="form-control serializable ctl-delay"
+                           id="stream-rating-max"
+                           type="number"
+                           min="0"
+                           th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
+                           data-name="MMR max"
+                           data-greater-than="#stream-rating-min"
+                           data-greater-than-inclusive="true"
                     />
                 </div>
                 <div class="form-group d-flex flex-wrap-gap-05">
