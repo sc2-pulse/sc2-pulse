@@ -3,6 +3,8 @@
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import static com.nephest.battlenet.sc2.model.BaseTeam.MAX_RATING;
+
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
@@ -15,9 +17,13 @@ import com.nephest.battlenet.sc2.web.service.community.CommunityStreamResult;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -25,6 +31,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@Validated
 @RequestMapping("/api/revealed")
 public class RevealedController
 {
@@ -58,7 +65,8 @@ public class RevealedController
         @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
         @RequestParam(name = "race", defaultValue = "") Set<Race> races,
         @RequestParam(name = "excludeRace", defaultValue = "") Set<Race> excludeRaces,
-        @RequestParam(name = "language", defaultValue = "") Set<Locale> languages
+        @RequestParam(name = "language", defaultValue = "") Set<Locale> languages,
+        @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin
     )
     {
         if(sorting == null) sorting = CommunityService.StreamSorting.VIEWERS;
@@ -71,7 +79,8 @@ public class RevealedController
                 identifiedOnly,
                 races,
                 excludeRaces,
-                languages
+                languages,
+                ratingMin
             )
             .block();
         return ResponseEntity.status(getStatus(result)).body(result);

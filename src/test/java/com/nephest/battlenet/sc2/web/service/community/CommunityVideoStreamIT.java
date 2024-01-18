@@ -676,6 +676,55 @@ public class CommunityVideoStreamIT
                 createIndexedLadderVideoStream(0, null)
             ), Set.of()));
     }
+
+    private void init(int count)
+    {
+        init(count, (c, c1)->{});
+        streams = IntStream.range(0, count)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
+    }
+
+    private void verifyIndexedLadderStream
+    (
+        CommunityStreamResult result,
+        List<LadderVideoStream> expectedStreams
+    )
+    {
+        Assertions.assertThat(result)
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .ignoringFields("streams.proPlayer.proPlayer.version")
+            .isEqualTo(new CommunityStreamResult(expectedStreams, Set.of()));
+    }
+
+    @Test
+    public void testRatingMinFilter()
+    throws Exception
+    {
+        init(4);
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam("ratingMin", "2")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        verifyIndexedLadderStream
+        (
+            ladderStreams,
+            List.of
+            (
+                createIndexedLadderVideoStream(3, null),
+                createIndexedLadderVideoStream(2, null)
+            )
+        );
+    }
     
     @Test
     public void testFeaturedServiceFilter()

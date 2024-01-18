@@ -177,7 +177,8 @@ public class CommunityService
         boolean identifiedOnly,
         Set<Race> races,
         Set<Race> excludeRaces,
-        Set<Locale> languages
+        Set<Locale> languages,
+        Integer ratingMin
     )
     {
         if(!getStreamServices().containsAll(services))
@@ -193,7 +194,8 @@ public class CommunityService
                     identifiedOnly,
                     races,
                     excludeRaces,
-                    languages
+                    languages,
+                    ratingMin
                 )
                     .collect(Collectors.toList()),
                 result.getErrors().isEmpty()
@@ -212,7 +214,8 @@ public class CommunityService
         boolean identifiedOnly,
         Set<Race> races,
         Set<Race> excludeRaces,
-        Set<Locale> languages
+        Set<Locale> languages,
+        Integer ratingMin
     )
     {
         if(!services.isEmpty() && !services.containsAll(getStreamServices())) streams
@@ -230,6 +233,8 @@ public class CommunityService
             .filter(s->containsFavoriteRace(s, races));
         if(!excludeRaces.isEmpty()) streams = streams
             .filter(s->!containsFavoriteRace(s, excludeRaces));
+        if(ratingMin != null) streams = streams
+            .filter(s->s.getTeam() != null && s.getTeam().getRating() >= ratingMin);
         if(comparator != null) streams = streams.sorted(comparator);
         return streams;
     }
@@ -342,7 +347,8 @@ public class CommunityService
                 true,
                 Set.of(),
                 Set.of(),
-                Set.of()
+                Set.of(),
+                null
             )
             .map(result->new CommunityStreamResult(
                 getFeaturedStreams(result.getStreams()),

@@ -35,6 +35,9 @@ class CommunityUtil
 
         document.querySelectorAll(".stream-filter-ctl").forEach(ctl=>ctl.addEventListener(
             "click", e=>window.setTimeout(CommunityUtil.updateAllStreams, 1)));
+        document.querySelectorAll(".stream-filters .ctl-delay").forEach(ctl=>ctl.addEventListener(
+            "input", e=>ElementUtil.clearAndSetInputTimeout(e.target.id, CommunityUtil.updateAllStreams)));
+        document.querySelectorAll(".stream-filters").forEach(form=>form.addEventListener("submit", e=>e.preventDefault()));
     }
 
     static enhanceFeaturedStreams()
@@ -68,7 +71,7 @@ class CommunityUtil
             .then(CommunityUtil.updateFeaturedStreamView);
     }
 
-    static createStreamUrlParameters(services, sorting, identifiedOnly, excludeRaces, languages)
+    static createStreamUrlParameters(services, sorting, identifiedOnly, excludeRaces, languages, ratingMin)
     {
         const params = new URLSearchParams();
         if(services != null) services.forEach(service=>params.append("service", service));
@@ -76,6 +79,7 @@ class CommunityUtil
         if(identifiedOnly != null) params.append("identifiedOnly", identifiedOnly);
         if(excludeRaces != null) excludeRaces.forEach(race=>params.append("excludeRace", race));
         if(languages != null) languages.forEach(language=>params.append("language", language));
+        if(ratingMin != null) params.append("ratingMin", ratingMin);
         return params;
     }
 
@@ -90,9 +94,16 @@ class CommunityUtil
             .filter(race=>localStorage.getItem("stream-race-" + race) === "false");
     }
 
-    static getStreams(services, sorting, identifiedOnly, excludeRaces, languages)
+    static getStreams(services, sorting, identifiedOnly, excludeRaces, languages, ratingMin)
     {
-        const params = CommunityUtil.createStreamUrlParameters(services, sorting, identifiedOnly, excludeRaces, languages);
+        const params = CommunityUtil.createStreamUrlParameters(
+            services,
+            sorting,
+            identifiedOnly,
+            excludeRaces,
+            languages,
+            ratingMin
+        );
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
@@ -100,15 +111,15 @@ class CommunityUtil
 
     static getFeaturedStreams(services)
     {
-        const params = CommunityUtil.createStreamUrlParameters(services, null, true, null, null);
+        const params = CommunityUtil.createStreamUrlParameters(services, null, true, null, null, null);
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream/featured?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
-    static updateStreamModel(services, sorting, identifiedOnly, excludeRaces, languages)
+    static updateStreamModel(services, sorting, identifiedOnly, excludeRaces, languages, ratingMin)
     {
-        return CommunityUtil.getStreams(services, sorting, identifiedOnly, excludeRaces, languages)
+        return CommunityUtil.getStreams(services, sorting, identifiedOnly, excludeRaces, languages, ratingMin)
             .then(streams=>{
                 Model.DATA.get(VIEW.STREAM_SEARCH).set(VIEW_DATA.SEARCH, streams);
                 return {data: streams, status: streams.errors.length == 0 ? LOADING_STATUS.COMPLETE : LOADING_STATUS.ERROR};
@@ -129,7 +140,8 @@ class CommunityUtil
             localStorage.getItem("stream-sort-by") || "RATING",
             localStorage.getItem("stream-identified-only") || "false",
             CommunityUtil.getStreamExcludeRaces(),
-            localStorage.getItem("stream-language-preferred") === "true" ? Util.getPreferredLanguages() : null)
+            localStorage.getItem("stream-language-preferred") === "true" ? Util.getPreferredLanguages() : null,
+            localStorage.getItem("stream-rating-min"))
                     .then(CommunityUtil.updateStreamView);
     }
 
