@@ -765,6 +765,33 @@ public class CommunityVideoStreamIT
         )
             .andExpect(status().isBadRequest());
     }
+
+    @Test
+    public void testLimitFilter()
+    throws Exception
+    {
+        init(5);
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam("limit", "3")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        verifyIndexedLadderStream
+        (
+            ladderStreams,
+            List.of
+            (
+                createIndexedLadderVideoStream(4, null),
+                createIndexedLadderVideoStream(3, null),
+                createIndexedLadderVideoStream(2, null)
+            )
+        );
+    }
     
     @Test
     public void testFeaturedServiceFilter()
