@@ -143,6 +143,8 @@ class CommunityUtil
     
     static updateStreams()
     {
+        if(!FormUtil.verifyForm(document.querySelector("#stream-filters"), document.querySelector("#search-stream .error-out")))
+            return Promise.resolve({data: null, status: LOADING_STATUS.COMPLETE});
         return CommunityUtil.updateStreamModel(
             CommunityUtil.getStreamServices(),
             localStorage.getItem("stream-sort-by") || "RATING",

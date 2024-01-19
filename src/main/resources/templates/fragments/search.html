@@ -261,7 +261,7 @@
     >
         <header>
             <h2>Stream search</h2>
-            <form class="stream-filters form-inline d-flex form-flex flex-wrap-gap justify-content-center mb-3">
+            <form id="stream-filters" class="stream-filters form-inline d-flex form-flex flex-wrap-gap justify-content-center mb-3">
                     <div class="form-group checkbox d-flex flex-wrap-gap-05"
                          th:each="type : ${@communityService.getStreamServices()}"
                     >
@@ -363,6 +363,7 @@
                     </select>
                 </div>
             </form>
+            <p class="error-out text-danger d-none"></p>
         </header>
         <p>
           Gray teams represent inferred data and are displayed when the streamer's actual team is unknown.
