@@ -481,6 +481,12 @@ class ElementUtil
         }
     }
 
+    static clearAndSetInputTimeout(key, runnable)
+    {
+        ElementUtil.clearInputTimeout(key);
+        ElementUtil.INPUT_TIMEOUTS.set(key, window.setTimeout(runnable, ElementUtil.INPUT_TIMEOUT));
+    }
+
     static enhanceCopyToClipboard()
     {
         document.querySelectorAll(".copy-to-clipboard")
