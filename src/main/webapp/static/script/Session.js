@@ -176,6 +176,7 @@ class Session
                     break;
                 default:
                     elem.addEventListener("change", e=>localStorage.setItem(elem.id, elem.value));
+                    elem.addEventListener("input", e=>localStorage.setItem(elem.id, elem.value));
                     break;
             }
         }
