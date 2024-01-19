@@ -269,7 +269,7 @@
                                class="stream-service-ctl stream-filter-ctl serializable"
                                type="checkbox"
                                name="service"
-                               value="${type.name()}"
+                               th:value="${type.name()}"
                                checked="checked"
                         />
                         <label class="form-check-label" th:for="|stream-service-${type.name()}|" data-feature-timestamp="1702976258000">
@@ -283,7 +283,7 @@
                                class="stream-race-ctl stream-filter-ctl serializable"
                                type="checkbox"
                                name="race"
-                               value="${race.name()}"
+                               th:value="${race.name()}"
                                checked="checked"
                         />
                         <label class="form-check-label" th:for="|stream-race-${race.name()}|">
