@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
@@ -16,32 +17,46 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchIndependentIT;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.LongStream;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -60,6 +75,9 @@ public class StandardAPIReadonlyIT
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired @Qualifier("mvcConversionService")
+    private ConversionService conversionService;
 
     private static MockMvc mvc;
 
@@ -184,6 +202,72 @@ public class StandardAPIReadonlyIT
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isNotFound());
+    }
+
+    public static Stream<Arguments> testMmrHistoryEnd()
+    {
+        OffsetDateTime seasonStart = SeasonGenerator.DEFAULT_SEASON_START
+            .atStartOfDay()
+            .atOffset(OffsetDateTime.now().getOffset());
+        return Stream.of
+        (
+            Arguments.of(null, true),
+            Arguments.of(seasonStart, true),
+            Arguments.of(seasonStart.minusSeconds(1), false)
+        );
+    }
+
+    @MethodSource
+    @ParameterizedTest
+    public void testMmrHistoryEnd(OffsetDateTime endDateTime, boolean shouldLoad)
+    throws Exception
+    {
+        CommonCharacter character = objectMapper.readValue(mvc.perform
+        (
+            get("/api/character/{id}/common", 1)
+                .queryParam("mmrHistoryEnd", conversionService.convert(endDateTime, String.class))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), CommonCharacter.class);
+
+        if(!shouldLoad)
+        {
+            assertTrue(character.getHistory().isEmpty());
+        }
+        else
+        {
+            Assertions.assertThat(character.getHistory())
+                .usingRecursiveComparison()
+                .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+                .isEqualTo(List.of(
+                    new LadderTeamState
+                    (
+                        new TeamState
+                        (
+                            1L,
+                            SeasonGenerator.DEFAULT_SEASON_START
+                                .atStartOfDay()
+                                .atOffset(OffsetDateTime.now().getOffset()),
+                            null,
+                            3,
+                            0
+                        ),
+                        Race.TERRAN,
+                        BaseLeagueTier.LeagueTierType.FIRST,
+                        new League
+                        (
+                            null,
+                            null,
+                            BaseLeague.LeagueType.BRONZE,
+                            QueueType.LOTV_1V1,
+                            TeamType.ARRANGED
+                        ),
+                        SeasonGenerator.DEFAULT_SEASON_ID,
+                        new PopulationState()
+                    )
+                ));
+        }
     }
 
 }
