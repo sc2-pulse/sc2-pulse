@@ -68,7 +68,8 @@ public class RevealedController
         @RequestParam(name = "language", defaultValue = "") Set<Locale> languages,
         @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin,
         @RequestParam(name = "ratingMax", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMax,
-        @RequestParam(name = "limit", required = false) @Min(1) @Valid Integer limit
+        @RequestParam(name = "limit", required = false) @Min(1) @Valid Integer limit,
+        @RequestParam(name = "limitPlayer", required = false) @Min(1) @Valid Integer limitPlayer
     )
     {
         if(ratingMin != null && ratingMax != null && ratingMin > ratingMax) return ResponseEntity
@@ -87,7 +88,7 @@ public class RevealedController
                 excludeRaces,
                 languages,
                 ratingMin, ratingMax,
-                limit
+                limit, limitPlayer
             )
             .block();
         return ResponseEntity.status(getStatus(result)).body(result);

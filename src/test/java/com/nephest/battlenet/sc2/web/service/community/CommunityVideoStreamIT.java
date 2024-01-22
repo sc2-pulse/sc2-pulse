@@ -792,6 +792,84 @@ public class CommunityVideoStreamIT
             )
         );
     }
+
+    @Test
+    public void testLimitPlayerFilter()
+    throws Exception
+    {
+        init(4, (c, c1)->{});
+        streams = new VideoStream[]
+        {
+            createIndexedVideoStream(0, SocialMedia.TWITCH),
+            createIndexedVideoStream(1, SocialMedia.TWITCH),
+            createIndexedVideoStream(2, SocialMedia.BILIBILI),
+            createIndexedVideoStream(3, SocialMedia.TWITCH),
+            createIndexedVideoStream(4, SocialMedia.TWITCH),
+        };
+        when(videoStreamSupplier.getStreams())
+            .thenReturn(Flux.fromArray(streams).filter(s->s.getService() == SocialMedia.TWITCH));
+        when(otherStreamSupplier.getStreams())
+            .thenReturn(Flux.fromArray(streams).filter(s->s.getService() == SocialMedia.BILIBILI));
+        SocialMediaLink bilibiliLink = socialMediaLinkDAO.merge(false, Set.of(new SocialMediaLink(
+            1L,
+            SocialMedia.BILIBILI,
+            SocialMedia.BILIBILI.getBaseUserUrl() + "/twitchUser" + 2,
+            OffsetDateTime.now(),
+            "twitchServiceUserId" + 2,
+            false
+        ))).iterator().next();
+
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam("limitPlayer", "3")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        verifyIndexedLadderStream
+        (
+            ladderStreams,
+            List.of
+            (
+                //anonymous player
+                new LadderVideoStream(streams[4], null, null),
+                //identified player
+                createIndexedLadderVideoStream(3, null),
+                // streams of identified player
+                new LadderVideoStream
+                (
+                    streams[2],
+                    new LadderProPlayer
+                    (
+                        proPlayers[0],
+                        null,
+                        List.of(links[0], bilibiliLink)
+                    ),
+                    ladderSearchDAO.findCharacterTeams(Set.of(1L)).stream()
+                        .findAny()
+                        .orElse(null),
+                    null
+                ),
+                new LadderVideoStream
+                (
+                    streams[0],
+                    new LadderProPlayer
+                    (
+                        proPlayers[0],
+                        null,
+                        List.of(links[0], bilibiliLink)
+                    ),
+                    ladderSearchDAO.findCharacterTeams(Set.of(1L)).stream()
+                        .findAny()
+                        .orElse(null),
+                    null
+                )
+            )
+        );
+    }
     
     @Test
     public void testFeaturedServiceFilter()

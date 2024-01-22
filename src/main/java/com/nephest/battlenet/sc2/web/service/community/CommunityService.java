@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -179,7 +180,7 @@ public class CommunityService
         Set<Race> excludeRaces,
         Set<Locale> languages,
         Integer ratingMin, Integer ratingMax,
-        Integer limit
+        Integer limit, Integer limitPlayer
     )
     {
         if(!getStreamServices().containsAll(services))
@@ -197,7 +198,7 @@ public class CommunityService
                     excludeRaces,
                     languages,
                     ratingMin, ratingMax,
-                    limit
+                    limit, limitPlayer
                 )
                     .collect(Collectors.toList()),
                 result.getErrors().isEmpty()
@@ -218,7 +219,7 @@ public class CommunityService
         Set<Race> excludeRaces,
         Set<Locale> languages,
         Integer ratingMin, Integer ratingMax,
-        Integer limit
+        Integer limit, Integer limitPlayer
     )
     {
         if(!services.isEmpty() && !services.containsAll(getStreamServices())) streams
@@ -241,8 +242,38 @@ public class CommunityService
         if(ratingMax != null) streams = streams
             .filter(s->s.getTeam() != null && s.getTeam().getRating() <= ratingMax);
         if(comparator != null) streams = streams.sorted(comparator);
+        if(limitPlayer != null) streams = limitPlayers(streams, limitPlayer);
         if(limit != null) streams = streams.limit(limit);
         return streams;
+    }
+
+    private static Stream<LadderVideoStream> limitPlayers
+    (
+        Stream<LadderVideoStream> streams,
+        int limit
+    )
+    {
+        Set<Long> proPlayers = new HashSet<>();
+        AtomicInteger anonymousStreams = new AtomicInteger(0);
+        return streams.filter(s->
+        {
+            int count = proPlayers.size() + anonymousStreams.get();
+            if(s.getProPlayer() != null)
+            {
+                if(proPlayers.contains(s.getProPlayer().getProPlayer().getId())) return true;
+                if(count < limit)
+                {
+                    proPlayers.add(s.getProPlayer().getProPlayer().getId());
+                    return true;
+                }
+                return false;
+            } else if(count < limit)
+            {
+                anonymousStreams.incrementAndGet();
+                return true;
+            }
+            return false;
+        });
     }
 
     private static boolean containsFavoriteRace(LadderVideoStream stream, Set<Race> races)
@@ -355,6 +386,7 @@ public class CommunityService
                 Set.of(),
                 Set.of(),
                 null, null,
+                FEATURED_STREAM_SKILLED_SLOT_COUNT,
                 FEATURED_STREAM_SKILLED_SLOT_COUNT
             )
             .map(result->new CommunityStreamResult(
