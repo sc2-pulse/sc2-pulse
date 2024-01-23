@@ -1452,6 +1452,12 @@ body.modal-open.modal-open-no-popup
     z-index: 9999;
 }
 
+.col-sm-padding
+{
+    padding-left: 15px;
+    padding-right: 15px;
+}
+
 .flex-col-adaptive
 {
     display: flex;

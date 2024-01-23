@@ -262,104 +262,7 @@
         <header>
             <h2>Stream search</h2>
             <form id="stream-filters" class="stream-filters form-inline d-flex form-flex flex-wrap-gap justify-content-center mb-3">
-                    <div class="form-group checkbox d-flex flex-wrap-gap-05"
-                         th:each="type : ${@communityService.getStreamServices()}"
-                    >
-                        <input th:id="|stream-service-${type.name()}|"
-                               class="stream-service-ctl stream-filter-ctl serializable"
-                               type="checkbox"
-                               name="service"
-                               th:value="${type.name()}"
-                               checked="checked"
-                        />
-                        <label class="form-check-label" th:for="|stream-service-${type.name()}|" data-feature-timestamp="1702976258000">
-                            <div th:class="|icofont icofont-${type.name().toLowerCase} form-font|" th:title="${type.name()}"></div>
-                        </label>
-                    </div>
-                    <div class="form-group checkbox d-flex flex-wrap-gap-05"
-                         th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
-                    >
-                        <input th:id="|stream-race-${race.name()}|"
-                               class="stream-race-ctl stream-filter-ctl serializable"
-                               type="checkbox"
-                               name="race"
-                               th:value="${race.name()}"
-                               checked="checked"
-                        />
-                        <label class="form-check-label" th:for="|stream-race-${race.name()}|">
-                            <div th:class="|icofont icofont-${race.name().toLowerCase} form-font|" th:title="${race.name()}"></div>
-                        </label>
-                    </div>
-                    <div class="form-group checkbox d-flex flex-wrap-gap-05">
-                        <input id="stream-identified-only"
-                               class="stream-filter-ctl serializable"
-                               type="checkbox"
-                               name="identifiedOnly"
-                               value="true"
-                        />
-                        <label class="form-check-label d-flex flex-wrap-gap-025" for="stream-identified-only">
-                            <span>Identified only</span>
-                            <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
-                                 title="Only identified streams with identified teams"
-                                 data-toggle="tooltip"
-                             />
-                        </label>
-                    </div>
-                <div class="form-group checkbox d-flex flex-wrap-gap-05">
-                    <input id="stream-language-preferred"
-                           class="stream-filter-ctl serializable"
-                           type="checkbox"
-                           name="languagePreferred"
-                           value="true"
-                    />
-                    <label class="form-check-label d-flex flex-wrap-gap-025" for="stream-language-preferred">
-                        <span>Preferred languages</span>
-                        <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
-                             title="Show streams with preferred browser languages"
-                             data-toggle="tooltip"
-                        />
-                    </label>
-                </div>
-                <div class="form-group d-flex flex-wrap-gap-05">
-                    <label for="stream-rating-min">MMR min</label>
-                    <input class="form-control serializable ctl-delay"
-                           id="stream-rating-min"
-                           type="number"
-                           min="0"
-                           th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
-                           data-name="MMR min"
-                    />
-                </div>
-                <div class="form-group d-flex flex-wrap-gap-05">
-                    <label for="stream-rating-max">MMR max</label>
-                    <input class="form-control serializable ctl-delay"
-                           id="stream-rating-max"
-                           type="number"
-                           min="0"
-                           th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
-                           data-name="MMR max"
-                           data-greater-than="#stream-rating-min"
-                           data-greater-than-inclusive="true"
-                    />
-                </div>
-                <div class="form-group d-flex flex-wrap-gap-05">
-                    <label for="stream-sort-by">Sort by</label>
-                    <select class="form-control serializable" id="stream-sort-by">
-                        <option th:each="sort : ${T(com.nephest.battlenet.sc2.web.service.community.CommunityService.StreamSorting).values()}"
-                                th:value="${sort.name()}"
-                                th:text="${sort.name()}"
-                                th:attrappend="selected=${sort.name() == 'RATING'} ? selected"
-                        ></option>
-                    </select>
-                </div>
-                <div class="form-group d-flex flex-wrap-gap-05">
-                    <label for="stream-limit-player">Limit</label>
-                    <input class="form-control serializable ctl-delay"
-                           id="stream-limit-player"
-                           type="number"
-                           min="1"
-                    />
-                </div>
+                <th:block th:replace="~{fragments/search :: stream-filters('', false)}"></th:block>
                 <div class="form-group d-flex flex-wrap-gap-05">
                     <label for="stream-layout">Layout</label>
                     <select class="form-control serializable class-ctl"
@@ -469,5 +372,108 @@
                class="form-control serializable" th:id="|${idRoot}-max|" th:name="|max${nameSuffix}|">
     </div>
 </div>
+<th:block th:fragment="stream-filters(idSuffix, featured)">
+    <div class="form-group checkbox d-flex flex-wrap-gap-05"
+         th:each="type : ${@communityService.getStreamServices()}"
+    >
+        <input th:id="|stream-service-${type.name()}${idSuffix}|"
+               class="stream-service-ctl stream-filter-ctl serializable"
+               type="checkbox"
+               name="service"
+               th:value="${type.name()}"
+               checked="checked"
+        />
+        <label class="form-check-label" th:for="|stream-service-${type.name()}${idSuffix}|" data-feature-timestamp="1702976258000">
+            <div th:class="|icofont icofont-${type.name().toLowerCase} form-font|" th:title="${type.name()}"></div>
+        </label>
+    </div>
+    <div class="form-group checkbox d-flex flex-wrap-gap-05"
+         th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
+    >
+        <input th:id="|stream-race-${race.name()}${idSuffix}|"
+               class="stream-race-ctl stream-filter-ctl serializable"
+               type="checkbox"
+               name="race"
+               th:value="${race.name()}"
+               checked="checked"
+        />
+        <label class="form-check-label" th:for="|stream-race-${race.name()}${idSuffix}|">
+            <div th:class="|icofont icofont-${race.name().toLowerCase} form-font|" th:title="${race.name()}"></div>
+        </label>
+    </div>
+    <div class="form-group checkbox d-flex flex-wrap-gap-05">
+        <input th:id="|stream-identified-only${idSuffix}|"
+               class="stream-filter-ctl serializable"
+               type="checkbox"
+               name="identifiedOnly"
+               value="true"
+               th:attrappend="checked=${featured} ? checked"
+        />
+        <label class="form-check-label d-flex flex-wrap-gap-025" th:for="|stream-identified-only${idSuffix}|">
+            <span>Identified only</span>
+            <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
+                 title="Only identified streams with identified teams"
+                 data-toggle="tooltip"
+            />
+        </label>
+    </div>
+    <div class="form-group checkbox d-flex flex-wrap-gap-05">
+        <input th:id="|stream-language-preferred${idSuffix}|"
+               class="stream-filter-ctl serializable"
+               type="checkbox"
+               name="languagePreferred"
+               value="true"
+               th:attrappend="checked=${featured} ? checked"
+        />
+        <label class="form-check-label d-flex flex-wrap-gap-025" th:for="|stream-language-preferred${idSuffix}|">
+            <span>Preferred languages</span>
+            <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
+                 title="Show streams with preferred browser languages"
+                 data-toggle="tooltip"
+            />
+        </label>
+    </div>
+    <div class="form-group d-flex flex-wrap-gap-05">
+        <label th:for="|stream-rating-min${idSuffix}|">MMR min</label>
+        <input class="form-control serializable ctl-delay"
+               th:id="|stream-rating-min${idSuffix}|"
+               type="number"
+               min="0"
+               th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
+               data-name="MMR min"
+        />
+    </div>
+    <div class="form-group d-flex flex-wrap-gap-05">
+        <label th:for="|stream-rating-max${idSuffix}|">MMR max</label>
+        <input class="form-control serializable ctl-delay"
+               th:id="|stream-rating-max${idSuffix}|"
+               type="number"
+               min="0"
+               th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
+               data-name="MMR max"
+               data-greater-than="#stream-rating-min"
+               data-greater-than-inclusive="true"
+        />
+    </div>
+    <div class="form-group d-flex flex-wrap-gap-05">
+        <label th:for="|stream-sort-by${idSuffix}|">Sort by</label>
+        <select class="form-control serializable stream-filter-ctl" th:id="|stream-sort-by${idSuffix}|">
+            <option th:each="sort : ${T(com.nephest.battlenet.sc2.web.service.community.CommunityService.StreamSorting).values()}"
+                    th:value="${sort.name()}"
+                    th:text="${sort.name()}"
+                    th:attrappend="selected=${sort.name() == (featured ? 'RANK_REGION' : 'RATING')} ? selected"
+            ></option>
+        </select>
+    </div>
+    <div th:if="${featured}" class="form-group d-flex flex-wrap-gap-05">
+        <label th:for="|stream-limit-player${idSuffix}|">Limit</label>
+        <input class="form-control serializable ctl-delay"
+               th:id="|stream-limit-player${idSuffix}|"
+               type="number"
+               min="1"
+               th:value="${T(com.nephest.battlenet.sc2.web.service.community.CommunityService).FEATURED_STREAM_SKILLED_SLOT_COUNT}"
+        />
+    </div>
+</th:block>
 </body>
 </html>

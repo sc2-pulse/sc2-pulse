@@ -30,14 +30,8 @@ class CommunityUtil
         });
         ElementUtil.ELEMENT_TASKS.set("search-stream-tab", streamUpdater.executeAndReschedule.bind(streamUpdater));
 
-        const sortCtl = document.querySelector("#stream-sort-by");
-        if(sortCtl) sortCtl.addEventListener("change", e=>CommunityUtil.updateAllStreams(), 1);
-
-        document.querySelectorAll(".stream-filter-ctl").forEach(ctl=>ctl.addEventListener(
-            "click", e=>window.setTimeout(CommunityUtil.updateAllStreams, 1)));
-        document.querySelectorAll(".stream-filters .ctl-delay").forEach(ctl=>ctl.addEventListener(
-            "input", e=>ElementUtil.clearAndSetInputTimeout(e.target.id, CommunityUtil.updateAllStreams)));
-        document.querySelectorAll(".stream-filters").forEach(form=>form.addEventListener("submit", e=>e.preventDefault()));
+        CommunityUtil.enhanceStreamFilters("#stream-filters",
+            CommunityUtil.STREAM_UPDATER.executeAndReschedule.bind(CommunityUtil.STREAM_UPDATER));
     }
 
     static enhanceFeaturedStreams()
@@ -57,6 +51,17 @@ class CommunityUtil
                 featuredStreamUpdater.executeAndReschedule();
             }
         });
+        CommunityUtil.enhanceStreamFilters("#stream-filters-featured",
+            CommunityUtil.FEATURED_STREAM_UPDATER.executeAndReschedule.bind(CommunityUtil.FEATURED_STREAM_UPDATER));
+    }
+
+    static enhanceStreamFilters(containerId, func)
+    {
+        document.querySelectorAll(containerId + " .stream-filter-ctl").forEach(ctl=>ctl.addEventListener(
+            ctl.tagName == "SELECT" ? "change" : "click", e=>window.setTimeout(func, 1)));
+        document.querySelectorAll(containerId + " .ctl-delay").forEach(ctl=>ctl.addEventListener(
+            "input", e=>ElementUtil.clearAndSetInputTimeout(e.target.id, func)));
+        document.querySelectorAll(containerId).forEach(form=>form.addEventListener("submit", e=>e.preventDefault()));
     }
 
     static updateAllStreams()
@@ -67,7 +72,15 @@ class CommunityUtil
 
     static updateFeaturedStreams()
     {
-        return CommunityUtil.getFeaturedStreams(CommunityUtil.getStreamServices())
+        return CommunityUtil.getStreams(
+            CommunityUtil.getStreamServices("-featured"),
+            localStorage.getItem("stream-sort-by-featured") || "RANK_REGION",
+            localStorage.getItem("stream-identified-only-featured") || "true",
+            CommunityUtil.getStreamExcludeRaces("-featured"),
+            localStorage.getItem("stream-language-preferred-featured") === "false" ? null : Util.getPreferredLanguages(),
+            localStorage.getItem("stream-rating-min-featured"), localStorage.getItem("stream-rating-max-featured"),
+            localStorage.getItem("stream-limit-player-featured") || 5
+        )
             .then(CommunityUtil.updateFeaturedStreamView);
     }
 
@@ -93,15 +106,15 @@ class CommunityUtil
         return params;
     }
 
-    static getStreamServices()
+    static getStreamServices(idSuffix = "")
     {
-        return STREAM_SERVICES.filter(service=>localStorage.getItem("stream-service-" + service) !== "false");
+        return STREAM_SERVICES.filter(service=>localStorage.getItem("stream-service-" + service + idSuffix) !== "false");
     }
 
-    static getStreamExcludeRaces()
+    static getStreamExcludeRaces(idSuffix = "")
     {
         return Object.keys(RACE)
-            .filter(race=>localStorage.getItem("stream-race-" + race) === "false");
+            .filter(race=>localStorage.getItem("stream-race-" + race + idSuffix) === "false");
     }
 
     static getStreams(services, sorting, identifiedOnly, excludeRaces, languages, ratingMin, ratingMax, limitPlayer)
@@ -117,14 +130,6 @@ class CommunityUtil
         );
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream?${params.toString()}`))
-            .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
-    }
-
-    static getFeaturedStreams(services)
-    {
-        const params = CommunityUtil.createStreamUrlParameters(services, null, true, null, null, null, null, 5);
-        return Session.beforeRequest()
-            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream/featured?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
