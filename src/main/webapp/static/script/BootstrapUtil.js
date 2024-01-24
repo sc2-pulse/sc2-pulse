@@ -407,4 +407,27 @@ class BootstrapUtil
         return promise;
     }
 
+    static enhanceTabLinks()
+    {
+        document.querySelectorAll(".link-tab").forEach(BootstrapUtil.enhanceTabLink);
+    }
+
+    static enhanceTabLink(link)
+    {
+        link.addEventListener("click", BootstrapUtil.onTabLinkClick)
+    }
+
+    static onTabLinkClick(e)
+    {
+        const href = e.target.closest("[href]").getAttribute("href");
+        if(!href) return;
+
+        const hash = href.substring(href.indexOf("#"));
+        const tab = document.querySelector(hash);
+        if(!tab) return;
+
+        e.preventDefault();
+        HistoryUtil.showAnchoredTabs(false, hash);
+    }
+
 }

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2024 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -235,6 +235,7 @@
     <th:block th:replace="${script}" />
     <script>Session.refreshTheme();</script>
     <script th:if="${showAds}">CommunityUtil.enhanceFeaturedStreams();</script>
+    <script>BootstrapUtil.enhanceTabLinks();</script>
 </body>
 </html>
 
