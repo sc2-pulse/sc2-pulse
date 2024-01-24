@@ -56,7 +56,7 @@
                 <div th:if="${@environment.getProperty('contacts.discord.server') != null}"
                      th:replace="~{fragments/misc :: discord-server-tile}">
                 </div>
-                <h2 class="mb-3 text-break"><a th:href="@{/?#search-stream}" class="link-stream-search">Featured streams</a></h2>
+                <h2 class="mb-3 text-break"><a th:href="@{/?#search-stream}" class="link-tab">Featured streams</a></h2>
                 <div class="streams-featured d-flex flex-wrap-gap-1-5 justify-content-center">
                 </div>
             </div>

@@ -36,7 +36,6 @@ class CommunityUtil
             CommunityUtil.updateStreamView();
         }, 1));
 
-        CommunityUtil.enhanceStreamSearchLinks();
         document.querySelectorAll(".stream-service-ctl").forEach(ctl=>ctl.addEventListener(
             "click", e=>window.setTimeout(CommunityUtil.updateAllStreams, 1)));
     }
@@ -58,22 +57,6 @@ class CommunityUtil
                 featuredStreamUpdater.executeAndReschedule();
             }
         });
-    }
-
-    static enhanceStreamSearchLinks()
-    {
-        document.querySelectorAll(".link-stream-search")
-            .forEach(link=>link.addEventListener("click", CommunityUtil.onStreamSearchLinkClick));
-    }
-
-    static onStreamSearchLinkClick(evt)
-    {
-        const search = document.querySelector("#search-stream-tab");
-        if(search == null) return;
-
-        evt.preventDefault();
-        BootstrapUtil.showTab("search-all-tab")
-            .then(e=>BootstrapUtil.showTab("search-stream-tab"));
     }
 
     static updateAllStreams()
