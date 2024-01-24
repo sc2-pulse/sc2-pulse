@@ -153,13 +153,13 @@ class HistoryUtil
                 hash != null ? hash : deepestDocumentTab));
     }
 
-    static showAnchoredTabs(activateOnly = false)
+    static showAnchoredTabs(activateOnly = false, hash = Session.locationHash())
     {
-        if(Session.locationHash() == null || Session.locationHash().length == 0) return Promise.resolve();
+        if(hash == null || hash.length == 0) return Promise.resolve();
 
         Util.setGeneratingStatus(STATUS.BEGIN);
         const promises = [];
-        let prevTab = document.querySelector(Session.locationHash());
+        let prevTab = document.querySelector(hash);
         HistoryUtil.showAnchoredTab(prevTab, promises, activateOnly);
         while(true)
         {
