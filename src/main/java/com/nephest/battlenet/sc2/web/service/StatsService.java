@@ -99,7 +99,7 @@ public class StatsService
     public static final Version VERSION = Version.LOTV;
     public static final int STALE_LADDER_TOLERANCE = 1;
     public static final int STALE_LADDER_DEPTH = 12;
-    public static final int LADDER_BATCH_SIZE = 100;
+    public static final int LADDER_BATCH_SIZE = 600;
     /*
         Disable partial updates because alternative ladder service should be fast enough
         now. Might want to reactivate it later if anything goes wrong, so leaving this note just in
