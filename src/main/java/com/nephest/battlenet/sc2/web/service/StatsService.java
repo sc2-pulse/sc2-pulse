@@ -117,6 +117,21 @@ public class StatsService
             BaseLeague.LeagueType.MASTER,
             BaseLeague.LeagueType.GRANDMASTER
         ));
+    public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_MAIN_LEAGUES_2 =
+    Collections.unmodifiableSet(EnumSet.of
+    (
+        BaseLeague.LeagueType.DIAMOND,
+        BaseLeague.LeagueType.MASTER,
+        BaseLeague.LeagueType.GRANDMASTER
+    ));
+    public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_SECONDARY_LEAGUES_2 =
+    Collections.unmodifiableSet(EnumSet.of
+    (
+        BaseLeague.LeagueType.BRONZE,
+        BaseLeague.LeagueType.SILVER,
+        BaseLeague.LeagueType.GOLD,
+        BaseLeague.LeagueType.PLATINUM
+    ));
     public static final Map<QueueType, Set<BaseLeague.LeagueType>> PARTIAL_UPDATE_SECONDARY_QUEUE =
         Collections.unmodifiableMap(new EnumMap<>(Map.of
         (
@@ -181,6 +196,89 @@ public class StatsService
                 QueueType.LOTV_ARCHON, LadderUpdateContext.ALL_LEAGUES
             )))
         );
+    public static final List<Map<QueueType, Set<BaseLeague.LeagueType>>> PARTIAL_UPDATE_DATA_2 =
+    List.of
+    (
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.BRONZE,
+                BaseLeague.LeagueType.SILVER,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.GOLD,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.PLATINUM,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_2V2, PARTIAL_UPDATE_MAIN_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_2V2, Set.of
+            (
+                BaseLeague.LeagueType.BRONZE,
+                BaseLeague.LeagueType.SILVER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_2V2, Set.of
+            (
+                BaseLeague.LeagueType.GOLD,
+                BaseLeague.LeagueType.PLATINUM
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_3V3, PARTIAL_UPDATE_MAIN_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_3V3, PARTIAL_UPDATE_SECONDARY_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_4V4, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_ARCHON, PARTIAL_UPDATE_MAIN_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_4V4, PARTIAL_UPDATE_SECONDARY_LEAGUES_2,
+            QueueType.LOTV_ARCHON, PARTIAL_UPDATE_SECONDARY_LEAGUES_2
+        )))
+    );
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
     public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofDays(7);
 
@@ -198,7 +296,9 @@ public class StatsService
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdates = new EnumMap<>(Region.class);
+    private final Map<Region, LongVar> partialUpdates2 = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdateIndexes = new EnumMap<>(Region.class);
+    private final Map<Region, LongVar> partialUpdateIndexes2 = new EnumMap<>(Region.class);
     private final PendingLadderData pendingLadderData = new PendingLadderData();
 
     private AlternativeLadderService alternativeLadderService;
@@ -288,7 +388,9 @@ public class StatsService
             forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced", false));
             forcedAlternativeUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.forced.timestamp", false));
             partialUpdates.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial", false));
+            partialUpdates2.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial.2", false));
             partialUpdateIndexes.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial.ix", false));
+            partialUpdateIndexes2.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial.ix.2", false));
         }
         //catch exceptions to allow service autowiring for tests
         try {
@@ -299,12 +401,17 @@ public class StatsService
                 forcedUpdateInstants.values().stream(),
                 forcedAlternativeUpdateInstants.values().stream(),
                 partialUpdates.values().stream(),
-                partialUpdateIndexes.values().stream()
+                partialUpdates2.values().stream(),
+                partialUpdateIndexes.values().stream(),
+                partialUpdateIndexes2.values().stream()
             )
                 .flatMap(Function.identity())
                 .map(var->(Var<?>) var)
                 .forEach(Var::load);
             partialUpdateIndexes.values().stream()
+                .filter(v->v.getValue() == null)
+                .forEach(v->v.setValueAndSave(0L));
+            partialUpdateIndexes2.values().stream()
                 .filter(v->v.getValue() == null)
                 .forEach(v->v.setValueAndSave(0L));
         }
@@ -553,15 +660,16 @@ public class StatsService
         Function<LadderUpdateContext, List<Future<Void>>> updater
     )
     {
+        List<Map<QueueType, Set<BaseLeague.LeagueType>>> queue = getPartialQueue(season.getRegion());
         boolean partialUpdate = alternative
-            ? isPartialUpdate(season.getRegion())
+            ? (isPartialUpdate(season.getRegion()) || isPartialUpdate2(season.getRegion()))
             : isPartialUpdateOrThreshold(season.getRegion());
-        LongVar partialUpdateIndex = partialUpdateIndexes.get(season.getRegion());
+        LongVar partialUpdateIndex = getPartialUpdateIndex(season.getRegion());
         LadderUpdateContext context = new LadderUpdateContext
         (
             season,
             partialUpdate
-                ? PARTIAL_UPDATE_DATA.get(partialUpdateIndex.getValue().intValue())
+                ? queue.get(partialUpdateIndex.getValue().intValue())
                 : data
         );
         if(partialUpdate) LOG.info("Partially updating {}({})", season, context.getData());
@@ -569,16 +677,31 @@ public class StatsService
         if(partialUpdate)
             partialUpdateIndex.setValueAndSave
             (
-                partialUpdateIndex.getValue() == PARTIAL_UPDATE_DATA.size() - 1
+                partialUpdateIndex.getValue() == queue.size() - 1
                     ? 0
                     : partialUpdateIndex.getValue() + 1
             );
         return new LadderUpdateTaskContext<>(season, context.getData(), tasks);
     }
 
+    public List<Map<QueueType, Set<BaseLeague.LeagueType>>> getPartialQueue(Region region)
+    {
+        return partialUpdates2.get(region).getValue() != null
+            ? PARTIAL_UPDATE_DATA_2
+            : PARTIAL_UPDATE_DATA;
+    }
+
+    public LongVar getPartialUpdateIndex(Region region)
+    {
+        return partialUpdates2.get(region).getValue() != null
+            ? partialUpdateIndexes2.get(region)
+            : partialUpdateIndexes.get(region);
+    }
+
     public boolean isPartialUpdateOrThreshold(Region region)
     {
         return isPartialUpdate(region)
+            || isPartialUpdate2(region)
             || Stream.concat(alternativeRegions.stream(), forcedAlternativeRegions.stream())
                 .distinct()
                 .count() >= PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD;
@@ -587,6 +710,11 @@ public class StatsService
     public boolean isPartialUpdate(Region region)
     {
         return partialUpdates.get(region).getValue() != null;
+    }
+
+    public boolean isPartialUpdate2(Region region)
+    {
+        return partialUpdates2.get(region).getValue() != null;
     }
 
     public boolean isAlternativeUpdate(Region region, boolean currentSeason)
@@ -969,6 +1097,12 @@ public class StatsService
     {
         partialUpdates.get(region).setValueAndSave(partial ? 1L : null);
         LOG.info("{} partial update: {}", region, partial);
+    }
+
+    public void setPartialUpdate2(Region region, boolean partial)
+    {
+        partialUpdates2.get(region).setValueAndSave(partial ? 1L : null);
+        LOG.info("{} partial update 2: {}", region, partial);
     }
 
     /*

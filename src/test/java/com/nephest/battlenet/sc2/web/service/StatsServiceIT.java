@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -186,6 +186,35 @@ public class StatsServiceIT
             .andExpect(status().isOk())
             .andReturn();
         for(Region region : Region.values()) assertFalse(realStatsService.isPartialUpdate(region));
+    }
+
+    @Test
+    @WithBlizzardMockUser(partition =  Partition.GLOBAL, username = "user", roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN})
+    public void testSetPartialUpdate2()
+    throws Exception
+    {
+        for(Region region : Region.values()) assertFalse(realStatsService.isPartialUpdate2(region));
+
+        mvc.perform
+        (
+            post("/admin/update/partial/2/EU")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        for(Region region : Region.values())
+            assertEquals(region == Region.EU, realStatsService.isPartialUpdate2(region));
+
+        mvc.perform
+        (
+            delete("/admin/update/partial/2/EU")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        for(Region region : Region.values()) assertFalse(realStatsService.isPartialUpdate2(region));
     }
 
 }
