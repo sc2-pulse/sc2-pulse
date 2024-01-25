@@ -57,9 +57,15 @@ public class SC2WebServiceUtil
         return new BlizzardSeason(s.getBattlenetId(), s.getYear(), s.getNumber(), s.getStart(), s.getEnd());
     }
 
+    public BlizzardSeason getCurrentOrLastOrExistingSeason(Region region, boolean global)
+    {
+        int maxId = global ? seasonDAO.getMaxBattlenetId() : seasonDAO.getMaxBattlenetId(region);
+        return getCurrentOrLastOrExistingSeason(region, maxId);
+    }
+
     public BlizzardSeason getCurrentOrLastOrExistingSeason(Region region)
     {
-        return getCurrentOrLastOrExistingSeason(region, seasonDAO.getMaxBattlenetId());
+        return getCurrentOrLastOrExistingSeason(region, true);
     }
 
     public BlizzardSeason getExternalOrExistingSeason(Region region, int season)
