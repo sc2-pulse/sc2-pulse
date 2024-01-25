@@ -46,6 +46,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.service.EventService;
+import com.nephest.battlenet.sc2.util.LogUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -66,6 +67,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import org.apache.commons.lang3.tuple.ImmutablePair;
@@ -83,7 +85,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
@@ -985,7 +986,7 @@ public class StatsService
                 continue;
             }
 
-            chainStaleDataCheck(region, maxId + STALE_LADDER_TOLERANCE, 0).block();
+            checkStaleData(region, maxId + STALE_LADDER_TOLERANCE, STALE_LADDER_DEPTH);
         }
         saveAlternativeRegions();
         LOG.trace("end checkStaleData({})", regions);
@@ -1020,24 +1021,27 @@ public class StatsService
         }
     }
 
-
-    private Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> chainStaleDataCheck(Region region, long ladderId, int count)
+    private void checkStaleData(Region region, long ladderIdStart, int depth)
     {
-        LOG.trace("chainStaleDataCheck({}, {}, {})", region, ladderId, count);
-        return Mono.defer(()->
-            api.getProfileLadderId(region, ladderId, alternativeLadderService.isDiscoveryWebRegion(region))
-                .doOnNext(l->{
-                    if(alternativeRegions.add(region))
-                        LOG.warn("Stale data detected for {}, added this region to alternative update", region);
-                })
-                .onErrorResume(t->{
-                    int next = count + 1;
-                    if(next < STALE_LADDER_DEPTH) return chainStaleDataCheck(region, ladderId + 1, next);
-
-                    if(alternativeRegions.remove(region))
-                        LOG.info("{} now returns fresh data, removed it from alternative update", region);
-                    return Mono.empty();
-        }));
+        LOG.trace("checkStaleData({}, {}, {})", region, ladderIdStart, depth);
+        Tuple3<Region, BlizzardPlayerCharacter[], Long> apiLadderId = Flux
+                .fromStream(IntStream.range(0, depth).boxed())
+                .map(i->ladderIdStart + i)
+                .flatMap(ladderId->WebServiceUtil.getOnErrorLogAndSkipMono(api.getProfileLadderId(
+                    region, ladderId, alternativeLadderService.isDiscoveryWebRegion(region)),
+                        (t)->{}, t->LogUtil.LogLevel.DEBUG))
+                .blockFirst();
+        if(apiLadderId != null)
+        {
+            if(alternativeRegions.add(region))
+                LOG.warn("Stale data detected for {}, added this region to alternative update", region);
+        }
+        else
+        {
+            if(alternativeRegions.remove(region))
+                LOG.info("{} now returns fresh data, removed it from alternative update", region);
+        }
+        LOG.trace("end checkStaleData({}, {}, {})", region, ladderIdStart, depth);
     }
 
     private void loadAlternativeRegions()
