@@ -464,6 +464,7 @@ public class StatsService
         boolean allStats
     )
     {
+        LOG.trace("updateCurrent({}, {})", data, allStats);
         Instant start = Instant.now();
         checkStaleData(data.keySet());
         Map<Region, LadderUpdateTaskContext<Void>> ctx
@@ -605,6 +606,7 @@ public class StatsService
             int maxSeason = seasonDao.getMaxBattlenetId(region);
             BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
             Season season = seasonDao.merge(Season.of(bSeason, region));
+            LOG.debug("Using season {} for current season update for {}", season, entry.getKey());
             createLeagues(season);
             ctx.put
             (
@@ -626,6 +628,7 @@ public class StatsService
         boolean currentSeason
     )
     {
+        LOG.trace("updateOrAlternativeUpdate({}, {}, {})", season, data, currentSeason);
         fastTeamDAO.load(season.getRegion(), season.getBattlenetId());
         LOG.debug("Loaded teams into FastTeamDAO for {}", season);
         if(!isAlternativeUpdate(season.getRegion(), currentSeason))
@@ -968,11 +971,13 @@ public class StatsService
 
     public void checkStaleData(Set<Region> regions)
     {
+        LOG.trace("checkStaleData({})", regions);
         for(Region region : regions)
         {
             int maxSeason = seasonDao.getMaxBattlenetId(region);
             checkStaleDataByTeamStateCount(region);
             BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
+            LOG.debug("Using season {} for stale data check {}", bSeason.getId(), region);
             long maxId = getMaxLadderId(bSeason, region);
             if(maxId < 0) {
                 if(alternativeRegions.add(region))
@@ -983,10 +988,12 @@ public class StatsService
             chainStaleDataCheck(region, maxId + STALE_LADDER_TOLERANCE, 0).block();
         }
         saveAlternativeRegions();
+        LOG.trace("end checkStaleData({})", regions);
     }
 
     public void checkStaleDataByTeamStateCount(Region region)
     {
+        LOG.trace("checkStaleDataByTeamStateCount({})", region);
         removeForcedAlternativeRegionIfExpired(region);
         if(teamStateDAO.getCount(region, OffsetDateTime.now().minus(STALE_DATA_TEAM_STATES_DEPTH)) == 0)
         {
@@ -996,6 +1003,7 @@ public class StatsService
                 forcedAlternativeUpdateInstants.get(region).setValueAndSave(Instant.now());
             }
         }
+        LOG.trace("end checkStaleDataByTeamStateCount({})", region);
     }
 
     public void removeForcedAlternativeRegionIfExpired(Region region)
@@ -1015,6 +1023,7 @@ public class StatsService
 
     private Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> chainStaleDataCheck(Region region, long ladderId, int count)
     {
+        LOG.trace("chainStaleDataCheck({}, {}, {})", region, ladderId, count);
         return Mono.defer(()->
             api.getProfileLadderId(region, ladderId, alternativeLadderService.isDiscoveryWebRegion(region))
                 .doOnNext(l->{

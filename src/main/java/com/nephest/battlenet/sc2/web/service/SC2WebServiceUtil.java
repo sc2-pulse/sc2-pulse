@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -36,6 +36,7 @@ public class SC2WebServiceUtil
 
     public BlizzardSeason getCurrentOrLastOrExistingSeason(Region region, int maxSeason)
     {
+        LOG.trace("getCurrentOrLastOrExistingSeason({}, {})", region, maxSeason);
         try
         {
             return api.getCurrentOrLastSeason(region, maxSeason).block();
