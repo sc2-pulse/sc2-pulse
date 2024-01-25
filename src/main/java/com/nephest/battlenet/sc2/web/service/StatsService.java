@@ -467,9 +467,16 @@ public class StatsService
     {
         LOG.trace("updateCurrent({}, {})", data, allStats);
         Instant start = Instant.now();
-        checkStaleData(data.keySet());
+        LOG.trace("Getting current seasons for {}", data.keySet());
+        Map<Region, BlizzardSeason> seasons = data.keySet().stream()
+            .collect(Collectors.toMap(
+                Function.identity(),
+                region->sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, false)
+            ));
+        LOG.trace("Got current seasons {}", seasons);
+        checkStaleData(seasons);
         Map<Region, LadderUpdateTaskContext<Void>> ctx
-            = updateCurrentSeason(data, allStats);
+            = updateCurrentSeason(data, seasons, allStats);
 
         long seconds = (System.currentTimeMillis() - start.toEpochMilli()) / 1000;
         LOG.info("Updated current for {} after {} seconds", ctx, seconds);
@@ -595,6 +602,7 @@ public class StatsService
     private Map<Region, LadderUpdateTaskContext<Void>> updateCurrentSeason
     (
         Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data,
+        Map<Region, BlizzardSeason> blizzardSeasons,
         boolean allStats
     )
     {
@@ -604,8 +612,7 @@ public class StatsService
         for(Map.Entry<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> entry : data.entrySet())
         {
             Region region = entry.getKey();
-            int maxSeason = seasonDao.getMaxBattlenetId(region);
-            BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
+            BlizzardSeason bSeason = blizzardSeasons.get(region);
             Season season = seasonDao.merge(Season.of(bSeason, region));
             LOG.debug("Using season {} for current season update for {}", season, entry.getKey());
             createLeagues(season);
@@ -970,16 +977,15 @@ public class StatsService
         return max.get();
     }
 
-    public void checkStaleData(Set<Region> regions)
+    public void checkStaleData(Map<Region, BlizzardSeason> seasons)
     {
-        LOG.trace("checkStaleData({})", regions);
-        for(Region region : regions)
+        LOG.trace("checkStaleData({})", seasons.keySet());
+        for(Map.Entry<Region, BlizzardSeason> entry : seasons.entrySet())
         {
-            int maxSeason = seasonDao.getMaxBattlenetId(region);
+            Region region = entry.getKey();
             checkStaleDataByTeamStateCount(region);
-            BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
-            LOG.debug("Using season {} for stale data check {}", bSeason.getId(), region);
-            long maxId = getMaxLadderId(bSeason, region);
+            LOG.debug("Using season {} for stale data check {}", entry.getValue().getId(), region);
+            long maxId = getMaxLadderId(entry.getValue(), region);
             if(maxId < 0) {
                 if(alternativeRegions.add(region))
                     LOG.warn("Stale data detected for {}, added this region to alternative update", region);
@@ -989,7 +995,7 @@ public class StatsService
             checkStaleData(region, maxId + STALE_LADDER_TOLERANCE, STALE_LADDER_DEPTH);
         }
         saveAlternativeRegions();
-        LOG.trace("end checkStaleData({})", regions);
+        LOG.trace("end checkStaleData({})", seasons.keySet());
     }
 
     public void checkStaleDataByTeamStateCount(Region region)
