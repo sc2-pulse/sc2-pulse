@@ -998,6 +998,12 @@ body.theme-dark .spinner-border
   text-decoration: none;
 }
 
+.decoration-none,
+.decoration-none:hover
+{
+    text-decoration: none !important;
+}
+
 #link-aligulac
 {
   font-size: 1.9em;
