@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'sc2pulse';
-  src: url('font/sc2pulse.woff?vebtai') format('woff');
+  src: url('font/sc2pulse.woff?vjti63') format('woff');
   font-weight: normal;
   font-style: normal;
   font-display: block;
@@ -76,6 +76,9 @@
 .icofont-shrink2:before {
   content: "\e98c";
 }
+.icofont-cog:before {
+  content: "\e994";
+}
 .icofont-stats-dots:before {
   content: "\e99b";
 }
@@ -111,6 +114,9 @@
 }
 .icofont-arrow-left2:before {
   content: "\ea40";
+}
+.icofont-filter:before {
+  content: "\ea5b";
 }
 
 body
