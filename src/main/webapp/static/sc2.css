@@ -175,6 +175,13 @@ table, ul, dl
     display: none !important;
 }
 
+.position-no-flow
+{
+    position: absolute;
+    top: 0;
+    left: 0.3em;
+}
+
 h1
 {
     font-size: 1.5rem;
