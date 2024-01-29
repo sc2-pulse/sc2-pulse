@@ -373,7 +373,7 @@
     </div>
 </div>
 <th:block th:fragment="stream-filters(idSuffix, featured)">
-    <div class="form-group checkbox d-flex flex-wrap-gap-05"
+    <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
          th:each="type : ${@communityService.getStreamServices()}"
     >
         <input th:id="|stream-service-${type.name()}${idSuffix}|"
@@ -387,7 +387,7 @@
             <div th:class="|icofont icofont-${type.name().toLowerCase} form-font|" th:title="${type.name()}"></div>
         </label>
     </div>
-    <div class="form-group checkbox d-flex flex-wrap-gap-05"
+    <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
          th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
     >
         <input th:id="|stream-race-${race.name()}${idSuffix}|"
@@ -401,7 +401,7 @@
             <div th:class="|icofont icofont-${race.name().toLowerCase} form-font|" th:title="${race.name()}"></div>
         </label>
     </div>
-    <div class="form-group checkbox d-flex flex-wrap-gap-05">
+    <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
         <input th:id="|stream-identified-only${idSuffix}|"
                class="stream-filter-ctl serializable"
                type="checkbox"
@@ -417,7 +417,7 @@
             />
         </label>
     </div>
-    <div class="form-group checkbox d-flex flex-wrap-gap-05">
+    <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
         <input th:id="|stream-language-preferred${idSuffix}|"
                class="stream-filter-ctl serializable"
                type="checkbox"
