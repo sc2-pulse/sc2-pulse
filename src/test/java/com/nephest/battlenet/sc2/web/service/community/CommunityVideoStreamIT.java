@@ -1019,12 +1019,14 @@ public class CommunityVideoStreamIT
         return new LadderVideoStream
         (
             streams[ix],
-            new LadderProPlayer
-            (
-                proPlayers[ix],
-                null,
-                List.of(links[ix])
-            ),
+            ix < proPlayers.length && proPlayers[ix] != null
+                ? new LadderProPlayer
+                (
+                    proPlayers[ix],
+                    null,
+                    List.of(links[ix])
+                )
+                : null,
             ladderSearchDAO.findCharacterTeams(Set.of(ix + 1L)).stream()
                 .findAny()
                 .orElse(null),
