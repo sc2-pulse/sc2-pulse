@@ -1918,6 +1918,11 @@ a.unstyled, a.unstyled:hover
         margin-right: 0;
         border-right: none;
     }
+
+    .form-flex
+    {
+        justify-content: start !important;
+    }
 }
 
 @media (max-width: 310px) {
