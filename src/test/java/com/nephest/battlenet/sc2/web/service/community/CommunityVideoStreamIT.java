@@ -20,9 +20,11 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.Partition;
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
+import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
@@ -54,6 +56,7 @@ import java.util.Set;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
@@ -118,6 +121,9 @@ public class CommunityVideoStreamIT
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
+    @Autowired @Qualifier("sc2StatsConversionService")
+    private ConversionService sc2ConversionService;
 
     @Autowired @Qualifier("mvcConversionService")
     private ConversionService conversionService;
@@ -851,7 +857,60 @@ public class CommunityVideoStreamIT
             )
         );
     }
-    
+
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testTeamFormatFilter(boolean lax)
+    throws Exception
+    {
+        init(5, (c, c1)->{});
+        streams = IntStream.range(0, 6)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams())
+            .thenReturn(Flux.fromArray(streams).filter(s->s.getService() == SocialMedia.TWITCH));
+        jdbcTemplate.update
+        (
+            "UPDATE team SET queue_type = ? WHERE id = 2",
+            sc2ConversionService.convert(QueueType.LOTV_2V2, Integer.class)
+        );
+        jdbcTemplate.update
+        (
+            "UPDATE team SET queue_type = ? WHERE id = 3",
+            sc2ConversionService.convert(QueueType.LOTV_3V3, Integer.class)
+        );
+        jdbcTemplate.update
+        (
+            "UPDATE team SET queue_type = ? WHERE id = 4",
+            sc2ConversionService.convert(QueueType.LOTV_4V4, Integer.class)
+        );
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam("sort", conversionService.convert(
+                    CommunityService.StreamSorting.VIEWERS, String.class))
+                .queryParam
+                (
+                    "teamFormat",
+                    Stream.of(TeamFormat._1V1, TeamFormat._3V3)
+                        .map(param->conversionService.convert(param, String.class))
+                        .toArray(String[]::new)
+                )
+                .queryParam("lax", conversionService.convert(lax, String.class))
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        List<LadderVideoStream> expectedResult = new ArrayList<>(List.of(
+            createIndexedLadderVideoStream(4, null),
+            createIndexedLadderVideoStream(2, null),
+            createIndexedLadderVideoStream(0, null)
+        ));
+        if(lax) expectedResult.add(0, createIndexedLadderVideoStream(5, null));
+        verifyIndexedLadderStream(ladderStreams, expectedResult);
+    }
+
     @Test
     public void testFeaturedServiceFilter()
     throws Exception

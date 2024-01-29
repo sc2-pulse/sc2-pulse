@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service.community;
 
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.SocialMedia;
+import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.SocialMediaUserId;
@@ -178,6 +179,7 @@ public class CommunityService
         boolean identifiedOnly,
         Set<Race> races,
         Set<Locale> languages,
+        Set<TeamFormat> teamFormats,
         Integer ratingMin, Integer ratingMax,
         Integer limit, Integer limitPlayer,
         boolean lax
@@ -196,6 +198,7 @@ public class CommunityService
                     identifiedOnly,
                     races,
                     languages,
+                    teamFormats,
                     ratingMin, ratingMax,
                     limit, limitPlayer,
                     lax
@@ -217,6 +220,7 @@ public class CommunityService
         boolean identifiedOnly,
         Set<Race> races,
         Set<Locale> languages,
+        Set<TeamFormat> teamFormats,
         Integer ratingMin, Integer ratingMax,
         Integer limit, Integer limitPlayer,
         boolean lax
@@ -258,6 +262,13 @@ public class CommunityService
                 s->lax
                     ? s.getTeam() == null || s.getTeam().getRating() <= ratingMax
                     : s.getTeam() != null && s.getTeam().getRating() <= ratingMax
+            );
+        if(!teamFormats.isEmpty()) streams = streams
+            .filter
+            (
+                s->lax
+                    ? s.getTeam() == null || containsTeamFormat(s, teamFormats)
+                    : containsTeamFormat(s, teamFormats)
             );
         if(comparator != null) streams = streams.sorted(comparator);
         if(limitPlayer != null) streams = limitPlayers(streams, limitPlayer);
@@ -305,6 +316,12 @@ public class CommunityService
     {
         return stream.getStream().getLanguage() != null
             && languages.contains(stream.getStream().getLanguage().getLanguage());
+    }
+
+    private static boolean containsTeamFormat(LadderVideoStream stream, Set<TeamFormat> formats)
+    {
+        return stream.getTeam() != null
+            && formats.contains(stream.getTeam().getQueueType().getTeamFormat());
     }
 
     public Mono<CommunityStreamResult> getStreamsNoCache()
@@ -400,6 +417,7 @@ public class CommunityService
                 services,
                 StreamSorting.RATING.getComparator(),
                 true,
+                Set.of(),
                 Set.of(),
                 Set.of(),
                 null, null,

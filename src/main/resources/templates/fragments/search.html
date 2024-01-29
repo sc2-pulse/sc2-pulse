@@ -481,6 +481,14 @@
         </div>
     </div>
     <div class="form-group d-flex flex-wrap-gap-05">
+        <label th:for="|stream-team-format${idSuffix}|">Mode</label>
+        <select class="form-control serializable stream-filter-ctl" th:id="|stream-team-format${idSuffix}|">
+            <option value="all" selected="selected">All</option>
+            <option value="1V1">1v1</option>
+            <option value="Team">Teams</option>
+        </select>
+    </div>
+    <div class="form-group d-flex flex-wrap-gap-05">
         <label th:for="|stream-sort-by${idSuffix}|">Sort by</label>
         <select class="form-control serializable stream-filter-ctl" th:id="|stream-sort-by${idSuffix}|">
             <option th:each="sort : ${T(com.nephest.battlenet.sc2.web.service.community.CommunityService.StreamSorting).values()}"

@@ -78,6 +78,7 @@ class CommunityUtil
             localStorage.getItem("stream-identified-only-featured") || "true",
             CommunityUtil.getStreamRaces("-featured"),
             localStorage.getItem("stream-language-preferred-featured") === "false" ? null : Util.getPreferredLanguages(),
+            CommunityUtil.getStreamTeamFormats("-featured"),
             localStorage.getItem("stream-rating-min-featured"), localStorage.getItem("stream-rating-max-featured"),
             localStorage.getItem("stream-limit-player-featured") || 5,
             localStorage.getItem("stream-lax-featured") || "false"
@@ -91,6 +92,7 @@ class CommunityUtil
         identifiedOnly,
         races,
         languages,
+        teamFormats,
         ratingMin, ratingMax,
         limitPlayer,
         lax
@@ -102,6 +104,7 @@ class CommunityUtil
         if(identifiedOnly != null) params.append("identifiedOnly", identifiedOnly);
         if(races != null) races.forEach(race=>params.append("race", race));
         if(languages != null) languages.forEach(language=>params.append("language", language));
+        if(teamFormats != null) teamFormats.forEach(teamFormat=>params.append("teamFormat", teamFormat));
         if(ratingMin != null) params.append("ratingMin", ratingMin);
         if(ratingMax != null) params.append("ratingMax", ratingMax);
         if(limitPlayer != null) params.append("limitPlayer", limitPlayer);
@@ -120,6 +123,17 @@ class CommunityUtil
             .filter(race=>localStorage.getItem("stream-race-" + race + idSuffix) !== "false");
     }
 
+    static getStreamTeamFormats(idSuffix = "")
+    {
+        const val = localStorage.getItem("stream-team-format" + idSuffix) || "all";
+        switch(val) {
+            case "all":
+                return Object.keys(TEAM_FORMAT);
+            default:
+                return EnumUtil.enumOfName(val, TEAM_FORMAT_TYPE).teamFormats.map(format=>format.formatName);
+        }
+    }
+
     static getStreams
     (
         services,
@@ -127,6 +141,7 @@ class CommunityUtil
         identifiedOnly,
         races,
         languages,
+        teamFormats,
         ratingMin, ratingMax,
         limitPlayer,
         lax
@@ -138,6 +153,7 @@ class CommunityUtil
             identifiedOnly,
             races,
             languages,
+            teamFormats,
             ratingMin, ratingMax,
             limitPlayer,
             lax
@@ -154,6 +170,7 @@ class CommunityUtil
         identifiedOnly,
         races,
         languages,
+        teamFormats,
         ratingMin, ratingMax,
         limitPlayer,
         lax
@@ -165,6 +182,7 @@ class CommunityUtil
             identifiedOnly,
             races,
             languages,
+            teamFormats,
             ratingMin, ratingMax,
             limitPlayer,
             lax
@@ -192,6 +210,7 @@ class CommunityUtil
             localStorage.getItem("stream-identified-only") || "false",
             CommunityUtil.getStreamRaces(),
             localStorage.getItem("stream-language-preferred") === "true" ? Util.getPreferredLanguages() : null,
+            CommunityUtil.getStreamTeamFormats(),
             localStorage.getItem("stream-rating-min"), localStorage.getItem("stream-rating-max"),
             localStorage.getItem("stream-limit-player"),
             localStorage.getItem("stream-lax") || "true")

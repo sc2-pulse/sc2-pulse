@@ -7,6 +7,7 @@ import static com.nephest.battlenet.sc2.model.BaseTeam.MAX_RATING;
 
 import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.SocialMedia;
+import com.nephest.battlenet.sc2.model.TeamFormat;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
@@ -65,6 +66,7 @@ public class RevealedController
         @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
         @RequestParam(name = "race", defaultValue = "") Set<Race> races,
         @RequestParam(name = "language", defaultValue = "") Set<Locale> languages,
+        @RequestParam(name = "teamFormat", defaultValue = "") Set<TeamFormat> teamFormats,
         @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin,
         @RequestParam(name = "ratingMax", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMax,
         @RequestParam(name = "limit", required = false) @Min(1) @Valid Integer limit,
@@ -86,6 +88,7 @@ public class RevealedController
                 identifiedOnly,
                 races,
                 languages,
+                teamFormats,
                 ratingMin, ratingMax,
                 limit, limitPlayer,
                 lax
