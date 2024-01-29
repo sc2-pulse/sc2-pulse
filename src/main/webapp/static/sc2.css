@@ -552,6 +552,26 @@ label.required::after
     gap: 1.5em;
 }
 
+.row-gap-tiny
+{
+    row-gap: 0.3em;
+}
+
+.row-gap-05
+{
+    row-gap: 0.5em;
+}
+
+.row-gap-1
+{
+    row-gap: 1em;
+}
+
+.row-gap-1-5
+{
+    row-gap: 1.5em;
+}
+
 .dl-gap-05 dt
 {
     margin-bottom: 0.5em;
