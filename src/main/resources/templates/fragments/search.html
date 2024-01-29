@@ -373,87 +373,95 @@
     </div>
 </div>
 <th:block th:fragment="stream-filters(idSuffix, featured)">
-    <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
-         th:each="type : ${@communityService.getStreamServices()}"
-    >
-        <input th:id="|stream-service-${type.name()}${idSuffix}|"
-               class="stream-service-ctl stream-filter-ctl serializable"
-               type="checkbox"
-               name="service"
-               th:value="${type.name()}"
-               checked="checked"
-        />
-        <label class="form-check-label" th:for="|stream-service-${type.name()}${idSuffix}|" data-feature-timestamp="1702976258000">
-            <div th:class="|icofont icofont-${type.name().toLowerCase} form-font|" th:title="${type.name()}"></div>
-        </label>
-    </div>
-    <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
-         th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
-    >
-        <input th:id="|stream-race-${race.name()}${idSuffix}|"
-               class="stream-race-ctl stream-filter-ctl serializable"
-               type="checkbox"
-               name="race"
-               th:value="${race.name()}"
-               checked="checked"
-        />
-        <label class="form-check-label" th:for="|stream-race-${race.name()}${idSuffix}|">
-            <div th:class="|icofont icofont-${race.name().toLowerCase} form-font|" th:title="${race.name()}"></div>
-        </label>
-    </div>
-    <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
-        <input th:id="|stream-identified-only${idSuffix}|"
-               class="stream-filter-ctl serializable"
-               type="checkbox"
-               name="identifiedOnly"
-               value="true"
-               th:attrappend="checked=${featured} ? checked"
-        />
-        <label class="form-check-label d-flex flex-wrap-gap-025" th:for="|stream-identified-only${idSuffix}|">
-            <span>Identified only</span>
-            <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
-                 title="Only identified streams with identified teams"
-                 data-toggle="tooltip"
+    <div class="d-flex flex-wrap-gap">
+        <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
+             th:each="type : ${@communityService.getStreamServices()}"
+        >
+            <input th:id="|stream-service-${type.name()}${idSuffix}|"
+                   class="stream-service-ctl stream-filter-ctl serializable"
+                   type="checkbox"
+                   name="service"
+                   th:value="${type.name()}"
+                   checked="checked"
             />
-        </label>
+            <label class="form-check-label" th:for="|stream-service-${type.name()}${idSuffix}|" data-feature-timestamp="1702976258000">
+                <div th:class="|icofont icofont-${type.name().toLowerCase} form-font|" th:title="${type.name()}"></div>
+            </label>
+        </div>
     </div>
-    <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
-        <input th:id="|stream-language-preferred${idSuffix}|"
-               class="stream-filter-ctl serializable"
-               type="checkbox"
-               name="languagePreferred"
-               value="true"
-               th:attrappend="checked=${featured} ? checked"
-        />
-        <label class="form-check-label d-flex flex-wrap-gap-025" th:for="|stream-language-preferred${idSuffix}|">
-            <span>Preferred languages</span>
-            <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
-                 title="Show streams with preferred browser languages"
-                 data-toggle="tooltip"
+    <div class="d-flex flex-wrap-gap">
+        <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
+             th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
+        >
+            <input th:id="|stream-race-${race.name()}${idSuffix}|"
+                   class="stream-race-ctl stream-filter-ctl serializable"
+                   type="checkbox"
+                   name="race"
+                   th:value="${race.name()}"
+                   checked="checked"
             />
-        </label>
+            <label class="form-check-label" th:for="|stream-race-${race.name()}${idSuffix}|">
+                <div th:class="|icofont icofont-${race.name().toLowerCase} form-font|" th:title="${race.name()}"></div>
+            </label>
+        </div>
     </div>
-    <div class="form-group d-flex flex-wrap-gap-05">
-        <label th:for="|stream-rating-min${idSuffix}|">MMR min</label>
-        <input class="form-control serializable ctl-delay"
-               th:id="|stream-rating-min${idSuffix}|"
-               type="number"
-               min="0"
-               th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
-               data-name="MMR min"
-        />
+    <div class="d-flex flex-wrap-gap">
+        <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
+            <input th:id="|stream-identified-only${idSuffix}|"
+                   class="stream-filter-ctl serializable"
+                   type="checkbox"
+                   name="identifiedOnly"
+                   value="true"
+                   th:attrappend="checked=${featured} ? checked"
+            />
+            <label class="form-check-label d-flex flex-wrap-gap-025" th:for="|stream-identified-only${idSuffix}|">
+                <span>Identified only</span>
+                <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
+                     title="Only identified streams with identified teams"
+                     data-toggle="tooltip"
+                />
+            </label>
+        </div>
+        <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
+            <input th:id="|stream-language-preferred${idSuffix}|"
+                   class="stream-filter-ctl serializable"
+                   type="checkbox"
+                   name="languagePreferred"
+                   value="true"
+                   th:attrappend="checked=${featured} ? checked"
+            />
+            <label class="form-check-label d-flex flex-wrap-gap-025" th:for="|stream-language-preferred${idSuffix}|">
+                <span>Preferred languages</span>
+                <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
+                     title="Show streams with preferred browser languages"
+                     data-toggle="tooltip"
+                />
+            </label>
+        </div>
     </div>
-    <div class="form-group d-flex flex-wrap-gap-05">
-        <label th:for="|stream-rating-max${idSuffix}|">MMR max</label>
-        <input class="form-control serializable ctl-delay"
-               th:id="|stream-rating-max${idSuffix}|"
-               type="number"
-               min="0"
-               th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
-               data-name="MMR max"
-               data-greater-than="#stream-rating-min"
-               data-greater-than-inclusive="true"
-        />
+    <div class="d-flex flex-wrap-gap">
+        <div class="form-group d-flex flex-wrap-gap-05">
+            <label th:for="|stream-rating-min${idSuffix}|">MMR min</label>
+            <input class="form-control serializable ctl-delay"
+                   th:id="|stream-rating-min${idSuffix}|"
+                   type="number"
+                   min="0"
+                   th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
+                   data-name="MMR min"
+            />
+        </div>
+        <div class="form-group d-flex flex-wrap-gap-05">
+            <label th:for="|stream-rating-max${idSuffix}|">MMR max</label>
+            <input class="form-control serializable ctl-delay"
+                   th:id="|stream-rating-max${idSuffix}|"
+                   type="number"
+                   min="0"
+                   th:max="${T(com.nephest.battlenet.sc2.model.blizzard.BlizzardBaseTeam).RATING_MAX}"
+                   data-name="MMR max"
+                   data-greater-than="#stream-rating-min"
+                   data-greater-than-inclusive="true"
+            />
+        </div>
     </div>
     <div class="form-group d-flex flex-wrap-gap-05">
         <label th:for="|stream-sort-by${idSuffix}|">Sort by</label>
