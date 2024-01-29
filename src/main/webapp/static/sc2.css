@@ -1949,6 +1949,12 @@ a.unstyled, a.unstyled:hover
         margin-bottom: 0;
     }
 
+    .form-flex label
+    {
+        display: flex;
+        align-items: center;
+    }
+
 }
 
 @media (max-width: 310px) {
