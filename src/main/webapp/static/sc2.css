@@ -1943,6 +1943,12 @@ a.unstyled, a.unstyled:hover
     {
         justify-content: start !important;
     }
+
+    .form-flex .form-group
+    {
+        margin-bottom: 0;
+    }
+
 }
 
 @media (max-width: 310px) {

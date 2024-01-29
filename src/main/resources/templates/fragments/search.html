@@ -200,7 +200,7 @@
             <h2>Team search</h2>
             <p>This is a fuzzy search of recently active teams which helps you find barcodes you just played against when
             their battlenet::// profile is not available.</p>
-            <form id="form-search-team" class="d-flex form-flex flex-wrap-gap justify-content-center mb-3 text-left">
+            <form id="form-search-team" class="d-flex form-flex flex-wrap-gap justify-content-center row-gap-1-5 mb-3 text-left">
                 <div class="form-group">
                     <label for="search-team-queue">Format</label>
                     <select class="form-control serializable" id="search-team-queue" name="queue" required="required">
@@ -261,7 +261,7 @@
     >
         <header>
             <h2>Stream search</h2>
-            <form id="stream-filters" class="stream-filters form-inline d-flex form-flex flex-wrap-gap justify-content-center mb-3">
+            <form id="stream-filters" class="stream-filters form-inline d-flex form-flex flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
                 <th:block th:replace="~{fragments/search :: stream-filters('', false)}"></th:block>
                 <div class="form-group d-flex flex-wrap-gap-05">
                     <label for="stream-layout">Layout</label>
