@@ -76,7 +76,7 @@ class CommunityUtil
             CommunityUtil.getStreamServices("-featured"),
             localStorage.getItem("stream-sort-by-featured") || "RANK_REGION",
             localStorage.getItem("stream-identified-only-featured") || "true",
-            CommunityUtil.getStreamExcludeRaces("-featured"),
+            CommunityUtil.getStreamRaces("-featured"),
             localStorage.getItem("stream-language-preferred-featured") === "false" ? null : Util.getPreferredLanguages(),
             localStorage.getItem("stream-rating-min-featured"), localStorage.getItem("stream-rating-max-featured"),
             localStorage.getItem("stream-limit-player-featured") || 5
@@ -88,7 +88,7 @@ class CommunityUtil
         services,
         sorting,
         identifiedOnly,
-        excludeRaces,
+        races,
         languages,
         ratingMin, ratingMax,
         limitPlayer
@@ -98,7 +98,7 @@ class CommunityUtil
         if(services != null) services.forEach(service=>params.append("service", service));
         if(sorting != null) params.append("sort", sorting);
         if(identifiedOnly != null) params.append("identifiedOnly", identifiedOnly);
-        if(excludeRaces != null) excludeRaces.forEach(race=>params.append("excludeRace", race));
+        if(races != null) races.forEach(race=>params.append("race", race));
         if(languages != null) languages.forEach(language=>params.append("language", language));
         if(ratingMin != null) params.append("ratingMin", ratingMin);
         if(ratingMax != null) params.append("ratingMax", ratingMax);
@@ -111,19 +111,19 @@ class CommunityUtil
         return STREAM_SERVICES.filter(service=>localStorage.getItem("stream-service-" + service + idSuffix) !== "false");
     }
 
-    static getStreamExcludeRaces(idSuffix = "")
+    static getStreamRaces(idSuffix = "")
     {
         return Object.keys(RACE)
-            .filter(race=>localStorage.getItem("stream-race-" + race + idSuffix) === "false");
+            .filter(race=>localStorage.getItem("stream-race-" + race + idSuffix) !== "false");
     }
 
-    static getStreams(services, sorting, identifiedOnly, excludeRaces, languages, ratingMin, ratingMax, limitPlayer)
+    static getStreams(services, sorting, identifiedOnly, races, languages, ratingMin, ratingMax, limitPlayer)
     {
         const params = CommunityUtil.createStreamUrlParameters(
             services,
             sorting,
             identifiedOnly,
-            excludeRaces,
+            races,
             languages,
             ratingMin, ratingMax,
             limitPlayer
@@ -133,13 +133,13 @@ class CommunityUtil
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
-    static updateStreamModel(services, sorting, identifiedOnly, excludeRaces, languages, ratingMin, ratingMax, limitPlayer)
+    static updateStreamModel(services, sorting, identifiedOnly, races, languages, ratingMin, ratingMax, limitPlayer)
     {
         return CommunityUtil.getStreams(
             services,
             sorting,
             identifiedOnly,
-            excludeRaces,
+            races,
             languages,
             ratingMin, ratingMax,
             limitPlayer
@@ -165,7 +165,7 @@ class CommunityUtil
             CommunityUtil.getStreamServices(),
             localStorage.getItem("stream-sort-by") || "RATING",
             localStorage.getItem("stream-identified-only") || "false",
-            CommunityUtil.getStreamExcludeRaces(),
+            CommunityUtil.getStreamRaces(),
             localStorage.getItem("stream-language-preferred") === "true" ? Util.getPreferredLanguages() : null,
             localStorage.getItem("stream-rating-min"), localStorage.getItem("stream-rating-max"),
             localStorage.getItem("stream-limit-player"))

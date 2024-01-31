@@ -177,7 +177,6 @@ public class CommunityService
         Comparator<LadderVideoStream> comparator,
         boolean identifiedOnly,
         Set<Race> races,
-        Set<Race> excludeRaces,
         Set<Locale> languages,
         Integer ratingMin, Integer ratingMax,
         Integer limit, Integer limitPlayer
@@ -195,7 +194,6 @@ public class CommunityService
                     comparator,
                     identifiedOnly,
                     races,
-                    excludeRaces,
                     languages,
                     ratingMin, ratingMax,
                     limit, limitPlayer
@@ -216,7 +214,6 @@ public class CommunityService
         Comparator<LadderVideoStream> comparator,
         boolean identifiedOnly,
         Set<Race> races,
-        Set<Race> excludeRaces,
         Set<Locale> languages,
         Integer ratingMin, Integer ratingMax,
         Integer limit, Integer limitPlayer
@@ -235,8 +232,6 @@ public class CommunityService
         }
         if(!races.isEmpty()) streams = streams
             .filter(s->containsFavoriteRace(s, races));
-        if(!excludeRaces.isEmpty()) streams = streams
-            .filter(s->!containsFavoriteRace(s, excludeRaces));
         if(ratingMin != null) streams = streams
             .filter(s->s.getTeam() != null && s.getTeam().getRating() >= ratingMin);
         if(ratingMax != null) streams = streams
@@ -382,7 +377,6 @@ public class CommunityService
                 services,
                 StreamSorting.RATING.getComparator(),
                 true,
-                Set.of(),
                 Set.of(),
                 Set.of(),
                 null, null,

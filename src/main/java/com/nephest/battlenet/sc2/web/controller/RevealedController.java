@@ -64,7 +64,6 @@ public class RevealedController
         @RequestParam(name = "sort", required = false) CommunityService.StreamSorting sorting,
         @RequestParam(name = "identifiedOnly", defaultValue = "false") boolean identifiedOnly,
         @RequestParam(name = "race", defaultValue = "") Set<Race> races,
-        @RequestParam(name = "excludeRace", defaultValue = "") Set<Race> excludeRaces,
         @RequestParam(name = "language", defaultValue = "") Set<Locale> languages,
         @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin,
         @RequestParam(name = "ratingMax", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMax,
@@ -85,7 +84,6 @@ public class RevealedController
                 sorting.getComparator(),
                 identifiedOnly,
                 races,
-                excludeRaces,
                 languages,
                 ratingMin, ratingMax,
                 limit, limitPlayer

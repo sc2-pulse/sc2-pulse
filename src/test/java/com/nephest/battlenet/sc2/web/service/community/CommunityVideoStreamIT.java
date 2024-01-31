@@ -611,42 +611,6 @@ public class CommunityVideoStreamIT
     }
 
     @Test
-    public void testExcludeRaceFilter()
-    throws Exception
-    {
-        init(5, (c, c1)->{});
-        streams = IntStream.range(0, 5)
-            .boxed()
-            .map(CommunityVideoStreamIT::createIndexedVideoStream)
-            .toArray(VideoStream[]::new);
-        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
-        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
-        (
-            get("/api/revealed/stream")
-                .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.VIEWERS, String.class))
-                .queryParam
-                (
-                    "excludeRace",
-                    conversionService.convert(Race.PROTOSS, String.class),
-                    conversionService.convert(Race.ZERG, String.class)
-                )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        Assertions.assertThat(ladderStreams)
-            .usingRecursiveComparison()
-            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
-            .ignoringFields("streams.proPlayer.proPlayer.version")
-            .isEqualTo(new CommunityStreamResult(List.of(
-                createIndexedLadderVideoStream(4, null),
-                createIndexedLadderVideoStream(3, null),
-                createIndexedLadderVideoStream(0, null)
-            ), Set.of()));
-    }
-
-    @Test
     public void testLanguageFilter()
     throws Exception
     {
