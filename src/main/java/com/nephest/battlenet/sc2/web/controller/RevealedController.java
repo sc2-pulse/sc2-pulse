@@ -68,7 +68,8 @@ public class RevealedController
         @RequestParam(name = "ratingMin", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMin,
         @RequestParam(name = "ratingMax", required = false) @Min(0) @Max(MAX_RATING) @Valid Integer ratingMax,
         @RequestParam(name = "limit", required = false) @Min(1) @Valid Integer limit,
-        @RequestParam(name = "limitPlayer", required = false) @Min(1) @Valid Integer limitPlayer
+        @RequestParam(name = "limitPlayer", required = false) @Min(1) @Valid Integer limitPlayer,
+        @RequestParam(name = "lax", defaultValue = "false") boolean lax
     )
     {
         if(ratingMin != null && ratingMax != null && ratingMin > ratingMax) return ResponseEntity
@@ -86,7 +87,8 @@ public class RevealedController
                 races,
                 languages,
                 ratingMin, ratingMax,
-                limit, limitPlayer
+                limit, limitPlayer,
+                lax
             )
             .block();
         return ResponseEntity.status(getStatus(result)).body(result);

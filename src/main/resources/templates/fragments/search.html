@@ -438,6 +438,23 @@
                 />
             </label>
         </div>
+        <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
+            <input th:id="|stream-lax${idSuffix}|"
+                   class="stream-filter-ctl serializable"
+                   type="checkbox"
+                   name="lax"
+                   value="true"
+                   th:attrappend="checked=${!featured} ? checked"
+            />
+            <label class="form-check-label d-flex flex-wrap-gap-025" th:for="|stream-lax${idSuffix}|">
+                <span>Lax</span>
+                <img th:src="@{/static/icon/misc/info.svg}" alt="?" class="form-icon"
+                     title="Don't remove streams with unknown filtered values. For example if the terran filter is enabled
+                        and the stream race is unknown, then such stream won't be removed if the lax filter is active."
+                     data-toggle="tooltip"
+                />
+            </label>
+        </div>
     </div>
     <div class="d-flex flex-wrap-gap">
         <div class="form-group d-flex flex-wrap-gap-05">

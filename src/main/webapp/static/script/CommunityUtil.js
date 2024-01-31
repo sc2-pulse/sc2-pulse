@@ -79,7 +79,8 @@ class CommunityUtil
             CommunityUtil.getStreamRaces("-featured"),
             localStorage.getItem("stream-language-preferred-featured") === "false" ? null : Util.getPreferredLanguages(),
             localStorage.getItem("stream-rating-min-featured"), localStorage.getItem("stream-rating-max-featured"),
-            localStorage.getItem("stream-limit-player-featured") || 5
+            localStorage.getItem("stream-limit-player-featured") || 5,
+            localStorage.getItem("stream-lax-featured") || "false"
         )
             .then(CommunityUtil.updateFeaturedStreamView);
     }
@@ -91,7 +92,8 @@ class CommunityUtil
         races,
         languages,
         ratingMin, ratingMax,
-        limitPlayer
+        limitPlayer,
+        lax
     )
     {
         const params = new URLSearchParams();
@@ -103,6 +105,7 @@ class CommunityUtil
         if(ratingMin != null) params.append("ratingMin", ratingMin);
         if(ratingMax != null) params.append("ratingMax", ratingMax);
         if(limitPlayer != null) params.append("limitPlayer", limitPlayer);
+        if(lax != null) params.append("lax", lax);
         return params;
     }
 
@@ -117,7 +120,17 @@ class CommunityUtil
             .filter(race=>localStorage.getItem("stream-race-" + race + idSuffix) !== "false");
     }
 
-    static getStreams(services, sorting, identifiedOnly, races, languages, ratingMin, ratingMax, limitPlayer)
+    static getStreams
+    (
+        services,
+        sorting,
+        identifiedOnly,
+        races,
+        languages,
+        ratingMin, ratingMax,
+        limitPlayer,
+        lax
+    )
     {
         const params = CommunityUtil.createStreamUrlParameters(
             services,
@@ -126,14 +139,25 @@ class CommunityUtil
             races,
             languages,
             ratingMin, ratingMax,
-            limitPlayer
+            limitPlayer,
+            lax
         );
         return Session.beforeRequest()
             .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/revealed/stream?${params.toString()}`))
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404, 502]))
     }
 
-    static updateStreamModel(services, sorting, identifiedOnly, races, languages, ratingMin, ratingMax, limitPlayer)
+    static updateStreamModel
+    (
+        services,
+        sorting,
+        identifiedOnly,
+        races,
+        languages,
+        ratingMin, ratingMax,
+        limitPlayer,
+        lax
+    )
     {
         return CommunityUtil.getStreams(
             services,
@@ -142,7 +166,8 @@ class CommunityUtil
             races,
             languages,
             ratingMin, ratingMax,
-            limitPlayer
+            limitPlayer,
+            lax
         )
             .then(streams=>{
                 Model.DATA.get(VIEW.STREAM_SEARCH).set(VIEW_DATA.SEARCH, streams);
@@ -168,7 +193,8 @@ class CommunityUtil
             CommunityUtil.getStreamRaces(),
             localStorage.getItem("stream-language-preferred") === "true" ? Util.getPreferredLanguages() : null,
             localStorage.getItem("stream-rating-min"), localStorage.getItem("stream-rating-max"),
-            localStorage.getItem("stream-limit-player"))
+            localStorage.getItem("stream-limit-player"),
+            localStorage.getItem("stream-lax") || "true")
                     .then(CommunityUtil.updateStreamView);
     }
 

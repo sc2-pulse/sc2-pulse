@@ -64,6 +64,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -134,7 +135,7 @@ public class CommunityVideoStreamIT
     private VideoStream[] streams;
     private ProPlayer[] proPlayers;
     private static final Locale[] LOCALES
-        = new Locale[]{Locale.ENGLISH, Locale.FRENCH, Locale.CHINESE};
+        = new Locale[]{Locale.ENGLISH, Locale.FRENCH, Locale.CHINESE, Locale.ENGLISH, null};
 
     @TestConfiguration
     static class InitConfiguration {
@@ -574,12 +575,13 @@ public class CommunityVideoStreamIT
             ), Set.of()));
     }
 
-    @Test
-    public void testRaceFilter()
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testRaceFilter(boolean lax)
     throws Exception
     {
         init(5, (c, c1)->{});
-        streams = IntStream.range(0, 5)
+        streams = IntStream.range(0, 6)
             .boxed()
             .map(CommunityVideoStreamIT::createIndexedVideoStream)
             .toArray(VideoStream[]::new);
@@ -595,27 +597,31 @@ public class CommunityVideoStreamIT
                     conversionService.convert(Race.TERRAN, String.class),
                     conversionService.convert(Race.RANDOM, String.class)
                 )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
+                    .queryParam("lax", conversionService.convert(lax, String.class))
+                    .contentType(MediaType.APPLICATION_JSON)
+            )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        List<LadderVideoStream> expectedResult = new ArrayList<>(List.of(
+            createIndexedLadderVideoStream(4, null),
+            createIndexedLadderVideoStream(3, null),
+            createIndexedLadderVideoStream(0, null)
+        ));
+        if(lax) expectedResult.add(0, createIndexedLadderVideoStream(5, null));
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("streams.proPlayer.proPlayer.version")
-            .isEqualTo(new CommunityStreamResult(List.of(
-                createIndexedLadderVideoStream(4, null),
-                createIndexedLadderVideoStream(3, null),
-                createIndexedLadderVideoStream(0, null)
-            ), Set.of()));
+            .isEqualTo(new CommunityStreamResult(expectedResult, Set.of()));
     }
 
-    @Test
-    public void testLanguageFilter()
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testLanguageFilter(boolean lax)
     throws Exception
     {
-        init(4, (c, c1)->{});
-        streams = IntStream.range(0, 4)
+        init(5, (c, c1)->{});
+        streams = IntStream.range(0, 5)
             .boxed()
             .map(CommunityVideoStreamIT::createIndexedVideoStream)
             .toArray(VideoStream[]::new);
@@ -626,19 +632,22 @@ public class CommunityVideoStreamIT
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam("language", "en-US", "zh")
+                .queryParam("lax", conversionService.convert(lax, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        List<LadderVideoStream> expectedResult = new ArrayList<>(List.of(
+            createIndexedLadderVideoStream(3, null),
+            createIndexedLadderVideoStream(2, null),
+            createIndexedLadderVideoStream(0, null)
+        ));
+        if(lax) expectedResult.add(0, createIndexedLadderVideoStream(4, null));
         Assertions.assertThat(ladderStreams)
             .usingRecursiveComparison()
             .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
             .ignoringFields("streams.proPlayer.proPlayer.version")
-            .isEqualTo(new CommunityStreamResult(List.of(
-                createIndexedLadderVideoStream(3, null),
-                createIndexedLadderVideoStream(2, null),
-                createIndexedLadderVideoStream(0, null)
-            ), Set.of()));
+            .isEqualTo(new CommunityStreamResult(expectedResult, Set.of()));
     }
 
     private void init(int count)
@@ -664,56 +673,64 @@ public class CommunityVideoStreamIT
             .isEqualTo(new CommunityStreamResult(expectedStreams, Set.of()));
     }
 
-    @Test
-    public void testRatingMinFilter()
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testRatingMinFilter(boolean lax)
     throws Exception
     {
-        init(4);
+        init(4, (c, c1)->{});
+        streams = IntStream.range(0, 5)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam("ratingMin", "2")
+                .queryParam("lax", conversionService.convert(lax, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        verifyIndexedLadderStream
-        (
-            ladderStreams,
-            List.of
-            (
-                createIndexedLadderVideoStream(3, null),
-                createIndexedLadderVideoStream(2, null)
-            )
-        );
+        List<LadderVideoStream> expectedResult = new ArrayList<>(List.of(
+            createIndexedLadderVideoStream(3, null),
+            createIndexedLadderVideoStream(2, null)
+        ));
+        if(lax) expectedResult.add(0, createIndexedLadderVideoStream(4, null));
+        verifyIndexedLadderStream(ladderStreams, expectedResult);
     }
 
-    @Test
-    public void testRatingMaxFilter()
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testRatingMaxFilter(boolean lax)
     throws Exception
     {
-        init(4);
+        init(4, (c, c1)->{});
+        streams = IntStream.range(0, 5)
+            .boxed()
+            .map(CommunityVideoStreamIT::createIndexedVideoStream)
+            .toArray(VideoStream[]::new);
+        when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
         CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream")
                 .queryParam("sort", conversionService.convert(
                     CommunityService.StreamSorting.VIEWERS, String.class))
                 .queryParam("ratingMax", "1")
+                .queryParam("lax", conversionService.convert(lax, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        verifyIndexedLadderStream
-        (
-            ladderStreams,
-            List.of
-            (
-                createIndexedLadderVideoStream(1, null),
-                createIndexedLadderVideoStream(0, null)
-            )
-        );
+        List<LadderVideoStream> expectedResult = new ArrayList<>(List.of(
+            createIndexedLadderVideoStream(1, null),
+            createIndexedLadderVideoStream(0, null)
+        ));
+        if(lax) expectedResult.add(0, createIndexedLadderVideoStream(4, null));
+        verifyIndexedLadderStream(ladderStreams, expectedResult);
     }
 
     @Test
