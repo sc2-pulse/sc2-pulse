@@ -30,11 +30,11 @@ const LEAGUE = Object.freeze
 
 const TEAM_FORMAT = Object.freeze
 ({
-    _1V1: {code:201, name: "1V1", fullName: "LOTV_1V1", memberCount: 1, order: 1},
-    _2V2: {code:202, name: "2V2", fullName: "LOTV_2V2", memberCount: 2, order: 2},
-    _3V3: {code:203, name: "3V3", fullName: "LOTV_3V3", memberCount: 3, order: 3},
-    _4V4: {code:204, name: "4V4", fullName: "LOTV_4V4", memberCount: 4, order: 4},
-    ARCHON: {code:206, name: "Archon", fullName: "LOTV_ARCHON", memberCount: 2, order: 5}
+    _1V1: {code:201, name: "1V1", fullName: "LOTV_1V1", formatName: "_1V1", memberCount: 1, order: 1},
+    _2V2: {code:202, name: "2V2", fullName: "LOTV_2V2", formatName: "_2V2", memberCount: 2, order: 2},
+    _3V3: {code:203, name: "3V3", fullName: "LOTV_3V3", formatName: "_3V3", memberCount: 3, order: 3},
+    _4V4: {code:204, name: "4V4", fullName: "LOTV_4V4", formatName: "_4V4", memberCount: 4, order: 4},
+    ARCHON: {code:206, name: "Archon", fullName: "LOTV_ARCHON", formatName: "ARCHON", memberCount: 2, order: 5}
 });
 
 const TEAM_TYPE = Object.freeze
