@@ -968,6 +968,11 @@ th.hoverable span
     display: none !important;
 }
 
+.collapse:not(.show)
+{
+    display: none !important;
+}
+
 .vertical-align-initial
 {
     vertical-align: initial !important;
