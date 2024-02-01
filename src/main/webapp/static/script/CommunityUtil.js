@@ -83,7 +83,21 @@ class CommunityUtil
             localStorage.getItem("stream-limit-player-featured") || 5,
             localStorage.getItem("stream-lax-featured") || "false"
         )
-            .then(CommunityUtil.updateFeaturedStreamView);
+            .then(result=>{
+                result.streams = CommunityUtil.filterSecondaryPlayerStreams(result.streams);
+                CommunityUtil.updateFeaturedStreamView(result);
+            });
+    }
+
+    static filterSecondaryPlayerStreams(streams)
+    {
+        const playerIds = new Set();
+        return streams.filter(stream=>{
+            if(stream.proPlayer == null) return true;
+            if(playerIds.has(stream.proPlayer.proPlayer.id)) return false;
+            playerIds.add(stream.proPlayer.proPlayer.id);
+            return true;
+        });
     }
 
     static createStreamUrlParameters(
