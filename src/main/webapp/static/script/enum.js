@@ -37,6 +37,12 @@ const TEAM_FORMAT = Object.freeze
     ARCHON: {code:206, name: "Archon", fullName: "LOTV_ARCHON", formatName: "ARCHON", memberCount: 2, order: 5}
 });
 
+const TEAM_FORMAT_TYPE = Object.freeze
+({
+    _1V1: {name: "1V1", teamFormats: [TEAM_FORMAT._1V1], order: 1},
+    TEAM: {name: "Team", teamFormats: Object.values(TEAM_FORMAT).filter(f=>f.memberCount > 1), order: 2}
+});
+
 const TEAM_TYPE = Object.freeze
 ({
     ARRANGED: {code:0, name: "Arranged", fullName: "ARRANGED", secondaryName: "Team", order: 1},
