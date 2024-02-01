@@ -271,7 +271,10 @@
                     Stream search
                 </a>
             </h2>
-            <form id="stream-filters" class="stream-filters collapse show form-inline d-flex form-flex flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
+            <form id="stream-filters"
+                  class="stream-filters collapse show form-inline d-flex form-flex flex-wrap-gap row-gap-1-5 justify-content-center mb-3"
+                  data-collapse-on="mobile"
+            >
                 <th:block th:replace="~{fragments/search :: stream-filters('', false)}"></th:block>
                 <div class="form-group d-flex flex-wrap-gap-05">
                     <label for="stream-layout">Layout</label>
