@@ -319,6 +319,15 @@ class BootstrapUtil
         $(".collapse").on("hidden.bs.collapse", e=>ElementUtil.resolveElementPromise(ElementUtil.NEGATION_PREFIX + e.target.id));
     }
 
+    static collapseOnCondition()
+    {
+        const mobile = Util.isMobile();
+        document.querySelectorAll('.collapse[data-collapse-on]').forEach(c=>{
+            const collapseOn = c.getAttribute("data-collapse-on");
+            if(collapseOn == "mobile" && mobile || collapseOn == "desktop" && !mobile) BootstrapUtil.hideCollapsible(c.id);
+        });
+    }
+
     static setFormCollapsibleScroll(id)
     {
         const jCol = $(document.getElementById(id));

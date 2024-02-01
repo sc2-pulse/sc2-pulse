@@ -106,6 +106,7 @@ class SC2Restful
                 BootstrapUtil.init();
                 BootstrapUtil.enhanceModals();
                 BootstrapUtil.enhanceCollapsibles();
+                BootstrapUtil.collapseOnCondition();
                 FormUtil.enhanceFormInputGroupFilters();
                 FormUtil.enhanceFormGroups();
                 FormUtil.initInputStateLinks();
