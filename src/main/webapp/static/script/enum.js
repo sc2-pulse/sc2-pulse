@@ -3,29 +3,29 @@
 
 const REGION = Object.freeze
 ({
-    US: {code:1, name: "us", order: 1},
-    EU: {code:2, name: "eu", order: 2},
-    KR: {code:3, name: "kr", order: 3},
-    CN: {code:5, name: "cn", order: 4}
+    US: {code:1, name: "us", fullName: "US", order: 1},
+    EU: {code:2, name: "eu", fullName: "EU", order: 2},
+    KR: {code:3, name: "kr", fullName: "KR", order: 3},
+    CN: {code:5, name: "cn", fullName: "CN", order: 4}
 });
 
 const RACE = Object.freeze
 ({
-    TERRAN: {code: 1, name: "terran", order: 1},
-    PROTOSS: {code: 2, name: "protoss", order: 2},
-    ZERG: {code: 3, name: "zerg", order: 3},
-    RANDOM: {code: 4, name: "random", order: 4}
+    TERRAN: {code: 1, name: "terran", fullName: "TERRAN", order: 1},
+    PROTOSS: {code: 2, name: "protoss", fullName: "PROTOSS", order: 2},
+    ZERG: {code: 3, name: "zerg", fullName: "ZERG", order: 3},
+    RANDOM: {code: 4, name: "random", fullName: "RANDOM", order: 4}
 });
 
 const LEAGUE = Object.freeze
 ({
-    BRONZE: {code:0, name: "bronze", shortName: "bro", order: 1},
-    SILVER: {code:1, name: "silver", shortName: "sil", order: 2},
-    GOLD: {code:2, name: "gold", shortName: "gol", order: 3},
-    PLATINUM: {code:3, name: "platinum", shortName: "pla", order: 4},
-    DIAMOND: {code:4, name: "diamond", shortName: "dia", order: 5},
-    MASTER: {code:5, name: "master", shortName: "mas", order: 6},
-    GRANDMASTER: {code:6, name: "grandmaster", shortName: "gra", order: 7}
+    BRONZE: {code:0, name: "bronze", shortName: "bro", fullName: "BRONZE", order: 1},
+    SILVER: {code:1, name: "silver", shortName: "sil", fullName: "SILVER", order: 2},
+    GOLD: {code:2, name: "gold", shortName: "gol", fullName: "GOLD", order: 3},
+    PLATINUM: {code:3, name: "platinum", shortName: "pla", fullName: "PLATINUM", order: 4},
+    DIAMOND: {code:4, name: "diamond", shortName: "dia", fullName: "DIAMOND", order: 5},
+    MASTER: {code:5, name: "master", shortName: "mas", fullName: "MASTER", order: 6},
+    GRANDMASTER: {code:6, name: "grandmaster", shortName: "gra", fullName: "GRANDMASTER", order: 7}
 });
 
 const TEAM_FORMAT = Object.freeze
@@ -39,8 +39,8 @@ const TEAM_FORMAT = Object.freeze
 
 const TEAM_FORMAT_TYPE = Object.freeze
 ({
-    _1V1: {name: "1V1", teamFormats: [TEAM_FORMAT._1V1], order: 1},
-    TEAM: {name: "Team", teamFormats: Object.values(TEAM_FORMAT).filter(f=>f.memberCount > 1), order: 2}
+    _1V1: {name: "1V1", fullName: "_1V1", teamFormats: [TEAM_FORMAT._1V1], order: 1},
+    TEAM: {name: "Team", fullName: "TEAM", teamFormats: Object.values(TEAM_FORMAT).filter(f=>f.memberCount > 1), order: 2}
 });
 
 const TEAM_TYPE = Object.freeze
