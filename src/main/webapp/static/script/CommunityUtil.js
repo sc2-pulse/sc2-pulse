@@ -102,9 +102,9 @@ class CommunityUtil
         if(services != null) services.forEach(service=>params.append("service", service));
         if(sorting != null) params.append("sort", sorting);
         if(identifiedOnly != null) params.append("identifiedOnly", identifiedOnly);
-        if(races != null) races.forEach(race=>params.append("race", race));
+        if(races != null) races.forEach(race=>params.append("race", race.fullName));
         if(languages != null) languages.forEach(language=>params.append("language", language));
-        if(teamFormats != null) teamFormats.forEach(teamFormat=>params.append("teamFormat", teamFormat));
+        if(teamFormats != null) teamFormats.forEach(teamFormat=>params.append("teamFormat", teamFormat.formatName));
         if(ratingMin != null) params.append("ratingMin", ratingMin);
         if(ratingMax != null) params.append("ratingMax", ratingMax);
         if(limitPlayer != null) params.append("limitPlayer", limitPlayer);
@@ -119,8 +119,8 @@ class CommunityUtil
 
     static getStreamRaces(idSuffix = "")
     {
-        return Object.keys(RACE)
-            .filter(race=>localStorage.getItem("stream-race-" + race + idSuffix) !== "false");
+        return Object.values(RACE)
+            .filter(race=>localStorage.getItem("stream-race-" + race.fullName + idSuffix) !== "false");
     }
 
     static getStreamTeamFormats(idSuffix = "")
@@ -128,9 +128,9 @@ class CommunityUtil
         const val = localStorage.getItem("stream-team-format" + idSuffix) || "all";
         switch(val) {
             case "all":
-                return Object.keys(TEAM_FORMAT);
+                return Object.values(TEAM_FORMAT);
             default:
-                return EnumUtil.enumOfName(val, TEAM_FORMAT_TYPE).teamFormats.map(format=>format.formatName);
+                return EnumUtil.enumOfName(val, TEAM_FORMAT_TYPE).teamFormats;
         }
     }
 
