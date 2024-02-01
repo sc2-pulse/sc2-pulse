@@ -260,8 +260,18 @@
              data-view-description="Find live streams enhanced with ranked ladder data."
     >
         <header>
-            <h2>Stream search</h2>
-            <form id="stream-filters" class="stream-filters form-inline d-flex form-flex flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
+            <h2>
+                <a class="c-dropdown"
+                   href="#stream-filters"
+                   data-toggle="collapse"
+                   role="button"
+                   aria-expanded="true"
+                   aria-controls="stream-filters"
+                >
+                    Stream search
+                </a>
+            </h2>
+            <form id="stream-filters" class="stream-filters collapse show form-inline d-flex form-flex flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
                 <th:block th:replace="~{fragments/search :: stream-filters('', false)}"></th:block>
                 <div class="form-group d-flex flex-wrap-gap-05">
                     <label for="stream-layout">Layout</label>
