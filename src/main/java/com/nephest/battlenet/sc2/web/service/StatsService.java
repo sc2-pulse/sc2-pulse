@@ -259,6 +259,17 @@ public class StatsService
         ))),
         Collections.unmodifiableMap(new EnumMap<>(Map.of
         (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.PLATINUM,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
             QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
             QueueType.LOTV_3V3, PARTIAL_UPDATE_MAIN_LEAGUES_2
         ))),
@@ -272,6 +283,17 @@ public class StatsService
             QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
             QueueType.LOTV_4V4, PARTIAL_UPDATE_MAIN_LEAGUES_2,
             QueueType.LOTV_ARCHON, PARTIAL_UPDATE_MAIN_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.PLATINUM,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
         ))),
         Collections.unmodifiableMap(new EnumMap<>(Map.of
         (

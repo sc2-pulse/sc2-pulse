@@ -37,6 +37,9 @@ public class Status
         (
             "prioritized_x2",
             "1v1 " + StringUtils.join(PARTIAL_UPDATE_MAIN_LEAGUES_2) + " are prioritized.\n"
+            + "1v1 PLATINUM is updated "
+            + FormatUtil.DEFAULT_DECIMAL_FORMAT.format(StatsService.PARTIAL_UPDATE_DATA_2.size() / 3.0)
+            + " times slower.\n"
             + "Other data is updated " + StatsService.PARTIAL_UPDATE_DATA_2.size()  + " times "
             + "slower.",
             Level.WARNING
