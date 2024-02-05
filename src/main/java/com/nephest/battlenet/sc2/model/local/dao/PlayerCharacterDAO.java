@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -63,7 +63,8 @@ public class PlayerCharacterDAO
         + "("
             + "UPDATE player_character "
             + "SET account_id=v.account_id, "
-            + "name=v.name "
+            + "name=v.name, "
+            + "updated=NOW() "
             + "FROM selected "
             + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name) "
                 + "USING (region, realm, battlenet_id) "

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -291,6 +291,29 @@ public class PlayerCharacterDAOIT
         assertEquals(2, playerCharacterDAO.updateCharacters(updatedCharacters));
 
         verifyUpdatedCharacters(minTimeAllowed);
+    }
+
+    @Test
+    public void testMerge()
+    {
+        Account account1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        Account account2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account1.getId(), Region.EU, 1L, 1, "name1#1"));
+
+        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+        PlayerCharacter char2 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account2.getId(), Region.EU, 1L, 1, "name2#1"));
+
+        Assertions.assertThat(playerCharacterDAO.find(Set.of(char1.getId())).get(0))
+            .usingRecursiveComparison()
+            .isEqualTo(char2);
+        OffsetDateTime afterUpdate = template.queryForObject
+        (
+            "SELECT updated FROM player_character WHERE id = " + char1.getId(),
+            OffsetDateTime.class
+        );
+        assertTrue(beforeUpdate.isBefore(afterUpdate));
     }
 
     private void verifyUpdatedCharacters(OffsetDateTime minTimeAllowed)
