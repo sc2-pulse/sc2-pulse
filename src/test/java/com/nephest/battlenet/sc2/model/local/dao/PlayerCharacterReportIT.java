@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -859,6 +859,24 @@ public class PlayerCharacterReportIT
             });
     }
 
+    private static void verifyStatus
+    (
+        LadderPlayerCharacterReport report,
+        Boolean reportStatus,
+        Boolean... evidenceStatus
+    )
+    {
+        assertEquals(reportStatus, report.getReport().getStatus());
+        assertArrayEquals
+        (
+            evidenceStatus,
+            report.getEvidence().stream()
+                .map(LadderEvidence::getEvidence)
+                .map(Evidence::getStatus)
+                .toArray(Boolean[]::new)
+        );
+    }
+
     private List<Notification> verifyNotifications(String msg, Long... ids)
     {
         List<Notification> notifications = notificationDAO.findAll();
@@ -1138,6 +1156,55 @@ public class PlayerCharacterReportIT
         )
             .andExpect(status().is(expectedCode))
             .andReturn();
+    }
+
+    @Test
+    public void whenReportHasDeniedStatusAndNewEvidenceReceived_thenResetReportStatus()
+    throws Exception
+    {
+        OffsetDateTime start = OffsetDateTime.now();
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+                .param("playerCharacterId", "1")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence1")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        LadderPlayerCharacterReport[] reports = getReports();
+        verifyStatus(reports[0], null, (Boolean) null);
+
+        evidenceVoteDAO.merge(new EvidenceVote(
+            reports[0].getEvidence().get(0).getEvidence().getId(),
+            reports[0].getEvidence().get(0).getEvidence().getCreated(),
+            2L, false, OffsetDateTime.now()
+        ));
+        evidenceVoteDAO.merge(new EvidenceVote(
+            reports[0].getEvidence().get(0).getEvidence().getId(),
+            reports[0].getEvidence().get(0).getEvidence().getCreated(),
+            1L, false, OffsetDateTime.now()
+        ));
+        reportService.update(start);
+        verifyStatus(getReports()[0], false, false);
+
+        mvc.perform
+        (
+            post("/api/character/report/new")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf().asHeader())
+                .param("playerCharacterId", "1")
+                .param("type", "CHEATER")
+                .param("evidence", "evidence2")
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+        verifyStatus(getReports()[0], false, null, false);
+
+        reportService.update(start);
+        verifyStatus(getReports()[0], null, null, false);
     }
 
 }
