@@ -483,7 +483,9 @@ public class PlayerCharacterDAOIT
         assertTrue(roles2.contains(SC2PulseAuthority.ADMIN));
 
         //rebind character 3 to account 4
-        playerCharacterDAO.merge(new PlayerCharacter(null, 4L, Region.EU, 3L, 3, "name3"));
+        PlayerCharacter char3 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, 4L, Region.EU, 3L, 3, "name3"));
+        assertEquals(4L, playerCharacterDAO.find(Set.of(char3.getId())).get(0).getAccountId());
 
         //rebound value does not exist, successfully rebound
         List<ProPlayerAccount> proPlayerAccountsRebound = proPlayerAccountDAO.findByProPlayerId(3);
