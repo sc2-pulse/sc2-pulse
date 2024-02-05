@@ -21,7 +21,7 @@ import org.springframework.stereotype.Repository;
 public class PlayerCharacterReportDAO
 {
 
-    public static final int DENIED_REPORT_TTL_DAYS = 180;
+    public static final int DENIED_REPORT_TTL_DAYS = 360;
 
     public static final String STD_SELECT =
         "player_character_report.id AS \"player_character_report.id\", "
