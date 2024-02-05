@@ -1201,7 +1201,7 @@ public class PlayerCharacterReportIT
         )
             .andExpect(status().isOk())
             .andReturn();
-        verifyStatus(getReports()[0], false, null, false);
+        verifyStatus(getReports()[0], null, null, false);
 
         reportService.update(start);
         verifyStatus(getReports()[0], null, null, false);
