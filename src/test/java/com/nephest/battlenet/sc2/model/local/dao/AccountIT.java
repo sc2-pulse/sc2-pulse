@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.DBTestService;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -44,6 +45,9 @@ public class AccountIT
 
     @Autowired
     private PlayerCharacterDAO playerCharacterDAO;
+
+    @Autowired
+    private DBTestService dbTestService;
 
     @Autowired
     private JdbcTemplate template;
@@ -160,6 +164,19 @@ public class AccountIT
         assertEquals("tag#1", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
         OffsetDateTime updatedAt = accountDAO.getUpdated(acc1.getId());
         assertTrue(beforeUpdate.isBefore(updatedAt));
+    }
+
+    @Test
+    public void whenRebindingAccount_thenRebindConnectedData()
+    {
+        Object[] bindings1 = dbTestService.createAccountBindings(1, true);
+        Object[] bindings2 = dbTestService.createAccountBindings(2, false);
+
+        playerCharacterDAO.updateAccountsAndCharacters(List.of(
+            Tuples.of((Account) bindings2[0], (PlayerCharacter) bindings1[1], false, 0)
+        ));
+
+        dbTestService.verifyAccountBindings(2L, 1L);
     }
 
     @Test
