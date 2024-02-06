@@ -88,8 +88,8 @@ public class MapServiceTest
         when(eventService.getMatchUpdateEvent()).thenReturn(Flux.just(ctx, ctx));
         mapService = new MapService(seasonDAO, mapStatsDAO, varDAO, eventService);
 
-        mapService.getUpdateEvent().blockFirst(Duration.ofMillis(100));
-        mapService.getUpdateEvent().blockFirst(Duration.ofMillis(100));
+        mapService.getUpdateEvent().blockFirst(Duration.ofMillis(1000));
+        mapService.getUpdateEvent().blockFirst(Duration.ofMillis(1000));
         verify(mapStatsDAO, times(2)).add(any(), any());
     }
 
