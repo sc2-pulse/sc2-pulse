@@ -19,16 +19,15 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.Account;
-import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
+import com.nephest.battlenet.sc2.model.local.DBTestService;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.Evidence;
 import com.nephest.battlenet.sc2.model.local.EvidenceVote;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
-import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
@@ -117,6 +116,9 @@ public class PlayerCharacterDAOIT
 
     @Autowired
     private SeasonGenerator seasonGenerator;
+
+    @Autowired
+    private DBTestService dbTestService;
 
     @Autowired
     private JdbcTemplate template;
@@ -439,10 +441,10 @@ public class PlayerCharacterDAOIT
     public void testCharacterRebinding()
     {
         //stub
-        stubCharacterChain(1, true);
-        stubCharacterChain(2, true);
-        stubCharacterChain(3, true);
-        stubCharacterChain(4, false);
+        dbTestService.createAccountBindings(1, true);
+        dbTestService.createAccountBindings(2, true);
+        dbTestService.createAccountBindings(3, true);
+        dbTestService.createAccountBindings(4, false);
         stubReport(1, 2, true);
         stubReport(3, 4, false);
         accountFollowingDAO.create(new AccountFollowing(1L, 1L));
@@ -510,25 +512,6 @@ public class PlayerCharacterDAOIT
         assertFalse(discordUserDAO.findByAccountId(3L, false).isPresent());
         DiscordUser discordUser3 = discordUserDAO.findByAccountId(4L, false).orElseThrow();
         assertEquals(Snowflake.of(3L), discordUser3.getId());
-    }
-
-    private Account stubCharacterChain(int num, boolean bind)
-    {
-        DiscordUser discordUser = discordUserDAO
-            .merge(Set.of(new DiscordUser(Snowflake.of(num), "name" + num, num)))
-            .iterator().next();
-        ProPlayer proPlayer = proPlayerDAO
-            .merge(new ProPlayer(null, (long) num, "proTag" + num, "proName" + num));
-        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag" + num));
-        PlayerCharacter char1 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, (long) num, num, "name" + num));
-        if(bind)
-        {
-            proPlayerAccountDAO.link(proPlayer.getId(), "tag" + num);
-            accountDiscordUserDAO
-                .create(Set.of(new AccountDiscordUser(acc1.getId(), discordUser.getId())));
-        }
-        return acc1;
     }
 
     private void stubReport(long accountId, long accountId2, boolean secondVote)
