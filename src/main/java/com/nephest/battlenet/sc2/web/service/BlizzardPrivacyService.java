@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -49,6 +49,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Validator;
@@ -106,6 +107,7 @@ public class BlizzardPrivacyService
     private InstantVar lastUpdatedCharacterInstant;
     private Future<?> characterUpdateTask = CompletableFuture.completedFuture(null);
     private final SingleRunnable updateOldDataTask;
+    private final boolean updateCharacterProfiles;
 
     @Autowired
     public BlizzardPrivacyService
@@ -122,7 +124,8 @@ public class BlizzardPrivacyService
         @Qualifier("webExecutorService") ExecutorService webExecutorService,
         Validator validator,
         SC2WebServiceUtil sc2WebServiceUtil,
-        GlobalContext globalContext
+        GlobalContext globalContext,
+        @Value("${com.nephest.battlenet.sc2.privacy.character.profile.update:#{'true'}}") boolean updateCharacterProfiles
     )
     {
         this.api = api;
@@ -142,6 +145,8 @@ public class BlizzardPrivacyService
         initVars(varDAO);
         api.addRequestLimitPriority(REQUEST_LIMIT_PRIORITY_NAME, REQUEST_LIMIT_PRIORITY_SLOTS);
         updateOldDataTask = new SingleRunnable(this::doUpdateOldSeasons, webExecutorService);
+        this.updateCharacterProfiles = updateCharacterProfiles;
+        if(!this.updateCharacterProfiles) LOG.warn("Character profile updates are disabled");
     }
 
     private void initVars(VarDAO varDAO)
@@ -379,9 +384,15 @@ public class BlizzardPrivacyService
                 : lastUpdatedSeason.getValue() + 1);
     }
 
+    public boolean getUpdateCharactersFlag()
+    {
+        return updateCharacterProfiles;
+    }
+
     private boolean shouldUpdateCharacters()
     {
-        return lastUpdatedCharacterInstant.getValue().isBefore(Instant.now().minus(CHARACTER_UPDATE_TIME_FRAME));
+        return getUpdateCharactersFlag()
+            && lastUpdatedCharacterInstant.getValue().isBefore(Instant.now().minus(CHARACTER_UPDATE_TIME_FRAME));
     }
 
     private int getCharacterBatchSize()

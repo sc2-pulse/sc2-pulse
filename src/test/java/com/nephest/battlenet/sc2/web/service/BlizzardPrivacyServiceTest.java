@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -156,7 +156,8 @@ public class BlizzardPrivacyServiceTest
             executor, executor, executor,
             validator,
             sc2WebServiceUtil,
-            globalContext
+            globalContext,
+            true
         );
     }
 
@@ -176,7 +177,8 @@ public class BlizzardPrivacyServiceTest
             TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE,
             validator,
             sc2WebServiceUtil,
-            globalContext
+            globalContext,
+            true
         );
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
@@ -289,6 +291,29 @@ public class BlizzardPrivacyServiceTest
         privacyService.update();
         //reset id cursor due to empty batch
         assertEquals(Long.MAX_VALUE, privacyService.getLastUpdatedCharacterId().getValue());
+    }
+
+    @Test
+    public void whenUpdateCharacterProfilesIsDisabled_thenDontUpdateCharacters()
+    {
+        privacyService = new BlizzardPrivacyService
+        (
+            api,
+            statsService,
+            alternativeLadderService,
+            seasonDAO,
+            varDAO,
+            accountDAO,
+            playerCharacterDAO,
+            executor, executor, executor,
+            validator,
+            sc2WebServiceUtil,
+            globalContext,
+            false
+        );
+        lenient().when(playerCharacterDAO.countByUpdatedMax(any(), any()))
+            .thenThrow(new IllegalStateException("test"));
+        privacyService.update();
     }
 
     @Test
