@@ -252,11 +252,6 @@ public class StatsService
         Collections.unmodifiableMap(new EnumMap<>(Map.of
         (
             QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
-            QueueType.LOTV_2V2, PARTIAL_UPDATE_MAIN_LEAGUES_2
-        ))),
-        Collections.unmodifiableMap(new EnumMap<>(Map.of
-        (
-            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
             QueueType.LOTV_2V2, Set.of
             (
                 BaseLeague.LeagueType.BRONZE,
@@ -325,6 +320,11 @@ public class StatsService
             QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
             QueueType.LOTV_4V4, PARTIAL_UPDATE_MAIN_TEAM_LEAGUES_2,
             QueueType.LOTV_ARCHON, PARTIAL_UPDATE_MAIN_TEAM_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_2V2, PARTIAL_UPDATE_MAIN_LEAGUES_2
         )))
     );
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
