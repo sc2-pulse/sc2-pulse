@@ -268,11 +268,16 @@ public class StatsService
                 BaseLeague.LeagueType.GRANDMASTER
             )
         ))),
-        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        Collections.unmodifiableMap(Stream.concat
         (
-            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
-            QueueType.LOTV_3V3, PARTIAL_UPDATE_MAIN_LEAGUES_2
-        ))),
+            Stream.of(Map.entry(QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2)),
+            PARTIAL_UPDATE_SECONDARY_QUEUE.entrySet().stream()
+        )
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (l, r)->l,
+                ()->new EnumMap<>(QueueType.class)))),
         Collections.unmodifiableMap(new EnumMap<>(Map.of
         (
             QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
@@ -281,8 +286,8 @@ public class StatsService
         Collections.unmodifiableMap(new EnumMap<>(Map.of
         (
             QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
-            QueueType.LOTV_4V4, PARTIAL_UPDATE_MAIN_LEAGUES_2,
-            QueueType.LOTV_ARCHON, PARTIAL_UPDATE_MAIN_LEAGUES_2
+            QueueType.LOTV_4V4, PARTIAL_UPDATE_SECONDARY_LEAGUES_2,
+            QueueType.LOTV_ARCHON, PARTIAL_UPDATE_SECONDARY_LEAGUES_2
         ))),
         Collections.unmodifiableMap(new EnumMap<>(Map.of
         (
@@ -298,8 +303,13 @@ public class StatsService
         Collections.unmodifiableMap(new EnumMap<>(Map.of
         (
             QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
-            QueueType.LOTV_4V4, PARTIAL_UPDATE_SECONDARY_LEAGUES_2,
-            QueueType.LOTV_ARCHON, PARTIAL_UPDATE_SECONDARY_LEAGUES_2
+            QueueType.LOTV_3V3, PARTIAL_UPDATE_MAIN_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_4V4, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_ARCHON, PARTIAL_UPDATE_MAIN_LEAGUES_2
         )))
     );
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);

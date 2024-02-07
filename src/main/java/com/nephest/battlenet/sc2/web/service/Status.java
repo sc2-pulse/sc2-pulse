@@ -40,6 +40,9 @@ public class Status
             + "1v1 PLATINUM is updated "
             + FormatUtil.DEFAULT_DECIMAL_FORMAT.format(StatsService.PARTIAL_UPDATE_DATA_2.size() / 3.0)
             + " times slower.\n"
+            + StringUtils.join(StatsService.PARTIAL_UPDATE_SECONDARY_QUEUE) + " are updated "
+            + FormatUtil.DEFAULT_DECIMAL_FORMAT.format(StatsService.PARTIAL_UPDATE_DATA_2.size() / 2.0)
+            + " times slower.\n"
             + "Other data is updated " + StatsService.PARTIAL_UPDATE_DATA_2.size()  + " times "
             + "slower.",
             Level.WARNING
