@@ -232,7 +232,7 @@ public class StatsService
             QueueType.LOTV_1V1,
             Set.of
             (
-                BaseLeague.LeagueType.GOLD,
+                BaseLeague.LeagueType.PLATINUM,
                 BaseLeague.LeagueType.DIAMOND,
                 BaseLeague.LeagueType.MASTER,
                 BaseLeague.LeagueType.GRANDMASTER
@@ -243,7 +243,7 @@ public class StatsService
             QueueType.LOTV_1V1,
             Set.of
             (
-                BaseLeague.LeagueType.PLATINUM,
+                BaseLeague.LeagueType.GOLD,
                 BaseLeague.LeagueType.DIAMOND,
                 BaseLeague.LeagueType.MASTER,
                 BaseLeague.LeagueType.GRANDMASTER
