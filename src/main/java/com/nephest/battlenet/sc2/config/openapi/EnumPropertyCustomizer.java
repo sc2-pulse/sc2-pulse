@@ -4,7 +4,6 @@
 package com.nephest.battlenet.sc2.config.openapi;
 
 import com.nephest.battlenet.sc2.util.SpringUtil;
-import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
 import java.util.Arrays;
 import java.util.List;
@@ -39,7 +38,7 @@ implements ParameterCustomizer
     }
 
     @Override
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked"})
     public Parameter customize(Parameter parameter, MethodParameter methodParameter)
     {
         Class<?> type = SpringUtil.getClass(methodParameter);
@@ -48,15 +47,7 @@ implements ParameterCustomizer
         List<String> enums = Arrays.stream(type.getEnumConstants())
             .map(e->mvcConversionService.convert(e, String.class))
             .collect(Collectors.toList());
-        /*
-            Can be any schema here, but it should be safe to inject string info here because
-            no type-specific features should be used by original schemes. This saves original
-            parameters while overriding the enum constants.
-         */
-        Schema schema = parameter.getSchema().getItems() != null
-            ? parameter.getSchema().getItems()
-            : parameter.getSchema();
-        schema.setEnum(enums);
+        OpenApiUtil.getSchema(parameter).setEnum(enums);
         if(parameter.getSchema().getType().equalsIgnoreCase("integer"))
         {
             parameter.getSchema().setType("string");
