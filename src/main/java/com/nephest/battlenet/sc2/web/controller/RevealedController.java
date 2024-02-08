@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.community.CommunityService;
 import com.nephest.battlenet.sc2.web.service.community.CommunityStreamResult;
+import io.swagger.v3.oas.annotations.Hidden;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -97,8 +98,9 @@ public class RevealedController
         return ResponseEntity.status(getStatus(result)).body(result);
     }
 
+    @Hidden
     @GetMapping("/stream/featured")
-    public ResponseEntity<CommunityStreamResult> getFeaturedStreams
+    public ResponseEntity<CommunityStreamResult> getFeaturedStreamsLegacy
     (
         @RequestParam(name = "service", defaultValue = "") Set<SocialMedia> services
     )
