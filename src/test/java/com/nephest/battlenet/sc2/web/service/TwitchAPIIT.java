@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -84,7 +84,11 @@ public class TwitchAPIIT
             .collectList()
             .block();
         assertFalse(streams.isEmpty());
-        assertTrue(streams.stream().allMatch(s->s.getGameId().equals(SC2_GAME_ID)));
+        /*
+            Twitch API returns other games sometimes. Ensure that at least *some* streams are
+            related to the target game.
+         */
+        assertTrue(streams.stream().anyMatch(s->s.getGameId().equals(SC2_GAME_ID)));
     }
 
     @Test
