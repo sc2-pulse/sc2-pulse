@@ -16,6 +16,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -39,6 +40,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
@@ -60,6 +62,9 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.Pair;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -107,10 +112,16 @@ public class BlizzardPrivacyServiceTest
     private Validator validator;
 
     @Mock
+    private ClanService clanService;
+
+    @Mock
     private SC2WebServiceUtil sc2WebServiceUtil;
 
     @Captor
     private ArgumentCaptor<List<Tuple4<Account, PlayerCharacter, Boolean, Integer>>> accountPlayerCaptor;
+
+    @Captor
+    private ArgumentCaptor<Collection<Pair<PlayerCharacter, Clan>>> clanPairCaptor;
 
     @Captor
     private ArgumentCaptor<OffsetDateTime> offsetDateTimeArgumentCaptor;
@@ -153,6 +164,7 @@ public class BlizzardPrivacyServiceTest
             varDAO,
             accountDAO,
             playerCharacterDAO,
+            clanService,
             executor, executor, executor,
             validator,
             sc2WebServiceUtil,
@@ -174,6 +186,7 @@ public class BlizzardPrivacyServiceTest
             varDAO,
             accountDAO,
             playerCharacterDAO,
+            clanService,
             TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE,
             validator,
             sc2WebServiceUtil,
@@ -305,6 +318,7 @@ public class BlizzardPrivacyServiceTest
             varDAO,
             accountDAO,
             playerCharacterDAO,
+            clanService,
             executor, executor, executor,
             validator,
             sc2WebServiceUtil,
@@ -367,6 +381,22 @@ public class BlizzardPrivacyServiceTest
         assertEquals(2, argChars.size());
         assertEquals(character1, argChars.get(0));
         assertEquals(character2, argChars.get(1));
+
+        verify(clanService).saveClans(clanPairCaptor.capture());
+        Assertions.assertThat(clanPairCaptor.getValue())
+            .usingRecursiveComparison()
+            .isEqualTo(List.of(
+                new ImmutablePair<>
+                (
+                    new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1#1"),
+                    new Clan(null, "clan1", Region.EU, null)
+                ),
+                new ImmutablePair<>
+                (
+                    new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2#1"),
+                    null
+                )
+            ));
     }
 
     @CsvSource
@@ -386,6 +416,7 @@ public class BlizzardPrivacyServiceTest
         privacyService.updateOldSeasons();
 
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
+        verify(clanService, never()).saveClans(any());
         List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> argChars =
             accountPlayerCaptor.getValue();
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
@@ -410,6 +441,17 @@ public class BlizzardPrivacyServiceTest
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         //true because season is the current season and alternative update route is disabled
         assertTrue(accountPlayerCaptor.getValue().get(0).getT3());
+
+        verify(clanService).saveClans(clanPairCaptor.capture());
+        Assertions.assertThat(clanPairCaptor.getValue())
+            .usingRecursiveComparison()
+            .isEqualTo(List.of(
+                new ImmutablePair<>
+                (
+                    new PlayerCharacter(null, null, Region.EU, 1L, 1, "name2#1"),
+                    new Clan(null, "tag", Region.EU, "clanName")
+                )
+            ));
     }
 
     @Test

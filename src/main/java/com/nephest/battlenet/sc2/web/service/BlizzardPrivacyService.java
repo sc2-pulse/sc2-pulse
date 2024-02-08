@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -45,6 +46,7 @@ import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,6 +92,7 @@ public class BlizzardPrivacyService
     private final SeasonDAO seasonDAO;
     private final AccountDAO accountDAO;
     private final PlayerCharacterDAO playerCharacterDAO;
+    private final ClanService clanService;
     private final ExecutorService dbExecutorService;
     private final ExecutorService secondaryDbExecutorService;
     private final ExecutorService webExecutorService;
@@ -119,6 +122,7 @@ public class BlizzardPrivacyService
         VarDAO varDAO,
         AccountDAO accountDAO,
         PlayerCharacterDAO playerCharacterDAO,
+        ClanService clanService,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
         @Qualifier("secondaryDbExecutorService") ExecutorService secondaryDbExecutorService,
         @Qualifier("webExecutorService") ExecutorService webExecutorService,
@@ -134,6 +138,7 @@ public class BlizzardPrivacyService
         this.seasonDAO = seasonDAO;
         this.accountDAO = accountDAO;
         this.playerCharacterDAO = playerCharacterDAO;
+        this.clanService = clanService;
         this.dbExecutorService = dbExecutorService;
         this.secondaryDbExecutorService = secondaryDbExecutorService;
         this.webExecutorService = webExecutorService;
@@ -304,20 +309,16 @@ public class BlizzardPrivacyService
     protected void update(Region region, int seasonId, boolean currentSeason)
     {
         BlizzardSeason bSeason = sc2WebServiceUtil.getExternalOrExistingSeason(region, seasonId);
-        List<Future<Void>> dbTasks = new ArrayList<>();
         List<Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladderIds =
             statsService.getLadderIds(StatsService.getLeagueIds(bSeason, region, UPDATE_DATA), currentSeason);
         api.getLadders(ladderIds, -1, Map.of(), REQUEST_LIMIT_PRIORITY_NAME)
             .flatMap(l->Flux.fromStream(extractPrivateInfo(l, seasonId, currentSeason)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
-            .forEach(l->dbTasks.add(secondaryDbExecutorService.submit(()->
-                LOG.debug("Updated {} accounts and characters", playerCharacterDAO.updateAccountsAndCharacters(l)),
-                    null)));
-        MiscUtil.awaitAndLogExceptions(dbTasks, true);
+            .forEach(l->process(l, currentSeason));
     }
 
-    private Stream<Tuple4<Account, PlayerCharacter, Boolean, Integer>> extractPrivateInfo
+    private Stream<Tuple2<BlizzardTeamMember, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> extractPrivateInfo
     (
         Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladder,
         int seasonId,
@@ -334,8 +335,31 @@ public class BlizzardPrivacyService
             {
                 Account account = Account.of(m.getAccount(), region);
                 PlayerCharacter character = PlayerCharacter.of(account, region, m.getCharacter());
-                return Tuples.of(account, character, fresh, seasonId);
+                return Tuples.of(m, Tuples.of(account, character, fresh, seasonId));
             });
+    }
+
+    private void process
+    (
+        List<Tuple2<BlizzardTeamMember, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> members,
+        boolean currentSeason
+    )
+    {
+        List<Future<Void>> dbTasks = new ArrayList<>();
+        List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> privateData = members.stream()
+            .map(Tuple2::getT2)
+            .collect(Collectors.toList());
+        dbTasks.add(secondaryDbExecutorService.submit(()->
+            LOG.debug("Updated {} accounts and characters",
+                playerCharacterDAO.updateAccountsAndCharacters(privateData)), null));
+        if(currentSeason)
+        {
+            List<Pair<PlayerCharacter, Clan>> clans = members.stream()
+                .map(m->StatsService.extractCharacterClanPair(m.getT1(), m.getT2().getT2()))
+                .collect(Collectors.toList());
+            dbTasks.add(dbExecutorService.submit(()->clanService.saveClans(clans), null));
+        }
+        MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 
     private void alternativeUpdate(Region region, int seasonId)
@@ -343,7 +367,6 @@ public class BlizzardPrivacyService
         Season season = new Season(null, seasonId, region, null, null, null, null);
         List<Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladderIds = alternativeLadderService
             .getExistingLadderIds(season, UPDATE_DATA);
-        List<Future<Void>> dbTasks = new ArrayList<>();
         api.getProfileLadders
         (
             ladderIds,
@@ -354,13 +377,10 @@ public class BlizzardPrivacyService
             .flatMap(l->Flux.fromStream(extractAlternativePrivateInfo(l)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
             .toStream()
-            .forEach(l->dbTasks.add(secondaryDbExecutorService.submit(()->
-                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(Set.copyOf(l))),
-                    null)));
-        MiscUtil.awaitAndLogExceptions(dbTasks, true);
+            .forEach(this::processAlternative);
     }
 
-    private Stream<PlayerCharacter> extractAlternativePrivateInfo
+    private Stream<Tuple2<BlizzardProfileTeamMember, PlayerCharacter>> extractAlternativePrivateInfo
     (Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladder)
     {
         Region region = ladder.getT2().getT1();
@@ -368,7 +388,23 @@ public class BlizzardPrivacyService
             .flatMap(l->Arrays.stream(l.getT1().getLadderTeams()))
             .flatMap(t->Arrays.stream(t.getTeamMembers()))
             .filter(profileTeamMemberPredicate)
-            .map(m-> PlayerCharacter.of(new Account(), region, m));
+            .map(m->Tuples.of(m, PlayerCharacter.of(new Account(), region, m)));
+    }
+
+    private void processAlternative(List<Tuple2<BlizzardProfileTeamMember, PlayerCharacter>> members)
+    {
+        List<Future<Void>> dbTasks = new ArrayList<>();
+        Set<PlayerCharacter> chars = members.stream()
+            .map(Tuple2::getT2)
+            .collect(Collectors.toSet());
+        dbTasks.add(secondaryDbExecutorService.submit(()->
+                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(chars)),
+            null));
+        List<Pair<PlayerCharacter, Clan>> clans = members.stream()
+            .map(t->AlternativeLadderService.extractClan(t.getT2(), t.getT1()))
+            .collect(Collectors.toList());
+        dbTasks.add(dbExecutorService.submit(()->clanService.saveClans(clans), null));
+        MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 
     protected Integer getSeasonToUpdate()
