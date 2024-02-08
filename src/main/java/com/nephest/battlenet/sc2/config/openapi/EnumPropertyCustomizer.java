@@ -1,13 +1,12 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.openapi;
 
+import com.nephest.battlenet.sc2.util.SpringUtil;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.parameters.Parameter;
-import java.lang.reflect.ParameterizedType;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springdoc.core.customizers.ParameterCustomizer;
@@ -43,7 +42,7 @@ implements ParameterCustomizer
     @SuppressWarnings({"unchecked", "rawtypes"})
     public Parameter customize(Parameter parameter, MethodParameter methodParameter)
     {
-        Class<?> type = getClass(methodParameter);
+        Class<?> type = SpringUtil.getClass(methodParameter);
         if(!type.isEnum()) return parameter;
 
         List<String> enums = Arrays.stream(type.getEnumConstants())
@@ -64,17 +63,6 @@ implements ParameterCustomizer
             parameter.getSchema().setFormat(null);
         }
         return parameter;
-    }
-
-    private Class<?> getClass(MethodParameter methodParameter)
-    {
-        Class<?> type = methodParameter.getParameter().getType();
-        return Collection.class.isAssignableFrom(type)
-            ? (Class<?>)((ParameterizedType) methodParameter.getNestedGenericParameterType())
-                .getActualTypeArguments()[0]
-            : type.isArray()
-                ? type.getComponentType()
-                : type;
     }
 
 
