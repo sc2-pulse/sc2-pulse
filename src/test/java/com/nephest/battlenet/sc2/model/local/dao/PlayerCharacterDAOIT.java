@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -54,6 +55,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple4;
 import reactor.util.function.Tuples;
 
@@ -290,7 +292,17 @@ public class PlayerCharacterDAOIT
         ));
 
         OffsetDateTime minTimeAllowed = OffsetDateTime.now();
-        assertEquals(2, playerCharacterDAO.updateCharacters(updatedCharacters));
+        Long[] ids = playerCharacterDAO.updateCharacters(updatedCharacters).stream()
+            .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        Long[] setIds = updatedCharacters.stream()
+            .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        Long[] expectedIds = new Long[]{char1.getId(), char3.getId()};
+        assertArrayEquals(expectedIds, ids);
+        assertArrayEquals(expectedIds, setIds);
 
         verifyUpdatedCharacters(minTimeAllowed);
     }
@@ -394,7 +406,18 @@ public class PlayerCharacterDAOIT
 
         OffsetDateTime char4Updated = playerCharacterDAO.getUpdated(char4.getId());
         OffsetDateTime minTimeAllowed = OffsetDateTime.now();
-        assertEquals(3, playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars));
+        Long[] ids = playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars).stream()
+            .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        Long[] setIds = updatedAccsAndChars.stream()
+            .map(Tuple2::getT2)
+            .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        Long[] expectedIds = new Long[]{char1.getId(), char3.getId(), char4.getId(), char5.getId()};
+        assertArrayEquals(expectedIds, ids);
+        assertArrayEquals(expectedIds, setIds);
 
         //character is not updated
         assertEquals("name10#123", playerCharacterDAO.find(Region.EU, 1, 3L).orElseThrow().getName());

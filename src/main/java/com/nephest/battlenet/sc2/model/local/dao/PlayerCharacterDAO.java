@@ -32,6 +32,7 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
+import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple4;
 
 @Repository
@@ -202,6 +203,12 @@ public class PlayerCharacterDAO
         + "UNION "
         + "SELECT id FROM inserted";
 
+    private static final String ID_SELECT =
+        "id AS \"player_character.id\", "
+        + "region AS \"player_character.region\", "
+        + "realm AS \"player_character.realm\", "
+        + "battlenet_id AS \"player_character.battlenet_id\" ";
+
     private static final String UPDATE_CHARACTERS =
         "WITH "
         + "vals AS (VALUES :characters), "
@@ -212,13 +219,18 @@ public class PlayerCharacterDAO
             + "INNER JOIN player_character USING(region, realm, battlenet_id) "
             + "ORDER BY region, realm, battlenet_id "
             + "FOR UPDATE "
+        + "), "
+        + "updated AS "
+        + "("
+            + "UPDATE player_character "
+            + "SET updated = NOW(), "
+            + "name = v.name "
+            + "FROM lock_filter v "
+            + "WHERE player_character.id = v.id "
+            + "AND player_character.anonymous IS NULL"
         + ") "
-        + "UPDATE player_character "
-        + "SET updated = NOW(), "
-        + "name = v.name "
-        + "FROM lock_filter v "
-        + "WHERE player_character.id = v.id "
-        + "AND player_character.anonymous IS NULL";
+        + "SELECT " + ID_SELECT
+        + "FROM lock_filter";
 
     private static final String UPDATE_ACCOUNTS_AND_CHARACTERS =
         "WITH "
@@ -270,25 +282,30 @@ public class PlayerCharacterDAO
             + "INNER JOIN account ON updated.account_id = account.id "
             + "ORDER BY partition, battle_tag "
             + "FOR UPDATE "
+        + "), "
+        + "updated_account AS "
+        + "( "
+            + "UPDATE account "
+            + "SET updated = "
+                + "CASE "
+                    + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
+                    + "OR account.battle_tag = account_lock_filter.battle_tag "
+                    + "THEN NOW() "
+                    + "ELSE account.updated "
+                + "END, "
+            + "battle_tag = "
+                + "CASE "
+                    + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
+                    + "THEN account_lock_filter.battle_tag "
+                    + "ELSE account.battle_tag "
+                + "END, "
+            + "battle_tag_last_season = GREATEST(account.battle_tag_last_season, account_lock_filter.season) "
+            + "FROM account_lock_filter "
+            + "WHERE account.id = account_lock_filter.id "
+            + "AND account.anonymous IS NULL"
         + ") "
-        + "UPDATE account "
-        + "SET updated = "
-            + "CASE "
-                + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
-                + "OR account.battle_tag = account_lock_filter.battle_tag "
-                + "THEN NOW() "
-                + "ELSE account.updated "
-            + "END, "
-        + "battle_tag = "
-            + "CASE "
-                + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
-                + "THEN account_lock_filter.battle_tag "
-                + "ELSE account.battle_tag "
-            + "END, "
-        + "battle_tag_last_season = GREATEST(account.battle_tag_last_season, account_lock_filter.season) "
-        + "FROM account_lock_filter "
-        + "WHERE account.id = account_lock_filter.id "
-        + "AND account.anonymous IS NULL";
+        + "SELECT " + ID_SELECT
+        + "FROM selected";
 
     private static final String UPDATE_ANONYMOUS_FLAG =
         "UPDATE player_character "
@@ -541,9 +558,9 @@ public class PlayerCharacterDAO
         updateCharacters and updateAccountsAndCharacters methods are primarily used to update historical BattleTags,
         names, and timestamps. This ensures full compliance with the Blizzard ToS.
      */
-    public int updateCharacters(Set<PlayerCharacter> characters)
+    public Set<PlayerCharacter> updateCharacters(Set<PlayerCharacter> characters)
     {
-        if(characters.isEmpty()) return 0;
+        if(characters.isEmpty()) return Set.of();
 
         List<Object[]> data = characters.stream()
             .map(c->new Object[]
@@ -555,13 +572,14 @@ public class PlayerCharacterDAO
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
-        return template.update(UPDATE_CHARACTERS, params);
+        List<PlayerCharacter> ids = template.query(UPDATE_CHARACTERS, params, ID_ROW_MAPPER);
+        return DAOUtils.updateOriginals(characters, ids, (o, m)->o.setId(m.getId()));
     }
 
-    public int updateAccountsAndCharacters
+    public Set<PlayerCharacter> updateAccountsAndCharacters
     (Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> accountsAndCharacters)
     {
-        if(accountsAndCharacters.isEmpty()) return 0;
+        if(accountsAndCharacters.isEmpty()) return Set.of();
 
         List<Object[]> data = accountsAndCharacters.stream()
             .map(c->new Object[]
@@ -577,7 +595,11 @@ public class PlayerCharacterDAO
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
-        return template.update(UPDATE_ACCOUNTS_AND_CHARACTERS, params);
+        List<PlayerCharacter> ids = template.query(UPDATE_ACCOUNTS_AND_CHARACTERS, params, ID_ROW_MAPPER);
+        Set<PlayerCharacter> characters = accountsAndCharacters.stream()
+            .map(Tuple2::getT2)
+            .collect(Collectors.toSet());
+        return DAOUtils.updateOriginals(characters, ids, (o, m)->o.setId(m.getId()));
     }
 
     public int updateAnonymousFlag( Long id, Boolean anonymous)

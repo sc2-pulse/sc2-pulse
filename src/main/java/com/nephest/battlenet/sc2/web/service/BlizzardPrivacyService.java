@@ -351,7 +351,7 @@ public class BlizzardPrivacyService
             .collect(Collectors.toSet());
         dbTasks.add(secondaryDbExecutorService.submit(()->
             LOG.debug("Updated {} accounts and characters",
-                playerCharacterDAO.updateAccountsAndCharacters(privateData)), null));
+                playerCharacterDAO.updateAccountsAndCharacters(privateData).size()), null));
         if(currentSeason)
         {
             List<Pair<PlayerCharacter, Clan>> clans = members.stream()
@@ -398,7 +398,7 @@ public class BlizzardPrivacyService
             .map(Tuple2::getT2)
             .collect(Collectors.toSet());
         dbTasks.add(secondaryDbExecutorService.submit(()->
-                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(chars)),
+                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(chars).size()),
             null));
         List<Pair<PlayerCharacter, Clan>> clans = members.stream()
             .map(t->AlternativeLadderService.extractClan(t.getT2(), t.getT1()))
@@ -479,7 +479,8 @@ public class BlizzardPrivacyService
             .toStream()
             .forEach(l->{
                 dbTasks.add(dbExecutorService.submit(()->
-                    LOG.info("Updated {} characters that are about to expire", playerCharacterDAO.updateCharacters(Set.copyOf(l)))));
+                    LOG.info("Updated {} characters that are about to expire",
+                        playerCharacterDAO.updateCharacters(Set.copyOf(l)).size())));
             });
         lastUpdatedCharacterInstant.setValueAndSave(Instant.now());
         lastUpdatedCharacterId.setValueAndSave(batch.get(batch.size() - 1).getId());
