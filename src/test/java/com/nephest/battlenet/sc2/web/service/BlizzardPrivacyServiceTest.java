@@ -118,7 +118,7 @@ public class BlizzardPrivacyServiceTest
     private SC2WebServiceUtil sc2WebServiceUtil;
 
     @Captor
-    private ArgumentCaptor<List<Tuple4<Account, PlayerCharacter, Boolean, Integer>>> accountPlayerCaptor;
+    private ArgumentCaptor<Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>>> accountPlayerCaptor;
 
     @Captor
     private ArgumentCaptor<Collection<Pair<PlayerCharacter, Clan>>> clanPairCaptor;
@@ -417,15 +417,16 @@ public class BlizzardPrivacyServiceTest
 
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         verify(clanService, never()).saveClans(any());
-        List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> argChars =
+        Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> argChars =
             accountPlayerCaptor.getValue();
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
         assertEquals(1, argChars.size());
-        PlayerCharacter extractedCharacter = argChars.get(0).getT2();
+        Tuple4<Account, PlayerCharacter, Boolean, Integer> tuple = argChars.iterator().next();
+        PlayerCharacter extractedCharacter = tuple.getT2();
         assertEquals(character1, extractedCharacter);
         assertEquals("name2#1", extractedCharacter.getName());
         //false because season is not the current season
-        assertFalse(argChars.get(0).getT3());
+        assertFalse(tuple.getT3());
     }
 
     @Test
@@ -440,7 +441,7 @@ public class BlizzardPrivacyServiceTest
         privacyService.updateOldSeasons();
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         //true because season is the current season and alternative update route is disabled
-        assertTrue(accountPlayerCaptor.getValue().get(0).getT3());
+        assertTrue(accountPlayerCaptor.getValue().iterator().next().getT3());
 
         verify(clanService).saveClans(clanPairCaptor.capture());
         Assertions.assertThat(clanPairCaptor.getValue())
@@ -481,7 +482,7 @@ public class BlizzardPrivacyServiceTest
         //executed once
         verify(playerCharacterDAO, times(1)).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         //true because season is the current season and alternative update route is disabled
-        assertTrue(accountPlayerCaptor.getValue().get(0).getT3());
+        assertTrue(accountPlayerCaptor.getValue().iterator().next().getT3());
     }
 
     private OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>> stubLadderApi(Duration delay)

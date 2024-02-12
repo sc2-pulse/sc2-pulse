@@ -360,15 +360,8 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char5 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#123"));
 
-        List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> updatedAccsAndChars = List.of
+        Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> updatedAccsAndChars = Set.of
         (
-            Tuples.of
-            (
-                new Account(null, Partition.GLOBAL, "tag3#123"),
-                new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123"),
-                true,
-                0
-            ),
             Tuples.of
             (
                 new Account(null, Partition.GLOBAL, "tag3#123"),
@@ -606,7 +599,7 @@ public class PlayerCharacterDAOIT
         playerCharacterDAO.merge(newPlayerCharacter);
         playerCharacterDAO.updateCharacters(Set.of(newPlayerCharacter));
         playerCharacterDAO
-            .updateAccountsAndCharacters(List.of(Tuples.of(acc, newPlayerCharacter, true, 1)));
+            .updateAccountsAndCharacters(Set.of(Tuples.of(acc, newPlayerCharacter, true, 1)));
 
         //entity wasn't updated due to anonymous flag
         PlayerCharacter foundCharacter = playerCharacterDAO.find(Set.of(pc.getId())).get(0);

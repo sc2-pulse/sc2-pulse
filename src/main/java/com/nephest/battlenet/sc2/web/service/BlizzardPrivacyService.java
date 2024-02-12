@@ -346,9 +346,9 @@ public class BlizzardPrivacyService
     )
     {
         List<Future<Void>> dbTasks = new ArrayList<>();
-        List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> privateData = members.stream()
+        Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> privateData = members.stream()
             .map(Tuple2::getT2)
-            .collect(Collectors.toList());
+            .collect(Collectors.toSet());
         dbTasks.add(secondaryDbExecutorService.submit(()->
             LOG.debug("Updated {} accounts and characters",
                 playerCharacterDAO.updateAccountsAndCharacters(privateData)), null));

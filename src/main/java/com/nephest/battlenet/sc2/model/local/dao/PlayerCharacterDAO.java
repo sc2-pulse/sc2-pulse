@@ -559,7 +559,7 @@ public class PlayerCharacterDAO
     }
 
     public int updateAccountsAndCharacters
-    (List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> accountsAndCharacters)
+    (Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> accountsAndCharacters)
     {
         if(accountsAndCharacters.isEmpty()) return 0;
 

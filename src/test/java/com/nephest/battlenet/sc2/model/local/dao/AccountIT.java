@@ -17,7 +17,6 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
@@ -120,7 +119,7 @@ public class AccountIT
         OffsetDateTime beforeUpdate = OffsetDateTime.now();
         playerCharacterDAO
             //the default last season is 0, -1 to imitate previous season
-            .updateAccountsAndCharacters(List.of(Tuples.of(acc2, char1, false, -1)));
+            .updateAccountsAndCharacters(Set.of(Tuples.of(acc2, char1, false, -1)));
 
         //the data hasn't been updated
         assertEquals("tag#1", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
@@ -139,7 +138,7 @@ public class AccountIT
         OffsetDateTime beforeUpdate = OffsetDateTime.now();
         playerCharacterDAO
             //the default last season is 0
-            .updateAccountsAndCharacters(List.of(Tuples.of(acc2, char1, false, seasonOffset)));
+            .updateAccountsAndCharacters(Set.of(Tuples.of(acc2, char1, false, seasonOffset)));
 
         //the data has been updated
         assertEquals("tag#2", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
@@ -158,7 +157,7 @@ public class AccountIT
         OffsetDateTime beforeUpdate = OffsetDateTime.now();
         playerCharacterDAO
             //the default last season is 0
-            .updateAccountsAndCharacters(List.of(Tuples.of(acc2, char1, false, seasonOffset)));
+            .updateAccountsAndCharacters(Set.of(Tuples.of(acc2, char1, false, seasonOffset)));
 
         //the data has been updated
         assertEquals("tag#1", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
@@ -172,7 +171,7 @@ public class AccountIT
         Object[] bindings1 = dbTestService.createAccountBindings(1, true);
         Object[] bindings2 = dbTestService.createAccountBindings(2, false);
 
-        playerCharacterDAO.updateAccountsAndCharacters(List.of(
+        playerCharacterDAO.updateAccountsAndCharacters(Set.of(
             Tuples.of((Account) bindings2[0], (PlayerCharacter) bindings1[1], false, 0)
         ));
 
@@ -202,7 +201,7 @@ public class AccountIT
         Account newAccount = new Account(null, Partition.GLOBAL, "tag#2");
         accountDAO.merge(newAccount, pc);
         playerCharacterDAO
-            .updateAccountsAndCharacters(List.of(Tuples.of(newAccount, pc, true, 1)));
+            .updateAccountsAndCharacters(Set.of(Tuples.of(newAccount, pc, true, 1)));
 
         //entity wasn't updated due to anonymous flag
         Account foundAccount = accountDAO.findByIds(Set.of(acc.getId())).get(0);
