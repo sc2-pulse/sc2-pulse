@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.util.BookmarkedResult;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SimpleBookmarkedResultSetExtractor;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collection;
@@ -399,6 +400,24 @@ public class PlayerCharacterDAO
         + "ORDER BY id DESC "
         + "LIMIT :limit";
 
+    private static final String FIND_IDS_BY_NAME_AND_REGION =
+        "SELECT id "
+        + "FROM player_character "
+        + "WHERE "
+        + "( "
+            + ":caseSensitive = true AND name LIKE :name "
+            + "OR :caseSensitive = false AND LOWER(name) LIKE LOWER(:name) "
+        + ") "
+        + "AND (:region IS NULL OR region = :region)";
+
+    private static final String FIND_IDS_BY_ADVANCED_SEARCH =
+        "WITH char_filter AS (" + FIND_IDS_BY_NAME_AND_REGION + ") "
+        + "SELECT distinct(id) "
+        + "FROM char_filter "
+        + "INNER JOIN team_member ON char_filter.id = team_member.player_character_id "
+        + "WHERE (array_length(:seasons::integer[], 1) IS NULL OR team_season = ANY(:seasons)) "
+        + "AND (array_length(:queues::smallint[], 1) IS NULL OR team_queue_type = ANY(:queues))";
+
     private static final String FIND_NAMES_WITHOUT_DISCRIMINATOR_BY_NAME_LIKE =
         "WITH character_filter AS "
         + "("
@@ -710,6 +729,42 @@ public class PlayerCharacterDAO
             .addValue("regions", regionIds)
             .addValue("limit", limit);
         return template.query(FIND_BY_UPDATED_AND_ID_MAX_EXCLUDED, params, getStdRowMapper());
+    }
+
+    public List<Long> findIds
+    (
+        String name,
+        boolean caseSensitive,
+        Region region,
+        Set<Integer> seasons,
+        Set<QueueType> queues
+    )
+    {
+        String query = !seasons.isEmpty() || !queues.isEmpty()
+            ? FIND_IDS_BY_ADVANCED_SEARCH
+            : FIND_IDS_BY_NAME_AND_REGION;
+        Integer[] queueIds = queues.isEmpty()
+            ? null
+            : queues.stream()
+                .map(queue->conversionService.convert(queue, Integer.class))
+                .toArray(Integer[]::new);
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("name", name, Types.VARCHAR)
+            .addValue("caseSensitive", caseSensitive, Types.BOOLEAN)
+            .addValue
+            (
+                "region",
+                conversionService.convert(region, Integer.class),
+                Types.INTEGER
+            )
+            .addValue
+            (
+                "seasons",
+                seasons.isEmpty() ? null : seasons.toArray(Integer[]::new),
+                Types.ARRAY
+            )
+            .addValue("queues", queueIds, Types.ARRAY);
+        return template.queryForList(query, params, Long.class);
     }
 
     public List<PlayerCharacter> find(Set<Long> ids)

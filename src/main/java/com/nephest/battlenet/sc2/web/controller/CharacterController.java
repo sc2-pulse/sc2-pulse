@@ -1,10 +1,14 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
 
+import static com.nephest.battlenet.sc2.web.service.SearchService.ID_SEARCH_MAX_SEASONS;
+
 import com.nephest.battlenet.sc2.model.BaseMatch;
+import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Race;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterStats;
@@ -24,21 +28,27 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterSta
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
+import com.nephest.battlenet.sc2.model.validation.NotFakeSc2Name;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.SearchService;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.service.external.ExternalLinkResolveResult;
 import com.nephest.battlenet.sc2.web.service.external.ExternalPlayerCharacterLinkService;
 import io.swagger.v3.oas.annotations.Hidden;
+import io.swagger.v3.oas.annotations.Operation;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -46,6 +56,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+@Validated
 @RestController
 @RequestMapping("/api/character")
 public class CharacterController
@@ -106,6 +117,23 @@ public class CharacterController
     public List<LadderDistinctCharacter> getCharacterTeams(@RequestParam("term") String term)
     {
         return searchService.findDistinctCharacters(term);
+    }
+
+    @Operation(description = "0/1 season and multiple queues, or multiple seasons and 0/1 queue")
+    @GetMapping("/search/advanced")
+    public ResponseEntity<?> findCharacterIds
+    (
+        @RequestParam("name") @Valid @NotBlank @NotFakeSc2Name String name,
+        @RequestParam(name = "caseSensitive", defaultValue = "true") boolean caseSensitive,
+        @RequestParam(name = "region", required = false) Region region,
+        @RequestParam(name = "season", defaultValue = "") @Valid @Size(max = ID_SEARCH_MAX_SEASONS) Set<Integer> seasons,
+        @RequestParam(name = "queue", defaultValue = "") Set<QueueType> queues
+    )
+    {
+        if(seasons.size() > 1 && queues.size() > 1) return ResponseEntity.badRequest()
+            .body("1 season x queues or x seasons 1 queue are supported");
+        return WebServiceUtil.notFoundIfEmpty(searchService
+            .findIds(name, caseSensitive, region, seasons, queues));
     }
 
     @Hidden

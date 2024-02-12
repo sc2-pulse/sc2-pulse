@@ -1,8 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterLink;
@@ -12,6 +14,8 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
+import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.model.validation.NotFakeSc2Name;
 import com.nephest.battlenet.sc2.web.service.external.ExternalCharacterSearch;
 import java.util.EnumMap;
 import java.util.List;
@@ -21,10 +25,15 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import javax.validation.Valid;
+import javax.validation.constraints.NotBlank;
+import javax.validation.constraints.Size;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.validation.annotation.Validated;
 
+@Validated
 @Service
 public class SearchService
 {
@@ -42,6 +51,7 @@ public class SearchService
         + "(/\\p{L}\\p{L}-\\p{L}\\p{L})?"
         + "/profile/[0-9]/[0-9]/[0-9]+$"
     );
+    public static final int ID_SEARCH_MAX_SEASONS = 10;
 
     private final PlayerCharacterDAO playerCharacterDAO;
     private final AccountDAO accountDAO;
@@ -130,6 +140,22 @@ public class SearchService
             default:
                 return term.length() >= MIN_CHARACTER_NAME_LENGTH;
         }
+    }
+
+    public List<Long> findIds
+    (
+        @Valid @NotBlank @NotFakeSc2Name String name,
+        boolean caseSensitive,
+        Region region,
+        @Valid @Size(max = ID_SEARCH_MAX_SEASONS) Set<Integer> seasons,
+        Set<QueueType> queues
+    )
+    {
+        if(seasons.size() > 1 && queues.size() > 1)
+            throw new IllegalArgumentException("Unsupported season and queue combination");
+
+        String likeName = PostgreSQLUtils.escapeLikePattern(name) + "#%";
+        return playerCharacterDAO.findIds(likeName, caseSensitive, region, seasons, queues);
     }
 
     public List<LadderDistinctCharacter> findDistinctCharacters(String term)
