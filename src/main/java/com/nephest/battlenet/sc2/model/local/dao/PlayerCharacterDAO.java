@@ -454,6 +454,8 @@ public class PlayerCharacterDAO
 
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
     private static ResultSetExtractor<PlayerCharacter> STD_EXTRACTOR;
+    private static RowMapper<PlayerCharacter> ID_ROW_MAPPER;
+    private static ResultSetExtractor<PlayerCharacter> ID_EXTRACTOR;
     private static ResultSetExtractor<BookmarkedResult<List<PlayerCharacter>>> BOOKMARKED_STD_ROW_EXTRACTOR;
 
     private final NamedParameterJdbcTemplate template;
@@ -482,8 +484,18 @@ public class PlayerCharacterDAO
             rs.getInt("player_character.realm"),
             rs.getString("player_character.name")
         );
+        if(ID_ROW_MAPPER == null) ID_ROW_MAPPER = (rs, i)-> new PlayerCharacter
+        (
+            rs.getLong("player_character.id"),
+            null,
+            conversionService.convert(rs.getInt("player_character.region"), Region.class),
+            rs.getLong("player_character.battlenet_id"),
+            rs.getInt("player_character.realm"),
+            null
+        );
 
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
+        if(ID_EXTRACTOR == null) ID_EXTRACTOR = DAOUtils.getResultSetExtractor(ID_ROW_MAPPER);
 
         if(BOOKMARKED_STD_ROW_EXTRACTOR == null) BOOKMARKED_STD_ROW_EXTRACTOR
             = new SimpleBookmarkedResultSetExtractor<>(STD_ROW_MAPPER, "team.rating", "team.id");
@@ -497,6 +509,16 @@ public class PlayerCharacterDAO
     public static ResultSetExtractor<PlayerCharacter> getStdExtractor()
     {
         return STD_EXTRACTOR;
+    }
+
+    public static RowMapper<PlayerCharacter> getIdRowMapper()
+    {
+        return ID_ROW_MAPPER;
+    }
+
+    public static ResultSetExtractor<PlayerCharacter> getIdExtractor()
+    {
+        return ID_EXTRACTOR;
     }
 
     public PlayerCharacter create(PlayerCharacter character)
