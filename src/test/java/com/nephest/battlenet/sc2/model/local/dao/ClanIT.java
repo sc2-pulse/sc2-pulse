@@ -32,11 +32,14 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
+import java.util.stream.LongStream;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -416,6 +419,116 @@ public class ClanIT
         clanDAO.merge(Set.of(new Clan(null, "tag", Region.EU, "name"))); //update name
         Clan foundClan = clanDAO.findByIds(Set.of(nullNameClan.getId())).get(0);
         assertEquals("name", foundClan.getName());
+    }
+
+    @Test
+    public void whenExpiredMembersRemoved_thenGenerateClanMemberEvents()
+    throws Exception
+    {
+        seasonGenerator.generateDefaultSeason(3);
+        playerCharacterStatsDAO.mergeCalculate();
+        PlayerCharacter[] chars = LongStream.range(0, 3)
+            .boxed()
+            .map(i->i + 1)
+            .map(i->new PlayerCharacter(i, i, null, null, null, null))
+            .toArray(PlayerCharacter[]::new);
+        Clan[] clans = IntStream.range(0, chars.length)
+            .boxed()
+            .map(i->i + 1)
+            .map(i->new Clan(i, "tag" + i, Region.EU, "name"))
+            .toArray(Clan[]::new);
+        Instant now = Instant.now();
+        List<ClanMemberEventData> clanData = IntStream.range(0, chars.length)
+            .boxed()
+            .map(i->new ClanMemberEventData(chars[i], clans[i], now))
+            .collect(Collectors.toList());
+        clanService.saveClans(clanData);
+
+        template.update
+        (
+            "UPDATE clan_member "
+                + "SET updated = NOW() - INTERVAL '" + ClanMemberDAO.TTL.toDays() +  " days' "
+                + "WHERE player_character_id IN(" + chars[0].getId() + ", " + chars[1].getId() + ")"
+        );
+        clanService.removeExpiredClanMembers();
+
+        LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group/clan/history")
+                .queryParam
+                (
+                    "characterId",
+                    Arrays.stream(chars)
+                        .map(PlayerCharacter::getId)
+                        .map(String::valueOf)
+                        .toArray(String[]::new)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
+        evts.getEvents().sort(Comparator.comparing(ClanMemberEvent::getPlayerCharacterId)
+            .thenComparing(ClanMemberEvent::getCreated, Comparator.reverseOrder()));
+        evts.getClans().sort(Comparator.comparing(Clan::getTag));
+        Assertions.assertThat(evts)
+            .usingRecursiveComparison()
+            .ignoringFields("events.created", "events.secondsSincePrevious")
+            .isEqualTo
+            (
+                new LadderClanMemberEvents
+                (
+                    List.of
+                    (
+                        SeasonGenerator.defaultLadderCharacter(clans[2], null, null, 2),
+                        SeasonGenerator.defaultLadderCharacter(null, null, null, 1),
+                        SeasonGenerator.defaultLadderCharacter(null, null, null, 0)
+                    ),
+                    Arrays.asList(clans),
+                    List.of
+                    (
+                        new ClanMemberEvent
+                        (
+                            chars[0].getId(),
+                            clans[0].getId(),
+                            LEAVE,
+                            null,
+                            null
+                        ),
+                        new ClanMemberEvent
+                        (
+                            chars[0].getId(),
+                            clans[0].getId(),
+                            JOIN,
+                            null,
+                            null
+                        ),
+                        new ClanMemberEvent
+                        (
+                            chars[1].getId(),
+                            clans[1].getId(),
+                            LEAVE,
+                            null,
+                            null
+                        ),
+                        new ClanMemberEvent
+                        (
+                            chars[1].getId(),
+                            clans[1].getId(),
+                            JOIN,
+                            null,
+                            null
+                        ),
+                        new ClanMemberEvent
+                        (
+                            chars[2].getId(),
+                            clans[2].getId(),
+                            JOIN,
+                            null,
+                            null
+                        )
+                    )
+                )
+            );
     }
 
 }

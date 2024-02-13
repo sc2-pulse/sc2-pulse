@@ -283,15 +283,21 @@ public class ClanService
 
     private void updateClanMembers()
     {
-        dbExecutorService.submit(this::removeExpiredClanMembers);
+        dbExecutorService.submit(clanService::removeExpiredClanMembers);
         if(inactiveClanMembersUpdateTask.isDone())
             inactiveClanMembersUpdateTask = webExecutorService.submit(this::updateInactiveClanMembers);
     }
 
-    private void removeExpiredClanMembers()
+    @Transactional
+    public void removeExpiredClanMembers()
     {
-        int removedExpiredMembers = clanMemberDAO.removeExpired().size();
-        if(removedExpiredMembers > 0) LOG.info("Removed {} expired clan members", removedExpiredMembers);
+        Instant now = Instant.now();
+        List<ClanMemberEventData> clanData = clanMemberDAO.removeExpired().stream()
+            .map(id->new PlayerCharacter(id, null, null, null, null, null))
+            .map(character->new ClanMemberEventData(character, null, now))
+            .collect(Collectors.toList());
+        clanService.saveClans(clanData);
+        if(clanData.size() > 0) LOG.info("Removed {} expired clan members", clanData.size());
     }
 
     private ClanMemberEventData extractClanMembers
