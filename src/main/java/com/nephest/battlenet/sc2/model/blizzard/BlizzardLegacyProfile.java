@@ -1,13 +1,16 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import java.time.Instant;
 
 public class BlizzardLegacyProfile
 extends BlizzardPlayerCharacter
 {
+
+    private final Instant createdAt = Instant.now();
 
     private String clanTag, clanName;
 
@@ -45,6 +48,11 @@ extends BlizzardPlayerCharacter
     public void setClanName(String clanName)
     {
         this.clanName = clanName;
+    }
+
+    public Instant getCreatedAt()
+    {
+        return createdAt;
     }
 
 }

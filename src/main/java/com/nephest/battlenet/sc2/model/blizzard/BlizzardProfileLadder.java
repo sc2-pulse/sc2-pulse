@@ -1,14 +1,15 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
-
+import com.nephest.battlenet.sc2.model.util.TimestampedObject;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 public class BlizzardProfileLadder
+extends TimestampedObject
 {
 
     public static final BlizzardProfileTeam[] EMPTY_LADDER_TEAMS = new BlizzardProfileTeam[0];
