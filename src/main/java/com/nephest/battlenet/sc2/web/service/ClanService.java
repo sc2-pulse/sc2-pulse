@@ -290,7 +290,7 @@ public class ClanService
 
     private void removeExpiredClanMembers()
     {
-        int removedExpiredMembers = clanMemberDAO.removeExpired();
+        int removedExpiredMembers = clanMemberDAO.removeExpired().size();
         if(removedExpiredMembers > 0) LOG.info("Removed {} expired clan members", removedExpiredMembers);
     }
 

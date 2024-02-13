@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.local.ClanMember;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -20,7 +21,6 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public class ClanMemberDAO
-extends StandardDAO
 {
 
     public static final Duration TTL = Duration.ofDays(30);
@@ -71,6 +71,12 @@ extends StandardDAO
     private static final String COUNT_INACTIVE =
         "SELECT COUNT(*) FROM clan_member WHERE updated < :to";
 
+    private static final String REMOVE_EXPIRED =
+        "DELETE "
+        + "FROM clan_member "
+        + "WHERE updated < NOW() - INTERVAL '" + TTL.toDays() + " days' "
+        + "RETURNING player_character_id";
+
     public static RowMapper<ClanMember> STD_ROW_MAPPER =
     (rs, rowNum)->new ClanMember
     (
@@ -81,13 +87,20 @@ extends StandardDAO
     public static ResultSetExtractor<ClanMember> STD_EXTRACTOR =
         DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
 
+    private final NamedParameterJdbcTemplate template;
+
     @Autowired
     public ClanMemberDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template
     )
     {
-        super(template, "clan_member", TTL.toDays() + " days");
+       this.template = template;
+    }
+
+    public NamedParameterJdbcTemplate getTemplate()
+    {
+        return template;
     }
 
     public List<ClanMember> find(Set<Long> playerCharacterIds)
@@ -131,6 +144,11 @@ extends StandardDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", playerCharacterIds);
         return getTemplate().update(REMOVE_BY_CHARACTER_IDS, params);
+    }
+
+    public List<Long> removeExpired()
+    {
+        return template.queryForList(REMOVE_EXPIRED, Map.of(), Long.class);
     }
 
     public int getInactiveCount(OffsetDateTime to)
