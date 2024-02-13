@@ -45,6 +45,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import java.time.Duration;
@@ -70,8 +71,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -868,7 +867,7 @@ public class StatsService
         BlizzardTeam[] bTeams = ladder.getTeams();
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members = new ArrayList<>(bTeams.length * memberCount);
-        List<Triple<PlayerCharacter, Clan, Instant>> clans = new ArrayList<>();
+        List<ClanMemberEventData> clans = new ArrayList<>();
         Integer curSeason = seasonDao.getMaxBattlenetId(season.getRegion()) == null
             ? 0 : seasonDao.getMaxBattlenetId(season.getRegion());
         List<Tuple2<Team, BlizzardTeam>> validTeams = Arrays.stream(bTeams)
@@ -912,7 +911,7 @@ public class StatsService
         BlizzardLadder ladder,
         BlizzardTeamMember[] bMembers,
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members,
-        List<Triple<PlayerCharacter, Clan, Instant>> clans,
+        List<ClanMemberEventData> clans,
         Season season,
         Team team
     )
@@ -925,19 +924,19 @@ public class StatsService
             Account account = Account.of(bMember.getAccount(), season.getRegion());
             PlayerCharacter character = PlayerCharacter.of(account, season.getRegion(), bMember.getCharacter());
             TeamMember member = TeamMember.of(team, character, bMember.getRaces());
-            clans.add(extractCharacterClanPair(ladder, bMember, character));
+            clans.add(extractCharacterClanData(ladder, bMember, character));
             members.add(Tuples.of(account, character, member));
         }
     }
 
-    public static Triple<PlayerCharacter, Clan, Instant> extractCharacterClanPair
+    public static ClanMemberEventData extractCharacterClanData
     (
         BlizzardLadder ladder,
         BlizzardTeamMember bMember,
         PlayerCharacter character
     )
     {
-        return new ImmutableTriple<>
+        return new ClanMemberEventData
         (
             character,
             bMember.getClan() != null

@@ -46,6 +46,7 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import java.math.BigInteger;
@@ -62,8 +63,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -122,7 +121,7 @@ public class BlizzardPrivacyServiceTest
     private ArgumentCaptor<Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>>> accountPlayerCaptor;
 
     @Captor
-    private ArgumentCaptor<Collection<Triple<PlayerCharacter, Clan, Instant>>> clanTripleCaptor;
+    private ArgumentCaptor<Collection<ClanMemberEventData>> clanDataCaptor;
 
     @Captor
     private ArgumentCaptor<OffsetDateTime> offsetDateTimeArgumentCaptor;
@@ -384,17 +383,17 @@ public class BlizzardPrivacyServiceTest
         assertEquals(character1, argChars.get(0));
         assertEquals(character2, argChars.get(1));
 
-        verify(clanService).saveClans(clanTripleCaptor.capture());
-        Assertions.assertThat(clanTripleCaptor.getValue())
+        verify(clanService).saveClans(clanDataCaptor.capture());
+        Assertions.assertThat(clanDataCaptor.getValue())
             .usingRecursiveComparison()
             .isEqualTo(List.of(
-                new ImmutableTriple<>
+                new ClanMemberEventData
                 (
                     new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1#1"),
                     new Clan(null, "clan1", Region.EU, null),
                     ladder.getCreatedAt()
                 ),
-                new ImmutableTriple<>
+                new ClanMemberEventData
                 (
                     new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2#1"),
                     null,
@@ -448,12 +447,12 @@ public class BlizzardPrivacyServiceTest
         //true because season is the current season and alternative update route is disabled
         assertTrue(accountPlayerCaptor.getValue().iterator().next().getT3());
 
-        verify(clanService).saveClans(clanTripleCaptor.capture());
-        Assertions.assertThat(clanTripleCaptor.getValue())
+        verify(clanService).saveClans(clanDataCaptor.capture());
+        Assertions.assertThat(clanDataCaptor.getValue())
             .usingRecursiveComparison()
             .withEqualsForType((l, r)->l.compareTo(r) >= 0, Instant.class)
             .isEqualTo(List.of(
-                new ImmutableTriple<>
+                new ClanMemberEventData
                 (
                     new PlayerCharacter(null, null, Region.EU, 1L, 1, "name2#1"),
                     new Clan(null, "tag", Region.EU, "clanName"),

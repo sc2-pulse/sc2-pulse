@@ -18,7 +18,6 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Account;
-import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -29,6 +28,7 @@ import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.SingleRunnable;
 import java.time.Duration;
@@ -46,7 +46,6 @@ import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -320,7 +319,7 @@ public class BlizzardPrivacyService
             .blockLast();
     }
 
-    private Stream<Tuple2<Triple<PlayerCharacter, Clan, Instant>, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> extractPrivateInfo
+    private Stream<Tuple2<ClanMemberEventData, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> extractPrivateInfo
     (
         Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladder,
         int seasonId,
@@ -339,7 +338,7 @@ public class BlizzardPrivacyService
                 PlayerCharacter character = PlayerCharacter.of(account, region, m.getCharacter());
                 return Tuples.of
                 (
-                    StatsService.extractCharacterClanPair(ladder.getT1(), m, character),
+                    StatsService.extractCharacterClanData(ladder.getT1(), m, character),
                     Tuples.of(account, character, fresh, seasonId)
                 );
             });
@@ -347,7 +346,7 @@ public class BlizzardPrivacyService
 
     private Mono<Void> process
     (
-        List<Tuple2<Triple<PlayerCharacter, Clan, Instant>, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> members,
+        List<Tuple2<ClanMemberEventData, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> members,
         boolean currentSeason
     )
     {
@@ -389,7 +388,7 @@ public class BlizzardPrivacyService
             .blockLast();
     }
 
-    private Stream<Tuple2<Triple<PlayerCharacter, Clan, Instant>, PlayerCharacter>> extractAlternativePrivateInfo
+    private Stream<Tuple2<ClanMemberEventData, PlayerCharacter>> extractAlternativePrivateInfo
     (Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladder)
     {
         Region region = ladder.getT2().getT1();
@@ -409,7 +408,7 @@ public class BlizzardPrivacyService
 
     private Mono<Void> processAlternative
     (
-        List<Tuple2<Triple<PlayerCharacter, Clan, Instant>, PlayerCharacter>> members
+        List<Tuple2<ClanMemberEventData, PlayerCharacter>> members
     )
     {
         return WebServiceUtil.getOnErrorLogAndSkipMono(Flux.fromIterable(members)

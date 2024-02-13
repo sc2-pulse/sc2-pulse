@@ -38,6 +38,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.AlternativeTeamData;
+import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -58,8 +59,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -529,7 +528,7 @@ public class AlternativeLadderService
         Division division = getOrCreateDivision(season, ladder.getLeague(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladderMemberCount, 1.0F);
         Set<PlayerCharacter> characters = new HashSet<>();
-        List<Triple<PlayerCharacter, Clan, Instant>> clans = new ArrayList<>();
+        List<ClanMemberEventData> clans = new ArrayList<>();
         List<AlternativeTeamData> newTeams = new ArrayList<>();
         List<Tuple2<Team, BlizzardProfileTeam>> validTeams = Arrays.stream(ladder.getLadderTeams())
             .filter(teamValidationPredicate.and(t->isValidTeam(t, teamMemberCount, ladder.getLeague().getQueueType().getTeamFormat())))
@@ -584,7 +583,7 @@ public class AlternativeLadderService
         BlizzardProfileTeam bTeam,
         List<AlternativeTeamData> newTeams,
         Set<PlayerCharacter> characters,
-        List<Triple<PlayerCharacter, Clan, Instant>> clans,
+        List<ClanMemberEventData> clans,
         Set<TeamMember> members
     )
     {
@@ -622,7 +621,7 @@ public class AlternativeLadderService
         Team team,
         BlizzardProfileTeamMember bMember,
         List<AlternativeTeamData> newTeams,
-        List<Triple<PlayerCharacter, Clan, Instant>> clans
+        List<ClanMemberEventData> clans
     )
     {
         String fakeBtag = BasePlayerCharacter.DEFAULT_FAKE_NAME + "#"
@@ -644,7 +643,7 @@ public class AlternativeLadderService
         BlizzardProfileTeamMember bMember,
         Set<PlayerCharacter> characters,
         Set<TeamMember> members,
-        List<Triple<PlayerCharacter, Clan, Instant>> clans
+        List<ClanMemberEventData> clans
     )
     {
         clans.add(extractClan(playerCharacter, bMember, ladder));
@@ -658,14 +657,14 @@ public class AlternativeLadderService
         members.add(member);
     }
 
-    public static Triple<PlayerCharacter, Clan, Instant> extractClan
+    public static ClanMemberEventData extractClan
     (
         PlayerCharacter playerCharacter,
         BlizzardProfileTeamMember bMember,
         BlizzardProfileLadder ladder
     )
     {
-        return new ImmutableTriple<>
+        return new ClanMemberEventData
         (
             playerCharacter,
             bMember.getClanTag() != null

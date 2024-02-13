@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
@@ -35,10 +36,6 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -90,10 +87,10 @@ public class ClanService
 
     private static final Duration CLAN_UPDATE_INSTANT_TTL = Duration.ofHours(1);
     private final Map<Long, Instant> characterClanUpdateInstants = new ConcurrentHashMap<>();
-    private final Predicate<Triple<PlayerCharacter, Clan, Instant>> clanUpdatePredicate = t->
-        characterClanUpdateInstants.compute(t.getLeft().getId(),
-            (id, ts)->ts == null || ts.isBefore(t.getRight()) ? t.getRight() : ts)
-                .compareTo(t.getRight()) <= 0;
+    private final Predicate<ClanMemberEventData> clanUpdatePredicate = t->
+        characterClanUpdateInstants.compute(t.getCharacter().getId(),
+            (id, ts)->ts == null || ts.isBefore(t.getCreatedAt()) ? t.getCreatedAt() : ts)
+                .compareTo(t.getCreatedAt()) <= 0;
 
     @Autowired
     public ClanService
@@ -297,7 +294,7 @@ public class ClanService
         if(removedExpiredMembers > 0) LOG.info("Removed {} expired clan members", removedExpiredMembers);
     }
 
-    private Triple<PlayerCharacter, Clan, Instant> extractClanMembers
+    private ClanMemberEventData extractClanMembers
     (Tuple2<BlizzardLegacyProfile, PlayerCharacterNaturalId> src)
     {
         PlayerCharacter character = (PlayerCharacter) src.getT2();
@@ -310,7 +307,7 @@ public class ClanService
                     src.getT1().getClanName()
                 )
             : null;
-        return new ImmutableTriple<>(character, clan, src.getT1().getCreatedAt());
+        return new ClanMemberEventData(character, clan, src.getT1().getCreatedAt());
     }
 
     private void updateInactiveClanMembersBatch(List<PlayerCharacter> clanMembers)
@@ -363,46 +360,47 @@ public class ClanService
 
     @Retryable
     @Transactional
-    public void saveClans(Collection<Triple<PlayerCharacter, Clan, Instant>> clanData)
+    public void saveClans(Collection<ClanMemberEventData> clanData)
     {
         if(clanData.isEmpty()) return;
-        Set<Pair<PlayerCharacter, Clan>> clans = clanData.stream()
+        List<ClanMemberEventData> clans = clanData.stream()
             .filter(clanUpdatePredicate)
-            .map(t->new ImmutablePair<>(t.getLeft(), t.getMiddle()))
-            .collect(Collectors.toSet());
+            .collect(Collectors.toList());
         LOG.debug("Saving clans {}/{}", clans.size(), clanData.size());
         if(clans.isEmpty()) return;
 
-        List<Pair<PlayerCharacter, Clan>> nonNullClans = clans.stream()
-            .filter(p->p.getValue() != null)
+        List<ClanMemberEventData> nonNullClans = clans.stream()
+            .filter(p->p.getClan() != null)
             .collect(Collectors.toList());
 
         Map<Clan, Clan> updatedClans =
-            clanDAO.merge(nonNullClans.stream().map(Pair::getValue).collect(Collectors.toSet()))
+            clanDAO.merge(nonNullClans.stream()
+                    .map(ClanMemberEventData::getClan)
+                    .collect(Collectors.toSet()))
                 .stream()
                 .collect(Collectors.toMap(Function.identity(), Function.identity()));
-        nonNullClans.forEach(c->c.getValue().setId(updatedClans.get(c.getValue()).getId()));
+        nonNullClans.forEach(c->c.getClan().setId(updatedClans.get(c.getClan()).getId()));
 
         Set<ClanMember> members = nonNullClans.stream()
-            .map(t->new ClanMember(t.getKey().getId(), t.getValue().getId()))
+            .map(t->new ClanMember(t.getCharacter().getId(), t.getClan().getId()))
             .collect(Collectors.toSet());
         clanMemberDAO.merge(members);
 
         Set<Long> charactersWithNoClan = clans.stream()
-            .filter(c->c.getValue() == null)
-            .map(Pair::getKey)
+            .filter(c->c.getClan() == null)
+            .map(ClanMemberEventData::getCharacter)
             .map(PlayerCharacter::getId)
             .collect(Collectors.toSet());
         clanMemberDAO.remove(charactersWithNoClan);
         createClanEvents(clans);
     }
 
-    private void createClanEvents(Collection<Pair<PlayerCharacter, Clan>> clans)
+    private void createClanEvents(Collection<ClanMemberEventData> clans)
     {
         if(clans.isEmpty()) return;
 
         Set<ClanMemberEvent> events = clans.stream()
-            .map(p->ClanMemberEvent.from(p.getKey(), p.getValue()))
+            .map(p->ClanMemberEvent.from(p.getCharacter(), p.getClan()))
             .collect(Collectors.toCollection(LinkedHashSet::new));
         clanMemberEventDAO.merge(events);
         LOG.debug("Created {} clan events", events.size());

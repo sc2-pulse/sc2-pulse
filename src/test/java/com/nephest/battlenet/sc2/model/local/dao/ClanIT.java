@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.local.ClanMemberEvent;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.web.service.ClanService;
@@ -37,7 +38,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
-import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -270,9 +270,9 @@ public class ClanIT
         Clan clan = new Clan(1, "tag123", Region.EU, "name");
         Instant now = Instant.now();
         clanService.saveClans(List.of(
-            new ImmutableTriple<>(new PlayerCharacter(1L, 1L, Region.EU, 1L, 1, "name"), clan, now),
-            new ImmutableTriple<>(new PlayerCharacter(2L, 2L, Region.EU, 2L, 2, "name"), clan, now),
-            new ImmutableTriple<>(new PlayerCharacter(3L, 3L, Region.EU, 3L, 3, "name"), clan, now)
+            new ClanMemberEventData(new PlayerCharacter(1L, 1L, Region.EU, 1L, 1, "name"), clan, now),
+            new ClanMemberEventData(new PlayerCharacter(2L, 2L, Region.EU, 2L, 2, "name"), clan, now),
+            new ClanMemberEventData(new PlayerCharacter(3L, 3L, Region.EU, 3L, 3, "name"), clan, now)
         ));
 
         LadderDistinctCharacter[] chars = objectMapper.readValue(mvc.perform
@@ -353,9 +353,9 @@ public class ClanIT
         seasonGenerator.generateDefaultSeason(1);
         playerCharacterStatsDAO.mergeCalculate();
         Instant start = Instant.now();
-        clanService.saveClans(List.of(new ImmutableTriple<>(pChar, clan1, start)));
-        clanService.saveClans(List.of(new ImmutableTriple<>(pChar, clan2, start.minusSeconds(1))));
-        clanService.saveClans(List.of(new ImmutableTriple<>(pChar, clan3, start.plusSeconds(1))));
+        clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan1, start)));
+        clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan2, start.minusSeconds(1))));
+        clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan3, start.plusSeconds(1))));
 
         LadderClanMemberEvents evts = objectMapper.readValue(mvc.perform
         (
