@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -17,6 +17,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.local.Division;
@@ -171,7 +172,8 @@ public class StatsServiceTest
         BlizzardTeam zeroGamesTeam = new BlizzardTeam();
         zeroGamesTeam.setMembers(new BlizzardTeamMember[]{new BlizzardTeamMember()});
 
-        ss.updateTeams(new BlizzardTeam[]{noMembersTeam, zeroGamesTeam}, mock(Season.class),
+        ss.updateTeams(new BlizzardLadder(new BlizzardTeam[]{noMembersTeam, zeroGamesTeam}, null),
+            mock(Season.class),
             new League(1, 1, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             mock(LeagueTier.class), mock(Division.class));
 

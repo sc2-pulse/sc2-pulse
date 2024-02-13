@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -45,6 +46,7 @@ import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -318,7 +320,7 @@ public class BlizzardPrivacyService
             .blockLast();
     }
 
-    private Stream<Tuple2<BlizzardTeamMember, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> extractPrivateInfo
+    private Stream<Tuple2<Triple<PlayerCharacter, Clan, Instant>, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> extractPrivateInfo
     (
         Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>> ladder,
         int seasonId,
@@ -335,13 +337,17 @@ public class BlizzardPrivacyService
             {
                 Account account = Account.of(m.getAccount(), region);
                 PlayerCharacter character = PlayerCharacter.of(account, region, m.getCharacter());
-                return Tuples.of(m, Tuples.of(account, character, fresh, seasonId));
+                return Tuples.of
+                (
+                    StatsService.extractCharacterClanPair(ladder.getT1(), m, character),
+                    Tuples.of(account, character, fresh, seasonId)
+                );
             });
     }
 
     private Mono<Void> process
     (
-        List<Tuple2<BlizzardTeamMember, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> members,
+        List<Tuple2<Triple<PlayerCharacter, Clan, Instant>, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> members,
         boolean currentSeason
     )
     {
@@ -356,7 +362,7 @@ public class BlizzardPrivacyService
             (
                 currentSeason
                     ? Flux.fromIterable(members)
-                        .map(m->StatsService.extractCharacterClanPair(m.getT1(), m.getT2().getT2()))
+                        .map(Tuple2::getT1)
                         .collectList()
                         .flatMap(clans->Mono.fromRunnable(()->clanService.saveClans(clans))
                             .subscribeOn(secondaryDbScheduler))
@@ -383,7 +389,7 @@ public class BlizzardPrivacyService
             .blockLast();
     }
 
-    private Stream<Tuple2<BlizzardProfileTeamMember, PlayerCharacter>> extractAlternativePrivateInfo
+    private Stream<Tuple2<Triple<PlayerCharacter, Clan, Instant>, PlayerCharacter>> extractAlternativePrivateInfo
     (Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>> ladder)
     {
         Region region = ladder.getT2().getT1();
@@ -391,10 +397,20 @@ public class BlizzardPrivacyService
             .flatMap(l->Arrays.stream(l.getT1().getLadderTeams()))
             .flatMap(t->Arrays.stream(t.getTeamMembers()))
             .filter(profileTeamMemberPredicate)
-            .map(m->Tuples.of(m, PlayerCharacter.of(new Account(), region, m)));
+            .map(m->{
+                PlayerCharacter character = PlayerCharacter.of(new Account(), region, m);
+                return Tuples.of
+                (
+                    AlternativeLadderService.extractClan(character, m, ladder.getT1()),
+                    character
+                );
+            });
     }
 
-    private Mono<Void> processAlternative(List<Tuple2<BlizzardProfileTeamMember, PlayerCharacter>> members)
+    private Mono<Void> processAlternative
+    (
+        List<Tuple2<Triple<PlayerCharacter, Clan, Instant>, PlayerCharacter>> members
+    )
     {
         return WebServiceUtil.getOnErrorLogAndSkipMono(Flux.fromIterable(members)
             .map(Tuple2::getT2)
@@ -403,7 +419,7 @@ public class BlizzardPrivacyService
                 .subscribeOn(secondaryDbScheduler))
             .doOnNext(chars->LOG.debug("Updated {} characters", chars.size()))
             .thenMany(Flux.fromIterable(members))
-            .map(t->AlternativeLadderService.extractClan(t.getT2(), t.getT1()))
+            .map(Tuple2::getT1)
             .collectList()
             .flatMap(clans-> Mono.fromRunnable(()->clanService.saveClans(clans))
                 .subscribeOn(secondaryDbScheduler))

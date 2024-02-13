@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
+import com.nephest.battlenet.sc2.model.blizzard.BlizzardLadder;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardPlayerCharacter;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
@@ -144,7 +145,8 @@ public class StatsServiceIT
             account)
         });
 
-        statsService.updateTeams(new BlizzardTeam[]{noBattletagTeam}, mock(Season.class),
+        statsService.updateTeams(new BlizzardLadder(new BlizzardTeam[]{noBattletagTeam}, null),
+            mock(Season.class),
             new League(1, 1, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             mock(LeagueTier.class), mock(Division.class));
 

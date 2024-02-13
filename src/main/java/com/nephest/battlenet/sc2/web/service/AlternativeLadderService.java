@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -58,8 +58,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.PostConstruct;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -529,7 +529,7 @@ public class AlternativeLadderService
         Division division = getOrCreateDivision(season, ladder.getLeague(), id.getT3());
         Set<TeamMember> members = new HashSet<>(ladderMemberCount, 1.0F);
         Set<PlayerCharacter> characters = new HashSet<>();
-        List<Pair<PlayerCharacter, Clan>> clans = new ArrayList<>();
+        List<Triple<PlayerCharacter, Clan, Instant>> clans = new ArrayList<>();
         List<AlternativeTeamData> newTeams = new ArrayList<>();
         List<Tuple2<Team, BlizzardProfileTeam>> validTeams = Arrays.stream(ladder.getLadderTeams())
             .filter(teamValidationPredicate.and(t->isValidTeam(t, teamMemberCount, ladder.getLeague().getQueueType().getTeamFormat())))
@@ -555,7 +555,8 @@ public class AlternativeLadderService
         teamDao.merge(changedTeams);
         validTeams.stream()
             .filter(t->t.getT1().getId() != null)
-            .forEach(t->extractTeamData(season, t.getT1(), t.getT2(), newTeams, characters, clans, members));
+            .forEach(t->extractTeamData(
+                season, ladder, t.getT1(), t.getT2(), newTeams, characters, clans, members));
         saveNewCharacterData(newTeams, members);
         savePlayerCharacters(characters);
         teamMemberDao.merge(members);
@@ -578,11 +579,12 @@ public class AlternativeLadderService
     private void extractTeamData
     (
         Season season,
+        BlizzardProfileLadder ladder,
         Team team,
         BlizzardProfileTeam bTeam,
         List<AlternativeTeamData> newTeams,
         Set<PlayerCharacter> characters,
-        List<Pair<PlayerCharacter, Clan>> clans,
+        List<Triple<PlayerCharacter, Clan, Instant>> clans,
         Set<TeamMember> members
     )
     {
@@ -593,9 +595,19 @@ public class AlternativeLadderService
                 .orElse(null);
 
             if(playerCharacter == null) {
-                addNewAlternativeCharacter(season, team, bMember, newTeams, clans);
+                addNewAlternativeCharacter(season, ladder, team, bMember, newTeams, clans);
             } else {
-                addExistingAlternativeCharacter(team, bTeam, playerCharacter, bMember, characters, members, clans);
+                addExistingAlternativeCharacter
+                (
+                    ladder,
+                    team,
+                    bTeam,
+                    playerCharacter,
+                    bMember,
+                    characters,
+                    members,
+                    clans
+                );
             }
         }
     }
@@ -606,10 +618,11 @@ public class AlternativeLadderService
     private void addNewAlternativeCharacter
     (
         Season season,
+        BlizzardProfileLadder ladder,
         Team team,
         BlizzardProfileTeamMember bMember,
         List<AlternativeTeamData> newTeams,
-        List<Pair<PlayerCharacter, Clan>> clans
+        List<Triple<PlayerCharacter, Clan, Instant>> clans
     )
     {
         String fakeBtag = BasePlayerCharacter.DEFAULT_FAKE_NAME + "#"
@@ -618,22 +631,23 @@ public class AlternativeLadderService
             + bMember.getId();
         Account fakeAccount = new Account(null, Partition.of(season.getRegion()), fakeBtag);
         PlayerCharacter character = PlayerCharacter.of(fakeAccount, season.getRegion(), bMember);
-        clans.add(extractClan(character, bMember));
+        clans.add(extractClan(character, bMember, ladder));
         newTeams.add(new AlternativeTeamData(fakeAccount, character, team, bMember.getFavoriteRace()));
     }
 
     private void addExistingAlternativeCharacter
     (
+        BlizzardProfileLadder ladder,
         Team team,
         BlizzardProfileTeam bTeam,
         PlayerCharacter playerCharacter,
         BlizzardProfileTeamMember bMember,
         Set<PlayerCharacter> characters,
         Set<TeamMember> members,
-        List<Pair<PlayerCharacter, Clan>> clans
+        List<Triple<PlayerCharacter, Clan, Instant>> clans
     )
     {
-        clans.add(extractClan(playerCharacter, bMember));
+        clans.add(extractClan(playerCharacter, bMember, ladder));
 
         playerCharacter.setName(bMember.getName());
         characters.add(playerCharacter);
@@ -644,18 +658,20 @@ public class AlternativeLadderService
         members.add(member);
     }
 
-    public static Pair<PlayerCharacter, Clan> extractClan
+    public static Triple<PlayerCharacter, Clan, Instant> extractClan
     (
         PlayerCharacter playerCharacter,
-        BlizzardProfileTeamMember bMember
+        BlizzardProfileTeamMember bMember,
+        BlizzardProfileLadder ladder
     )
     {
-        return new ImmutablePair<>
+        return new ImmutableTriple<>
         (
             playerCharacter,
             bMember.getClanTag() != null
                 ? Clan.of(bMember.getClanTag(), playerCharacter.getRegion())
-                : null
+                : null,
+            ladder.getCreatedAt()
         );
     }
 

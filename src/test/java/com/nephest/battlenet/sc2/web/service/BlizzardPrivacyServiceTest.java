@@ -62,8 +62,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
+import org.apache.commons.lang3.tuple.Triple;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -122,7 +122,7 @@ public class BlizzardPrivacyServiceTest
     private ArgumentCaptor<Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>>> accountPlayerCaptor;
 
     @Captor
-    private ArgumentCaptor<Collection<Pair<PlayerCharacter, Clan>>> clanPairCaptor;
+    private ArgumentCaptor<Collection<Triple<PlayerCharacter, Clan, Instant>>> clanTripleCaptor;
 
     @Captor
     private ArgumentCaptor<OffsetDateTime> offsetDateTimeArgumentCaptor;
@@ -336,26 +336,27 @@ public class BlizzardPrivacyServiceTest
     {
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON);
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(true);
+        BlizzardProfileLadder ladder = new BlizzardProfileLadder
+        (
+            new BlizzardProfileTeam[]
+            {
+                new BlizzardProfileTeam
+                (
+                    new BlizzardProfileTeamMember[]
+                    {
+                        new BlizzardProfileTeamMember(1L, 1, "name1", Race.TERRAN, "clan1"),
+                        new BlizzardProfileTeamMember(2L, 1, "name2", Race.TERRAN, null)
+                    },
+                    0L, 0, 0, 0, 0
+                )
+            },
+            null
+        );
         Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> ladders = Flux.just
         (
             Tuples.of
             (
-                new BlizzardProfileLadder
-                (
-                    new BlizzardProfileTeam[]
-                    {
-                        new BlizzardProfileTeam
-                        (
-                            new BlizzardProfileTeamMember[]
-                            {
-                                new BlizzardProfileTeamMember(1L, 1, "name1", Race.TERRAN, "clan1"),
-                                new BlizzardProfileTeamMember(2L, 1, "name2", Race.TERRAN, null)
-                            },
-                            0L, 0, 0, 0, 0
-                        )
-                    },
-                    null
-                ),
+                ladder,
                 Tuples.of
                 (
                     Region.EU,
@@ -383,19 +384,21 @@ public class BlizzardPrivacyServiceTest
         assertEquals(character1, argChars.get(0));
         assertEquals(character2, argChars.get(1));
 
-        verify(clanService).saveClans(clanPairCaptor.capture());
-        Assertions.assertThat(clanPairCaptor.getValue())
+        verify(clanService).saveClans(clanTripleCaptor.capture());
+        Assertions.assertThat(clanTripleCaptor.getValue())
             .usingRecursiveComparison()
             .isEqualTo(List.of(
-                new ImmutablePair<>
+                new ImmutableTriple<>
                 (
                     new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1#1"),
-                    new Clan(null, "clan1", Region.EU, null)
+                    new Clan(null, "clan1", Region.EU, null),
+                    ladder.getCreatedAt()
                 ),
-                new ImmutablePair<>
+                new ImmutableTriple<>
                 (
                     new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2#1"),
-                    null
+                    null,
+                    ladder.getCreatedAt()
                 )
             ));
     }
@@ -437,6 +440,7 @@ public class BlizzardPrivacyServiceTest
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
 
+        Instant begin = Instant.now();
         stubLadderApi();
         //update current season
         privacyService.updateOldSeasons();
@@ -444,14 +448,16 @@ public class BlizzardPrivacyServiceTest
         //true because season is the current season and alternative update route is disabled
         assertTrue(accountPlayerCaptor.getValue().iterator().next().getT3());
 
-        verify(clanService).saveClans(clanPairCaptor.capture());
-        Assertions.assertThat(clanPairCaptor.getValue())
+        verify(clanService).saveClans(clanTripleCaptor.capture());
+        Assertions.assertThat(clanTripleCaptor.getValue())
             .usingRecursiveComparison()
+            .withEqualsForType((l, r)->l.compareTo(r) >= 0, Instant.class)
             .isEqualTo(List.of(
-                new ImmutablePair<>
+                new ImmutableTriple<>
                 (
                     new PlayerCharacter(null, null, Region.EU, 1L, 1, "name2#1"),
-                    new Clan(null, "tag", Region.EU, "clanName")
+                    new Clan(null, "tag", Region.EU, "clanName"),
+                    begin
                 )
             ));
     }

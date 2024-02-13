@@ -29,18 +29,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.ImmutablePair;
+import org.apache.commons.lang3.tuple.ImmutableTriple;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.lang3.tuple.Triple;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.retry.annotation.Retryable;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
@@ -82,6 +87,13 @@ public class ClanService
 
     @Autowired @Lazy
     private ClanService clanService;
+
+    private static final Duration CLAN_UPDATE_INSTANT_TTL = Duration.ofHours(1);
+    private final Map<Long, Instant> characterClanUpdateInstants = new ConcurrentHashMap<>();
+    private final Predicate<Triple<PlayerCharacter, Clan, Instant>> clanUpdatePredicate = t->
+        characterClanUpdateInstants.compute(t.getLeft().getId(),
+            (id, ts)->ts == null || ts.isBefore(t.getRight()) ? t.getRight() : ts)
+                .compareTo(t.getRight()) <= 0;
 
     @Autowired
     public ClanService
@@ -181,6 +193,13 @@ public class ClanService
         this.clanService = clanService;
     }
 
+    @Scheduled(cron="0 0/10 * * * *")
+    public boolean removeOldClanUpdates()
+    {
+        Instant min = Instant.now().minus(CLAN_UPDATE_INSTANT_TTL);
+        return characterClanUpdateInstants.entrySet().removeIf(e->e.getValue().isBefore(min));
+    }
+
 
     private void update()
     {
@@ -278,7 +297,7 @@ public class ClanService
         if(removedExpiredMembers > 0) LOG.info("Removed {} expired clan members", removedExpiredMembers);
     }
 
-    private Pair<PlayerCharacter, Clan> extractClanMembers
+    private Triple<PlayerCharacter, Clan, Instant> extractClanMembers
     (Tuple2<BlizzardLegacyProfile, PlayerCharacterNaturalId> src)
     {
         PlayerCharacter character = (PlayerCharacter) src.getT2();
@@ -291,7 +310,7 @@ public class ClanService
                     src.getT1().getClanName()
                 )
             : null;
-        return new ImmutablePair<>(character, clan);
+        return new ImmutableTriple<>(character, clan, src.getT1().getCreatedAt());
     }
 
     private void updateInactiveClanMembersBatch(List<PlayerCharacter> clanMembers)
@@ -344,9 +363,16 @@ public class ClanService
 
     @Retryable
     @Transactional
-    public void saveClans(Collection<Pair<PlayerCharacter, Clan>> clans)
+    public void saveClans(Collection<Triple<PlayerCharacter, Clan, Instant>> clanData)
     {
+        if(clanData.isEmpty()) return;
+        Set<Pair<PlayerCharacter, Clan>> clans = clanData.stream()
+            .filter(clanUpdatePredicate)
+            .map(t->new ImmutablePair<>(t.getLeft(), t.getMiddle()))
+            .collect(Collectors.toSet());
+        LOG.debug("Saving clans {}/{}", clans.size(), clanData.size());
         if(clans.isEmpty()) return;
+
         List<Pair<PlayerCharacter, Clan>> nonNullClans = clans.stream()
             .filter(p->p.getValue() != null)
             .collect(Collectors.toList());
