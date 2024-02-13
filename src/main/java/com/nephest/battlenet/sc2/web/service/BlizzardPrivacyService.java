@@ -357,7 +357,7 @@ public class BlizzardPrivacyService
             List<Pair<PlayerCharacter, Clan>> clans = members.stream()
                 .map(m->StatsService.extractCharacterClanPair(m.getT1(), m.getT2().getT2()))
                 .collect(Collectors.toList());
-            dbTasks.add(dbExecutorService.submit(()->clanService.saveClans(clans), null));
+            dbTasks.add(secondaryDbExecutorService.submit(()->clanService.saveClans(clans), null));
         }
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
@@ -403,7 +403,7 @@ public class BlizzardPrivacyService
         List<Pair<PlayerCharacter, Clan>> clans = members.stream()
             .map(t->AlternativeLadderService.extractClan(t.getT2(), t.getT1()))
             .collect(Collectors.toList());
-        dbTasks.add(dbExecutorService.submit(()->clanService.saveClans(clans), null));
+        dbTasks.add(secondaryDbExecutorService.submit(()->clanService.saveClans(clans), null));
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
     }
 
