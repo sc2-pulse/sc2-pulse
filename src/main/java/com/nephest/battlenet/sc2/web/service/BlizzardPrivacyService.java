@@ -18,7 +18,6 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Account;
-import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -46,7 +45,6 @@ import java.util.concurrent.Future;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -56,6 +54,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Scheduler;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
@@ -94,7 +94,7 @@ public class BlizzardPrivacyService
     private final PlayerCharacterDAO playerCharacterDAO;
     private final ClanService clanService;
     private final ExecutorService dbExecutorService;
-    private final ExecutorService secondaryDbExecutorService;
+    private final Scheduler secondaryDbScheduler;
     private final ExecutorService webExecutorService;
     private final SC2WebServiceUtil sc2WebServiceUtil;
     private final Predicate<BlizzardTeamMember> teamMemberPredicate;
@@ -124,7 +124,7 @@ public class BlizzardPrivacyService
         PlayerCharacterDAO playerCharacterDAO,
         ClanService clanService,
         @Qualifier("dbExecutorService") ExecutorService dbExecutorService,
-        @Qualifier("secondaryDbExecutorService") ExecutorService secondaryDbExecutorService,
+        @Qualifier("secondaryDbScheduler") Scheduler secondaryDbScheduler,
         @Qualifier("webExecutorService") ExecutorService webExecutorService,
         Validator validator,
         SC2WebServiceUtil sc2WebServiceUtil,
@@ -140,7 +140,7 @@ public class BlizzardPrivacyService
         this.playerCharacterDAO = playerCharacterDAO;
         this.clanService = clanService;
         this.dbExecutorService = dbExecutorService;
-        this.secondaryDbExecutorService = secondaryDbExecutorService;
+        this.secondaryDbScheduler = secondaryDbScheduler;
         this.webExecutorService = webExecutorService;
         this.teamMemberPredicate = DAOUtils.beanValidationPredicate(validator);
         this.profileTeamMemberPredicate = DAOUtils.beanValidationPredicate(validator);
@@ -314,8 +314,8 @@ public class BlizzardPrivacyService
         api.getLadders(ladderIds, -1, Map.of(), REQUEST_LIMIT_PRIORITY_NAME)
             .flatMap(l->Flux.fromStream(extractPrivateInfo(l, seasonId, currentSeason)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
-            .toStream()
-            .forEach(l->process(l, currentSeason));
+            .flatMap(l->process(l, currentSeason))
+            .blockLast();
     }
 
     private Stream<Tuple2<BlizzardTeamMember, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> extractPrivateInfo
@@ -339,27 +339,30 @@ public class BlizzardPrivacyService
             });
     }
 
-    private void process
+    private Mono<Void> process
     (
         List<Tuple2<BlizzardTeamMember, Tuple4<Account, PlayerCharacter, Boolean, Integer>>> members,
         boolean currentSeason
     )
     {
-        List<Future<Void>> dbTasks = new ArrayList<>();
-        Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> privateData = members.stream()
+        return WebServiceUtil.getOnErrorLogAndSkipMono(Flux.fromIterable(members)
             .map(Tuple2::getT2)
-            .collect(Collectors.toSet());
-        dbTasks.add(secondaryDbExecutorService.submit(()->
-            LOG.debug("Updated {} accounts and characters",
-                playerCharacterDAO.updateAccountsAndCharacters(privateData).size()), null));
-        if(currentSeason)
-        {
-            List<Pair<PlayerCharacter, Clan>> clans = members.stream()
-                .map(m->StatsService.extractCharacterClanPair(m.getT1(), m.getT2().getT2()))
-                .collect(Collectors.toList());
-            dbTasks.add(secondaryDbExecutorService.submit(()->clanService.saveClans(clans), null));
-        }
-        MiscUtil.awaitAndLogExceptions(dbTasks, true);
+            .collect(Collectors.toSet())
+            .flatMap(privateData->Mono.fromCallable(()->
+                playerCharacterDAO.updateAccountsAndCharacters(privateData))
+                .subscribeOn(secondaryDbScheduler))
+            .doOnNext(data->LOG.debug("Updated {} accounts and characters", data.size()))
+            .then
+            (
+                currentSeason
+                    ? Flux.fromIterable(members)
+                        .map(m->StatsService.extractCharacterClanPair(m.getT1(), m.getT2().getT2()))
+                        .collectList()
+                        .flatMap(clans->Mono.fromRunnable(()->clanService.saveClans(clans))
+                            .subscribeOn(secondaryDbScheduler))
+                    : Mono.empty()
+            )
+            .then());
     }
 
     private void alternativeUpdate(Region region, int seasonId)
@@ -376,8 +379,8 @@ public class BlizzardPrivacyService
         )
             .flatMap(l->Flux.fromStream(extractAlternativePrivateInfo(l)))
             .buffer(ACCOUNT_AND_CHARACTER_BATCH_SIZE)
-            .toStream()
-            .forEach(this::processAlternative);
+            .flatMap(this::processAlternative)
+            .blockLast();
     }
 
     private Stream<Tuple2<BlizzardProfileTeamMember, PlayerCharacter>> extractAlternativePrivateInfo
@@ -391,20 +394,20 @@ public class BlizzardPrivacyService
             .map(m->Tuples.of(m, PlayerCharacter.of(new Account(), region, m)));
     }
 
-    private void processAlternative(List<Tuple2<BlizzardProfileTeamMember, PlayerCharacter>> members)
+    private Mono<Void> processAlternative(List<Tuple2<BlizzardProfileTeamMember, PlayerCharacter>> members)
     {
-        List<Future<Void>> dbTasks = new ArrayList<>();
-        Set<PlayerCharacter> chars = members.stream()
+        return WebServiceUtil.getOnErrorLogAndSkipMono(Flux.fromIterable(members)
             .map(Tuple2::getT2)
-            .collect(Collectors.toSet());
-        dbTasks.add(secondaryDbExecutorService.submit(()->
-                LOG.debug("Updated {} characters", playerCharacterDAO.updateCharacters(chars).size()),
-            null));
-        List<Pair<PlayerCharacter, Clan>> clans = members.stream()
+            .collect(Collectors.toSet())
+            .flatMap(chars->Mono.fromCallable(()->playerCharacterDAO.updateCharacters(chars))
+                .subscribeOn(secondaryDbScheduler))
+            .doOnNext(chars->LOG.debug("Updated {} characters", chars.size()))
+            .thenMany(Flux.fromIterable(members))
             .map(t->AlternativeLadderService.extractClan(t.getT2(), t.getT1()))
-            .collect(Collectors.toList());
-        dbTasks.add(secondaryDbExecutorService.submit(()->clanService.saveClans(clans), null));
-        MiscUtil.awaitAndLogExceptions(dbTasks, true);
+            .collectList()
+            .flatMap(clans-> Mono.fromRunnable(()->clanService.saveClans(clans))
+                .subscribeOn(secondaryDbScheduler))
+            .then());
     }
 
     protected Integer getSeasonToUpdate()

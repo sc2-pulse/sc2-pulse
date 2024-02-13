@@ -78,6 +78,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
@@ -165,7 +166,7 @@ public class BlizzardPrivacyServiceTest
             accountDAO,
             playerCharacterDAO,
             clanService,
-            executor, executor, executor,
+            executor, Schedulers.immediate(), executor,
             validator,
             sc2WebServiceUtil,
             globalContext,
@@ -187,7 +188,7 @@ public class BlizzardPrivacyServiceTest
             accountDAO,
             playerCharacterDAO,
             clanService,
-            TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE,
+            TestUtil.EXECUTOR_SERVICE, Schedulers.immediate(), TestUtil.EXECUTOR_SERVICE,
             validator,
             sc2WebServiceUtil,
             globalContext,
@@ -319,7 +320,7 @@ public class BlizzardPrivacyServiceTest
             accountDAO,
             playerCharacterDAO,
             clanService,
-            executor, executor, executor,
+            executor, Schedulers.immediate(), executor,
             validator,
             sc2WebServiceUtil,
             globalContext,
