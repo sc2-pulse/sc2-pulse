@@ -368,6 +368,7 @@ public class ClanIT
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), LadderClanMemberEvents.class);
+        evts.getClans().sort(Comparator.comparing(Clan::getTag));
         Assertions.assertThat(evts)
             .usingRecursiveComparison()
             .ignoringFields("events.created", "events.secondsSincePrevious")
