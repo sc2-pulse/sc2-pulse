@@ -69,6 +69,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
@@ -330,8 +331,9 @@ public class BlizzardPrivacyServiceTest
         privacyService.update();
     }
 
-    @Test
-    public void testUpdateAlternativeLadder()
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testUpdateAlternativeLadder(boolean charUpdated)
     {
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON);
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(true);
@@ -369,10 +371,15 @@ public class BlizzardPrivacyServiceTest
                 .thenReturn(ladders);
         for(int i = 1; i < globalContext.getActiveRegions().size(); i++)
             stub = stub.thenReturn(Flux.empty());
+        if(charUpdated) when(playerCharacterDAO.updateCharacters(any())).thenAnswer(i->{
+            Set<PlayerCharacter> chars = i.getArgument(0);
+            chars.forEach(c->c.setId(c.getBattlenetId()));
+            return chars;
+        });
         privacyService.updateOldSeasons();
 
-        PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
-        PlayerCharacter character2 = new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2");
+        PlayerCharacter character1 = new PlayerCharacter(1L, null, Region.EU, 1L, 1, "name1");
+        PlayerCharacter character2 = new PlayerCharacter(2L, null, Region.EU, 2L, 1, "name2");
         verify(playerCharacterDAO).updateCharacters(characterArgumentCaptor.capture());
         List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues()
             .stream()
@@ -386,16 +393,16 @@ public class BlizzardPrivacyServiceTest
         verify(clanService).saveClans(clanDataCaptor.capture());
         Assertions.assertThat(clanDataCaptor.getValue())
             .usingRecursiveComparison()
-            .isEqualTo(List.of(
+            .isEqualTo(!charUpdated ? List.of() : List.of(
                 new ClanMemberEventData
                 (
-                    new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1#1"),
+                    new PlayerCharacter(1L, null, Region.EU, 1L, 1, "name1#1"),
                     new Clan(null, "clan1", Region.EU, null),
                     ladder.getCreatedAt()
                 ),
                 new ClanMemberEventData
                 (
-                    new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2#1"),
+                    new PlayerCharacter(2L, null, Region.EU, 2L, 1, "name2#1"),
                     null,
                     ladder.getCreatedAt()
                 )
@@ -432,12 +439,20 @@ public class BlizzardPrivacyServiceTest
         assertFalse(tuple.getT3());
     }
 
-    @Test
-    public void testUpdateCurrentLadder()
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testUpdateCurrentLadder(boolean charUpdated)
     {
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
+        if(charUpdated) when(playerCharacterDAO.updateAccountsAndCharacters(any()))
+            .thenAnswer(i->{
+                Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> arg = i.getArgument(0);
+                PlayerCharacter character = arg.iterator().next().getT2();
+                character.setId(1L);
+                return Set.of(character);
+            });
 
         Instant begin = Instant.now();
         stubLadderApi();
@@ -451,10 +466,10 @@ public class BlizzardPrivacyServiceTest
         Assertions.assertThat(clanDataCaptor.getValue())
             .usingRecursiveComparison()
             .withEqualsForType((l, r)->l.compareTo(r) >= 0, Instant.class)
-            .isEqualTo(List.of(
+            .isEqualTo(!charUpdated ? List.of() : List.of(
                 new ClanMemberEventData
                 (
-                    new PlayerCharacter(null, null, Region.EU, 1L, 1, "name2#1"),
+                    new PlayerCharacter(1L,  null, Region.EU, 1L, 1, "name2#1"),
                     new Clan(null, "tag", Region.EU, "clanName"),
                     begin
                 )

@@ -362,6 +362,7 @@ public class BlizzardPrivacyService
                 currentSeason
                     ? Flux.fromIterable(members)
                         .map(Tuple2::getT1)
+                        .filter(data->data.getCharacter().getId() != null)
                         .collectList()
                         .flatMap(clans->Mono.fromRunnable(()->clanService.saveClans(clans))
                             .subscribeOn(secondaryDbScheduler))
@@ -419,6 +420,7 @@ public class BlizzardPrivacyService
             .doOnNext(chars->LOG.debug("Updated {} characters", chars.size()))
             .thenMany(Flux.fromIterable(members))
             .map(Tuple2::getT1)
+            .filter(data->data.getCharacter().getId() != null)
             .collectList()
             .flatMap(clans-> Mono.fromRunnable(()->clanService.saveClans(clans))
                 .subscribeOn(secondaryDbScheduler))

@@ -573,7 +573,13 @@ public class PlayerCharacterDAO
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
         List<PlayerCharacter> ids = template.query(UPDATE_CHARACTERS, params, ID_ROW_MAPPER);
-        return DAOUtils.updateOriginals(characters, ids, (o, m)->o.setId(m.getId()));
+        return DAOUtils.updateOriginals
+        (
+            characters,
+            ids,
+            (o, m)->o.setId(m.getId()),
+            c->c.setId(null)
+        );
     }
 
     public Set<PlayerCharacter> updateAccountsAndCharacters
@@ -599,7 +605,13 @@ public class PlayerCharacterDAO
         Set<PlayerCharacter> characters = accountsAndCharacters.stream()
             .map(Tuple2::getT2)
             .collect(Collectors.toSet());
-        return DAOUtils.updateOriginals(characters, ids, (o, m)->o.setId(m.getId()));
+        return DAOUtils.updateOriginals
+        (
+            characters,
+            ids,
+            (o, m)->o.setId(m.getId()),
+            c->c.setId(null)
+        );
     }
 
     public int updateAnonymousFlag( Long id, Boolean anonymous)

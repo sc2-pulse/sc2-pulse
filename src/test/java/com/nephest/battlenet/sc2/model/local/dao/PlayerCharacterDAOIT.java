@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
@@ -44,6 +46,7 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -307,6 +310,26 @@ public class PlayerCharacterDAOIT
         verifyUpdatedCharacters(minTimeAllowed);
     }
 
+    private void verifyCharacterUpdateId(Consumer<Object[]> updater)
+    {
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name1#123"));
+        PlayerCharacter char2 =
+            new PlayerCharacter(null, acc1.getId(), Region.EU, 2L, 1, "name2#123");
+        char1.setId(null);
+        updater.accept(new Object[]{acc1, char1, char2});
+        assertNotNull(char1.getId());
+        assertNull(char2.getId());
+    }
+
+    @Test
+    public void whenUpdateNewCharacter_thenNullifyCharacterId()
+    {
+        verifyCharacterUpdateId(obs->playerCharacterDAO.updateCharacters(Set.of(
+            (PlayerCharacter) obs[1], (PlayerCharacter) obs[2])));
+    }
+
     @Test
     public void testMerge()
     {
@@ -451,6 +474,19 @@ public class PlayerCharacterDAOIT
 
         accountDAO.anonymizeExpiredAccounts(OffsetDateTime.MIN);
         assertEquals(BasePlayerCharacter.DEFAULT_FAKE_NAME + "#211", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
+    }
+
+    @Test
+    public void whenUpdateNewAccountAndCharacter_thenNullifyCharacterId()
+    {
+        verifyCharacterUpdateId(obs->{
+            Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> updatedAccsAndChars = Set.of
+            (
+                Tuples.of((Account) obs[0], (PlayerCharacter) obs[1], true, 0),
+                Tuples.of((Account) obs[0], (PlayerCharacter) obs[2], true, 0)
+            );
+            playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars);
+        });
     }
 
     @Test
