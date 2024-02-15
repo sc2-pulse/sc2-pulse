@@ -1,0 +1,1 @@
+CREATE INDEX "ix_player_character_name_cs" ON "player_character"("name" text_pattern_ops);
