@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -7,6 +7,7 @@ import static com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgum
 
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
@@ -178,6 +179,7 @@ public class GroupController
         @CharacterGroup Set<Long> characterIds,
         @RequestParam(name = "season", required = false, defaultValue = "") Set<Integer> seasons,
         @RequestParam(name = "queue", required = false, defaultValue = "") Set<QueueType> queues,
+        @RequestParam(name = "race", required = false, defaultValue = "") Set<Race> races,
         @RequestParam(name = "limit", required = false, defaultValue = TEAM_LIMIT + "") Integer limit
     )
     {
@@ -196,7 +198,7 @@ public class GroupController
                 .body("1 season and 1 queue are required for multi-character request");
 
         return WebServiceUtil.notFoundIfEmpty(ladderSearchDAO
-            .findCharacterTeams(characterIds, seasons, queues, limit));
+            .findCharacterTeams(characterIds, seasons, queues, races, limit));
     }
 
     @GetMapping("/flat") @CharacterGroup

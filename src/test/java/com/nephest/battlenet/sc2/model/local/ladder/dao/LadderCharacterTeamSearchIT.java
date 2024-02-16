@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -15,6 +16,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
@@ -31,6 +33,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.LongStream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -38,8 +41,10 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.core.convert.ConversionService;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
@@ -65,6 +70,9 @@ public class LadderCharacterTeamSearchIT
 
     @Autowired
     private ObjectMapper objectMapper;
+
+    @Autowired @Qualifier("mvcConversionService")
+    private ConversionService mvcConversionService;
 
     private static PlayerCharacter[] characters;
     private static Team team1, team2, team3, team4, team5, team6;
@@ -97,7 +105,8 @@ public class LadderCharacterTeamSearchIT
             List.of(QueueType.LOTV_1V1, QueueType.LOTV_4V4),
             TEAM_TYPE,
             TIER_TYPE,
-            3
+            5,
+            true
         );
         Division bronze1 = divisionDAO.findListByLadder(season1.getBattlenetId(), region, BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE, TIER_TYPE).get(0);
         Division gold2 = divisionDAO.findListByLadder(season2.getBattlenetId(), region, BaseLeague.LeagueType.GOLD, QueueType.LOTV_4V4, TEAM_TYPE, TIER_TYPE).get(0);
@@ -244,6 +253,38 @@ public class LadderCharacterTeamSearchIT
         assertEquals(team1.getId(), teams.get(2).getId());
         for(PlayerCharacter character : characters)
             assertTrue(teams.get(2).getMembers().stream().anyMatch(m->m.getCharacter().equals(character)));
+    }
+
+    @Test
+    public void testFindCharacterTeamsRaceFilter()
+    throws Exception
+    {
+        String[] charIds = LongStream.range(0, 5)
+            .boxed()
+            .map(i->i + 1)
+            .map(String::valueOf)
+            .toArray(String[]::new);
+        List<LadderTeam> teams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/group/team")
+                .param("characterId", charIds)
+                .param("season", "1")
+                .param("queue", mvcConversionService.convert(QueueType.LOTV_1V1, String.class))
+                .param
+                (
+                    "race",
+                    mvcConversionService.convert(Race.TERRAN, String.class),
+                    mvcConversionService.convert(Race.PROTOSS, String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        Long[] teamIds = teams.stream()
+            .map(LadderTeam::getId)
+            .toArray(Long[]::new);
+        Long[] expectedIds = new Long[]{5L, 2L, 1L};
+        assertArrayEquals(expectedIds, teamIds);
     }
 
     @Test

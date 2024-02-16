@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -308,7 +308,7 @@ public class DiscordService
             .collect(Collectors.toSet());
         return characters.stream()
             .flatMap(c->ladderSearchDAO
-                .findCharacterTeams(c.getId(), seasons, MAIN_TEAM_QUEUE_TYPES, 1).stream())
+                .findCharacterTeams(c.getId(), seasons, MAIN_TEAM_QUEUE_TYPES, Set.of(), 1).stream())
             .min(MAIN_TEAM_COMPARATOR);
     }
 

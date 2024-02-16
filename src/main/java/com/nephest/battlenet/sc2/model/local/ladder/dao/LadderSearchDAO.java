@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -174,7 +174,18 @@ public class LadderSearchDAO
         + "FROM team_member "
         + "WHERE player_character_id IN(:playerCharacterIds) "
         + "AND (array_length(:seasons::smallint[], 1) IS NULL OR team_season = ANY(:seasons)) "
-        + "AND (array_length(:queues::smallint[], 1) IS NULL OR team_queue_type = ANY(:queues)) ";
+        + "AND (array_length(:queues::smallint[], 1) IS NULL OR team_queue_type = ANY(:queues)) "
+        + "AND "
+        + "("
+            + "array_length(:races::smallint[], 1) IS NULL "
+            + "OR get_favorite_race"
+            + "("
+                + "terran_games_played, "
+                + "protoss_games_played, "
+                + "zerg_games_played, "
+                + "random_games_played "
+            + ") = ANY(:races)"
+        + ") ";
     private static final String FIND_CHARACTER_TEAM_MEMBERS_QUERY =
         "WITH team_filtered AS (" + CHARACTER_TEAM_IDS_UNORDERED_QUERY + ") "
         + FIND_CHARACTER_TEAM_MEMBERS_TAIL
@@ -454,6 +465,7 @@ public class LadderSearchDAO
         Set<Long> ids,
         Set<Integer> seasons,
         Set<QueueType> queues,
+        Set<Race> races,
         Integer limit
     )
     {
@@ -464,10 +476,16 @@ public class LadderSearchDAO
             : queues.stream()
                 .map(q->conversionService.convert(q, Integer.class))
                 .toArray(Integer[]::new);
+        Integer[] raceIds = races.isEmpty()
+            ? null
+            : races.stream()
+                .map(r->conversionService.convert(r, Integer.class))
+                .toArray(Integer[]::new);
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("playerCharacterIds", ids)
             .addValue("seasons", seasons.isEmpty() ? null : seasons.toArray(Integer[]::new))
             .addValue("queues", queueIds)
+            .addValue("races", raceIds)
             .addValue("limit", limit)
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
@@ -482,15 +500,16 @@ public class LadderSearchDAO
         Long id,
         Set<Integer> seasons,
         Set<QueueType> queues,
+        Set<Race> races,
         Integer limit
     )
     {
-        return findCharacterTeams(Set.of(id), seasons, queues, limit);
+        return findCharacterTeams(Set.of(id), seasons, queues, races, limit);
     }
 
     public List<LadderTeam> findCharacterTeams(Set<Long> ids)
     {
-        return findCharacterTeams(ids, Set.of(), Set.of(), null);
+        return findCharacterTeams(ids, Set.of(), Set.of(), Set.of(), null);
     }
 
     public List<LadderTeam> findFollowingTeams
