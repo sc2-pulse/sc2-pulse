@@ -294,6 +294,10 @@ public class CharacterController
         return playerCharacterStatsDAO.findGlobalList(id);
     }
 
+    @Operation
+    (
+        description = "Max depth is " + SUMMARY_DEPTH_MAX + ", unlimited for single character"
+    )
     @GetMapping
     ({
         "/{ids}/summary/1v1/{depthDays}",
@@ -308,7 +312,7 @@ public class CharacterController
     {
         if(ids.length > SUMMARY_IDS_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id list is too long, max: " + SUMMARY_IDS_MAX);
-        if(depth > SUMMARY_DEPTH_MAX)
+        if(ids.length > 1 && depth > SUMMARY_DEPTH_MAX)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Depth is too big, max: " + SUMMARY_DEPTH_MAX);
         if(races == null) races = Race.EMPTY_RACE_ARRAY;
 

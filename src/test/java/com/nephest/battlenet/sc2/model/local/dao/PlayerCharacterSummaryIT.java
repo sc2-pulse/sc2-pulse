@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -304,7 +304,7 @@ public class PlayerCharacterSummaryIT
     {
         mvc.perform
         (
-            get("/api/character/1/summary/1v1/" + CharacterController.SUMMARY_DEPTH_MAX + 1)
+            get("/api/character/1,2/summary/1v1/" + CharacterController.SUMMARY_DEPTH_MAX + 1)
                 .contentType(MediaType.APPLICATION_JSON)
         )
         .andExpect(status().isBadRequest())
@@ -325,6 +325,18 @@ public class PlayerCharacterSummaryIT
         //.andExpect(content().json("{\"message\":\"Id list is too long, max: " + CharacterController.SUMMARY_IDS_MAX +"\"}"))
         .andReturn();
 
+    }
+
+    @Test
+    public void whenSearchingForSingleCharacter_thenUnlimitedDepth()
+    throws Exception
+    {
+        mvc.perform
+        (
+            get("/api/character/1/summary/1v1/" + CharacterController.SUMMARY_DEPTH_MAX + 1)
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk());
     }
 
 }
