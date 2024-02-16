@@ -20,6 +20,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
@@ -178,13 +179,7 @@ public class LadderSearchDAO
         + "AND "
         + "("
             + "array_length(:races::smallint[], 1) IS NULL "
-            + "OR get_favorite_race"
-            + "("
-                + "terran_games_played, "
-                + "protoss_games_played, "
-                + "zerg_games_played, "
-                + "random_games_played "
-            + ") = ANY(:races)"
+            + "OR " + TeamMemberDAO.FAVORITE_RACE_SELECT + " = ANY(:races)"
         + ") ";
     private static final String FIND_CHARACTER_TEAM_MEMBERS_QUERY =
         "WITH team_filtered AS (" + CHARACTER_TEAM_IDS_UNORDERED_QUERY + ") "

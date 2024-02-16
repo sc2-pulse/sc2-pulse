@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -14,6 +14,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
@@ -87,8 +88,7 @@ public class LadderCharacterDAO
     + "("
         + "SELECT DISTINCT ON(player_character_filtered.id) "
         + "player_character_filtered.id AS player_character_id, "
-        + "get_favorite_race(team_member.terran_games_played, team_member.protoss_games_played, "
-            + "team_member.zerg_games_played, team_member.random_games_played) AS race "
+        + TeamMemberDAO.FAVORITE_RACE_SELECT + " AS race "
         + "FROM player_character_filtered "
         + "INNER JOIN team_member ON player_character_filtered.id = team_member.player_character_id "
         + "INNER JOIN team ON team_member.team_id = team.id "

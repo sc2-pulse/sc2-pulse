@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -22,6 +22,15 @@ public class TeamMemberDAO
         + "team_member.protoss_games_played AS \"team_member.protoss_games_played\", "
         + "team_member.zerg_games_played AS \"team_member.zerg_games_played\", "
         + "team_member.random_games_played AS \"team_member.random_games_played\" ";
+
+    public static final String FAVORITE_RACE_SELECT =
+        "get_favorite_race"
+        + "("
+            + "team_member.terran_games_played, "
+            + "team_member.protoss_games_played, "
+            + "team_member.zerg_games_played, "
+            + "team_member.random_games_played "
+        + ") ";
     
     private static final String CREATE_QUERY = "INSERT INTO team_member "
         + "(team_id, player_character_id, terran_games_played, protoss_games_played, zerg_games_played, random_games_played) "
