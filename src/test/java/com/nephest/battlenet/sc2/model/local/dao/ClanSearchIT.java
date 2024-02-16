@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -71,7 +71,7 @@ public class ClanSearchIT
             Region[] regions = Region.values();
             Set<Clan> clans = IntStream.range(0, CLAN_COUNT)
                 .boxed()
-                .map(i->new Clan(null, "clan" + i, regions[i % regions.length], "clan" + i + "Name"))
+                .map(i->new Clan(null, "clan" + i, regions[i % regions.length], "name" + i))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
             clanDAO.merge(clans);
             template.execute
@@ -126,7 +126,7 @@ public class ClanSearchIT
         assertNotNull(clan);
         Assertions.assertThat(clan).usingRecursiveComparison().isEqualTo(new Clan(
 
-            2, "clan1", Region.EU, "clan1Name",
+            2, "clan1", Region.EU, "name1",
             5, 2, 3, null, 4
         ));
     }
@@ -141,18 +141,18 @@ public class ClanSearchIT
         assertEquals(1, clansByTag.length);
         Clan clan = clansByTag[0];
         Assertions.assertThat(clan).usingRecursiveComparison().isEqualTo(new Clan(
-            CLAN_COUNT, "clan" + (CLAN_COUNT - 1), Region.CN, "clan" + (CLAN_COUNT - 1) + "Name",
+            CLAN_COUNT, "clan" + (CLAN_COUNT - 1), Region.CN, "name" + (CLAN_COUNT - 1),
             103, 100, 101, null, 200
         ));
 
 
         Clan[] clansByName = WebServiceTestUtil
-            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/cLAn");
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/nAmE");
         assertEquals(CLAN_COUNT, clansByName.length);
 
         //LIKE search must be used only for names that are at least 3 characters long.
         Clan[] clansByShortName = WebServiceTestUtil
-            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/cl");
+            .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/na");
         assertEquals(0, clansByShortName.length);
     }
 
