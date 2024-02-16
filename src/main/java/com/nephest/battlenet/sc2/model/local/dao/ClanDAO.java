@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -36,6 +36,7 @@ public class ClanDAO
     public static final int PAGE_SIZE = 50;
     public static final int MAX_PAGE_DIFF = 2;
 
+    public static final int TAG_LIKE_MIN_LENGTH = 2;
     public static final int NAME_LIKE_MIN_LENGTH = 3;
 
     public static final String STD_SELECT_SHORT =
@@ -128,7 +129,8 @@ public class ClanDAO
     private static final String FIND_BY_TAG = "SELECT " + STD_SELECT + "FROM clan WHERE tag = :tag";
     private static final String FIND_BY_TAG_OR_NAME = "SELECT " + STD_SELECT
         + "FROM clan "
-        + "WHERE tag = :tag OR LOWER(name) LIKE LOWER(:nameLike) "
+        + "WHERE LOWER(tag) LIKE LOWER(:tag) "
+        + "OR LOWER(name) LIKE LOWER(:nameLike) "
         + "ORDER BY active_members DESC NULLS LAST";
 
     private static final String FIND_BY_CURSOR_TEMPLATE =
@@ -434,9 +436,12 @@ public class ClanDAO
     public List<Clan> findByTagOrName(String search)
     {
         String escapedSearch = PostgreSQLUtils.escapeLikePattern(search);
+        String tagLike = search.length() >= TAG_LIKE_MIN_LENGTH
+            ? escapedSearch + "%"
+            : escapedSearch;
         String nameLike = search.length() >= NAME_LIKE_MIN_LENGTH ? escapedSearch + "%" : escapedSearch;
         SqlParameterSource params = new MapSqlParameterSource()
-            .addValue("tag", search)
+            .addValue("tag", tagLike)
             .addValue("nameLike", nameLike);
         return template.query(FIND_BY_TAG_OR_NAME, params, STD_ROW_MAPPER);
     }

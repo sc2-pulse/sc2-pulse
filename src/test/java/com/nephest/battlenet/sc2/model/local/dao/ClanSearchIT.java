@@ -6,7 +6,9 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.springframework.security.test.web.servlet.setup.SecurityMockMvcConfigurers.springSecurity;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -34,6 +36,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
@@ -49,6 +52,7 @@ public class ClanSearchIT
 
     private static final int CLAN_COUNT = ClanDAO.PAGE_SIZE * 2;
     private static MockMvc mvc;
+    private static Set<Clan> clans;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -69,9 +73,13 @@ public class ClanSearchIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
 
             Region[] regions = Region.values();
-            Set<Clan> clans = IntStream.range(0, CLAN_COUNT)
+            clans = IntStream.range(0, CLAN_COUNT)
                 .boxed()
-                .map(i->new Clan(null, "clan" + i, regions[i % regions.length], "name" + i))
+                .map(i->new Clan(
+                    null,
+                    i == 0 ? "c" : ("clan" + i),
+                    regions[i % regions.length],
+                    "name" + i))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
             clanDAO.merge(clans);
             template.execute
@@ -154,6 +162,47 @@ public class ClanSearchIT
         Clan[] clansByShortName = WebServiceTestUtil
             .getObject(mvc, objectMapper, Clan[].class, "/api/clan/tag-or-name/na");
         assertEquals(0, clansByShortName.length);
+    }
+
+    @Test
+    public void testTagPrefixSearch()
+    throws Exception
+    {
+        Clan[] clansByTag = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/tag-or-name")
+                .queryParam("term", "cL")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), Clan[].class);
+        Arrays.sort(clansByTag, Comparator.comparing(Clan::getTag));
+        Clan[] expectedResult = clans.stream()
+            .filter(c->c.getTag().startsWith("cl"))
+            .sorted(Comparator.comparing(Clan::getTag))
+            .toArray(Clan[]::new);
+        Assertions.assertThat(expectedResult)
+            .usingRecursiveComparison()
+            .ignoringFields("members", "activeMembers", "games", "avgRating")
+            .isEqualTo(clansByTag);
+    }
+
+    @Test
+    public void whenSearchingByTagPrefixAndTermLengthIsLessThan2_thenSearchByTag()
+    throws Exception
+    {
+        Clan[] clansByTag = objectMapper.readValue(mvc.perform
+        (
+            get("/api/clan/tag-or-name")
+                .queryParam("term", "C")
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), Clan[].class);
+        Assertions.assertThat(clansByTag)
+            .usingRecursiveComparison()
+            .ignoringFields("members", "activeMembers", "games", "avgRating")
+            .isEqualTo(new Clan[]{clans.iterator().next()});
     }
 
     @CsvSource
