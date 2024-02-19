@@ -36,6 +36,7 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import discord4j.common.util.Snowflake;
 import java.math.BigInteger;
@@ -58,9 +59,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuple4;
-import reactor.util.function.Tuples;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -395,30 +393,30 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char5 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#123"));
 
-        Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> updatedAccsAndChars = Set.of
+        Set<AccountCharacterData> updatedAccsAndChars = Set.of
         (
-            Tuples.of
+            new AccountCharacterData
             (
                 new Account(null, Partition.GLOBAL, "tag3#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123"),
                 true,
                 0
             ),
-            Tuples.of
+            new AccountCharacterData
             (
                 new Account(null, Partition.GLOBAL, "tag4#123"),
                 new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123"),
                 true,
                 0
             ),
-            Tuples.of
+            new AccountCharacterData
             (
                 new Account(null, Partition.GLOBAL, "tag10#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name11#123"),
                 false,
                 0
             ),
-            Tuples.of
+            new AccountCharacterData
             (
                 new Account(null, Partition.GLOBAL, "tag10#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#1"),
@@ -434,7 +432,7 @@ public class PlayerCharacterDAOIT
             .map(PlayerCharacter::getId)
             .toArray(Long[]::new);
         Long[] setIds = updatedAccsAndChars.stream()
-            .map(Tuple2::getT2)
+            .map(AccountCharacterData::getCharacter)
             .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
             .map(PlayerCharacter::getId)
             .toArray(Long[]::new);
@@ -480,10 +478,10 @@ public class PlayerCharacterDAOIT
     public void whenUpdateNewAccountAndCharacter_thenNullifyCharacterId()
     {
         verifyCharacterUpdateId(obs->{
-            Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> updatedAccsAndChars = Set.of
+            Set<AccountCharacterData> updatedAccsAndChars = Set.of
             (
-                Tuples.of((Account) obs[0], (PlayerCharacter) obs[1], true, 0),
-                Tuples.of((Account) obs[0], (PlayerCharacter) obs[2], true, 0)
+                new AccountCharacterData((Account) obs[0], (PlayerCharacter) obs[1], true, 0),
+                new AccountCharacterData((Account) obs[0], (PlayerCharacter) obs[2], true, 0)
             );
             playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars);
         });
@@ -657,8 +655,8 @@ public class PlayerCharacterDAOIT
             new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#2");
         playerCharacterDAO.merge(newPlayerCharacter);
         playerCharacterDAO.updateCharacters(Set.of(newPlayerCharacter));
-        playerCharacterDAO
-            .updateAccountsAndCharacters(Set.of(Tuples.of(acc, newPlayerCharacter, true, 1)));
+        playerCharacterDAO.updateAccountsAndCharacters(Set.of(
+            new AccountCharacterData(acc, newPlayerCharacter, true, 1)));
 
         //entity wasn't updated due to anonymous flag
         PlayerCharacter foundCharacter = playerCharacterDAO.find(Set.of(pc.getId())).get(0);

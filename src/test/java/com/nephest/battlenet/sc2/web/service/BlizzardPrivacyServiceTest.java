@@ -39,13 +39,13 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
-import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.TestUtil;
@@ -119,7 +119,7 @@ public class BlizzardPrivacyServiceTest
     private SC2WebServiceUtil sc2WebServiceUtil;
 
     @Captor
-    private ArgumentCaptor<Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>>> accountPlayerCaptor;
+    private ArgumentCaptor<Set<AccountCharacterData>> accountPlayerCaptor;
 
     @Captor
     private ArgumentCaptor<Collection<ClanMemberEventData>> clanDataCaptor;
@@ -427,16 +427,15 @@ public class BlizzardPrivacyServiceTest
 
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         verify(clanService, never()).saveClans(any());
-        Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> argChars =
-            accountPlayerCaptor.getValue();
+        Set<AccountCharacterData> argChars = accountPlayerCaptor.getValue();
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
         assertEquals(1, argChars.size());
-        Tuple4<Account, PlayerCharacter, Boolean, Integer> tuple = argChars.iterator().next();
-        PlayerCharacter extractedCharacter = tuple.getT2();
+        AccountCharacterData acData = argChars.iterator().next();
+        PlayerCharacter extractedCharacter = acData.getCharacter();
         assertEquals(character1, extractedCharacter);
         assertEquals("name2#1", extractedCharacter.getName());
         //false because season is not the current season
-        assertFalse(tuple.getT3());
+        assertFalse(acData.isFresh());
     }
 
     @ValueSource(booleans = {true, false})
@@ -448,8 +447,8 @@ public class BlizzardPrivacyServiceTest
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
         if(charUpdated) when(playerCharacterDAO.updateAccountsAndCharacters(any()))
             .thenAnswer(i->{
-                Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> arg = i.getArgument(0);
-                PlayerCharacter character = arg.iterator().next().getT2();
+                Set<AccountCharacterData> arg = i.getArgument(0);
+                PlayerCharacter character = arg.iterator().next().getCharacter();
                 character.setId(1L);
                 return Set.of(character);
             });
@@ -460,7 +459,7 @@ public class BlizzardPrivacyServiceTest
         privacyService.updateOldSeasons();
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         //true because season is the current season and alternative update route is disabled
-        assertTrue(accountPlayerCaptor.getValue().iterator().next().getT3());
+        assertTrue(accountPlayerCaptor.getValue().iterator().next().isFresh());
 
         verify(clanService).saveClans(clanDataCaptor.capture());
         Assertions.assertThat(clanDataCaptor.getValue())
@@ -503,7 +502,7 @@ public class BlizzardPrivacyServiceTest
         //executed once
         verify(playerCharacterDAO, times(1)).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         //true because season is the current season and alternative update route is disabled
-        assertTrue(accountPlayerCaptor.getValue().iterator().next().getT3());
+        assertTrue(accountPlayerCaptor.getValue().iterator().next().isFresh());
     }
 
     private OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>> stubLadderApi(Duration delay)

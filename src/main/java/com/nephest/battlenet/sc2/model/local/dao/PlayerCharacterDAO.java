@@ -7,8 +7,8 @@ import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import com.nephest.battlenet.sc2.model.util.BookmarkedResult;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SimpleBookmarkedResultSetExtractor;
@@ -32,8 +32,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuple4;
 
 @Repository
 public class PlayerCharacterDAO
@@ -583,27 +581,27 @@ public class PlayerCharacterDAO
     }
 
     public Set<PlayerCharacter> updateAccountsAndCharacters
-    (Set<Tuple4<Account, PlayerCharacter, Boolean, Integer>> accountsAndCharacters)
+    (Set<AccountCharacterData> accountsAndCharacters)
     {
         if(accountsAndCharacters.isEmpty()) return Set.of();
 
         List<Object[]> data = accountsAndCharacters.stream()
             .map(c->new Object[]
             {
-                conversionService.convert(c.getT1().getPartition(), Integer.class),
-                c.getT1().getBattleTag(),
-                conversionService.convert(c.getT2().getRegion(), Integer.class),
-                c.getT2().getRealm(),
-                c.getT2().getBattlenetId(),
-                c.getT2().getName(),
-                c.getT3(),
-                c.getT4()
+                conversionService.convert(c.getAccount().getPartition(), Integer.class),
+                c.getAccount().getBattleTag(),
+                conversionService.convert(c.getCharacter().getRegion(), Integer.class),
+                c.getCharacter().getRealm(),
+                c.getCharacter().getBattlenetId(),
+                c.getCharacter().getName(),
+                c.isFresh(),
+                c.getSeason()
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
         List<PlayerCharacter> ids = template.query(UPDATE_ACCOUNTS_AND_CHARACTERS, params, ID_ROW_MAPPER);
         Set<PlayerCharacter> characters = accountsAndCharacters.stream()
-            .map(Tuple2::getT2)
+            .map(AccountCharacterData::getCharacter)
             .collect(Collectors.toSet());
         return DAOUtils.updateOriginals
         (
