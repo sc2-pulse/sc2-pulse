@@ -475,6 +475,23 @@ public class PlayerCharacterDAOIT
     }
 
     @Test
+    public void whenAccountAndCharacterDataContainsSameCharacter_thenRemoveDuplicatesInResult()
+    {
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123"));
+        Set<AccountCharacterData> updData = Set.of
+        (
+            new AccountCharacterData(acc1, char1, false, 0),
+            new AccountCharacterData(acc1, char1, false, 1)
+        );
+        Set<PlayerCharacter> updatedIds = playerCharacterDAO.updateAccountsAndCharacters(updData);
+        Assertions.assertThat(updatedIds)
+            .usingRecursiveComparison()
+            .isEqualTo(Set.of(char1));
+    }
+
+    @Test
     public void whenUpdateNewAccountAndCharacter_thenNullifyCharacterId()
     {
         verifyCharacterUpdateId(obs->{

@@ -302,8 +302,9 @@ public class PlayerCharacterDAO
             + "WHERE account.id = account_lock_filter.id "
             + "AND account.anonymous IS NULL"
         + ") "
-        + "SELECT " + ID_SELECT
-        + "FROM selected";
+        + "SELECT DISTINCT ON (id) " + ID_SELECT
+        + "FROM selected "
+        + "ORDER BY id ";
 
     private static final String UPDATE_ANONYMOUS_FLAG =
         "UPDATE player_character "
