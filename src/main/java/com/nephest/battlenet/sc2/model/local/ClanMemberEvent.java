@@ -1,10 +1,12 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.Identifiable;
+import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
 
@@ -93,6 +95,17 @@ public class ClanMemberEvent
             clan == null ? null : clan.getId(),
             clan == null ? ClanMemberEvent.EventType.LEAVE : ClanMemberEvent.EventType.JOIN,
             OffsetDateTime.now()
+        );
+    }
+
+    public static ClanMemberEvent from(ClanMemberEventData data)
+    {
+        return new ClanMemberEvent
+        (
+            data.getCharacter().getId(),
+            data.getClan() == null ? null : data.getClan().getId(),
+            data.getClan() == null ? ClanMemberEvent.EventType.LEAVE : ClanMemberEvent.EventType.JOIN,
+            data.getCreatedAt().atOffset(ZoneOffset.UTC)
         );
     }
 

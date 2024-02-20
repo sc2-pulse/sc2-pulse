@@ -406,7 +406,7 @@ public class ClanService
         if(clans.isEmpty()) return;
 
         Set<ClanMemberEvent> events = clans.stream()
-            .map(p->ClanMemberEvent.from(p.getCharacter(), p.getClan()))
+            .map(ClanMemberEvent::from)
             .collect(Collectors.toCollection(LinkedHashSet::new));
         clanMemberEventDAO.merge(events);
         LOG.debug("Created {} clan events", events.size());
