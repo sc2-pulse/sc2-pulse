@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -56,6 +56,16 @@ public class AdminController
     public void addPartialUpdate(@PathVariable("region") Region region, HttpServletRequest request)
     {
         statsService.setPartialUpdate(region, request.getMethod().equals("POST"));
+    }
+
+    @RequestMapping
+    (
+        value = "/update/partial/2/{region}",
+        method = {RequestMethod.POST, RequestMethod.DELETE}
+    )
+    public void addPartialUpdate2(@PathVariable("region") Region region, HttpServletRequest request)
+    {
+        statsService.setPartialUpdate2(region, request.getMethod().equals("POST"));
     }
 
     @PostMapping("/update/match/frame/{durationMillis}")

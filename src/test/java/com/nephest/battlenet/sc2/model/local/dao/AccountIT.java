@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -12,11 +12,12 @@ import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.DBTestService;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.util.List;
 import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
@@ -31,7 +32,6 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
 import org.springframework.test.jdbc.JdbcTestUtils;
-import reactor.util.function.Tuples;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -44,6 +44,9 @@ public class AccountIT
 
     @Autowired
     private PlayerCharacterDAO playerCharacterDAO;
+
+    @Autowired
+    private DBTestService dbTestService;
 
     @Autowired
     private JdbcTemplate template;
@@ -116,7 +119,7 @@ public class AccountIT
         OffsetDateTime beforeUpdate = OffsetDateTime.now();
         playerCharacterDAO
             //the default last season is 0, -1 to imitate previous season
-            .updateAccountsAndCharacters(List.of(Tuples.of(acc2, char1, false, -1)));
+            .updateAccountsAndCharacters(Set.of(new AccountCharacterData(acc2, char1, false, -1)));
 
         //the data hasn't been updated
         assertEquals("tag#1", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
@@ -135,7 +138,7 @@ public class AccountIT
         OffsetDateTime beforeUpdate = OffsetDateTime.now();
         playerCharacterDAO
             //the default last season is 0
-            .updateAccountsAndCharacters(List.of(Tuples.of(acc2, char1, false, seasonOffset)));
+            .updateAccountsAndCharacters(Set.of(new AccountCharacterData(acc2, char1, false, seasonOffset)));
 
         //the data has been updated
         assertEquals("tag#2", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
@@ -154,12 +157,31 @@ public class AccountIT
         OffsetDateTime beforeUpdate = OffsetDateTime.now();
         playerCharacterDAO
             //the default last season is 0
-            .updateAccountsAndCharacters(List.of(Tuples.of(acc2, char1, false, seasonOffset)));
+            .updateAccountsAndCharacters(Set.of(new AccountCharacterData(acc2, char1, false, seasonOffset)));
 
         //the data has been updated
         assertEquals("tag#1", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
         OffsetDateTime updatedAt = accountDAO.getUpdated(acc1.getId());
         assertTrue(beforeUpdate.isBefore(updatedAt));
+    }
+
+    @Test
+    public void whenRebindingAccount_thenRebindConnectedData()
+    {
+        Object[] bindings1 = dbTestService.createAccountBindings(1, true);
+        Object[] bindings2 = dbTestService.createAccountBindings(2, false);
+
+        playerCharacterDAO.updateAccountsAndCharacters(Set.of(
+            new AccountCharacterData
+            (
+                (Account) bindings2[0],
+                (PlayerCharacter) bindings1[1],
+                false,
+                0
+            )
+        ));
+
+        dbTestService.verifyAccountBindings(2L, 1L);
     }
 
     @Test
@@ -184,8 +206,8 @@ public class AccountIT
         //modifying operations that should update the entity
         Account newAccount = new Account(null, Partition.GLOBAL, "tag#2");
         accountDAO.merge(newAccount, pc);
-        playerCharacterDAO
-            .updateAccountsAndCharacters(List.of(Tuples.of(newAccount, pc, true, 1)));
+        playerCharacterDAO.updateAccountsAndCharacters(Set.of(
+            new AccountCharacterData(newAccount, pc, true, 1)));
 
         //entity wasn't updated due to anonymous flag
         Account foundAccount = accountDAO.findByIds(Set.of(acc.getId())).get(0);

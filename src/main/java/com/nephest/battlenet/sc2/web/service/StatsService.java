@@ -45,7 +45,9 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.service.EventService;
+import com.nephest.battlenet.sc2.util.LogUtil;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
@@ -66,10 +68,9 @@ import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.annotation.PostConstruct;
-import org.apache.commons.lang3.tuple.ImmutablePair;
-import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,7 +84,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
@@ -99,7 +99,7 @@ public class StatsService
     public static final Version VERSION = Version.LOTV;
     public static final int STALE_LADDER_TOLERANCE = 1;
     public static final int STALE_LADDER_DEPTH = 12;
-    public static final int LADDER_BATCH_SIZE = 100;
+    public static final int LADDER_BATCH_SIZE = 600;
     /*
         Disable partial updates because alternative ladder service should be fast enough
         now. Might want to reactivate it later if anything goes wrong, so leaving this note just in
@@ -116,6 +116,36 @@ public class StatsService
             BaseLeague.LeagueType.DIAMOND,
             BaseLeague.LeagueType.MASTER,
             BaseLeague.LeagueType.GRANDMASTER
+        ));
+    public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_MAIN_LEAGUES_2 =
+    Collections.unmodifiableSet(EnumSet.of
+    (
+        BaseLeague.LeagueType.DIAMOND,
+        BaseLeague.LeagueType.MASTER,
+        BaseLeague.LeagueType.GRANDMASTER
+    ));
+    public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_SECONDARY_LEAGUES_2 =
+    Collections.unmodifiableSet(EnumSet.of
+    (
+        BaseLeague.LeagueType.BRONZE,
+        BaseLeague.LeagueType.SILVER,
+        BaseLeague.LeagueType.GOLD,
+        BaseLeague.LeagueType.PLATINUM
+    ));
+    public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_MAIN_TEAM_LEAGUES_2 =
+        Collections.unmodifiableSet(EnumSet.of
+        (
+            BaseLeague.LeagueType.PLATINUM,
+            BaseLeague.LeagueType.DIAMOND,
+            BaseLeague.LeagueType.MASTER,
+            BaseLeague.LeagueType.GRANDMASTER
+        ));
+    public static final Set<BaseLeague.LeagueType> PARTIAL_UPDATE_SECONDARY_TEAM_LEAGUES_2 =
+        Collections.unmodifiableSet(EnumSet.of
+        (
+            BaseLeague.LeagueType.BRONZE,
+            BaseLeague.LeagueType.SILVER,
+            BaseLeague.LeagueType.GOLD
         ));
     public static final Map<QueueType, Set<BaseLeague.LeagueType>> PARTIAL_UPDATE_SECONDARY_QUEUE =
         Collections.unmodifiableMap(new EnumMap<>(Map.of
@@ -181,6 +211,121 @@ public class StatsService
                 QueueType.LOTV_ARCHON, LadderUpdateContext.ALL_LEAGUES
             )))
         );
+    public static final List<Map<QueueType, Set<BaseLeague.LeagueType>>> PARTIAL_UPDATE_DATA_2 =
+    List.of
+    (
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.BRONZE,
+                BaseLeague.LeagueType.SILVER,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.PLATINUM,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.GOLD,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_2V2, Set.of
+            (
+                BaseLeague.LeagueType.BRONZE,
+                BaseLeague.LeagueType.SILVER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_2V2, Set.of
+            (
+                BaseLeague.LeagueType.GOLD,
+                BaseLeague.LeagueType.PLATINUM
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.PLATINUM,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
+        ))),
+        Collections.unmodifiableMap(Stream.concat
+        (
+            Stream.of(Map.entry(QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2)),
+            PARTIAL_UPDATE_SECONDARY_QUEUE.entrySet().stream()
+        )
+            .collect(Collectors.toMap(
+                Map.Entry::getKey,
+                Map.Entry::getValue,
+                (l, r)->l,
+                ()->new EnumMap<>(QueueType.class)))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_3V3, PARTIAL_UPDATE_SECONDARY_TEAM_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_4V4, PARTIAL_UPDATE_SECONDARY_TEAM_LEAGUES_2,
+            QueueType.LOTV_ARCHON, PARTIAL_UPDATE_SECONDARY_TEAM_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1,
+            Set.of
+            (
+                BaseLeague.LeagueType.PLATINUM,
+                BaseLeague.LeagueType.DIAMOND,
+                BaseLeague.LeagueType.MASTER,
+                BaseLeague.LeagueType.GRANDMASTER
+            )
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_3V3, PARTIAL_UPDATE_MAIN_TEAM_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_4V4, PARTIAL_UPDATE_MAIN_TEAM_LEAGUES_2,
+            QueueType.LOTV_ARCHON, PARTIAL_UPDATE_MAIN_TEAM_LEAGUES_2
+        ))),
+        Collections.unmodifiableMap(new EnumMap<>(Map.of
+        (
+            QueueType.LOTV_1V1, PARTIAL_UPDATE_MAIN_LEAGUES_2,
+            QueueType.LOTV_2V2, PARTIAL_UPDATE_MAIN_LEAGUES_2
+        )))
+    );
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
     public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofDays(7);
 
@@ -198,7 +343,9 @@ public class StatsService
     private final Map<Region, InstantVar> forcedUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, InstantVar> forcedAlternativeUpdateInstants = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdates = new EnumMap<>(Region.class);
+    private final Map<Region, LongVar> partialUpdates2 = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdateIndexes = new EnumMap<>(Region.class);
+    private final Map<Region, LongVar> partialUpdateIndexes2 = new EnumMap<>(Region.class);
     private final PendingLadderData pendingLadderData = new PendingLadderData();
 
     private AlternativeLadderService alternativeLadderService;
@@ -288,7 +435,9 @@ public class StatsService
             forcedUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.updated.forced", false));
             forcedAlternativeUpdateInstants.put(region, new InstantVar(varDAO, region.getId() + ".ladder.alternative.forced.timestamp", false));
             partialUpdates.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial", false));
+            partialUpdates2.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial.2", false));
             partialUpdateIndexes.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial.ix", false));
+            partialUpdateIndexes2.put(region, new LongVar(varDAO, region.getId() + ".ladder.partial.ix.2", false));
         }
         //catch exceptions to allow service autowiring for tests
         try {
@@ -299,12 +448,17 @@ public class StatsService
                 forcedUpdateInstants.values().stream(),
                 forcedAlternativeUpdateInstants.values().stream(),
                 partialUpdates.values().stream(),
-                partialUpdateIndexes.values().stream()
+                partialUpdates2.values().stream(),
+                partialUpdateIndexes.values().stream(),
+                partialUpdateIndexes2.values().stream()
             )
                 .flatMap(Function.identity())
                 .map(var->(Var<?>) var)
                 .forEach(Var::load);
             partialUpdateIndexes.values().stream()
+                .filter(v->v.getValue() == null)
+                .forEach(v->v.setValueAndSave(0L));
+            partialUpdateIndexes2.values().stream()
                 .filter(v->v.getValue() == null)
                 .forEach(v->v.setValueAndSave(0L));
         }
@@ -357,10 +511,18 @@ public class StatsService
         boolean allStats
     )
     {
+        LOG.trace("updateCurrent({}, {})", data, allStats);
         Instant start = Instant.now();
-        checkStaleData(data.keySet());
+        LOG.trace("Getting current seasons for {}", data.keySet());
+        Map<Region, BlizzardSeason> seasons = data.keySet().stream()
+            .collect(Collectors.toMap(
+                Function.identity(),
+                region->sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, false)
+            ));
+        LOG.trace("Got current seasons {}", seasons);
+        checkStaleData(seasons);
         Map<Region, LadderUpdateTaskContext<Void>> ctx
-            = updateCurrentSeason(data, allStats);
+            = updateCurrentSeason(data, seasons, allStats);
 
         long seconds = (System.currentTimeMillis() - start.toEpochMilli()) / 1000;
         LOG.info("Updated current for {} after {} seconds", ctx, seconds);
@@ -389,7 +551,7 @@ public class StatsService
         League league = new League(null, null, lKey.getLeagueId(), lKey.getQueueId(), lKey.getTeamType());
         LeagueTier tier = new LeagueTier(null, null, AlternativeLadderService.ALTERNATIVE_TIER, 0, 0);
         Division division = alternativeLadderService.getOrCreateDivision(season, lKey, id);
-        updateTeams(bLadder.getTeams(), season, league, tier, division);
+        updateTeams(bLadder, season, league, tier, division);
     }
 
     private void updateSeason
@@ -486,6 +648,7 @@ public class StatsService
     private Map<Region, LadderUpdateTaskContext<Void>> updateCurrentSeason
     (
         Map<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> data,
+        Map<Region, BlizzardSeason> blizzardSeasons,
         boolean allStats
     )
     {
@@ -495,9 +658,9 @@ public class StatsService
         for(Map.Entry<Region, Map<QueueType, Set<BaseLeague.LeagueType>>> entry : data.entrySet())
         {
             Region region = entry.getKey();
-            int maxSeason = seasonDao.getMaxBattlenetId(region);
-            BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
+            BlizzardSeason bSeason = blizzardSeasons.get(region);
             Season season = seasonDao.merge(Season.of(bSeason, region));
+            LOG.debug("Using season {} for current season update for {}", season, entry.getKey());
             createLeagues(season);
             ctx.put
             (
@@ -519,6 +682,7 @@ public class StatsService
         boolean currentSeason
     )
     {
+        LOG.trace("updateOrAlternativeUpdate({}, {}, {})", season, data, currentSeason);
         fastTeamDAO.load(season.getRegion(), season.getBattlenetId());
         LOG.debug("Loaded teams into FastTeamDAO for {}", season);
         if(!isAlternativeUpdate(season.getRegion(), currentSeason))
@@ -553,15 +717,16 @@ public class StatsService
         Function<LadderUpdateContext, List<Future<Void>>> updater
     )
     {
+        List<Map<QueueType, Set<BaseLeague.LeagueType>>> queue = getPartialQueue(season.getRegion());
         boolean partialUpdate = alternative
-            ? isPartialUpdate(season.getRegion())
+            ? (isPartialUpdate(season.getRegion()) || isPartialUpdate2(season.getRegion()))
             : isPartialUpdateOrThreshold(season.getRegion());
-        LongVar partialUpdateIndex = partialUpdateIndexes.get(season.getRegion());
+        LongVar partialUpdateIndex = getPartialUpdateIndex(season.getRegion());
         LadderUpdateContext context = new LadderUpdateContext
         (
             season,
             partialUpdate
-                ? PARTIAL_UPDATE_DATA.get(partialUpdateIndex.getValue().intValue())
+                ? queue.get(partialUpdateIndex.getValue().intValue())
                 : data
         );
         if(partialUpdate) LOG.info("Partially updating {}({})", season, context.getData());
@@ -569,16 +734,31 @@ public class StatsService
         if(partialUpdate)
             partialUpdateIndex.setValueAndSave
             (
-                partialUpdateIndex.getValue() == PARTIAL_UPDATE_DATA.size() - 1
+                partialUpdateIndex.getValue() == queue.size() - 1
                     ? 0
                     : partialUpdateIndex.getValue() + 1
             );
         return new LadderUpdateTaskContext<>(season, context.getData(), tasks);
     }
 
+    public List<Map<QueueType, Set<BaseLeague.LeagueType>>> getPartialQueue(Region region)
+    {
+        return partialUpdates2.get(region).getValue() != null
+            ? PARTIAL_UPDATE_DATA_2
+            : PARTIAL_UPDATE_DATA;
+    }
+
+    public LongVar getPartialUpdateIndex(Region region)
+    {
+        return partialUpdates2.get(region).getValue() != null
+            ? partialUpdateIndexes2.get(region)
+            : partialUpdateIndexes.get(region);
+    }
+
     public boolean isPartialUpdateOrThreshold(Region region)
     {
         return isPartialUpdate(region)
+            || isPartialUpdate2(region)
             || Stream.concat(alternativeRegions.stream(), forcedAlternativeRegions.stream())
                 .distinct()
                 .count() >= PARTIAL_ALTERNATIVE_UPDATE_REGION_THRESHOLD;
@@ -587,6 +767,11 @@ public class StatsService
     public boolean isPartialUpdate(Region region)
     {
         return partialUpdates.get(region).getValue() != null;
+    }
+
+    public boolean isPartialUpdate2(Region region)
+    {
+        return partialUpdates2.get(region).getValue() != null;
     }
 
     public boolean isAlternativeUpdate(Region region, boolean currentSeason)
@@ -637,7 +822,7 @@ public class StatsService
             League league = leagueDao.merge(League.of(season, l.getT2().getT1()));
             LeagueTier tier = leagueTierDao.merge(LeagueTier.of(league, l.getT2().getT3()));
             Division division = saveDivision(season, league, tier, l.getT2().getT4());
-            int teams = updateTeams(l.getT1().getTeams(), season, league, tier, division);
+            int teams = updateTeams(l.getT1(), season, league, tier, division);
             LOG.debug
             (
                 "Ladder saved: {} {} {}({}/{} teams)",
@@ -672,16 +857,17 @@ public class StatsService
 
     protected int updateTeams
     (
-        BlizzardTeam[] bTeams,
+        BlizzardLadder ladder,
         Season season,
         League league,
         LeagueTier tier,
         Division division
     )
     {
+        BlizzardTeam[] bTeams = ladder.getTeams();
         int memberCount = league.getQueueType().getTeamFormat().getMemberCount(league.getTeamType());
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members = new ArrayList<>(bTeams.length * memberCount);
-        List<Pair<PlayerCharacter, Clan>> clans = new ArrayList<>();
+        List<ClanMemberEventData> clans = new ArrayList<>();
         Integer curSeason = seasonDao.getMaxBattlenetId(season.getRegion()) == null
             ? 0 : seasonDao.getMaxBattlenetId(season.getRegion());
         List<Tuple2<Team, BlizzardTeam>> validTeams = Arrays.stream(bTeams)
@@ -695,7 +881,8 @@ public class StatsService
         validTeams.stream()
             .filter(t->t.getT1().getId() != null)
             .forEach(t->{
-                extractTeamMembers(t.getT2().getMembers(), members, clans, season, t.getT1());
+                extractTeamMembers(
+                    ladder, t.getT2().getMembers(), members, clans, season, t.getT1());
                 if(season.getBattlenetId().equals(curSeason))
                     pendingLadderData.getTeams().add(t.getT1().getId());
             });
@@ -721,9 +908,10 @@ public class StatsService
 
     private void extractTeamMembers
     (
+        BlizzardLadder ladder,
         BlizzardTeamMember[] bMembers,
         List<Tuple3<Account, PlayerCharacter, TeamMember>> members,
-        List<Pair<PlayerCharacter, Clan>> clans,
+        List<ClanMemberEventData> clans,
         Season season,
         Team team
     )
@@ -736,23 +924,25 @@ public class StatsService
             Account account = Account.of(bMember.getAccount(), season.getRegion());
             PlayerCharacter character = PlayerCharacter.of(account, season.getRegion(), bMember.getCharacter());
             TeamMember member = TeamMember.of(team, character, bMember.getRaces());
-            clans.add(extractCharacterClanPair(bMember, character));
+            clans.add(extractCharacterClanData(ladder, bMember, character));
             members.add(Tuples.of(account, character, member));
         }
     }
 
-    public static Pair<PlayerCharacter, Clan> extractCharacterClanPair
+    public static ClanMemberEventData extractCharacterClanData
     (
+        BlizzardLadder ladder,
         BlizzardTeamMember bMember,
         PlayerCharacter character
     )
     {
-        return new ImmutablePair<>
+        return new ClanMemberEventData
         (
             character,
             bMember.getClan() != null
                 ? Clan.of(bMember.getClan(), character.getRegion())
-                : null
+                : null,
+            ladder.getCreatedAt()
         );
     }
 
@@ -838,27 +1028,30 @@ public class StatsService
         return max.get();
     }
 
-    public void checkStaleData(Set<Region> regions)
+    public void checkStaleData(Map<Region, BlizzardSeason> seasons)
     {
-        for(Region region : regions)
+        LOG.trace("checkStaleData({})", seasons.keySet());
+        for(Map.Entry<Region, BlizzardSeason> entry : seasons.entrySet())
         {
-            int maxSeason = seasonDao.getMaxBattlenetId(region);
+            Region region = entry.getKey();
             checkStaleDataByTeamStateCount(region);
-            BlizzardSeason bSeason = sc2WebServiceUtil.getCurrentOrLastOrExistingSeason(region, maxSeason);
-            long maxId = getMaxLadderId(bSeason, region);
+            LOG.debug("Using season {} for stale data check {}", entry.getValue().getId(), region);
+            long maxId = getMaxLadderId(entry.getValue(), region);
             if(maxId < 0) {
                 if(alternativeRegions.add(region))
                     LOG.warn("Stale data detected for {}, added this region to alternative update", region);
                 continue;
             }
 
-            chainStaleDataCheck(region, maxId + STALE_LADDER_TOLERANCE, 0).block();
+            checkStaleData(region, maxId + STALE_LADDER_TOLERANCE, STALE_LADDER_DEPTH);
         }
         saveAlternativeRegions();
+        LOG.trace("end checkStaleData({})", seasons.keySet());
     }
 
     public void checkStaleDataByTeamStateCount(Region region)
     {
+        LOG.trace("checkStaleDataByTeamStateCount({})", region);
         removeForcedAlternativeRegionIfExpired(region);
         if(teamStateDAO.getCount(region, OffsetDateTime.now().minus(STALE_DATA_TEAM_STATES_DEPTH)) == 0)
         {
@@ -868,6 +1061,7 @@ public class StatsService
                 forcedAlternativeUpdateInstants.get(region).setValueAndSave(Instant.now());
             }
         }
+        LOG.trace("end checkStaleDataByTeamStateCount({})", region);
     }
 
     public void removeForcedAlternativeRegionIfExpired(Region region)
@@ -884,23 +1078,27 @@ public class StatsService
         }
     }
 
-
-    private Mono<Tuple3<Region, BlizzardPlayerCharacter[], Long>> chainStaleDataCheck(Region region, long ladderId, int count)
+    private void checkStaleData(Region region, long ladderIdStart, int depth)
     {
-        return Mono.defer(()->
-            api.getProfileLadderId(region, ladderId, alternativeLadderService.isDiscoveryWebRegion(region))
-                .doOnNext(l->{
-                    if(alternativeRegions.add(region))
-                        LOG.warn("Stale data detected for {}, added this region to alternative update", region);
-                })
-                .onErrorResume(t->{
-                    int next = count + 1;
-                    if(next < STALE_LADDER_DEPTH) return chainStaleDataCheck(region, ladderId + 1, next);
-
-                    if(alternativeRegions.remove(region))
-                        LOG.info("{} now returns fresh data, removed it from alternative update", region);
-                    return Mono.empty();
-        }));
+        LOG.trace("checkStaleData({}, {}, {})", region, ladderIdStart, depth);
+        Tuple3<Region, BlizzardPlayerCharacter[], Long> apiLadderId = Flux
+                .fromStream(IntStream.range(0, depth).boxed())
+                .map(i->ladderIdStart + i)
+                .flatMap(ladderId->WebServiceUtil.getOnErrorLogAndSkipMono(api.getProfileLadderId(
+                    region, ladderId, alternativeLadderService.isDiscoveryWebRegion(region)),
+                        (t)->{}, t->LogUtil.LogLevel.DEBUG))
+                .blockFirst();
+        if(apiLadderId != null)
+        {
+            if(alternativeRegions.add(region))
+                LOG.warn("Stale data detected for {}, added this region to alternative update", region);
+        }
+        else
+        {
+            if(alternativeRegions.remove(region))
+                LOG.info("{} now returns fresh data, removed it from alternative update", region);
+        }
+        LOG.trace("end checkStaleData({}, {}, {})", region, ladderIdStart, depth);
     }
 
     private void loadAlternativeRegions()
@@ -969,6 +1167,12 @@ public class StatsService
     {
         partialUpdates.get(region).setValueAndSave(partial ? 1L : null);
         LOG.info("{} partial update: {}", region, partial);
+    }
+
+    public void setPartialUpdate2(Region region, boolean partial)
+    {
+        partialUpdates2.get(region).setValueAndSave(partial ? 1L : null);
+        LOG.info("{} partial update 2: {}", region, partial);
     }
 
     /*

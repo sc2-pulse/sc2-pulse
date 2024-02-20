@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -16,6 +16,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.eq;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -38,12 +39,14 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMember;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
-import com.nephest.battlenet.sc2.model.local.Account;
+import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
+import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import java.math.BigInteger;
@@ -60,11 +63,13 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.stream.Collectors;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.InOrder;
@@ -73,6 +78,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.validation.Validator;
 import reactor.core.publisher.Flux;
+import reactor.core.scheduler.Schedulers;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuple4;
@@ -107,10 +113,16 @@ public class BlizzardPrivacyServiceTest
     private Validator validator;
 
     @Mock
+    private ClanService clanService;
+
+    @Mock
     private SC2WebServiceUtil sc2WebServiceUtil;
 
     @Captor
-    private ArgumentCaptor<List<Tuple4<Account, PlayerCharacter, Boolean, Integer>>> accountPlayerCaptor;
+    private ArgumentCaptor<Set<AccountCharacterData>> accountPlayerCaptor;
+
+    @Captor
+    private ArgumentCaptor<Collection<ClanMemberEventData>> clanDataCaptor;
 
     @Captor
     private ArgumentCaptor<OffsetDateTime> offsetDateTimeArgumentCaptor;
@@ -153,10 +165,12 @@ public class BlizzardPrivacyServiceTest
             varDAO,
             accountDAO,
             playerCharacterDAO,
-            executor, executor, executor,
+            clanService,
+            executor, Schedulers.immediate(), executor,
             validator,
             sc2WebServiceUtil,
-            globalContext
+            globalContext,
+            true
         );
     }
 
@@ -173,10 +187,12 @@ public class BlizzardPrivacyServiceTest
             varDAO,
             accountDAO,
             playerCharacterDAO,
-            TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE, TestUtil.EXECUTOR_SERVICE,
+            clanService,
+            TestUtil.EXECUTOR_SERVICE, Schedulers.immediate(), TestUtil.EXECUTOR_SERVICE,
             validator,
             sc2WebServiceUtil,
-            globalContext
+            globalContext,
+            true
         );
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
@@ -292,30 +308,56 @@ public class BlizzardPrivacyServiceTest
     }
 
     @Test
-    public void testUpdateAlternativeLadder()
+    public void whenUpdateCharacterProfilesIsDisabled_thenDontUpdateCharacters()
+    {
+        privacyService = new BlizzardPrivacyService
+        (
+            api,
+            statsService,
+            alternativeLadderService,
+            seasonDAO,
+            varDAO,
+            accountDAO,
+            playerCharacterDAO,
+            clanService,
+            executor, Schedulers.immediate(), executor,
+            validator,
+            sc2WebServiceUtil,
+            globalContext,
+            false
+        );
+        lenient().when(playerCharacterDAO.countByUpdatedMax(any(), any()))
+            .thenThrow(new IllegalStateException("test"));
+        privacyService.update();
+    }
+
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testUpdateAlternativeLadder(boolean charUpdated)
     {
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON);
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(true);
+        BlizzardProfileLadder ladder = new BlizzardProfileLadder
+        (
+            new BlizzardProfileTeam[]
+            {
+                new BlizzardProfileTeam
+                (
+                    new BlizzardProfileTeamMember[]
+                    {
+                        new BlizzardProfileTeamMember(1L, 1, "name1", Race.TERRAN, "clan1"),
+                        new BlizzardProfileTeamMember(2L, 1, "name2", Race.TERRAN, null)
+                    },
+                    0L, 0, 0, 0, 0
+                )
+            },
+            null
+        );
         Flux<Tuple2<BlizzardProfileLadder, Tuple3<Region, BlizzardPlayerCharacter[], Long>>> ladders = Flux.just
         (
             Tuples.of
             (
-                new BlizzardProfileLadder
-                (
-                    new BlizzardProfileTeam[]
-                    {
-                        new BlizzardProfileTeam
-                        (
-                            new BlizzardProfileTeamMember[]
-                            {
-                                new BlizzardProfileTeamMember(1L, 1, "name1", Race.TERRAN, "clan1"),
-                                new BlizzardProfileTeamMember(2L, 1, "name2", Race.TERRAN, null)
-                            },
-                            0L, 0, 0, 0, 0
-                        )
-                    },
-                    null
-                ),
+                ladder,
                 Tuples.of
                 (
                     Region.EU,
@@ -329,10 +371,15 @@ public class BlizzardPrivacyServiceTest
                 .thenReturn(ladders);
         for(int i = 1; i < globalContext.getActiveRegions().size(); i++)
             stub = stub.thenReturn(Flux.empty());
+        if(charUpdated) when(playerCharacterDAO.updateCharacters(any())).thenAnswer(i->{
+            Set<PlayerCharacter> chars = i.getArgument(0);
+            chars.forEach(c->c.setId(c.getBattlenetId()));
+            return chars;
+        });
         privacyService.updateOldSeasons();
 
-        PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
-        PlayerCharacter character2 = new PlayerCharacter(null, null, Region.EU, 2L, 1, "name2");
+        PlayerCharacter character1 = new PlayerCharacter(1L, null, Region.EU, 1L, 1, "name1");
+        PlayerCharacter character2 = new PlayerCharacter(2L, null, Region.EU, 2L, 1, "name2");
         verify(playerCharacterDAO).updateCharacters(characterArgumentCaptor.capture());
         List<PlayerCharacter> argChars = characterArgumentCaptor.getAllValues()
             .stream()
@@ -342,6 +389,24 @@ public class BlizzardPrivacyServiceTest
         assertEquals(2, argChars.size());
         assertEquals(character1, argChars.get(0));
         assertEquals(character2, argChars.get(1));
+
+        verify(clanService).saveClans(clanDataCaptor.capture());
+        Assertions.assertThat(clanDataCaptor.getValue())
+            .usingRecursiveComparison()
+            .isEqualTo(!charUpdated ? List.of() : List.of(
+                new ClanMemberEventData
+                (
+                    new PlayerCharacter(1L, null, Region.EU, 1L, 1, "name1#1"),
+                    new Clan(null, "clan1", Region.EU, null),
+                    ladder.getCreatedAt()
+                ),
+                new ClanMemberEventData
+                (
+                    new PlayerCharacter(2L, null, Region.EU, 2L, 1, "name2#1"),
+                    null,
+                    ladder.getCreatedAt()
+                )
+            ));
     }
 
     @CsvSource
@@ -361,30 +426,53 @@ public class BlizzardPrivacyServiceTest
         privacyService.updateOldSeasons();
 
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
-        List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> argChars =
-            accountPlayerCaptor.getValue();
+        verify(clanService, never()).saveClans(any());
+        Set<AccountCharacterData> argChars = accountPlayerCaptor.getValue();
         PlayerCharacter character1 = new PlayerCharacter(null, null, Region.EU, 1L, 1, "name1");
         assertEquals(1, argChars.size());
-        PlayerCharacter extractedCharacter = argChars.get(0).getT2();
+        AccountCharacterData acData = argChars.iterator().next();
+        PlayerCharacter extractedCharacter = acData.getCharacter();
         assertEquals(character1, extractedCharacter);
         assertEquals("name2#1", extractedCharacter.getName());
         //false because season is not the current season
-        assertFalse(argChars.get(0).getT3());
+        assertFalse(acData.isFresh());
     }
 
-    @Test
-    public void testUpdateCurrentLadder()
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void testUpdateCurrentLadder(boolean charUpdated)
     {
         when(seasonDAO.getMaxBattlenetId()).thenReturn(BlizzardSC2API.FIRST_SEASON + 1);
         when(statsService.isAlternativeUpdate(any(), anyBoolean())).thenReturn(false);
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
+        if(charUpdated) when(playerCharacterDAO.updateAccountsAndCharacters(any()))
+            .thenAnswer(i->{
+                Set<AccountCharacterData> arg = i.getArgument(0);
+                PlayerCharacter character = arg.iterator().next().getCharacter();
+                character.setId(1L);
+                return Set.of(character);
+            });
 
+        Instant begin = Instant.now();
         stubLadderApi();
         //update current season
         privacyService.updateOldSeasons();
         verify(playerCharacterDAO).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         //true because season is the current season and alternative update route is disabled
-        assertTrue(accountPlayerCaptor.getValue().get(0).getT3());
+        assertTrue(accountPlayerCaptor.getValue().iterator().next().isFresh());
+
+        verify(clanService).saveClans(clanDataCaptor.capture());
+        Assertions.assertThat(clanDataCaptor.getValue())
+            .usingRecursiveComparison()
+            .withEqualsForType((l, r)->l.compareTo(r) >= 0, Instant.class)
+            .isEqualTo(!charUpdated ? List.of() : List.of(
+                new ClanMemberEventData
+                (
+                    new PlayerCharacter(1L,  null, Region.EU, 1L, 1, "name2#1"),
+                    new Clan(null, "tag", Region.EU, "clanName"),
+                    begin
+                )
+            ));
     }
 
     @Test
@@ -414,7 +502,7 @@ public class BlizzardPrivacyServiceTest
         //executed once
         verify(playerCharacterDAO, times(1)).updateAccountsAndCharacters(accountPlayerCaptor.capture());
         //true because season is the current season and alternative update route is disabled
-        assertTrue(accountPlayerCaptor.getValue().get(0).getT3());
+        assertTrue(accountPlayerCaptor.getValue().iterator().next().isFresh());
     }
 
     private OngoingStubbing<Flux<Tuple2<BlizzardLadder, Tuple4<BlizzardLeague, Region, BlizzardLeagueTier, BlizzardTierDivision>>>> stubLadderApi(Duration delay)

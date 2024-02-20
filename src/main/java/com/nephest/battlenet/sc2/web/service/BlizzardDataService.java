@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -18,8 +19,6 @@ import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.util.function.Tuple4;
-import reactor.util.function.Tuples;
 
 @Service
 public class BlizzardDataService
@@ -59,10 +58,10 @@ public class BlizzardDataService
             .forEach(id->playerCharacterDAO.updateAnonymousFlag(id, false));
 
         Integer curSeason = seasonDAO.getMaxBattlenetId();
-        List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> importedData = characters
+        Set<AccountCharacterData> importedData = characters
             .stream()
-            .map(c->Tuples.of(account, c, true, curSeason))
-            .collect(Collectors.toList());
+            .map(c->new AccountCharacterData(account, c, true, curSeason))
+            .collect(Collectors.toSet());
         playerCharacterDAO.updateAccountsAndCharacters(importedData);
         accountDAO.updateUpdated(OffsetDateTime.now().plus(ACCOUNT_IMPORT_DURATION), Set.of(account.getId()));
     }

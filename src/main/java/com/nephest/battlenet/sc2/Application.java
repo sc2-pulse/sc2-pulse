@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2;
@@ -25,6 +25,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.SynchronousQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.client.RestTemplateCustomizer;
@@ -39,6 +40,8 @@ import org.springframework.retry.annotation.EnableRetry;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import org.springframework.transaction.annotation.EnableTransactionManagement;
+import reactor.core.scheduler.Scheduler;
+import reactor.core.scheduler.Schedulers;
 
 @SpringBootApplication
 @EnableCaching
@@ -125,6 +128,21 @@ extends SpringBootServletInitializer
             new SynchronousQueue<>(),
             new CustomizableThreadFactory(WEB_THREAD_POOL_NAME)
         );
+    }
+
+    @Bean
+    public Scheduler dbScheduler(@Qualifier("dbExecutorService") ExecutorService executorService)
+    {
+        return Schedulers.fromExecutorService(executorService, "DB scheduler");
+    }
+
+    @Bean
+    public Scheduler secondaryDbScheduler
+    (
+        @Qualifier("secondaryDbExecutorService") ExecutorService executorService
+    )
+    {
+        return Schedulers.fromExecutorService(executorService, "Secondary DB scheduler");
     }
 
 }

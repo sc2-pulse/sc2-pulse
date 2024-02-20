@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.web.service.AccountService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.net.URL;
 import java.util.List;
 import java.util.Objects;
@@ -107,7 +108,8 @@ implements Oauth2UserServiceRegistration<OidcUserRequest, OidcUser>
 
     private Optional<Account> findByBlizzardCharacters(OidcUser user)
     {
-        return api.getPlayerCharacters(Region.EU, Long.valueOf(user.getSubject()))
+        return WebServiceUtil.getOnErrorLogAndSkipFlux(
+            api.getPlayerCharacters(Region.EU, Long.valueOf(user.getSubject())))
             .toStream()
             .map(c->playerCharacterDAO.find(c.getRegion(), c.getRealm(), c.getBattlenetId()).orElse(null))
             .filter(Objects::nonNull)

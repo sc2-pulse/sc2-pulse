@@ -1,10 +1,13 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
+import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
@@ -19,21 +22,21 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.discord.DiscordUser;
 import com.nephest.battlenet.sc2.model.discord.dao.DiscordUserDAO;
 import com.nephest.battlenet.sc2.model.local.Account;
-import com.nephest.battlenet.sc2.model.local.AccountDiscordUser;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
+import com.nephest.battlenet.sc2.model.local.DBTestService;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.Evidence;
 import com.nephest.battlenet.sc2.model.local.EvidenceVote;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
-import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import discord4j.common.util.Snowflake;
 import java.math.BigInteger;
@@ -44,6 +47,7 @@ import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.sql.DataSource;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
@@ -55,8 +59,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
-import reactor.util.function.Tuple4;
-import reactor.util.function.Tuples;
 
 @SpringJUnitConfig(classes = DatabaseTestConfig.class)
 @TestPropertySource("classpath:application.properties")
@@ -117,6 +119,9 @@ public class PlayerCharacterDAOIT
 
     @Autowired
     private SeasonGenerator seasonGenerator;
+
+    @Autowired
+    private DBTestService dbTestService;
 
     @Autowired
     private JdbcTemplate template;
@@ -288,9 +293,62 @@ public class PlayerCharacterDAOIT
         ));
 
         OffsetDateTime minTimeAllowed = OffsetDateTime.now();
-        assertEquals(2, playerCharacterDAO.updateCharacters(updatedCharacters));
+        Long[] ids = playerCharacterDAO.updateCharacters(updatedCharacters).stream()
+            .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        Long[] setIds = updatedCharacters.stream()
+            .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        Long[] expectedIds = new Long[]{char1.getId(), char3.getId()};
+        assertArrayEquals(expectedIds, ids);
+        assertArrayEquals(expectedIds, setIds);
 
         verifyUpdatedCharacters(minTimeAllowed);
+    }
+
+    private void verifyCharacterUpdateId(Consumer<Object[]> updater)
+    {
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name1#123"));
+        PlayerCharacter char2 =
+            new PlayerCharacter(null, acc1.getId(), Region.EU, 2L, 1, "name2#123");
+        char1.setId(null);
+        updater.accept(new Object[]{acc1, char1, char2});
+        assertNotNull(char1.getId());
+        assertNull(char2.getId());
+    }
+
+    @Test
+    public void whenUpdateNewCharacter_thenNullifyCharacterId()
+    {
+        verifyCharacterUpdateId(obs->playerCharacterDAO.updateCharacters(Set.of(
+            (PlayerCharacter) obs[1], (PlayerCharacter) obs[2])));
+    }
+
+    @Test
+    public void testMerge()
+    {
+        Account account1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        Account account2 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account1.getId(), Region.EU, 1L, 1, "name1#1"));
+
+        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+        PlayerCharacter char2 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, account2.getId(), Region.EU, 1L, 1, "name2#1"));
+
+        Assertions.assertThat(playerCharacterDAO.find(Set.of(char1.getId())).get(0))
+            .usingRecursiveComparison()
+            .isEqualTo(char2);
+        OffsetDateTime afterUpdate = template.queryForObject
+        (
+            "SELECT updated FROM player_character WHERE id = " + char1.getId(),
+            OffsetDateTime.class
+        );
+        assertTrue(beforeUpdate.isBefore(afterUpdate));
     }
 
     private void verifyUpdatedCharacters(OffsetDateTime minTimeAllowed)
@@ -335,37 +393,30 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char5 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#123"));
 
-        List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> updatedAccsAndChars = List.of
+        Set<AccountCharacterData> updatedAccsAndChars = Set.of
         (
-            Tuples.of
+            new AccountCharacterData
             (
                 new Account(null, Partition.GLOBAL, "tag3#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123"),
                 true,
                 0
             ),
-            Tuples.of
-            (
-                new Account(null, Partition.GLOBAL, "tag3#123"),
-                new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name2#123"),
-                true,
-                0
-            ),
-            Tuples.of
+            new AccountCharacterData
             (
                 new Account(null, Partition.GLOBAL, "tag4#123"),
                 new PlayerCharacter(null, acc2.getId(), Region.EU, 2L, 1, "name4#123"),
                 true,
                 0
             ),
-            Tuples.of
+            new AccountCharacterData
             (
                 new Account(null, Partition.GLOBAL, "tag10#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 3L, 1, "name11#123"),
                 false,
                 0
             ),
-            Tuples.of
+            new AccountCharacterData
             (
                 new Account(null, Partition.GLOBAL, "tag10#123"),
                 new PlayerCharacter(null, acc1.getId(), Region.EU, 4L, 1, "name20#1"),
@@ -376,7 +427,18 @@ public class PlayerCharacterDAOIT
 
         OffsetDateTime char4Updated = playerCharacterDAO.getUpdated(char4.getId());
         OffsetDateTime minTimeAllowed = OffsetDateTime.now();
-        assertEquals(3, playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars));
+        Long[] ids = playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars).stream()
+            .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        Long[] setIds = updatedAccsAndChars.stream()
+            .map(AccountCharacterData::getCharacter)
+            .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
+            .map(PlayerCharacter::getId)
+            .toArray(Long[]::new);
+        Long[] expectedIds = new Long[]{char1.getId(), char3.getId(), char4.getId(), char5.getId()};
+        assertArrayEquals(expectedIds, ids);
+        assertArrayEquals(expectedIds, setIds);
 
         //character is not updated
         assertEquals("name10#123", playerCharacterDAO.find(Region.EU, 1, 3L).orElseThrow().getName());
@@ -413,13 +475,43 @@ public class PlayerCharacterDAOIT
     }
 
     @Test
+    public void whenAccountAndCharacterDataContainsSameCharacter_thenRemoveDuplicatesInResult()
+    {
+        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#123"));
+        PlayerCharacter char1 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#123"));
+        Set<AccountCharacterData> updData = Set.of
+        (
+            new AccountCharacterData(acc1, char1, false, 0),
+            new AccountCharacterData(acc1, char1, false, 1)
+        );
+        Set<PlayerCharacter> updatedIds = playerCharacterDAO.updateAccountsAndCharacters(updData);
+        Assertions.assertThat(updatedIds)
+            .usingRecursiveComparison()
+            .isEqualTo(Set.of(char1));
+    }
+
+    @Test
+    public void whenUpdateNewAccountAndCharacter_thenNullifyCharacterId()
+    {
+        verifyCharacterUpdateId(obs->{
+            Set<AccountCharacterData> updatedAccsAndChars = Set.of
+            (
+                new AccountCharacterData((Account) obs[0], (PlayerCharacter) obs[1], true, 0),
+                new AccountCharacterData((Account) obs[0], (PlayerCharacter) obs[2], true, 0)
+            );
+            playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars);
+        });
+    }
+
+    @Test
     public void testCharacterRebinding()
     {
         //stub
-        stubCharacterChain(1, true);
-        stubCharacterChain(2, true);
-        stubCharacterChain(3, true);
-        stubCharacterChain(4, false);
+        dbTestService.createAccountBindings(1, true);
+        dbTestService.createAccountBindings(2, true);
+        dbTestService.createAccountBindings(3, true);
+        dbTestService.createAccountBindings(4, false);
         stubReport(1, 2, true);
         stubReport(3, 4, false);
         accountFollowingDAO.create(new AccountFollowing(1L, 1L));
@@ -460,7 +552,9 @@ public class PlayerCharacterDAOIT
         assertTrue(roles2.contains(SC2PulseAuthority.ADMIN));
 
         //rebind character 3 to account 4
-        playerCharacterDAO.merge(new PlayerCharacter(null, 4L, Region.EU, 3L, 3, "name3"));
+        PlayerCharacter char3 = playerCharacterDAO
+            .merge(new PlayerCharacter(null, 4L, Region.EU, 3L, 3, "name3"));
+        assertEquals(4L, playerCharacterDAO.find(Set.of(char3.getId())).get(0).getAccountId());
 
         //rebound value does not exist, successfully rebound
         List<ProPlayerAccount> proPlayerAccountsRebound = proPlayerAccountDAO.findByProPlayerId(3);
@@ -485,25 +579,6 @@ public class PlayerCharacterDAOIT
         assertFalse(discordUserDAO.findByAccountId(3L, false).isPresent());
         DiscordUser discordUser3 = discordUserDAO.findByAccountId(4L, false).orElseThrow();
         assertEquals(Snowflake.of(3L), discordUser3.getId());
-    }
-
-    private Account stubCharacterChain(int num, boolean bind)
-    {
-        DiscordUser discordUser = discordUserDAO
-            .merge(Set.of(new DiscordUser(Snowflake.of(num), "name" + num, num)))
-            .iterator().next();
-        ProPlayer proPlayer = proPlayerDAO
-            .merge(new ProPlayer(null, (long) num, "proTag" + num, "proName" + num));
-        Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag" + num));
-        PlayerCharacter char1 = playerCharacterDAO
-            .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, (long) num, num, "name" + num));
-        if(bind)
-        {
-            proPlayerAccountDAO.link(proPlayer.getId(), "tag" + num);
-            accountDiscordUserDAO
-                .create(Set.of(new AccountDiscordUser(acc1.getId(), discordUser.getId())));
-        }
-        return acc1;
     }
 
     private void stubReport(long accountId, long accountId2, boolean secondVote)
@@ -597,8 +672,8 @@ public class PlayerCharacterDAOIT
             new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#2");
         playerCharacterDAO.merge(newPlayerCharacter);
         playerCharacterDAO.updateCharacters(Set.of(newPlayerCharacter));
-        playerCharacterDAO
-            .updateAccountsAndCharacters(List.of(Tuples.of(acc, newPlayerCharacter, true, 1)));
+        playerCharacterDAO.updateAccountsAndCharacters(Set.of(
+            new AccountCharacterData(acc, newPlayerCharacter, true, 1)));
 
         //entity wasn't updated due to anonymous flag
         PlayerCharacter foundCharacter = playerCharacterDAO.find(Set.of(pc.getId())).get(0);

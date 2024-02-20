@@ -111,6 +111,7 @@ public class ClanServiceTest
             executor
         );
         nestedClanService = spy(clanService);
+        nestedClanService.setClanService(nestedClanService);
         clanService.setClanService(nestedClanService);
     }
     

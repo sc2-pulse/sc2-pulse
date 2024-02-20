@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -153,6 +153,19 @@ public class BlizzardOidcUserServiceTest
 
         assertEquals(expectedResult, ((BlizzardOidcUser) service.loadUser(null)).getAccount());
         verify(accountDAO).merge(argThat(a->a.equals(expectedResult)));
+    }
+
+    @Test
+    public void whenAccountDoesntExistAndLoadingByBlizzardProfileThrowsException_thenMerge()
+    {
+        Account expectedResult = new Account(1L, PARTITION, BATTLE_TAG);
+        when(accountDAO.merge(expectedResult)).thenReturn(expectedResult);
+        when(accountDAO.find(PARTITION, BATTLE_TAG)).thenReturn(Optional.empty());
+        when(api.getPlayerCharacters(Region.EU, ID))
+            .thenReturn(Flux.error(new IllegalStateException("test")));
+
+        assertEquals(expectedResult, ((BlizzardOidcUser) service.loadUser(null)).getAccount());
+        verify(accountDAO).merge(expectedResult);
     }
 
     @Test

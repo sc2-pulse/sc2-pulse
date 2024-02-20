@@ -1,12 +1,14 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -19,7 +21,7 @@ import org.springframework.stereotype.Repository;
 public class PlayerCharacterReportDAO
 {
 
-    public static final int DENIED_REPORT_TTL_DAYS = 180;
+    public static final int DENIED_REPORT_TTL_DAYS = 360;
 
     public static final String STD_SELECT =
         "player_character_report.id AS \"player_character_report.id\", "
@@ -63,28 +65,44 @@ public class PlayerCharacterReportDAO
         + "ORDER BY id ASC "
         + "LIMIT :limit";
 
-    private static final String UPDATE_STATUS_QUERY =
-        "WITH recent_reports AS ("
-            + "SELECT DISTINCT(player_character_report.id) "
-            + "FROM player_character_report "
-            + "INNER JOIN evidence ON player_character_report.id = evidence.player_character_report_id "
-            + "WHERE evidence.status_change_timestamp >= :from "
-        + "), "
-        + "report_status AS ("
-            + "SELECT DISTINCT ON (player_character_report.id) "
-            + "player_character_report.id, evidence.status "
-            + "FROM recent_reports "
+    private static final String UPDATE_STATUS_TAIL =
+        "report_status_agg AS ("
+            + "SELECT player_character_report.id, "
+            + "player_character_report.status AS report_status, "
+            + "array_agg(evidence.status) AS evidence_status "
+            + "FROM report_filter "
             + "INNER JOIN player_character_report USING(id) "
             + "INNER JOIN evidence ON player_character_report.id = evidence.player_character_report_id "
-            + "WHERE evidence.status IS NOT NULL "
-            + "ORDER BY player_character_report.id, evidence.status DESC"
+            + "GROUP BY player_character_report.id, player_character_report.status "
+        + "), "
+        + "report_status AS ("
+            + "SELECT id, "
+            + "CASE "
+                + "WHEN true = ANY(evidence_status) THEN true "
+                + "WHEN true = ANY(SELECT unnest(evidence_status) IS NULL) THEN null "
+                + "ELSE false "
+            + "END AS status "
+            + "FROM report_status_agg "
         + ") "
         + "UPDATE player_character_report "
         + "SET status = report_status.status, "
         + "status_change_timestamp = NOW() "
         + "FROM report_status "
         + "WHERE player_character_report.id = report_status.id "
-        + "AND (player_character_report.status IS NULL OR player_character_report.status != report_status.status)";
+        + "AND player_character_report.status IS DISTINCT FROM report_status.status";
+
+    private static final String UPDATE_STATUS_QUERY =
+        "WITH report_filter AS ("
+            + "SELECT DISTINCT(player_character_report.id) "
+            + "FROM player_character_report "
+            + "INNER JOIN evidence ON player_character_report.id = evidence.player_character_report_id "
+            + "WHERE evidence.status_change_timestamp >= :from "
+        + "), "
+        + UPDATE_STATUS_TAIL;
+
+    private static final String UPDATE_STATUS_BY_IDS_QUERY =
+        "WITH report_filter AS (SELECT * FROM unnest(:ids) AS id), "
+        + UPDATE_STATUS_TAIL;
 
     private static final String REMOVE_EXPIRED_QUERY =
         "DELETE FROM player_character_report "
@@ -155,6 +173,15 @@ public class PlayerCharacterReportDAO
     public int updateStatus(OffsetDateTime from)
     {
         return template.update(UPDATE_STATUS_QUERY, new MapSqlParameterSource().addValue("from", from));
+    }
+
+    public int updateStatus(Set<Integer> ids)
+    {
+        if(ids.isEmpty()) return 0;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("ids", ids.toArray(Integer[]::new), Types.ARRAY);
+        return template.update(UPDATE_STATUS_BY_IDS_QUERY, params);
     }
 
     public int removeExpired()

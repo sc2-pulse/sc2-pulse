@@ -166,6 +166,8 @@ To ensure that the potential violation is a minor one, the following rules are a
 * `com.nephest.battlenet.sc2.db-dump-file` path to the database dump.
 * `com.nephest.battlenet.sc2.api.request.limit.separate` Activates legacy mode where each region uses a separate request
 limiter. False by default.
+* `com.nephest.battlenet.sc2.privacy.character.profile.update` update characters directly from their bnet profiles. True
+by default.
 * `contacts.email`
 * `contacts.discord.server`
 * `contacts.discord.server.name`

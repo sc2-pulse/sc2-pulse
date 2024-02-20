@@ -7,8 +7,8 @@ import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import com.nephest.battlenet.sc2.model.util.BookmarkedResult;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
 import com.nephest.battlenet.sc2.model.util.SimpleBookmarkedResultSetExtractor;
@@ -33,7 +33,6 @@ import org.springframework.jdbc.core.namedparam.SqlParameterSource;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-import reactor.util.function.Tuple4;
 
 @Repository
 public class PlayerCharacterDAO
@@ -50,34 +49,8 @@ public class PlayerCharacterDAO
         + "(account_id, region, battlenet_id, realm, name) "
         + "VALUES (:accountId, :region, :battlenetId, :realm, :name)";
 
-    private static final String MERGE_QUERY =
-        "WITH "
-        + "vals AS (VALUES(:accountId, :region, :battlenetId, :realm, :name)), "
-        + "selected AS "
-        + "("
-            + "SELECT id, region, realm, battlenet_id, player_character.account_id "
-            + "FROM player_character "
-            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name) "
-                + "USING (region, realm, battlenet_id)"
-        + "), "
-        + "updated AS "
-        + "("
-            + "UPDATE player_character "
-            + "SET account_id=v.account_id, "
-            + "name=v.name "
-            + "FROM selected "
-            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name) "
-                + "USING (region, realm, battlenet_id) "
-            + "WHERE player_character.id = selected.id "
-            + "AND "
-            + "("
-                + "player_character.account_id != v.account_id "
-                + "OR player_character.name != v.name "
-            + ") "
-            + "AND player_character.anonymous IS NULL "
-            + "RETURNING player_character.id, player_character.account_id "
-        + "), "
-        + "rebound AS "
+    private static final String REBOUND =
+        "rebound AS "
         + "("
             + "SELECT updated.id, "
             + "updated.account_id AS new_account_id, "
@@ -183,7 +156,37 @@ public class PlayerCharacterDAO
                 + "FROM account_discord_user adu "
                 + "WHERE adu.account_id = rebound.new_account_id "
             + ")"
+        + ") ";
+
+    private static final String MERGE_QUERY =
+        "WITH "
+        + "vals AS (VALUES(:accountId, :region, :battlenetId, :realm, :name)), "
+        + "selected AS "
+        + "("
+            + "SELECT id, region, realm, battlenet_id, player_character.account_id "
+            + "FROM player_character "
+            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name) "
+                + "USING (region, realm, battlenet_id)"
         + "), "
+        + "updated AS "
+        + "("
+            + "UPDATE player_character "
+            + "SET account_id=v.account_id, "
+            + "name=v.name, "
+            + "updated=NOW() "
+            + "FROM selected "
+            + "INNER JOIN vals v(account_id, region, battlenet_id, realm, name) "
+                + "USING (region, realm, battlenet_id) "
+            + "WHERE player_character.id = selected.id "
+            + "AND "
+            + "("
+                + "player_character.account_id != v.account_id "
+                + "OR player_character.name != v.name "
+            + ") "
+            + "AND player_character.anonymous IS NULL "
+            + "RETURNING player_character.id, player_character.account_id "
+        + "), "
+        + REBOUND + ", "
         + "inserted AS "
         + "("
             + "INSERT INTO player_character "
@@ -199,6 +202,12 @@ public class PlayerCharacterDAO
         + "UNION "
         + "SELECT id FROM inserted";
 
+    private static final String ID_SELECT =
+        "id AS \"player_character.id\", "
+        + "region AS \"player_character.region\", "
+        + "realm AS \"player_character.realm\", "
+        + "battlenet_id AS \"player_character.battlenet_id\" ";
+
     private static final String UPDATE_CHARACTERS =
         "WITH "
         + "vals AS (VALUES :characters), "
@@ -209,26 +218,31 @@ public class PlayerCharacterDAO
             + "INNER JOIN player_character USING(region, realm, battlenet_id) "
             + "ORDER BY region, realm, battlenet_id "
             + "FOR UPDATE "
+        + "), "
+        + "updated AS "
+        + "("
+            + "UPDATE player_character "
+            + "SET updated = NOW(), "
+            + "name = v.name "
+            + "FROM lock_filter v "
+            + "WHERE player_character.id = v.id "
+            + "AND player_character.anonymous IS NULL"
         + ") "
-        + "UPDATE player_character "
-        + "SET updated = NOW(), "
-        + "name = v.name "
-        + "FROM lock_filter v "
-        + "WHERE player_character.id = v.id "
-        + "AND player_character.anonymous IS NULL";
+        + "SELECT " + ID_SELECT
+        + "FROM lock_filter";
 
     private static final String UPDATE_ACCOUNTS_AND_CHARACTERS =
         "WITH "
         + "vals AS (VALUES :characters), "
-        + "lock_filter AS "
+        + "selected AS "
         + "("
-            + "SELECT player_character.id, v.* "
+            + "SELECT player_character.id, player_character.account_id, v.* "
             + "FROM vals v(partition, battle_tag, region, realm, battlenet_id, name, fresh, season) "
             + "INNER JOIN player_character USING(region, realm, battlenet_id) "
             + "ORDER BY region, realm, battlenet_id "
             + "FOR UPDATE "
         + "), "
-        + "updated_character AS "
+        + "updated AS "
         + "( "
             + "UPDATE player_character "
             + "SET updated = "
@@ -248,43 +262,50 @@ public class PlayerCharacterDAO
                 There can be a situation when a BattleTag already exists in one region, but characters were not
                 yet rebound to it in another region due to API issues. Rebind it now.
              */
-            + "account_id = COALESCE(account.id, account_id), "
+            + "account_id = COALESCE(account.id, v.account_id), "
             + "name = CASE WHEN v.fresh THEN v.name ELSE player_character.name END "
-            + "FROM lock_filter v "
+            + "FROM selected v "
             + "LEFT JOIN account ON v.partition = account.partition "
                 + "AND v.battle_tag = account.battle_tag "
             + "WHERE player_character.id = v.id "
             + "AND player_character.anonymous IS NULL "
-            + "RETURNING player_character.account_id, v.battle_tag, v.season "
+            + "RETURNING player_character.id, player_character.account_id, v.battle_tag, v.season "
         + "), "
+        + REBOUND + ", "
         + "account_lock_filter AS "
         + "( "
             + "SELECT account.id, "
-            + "updated_character.battle_tag, "
-            + "updated_character.season "
-            + "FROM updated_character "
-            + "INNER JOIN account ON updated_character.account_id = account.id "
+            + "updated.battle_tag, "
+            + "updated.season "
+            + "FROM updated "
+            + "INNER JOIN account ON updated.account_id = account.id "
             + "ORDER BY partition, battle_tag "
             + "FOR UPDATE "
+        + "), "
+        + "updated_account AS "
+        + "( "
+            + "UPDATE account "
+            + "SET updated = "
+                + "CASE "
+                    + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
+                    + "OR account.battle_tag = account_lock_filter.battle_tag "
+                    + "THEN NOW() "
+                    + "ELSE account.updated "
+                + "END, "
+            + "battle_tag = "
+                + "CASE "
+                    + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
+                    + "THEN account_lock_filter.battle_tag "
+                    + "ELSE account.battle_tag "
+                + "END, "
+            + "battle_tag_last_season = GREATEST(account.battle_tag_last_season, account_lock_filter.season) "
+            + "FROM account_lock_filter "
+            + "WHERE account.id = account_lock_filter.id "
+            + "AND account.anonymous IS NULL"
         + ") "
-        + "UPDATE account "
-        + "SET updated = "
-            + "CASE "
-                + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
-                + "OR account.battle_tag = account_lock_filter.battle_tag "
-                + "THEN NOW() "
-                + "ELSE account.updated "
-            + "END, "
-        + "battle_tag = "
-            + "CASE "
-                + "WHEN account.battle_tag_last_season <= account_lock_filter.season "
-                + "THEN account_lock_filter.battle_tag "
-                + "ELSE account.battle_tag "
-            + "END, "
-        + "battle_tag_last_season = GREATEST(account.battle_tag_last_season, account_lock_filter.season) "
-        + "FROM account_lock_filter "
-        + "WHERE account.id = account_lock_filter.id "
-        + "AND account.anonymous IS NULL";
+        + "SELECT DISTINCT ON (id) " + ID_SELECT
+        + "FROM selected "
+        + "ORDER BY id ";
 
     private static final String UPDATE_ANONYMOUS_FLAG =
         "UPDATE player_character "
@@ -468,6 +489,8 @@ public class PlayerCharacterDAO
 
     private static RowMapper<PlayerCharacter> STD_ROW_MAPPER;
     private static ResultSetExtractor<PlayerCharacter> STD_EXTRACTOR;
+    private static RowMapper<PlayerCharacter> ID_ROW_MAPPER;
+    private static ResultSetExtractor<PlayerCharacter> ID_EXTRACTOR;
     private static ResultSetExtractor<BookmarkedResult<List<PlayerCharacter>>> BOOKMARKED_STD_ROW_EXTRACTOR;
 
     private final NamedParameterJdbcTemplate template;
@@ -496,8 +519,18 @@ public class PlayerCharacterDAO
             rs.getInt("player_character.realm"),
             rs.getString("player_character.name")
         );
+        if(ID_ROW_MAPPER == null) ID_ROW_MAPPER = (rs, i)-> new PlayerCharacter
+        (
+            rs.getLong("player_character.id"),
+            null,
+            conversionService.convert(rs.getInt("player_character.region"), Region.class),
+            rs.getLong("player_character.battlenet_id"),
+            rs.getInt("player_character.realm"),
+            null
+        );
 
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
+        if(ID_EXTRACTOR == null) ID_EXTRACTOR = DAOUtils.getResultSetExtractor(ID_ROW_MAPPER);
 
         if(BOOKMARKED_STD_ROW_EXTRACTOR == null) BOOKMARKED_STD_ROW_EXTRACTOR
             = new SimpleBookmarkedResultSetExtractor<>(STD_ROW_MAPPER, "team.rating", "team.id");
@@ -511,6 +544,16 @@ public class PlayerCharacterDAO
     public static ResultSetExtractor<PlayerCharacter> getStdExtractor()
     {
         return STD_EXTRACTOR;
+    }
+
+    public static RowMapper<PlayerCharacter> getIdRowMapper()
+    {
+        return ID_ROW_MAPPER;
+    }
+
+    public static ResultSetExtractor<PlayerCharacter> getIdExtractor()
+    {
+        return ID_EXTRACTOR;
     }
 
     public PlayerCharacter create(PlayerCharacter character)
@@ -533,9 +576,9 @@ public class PlayerCharacterDAO
         updateCharacters and updateAccountsAndCharacters methods are primarily used to update historical BattleTags,
         names, and timestamps. This ensures full compliance with the Blizzard ToS.
      */
-    public int updateCharacters(Set<PlayerCharacter> characters)
+    public Set<PlayerCharacter> updateCharacters(Set<PlayerCharacter> characters)
     {
-        if(characters.isEmpty()) return 0;
+        if(characters.isEmpty()) return Set.of();
 
         List<Object[]> data = characters.stream()
             .map(c->new Object[]
@@ -547,29 +590,46 @@ public class PlayerCharacterDAO
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
-        return template.update(UPDATE_CHARACTERS, params);
+        List<PlayerCharacter> ids = template.query(UPDATE_CHARACTERS, params, ID_ROW_MAPPER);
+        return DAOUtils.updateOriginals
+        (
+            characters,
+            ids,
+            (o, m)->o.setId(m.getId()),
+            c->c.setId(null)
+        );
     }
 
-    public int updateAccountsAndCharacters
-    (List<Tuple4<Account, PlayerCharacter, Boolean, Integer>> accountsAndCharacters)
+    public Set<PlayerCharacter> updateAccountsAndCharacters
+    (Set<AccountCharacterData> accountsAndCharacters)
     {
-        if(accountsAndCharacters.isEmpty()) return 0;
+        if(accountsAndCharacters.isEmpty()) return Set.of();
 
         List<Object[]> data = accountsAndCharacters.stream()
             .map(c->new Object[]
             {
-                conversionService.convert(c.getT1().getPartition(), Integer.class),
-                c.getT1().getBattleTag(),
-                conversionService.convert(c.getT2().getRegion(), Integer.class),
-                c.getT2().getRealm(),
-                c.getT2().getBattlenetId(),
-                c.getT2().getName(),
-                c.getT3(),
-                c.getT4()
+                conversionService.convert(c.getAccount().getPartition(), Integer.class),
+                c.getAccount().getBattleTag(),
+                conversionService.convert(c.getCharacter().getRegion(), Integer.class),
+                c.getCharacter().getRealm(),
+                c.getCharacter().getBattlenetId(),
+                c.getCharacter().getName(),
+                c.isFresh(),
+                c.getSeason()
             })
             .collect(Collectors.toList());
         SqlParameterSource params = new MapSqlParameterSource().addValue("characters", data);
-        return template.update(UPDATE_ACCOUNTS_AND_CHARACTERS, params);
+        List<PlayerCharacter> ids = template.query(UPDATE_ACCOUNTS_AND_CHARACTERS, params, ID_ROW_MAPPER);
+        Set<PlayerCharacter> characters = accountsAndCharacters.stream()
+            .map(AccountCharacterData::getCharacter)
+            .collect(Collectors.toSet());
+        return DAOUtils.updateOriginals
+        (
+            characters,
+            ids,
+            (o, m)->o.setId(m.getId()),
+            c->c.setId(null)
+        );
     }
 
     public int updateAnonymousFlag( Long id, Boolean anonymous)

@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
 import static com.nephest.battlenet.sc2.web.service.StatsService.PARTIAL_UPDATE_MAIN_LEAGUES;
+import static com.nephest.battlenet.sc2.web.service.StatsService.PARTIAL_UPDATE_MAIN_LEAGUES_2;
 
 import com.nephest.battlenet.sc2.web.util.FormatUtil;
 import com.nephest.battlenet.sc2.web.util.Level;
@@ -30,6 +31,20 @@ public class Status
             + FormatUtil.DEFAULT_DECIMAL_FORMAT.format(StatsService.PARTIAL_UPDATE_DATA.size() / 3.0)
             + " times slower.\n"
             + "Other data is updated " + StatsService.PARTIAL_UPDATE_DATA.size()  + " times slower.",
+            Level.WARNING
+        ),
+        PRIORITIZED_2
+        (
+            "prioritized_x2",
+            "1v1 " + StringUtils.join(PARTIAL_UPDATE_MAIN_LEAGUES_2) + " are prioritized.\n"
+            + "1v1 PLATINUM is updated "
+            + FormatUtil.DEFAULT_DECIMAL_FORMAT.format(StatsService.PARTIAL_UPDATE_DATA_2.size() / 3.0)
+            + " times slower.\n"
+            + StringUtils.join(StatsService.PARTIAL_UPDATE_SECONDARY_QUEUE) + " are updated "
+            + FormatUtil.DEFAULT_DECIMAL_FORMAT.format(StatsService.PARTIAL_UPDATE_DATA_2.size() / 2.0)
+            + " times slower.\n"
+            + "Other data is updated " + StatsService.PARTIAL_UPDATE_DATA_2.size()  + " times "
+            + "slower.",
             Level.WARNING
         ),
         WEB
