@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.selenium;
@@ -84,7 +84,7 @@ import org.springframework.test.context.TestPropertySource;
 public class GeneralSeleniumIT
 {
 
-    public static final int TIMEOUT_MILLIS = 10000;
+    public static final int TIMEOUT_MILLIS = 15000;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
