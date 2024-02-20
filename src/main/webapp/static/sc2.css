@@ -1814,7 +1814,7 @@ body.modal-open.modal-open-no-popup
     grid-column: 5/5;
 }
 
-.new:after
+.new.new-content:after
 {
     content: 'NEW';
     border-width: 1px;
@@ -1826,10 +1826,16 @@ body.modal-open.modal-open-no-popup
     font-size: 0.9em;
 }
 
-.new:not(.btn):after
+.new.new-content:not(.btn):after
 {
     color: #28a745;
     border-color: #28a745;
+}
+
+body.theme-dark .new.new-color:not(.btn):not(.nav-link):not(.page-link):not(.disabled),
+.new.new-color:not(.btn):not(.nav-link):not(.page-link):not(.disabled)
+{
+    color: #28a745;
 }
 
 @media (min-width: 576px) {
