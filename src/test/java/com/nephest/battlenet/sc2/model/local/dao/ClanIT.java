@@ -355,7 +355,8 @@ public class ClanIT
         PlayerCharacter pChar = new PlayerCharacter(1L, 1L, Region.EU, 1L, 1, "name");
         seasonGenerator.generateDefaultSeason(1);
         playerCharacterStatsDAO.mergeCalculate();
-        Instant start = Instant.now();
+        Instant start = Instant.now().minusSeconds(60);
+        clanService.removeClanUpdates();
         clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan1, start)));
         clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan2, start.minusSeconds(1))));
         clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan3, start.plusSeconds(1))));
