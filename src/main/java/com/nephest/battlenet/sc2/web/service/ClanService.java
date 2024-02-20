@@ -197,6 +197,10 @@ public class ClanService
         return characterClanUpdateInstants.entrySet().removeIf(e->e.getValue().isBefore(min));
     }
 
+    public void removeClanUpdates()
+    {
+        characterClanUpdateInstants.clear();
+    }
 
     private void update()
     {
