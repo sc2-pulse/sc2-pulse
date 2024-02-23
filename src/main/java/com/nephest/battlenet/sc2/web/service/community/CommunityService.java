@@ -74,8 +74,15 @@ public class CommunityService
             Comparator.nullsLast(Comparator.reverseOrder())
         )
             .thenComparing(STREAM_VIEWERS_COMPARATOR)),
-        RANK_REGION(Comparator.<LadderVideoStream, Integer>comparing(
-            s->s.getTeam() != null ? s.getTeam().getRegionRank() : null,
+        TOP_PERCENT_REGION(Comparator.<LadderVideoStream, Float>comparing(
+            s->s.getTeam() != null
+                && s.getTeam().getRegionRank() != null
+                && s.getTeam().getPopulationState() != null
+                && s.getTeam().getPopulationState().getRegionTeamCount() != null
+                    ? (s.getTeam().getRegionRank()
+                        / s.getTeam().getPopulationState().getRegionTeamCount().floatValue())
+                            * 100
+                    : null,
             Comparator.nullsLast(Comparator.naturalOrder())
         )
             .thenComparing(STREAM_VIEWERS_COMPARATOR));

@@ -74,7 +74,7 @@ class CommunityUtil
     {
         return CommunityUtil.getStreams(
             CommunityUtil.getStreamServices("-featured"),
-            localStorage.getItem("stream-sort-by-featured") || "RANK_REGION",
+            localStorage.getItem("stream-sort-by-featured") || "TOP_PERCENT_REGION",
             localStorage.getItem("stream-identified-only-featured") || "true",
             CommunityUtil.getStreamRaces("-featured"),
             localStorage.getItem("stream-language-preferred-featured") === "false" ? null : Util.getPreferredLanguages(),

@@ -32,6 +32,7 @@ import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
@@ -107,6 +108,9 @@ public class CommunityVideoStreamIT
 
     @Autowired
     private PopulationStateDAO populationStateDAO;
+
+    @Autowired
+    private LeagueStatsDAO leagueStatsDAO;
 
     @Autowired
     private TeamDAO teamDAO;
@@ -424,15 +428,15 @@ public class CommunityVideoStreamIT
     }
 
     @Test
-    public void testStreamRegionalRankSorting()
+    public void testStreamRegionalTopPercentSorting()
     throws Exception
     {
         init(4, (c, c1)->{});
         jdbcTemplate.update("UPDATE team SET rating = 99 WHERE id = 2");
         jdbcTemplate.update("DELETE FROM team WHERE id = 4");
-        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
+        leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
-        jdbcTemplate.update("UPDATE team SET rating = 0 WHERE id = 2");
+        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         streams = IntStream.range(0, 4)
             .boxed()
             .map(CommunityVideoStreamIT::createIndexedVideoStream)
@@ -443,7 +447,7 @@ public class CommunityVideoStreamIT
         (
             get("/api/revealed/stream")
                 .queryParam("sort", conversionService.convert(
-                    CommunityService.StreamSorting.RANK_REGION, String.class))
+                    CommunityService.StreamSorting.TOP_PERCENT_REGION, String.class))
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
