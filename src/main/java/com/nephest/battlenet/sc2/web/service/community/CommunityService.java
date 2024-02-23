@@ -68,13 +68,13 @@ public class CommunityService
     public enum StreamSorting
     {
 
-        VIEWERS(STREAM_VIEWERS_COMPARATOR),
-        RATING(Comparator.<LadderVideoStream, Long>comparing(
+        VIEWERS("Viewers", STREAM_VIEWERS_COMPARATOR),
+        RATING("MMR", Comparator.<LadderVideoStream, Long>comparing(
             s->s.getTeam() != null ? s.getTeam().getRating() : null,
             Comparator.nullsLast(Comparator.reverseOrder())
         )
             .thenComparing(STREAM_VIEWERS_COMPARATOR)),
-        TOP_PERCENT_REGION(Comparator.<LadderVideoStream, Float>comparing(
+        TOP_PERCENT_REGION("Top% Region", Comparator.<LadderVideoStream, Float>comparing(
             s->s.getTeam() != null
                 && s.getTeam().getRegionRank() != null
                 && s.getTeam().getPopulationState() != null
@@ -87,11 +87,18 @@ public class CommunityService
         )
             .thenComparing(STREAM_VIEWERS_COMPARATOR));
 
+        private final String name;
         private final Comparator<LadderVideoStream> comparator;
 
-        StreamSorting(Comparator<LadderVideoStream> comparator)
+        StreamSorting(String name, Comparator<LadderVideoStream> comparator)
         {
+            this.name = name;
             this.comparator = comparator;
+        }
+
+        public String getName()
+        {
+            return name;
         }
 
         public Comparator<LadderVideoStream> getComparator()
