@@ -32,12 +32,14 @@ import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
@@ -114,6 +116,9 @@ public class CommunityVideoStreamIT
 
     @Autowired
     private TeamDAO teamDAO;
+
+    @Autowired
+    private TeamMemberDAO teamMemberDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -624,6 +629,29 @@ public class CommunityVideoStreamIT
             .ignoringFields("streams.proPlayer.proPlayer.version")
             .isEqualTo(new CommunityStreamResult(expectedResult, Set.of()));
     }
+
+    @Test
+    public void whenMultiCharacterTeam_thenRaceFilterIsAppliedToStreamer()
+    throws Exception
+    {
+        init(2);
+        //The team contains a zerg player, but it's not returned because streamer is a terran.
+        teamMemberDAO.create(new TeamMember(1L, 2L, 0, 1, 2, 0));
+        CommunityStreamResult ladderStreams = objectMapper.readValue(mvc.perform
+        (
+            get("/api/revealed/stream")
+                .queryParam
+                (
+                    "race",
+                    conversionService.convert(Race.ZERG, String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isNotFound())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertTrue(ladderStreams.getStreams().isEmpty());
+    }
+
 
     @ValueSource(booleans = {true, false})
     @ParameterizedTest

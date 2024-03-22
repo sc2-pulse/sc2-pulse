@@ -322,8 +322,15 @@ public class CommunityService
     private static boolean containsFavoriteRace(LadderVideoStream stream, Set<Race> races)
     {
         return stream.getTeam() != null
+            && stream.getProPlayer() != null
+            && stream.getProPlayer().getProPlayer() != null
             && stream.getTeam().getMembers().stream()
-                .anyMatch(m->races.contains(m.getFavoriteRace()));
+                .anyMatch
+                (
+                    m->m.getProId() != null
+                        && m.getProId().equals(stream.getProPlayer().getProPlayer().getId())
+                        && races.contains(m.getFavoriteRace())
+                );
     }
 
     private static boolean containsLanguage(LadderVideoStream stream, Set<String> languages)
