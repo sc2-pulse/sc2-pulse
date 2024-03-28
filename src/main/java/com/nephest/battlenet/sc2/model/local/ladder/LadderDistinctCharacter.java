@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -37,6 +37,7 @@ public class LadderDistinctCharacter
         Account account,
         PlayerCharacter character,
         Clan clan,
+        Long proId,
         String proNickname,
         String proTeam,
         Boolean restrictions,
@@ -57,6 +58,7 @@ public class LadderDistinctCharacter
             account,
             character,
             clan,
+            proId,
             proNickname,
             proTeam,
             restrictions,

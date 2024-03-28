@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -30,6 +30,7 @@ public class LadderTeamMemberDAO
         + PlayerCharacterDAO.STD_SELECT + ", "
         + AccountDAO.STD_SELECT + ", "
         + ClanDAO.STD_SELECT + ", "
+        + "pro_player.id AS \"pro_player.id\", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\", "
         + "confirmed_cheater_report.restrictions AS \"confirmed_cheater_report.restrictions\" "

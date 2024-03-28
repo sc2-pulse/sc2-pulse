@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -349,13 +349,13 @@ public class DiscordServiceTest
                 new LadderTeamMember
                 (
                     new Account(2L, Partition.GLOBAL, "tag2#123"),
-                    null, null, null, null, null,
+                    null, null, null, null, null, null,
                     2, 1, 1, 1
                 ),
                 new LadderTeamMember
                 (
                     new Account(1L, Partition.GLOBAL, tag),
-                    null, null, null, null, null,
+                    null, null, null, null, null, null,
                     1, 2, 1, 1
                 )
             ),

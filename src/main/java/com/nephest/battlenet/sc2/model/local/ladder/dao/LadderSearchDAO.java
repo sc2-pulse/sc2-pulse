@@ -60,6 +60,7 @@ public class LadderSearchDAO
         + PlayerCharacterDAO.STD_SELECT + ", "
         + AccountDAO.STD_SELECT + ", "
         + ClanDAO.STD_SELECT + ", "
+        + "pro_player.id AS \"pro_player.id\", "
         + "pro_player.nickname AS \"pro_player.nickname\", "
         + "COALESCE(pro_team.short_name, pro_team.name) AS \"pro_player.team\", "
         + "confirmed_cheater_report.restrictions AS \"confirmed_cheater_report.restrictions\" ";
@@ -307,6 +308,7 @@ public class LadderSearchDAO
                 AccountDAO.getStdRowMapper().mapRow(rs, 0),
                 PlayerCharacterDAO.getStdRowMapper().mapRow(rs, 0),
                 clan,
+                DAOUtils.getLong(rs, "pro_player.id"),
                 rs.getString("pro_player.nickname"),
                 rs.getString("pro_player.team"),
                 DAOUtils.getBoolean(rs, "confirmed_cheater_report.restrictions"),

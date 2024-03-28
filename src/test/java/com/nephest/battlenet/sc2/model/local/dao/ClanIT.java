@@ -309,9 +309,9 @@ public class ClanIT
                 (
                     List.of
                     (
-                        SeasonGenerator.defaultLadderCharacter(clan, null, null, 0),
-                        SeasonGenerator.defaultLadderCharacter(clan, null, null, 1),
-                        SeasonGenerator.defaultLadderCharacter(clan, null, null, 2)
+                        SeasonGenerator.defaultLadderCharacter(clan, null, null, null, 0),
+                        SeasonGenerator.defaultLadderCharacter(clan, null, null, null, 1),
+                        SeasonGenerator.defaultLadderCharacter(clan, null, null, null, 2)
                     ),
                     List.of(clan),
                     List.of
@@ -379,7 +379,7 @@ public class ClanIT
                 (
                     List.of
                     (
-                        SeasonGenerator.defaultLadderCharacter(clan3, null, null, 0)
+                        SeasonGenerator.defaultLadderCharacter(clan3, null, null, null, 0)
                     ),
                     List.of(clan1, clan3),
                     List.of
@@ -481,9 +481,9 @@ public class ClanIT
                 (
                     List.of
                     (
-                        SeasonGenerator.defaultLadderCharacter(clans[2], null, null, 2),
-                        SeasonGenerator.defaultLadderCharacter(null, null, null, 1),
-                        SeasonGenerator.defaultLadderCharacter(null, null, null, 0)
+                        SeasonGenerator.defaultLadderCharacter(clans[2], null, null, null, 2),
+                        SeasonGenerator.defaultLadderCharacter(null, null, null, null, 1),
+                        SeasonGenerator.defaultLadderCharacter(null, null, null, null, 0)
                     ),
                     Arrays.asList(clans),
                     List.of

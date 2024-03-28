@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord;
@@ -106,7 +106,7 @@ public class DiscordBootstrapTest
             new Account(2L, Partition.GLOBAL, "tag#1"),
             new PlayerCharacter(1L, 2L, Region.EU, 2L, 2, "name#1"),
             new Clan(2, "clan1", Region.EU, "clanName"),
-            "proName1", "proTeam1",
+            1L, "proName1", "proTeam1",
             null,
             1, 1, 1, 1
         );
@@ -133,7 +133,7 @@ public class DiscordBootstrapTest
             new Account(2L, Partition.GLOBAL, "tag#1"),
             new PlayerCharacter(1L, 2L, Region.EU, 2L, 2, "name#1"),
             new Clan(2, "clan1", Region.EU, "clanName"),
-            "proName1", "proTeam1",
+            1L, "proName1", "proTeam1",
             null,
             1, 2, 1, 1
         );
@@ -171,8 +171,7 @@ public class DiscordBootstrapTest
                     new Account(987L, Partition.GLOBAL, "tag#2"),
                     new PlayerCharacter(2L, 987L, Region.EU, 2L, 1, "name#2"),
                     null,
-                    null,
-                    null,
+                    null, null,  null,
                     false,
                     2, 1, 1, 1
                 ),
@@ -181,7 +180,7 @@ public class DiscordBootstrapTest
                     new Account(2L, Partition.GLOBAL, "tag#1"),
                     new PlayerCharacter(1L, 2L, Region.EU, 2L, 2, "name#1"),
                     new Clan(2, "clan1", Region.EU, "clanName"),
-                    "proName1", "proTeam1",
+                    1L, "proName1", "proTeam1",
                     null,
                     1, 2, 1, 1
                 )

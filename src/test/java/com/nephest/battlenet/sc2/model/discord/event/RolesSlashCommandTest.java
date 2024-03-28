@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord.event;
@@ -275,8 +275,7 @@ public class RolesSlashCommandTest
             new Account(987L, Partition.GLOBAL, "tag#1"),
             new PlayerCharacter(1L, 987L, Region.EU, 1L, 1, "name#1"),
             null,
-            null,
-            null,
+            null, null,  null,
             false,
             2, 1, 1, 1
         );

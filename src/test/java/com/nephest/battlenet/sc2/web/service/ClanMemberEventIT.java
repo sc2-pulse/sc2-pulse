@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -519,7 +519,7 @@ public class ClanMemberEventIT
             accounts[ix],
             characters[ix],
             clan,
-            null, null,
+            null, null, null,
             null,
             null, null, null, ix, ix,
             new LadderPlayerSearchStats(null, null, null),

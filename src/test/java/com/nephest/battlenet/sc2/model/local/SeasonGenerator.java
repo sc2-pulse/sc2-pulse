@@ -443,13 +443,13 @@ public class SeasonGenerator
 
     public static LadderDistinctCharacter defaultLadderCharacter(int ix)
     {
-        return defaultLadderCharacter(null, null, null, ix);
+        return defaultLadderCharacter(null, null, null, null, ix);
     }
 
     public static LadderDistinctCharacter defaultLadderCharacter
     (
         Clan clan,
-        String proNickname, String proTeam,
+        Long proId, String proNickname, String proTeam,
         int ix
     )
     {
@@ -460,7 +460,7 @@ public class SeasonGenerator
             defaultAccount(ix),
             defaultCharacter(ix),
             clan,
-            proNickname, proTeam,
+            proId, proNickname, proTeam,
             null,
             null, null, null, games, games,
             new LadderPlayerSearchStats(null, null, null),

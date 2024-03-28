@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord.event;
@@ -117,12 +117,12 @@ public class Summary1v1CommandTest
     {
         List<LadderDistinctCharacter> characters = new ArrayList<>();
         for(int i = 0; i < 5; i++) characters.add(DiscordTestUtil.createSimpleCharacter(
-            "tag#" + i, "name#" + i, "proName" + i, "clan" + i, "proTeam" + i, Region.EU,
+            "tag#" + i, "name#" + i, (long) i, "proName" + i, "clan" + i, "proTeam" + i, Region.EU,
             i, i
         ));
         //excluded by region filter
         characters.add(DiscordTestUtil.createSimpleCharacter(
-            "tag#6", "name#6", "6", "clan6", "proTeam6", Region.US, 6, 6
+            "tag#6", "name#6", 6L, "6", "clan6", "proTeam6", Region.US, 6, 6
         ));
         when(searchService.findDistinctCharacters("emptyTerm")).thenReturn(List.of());
         when(searchService.findDistinctCharacters(term)).thenReturn(characters);

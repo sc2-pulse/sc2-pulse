@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder;
@@ -26,6 +26,7 @@ implements java.io.Serializable
 
     private final Clan clan;
 
+    private final Long proId;
     private final String proNickname;
     private final String proTeam;
     private final Boolean restrictions;
@@ -35,6 +36,7 @@ implements java.io.Serializable
         Account account,
         PlayerCharacter character,
         Clan clan,
+        Long proId,
         String proNickname,
         String proTeam,
         Boolean restrictions,
@@ -48,6 +50,7 @@ implements java.io.Serializable
         this.character = character;
         this.account = account;
         this.clan = clan;
+        this.proId = proId;
         this.proNickname = proNickname;
         this.proTeam = proTeam;
         this.restrictions = restrictions;
@@ -66,6 +69,11 @@ implements java.io.Serializable
     public Clan getClan()
     {
         return clan;
+    }
+
+    public Long getProId()
+    {
+        return proId;
     }
 
     public String getProNickname()

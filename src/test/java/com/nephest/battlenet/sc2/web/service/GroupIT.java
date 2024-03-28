@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -167,7 +167,7 @@ public class GroupIT
                 new Account(1L, Partition.GLOBAL, "battletag#0"),
                 new PlayerCharacter(1L, 1L, Region.EU, 0L, 1, "character#0"),
                 initGroup.getClans().get(0),
-                null, null,
+                null, null, null,
                 null,
                 null, null, null, 3, 3,
                 new LadderPlayerSearchStats(null, null, null),
@@ -179,7 +179,7 @@ public class GroupIT
                 new Account(20L, Partition.GLOBAL, "battletag#190"),
                 new PlayerCharacter(20L, 20L, Region.EU, 190L, 1, "character#190"),
                 null,
-                null, null,
+                null, null, null,
                 null,
                 null, null, null, 60, 60,
                 new LadderPlayerSearchStats(null, null, null),

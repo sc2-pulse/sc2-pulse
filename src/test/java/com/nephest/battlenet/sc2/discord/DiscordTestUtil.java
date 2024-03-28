@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -21,6 +21,7 @@ public final class DiscordTestUtil
     (
         String battleTag,
         String name,
+        Long proId,
         String proName,
         String clan,
         String proTeam,
@@ -36,8 +37,7 @@ public final class DiscordTestUtil
             new Account(id, Partition.GLOBAL, battleTag),
             new PlayerCharacter(id, id, region, id, 0, name),
             clan != null ? new Clan((int) id, clan, region, clan) : null,
-            proName,
-            proTeam,
+            proId, proName, proTeam,
             null,
             0, 0, 0, 0, 0,
             null,
