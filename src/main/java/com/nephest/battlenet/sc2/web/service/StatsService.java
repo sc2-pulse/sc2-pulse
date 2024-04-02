@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -661,7 +662,7 @@ public class StatsService
             BlizzardSeason bSeason = blizzardSeasons.get(region);
             Season season = seasonDao.merge(Season.of(bSeason, region));
             LOG.debug("Using season {} for current season update for {}", season, entry.getKey());
-            createLeagues(season);
+            createLeaguesAndTiers(season);
             ctx.put
             (
                 region,
@@ -1176,10 +1177,10 @@ public class StatsService
     }
 
     /*
-        Many things rely on league existence, but some leagues could be absent on the ladder for various reasons.
-        Precreate leagues for such occasions
+        Many things rely on league and tier existence, but some leagues could be absent on the ladder
+        for various reasons. Precreate leagues and tiers for such occasions
      */
-    private void createLeagues(Season season)
+    private void createLeaguesAndTiers(Season season)
     {
         for(QueueType queueType : QueueType.values())
         {
@@ -1189,7 +1190,21 @@ public class StatsService
                 {
                     if(!BlizzardSC2API.isValidCombination(leagueType, queueType, teamType)) continue;
 
-                    leagueDao.merge(new League(null, season.getId(), leagueType, queueType, teamType));
+                    League league = leagueDao
+                        .merge(new League(null, season.getId(), leagueType, queueType, teamType));
+                    for(BaseLeagueTier.LeagueTierType tierType : BaseLeagueTier.LeagueTierType.values())
+                    {
+                        if
+                        (
+                            leagueTierDao.findByLadder
+                            (
+                                season.getBattlenetId(), season.getRegion(),
+                                leagueType, queueType, teamType, tierType
+                            ).isEmpty()
+                        )
+                            leagueTierDao.merge(new LeagueTier(null, league.getId(), tierType, null, null));
+                    }
+
                 }
             }
         }
