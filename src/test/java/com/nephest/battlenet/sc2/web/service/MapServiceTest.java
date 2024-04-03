@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static com.nephest.battlenet.sc2.service.EventService.DEFAULT_FAILURE_HANDLER;
 import static com.nephest.battlenet.sc2.web.service.MapService.MAP_STATS_SKIP_NEW_SEASON_FRAME;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,8 +15,11 @@ import static org.mockito.Mockito.when;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.MapStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmFrameDAO;
+import com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmSpecDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsFilmDAO;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Duration;
 import java.time.Instant;
@@ -28,6 +32,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Sinks;
 
 @ExtendWith(MockitoExtension.class)
 public class MapServiceTest
@@ -38,6 +43,15 @@ public class MapServiceTest
 
     @Mock
     private MapStatsDAO mapStatsDAO;
+
+    @Mock
+    private MapStatsFilmSpecDAO mapStatsFilmSpecDAO;
+
+    @Mock
+    private MapStatsFilmFrameDAO mapStatsFilmFrameDAO;
+
+    @Mock
+    private LadderMapStatsFilmDAO ladderMapStatsFilmDAO;
 
     @Mock
     private VarDAO varDAO;
@@ -51,7 +65,17 @@ public class MapServiceTest
     public void beforeEach()
     {
         when(eventService.getMatchUpdateEvent()).thenReturn(Flux.empty());
-        mapService = new MapService(seasonDAO, mapStatsDAO, varDAO, eventService);
+        mapService = new MapService
+        (
+            seasonDAO,
+            mapStatsDAO,
+            mapStatsFilmSpecDAO,
+            mapStatsFilmFrameDAO,
+            ladderMapStatsFilmDAO,
+            varDAO,
+            eventService
+        );
+        mapService.setMapService(mapService);
     }
 
     @Test
@@ -85,8 +109,22 @@ public class MapServiceTest
             Map.of(),
             new UpdateContext(Instant.now(), Instant.now())
         );
-        when(eventService.getMatchUpdateEvent()).thenReturn(Flux.just(ctx, ctx));
-        mapService = new MapService(seasonDAO, mapStatsDAO, varDAO, eventService);
+        Sinks.Many<MatchUpdateContext> matchUpdateEvent = Sinks.unsafe()
+            .many().multicast().onBackpressureBuffer(2);
+        when(eventService.getMatchUpdateEvent()).thenReturn(matchUpdateEvent.asFlux());
+        mapService = new MapService
+        (
+            seasonDAO,
+            mapStatsDAO,
+            mapStatsFilmSpecDAO,
+            mapStatsFilmFrameDAO,
+            ladderMapStatsFilmDAO,
+            varDAO,
+            eventService
+        );
+        mapService.setMapService(mapService);
+        matchUpdateEvent.emitNext(ctx, DEFAULT_FAILURE_HANDLER);
+        matchUpdateEvent.emitNext(ctx, DEFAULT_FAILURE_HANDLER);
 
         //subscription may miss already emitted events, ignore such cases
         try

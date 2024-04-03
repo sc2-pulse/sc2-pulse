@@ -1038,6 +1038,60 @@ CREATE TABLE "map_stats"
 CREATE UNIQUE INDEX "uq_map_stats_league_id_map_id_race_versus_race"
     ON "map_stats"("league_id", COALESCE("map_id", -1), "race", "versus_race");
 
+CREATE TABLE "map_stats_film_spec"
+(
+    "id" SMALLINT NOT NULL GENERATED ALWAYS AS IDENTITY,
+    "race" SMALLINT NOT NULL,
+    "versus_race" SMALLINT NOT NULL,
+    "frame_duration" SMALLINT NOT NULL,
+
+    PRIMARY KEY("id"),
+
+    CONSTRAINT "uq_map_stats_film_spec"
+            UNIQUE("race", "versus_race", "frame_duration")
+);
+
+CREATE TABLE "map_stats_film"
+(
+    "id" SERIAL,
+    "map_id" INTEGER NOT NULL,
+    "league_tier_id" INTEGER NOT NULL,
+    "map_stats_film_spec_id" SMALLINT NOT NULL,
+
+    PRIMARY KEY("id"),
+
+    CONSTRAINT "uq_map_stats_film"
+        UNIQUE("league_tier_id", "map_id", "map_stats_film_spec_id"),
+
+    CONSTRAINT "fk_map_stats_film_map_id"
+        FOREIGN KEY ("map_id")
+        REFERENCES "map"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_map_stats_film_league_tier_id"
+        FOREIGN KEY ("league_tier_id")
+        REFERENCES "league_tier"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "fk_map_stats_film_map_stats_film_spec_id"
+        FOREIGN KEY ("map_stats_film_spec_id")
+        REFERENCES "map_stats_film_spec"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+CREATE TABLE "map_stats_film_frame"
+(
+    "map_stats_film_id" INTEGER NOT NULL,
+    "number" SMALLINT NOT NULL,
+    "games" SMALLINT NOT NULL,
+    "wins" SMALLINT NOT NULL,
+
+    PRIMARY KEY("map_stats_film_id", "number"),
+
+    CONSTRAINT "fk_map_stats_film_frame_map_stats_film_id"
+        FOREIGN KEY ("map_stats_film_id")
+        REFERENCES "map_stats_film"("id")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
 CREATE TABLE "match"
 (
     "id" BIGSERIAL,

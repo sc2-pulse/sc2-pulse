@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -6,22 +6,34 @@ package com.nephest.battlenet.sc2.web.controller;
 import com.nephest.battlenet.sc2.model.BaseLeague.LeagueType;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType;
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
-import com.nephest.battlenet.sc2.model.local.ladder.*;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderLeagueStats;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStats;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStatsFilm;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
+import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderStatsDAO;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
-
+import com.nephest.battlenet.sc2.web.service.MapService;
+import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/ladder")
@@ -38,6 +50,9 @@ public class LadderController
 
     @Autowired
     private LadderMapStatsDAO ladderMapStatsDAO;
+
+    @Autowired
+    private MapService mapService;
 
     @GetMapping("/a/{ratingAnchor}/{idAnchor}/{count}")
     public PagedSearchResult<List<LadderTeam>> getLadderAnchored
@@ -179,6 +194,35 @@ public class LadderController
     )
     {
         return ladderMapStatsDAO.find(season, List.of(regions), List.of(leagues), queue, teamType, mapId);
+    }
+
+    @GetMapping("/stats/map/film")
+    public ResponseEntity<LadderMapStatsFilm> getLadderMapStatsFilm
+    (
+        @RequestParam("season") int season,
+        @RequestParam(value = "region", defaultValue = "") Set<Region> regions,
+        @RequestParam("queue") QueueType queue,
+        @RequestParam("teamType") TeamType teamType,
+        @RequestParam("league") LeagueType league,
+        @RequestParam("tier") LeagueTierType tier,
+        @RequestParam(value = "frameNumberMax", required = false) Integer frameNumberMax,
+        @RequestParam(value = "race", defaultValue = "") Set<Race> races
+    )
+    {
+        if(regions.isEmpty()) regions = EnumSet.allOf(Region.class);
+        if(races.isEmpty()) races = EnumSet.allOf(Race.class);
+
+        return WebServiceUtil.notFoundIfNull(mapService.findFilm(
+            races,
+            MapService.FILM_FRAME_DURATION,
+            frameNumberMax,
+            season,
+            regions,
+            queue,
+            teamType,
+            league,
+            tier
+        ));
     }
 
     @GetMapping("/league/bounds")
