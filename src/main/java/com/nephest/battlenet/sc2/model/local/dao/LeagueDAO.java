@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -8,6 +8,7 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.League;
 import java.util.List;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -67,6 +68,18 @@ public class LeagueDAO
         "SELECT " + STD_SELECT
         + "FROM league "
         + "WHERE id IN(:ids)";
+
+    private static final String FIND_BY_SEASON_IDS_AND_UNIQUE_IDS =
+        "SELECT " + STD_SELECT
+        + "FROM league "
+        + "WHERE season_id IN(:seasonIds) "
+        + "AND (array_length(:types::smallint[], 1) IS NULL OR type = ANY(:types::smallint[])) "
+        + "AND "
+        + "("
+            + "array_length(:queues::smallint[], 1) IS NULL "
+            + "OR queue_type = ANY(:queues::smallint[])"
+        + ") "
+        + "AND (:teamType::smallint IS NULL OR team_type = :teamType::smallint)";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -137,6 +150,37 @@ public class LeagueDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", ids);
         return template.query(FIND_BY_IDS_QUERY, params, STD_ROW_MAPPER);
+    }
+
+    public List<League> find
+    (
+        Set<Integer> seasonIds,
+        Set<QueueType> queues,
+        TeamType teamType,
+        Set<BaseLeague.LeagueType> leagueTypes
+    )
+    {
+        if(seasonIds.isEmpty())
+        {
+            if(!queues.isEmpty() || teamType != null || !leagueTypes.isEmpty())
+                throw new IllegalArgumentException("Missing seasonIds");
+            return List.of();
+        }
+
+        Integer[] queueIds = queues.stream()
+            .map(queue->conversionService.convert(queue, Integer.class))
+            .distinct()
+            .toArray(Integer[]::new);
+        Integer[] typeIds = leagueTypes.stream()
+            .map(leagueType->conversionService.convert(leagueType, Integer.class))
+            .distinct()
+            .toArray(Integer[]::new);
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("seasonIds", seasonIds)
+            .addValue("queues", queueIds.length == 0 ? null : queueIds)
+            .addValue("types", typeIds.length == 0 ? null : typeIds)
+            .addValue("teamType", conversionService.convert(teamType, Integer.class));
+        return template.query(FIND_BY_SEASON_IDS_AND_UNIQUE_IDS, params, STD_ROW_MAPPER);
     }
 
     private MapSqlParameterSource createParameterSource(League league)

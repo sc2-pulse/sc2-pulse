@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -10,7 +10,9 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import java.sql.Types;
+import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.cache.annotation.Cacheable;
@@ -84,6 +86,12 @@ public class LeagueTierDAO
         + "AND league.queue_type = :queueType "
         + "AND league.team_type = :teamType "
         + "AND league_tier.type = :tierType";
+
+    private static final String FIND_BY_LEAGUE_IDS_AND_TYPES =
+        "SELECT " + STD_SELECT
+        + "FROM league_tier "
+        + "WHERE league_id IN(:leagueIds) "
+        + "AND (array_length(:types::smallint[], 1) IS NULL OR type = ANY(:types::smallint[]))";
 
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
@@ -163,6 +171,24 @@ public class LeagueTierDAO
             .addValue("teamType", conversionService.convert(teamType, Integer.class))
             .addValue("tierType", conversionService.convert(tierType, Integer.class));
         return Optional.ofNullable(template.query(FIND_BY_LADDER_QUERY, params, getStdExtractor()));
+    }
+
+    public List<LeagueTier> find(Set<Integer> leagueIds, Set<BaseLeagueTier.LeagueTierType> types)
+    {
+        if(leagueIds.isEmpty())
+        {
+            if(!types.isEmpty()) throw new IllegalArgumentException("Missing leagueIds");
+            return List.of();
+        }
+
+        Integer[] typeIds = types.stream()
+            .map(type->conversionService.convert(type, Integer.class))
+            .distinct()
+            .toArray(Integer[]::new);
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("leagueIds", leagueIds)
+            .addValue("types", typeIds.length == 0 ? null : typeIds);
+        return template.query(FIND_BY_LEAGUE_IDS_AND_TYPES, params, STD_ROW_MAPPER);
     }
 
 }
