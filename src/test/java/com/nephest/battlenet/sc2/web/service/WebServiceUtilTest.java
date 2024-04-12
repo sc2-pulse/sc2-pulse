@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.util.LogUtil;
@@ -10,6 +11,8 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import reactor.core.publisher.Flux;
 
 public class WebServiceUtilTest
@@ -51,6 +54,13 @@ public class WebServiceUtilTest
         Assertions.assertThat(ints)
             .isEqualTo(List.of(1, 2));
         assertTrue(run.get());
+    }
+
+    @CsvSource({",404", "a,200"})
+    @ParameterizedTest
+    public void testNotFoundIfNull(String val, int code)
+    {
+        assertEquals(code, WebServiceUtil.notFoundIfNull(val).getStatusCode().value());
     }
 
 }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -464,6 +464,13 @@ public class WebServiceUtil
         return collection.isEmpty()
             ? ResponseEntity.notFound().build()
             : ResponseEntity.ok(collection);
+    }
+
+    public static <T> ResponseEntity<T> notFoundIfNull(T t)
+    {
+        return t == null
+            ? ResponseEntity.notFound().build()
+            : ResponseEntity.ok(t);
     }
 
 }
