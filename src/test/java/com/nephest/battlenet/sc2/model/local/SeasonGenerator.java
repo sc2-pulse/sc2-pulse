@@ -93,7 +93,7 @@ public class SeasonGenerator
     private NamedParameterJdbcTemplate template;
 
     @Transactional
-    public void generateDefaultSeason(int teams)
+    public void generateDefaultSeason(int teams, boolean spreadRaces)
     {
         generateDefaultSeason
         (
@@ -102,8 +102,15 @@ public class SeasonGenerator
             List.of(QueueType.LOTV_1V1),
             TeamType.ARRANGED,
             BaseLeagueTier.LeagueTierType.FIRST,
-            teams
+            teams,
+            spreadRaces
         );
+    }
+
+    @Transactional
+    public void generateDefaultSeason(int teams)
+    {
+        generateDefaultSeason(teams, false);
     }
 
     @Transactional
