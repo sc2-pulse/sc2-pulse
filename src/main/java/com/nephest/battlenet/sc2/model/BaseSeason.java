@@ -1,14 +1,10 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.nephest.battlenet.sc2.config.convert.jackson.EpochSecondToLocalDateConverter;
-
-import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
+import javax.validation.constraints.NotNull;
 
 public class BaseSeason
 {
@@ -61,31 +57,21 @@ public class BaseSeason
         return year;
     }
 
-    /*
-        Using different names for getters and setters because we want to sync the property names
-        between our endpoints while also being able to correctly parse the upstream property names
-     */
-    @JsonProperty("start")
     public LocalDate getStart()
     {
         return start;
     }
 
-    @JsonProperty("startDate")
-    @JsonDeserialize(converter = EpochSecondToLocalDateConverter.class)
     public void setStart(LocalDate start)
     {
         this.start = start;
     }
 
-    @JsonProperty("end")
     public LocalDate getEnd()
     {
         return end;
     }
 
-    @JsonProperty("endDate")
-    @JsonDeserialize(converter = EpochSecondToLocalDateConverter.class)
     public void setEnd(LocalDate end)
     {
         this.end = end;
