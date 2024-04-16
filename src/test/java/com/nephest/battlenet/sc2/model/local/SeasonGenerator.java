@@ -47,10 +47,16 @@ public class SeasonGenerator
 {
 
     public static final int DEFAULT_SEASON_ID = 1;
+    public static final Region DEFAULT_SEASON_REGION = Region.EU;
     public static final int DEFAULT_SEASON_YEAR = 2020;
     public static final int DEFAULT_SEASON_NUMBER = 1;
     public static final LocalDate DEFAULT_SEASON_START = LocalDate.of(2020, 1, 1);
     public static final LocalDate DEFAULT_SEASON_END = DEFAULT_SEASON_START.plusMonths(1);
+    public static final BaseLeague.LeagueType DEFAULT_LEAGUE_TYPE = BaseLeague.LeagueType.BRONZE;
+    public static final QueueType DEFAULT_QUEUE = QueueType.LOTV_1V1;
+    public static final BaseLeagueTier.LeagueTierType DEFAULT_TIER =
+        BaseLeagueTier.LeagueTierType.FIRST;
+    public static final TeamType DEFAULT_TEAM_TYPE = TeamType.ARRANGED;
     public static final int DEFAULT_REALM = 1;
 
     @Autowired
@@ -97,11 +103,11 @@ public class SeasonGenerator
     {
         generateDefaultSeason
         (
-            List.of(Region.EU),
-            List.of(BaseLeague.LeagueType.BRONZE),
-            List.of(QueueType.LOTV_1V1),
-            TeamType.ARRANGED,
-            BaseLeagueTier.LeagueTierType.FIRST,
+            List.of(DEFAULT_SEASON_REGION),
+            List.of(DEFAULT_LEAGUE_TYPE),
+            List.of(DEFAULT_QUEUE),
+            DEFAULT_TEAM_TYPE,
+            DEFAULT_TIER,
             teams,
             spreadRaces
         );
@@ -421,6 +427,42 @@ public class SeasonGenerator
             matchParticipantDAO.merge(Set.of(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.WIN)));
         for(long charId : characterIds2)
             matchParticipantDAO.merge(Set.of(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.LOSS)));
+    }
+
+    public static Season defaultSeason()
+    {
+        return new Season
+        (
+            1,
+            DEFAULT_SEASON_ID,
+            DEFAULT_SEASON_REGION,
+            DEFAULT_SEASON_YEAR,
+            DEFAULT_SEASON_NUMBER,
+            DEFAULT_SEASON_START,
+            DEFAULT_SEASON_END
+        );
+    }
+
+    public static League defaultLeague()
+    {
+        return new League
+        (
+            1,
+            1,
+            DEFAULT_LEAGUE_TYPE,
+            DEFAULT_QUEUE,
+            DEFAULT_TEAM_TYPE
+        );
+    }
+
+    public static LeagueTier defaultTier()
+    {
+        return new LeagueTier(1, 1, DEFAULT_TIER, 1, 2);
+    }
+
+    public static SC2Map defaultMap()
+    {
+        return new SC2Map(1, "map");
     }
 
     public static Account defaultAccount(int ix)
