@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -368,7 +368,7 @@ public class ProPlayerServiceIT
         assertTrue(demuslimLinks.size() >= 3);
         verifyTypePresent(demuslimLinks, SocialMedia.INSTAGRAM);
         verifyTypePresent(demuslimLinks, SocialMedia.TWITTER);
-        verifyTypeAbsent(demuslimLinks, SocialMedia.TWITCH);
+        verifyTypePresent(demuslimLinks, SocialMedia.TWITCH);
     }
 
     private <T extends SocialMediaLink> T verifyTypePresent
