@@ -205,7 +205,7 @@ public class ClanMemberIT
         template.update
         (
             "UPDATE clan_member "
-            + "SET updated = NOW() - INTERVAL '" + ClanMemberDAO.TTL.toDays() +  " days' "
+            + "SET updated = NOW() - INTERVAL '" + ClanMemberDAO.TTL.toHours() +  " hours' "
             + "WHERE player_character_id = " + char1.getId()
         );
 

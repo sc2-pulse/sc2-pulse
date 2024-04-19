@@ -449,7 +449,7 @@ public class ClanIT
         template.update
         (
             "UPDATE clan_member "
-                + "SET updated = NOW() - INTERVAL '" + ClanMemberDAO.TTL.toDays() +  " days' "
+                + "SET updated = NOW() - INTERVAL '" + ClanMemberDAO.TTL.toHours() +  " hours' "
                 + "WHERE player_character_id IN(" + chars[0].getId() + ", " + chars[1].getId() + ")"
         );
         clanService.removeExpiredClanMembers();

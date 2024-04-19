@@ -74,7 +74,7 @@ public class ClanMemberDAO
     private static final String REMOVE_EXPIRED =
         "DELETE "
         + "FROM clan_member "
-        + "WHERE updated < NOW() - INTERVAL '" + TTL.toDays() + " days' "
+        + "WHERE updated < NOW() - INTERVAL '" + TTL.toHours() + " hours' "
         + "RETURNING player_character_id";
 
     public static RowMapper<ClanMember> STD_ROW_MAPPER =
