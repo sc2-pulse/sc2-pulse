@@ -91,3 +91,6 @@ CREATE TABLE "map_stats_film_frame"
         REFERENCES "map_stats_film"("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+ALTER TABLE "team" SET (fillfactor = 100);
+VACUUM FULL "team";

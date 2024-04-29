@@ -663,8 +663,7 @@ CREATE TABLE "team"
     CONSTRAINT "uq_team_queue_type_region_legacy_id_season"
         UNIQUE ("queue_type", "region", "legacy_id", "season")
 
-)
-WITH (fillfactor = 50);
+);
 
 CREATE INDEX "ix_team_ladder_search_full" ON "team"("season", "queue_type", "team_type", "rating", "id");
 CREATE INDEX "ix_team_season_queue_type" ON "team"("season", "queue_type") WHERE "queue_type" = 201;
