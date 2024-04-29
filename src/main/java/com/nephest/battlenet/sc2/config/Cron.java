@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
@@ -362,7 +362,12 @@ public class Cron
             "ix_account_updated",
             "ix_player_character_updated",
             "ix_clan_member_updated",
-            "ix_recent_team_search"
+            "ix_recent_team_search",
+
+            "ix_clan_search_active_members",
+            "ix_clan_search_avg_rating",
+            "ix_clan_search_games",
+            "ix_clan_search_members"
         ), true));
     }
 
