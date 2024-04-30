@@ -17,8 +17,8 @@ Furthermore, I'm only interested in backend stack, so the frontend part of the p
 and I don't have time to rewrite the old code. The project will remain as it is until I implement all the planned features.
 
 ## Dependencies
-* Java 11+
-* PostgreSQL 13+ with btree_gist extension
+* Java 17+
+* PostgreSQL 15+ with btree_gist extension
 * Maven 3
 * BattleNet API access keys(you must use your own keys)
 * Twitch API keys(you must use your own keys)
