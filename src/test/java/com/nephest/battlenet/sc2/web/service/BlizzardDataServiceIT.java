@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.BlizzardDataController;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -141,7 +142,7 @@ public class BlizzardDataServiceIT
         accountDAO.updateAnonymousFlag(acc1.getId(), true);
         playerCharacterDAO.updateAnonymousFlag(char1_1.getId(), true);
         playerCharacterDAO.updateAnonymousFlag(char1_2.getId(), true);
-        OffsetDateTime updatedMin = OffsetDateTime.now()
+        OffsetDateTime updatedMin = SC2Pulse.offsetDateTime()
             .plus(BlizzardDataService.ACCOUNT_IMPORT_DURATION);
 
         try(MockWebServer server = new MockWebServer())
@@ -198,7 +199,7 @@ public class BlizzardDataServiceIT
             api.setRegionUri(null);
         }
         controller.waitForLastAction();
-        OffsetDateTime updatedMax = OffsetDateTime.now()
+        OffsetDateTime updatedMax = SC2Pulse.offsetDateTime()
             .minus(BlizzardPrivacyService.DATA_TTL);
 
         Account foundAcc1 = accountDAO.findByIds(Set.of(acc1.getId())).get(0);

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -51,6 +51,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.Versus;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -211,7 +212,7 @@ public class VersusIT
             new TeamMember(team4.getId(), charEu4.getId(), 1, 1, 1, 1)
         ));
 
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
         teamStateDAO.saveState(Set.of(
             new TeamState(team1.getId(), now, division1v1.getId(), 1, 1),
             new TeamState(team2.getId(), now, division1v1.getId(), 1, 1),
@@ -284,7 +285,7 @@ public class VersusIT
                 new BlizzardPlayerCharacter(character.getBattlenetId(), character.getRealm(), character.getName())
             }, Race.TERRAN),
             division.getId(), 1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
     }
 

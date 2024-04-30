@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Match;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
@@ -226,8 +227,8 @@ extends StandardDAO
     public int removeExpired()
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("toDate", OffsetDateTime.now().minusDays(TTL_DAYS))
-            .addValue("toUpdated", OffsetDateTime.now().minusDays(UPDATED_TTL_DAYS));
+            .addValue("toDate", SC2Pulse.offsetDateTime().minusDays(TTL_DAYS))
+            .addValue("toUpdated", SC2Pulse.offsetDateTime().minusDays(UPDATED_TTL_DAYS));
         return getTemplate().update(REMOVE_EXPIRED_QUERY, params);
     }
 

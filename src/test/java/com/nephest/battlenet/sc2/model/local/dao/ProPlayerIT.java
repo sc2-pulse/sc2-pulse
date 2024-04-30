@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -10,6 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
@@ -81,7 +82,7 @@ public class ProPlayerIT
             "US",
             LocalDate.now(),
             123,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             100 //supplied version doesn't matter
         ));
 
@@ -108,7 +109,7 @@ public class ProPlayerIT
             "US",
             LocalDate.now(),
             123,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             1
         ));
         proPlayerDAO.merge(lastPlayer);
@@ -131,7 +132,7 @@ public class ProPlayerIT
             "US",
             birthday1,
             123,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             1
         ));
         ProPlayer updatedProPlayer = proPlayerDAO.mergeVersioned(new ProPlayer(
@@ -142,7 +143,7 @@ public class ProPlayerIT
             "EU",
             birthday1.minusDays(1),
             456,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             1
         ));
         assertEquals(2, updatedProPlayer.getVersion());
@@ -158,7 +159,7 @@ public class ProPlayerIT
     public void whenMergingWithCorrectVersionButOnlyDifferenceIsUpdateTimestamp_thenDontUpdateVersion()
     {
         LocalDate birthday1 = LocalDate.now();
-        OffsetDateTime odt1 = OffsetDateTime.now();
+        OffsetDateTime odt1 = SC2Pulse.offsetDateTime();
         ProPlayer proPlayer = proPlayerDAO.mergeVersioned(new ProPlayer(
             null,
             null,
@@ -202,7 +203,7 @@ public class ProPlayerIT
             "US",
             birthday1,
             123,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             1
         ));
         ProPlayer invalidVersionPlayer = new ProPlayer
@@ -214,7 +215,7 @@ public class ProPlayerIT
             "EU",
             birthday1.minusDays(1),
             456,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             2
         );
         assertThrows
@@ -235,7 +236,7 @@ public class ProPlayerIT
             "US",
             LocalDate.now(),
             123,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             1
         ));
         ProPlayer proPlayer2 = proPlayerDAO.mergeVersioned(new ProPlayer(
@@ -246,7 +247,7 @@ public class ProPlayerIT
             "US",
             LocalDate.now(),
             123,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             1
         ));
         ProPlayer proPlayer3 = proPlayerDAO.mergeVersioned(new ProPlayer(
@@ -257,7 +258,7 @@ public class ProPlayerIT
             "US",
             LocalDate.now(),
             123,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             1
         ));
         List<ProPlayer> proPlayers = proPlayerDAO

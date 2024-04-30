@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -14,9 +14,9 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
 import java.util.Set;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
@@ -83,14 +83,14 @@ public class ProPlayerAccountIT
         proPlayerAccountDAO.merge
         (
             false,
-            Set.of(new ProPlayerAccount(proPlayer1.getId(), acc1.getId(), OffsetDateTime.now(), true))
+            Set.of(new ProPlayerAccount(proPlayer1.getId(), acc1.getId(), SC2Pulse.offsetDateTime(), true))
         );
 
         //protected links are not updated
         proPlayerAccountDAO.merge
         (
             true,
-            Set.of(new ProPlayerAccount(proPlayer2.getId(), acc1.getId(), OffsetDateTime.now(), false))
+            Set.of(new ProPlayerAccount(proPlayer2.getId(), acc1.getId(), SC2Pulse.offsetDateTime(), false))
         );
         proPlayerAccountDAO.link(proPlayer2.getId(), "tag1");
         proPlayerAccountDAO.link(proPlayer2.getId(), Set.of(1L));
@@ -104,7 +104,7 @@ public class ProPlayerAccountIT
         proPlayerAccountDAO.merge
         (
             false,
-            Set.of(new ProPlayerAccount(proPlayer1.getId(), acc1.getId(), OffsetDateTime.now(), false))
+            Set.of(new ProPlayerAccount(proPlayer1.getId(), acc1.getId(), SC2Pulse.offsetDateTime(), false))
         );
 
         //unprotected links are updated

@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Collections;
@@ -500,7 +501,7 @@ public class ClanDAO
 
     public int updateStats(List<Integer> clans)
     {
-        OffsetDateTime from = OffsetDateTime.now().minusDays(CLAN_STATS_DEPTH_DAYS);
+        OffsetDateTime from = SC2Pulse.offsetDateTime().minusDays(CLAN_STATS_DEPTH_DAYS);
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("clans", clans)
             .addValue("races", DEFAULT_STATS_RACES)

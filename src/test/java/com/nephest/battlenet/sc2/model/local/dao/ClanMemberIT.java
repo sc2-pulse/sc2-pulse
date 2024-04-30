@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -109,7 +110,7 @@ public class ClanMemberIT
         assertEquals(char2.getId(), pcc2.getPlayerCharacterId());
         assertEquals(clans[1].getId(), pcc2.getClanId());
 
-        OffsetDateTime beforeSecondMerge = OffsetDateTime.now();
+        OffsetDateTime beforeSecondMerge = SC2Pulse.offsetDateTime();
         //2nd merge
         clanMemberDAO.merge(Set.of(
             new ClanMember(char2.getId(), clans[0].getId()), //updated
@@ -209,7 +210,7 @@ public class ClanMemberIT
             + "WHERE player_character_id = " + char1.getId()
         );
 
-        OffsetDateTime expiredOdt = OffsetDateTime.now().minus(ClanMemberDAO.TTL);
+        OffsetDateTime expiredOdt = SC2Pulse.offsetDateTime().minus(ClanMemberDAO.TTL);
         assertEquals(1, clanMemberDAO.getInactiveCount(expiredOdt));
         assertIterableEquals(List.of(char1.getId()), clanMemberDAO.removeExpired());
         assertTrue(clanMemberDAO.find(Set.of(char1.getId())).isEmpty());

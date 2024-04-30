@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -46,11 +46,11 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -204,7 +204,7 @@ public class LadderSearchIndependentIT
             new BaseLeague(BaseLeague.LeagueType.SILVER, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11111L), bronze1.getId(),
             100L, 100, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.create(team1);
         TeamMember member1 = new TeamMember
@@ -219,7 +219,7 @@ public class LadderSearchIndependentIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11114L), bronze2.getId(),
             98L, 99, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.create(team1_2);
         TeamMember member1_2 = new TeamMember
@@ -234,7 +234,7 @@ public class LadderSearchIndependentIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11115L), bronze2.getId(),
             97L, 50, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.create(team1_3);
         TeamMember member1_3 = new TeamMember
@@ -249,7 +249,7 @@ public class LadderSearchIndependentIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11112L), bronze1.getId(),
             101L, 100, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.create(team2);
         TeamMember member2 = new TeamMember
@@ -264,7 +264,7 @@ public class LadderSearchIndependentIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11113L), bronze1.getId(),
             102L, 100, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.create(team3);
         TeamMember member3 = new TeamMember
@@ -280,7 +280,7 @@ public class LadderSearchIndependentIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QUEUE_TYPE, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(11113L), bronze1.getId(),
             102L, 100, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.create(team3_2);
         TeamMember member3_2 = new TeamMember
@@ -477,7 +477,7 @@ public class LadderSearchIndependentIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(10001L), d1.getId(),
             3L, 100, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         //2nd mmr, but prev season
         Team team2 = new Team
@@ -486,7 +486,7 @@ public class LadderSearchIndependentIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(10002L), d2.getId(),
             2L, 100, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         //3rd mmr, picked because it's the latest team
         Team team3 = new Team
@@ -495,7 +495,7 @@ public class LadderSearchIndependentIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TEAM_TYPE), TIER_TYPE,
             BigInteger.valueOf(10003L), d3.getId(),
             1L, 100, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.merge(Set.of(team1, team2, team3));
         teamMemberDAO.merge(Set.of(

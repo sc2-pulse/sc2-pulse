@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -115,12 +116,12 @@ extends InstantVar
 
     public Instant availableOn()
     {
-        return getValue() == null ? Instant.now() : getValue().plus(getDurationBetweenRuns());
+        return getValue() == null ? SC2Pulse.instant() : getValue().plus(getDurationBetweenRuns());
     }
 
     public boolean isAvailable()
     {
-        return availableOn().minusMillis(1).isBefore(Instant.now()) && !isActive();
+        return availableOn().minusMillis(1).isBefore(SC2Pulse.instant()) && !isActive();
     }
 
     public boolean isActive()
@@ -141,12 +142,12 @@ extends InstantVar
             return Mono.just(false);
         }
 
-        Instant beforeTask = Instant.now();
+        Instant beforeTask = SC2Pulse.instant();
         return task
             .get()
             .doOnError(e->active.compareAndSet(true, false))
             .then(Mono.fromRunnable(()->{
-                this.setValueAndSave(isValueBeforeTask() ? beforeTask : Instant.now());
+                this.setValueAndSave(isValueBeforeTask() ? beforeTask : SC2Pulse.instant());
                 LOG.debug("Executed {} timer", getKey());
                 active.compareAndSet(true, false);
             }))

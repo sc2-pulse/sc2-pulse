@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -23,6 +23,7 @@ import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LegacySearchIT;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -120,11 +121,11 @@ public class TeamStateDAOIT
             divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
 
         //should be deleted as expired secondary
-        TeamState state1 = TeamState.of(team1, OffsetDateTime.now().minusDays(targetLengthSecondary + 1));
+        TeamState state1 = TeamState.of(team1, SC2Pulse.offsetDateTime().minusDays(targetLengthSecondary + 1));
         //should be saved because it's a main state
-        TeamState state2Secondary = TeamState.of(team2, OffsetDateTime.now().minusDays(targetLengthSecondary + 1));
+        TeamState state2Secondary = TeamState.of(team2, SC2Pulse.offsetDateTime().minusDays(targetLengthSecondary + 1));
         //should be deleted as expired main
-        TeamState state2Main = TeamState.of(team2, OffsetDateTime.now().minusDays(targetLengthMain + 1));
+        TeamState state2Main = TeamState.of(team2, SC2Pulse.offsetDateTime().minusDays(targetLengthMain + 1));
         teamStateDAO.saveState(Set.of(state1, state2Secondary, state2Main));
 
         Set<TeamLegacyUid> legacyIds1 = Set.of(
@@ -167,7 +168,7 @@ public class TeamStateDAOIT
             BaseLeagueTier.LeagueTierType.FIRST,
             1
         );
-        OffsetDateTime from = OffsetDateTime.now();
+        OffsetDateTime from = SC2Pulse.offsetDateTime();
         teamStateDAO.saveState(Set.of(
             new TeamState(1L, from, 1, 1, 1),
             new TeamState(3L, from.plusSeconds(1), 1, 1, 1)

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.blizzard;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.time.Instant;
 import javax.validation.Valid;
@@ -27,7 +28,7 @@ extends BlizzardBaseTeam
     private BlizzardTeamMember[] members = EMPTY_TEAM_MEMBER_ARRAY;
 
     @NotNull
-    private Instant lastPlayedTimeStamp = Instant.now();
+    private Instant lastPlayedTimeStamp = SC2Pulse.instant();
 
     public BlizzardTeam(){super();}
 

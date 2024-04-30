@@ -25,6 +25,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStatsFilm;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsFilmDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Duration;
 import java.time.Instant;
@@ -91,7 +92,7 @@ public class MapService
         this.mapStatsFilmFrameDAO = mapStatsFilmFrameDAO;
         this.ladderMapStatsFilmDAO = ladderMapStatsFilmDAO;
         mapStatsInstant = new InstantVar(varDAO, "ladder.stats.map.timestamp", false);
-        Instant defaultMapStatsInstant = Instant.now().minusSeconds
+        Instant defaultMapStatsInstant = SC2Pulse.instant().minusSeconds
         (
             MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 60
             + MAP_STATS_DEFAULT_UPDATE_FRAME.toSeconds()

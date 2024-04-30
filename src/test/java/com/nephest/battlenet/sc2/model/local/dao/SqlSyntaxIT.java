@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -29,11 +29,11 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchVideoDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
@@ -198,42 +198,42 @@ public class SqlSyntaxIT
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             BigInteger.ONE, division.getId(),
             1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team newTeam2 = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             BigInteger.TEN, division.getId(),
             1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team sameTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
             BigInteger.ONE, division.getId(),
             2L, 2, 2, 2, 2,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team updatedTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
             BigInteger.ONE, division2.getId(),
             3L, 3, 3, 3, 3,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team zergTeam = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
             BigInteger.valueOf(-1), division2.getId(),
             4L, 3, 3, 0, 3,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team zergTeamClone = new Team
         (
             null, season.getBattlenetId(), season.getRegion(), league2, tier2.getType(),
             BigInteger.valueOf(-1), division2.getId(),
             4L, 3, 3, 0, 3,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team mergeTestTeam6 = createGenericTeam(season, league2, tier2, division2, -4);
         Team mergeTestTeam5 = createGenericTeam(season, league2, tier2, division2, -5);
@@ -289,17 +289,17 @@ public class SqlSyntaxIT
         //do not update a team when games played or division is the same
         assertEquals(0, teamDAO.merge(Set.of(team)).size());
         team.setDivisionId(division2.getId());
-        team.setLastPlayed(OffsetDateTime.now());
+        team.setLastPlayed(SC2Pulse.offsetDateTime());
         assertEquals(1, teamDAO.merge(Set.of(team)).size());
         team.setDivisionId(division.getId());
-        team.setLastPlayed(OffsetDateTime.now());
+        team.setLastPlayed(SC2Pulse.offsetDateTime());
         assertEquals(1, teamDAO.merge(Set.of(team)).size());
-        sameTeam.setLastPlayed(OffsetDateTime.now());
+        sameTeam.setLastPlayed(SC2Pulse.offsetDateTime());
         assertEquals(0, teamDAO.merge(Set.of(sameTeam)).size());
         sameTeam.setDivisionId(division2.getId());
-        sameTeam.setLastPlayed(OffsetDateTime.now());
+        sameTeam.setLastPlayed(SC2Pulse.offsetDateTime());
         assertEquals(1, teamDAO.merge(Set.of(sameTeam)).size());
-        updatedTeam.setLastPlayed(OffsetDateTime.now());
+        updatedTeam.setLastPlayed(SC2Pulse.offsetDateTime());
         teamDAO.merge(Set.of(updatedTeam));
         Team foundTeam = teamDAO.findById(updatedTeam.getId()).orElse(null);
         assertEquals(updatedTeam.getId(), foundTeam.getId());
@@ -409,7 +409,7 @@ public class SqlSyntaxIT
         assertEquals(zergTeam.getId(),
             teamDAO.find1v1TeamByFavoriteRace(40, character, Race.ZERG).get().getKey().getId());
         zergTeam.setWins(zergTeam.getWins() + 1);
-        zergTeam.setLastPlayed(OffsetDateTime.now());
+        zergTeam.setLastPlayed(SC2Pulse.offsetDateTime());
         teamDAO.merge(Set.of(zergTeam));
         assertEquals(zergTeam.getWins(), teamDAO.find1v1TeamByFavoriteRace(season.getBattlenetId(), character, Race.ZERG)
             .get().getKey().getWins());
@@ -455,7 +455,7 @@ public class SqlSyntaxIT
             null, season.getBattlenetId(), season.getRegion(), league2, tier.getType(),
             BigInteger.valueOf(id), division.getId(),
             4L, 3, 3, 0, 3,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
     }
 

@@ -16,12 +16,12 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.EnumSet;
@@ -117,14 +117,14 @@ public class CommunityService
     public static final Duration CURRENT_TEAM_MAX_DURATION_OFFSET = Duration.ofDays(14);
     public static final Predicate<LadderTeam> CURRENT_TEAM_PREDICATE = t->
         t.getLastPlayed() != null
-        && Duration.between(t.getLastPlayed(), OffsetDateTime.now())
+        && Duration.between(t.getLastPlayed(), SC2Pulse.offsetDateTime())
             .compareTo(CURRENT_TEAM_MAX_DURATION_OFFSET)
             <= 0;
     public static final Duration CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET = Duration.ofMinutes(40);
     public static final Predicate<LadderTeam> CURRENT_FEATURED_TEAM_PREDICATE = t->
         t != null
         && t.getLastPlayed() != null
-        && Duration.between(t.getLastPlayed(), OffsetDateTime.now())
+        && Duration.between(t.getLastPlayed(), SC2Pulse.offsetDateTime())
             .compareTo(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
             <= 0;
 
@@ -503,7 +503,7 @@ public class CommunityService
         if
         (
             currentRandomStream != null
-                && Duration.between(currentRandomStreamAssigned, Instant.now())
+                && Duration.between(currentRandomStreamAssigned, SC2Pulse.instant())
                     .compareTo(RANDOM_STREAM_MAX_DURATION) < 0
                 &&
                 (
@@ -527,7 +527,7 @@ public class CommunityService
         }
 
         currentRandomStream = getRandomStream(streams);
-        currentRandomStreamAssigned = Instant.now();
+        currentRandomStreamAssigned = SC2Pulse.instant();
         if(currentRandomStream != null)
         {
             LOG.trace

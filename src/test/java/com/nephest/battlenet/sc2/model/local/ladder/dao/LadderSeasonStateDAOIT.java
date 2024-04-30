@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -30,6 +30,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderSeasonState;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -146,7 +147,7 @@ public class LadderSeasonStateDAOIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.ONE, division1.getId(),
             1L, 1, 1, 1, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.merge(Set.of(team1));
         Team team2 = new Team
@@ -155,7 +156,7 @@ public class LadderSeasonStateDAOIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_4V4, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.TWO, division1.getId(),
             1L, 1, 1, 1, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.merge(Set.of(team2));
         Team team3 = new Team
@@ -164,7 +165,7 @@ public class LadderSeasonStateDAOIT
             new BaseLeague(BaseLeague.LeagueType.PLATINUM, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.TEN, division2.getId(),
             1L, 1, 1, 1, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.merge(Set.of(team3));
         teamMemberDAO.merge(Set.of(
@@ -180,7 +181,7 @@ public class LadderSeasonStateDAOIT
         ));
 
         //hour1: only 1 4v4 US team
-        OffsetDateTime time1 = OffsetDateTime.now().withMinute(0).withSecond(0).withNano(0);
+        OffsetDateTime time1 = SC2Pulse.offsetDateTime().withMinute(0).withSecond(0).withNano(0);
         TeamState state1 = TeamState.of(team1);
         state1.setDateTime(time1.plusMinutes(59));
         //this state has no effect on stats
@@ -201,7 +202,7 @@ public class LadderSeasonStateDAOIT
 
         //hour2: 2 4v4 US teams, 1 1v1 EU team
         team1.setWins(2); // + 1 win
-        team1.setLastPlayed(OffsetDateTime.now());
+        team1.setLastPlayed(SC2Pulse.offsetDateTime());
         teamDAO.merge(Set.of(team1));
         OffsetDateTime time2 = time1.plusHours(1);
         TeamState state21 = TeamState.of(team1);

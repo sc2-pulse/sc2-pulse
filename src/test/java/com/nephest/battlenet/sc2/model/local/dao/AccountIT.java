@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.DBTestService;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -116,7 +117,7 @@ public class AccountIT
         PlayerCharacter char1 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
         Account acc2 = new Account(null, Partition.GLOBAL, "tag#2");
-        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+        OffsetDateTime beforeUpdate = SC2Pulse.offsetDateTime();
         playerCharacterDAO
             //the default last season is 0, -1 to imitate previous season
             .updateAccountsAndCharacters(Set.of(new AccountCharacterData(acc2, char1, false, -1)));
@@ -135,7 +136,7 @@ public class AccountIT
         PlayerCharacter char1 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
         Account acc2 = new Account(null, Partition.GLOBAL, "tag#2");
-        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+        OffsetDateTime beforeUpdate = SC2Pulse.offsetDateTime();
         playerCharacterDAO
             //the default last season is 0
             .updateAccountsAndCharacters(Set.of(new AccountCharacterData(acc2, char1, false, seasonOffset)));
@@ -154,7 +155,7 @@ public class AccountIT
         PlayerCharacter char1 = playerCharacterDAO
             .create(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
         Account acc2 = new Account(null, Partition.GLOBAL, "tag#1");
-        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+        OffsetDateTime beforeUpdate = SC2Pulse.offsetDateTime();
         playerCharacterDAO
             //the default last season is 0
             .updateAccountsAndCharacters(Set.of(new AccountCharacterData(acc2, char1, false, seasonOffset)));
@@ -188,7 +189,7 @@ public class AccountIT
     public void testUpdateUpdated()
     {
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
-        OffsetDateTime newUpdated = OffsetDateTime.now().plusDays(1);
+        OffsetDateTime newUpdated = SC2Pulse.offsetDateTime().plusDays(1);
         accountDAO.updateUpdated(newUpdated, Set.of(account.getId()));
         assertTrue(accountDAO.getUpdated(account.getId()).isEqual(newUpdated));
     }
@@ -201,7 +202,7 @@ public class AccountIT
         PlayerCharacter pc = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
         accountDAO.updateAnonymousFlag(acc.getId(), true);
-        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+        OffsetDateTime beforeUpdate = SC2Pulse.offsetDateTime();
 
         //modifying operations that should update the entity
         Account newAccount = new Account(null, Partition.GLOBAL, "tag#2");

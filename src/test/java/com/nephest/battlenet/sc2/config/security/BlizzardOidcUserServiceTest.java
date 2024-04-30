@@ -21,12 +21,12 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.AccountRoleDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.AccountService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -90,8 +90,8 @@ public class BlizzardOidcUserServiceTest
             new OidcIdToken
             (
                 "123",
-                Instant.now(),
-                Instant.now().plus(Duration.ofDays(1)),
+                SC2Pulse.instant(),
+                SC2Pulse.instant().plus(Duration.ofDays(1)),
                 Map.of
                 (
                     "battle_tag", BATTLE_TAG,

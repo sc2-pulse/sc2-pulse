@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.convert.jackson;
@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ extends SimpleArrayFieldToArrayListDeserializer<List<LadderTeamState>, LadderTea
                 Map.entry("teamId", (node, state)->state.getTeamState()
                     .setTeamId(node.asLong())),
                 Map.entry("dateTime", (node, state)->state.getTeamState()
-                    .setDateTime(OffsetDateTime.parse(node.asText()))),
+                    .setDateTime(SC2Pulse.offsetDateTime(OffsetDateTime.parse(node.asText())))),
                 Map.entry("wins", (node, state)->state.getTeamState()
                     .setWins(node.isNull() ? null : node.asInt())),
                 Map.entry("games", (node, state)->state.getTeamState()

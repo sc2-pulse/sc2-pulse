@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -16,6 +16,7 @@ import com.nephest.battlenet.sc2.model.local.BasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -110,7 +111,7 @@ public class TeamIT
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
                 BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
                 1L, 1, 1, 1, 1,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             ),
             new Team
             (
@@ -118,7 +119,7 @@ public class TeamIT
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
                 BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(2), 1,
                 1L, 1, 1, 1, 1,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             ),
             //different region, skip
             new Team
@@ -127,7 +128,7 @@ public class TeamIT
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
                 BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(3), 1,
                 1L, 1, 1, 1, 1,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             ),
             //different season, skip
             new Team
@@ -136,7 +137,7 @@ public class TeamIT
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
                 BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(4), 1,
                 1L, 1, 1, 1, 1,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             )
         )))
             .stream()
@@ -172,7 +173,7 @@ public class TeamIT
                 new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
                 BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
                 1L, 10, 0, 0, 1,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             )
         )).iterator().next();
         //invalid team state, should be used because it's the last state of the team
@@ -186,7 +187,7 @@ public class TeamIT
             new TeamState
             (
                 team.getId(),
-                OffsetDateTime.now().minusYears(1),
+                SC2Pulse.offsetDateTime().minusYears(1),
                 1,
                 8,
                 3
@@ -204,7 +205,7 @@ public class TeamIT
                     new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
                     BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
                     1L, 9, 0, 0, 1,
-                    OffsetDateTime.now()
+                    SC2Pulse.offsetDateTime()
                 )
             )).size()
         );
@@ -295,7 +296,7 @@ public class TeamIT
             team->
             {
                 team.setWins(team.getWins() + 1);
-                team.setLastPlayed(OffsetDateTime.now());
+                team.setLastPlayed(SC2Pulse.offsetDateTime());
             },
             true
         );
@@ -312,7 +313,7 @@ public class TeamIT
     @ParameterizedTest
     public void whenPreviousLastPlayedIsAfterCurrentLastPlayed_thenSkip(BasicEntityOperations<Team> operations)
     {
-        OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
+        OffsetDateTime lastPlayed = SC2Pulse.offsetDateTime().minusDays(1);
         testMerge
         (
             operations,
@@ -330,7 +331,7 @@ public class TeamIT
     @ParameterizedTest
     public void whenPreviousLastPlayedEqualsCurrentLastPlayed_thenSkip(BasicEntityOperations<Team> operations)
     {
-        OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
+        OffsetDateTime lastPlayed = SC2Pulse.offsetDateTime().minusDays(1);
         testMerge
         (
             operations,
@@ -379,7 +380,7 @@ public class TeamIT
                 0
             );
         }
-        OffsetDateTime lastPlayed = OffsetDateTime.now().minusDays(1);
+        OffsetDateTime lastPlayed = SC2Pulse.offsetDateTime().minusDays(1);
         Team team = new Team
         (
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,

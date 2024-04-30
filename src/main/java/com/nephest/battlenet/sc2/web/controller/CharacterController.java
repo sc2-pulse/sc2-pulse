@@ -28,6 +28,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterSta
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.NotFakeSc2Name;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.SearchService;
@@ -187,7 +188,7 @@ public class CharacterController
                 .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
                 .orElse(null),
             ladderMatchDAO.findMatchesByCharacterId(
-                id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
+                id, SC2Pulse.offsetDateTime(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
             ladderTeamStateDAO.find(id),
             reportService.findReportsByCharacterIds
             (
@@ -209,7 +210,7 @@ public class CharacterController
     )
     {
         if(types == null) types = new BaseMatch.MatchType[0];
-        OffsetDateTime from = depth == null ? null : OffsetDateTime.now().minusDays(depth);
+        OffsetDateTime from = depth == null ? null : SC2Pulse.offsetDateTime().minusDays(depth);
         List<LadderDistinctCharacter> linkedCharacters =
             ladderCharacterDAO.findLinkedDistinctCharactersByCharacterId(id);
         if(linkedCharacters.isEmpty()) return ResponseEntity.notFound().build();
@@ -230,7 +231,7 @@ public class CharacterController
                 .findByAccountId(currentCharacter.getMembers().getAccount().getId(), true)
                 .orElse(null),
             ladderMatchDAO.findMatchesByCharacterId(
-                id, OffsetDateTime.now(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
+                id, SC2Pulse.offsetDateTime(), BaseMatch.MatchType._1V1, 0, 0, 1, types).getResult(),
             ladderTeamStateDAO.find(id, from),
             reportService.findReportsByCharacterIds
             (
@@ -266,7 +267,7 @@ public class CharacterController
         return ladderMatchDAO.findMatchesByCharacterId
         (
             id,
-            OffsetDateTime.parse(dateAnchor),
+            SC2Pulse.offsetDateTime(OffsetDateTime.parse(dateAnchor)),
             typeAnchor,
             mapAnchor,
             page,
@@ -314,7 +315,7 @@ public class CharacterController
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Depth is too big, max: " + SUMMARY_DEPTH_MAX);
         if(races == null) races = Race.EMPTY_RACE_ARRAY;
 
-        return playerCharacterSummaryDAO.find(ids, OffsetDateTime.now().minusDays(depth), races);
+        return playerCharacterSummaryDAO.find(ids, SC2Pulse.offsetDateTime().minusDays(depth), races);
     }
 
     @GetMapping("/{id}/links/additional")

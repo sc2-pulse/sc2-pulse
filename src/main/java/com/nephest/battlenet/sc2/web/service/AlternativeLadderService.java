@@ -39,9 +39,9 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.AlternativeTeamData;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -357,7 +357,7 @@ public class AlternativeLadderService
                 isSeparateWebQueue()
             );
             tasks = updateLadders(season, data.keySet(), profileLadderIds, true);
-            additionalWebScanInstants.get(season.getRegion()).setValueAndSave(Instant.now());
+            additionalWebScanInstants.get(season.getRegion()).setValueAndSave(SC2Pulse.instant());
             additionalWebUpdates.put
             (
                 season.getRegion(),
@@ -367,7 +367,7 @@ public class AlternativeLadderService
         else
         {
             tasks = updateLadders(season, data.keySet(), profileLadderIds, false);
-            scanInstants.get(season.getRegion()).setValueAndSave(Instant.now());
+            scanInstants.get(season.getRegion()).setValueAndSave(SC2Pulse.instant());
         }
         return tasks;
     }
@@ -453,7 +453,7 @@ public class AlternativeLadderService
         LOG.info("{} {} ladders found", profileIds.size(), season);
         List<Future<Void>> tasks =
             updateLadders(season, QueueType.getTypes(StatsService.VERSION), profileIds, web);
-        if(updateInstant) discoveryInstants.get(season.getRegion()).setValueAndSave(Instant.now());
+        if(updateInstant) discoveryInstants.get(season.getRegion()).setValueAndSave(SC2Pulse.instant());
         return tasks;
     }
 
@@ -543,7 +543,7 @@ public class AlternativeLadderService
                         baseLeague, null,
                         teamDao.legacyIdOf(baseLeague, bTeam), division.getId(),
                         bTeam.getRating(), bTeam.getWins(), bTeam.getLosses(), 0, bTeam.getPoints(),
-                        OffsetDateTime.now()
+                        SC2Pulse.offsetDateTime()
                     ),
                     bTeam
                 )

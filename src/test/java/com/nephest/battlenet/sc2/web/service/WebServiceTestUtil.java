@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -9,11 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import io.netty.channel.ChannelOption;
 import io.netty.handler.timeout.ReadTimeoutHandler;
 import io.netty.handler.timeout.WriteTimeoutHandler;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
@@ -168,14 +168,14 @@ public class WebServiceTestUtil
             (
                 OAuth2AccessToken.TokenType.BEARER,
                 "token",
-                expired ? Instant.now().minusSeconds(99999) : Instant.now(),
-                expired ? Instant.now().minusSeconds(10000) : Instant.now().plusSeconds(99999),
+                expired ? SC2Pulse.instant().minusSeconds(99999) : SC2Pulse.instant(),
+                expired ? SC2Pulse.instant().minusSeconds(10000) : SC2Pulse.instant().plusSeconds(99999),
                 Set.of("test")
             ),
             new OAuth2RefreshToken
             (
                 "token",
-                Instant.now()
+                SC2Pulse.instant()
             )
         );
     }

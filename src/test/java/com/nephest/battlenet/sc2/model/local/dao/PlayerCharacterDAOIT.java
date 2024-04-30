@@ -37,6 +37,7 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import discord4j.common.util.Snowflake;
 import java.math.BigInteger;
@@ -172,13 +173,13 @@ public class PlayerCharacterDAOIT
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("1"), division.getId(), 1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team2 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_2V2, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("2"), division.getId(), 2L, 2, 2, 2, 2,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         teamMemberDAO.merge(Set.of(
             new TeamMember(team1.getId(), char1.getId(), 1, 0, 0, 0),
@@ -186,7 +187,7 @@ public class PlayerCharacterDAOIT
             new TeamMember(team2.getId(), char1.getId(), 0, 0, 1, 0),
             new TeamMember(team2.getId(), char3.getId(), 0, 0, 0, 1)
         ));
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
         TeamState state1 = TeamState.of(team1);
         state1.setDateTime(now.minusHours(1));
         TeamState state2 = TeamState.of(team2);
@@ -235,7 +236,7 @@ public class PlayerCharacterDAOIT
         clanMemberDAO.merge(Set.of(new ClanMember(char3.getId(), clan1.getId())));
         clanMemberDAO.merge(Set.of(new ClanMember(char4.getId(), clan1.getId())));
 
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
 
         List<PlayerCharacter> cms1 = playerCharacterDAO
             .findInactiveClanMembers(now, Long.MAX_VALUE, 2);
@@ -261,7 +262,7 @@ public class PlayerCharacterDAOIT
     @Test
     public void whenAllClanMembersAreFresh_thenReturnEmptyList()
     {
-        OffsetDateTime start = OffsetDateTime.now();
+        OffsetDateTime start = SC2Pulse.offsetDateTime();
         Account acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         PlayerCharacter char1 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc1.getId(), Region.EU, 1L, 1, "name#1"));
@@ -292,7 +293,7 @@ public class PlayerCharacterDAOIT
             new PlayerCharacter(null, account.getId(), Region.EU, 2L, 1, "name4#123")
         ));
 
-        OffsetDateTime minTimeAllowed = OffsetDateTime.now();
+        OffsetDateTime minTimeAllowed = SC2Pulse.offsetDateTime();
         Long[] ids = playerCharacterDAO.updateCharacters(updatedCharacters).stream()
             .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
             .map(PlayerCharacter::getId)
@@ -336,7 +337,7 @@ public class PlayerCharacterDAOIT
         PlayerCharacter char1 = playerCharacterDAO
             .merge(new PlayerCharacter(null, account1.getId(), Region.EU, 1L, 1, "name1#1"));
 
-        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+        OffsetDateTime beforeUpdate = SC2Pulse.offsetDateTime();
         PlayerCharacter char2 = playerCharacterDAO
             .merge(new PlayerCharacter(null, account2.getId(), Region.EU, 1L, 1, "name2#1"));
 
@@ -363,10 +364,10 @@ public class PlayerCharacterDAOIT
 
         playerCharacterDAO.updateUpdated
         (
-            OffsetDateTime.now().minus(BlizzardPrivacyService.DATA_TTL.plusDays(2)),
+            SC2Pulse.offsetDateTime().minus(BlizzardPrivacyService.DATA_TTL.plusDays(2)),
             Set.of(1L)
         );
-        playerCharacterDAO.anonymizeExpiredCharacters(OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
+        playerCharacterDAO.anonymizeExpiredCharacters(SC2Pulse.offsetDateTime().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
         //character is excluded due to "from' param
         assertEquals("name2#123", playerCharacterDAO.find(Region.EU, 1, 1L).orElseThrow().getName());
 
@@ -426,7 +427,7 @@ public class PlayerCharacterDAOIT
         );
 
         OffsetDateTime char4Updated = playerCharacterDAO.getUpdated(char4.getId());
-        OffsetDateTime minTimeAllowed = OffsetDateTime.now();
+        OffsetDateTime minTimeAllowed = SC2Pulse.offsetDateTime();
         Long[] ids = playerCharacterDAO.updateAccountsAndCharacters(updatedAccsAndChars).stream()
             .sorted(Comparator.comparing(PlayerCharacter::getBattlenetId))
             .map(PlayerCharacter::getId)
@@ -449,7 +450,7 @@ public class PlayerCharacterDAOIT
         OffsetDateTime char5Updated = playerCharacterDAO.getUpdated(char5.getId());
         assertTrue(char5Updated.isAfter(minTimeAllowed));
 
-        playerCharacterDAO.updateUpdated(OffsetDateTime.now(), Set.of(char4.getId()));
+        playerCharacterDAO.updateUpdated(SC2Pulse.offsetDateTime(), Set.of(char4.getId()));
 
         verifyUpdatedCharacters(minTimeAllowed);
         OffsetDateTime minAccTime =
@@ -463,10 +464,10 @@ public class PlayerCharacterDAOIT
 
         accountDAO.updateUpdated
         (
-            OffsetDateTime.now().minus(BlizzardPrivacyService.DATA_TTL.plusDays(2)),
+            SC2Pulse.offsetDateTime().minus(BlizzardPrivacyService.DATA_TTL.plusDays(2)),
             Set.of(acc1.getId())
         );
-        accountDAO.anonymizeExpiredAccounts(OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
+        accountDAO.anonymizeExpiredAccounts(SC2Pulse.offsetDateTime().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).minusDays(1));
         //the account is excluded due to "from" param
         assertEquals("tag3#123", accountDAO.findByIds(Set.of(acc1.getId())).get(0).getBattleTag());
 
@@ -593,7 +594,7 @@ public class PlayerCharacterDAOIT
                 PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
                 false,
                 true,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             )
         );
         Evidence evidence = evidenceDAO.create
@@ -606,7 +607,7 @@ public class PlayerCharacterDAOIT
                 null,
                 "description",
                 false,
-                OffsetDateTime.now(), OffsetDateTime.now()
+                SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
             )
         );
         evidenceVoteDAO.merge
@@ -614,10 +615,10 @@ public class PlayerCharacterDAOIT
             new EvidenceVote
             (
                 evidence.getId(),
-                OffsetDateTime.now(),
+                SC2Pulse.offsetDateTime(),
                 accountId,
                 true,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             )
         );
         if(secondVote) evidenceVoteDAO.merge
@@ -625,10 +626,10 @@ public class PlayerCharacterDAOIT
             new EvidenceVote
             (
                 evidence.getId(),
-                OffsetDateTime.now(),
+                SC2Pulse.offsetDateTime(),
                 accountId2,
                 true,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             )
         );
         Evidence evidence2 = evidenceDAO.create
@@ -641,7 +642,7 @@ public class PlayerCharacterDAOIT
                 null,
                 "description",
                 false,
-                OffsetDateTime.now(), OffsetDateTime.now()
+                SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
             )
         );
     }
@@ -652,7 +653,7 @@ public class PlayerCharacterDAOIT
         Account account = accountDAO.merge(new Account(null, Partition.GLOBAL, "tag#1"));
         PlayerCharacter char1 = playerCharacterDAO
             .merge(new PlayerCharacter(null, account.getId(), Region.EU, 1L, 1, "name#1"));
-        OffsetDateTime newUpdated = OffsetDateTime.now().plusDays(1);
+        OffsetDateTime newUpdated = SC2Pulse.offsetDateTime().plusDays(1);
         playerCharacterDAO.updateUpdated(newUpdated, Set.of(char1.getId()));
         assertTrue(playerCharacterDAO.getUpdated(char1.getId()).isEqual(newUpdated));
     }
@@ -665,7 +666,7 @@ public class PlayerCharacterDAOIT
         PlayerCharacter pc = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc.getId(), Region.EU, 1L, 1, "name#1"));
         playerCharacterDAO.updateAnonymousFlag(pc.getId(), true);
-        OffsetDateTime beforeUpdate = OffsetDateTime.now();
+        OffsetDateTime beforeUpdate = SC2Pulse.offsetDateTime();
 
         //modifying operations that should update the entity
         PlayerCharacter newPlayerCharacter =
@@ -713,14 +714,14 @@ public class PlayerCharacterDAOIT
         PlayerCharacter pc4 = playerCharacterDAO
             .merge(new PlayerCharacter(null, acc.getId(), Region.US, 4L, 1, "name#4"));
 
-        assertEquals(4, playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now(), Set.of()));
+        assertEquals(4, playerCharacterDAO.countByUpdatedMax(SC2Pulse.offsetDateTime(), Set.of()));
         assertEquals(2, playerCharacterDAO
-            .countByUpdatedMax(OffsetDateTime.now(), Set.of(Region.EU)));
+            .countByUpdatedMax(SC2Pulse.offsetDateTime(), Set.of(Region.EU)));
         assertEquals(1, playerCharacterDAO
-            .updateUpdated(OffsetDateTime.now().plusDays(1), Set.of(pc1.getId())));
-        assertEquals(3, playerCharacterDAO.countByUpdatedMax(OffsetDateTime.now(), Set.of()));
+            .updateUpdated(SC2Pulse.offsetDateTime().plusDays(1), Set.of(pc1.getId())));
+        assertEquals(3, playerCharacterDAO.countByUpdatedMax(SC2Pulse.offsetDateTime(), Set.of()));
         assertEquals(1, playerCharacterDAO
-            .countByUpdatedMax(OffsetDateTime.now(), Set.of(Region.EU)));
+            .countByUpdatedMax(SC2Pulse.offsetDateTime(), Set.of(Region.EU)));
     }
 
     @Test

@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import java.time.OffsetDateTime;
 import org.junit.jupiter.api.Test;
@@ -20,7 +21,7 @@ public class ClanMemberEventTest
     @Test
     public void testUniqueness()
     {
-        OffsetDateTime equalOdt = OffsetDateTime.now();
+        OffsetDateTime equalOdt = SC2Pulse.offsetDateTime();
         OffsetDateTime notEqualOdt = equalOdt.minusSeconds(1);
         ClanMemberEvent evt =
             new ClanMemberEvent(1L, 2, ClanMemberEvent.EventType.LEAVE, equalOdt, 3);
@@ -50,7 +51,7 @@ public class ClanMemberEventTest
     {
         PlayerCharacter playerCharacter
             = new PlayerCharacter(1L, 2L, Region.EU, 3L, 4, "name#1");
-        OffsetDateTime before = OffsetDateTime.now().minusSeconds(1);
+        OffsetDateTime before = SC2Pulse.offsetDateTime().minusSeconds(1);
         ClanMemberEvent evt = ClanMemberEvent.from(playerCharacter, null);
         assertEquals(playerCharacter.getId(), evt.getPlayerCharacterId());
         assertNull(evt.getClanId());
@@ -64,7 +65,7 @@ public class ClanMemberEventTest
         PlayerCharacter playerCharacter
             = new PlayerCharacter(1L, 2L, Region.EU, 3L, 4, "name#1");
         Clan clan = new Clan(1, "tag", Region.EU, "name");
-        OffsetDateTime before = OffsetDateTime.now().minusSeconds(1);
+        OffsetDateTime before = SC2Pulse.offsetDateTime().minusSeconds(1);
         ClanMemberEvent evt = ClanMemberEvent.from(playerCharacter, clan);
         assertEquals(playerCharacter.getId(), evt.getPlayerCharacterId());
         assertEquals(clan.getId(), evt.getClanId());

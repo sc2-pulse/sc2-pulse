@@ -22,6 +22,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderEvidenceVoteDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterReportDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamMemberDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.MarkdownUtil;
 import com.nephest.battlenet.sc2.web.service.notification.NotificationService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
@@ -107,7 +108,7 @@ public class PlayerCharacterReportService
         Long reporterId
     )
     {
-        if(evidenceDAO.getCount(reporterIp, reporterId, OffsetDateTime.now().minusDays(1)) >= EVIDENCE_PER_DAY) return -2;
+        if(evidenceDAO.getCount(reporterIp, reporterId, SC2Pulse.offsetDateTime().minusDays(1)) >= EVIDENCE_PER_DAY) return -2;
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null,
             id,
@@ -115,12 +116,12 @@ public class PlayerCharacterReportService
             type,
             null,
             false,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ));
         if(evidenceDAO.getConfirmedCount(report.getId()) >= CONFIRMED_EVIDENCE_MAX) return -3;
 
         Evidence evidenceObj = evidenceDAO.create(new Evidence(
-            null, report.getId(), reporterId, reporterIp, evidence, null, OffsetDateTime.now(), OffsetDateTime.now()
+            null, report.getId(), reporterId, reporterIp, evidence, null, SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime()
         ));
         playerCharacterReportDAO.updateStatus(Set.of(report.getId()));
         enqueueNotifications(report, evidenceObj);

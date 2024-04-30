@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -24,6 +24,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.math.BigInteger;
 import java.sql.Connection;
@@ -86,7 +87,7 @@ public class LegacySearchIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            ODT = OffsetDateTime.now().minusDays(teamStateDAO.getMaxDepthDaysMain() + 1);
+            ODT = SC2Pulse.offsetDateTime().minusDays(teamStateDAO.getMaxDepthDaysMain() + 1);
             seasonGenerator.generateSeason
             (
                 List.of
@@ -138,7 +139,7 @@ public class LegacySearchIT
             new BaseLeague(league, queueType, TeamType.ARRANGED), BaseLeagueTier.LeagueTierType.FIRST,
             legacyId, division1.getId(),
             1L, wins, 0, 0, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.merge(Set.of(team1));
         Set<TeamMember> members = IntStream
@@ -149,7 +150,7 @@ public class LegacySearchIT
         teamMemberDAO.merge(members);
         teamStateDAO.saveState(Set.of(TeamState.of(team1)));
         team1.setWins(team1.getWins() + 1);
-        team1.setLastPlayed(OffsetDateTime.now());
+        team1.setLastPlayed(SC2Pulse.offsetDateTime());
         teamDAO.merge(Set.of(team1));
         teamStateDAO.saveState(Set.of(TeamState.of(team1)));
         return team1;

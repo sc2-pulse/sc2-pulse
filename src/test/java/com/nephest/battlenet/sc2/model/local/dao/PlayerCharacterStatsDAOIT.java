@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -24,11 +24,11 @@ import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -115,8 +115,8 @@ public class PlayerCharacterStatsDAOIT
     public void testRecentStatsCalculation()
     {
         PlayerCharacter character = setupStats();
-        playerCharacterStatsDAO.calculate(OffsetDateTime.now().minusHours(1));
-        playerCharacterStatsDAO.mergeCalculate(OffsetDateTime.now().minusHours(1)); //just for testing, not actually required
+        playerCharacterStatsDAO.calculate(SC2Pulse.offsetDateTime().minusHours(1));
+        playerCharacterStatsDAO.mergeCalculate(SC2Pulse.offsetDateTime().minusHours(1)); //just for testing, not actually required
         Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> stats =
             ladderPlayerCharacterStatsDAO.findGlobalMap(character.getId());
         verifyStats(character, stats);
@@ -162,8 +162,8 @@ public class PlayerCharacterStatsDAOIT
         createTeam(season2, Race.ZERG, region, BaseLeague.LeagueType.GOLD, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, gold2, BigInteger.valueOf(10003L), 2L, character);
         createTeam(season2, null, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, BigInteger.valueOf(10004L), 2L, character);
         int depth = QUEUE_TYPE == QueueType.LOTV_1V1 ? teamStateDAO.getMaxDepthDaysMain() : teamStateDAO.getMaxDepthDaysSecondary();
-        teamStateDAO.archive(OffsetDateTime.now().minusDays(depth + 2));
-        teamStateDAO.cleanArchive(OffsetDateTime.now().minusDays(depth + 2));
+        teamStateDAO.archive(SC2Pulse.offsetDateTime().minusDays(depth + 2));
+        teamStateDAO.cleanArchive(SC2Pulse.offsetDateTime().minusDays(depth + 2));
         teamStateDAO.removeExpired();
         return character;
     }
@@ -209,11 +209,11 @@ public class PlayerCharacterStatsDAOIT
             division.getId(),
             rating,
             100, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         teamDAO.create(team);
         teamStateDAO.saveState(Set.of(TeamState.of(team)));
-        TeamState maxState = TeamState.of(team, OffsetDateTime.now().minusDays(
+        TeamState maxState = TeamState.of(team, SC2Pulse.offsetDateTime().minusDays(
             (queueType == QueueType.LOTV_1V1 ? teamStateDAO.getMaxDepthDaysMain() : teamStateDAO.getMaxDepthDaysSecondary()) + 1));
         maxState.setRating((int) (team.getRating() + 1));
         teamStateDAO.saveState(Set.of(maxState));

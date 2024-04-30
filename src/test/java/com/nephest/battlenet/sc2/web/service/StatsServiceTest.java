@@ -39,6 +39,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Instant;
 import java.util.concurrent.ExecutorService;
@@ -189,7 +190,7 @@ public class StatsServiceTest
         assertFalse(ss.isAlternativeUpdate(Region.EU, true));
 
         //alternative, no matches found
-        Instant before = Instant.now();
+        Instant before = SC2Pulse.instant();
         when(teamStateDAO.getCount(eq(Region.EU), any())).thenReturn(0);
         ss.checkStaleDataByTeamStateCount(Region.EU);
         assertTrue(ss.isAlternativeUpdate(Region.EU, true));
@@ -207,7 +208,7 @@ public class StatsServiceTest
         assertTrue(ss.getForcedAlternativeUpdateInstants().get(Region.EU).getValue().isAfter(before));
 
         //standard, there are matches and time has passed
-        ss.getForcedAlternativeUpdateInstants().get(Region.EU).setValue(Instant.now()
+        ss.getForcedAlternativeUpdateInstants().get(Region.EU).setValue(SC2Pulse.instant()
             .minus(StatsService.FORCED_ALTERNATIVE_UPDATE_DURATION)
             .minusSeconds(1));
         ss.checkStaleDataByTeamStateCount(Region.EU);

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.SocialMediaUserId;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -203,7 +204,7 @@ public class SocialMediaLinkDAO
             .sorted(SocialMediaLink.NATURAL_ID_COMPARATOR)
             .peek(link->link.setUpdated(link.getUpdated() != null
                 ? link.getUpdated()
-                : OffsetDateTime.now()))
+                : SC2Pulse.offsetDateTime()))
             .map(link->createParameterSource(link).addValue("protectedMode", isProtected))
             .toArray(MapSqlParameterSource[]::new);
 

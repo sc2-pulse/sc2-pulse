@@ -1,17 +1,17 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
-import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
-
-import java.time.Duration;
-import java.time.Instant;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.mock;
+
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import java.time.Duration;
+import java.time.Instant;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class UpdateServiceTest
 {
@@ -27,7 +27,7 @@ public class UpdateServiceTest
     @Test
     public void testUpdateDuration()
     {
-        Instant now = Instant.now();
+        Instant now = SC2Pulse.instant();
         assertEquals(Duration.ZERO, updateService.calculateUpdateDuration(null));
 
         //there is no previous update, zero duration

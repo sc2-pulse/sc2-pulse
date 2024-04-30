@@ -52,6 +52,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.math.BigInteger;
@@ -216,7 +217,7 @@ public class PlayerCharacterReportIT
     throws Exception
     {
         byte[] localhost = InetAddress.getByName("127.0.0.1").getAddress();
-        ZoneOffset offset = OffsetDateTime.now().getOffset();
+        ZoneOffset offset = SC2Pulse.offsetDateTime().getOffset();
         OffsetDateTime matchDateTime = SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay(offset).toOffsetDateTime();
         SC2Map map = mapDAO.merge(Set.of(new SC2Map(null, "map"))).iterator().next();
         Match match = matchDAO
@@ -229,7 +230,7 @@ public class PlayerCharacterReportIT
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, matchDateTime.minusDays(10));
         playerCharacterStatsDAO.mergeCalculate();
 
-        OffsetDateTime start = OffsetDateTime.now();
+        OffsetDateTime start = SC2Pulse.offsetDateTime();
 
         mvc.perform(get("/api/character/report/list").contentType(MediaType.APPLICATION_JSON))
             .andExpect(status().isOk())
@@ -401,26 +402,26 @@ public class PlayerCharacterReportIT
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[0].getEvidence().get(0).getEvidence().getId(),
             reports[0].getEvidence().get(0).getEvidence().getCreated(),
-            2L, true, OffsetDateTime.now()
+            2L, true, SC2Pulse.offsetDateTime()
         ));
 
         //diff vote
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[0].getEvidence().get(1).getEvidence().getId(),
             reports[0].getEvidence().get(1).getEvidence().getCreated(),
-            2L, false, OffsetDateTime.now()
+            2L, false, SC2Pulse.offsetDateTime()
         ));
 
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[1].getEvidence().get(0).getEvidence().getId(),
             reports[1].getEvidence().get(0).getEvidence().getCreated(),
-            2L, true, OffsetDateTime.now()
+            2L, true, SC2Pulse.offsetDateTime()
         ));
 
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[2].getEvidence().get(0).getEvidence().getId(),
             reports[2].getEvidence().get(0).getEvidence().getCreated(),
-            2L, true, OffsetDateTime.now()
+            2L, true, SC2Pulse.offsetDateTime()
         ));
 
         reportService.update(start);
@@ -447,7 +448,7 @@ public class PlayerCharacterReportIT
         LadderMatch ladderMatch = ladderMatchDAO.findMatchesByCharacterId
         (
             1L,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             BaseMatch.MatchType._1V1,
             0,
             0, 1
@@ -484,25 +485,25 @@ public class PlayerCharacterReportIT
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[0].getEvidence().get(0).getEvidence().getId(),
             reports[0].getEvidence().get(0).getEvidence().getCreated(),
-            3L, false, OffsetDateTime.now()
+            3L, false, SC2Pulse.offsetDateTime()
         ));
 
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[0].getEvidence().get(1).getEvidence().getId(),
             reports[0].getEvidence().get(1).getEvidence().getCreated(),
-            3L, false, OffsetDateTime.now()
+            3L, false, SC2Pulse.offsetDateTime()
         ));
 
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[1].getEvidence().get(0).getEvidence().getId(),
             reports[1].getEvidence().get(0).getEvidence().getCreated(),
-            3L, false, OffsetDateTime.now()
+            3L, false, SC2Pulse.offsetDateTime()
         ));
 
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[2].getEvidence().get(0).getEvidence().getId(),
             reports[2].getEvidence().get(0).getEvidence().getCreated(),
-            3L, false, OffsetDateTime.now()
+            3L, false, SC2Pulse.offsetDateTime()
         ));
 
         reportService.update(start);
@@ -585,7 +586,7 @@ public class PlayerCharacterReportIT
         evidenceVoteDAO.merge(new EvidenceVote(
             veryOldEvidence.getId(),
             veryOldEvidence.getCreated(),
-            6L, false, OffsetDateTime.now()
+            6L, false, SC2Pulse.offsetDateTime()
         ));
 
         reportService.update(start);
@@ -683,17 +684,17 @@ public class PlayerCharacterReportIT
         PlayerCharacterReport expiredReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         PlayerCharacterReport expiredConfirmedReport = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 9L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             true, false,
-            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         Evidence expiredEvidence = evidenceDAO.create(
             new Evidence(null, expiredReport.getId(), null, localhost, "description asda",
-            false, OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),OffsetDateTime.now()));
+            false, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),SC2Pulse.offsetDateTime()));
         Evidence expiredConfirmedEvidence = evidenceDAO.create(
             new Evidence(null, expiredConfirmedReport.getId(), null, localhost, "description asda",
-                true, OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),OffsetDateTime.now()));
+                true, SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS),SC2Pulse.offsetDateTime()));
         assertEquals(7, playerCharacterReportDAO.getAll().size());
         assertEquals(evidenceCountEnd + 2, evidenceDAO.findAll(false).size());
         reports = getReports();
@@ -718,7 +719,7 @@ public class PlayerCharacterReportIT
             SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, new BigInteger("12344"), 1, 10L, 10, 0, 0, 0,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         template.update("UPDATE player_character_report SET restrictions = true");
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
@@ -943,10 +944,10 @@ public class PlayerCharacterReportIT
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 8L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         Evidence evidence = evidenceDAO.create(new Evidence(
             null, report.getId(), null, privateIp, "description asda",false,
-            OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,OffsetDateTime.now()));
+            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));
 
         LadderPlayerCharacterReport[] reports = getReports();
         Arrays.stream(reports)
@@ -978,7 +979,7 @@ public class PlayerCharacterReportIT
             .andExpect(status().isOk())
             .andReturn();
 
-        evidenceVoteDAO.merge(new EvidenceVote(1, OffsetDateTime.now(), 10L, true, OffsetDateTime.now()));
+        evidenceVoteDAO.merge(new EvidenceVote(1, SC2Pulse.offsetDateTime(), 10L, true, SC2Pulse.offsetDateTime()));
         LadderEvidenceVote voteAll = getReports()[0].getEvidence().get(0).getVotes().get(0);
         assertNull(voteAll.getVoterAccount());
         assertNull(voteAll.getVote().getVoterAccountId());
@@ -1162,7 +1163,7 @@ public class PlayerCharacterReportIT
     public void whenReportHasDeniedStatusAndNewEvidenceReceived_thenResetReportStatus()
     throws Exception
     {
-        OffsetDateTime start = OffsetDateTime.now();
+        OffsetDateTime start = SC2Pulse.offsetDateTime();
         mvc.perform
         (
             post("/api/character/report/new")
@@ -1180,12 +1181,12 @@ public class PlayerCharacterReportIT
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[0].getEvidence().get(0).getEvidence().getId(),
             reports[0].getEvidence().get(0).getEvidence().getCreated(),
-            2L, false, OffsetDateTime.now()
+            2L, false, SC2Pulse.offsetDateTime()
         ));
         evidenceVoteDAO.merge(new EvidenceVote(
             reports[0].getEvidence().get(0).getEvidence().getId(),
             reports[0].getEvidence().get(0).getEvidence().getCreated(),
-            1L, false, OffsetDateTime.now()
+            1L, false, SC2Pulse.offsetDateTime()
         ));
         reportService.update(start);
         verifyStatus(getReports()[0], false, false);

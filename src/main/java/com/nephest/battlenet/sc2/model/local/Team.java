@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
@@ -104,8 +105,8 @@ implements java.io.Serializable
             bTeam.getWins(), bTeam.getLosses(), bTeam.getTies(),
             bTeam.getPoints(),
             bTeam.getLastPlayedTimeStamp() != null
-                ? bTeam.getLastPlayedTimeStamp().atOffset(OffsetDateTime.now().getOffset())
-                : OffsetDateTime.now()
+                ? bTeam.getLastPlayedTimeStamp().atOffset(SC2Pulse.offsetDateTime().getOffset())
+                : SC2Pulse.offsetDateTime()
         );
     }
 

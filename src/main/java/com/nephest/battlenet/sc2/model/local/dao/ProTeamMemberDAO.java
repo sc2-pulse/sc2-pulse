@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.ProTeamMember;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
@@ -78,7 +79,7 @@ public class ProTeamMemberDAO
         if(proTeamMembers.isEmpty()) return DAOUtils.EMPTY_INT_ARRAY;
 
         MapSqlParameterSource[] params = proTeamMembers.stream()
-            .peek(proTeamMember->proTeamMember.setUpdated(OffsetDateTime.now()))
+            .peek(proTeamMember->proTeamMember.setUpdated(SC2Pulse.offsetDateTime()))
             .map(this::createParameterSource)
             .toArray(MapSqlParameterSource[]::new);
 

@@ -8,7 +8,7 @@ import java.time.Instant;
 public class TimestampedObject
 {
 
-    private final Instant createdAt = Instant.now();
+    private final Instant createdAt = SC2Pulse.instant();
 
     public Instant getCreatedAt()
     {

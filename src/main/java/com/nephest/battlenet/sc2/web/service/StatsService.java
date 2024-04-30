@@ -47,6 +47,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import java.time.Duration;
@@ -513,7 +514,7 @@ public class StatsService
     )
     {
         LOG.trace("updateCurrent({}, {})", data, allStats);
-        Instant start = Instant.now();
+        Instant start = SC2Pulse.instant();
         LOG.trace("Getting current seasons for {}", data.keySet());
         Map<Region, BlizzardSeason> seasons = data.keySet().stream()
             .collect(Collectors.toMap(
@@ -1054,12 +1055,12 @@ public class StatsService
     {
         LOG.trace("checkStaleDataByTeamStateCount({})", region);
         removeForcedAlternativeRegionIfExpired(region);
-        if(teamStateDAO.getCount(region, OffsetDateTime.now().minus(STALE_DATA_TEAM_STATES_DEPTH)) == 0)
+        if(teamStateDAO.getCount(region, SC2Pulse.offsetDateTime().minus(STALE_DATA_TEAM_STATES_DEPTH)) == 0)
         {
             if(addForcedAlternativeRegion(region))
             {
                 LOG.warn("Stale data detected for {}, added this region to forced alternative update", region);
-                forcedAlternativeUpdateInstants.get(region).setValueAndSave(Instant.now());
+                forcedAlternativeUpdateInstants.get(region).setValueAndSave(SC2Pulse.instant());
             }
         }
         LOG.trace("end checkStaleDataByTeamStateCount({})", region);
@@ -1071,7 +1072,7 @@ public class StatsService
         if(from == null) return;
 
         OffsetDateTime fromOdt = OffsetDateTime.ofInstant(from, ZoneId.systemDefault());
-        if(fromOdt.isBefore(OffsetDateTime.now().minus(FORCED_ALTERNATIVE_UPDATE_DURATION)))
+        if(fromOdt.isBefore(SC2Pulse.offsetDateTime().minus(FORCED_ALTERNATIVE_UPDATE_DURATION)))
         {
             if(removeForcedAlternativeRegion(region))
                 LOG.info("Removed {} from forced alternative update due to timeout", region);

@@ -43,6 +43,7 @@ import com.nephest.battlenet.sc2.model.local.LongVar;
 import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
@@ -347,7 +348,7 @@ extends BaseAPI
             {
                 Instant ts = forceRegionInstants.get(region).getValue();
                 if(ts == null
-                    || Instant.now().getEpochSecond() - ts.getEpochSecond() > AUTO_FORCE_REGION_MAX_DURATION.toSeconds())
+                    || SC2Pulse.instant().getEpochSecond() - ts.getEpochSecond() > AUTO_FORCE_REGION_MAX_DURATION.toSeconds())
                 {
                     LOG.info("{} API host redirect timeout reached, removing redirect", region);
                     setForceRegion.accept(region, null);
@@ -515,7 +516,7 @@ extends BaseAPI
     public void setForceRegion(Region target, Region force)
     {
         forceRegions.get(target).setValueAndSave(force);
-        forceRegionInstants.get(target).setValueAndSave(force == null ? null : Instant.now());
+        forceRegionInstants.get(target).setValueAndSave(force == null ? null : SC2Pulse.instant());
         LOG.warn("Redirecting API host: {}->{}", target, force);
     }
 
@@ -543,7 +544,7 @@ extends BaseAPI
     public void setForceProfileRegion(Region target, Region force)
     {
         forceProfileRegions.get(target).setValueAndSave(force);
-        forceProfileRegionInstants.get(target).setValueAndSave(force == null ? null : Instant.now());
+        forceProfileRegionInstants.get(target).setValueAndSave(force == null ? null : SC2Pulse.instant());
         LOG.warn("Redirecting API host(profile): {}->{}", target, force);
     }
 

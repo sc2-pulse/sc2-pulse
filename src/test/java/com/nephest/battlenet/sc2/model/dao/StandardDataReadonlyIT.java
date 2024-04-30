@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.dao;
@@ -28,6 +28,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderTeamStateDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -254,7 +255,7 @@ public class StandardDataReadonlyIT
     @Test
     public void testFinderByUpdatedAndIdMax()
     {
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
         assertTrue(playerCharacterDAO
             .find(now.minusYears(1), Long.MAX_VALUE, Set.of(), 2).isEmpty());
 
@@ -273,7 +274,7 @@ public class StandardDataReadonlyIT
     public void testFinderByUpdatedAndIdMaxRegionFilter()
     {
         List<PlayerCharacter> regionFilterBatch = playerCharacterDAO
-            .find(OffsetDateTime.now(), Long.MAX_VALUE, Set.of(Region.EU), 2);
+            .find(SC2Pulse.offsetDateTime(), Long.MAX_VALUE, Set.of(Region.EU), 2);
         assertEquals(2, regionFilterBatch.size());
         assertEquals(4460, regionFilterBatch.get(0).getId());
         assertEquals(4459, regionFilterBatch.get(1).getId());
@@ -305,7 +306,7 @@ public class StandardDataReadonlyIT
     @Test
     public void testFindTeamState()
     {
-        ZoneOffset offset = OffsetDateTime.now().getOffset();
+        ZoneOffset offset = SC2Pulse.offsetDateTime().getOffset();
         OffsetDateTime seasonStart =
             SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay().atOffset(offset);
 

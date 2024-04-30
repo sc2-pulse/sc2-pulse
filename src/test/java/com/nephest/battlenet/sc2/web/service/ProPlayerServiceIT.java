@@ -33,6 +33,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedPlayers;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.twitch.TwitchTest;
 import java.io.IOException;
 import java.sql.Connection;
@@ -402,7 +403,7 @@ public class ProPlayerServiceIT
         ProPlayer proPlayer1 = proPlayerDAO.merge(new ProPlayer(null, null, "tag1", "name1"));
         ProPlayer proPlayer2 = proPlayerDAO.merge(new ProPlayer(null, null, "tag2", "name2"));
         ProPlayer proPlayer3 = proPlayerDAO.merge(new ProPlayer(null, null, "tag3", "name3"));
-        OffsetDateTime updated = OffsetDateTime.now();
+        OffsetDateTime updated = SC2Pulse.offsetDateTime();
         SocialMediaLink[] links = new SocialMediaLink[]
         {
             //noise

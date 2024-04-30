@@ -21,6 +21,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderClanMemberEventDAO
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroup;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
@@ -126,7 +127,7 @@ public class GroupController
     {
         if(limit > CLAN_MEMBER_EVENT_PAGE_SIZE_MAX)
             return ResponseEntity.badRequest().body("Max page size exceeded: " + CLAN_MEMBER_EVENT_PAGE_SIZE_MAX);
-        OffsetDateTime cCursor = createdCursor != null ? createdCursor : OffsetDateTime.now();
+        OffsetDateTime cCursor = createdCursor != null ? createdCursor : SC2Pulse.offsetDateTime();
         return areIdsInvalid(characterIds, clanIds, proPlayerIds, accountIds)
             .orElseGet(()->ResponseEntity.of(ladderClanMemberEventDAO.find
             (
@@ -154,7 +155,7 @@ public class GroupController
             .badRequest()
             .body("Max limit: " + MATCH_PAGE_SIZE_MAX);
 
-        dateCursor = dateCursor != null ? dateCursor : OffsetDateTime.now();
+        dateCursor = dateCursor != null ? dateCursor : SC2Pulse.offsetDateTime();
         return WebServiceUtil.notFoundIfEmpty
         (
             ladderMatchDAO.findMatchesByCharacterIds

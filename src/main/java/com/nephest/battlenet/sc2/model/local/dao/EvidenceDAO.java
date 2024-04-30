@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.Evidence;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -207,14 +208,14 @@ public class EvidenceDAO
     public List<Evidence> findAll(boolean hideDenied)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_EVIDENCE_DAYS));
+            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_EVIDENCE_DAYS));
         return template.query(hideDenied ? GET_ALL_HIDE_DENIED_QUERY : GET_ALL_QUERY, params, STD_ROW_MAPPER);
     }
 
     public Optional<Evidence> findById(boolean hideDenied, int id)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
+            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
             .addValue("id", id);
         return Optional.ofNullable(template.query(hideDenied ? GET_BY_ID_HIDE_DENIED : GET_BY_ID, params, STD_EXTRACTOR));
     }
@@ -232,7 +233,7 @@ public class EvidenceDAO
         if(reportIds.isEmpty()) return List.of();
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
+            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_EVIDENCE_DAYS))
             .addValue("reportIds", reportIds);
         return template.query(hideDenied ? GET_BY_REPORT_IDS_HIDE_DENIED : GET_BY_REPORT_IDS, params, STD_ROW_MAPPER);
     }
@@ -262,7 +263,7 @@ public class EvidenceDAO
     public int removeExpired()
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", OffsetDateTime.now().minusDays(DENIED_EVIDENCE_TTL_DAYS));
+            .addValue("from", SC2Pulse.offsetDateTime().minusDays(DENIED_EVIDENCE_TTL_DAYS));
         return template.update(REMOVE_EXPIRED_QUERY, params);
     }
 

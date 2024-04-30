@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Types;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -170,7 +171,7 @@ public class ProPlayerDAO
 
     public ProPlayer merge(ProPlayer proPlayer)
     {
-        proPlayer.setUpdated(OffsetDateTime.now());
+        proPlayer.setUpdated(SC2Pulse.offsetDateTime());
         MapSqlParameterSource params = createParameterSource(proPlayer);
         proPlayer.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return proPlayer;
@@ -183,7 +184,7 @@ public class ProPlayerDAO
         MapSqlParameterSource[] params = new MapSqlParameterSource[proPlayers.length];
         for(int i = 0; i < proPlayers.length; i++)
         {
-            proPlayers[i].setUpdated(OffsetDateTime.now());
+            proPlayers[i].setUpdated(SC2Pulse.offsetDateTime());
             params[i] = createParameterSource(proPlayers[i]);
         }
 
@@ -192,7 +193,7 @@ public class ProPlayerDAO
 
     public ProPlayer mergeVersioned(ProPlayer proPlayer)
     {
-        proPlayer.setUpdated(OffsetDateTime.now());
+        proPlayer.setUpdated(SC2Pulse.offsetDateTime());
         MapSqlParameterSource params = createParameterSource(proPlayer)
             .addValue("id", proPlayer.getId(), Types.BIGINT)
             .addValue("version", proPlayer.getVersion(), Types.INTEGER);

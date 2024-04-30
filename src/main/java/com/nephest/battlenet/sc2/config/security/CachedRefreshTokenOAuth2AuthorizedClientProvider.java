@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
 
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
@@ -104,7 +105,7 @@ implements OAuth2AuthorizedClientProvider
             cache.put
             (
                 RefreshTokenIdentity.from(context),
-                new ImmutablePair<>(auth, Instant.now())
+                new ImmutablePair<>(auth, SC2Pulse.instant())
             );
             LOG.debug("Cached refresh token request for {}", context.getPrincipal().getName());
         }
@@ -113,7 +114,7 @@ implements OAuth2AuthorizedClientProvider
 
     private void clearCache()
     {
-        Instant minInstant = Instant.now().minus(CACHE_TTL);
+        Instant minInstant = SC2Pulse.instant().minus(CACHE_TTL);
         cache.entrySet().removeIf(e->e.getValue().getValue().isBefore(minInstant));
     }
 

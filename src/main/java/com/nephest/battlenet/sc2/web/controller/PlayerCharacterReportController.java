@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.dao.EvidenceVoteDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderEvidenceVote;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderEvidenceVoteDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
 import io.swagger.v3.oas.annotations.Hidden;
 import java.net.InetAddress;
@@ -112,7 +113,7 @@ public class PlayerCharacterReportController
             evidenceCreated,
             user.getAccount().getId(),
             vote,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ));
         return ladderEvidenceVoteDAO.findByEvidenceIds(Set.of(evidenceId));
     }

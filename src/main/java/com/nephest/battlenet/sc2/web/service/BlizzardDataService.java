@@ -10,6 +10,7 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -63,13 +64,13 @@ public class BlizzardDataService
             .map(c->new AccountCharacterData(account, c, true, curSeason))
             .collect(Collectors.toSet());
         playerCharacterDAO.updateAccountsAndCharacters(importedData);
-        accountDAO.updateUpdated(OffsetDateTime.now().plus(ACCOUNT_IMPORT_DURATION), Set.of(account.getId()));
+        accountDAO.updateUpdated(SC2Pulse.offsetDateTime().plus(ACCOUNT_IMPORT_DURATION), Set.of(account.getId()));
     }
 
     @Transactional
     public void removeData(Account account, List<BlizzardFullPlayerCharacter> blizzardCharacters)
     {
-        OffsetDateTime expiredOdt = OffsetDateTime.now().minus(BlizzardPrivacyService.DATA_TTL);
+        OffsetDateTime expiredOdt = SC2Pulse.offsetDateTime().minus(BlizzardPrivacyService.DATA_TTL);
         List<PlayerCharacter> characters = blizzardCharacters
             .stream()
             .map(c->playerCharacterDAO.find(c.getRegion(), c.getRealm(), c.getBattlenetId()).orElse(null))

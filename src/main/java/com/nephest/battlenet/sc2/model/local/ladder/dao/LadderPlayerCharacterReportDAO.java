@@ -9,7 +9,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterReportDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterReport;
-import java.time.OffsetDateTime;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.util.List;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -104,7 +104,7 @@ public class LadderPlayerCharacterReportDAO
     public List<LadderPlayerCharacterReport> findAll()
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_REPORTS_DAYS))
+            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_REPORTS_DAYS))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template.query(FIND_REPORTS, params, STD_MAPPER);
@@ -116,7 +116,7 @@ public class LadderPlayerCharacterReportDAO
 
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("characterIds",  characterIds)
-            .addValue("from", OffsetDateTime.now().minusDays(HIDE_DENIED_REPORTS_DAYS))
+            .addValue("from", SC2Pulse.offsetDateTime().minusDays(HIDE_DENIED_REPORTS_DAYS))
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template.query(FIND_REPORTS_BY_CHARACTER_IDS, params, STD_MAPPER);

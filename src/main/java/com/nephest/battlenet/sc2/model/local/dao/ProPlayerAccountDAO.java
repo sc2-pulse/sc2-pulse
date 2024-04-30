@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.local.ProPlayerAccount;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
@@ -124,7 +125,7 @@ public class ProPlayerAccountDAO
         if(proPlayerAccounts.isEmpty()) return DAOUtils.EMPTY_INT_ARRAY;
 
         MapSqlParameterSource[] params = proPlayerAccounts.stream()
-            .peek(proPlayerAccount->proPlayerAccount.setUpdated(OffsetDateTime.now()))
+            .peek(proPlayerAccount->proPlayerAccount.setUpdated(SC2Pulse.offsetDateTime()))
             .map(this::createParameterSource)
             .toArray(MapSqlParameterSource[]::new);
 

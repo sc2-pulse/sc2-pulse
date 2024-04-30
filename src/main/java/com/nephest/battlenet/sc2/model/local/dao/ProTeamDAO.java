@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.ProTeam;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -108,7 +109,7 @@ public class ProTeamDAO
 
     public ProTeam merge(ProTeam proTeam)
     {
-        proTeam.setUpdated(OffsetDateTime.now());
+        proTeam.setUpdated(SC2Pulse.offsetDateTime());
         MapSqlParameterSource params = createParameterSource(proTeam);
         proTeam.setId(template.query(MERGE_QUERY, params, DAOUtils.LONG_EXTRACTOR));
         return proTeam;
@@ -121,7 +122,7 @@ public class ProTeamDAO
         MapSqlParameterSource[] params = new MapSqlParameterSource[proTeams.length];
         for(int i = 0; i < proTeams.length; i++)
         {
-            proTeams[i].setUpdated(OffsetDateTime.now());
+            proTeams[i].setUpdated(SC2Pulse.offsetDateTime());
             params[i] = createParameterSource(proTeams[i]);
         }
 

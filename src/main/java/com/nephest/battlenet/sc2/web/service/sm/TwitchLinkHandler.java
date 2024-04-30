@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.sm;
@@ -6,9 +6,9 @@ package com.nephest.battlenet.sc2.web.service.sm;
 import com.github.twitch4j.helix.domain.User;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.twitch.Twitch;
 import com.nephest.battlenet.sc2.web.service.TwitchAPI;
-import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -81,7 +81,7 @@ implements SocialMediaLinkResolver, SocialMediaLinkUpdater
         if(link.getUrl().equals(url)) return false;
 
         link.setUrl(url);
-        link.setUpdated(OffsetDateTime.now());
+        link.setUpdated(SC2Pulse.offsetDateTime());
         return true;
     }
 

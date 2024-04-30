@@ -21,6 +21,7 @@ import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummaryDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.SearchService;
 import discord4j.core.event.domain.interaction.ChatInputInteractionEvent;
 import discord4j.core.spec.InteractionFollowupCreateMono;
@@ -90,7 +91,12 @@ public class Summary1v1CommandTest
 
         verify(summaryDAO).find(any(), depthCaptor.capture(), eq(Race.TERRAN));
         //verify correct depth, 10 seconds to run the test just in case
-        assertTrue(OffsetDateTime.now().minusDays(100).toEpochSecond() - depthCaptor.getValue().toEpochSecond() < 10);
+        assertTrue
+        (
+            SC2Pulse.offsetDateTime().minusDays(100).toEpochSecond()
+            - depthCaptor.getValue().toEpochSecond()
+            < 10
+        );
 
         verify(followup).withContent(contentCaptor.capture());
         String content = contentCaptor.getValue();

@@ -25,6 +25,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Instant;
 import java.util.LinkedHashSet;
@@ -123,14 +124,14 @@ public class ClanServiceTest
     @Test
     public void testNullifyStats()
     {
-        clanService.getNullifyStatsTask().setValue(Instant.now()
+        clanService.getNullifyStatsTask().setValue(SC2Pulse.instant()
             .minus(ClanService.STATS_UPDATE_FRAME)
             .plusSeconds(1));
         update();
         verify(clanDAO, never()).nullifyStats(anyInt());
 
-        Instant beforeStart = Instant.now().minusSeconds(1);
-        clanService.getNullifyStatsTask().setValue(Instant.now().minus(ClanService.STATS_UPDATE_FRAME));
+        Instant beforeStart = SC2Pulse.instant().minusSeconds(1);
+        clanService.getNullifyStatsTask().setValue(SC2Pulse.instant().minus(ClanService.STATS_UPDATE_FRAME));
         update();
         verify(clanDAO).nullifyStats(ClanDAO.CLAN_STATS_MIN_MEMBERS - 1);
         assertTrue(beforeStart.isBefore(clanService.getNullifyStatsTask().getValue()));
@@ -145,8 +146,8 @@ public class ClanServiceTest
         List<Integer> firstList = List.of(22);
         when(clanDAO.findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS, 0, 50))
             .thenReturn(firstList);
-        clanService.getStatsUpdated().setValue(Instant.now().minus(ClanService.STATS_UPDATE_FRAME.dividedBy(2)));
-        Instant beforeStart = Instant.now().minusSeconds(1);
+        clanService.getStatsUpdated().setValue(SC2Pulse.instant().minus(ClanService.STATS_UPDATE_FRAME.dividedBy(2)));
+        Instant beforeStart = SC2Pulse.instant().minusSeconds(1);
 
         update();
         update(); //error recovery
@@ -157,8 +158,8 @@ public class ClanServiceTest
         List<Integer> secondList = List.of();
         when(clanDAO.findIdsByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS, 22, 50))
             .thenReturn(secondList);
-        clanService.getStatsUpdated().setValue(Instant.now().minus(ClanService.STATS_UPDATE_FRAME.dividedBy(2)));
-        beforeStart = Instant.now();
+        clanService.getStatsUpdated().setValue(SC2Pulse.instant().minus(ClanService.STATS_UPDATE_FRAME.dividedBy(2)));
+        beforeStart = SC2Pulse.instant();
 
         //The cursor is reset due to end of cursor
         update();
@@ -221,9 +222,9 @@ public class ClanServiceTest
             }
             return clans;
         });
-        clanService.getInactiveClanMembersUpdated().setValue(Instant.now().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME));
+        clanService.getInactiveClanMembersUpdated().setValue(SC2Pulse.instant().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME));
 
-        Instant beforeUpdate = Instant.now().minusSeconds(1);
+        Instant beforeUpdate = SC2Pulse.instant().minusSeconds(1);
         update();
         verify(clanMemberDAO).removeExpired();
         //clan membership dropped
@@ -252,7 +253,7 @@ public class ClanServiceTest
     @Test
     public void whenNoInactiveClanMembers_thenDontUpdateVars()
     {
-        Instant beforeUpdate = Instant.now().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME);
+        Instant beforeUpdate = SC2Pulse.instant().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME);
         when(clanMemberDAO.getInactiveCount(any())).thenReturn(0);
         clanService.getInactiveClanMembersCursor().setValue(33L);
         clanService.getInactiveClanMembersUpdated().setValue(beforeUpdate);
@@ -266,7 +267,7 @@ public class ClanServiceTest
     @Test
     public void whenEmptyInactiveClanMemberBatch_thenResetIdCursor()
     {
-        Instant beforeUpdate = Instant.now().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME);
+        Instant beforeUpdate = SC2Pulse.instant().minus(ClanService.CLAN_MEMBER_UPDATE_FRAME);
         when(clanMemberDAO.getInactiveCount(any())).thenReturn(2);
         clanService.getInactiveClanMembersCursor().setValue(33L);
         clanService.getInactiveClanMembersUpdated().setValue(beforeUpdate);

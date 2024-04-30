@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -15,6 +15,7 @@ import com.nephest.battlenet.sc2.model.twitch.TwitchUser;
 import com.nephest.battlenet.sc2.model.twitch.TwitchVideo;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchUserDAO;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchVideoDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.twitch.Twitch;
 import java.time.Duration;
@@ -125,7 +126,7 @@ public class TwitchService
 
     private void updateVod()
     {
-        OffsetDateTime from = OffsetDateTime.now().minus(LINK_VIDEO_OFFSET);
+        OffsetDateTime from = SC2Pulse.offsetDateTime().minus(LINK_VIDEO_OFFSET);
         matchParticipantDAO.linkTwitchVideo(from);
         matchDAO.updateTwitchVodStats(from);
     }

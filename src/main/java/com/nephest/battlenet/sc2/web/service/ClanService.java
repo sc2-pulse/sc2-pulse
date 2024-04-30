@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ClanMemberEventDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.Duration;
@@ -137,13 +138,13 @@ public class ClanService
 
         try
         {
-            if(statsUpdated.load() == null) statsUpdated.setValueAndSave(Instant.now());
+            if(statsUpdated.load() == null) statsUpdated.setValueAndSave(SC2Pulse.instant());
             if(nullifyStatsTask.load() == null) nullifyStatsTask
-                .setValueAndSave(Instant.now().minus(STATS_UPDATE_FRAME));
+                .setValueAndSave(SC2Pulse.instant().minus(STATS_UPDATE_FRAME));
             if(statsCursor.load() == null) statsCursor.setValueAndSave(0L);
 
             if(inactiveClanMembersUpdated.load() == null)
-                inactiveClanMembersUpdated.setValueAndSave(Instant.now());
+                inactiveClanMembersUpdated.setValueAndSave(SC2Pulse.instant());
             if(inactiveClanMembersCursor.load() == null)
                 inactiveClanMembersCursor.setValueAndSave(Long.MAX_VALUE);
         }
@@ -193,7 +194,7 @@ public class ClanService
     @Scheduled(cron="0 0/10 * * * *")
     public boolean removeOldClanUpdates()
     {
-        Instant min = Instant.now().minus(CLAN_UPDATE_INSTANT_TTL);
+        Instant min = SC2Pulse.instant().minus(CLAN_UPDATE_INSTANT_TTL);
         return characterClanUpdateInstants.entrySet().removeIf(e->e.getValue().isBefore(min));
     }
 
@@ -234,13 +235,13 @@ public class ClanService
         if(batch.isEmpty())
         {
             statsCursor.setValueAndSave(0L);
-            statsUpdated.setValueAndSave(Instant.now());
+            statsUpdated.setValueAndSave(SC2Pulse.instant());
         }
         else
         {
             updateStats(batch);
             statsCursor.setValueAndSave((long) batch.get(batch.size() - 1));
-            statsUpdated.setValueAndSave(Instant.now());
+            statsUpdated.setValueAndSave(SC2Pulse.instant());
         }
 
     }
@@ -265,7 +266,7 @@ public class ClanService
         int clansTotal = clanDAO.getCountByMinMemberCount(ClanDAO.CLAN_STATS_MIN_MEMBERS);
         if(clansTotal == 0) return 0;
         Duration durationPerClan = STATS_UPDATE_FRAME.dividedBy(clansTotal);
-        return (int) Duration.between(statsUpdated.getValue(), Instant.now())
+        return (int) Duration.between(statsUpdated.getValue(), SC2Pulse.instant())
             .dividedBy(durationPerClan);
     }
 
@@ -276,12 +277,12 @@ public class ClanService
 
     private int getInactiveClanMembersBatchSize()
     {
-        OffsetDateTime inactiveTo = OffsetDateTime.now().minus(CLAN_MEMBER_INACTIVE_AFTER);
+        OffsetDateTime inactiveTo = SC2Pulse.offsetDateTime().minus(CLAN_MEMBER_INACTIVE_AFTER);
         int inactiveMembersTotal = clanMemberDAO.getInactiveCount(inactiveTo);
         if(inactiveMembersTotal < 1) return 0;
 
         Duration durationPerClanMember = CLAN_MEMBER_UPDATE_FRAME.dividedBy(inactiveMembersTotal);
-        return (int) Duration.between(inactiveClanMembersUpdated.getValue(), Instant.now())
+        return (int) Duration.between(inactiveClanMembersUpdated.getValue(), SC2Pulse.instant())
             .dividedBy(durationPerClanMember);
     }
 
@@ -295,7 +296,7 @@ public class ClanService
     @Transactional
     public void removeExpiredClanMembers()
     {
-        Instant now = Instant.now();
+        Instant now = SC2Pulse.instant();
         List<ClanMemberEventData> clanData = clanMemberDAO.removeExpired().stream()
             .map(id->new PlayerCharacter(id, null, null, null, null, null))
             .map(character->new ClanMemberEventData(character, null, now))
@@ -349,7 +350,7 @@ public class ClanService
         int batchSize = getInactiveClanMembersBatchSize();
         if(batchSize < 1) return;
 
-        OffsetDateTime inactiveTo = OffsetDateTime.now().minus(CLAN_MEMBER_INACTIVE_AFTER);
+        OffsetDateTime inactiveTo = SC2Pulse.offsetDateTime().minus(CLAN_MEMBER_INACTIVE_AFTER);
         List<PlayerCharacter> inactiveMembers = playerCharacterDAO.findInactiveClanMembers
         (
             inactiveTo,
@@ -364,7 +365,7 @@ public class ClanService
         {
             updateInactiveClanMembersBatch(inactiveMembers);
             inactiveClanMembersCursor.setValueAndSave(inactiveMembers.get(inactiveMembers.size() - 1).getId());
-            inactiveClanMembersUpdated.setValueAndSave(Instant.now());
+            inactiveClanMembersUpdated.setValueAndSave(SC2Pulse.instant());
         }
     }
 

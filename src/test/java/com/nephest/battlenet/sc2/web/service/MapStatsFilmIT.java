@@ -30,6 +30,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStatsFilm;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -118,7 +119,7 @@ public class MapStatsFilmIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
-        mapService.getMapStatsInstant().setValue(Instant.now());
+        mapService.getMapStatsInstant().setValue(SC2Pulse.instant());
     }
 
     @AfterAll
@@ -129,7 +130,7 @@ public class MapStatsFilmIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
         }
-        mapService.getMapStatsInstant().setValue(Instant.now());
+        mapService.getMapStatsInstant().setValue(SC2Pulse.instant());
     }
 
     private void takeTeamSnapshot(List<Long> teamIds, OffsetDateTime odt, long duration, int ix)
@@ -178,7 +179,7 @@ public class MapStatsFilmIT
     {
         int frameNumber = 2;
         long frameOffset = FILM_FRAME_DURATION.toSeconds() * frameNumber;
-        OffsetDateTime startFrom = OffsetDateTime.now().plusMonths(1);
+        OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
         Instant mucInstant = startFrom.plusDays(1).toInstant();
         seasonGenerator.generateDefaultSeason(1000, true);
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
@@ -337,7 +338,7 @@ public class MapStatsFilmIT
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
-        OffsetDateTime startFrom = OffsetDateTime.now().plusMonths(1);
+        OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
         Instant mucInstant = startFrom.plusDays(1).toInstant();
         seasonGenerator.createMatches
         (

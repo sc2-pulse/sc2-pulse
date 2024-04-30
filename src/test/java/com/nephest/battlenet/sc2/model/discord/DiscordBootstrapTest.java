@@ -31,6 +31,7 @@ import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.core.GatewayDiscordClient;
@@ -46,7 +47,6 @@ import discord4j.rest.service.ApplicationService;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
 import java.math.BigInteger;
-import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -163,7 +163,7 @@ public class DiscordBootstrapTest
             1,
             10L,
             120, 1, 2, 2,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             List.of
             (
                 new LadderTeamMember

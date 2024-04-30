@@ -1,10 +1,11 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -317,9 +318,9 @@ public class TeamStateDAO
     public int removeExpired()
     {
         MapSqlParameterSource paramsMain = new MapSqlParameterSource()
-            .addValue("from", OffsetDateTime.now().minusDays(getMaxDepthDaysMain()));
+            .addValue("from", SC2Pulse.offsetDateTime().minusDays(getMaxDepthDaysMain()));
         MapSqlParameterSource paramsSecondary = new MapSqlParameterSource()
-            .addValue("from", OffsetDateTime.now().minusDays(getMaxDepthDaysSecondary()));
+            .addValue("from", SC2Pulse.offsetDateTime().minusDays(getMaxDepthDaysSecondary()));
         int removed1v1 = template.update(REMOVE_EXPIRED_MAIN_QUERY, paramsMain);
         int removedTeam = template.update(REMOVE_EXPIRED_SECONDARY_QUERY, paramsSecondary);
         LOG.debug("Removed expired team states({} 1v1, {} team)", removed1v1, removedTeam);

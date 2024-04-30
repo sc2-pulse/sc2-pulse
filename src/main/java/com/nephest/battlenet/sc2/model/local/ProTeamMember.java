@@ -1,11 +1,12 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
-import javax.validation.constraints.NotNull;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public class ProTeamMember
 implements java.io.Serializable
@@ -20,7 +21,7 @@ implements java.io.Serializable
     private Long proPlayerId;
 
     @NotNull
-    private OffsetDateTime updated = OffsetDateTime.now();
+    private OffsetDateTime updated = SC2Pulse.offsetDateTime();
 
     public ProTeamMember(){}
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -55,6 +55,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatchParticipant;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -277,7 +278,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charEu4.getBattlenetId(), charEu4.getRealm(), charEu4.getName())
             }),
             division4v4.getId(), 1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team4v4Loss = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
@@ -290,7 +291,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charEu8.getBattlenetId(), charEu8.getRealm(), charEu8.getName())
             }),
             division4v4_2.getId(), 2L, 2, 2, 2, 2,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team2v2Win1 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -300,7 +301,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charUs1.getBattlenetId(), charUs1.getRealm(), charUs1.getName())
             }),
             division2v2.getId(), 1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team2v2Win2 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -310,7 +311,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charUs2.getBattlenetId(), charUs2.getRealm(), charUs2.getName())
             }),
             division2v2.getId(), 1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team2v2Loss1 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -320,7 +321,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charUs3.getBattlenetId(), charUs3.getRealm(), charUs3.getName())
             }),
             division2v2.getId(), 2L, 2, 2, 2, 2,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team2v2Loss2 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -330,7 +331,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charUs4.getBattlenetId(), charUs4.getRealm(), charUs4.getName())
             }),
             division2v2.getId(), 2L, 2, 2, 2, 2,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
         Team team1v1Win = teamDAO.merge(Set.of(new Team(
@@ -341,7 +342,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charKr1.getBattlenetId(), charKr1.getRealm(), charKr1.getName())
             }, Race.TERRAN),
             division1v1.getId(), 1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team1v1Loss = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.KR,
@@ -351,7 +352,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charKr2.getBattlenetId(), charKr2.getRealm(), charKr2.getName())
             }, Race.PROTOSS),
             division1v1.getId(), 2L, 2, 2, 2, 2,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
         Team team1v1Win4 = teamDAO.merge(Set.of(new Team(
@@ -362,7 +363,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charEu9.getBattlenetId(), charEu9.getRealm(), charEu9.getName())
             }, Race.TERRAN),
             division1v1_2.getId(), 1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team1v1Loss4 = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.EU,
@@ -372,7 +373,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charEu10.getBattlenetId(), charEu10.getRealm(), charEu10.getName())
             }, Race.PROTOSS),
             division1v1_2.getId(), 2L, 2, 2, 2, 2,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
         Team team1v1WinInvalidState = teamDAO.merge(Set.of(new Team(
@@ -383,7 +384,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charKr3.getBattlenetId(), charKr3.getRealm(), charKr3.getName())
             }, Race.TERRAN),
             division1v1.getId(), 1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         Team team1v1LossInvalidState = teamDAO.merge(Set.of(new Team(
             null, SeasonGenerator.DEFAULT_SEASON_ID, Region.US,
@@ -393,7 +394,7 @@ public class MatchIT
                 new BlizzardPlayerCharacter(charKr4.getBattlenetId(), charKr4.getRealm(), charKr4.getName())
             }, Race.PROTOSS),
             division1v1.getId(), 1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
         teamMemberDAO.merge(Set.of(
             new TeamMember(team4v4Win.getId(), charEu1.getId(), 1, 0, 0, 0),
@@ -420,7 +421,7 @@ public class MatchIT
             new TeamMember(team1v1WinInvalidState.getId(), charKr3.getId(), 1, 0, 0, 0),
             new TeamMember(team1v1LossInvalidState.getId(), charKr4.getId(), 1, 0, 0, 0)
         ));
-        OffsetDateTime now = OffsetDateTime.now().minusSeconds(1);
+        OffsetDateTime now = SC2Pulse.offsetDateTime().minusSeconds(1);
         SC2Map map1v1_1 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_1"))).iterator().next();
         SC2Map map1v1_2 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_2"))).iterator().next();
         SC2Map map1v1_3 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_3"))).iterator().next();
@@ -604,7 +605,7 @@ public class MatchIT
             mvc, objectMapper, new TypeReference<>(){},
             "/api/group/match"
                 + "?characterId=" + charKr1.getId()
-                + "&dateCursor=" + OffsetDateTime.now()
+                + "&dateCursor=" + SC2Pulse.offsetDateTime()
                     .plusMinutes(MatchParticipantDAO.IDENTIFICATION_FRAME_MINUTES * 2 + 1)
         );
         assertEquals(6, matches1v1.size());
@@ -781,7 +782,7 @@ public class MatchIT
 
         SC2Map map1v1_1 = mapDAO.merge(Set.of(new SC2Map(null, "map1v1_1"))).iterator().next();
 
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
         Match match1v1_1 = new Match(null, now, BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
         Match match1v1_2 = new Match(null, match1v1_1.getDate().minusSeconds(300), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
         Match match1v1_3 = new Match(null, match1v1_2.getDate().minusSeconds(400), BaseMatch.MatchType._1V1, map1v1_1.getId(), Region.EU);
@@ -844,7 +845,7 @@ public class MatchIT
             2
         );
 
-        OffsetDateTime now = OffsetDateTime.now();
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
         seasonGenerator.createMatches
         (
             BaseMatch.MatchType._4V4,
@@ -865,7 +866,7 @@ public class MatchIT
             75, 125 //null, out of scope values
         );
 
-        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, OffsetDateTime.now().minusYears(1));
+        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, SC2Pulse.offsetDateTime().minusYears(1));
         //unidentify match
         assertEquals(8, template.update("UPDATE match_participant SET team_id = NULL WHERE match_id = 8"));
 

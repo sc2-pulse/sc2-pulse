@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.OffsetDateTime;
@@ -229,7 +230,7 @@ public class SeasonGenerator
         boolean spreadRaces
     )
     {
-        ZoneOffset offset = OffsetDateTime.now().getOffset();
+        ZoneOffset offset = SC2Pulse.offsetDateTime().getOffset();
         OffsetDateTime seasonStart = season.getStart().atStartOfDay(offset).toOffsetDateTime();
         League league = leagueDAO.create(new League(null, season.getId(), type, queueType, teamType));
         LeagueTier newTier = new LeagueTier
@@ -270,7 +271,7 @@ public class SeasonGenerator
                 null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
                 teamDAO.legacyIdOf(league, bTeam), division.getId(),
                 (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             );
             Team team = teamDAO.create(newTeam);
             TeamState teamState = TeamState.of(team);
@@ -329,7 +330,7 @@ public class SeasonGenerator
             null, season.getBattlenetId(), season.getRegion(), league, tierType,
             legacyId, division.getId(),
             rating, wins, losses, ties, points,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team team = teamDAO.create(newTeam);
         for(PlayerCharacter member : members) teamMemberDAO.create(new TeamMember(team.getId(), member.getId(), 1, 2, 3, 4));
@@ -356,7 +357,7 @@ public class SeasonGenerator
                 BaseLeagueTier.LeagueTierType.FIRST,
                 BigInteger.valueOf(i), 1,
                 (long) i, i, 0, 0, 0,
-                OffsetDateTime.now()
+                SC2Pulse.offsetDateTime()
             );
             teams.add(team);
             teamDAO.create(team);

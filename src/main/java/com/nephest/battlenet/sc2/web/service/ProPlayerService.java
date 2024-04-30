@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -23,10 +23,10 @@ import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.liquipedia.LiquipediaAPI;
 import com.nephest.battlenet.sc2.web.service.sm.SocialMediaLinkResolver;
 import com.nephest.battlenet.sc2.web.service.sm.SocialMediaLinkUpdater;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -302,7 +302,7 @@ public class ProPlayerService
             proPlayerId,
             accountId,
             PersonalService.getAccountId().orElse(null),
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             false
         )));
     }

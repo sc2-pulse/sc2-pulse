@@ -4,13 +4,14 @@
 package com.nephest.battlenet.sc2.model.blizzard;
 
 import com.fasterxml.jackson.annotation.JsonAlias;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.Instant;
 
 public class BlizzardLegacyProfile
 extends BlizzardPlayerCharacter
 {
 
-    private final Instant createdAt = Instant.now();
+    private final Instant createdAt = SC2Pulse.instant();
 
     private String clanTag, clanName;
 

@@ -1,20 +1,20 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import javax.annotation.PostConstruct;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.EnumMap;
 import java.util.Map;
+import javax.annotation.PostConstruct;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 @Service
 public class UpdateService
@@ -98,7 +98,7 @@ public class UpdateService
 
     public void updated(Instant externalUpdate)
     {
-        Instant internalUpdate = Instant.now();
+        Instant internalUpdate = SC2Pulse.instant();
         varDAO.merge("global.updated", String.valueOf(externalUpdate.toEpochMilli()));
         varDAO.merge("global.updated.internal", String.valueOf(internalUpdate.toEpochMilli()));
         previousGlobalContext = globalContext;
@@ -107,7 +107,7 @@ public class UpdateService
 
     public void updated(Region region, Instant externalUpdate)
     {
-        Instant internalUpdate = Instant.now();
+        Instant internalUpdate = SC2Pulse.instant();
         varDAO.merge(region.getId() + ".updated", String.valueOf(externalUpdate.toEpochMilli()));
         varDAO.merge(region.getId() + ".updated.internal", String.valueOf(internalUpdate.toEpochMilli()));
         regionalContexts.put(region, new UpdateContext(externalUpdate, internalUpdate));

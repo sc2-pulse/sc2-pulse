@@ -42,6 +42,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.wrapper.ThreadLocalRandomSupplier;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -209,7 +210,7 @@ public class CommunityVideoStreamIT
             .createTeams(true, teamCharacters.toArray(PlayerCharacter[]::new));
 
         LocalDate bd1 = LocalDate.now().minusYears(20);
-        OffsetDateTime odt = OffsetDateTime.now();
+        OffsetDateTime odt = SC2Pulse.offsetDateTime();
         proPlayers = IntStream.range(0, count)
             .boxed()
             .map(i->new ProPlayer(null, (long) i, "tag" + i, "name" + i, "US",
@@ -222,7 +223,7 @@ public class CommunityVideoStreamIT
                 proPlayers[i].getId(),
                 services.get(i % services.size()),
                 services.get(i % services.size()) + "/twitchUser" + i,
-                OffsetDateTime.now(),
+                SC2Pulse.offsetDateTime(),
                 "twitchServiceUserId" + i,
                 false
             ))
@@ -262,7 +263,7 @@ public class CommunityVideoStreamIT
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ?",
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
                 .plusSeconds(10)
         );
@@ -561,7 +562,7 @@ public class CommunityVideoStreamIT
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ? WHERE id = 1",
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
                 .minusSeconds(1)
         );
@@ -833,7 +834,7 @@ public class CommunityVideoStreamIT
             1L,
             SocialMedia.BILIBILI,
             SocialMedia.BILIBILI.getBaseUserUrl() + "/twitchUser" + 2,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             "twitchServiceUserId" + 2,
             false
         ))).iterator().next();
@@ -960,7 +961,7 @@ public class CommunityVideoStreamIT
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ?",
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .plusSeconds(10)
         );
@@ -1000,7 +1001,7 @@ public class CommunityVideoStreamIT
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ? WHERE id = 1",
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
                 .plusSeconds(10)
         );
@@ -1008,14 +1009,14 @@ public class CommunityVideoStreamIT
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ? WHERE id = 2",
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
                 .plusSeconds(12)
         );
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ? WHERE id = 3",
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_TEAM_MAX_DURATION_OFFSET)
                 .plusSeconds(11)
         );
@@ -1114,7 +1115,7 @@ public class CommunityVideoStreamIT
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ?",
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .plusSeconds(10)
         );
@@ -1154,14 +1155,14 @@ public class CommunityVideoStreamIT
             1L,
             SocialMedia.BILIBILI,
             SocialMedia.BILIBILI.getBaseUserUrl() + "/twitchUser" + 1,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             "twitchServiceUserId" + 1,
             false
         ))).iterator().next();
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ?",
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .plusSeconds(10)
         );
@@ -1213,7 +1214,7 @@ public class CommunityVideoStreamIT
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ?",
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .plusSeconds(10)
         );
@@ -1221,7 +1222,7 @@ public class CommunityVideoStreamIT
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ? WHERE id = " + (8 - FEATURED_STREAM_SKILLED_SLOT_COUNT),
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .minusSeconds(1)
         );
@@ -1232,7 +1233,7 @@ public class CommunityVideoStreamIT
         when(videoStreamSupplier.getStreams()).thenReturn(Flux.fromArray(streams));
 
         assertNull(communityService.getCurrentRandomStreamAssigned());
-        Instant beforeRandomStreamReassignment1 = Instant.now();
+        Instant beforeRandomStreamReassignment1 = SC2Pulse.instant();
         CommunityStreamResult featuredStreams1 = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream/featured")
@@ -1272,7 +1273,7 @@ public class CommunityVideoStreamIT
         Random rng = mock(Random.class);
         List<LadderVideoStream> featuredStreams = testFeaturedStreamsStart(rng);
         //the same random stream is picked, despite different rng
-        Instant maxRandomStreamInstant = Instant.now()
+        Instant maxRandomStreamInstant = SC2Pulse.instant()
             .minus(CommunityService.RANDOM_STREAM_MAX_DURATION)
             .plusSeconds(5); //offset for test execution
         communityService.setCurrentRandomStreamAssigned(maxRandomStreamInstant);
@@ -1293,7 +1294,7 @@ public class CommunityVideoStreamIT
 
         //random stream slot has expired, should pick a new stream due to different rng
         communityService.setCurrentRandomStreamAssigned(
-            Instant.now().minus(CommunityService.RANDOM_STREAM_MAX_DURATION).minusSeconds(1));
+            SC2Pulse.instant().minus(CommunityService.RANDOM_STREAM_MAX_DURATION).minusSeconds(1));
         featuredStreams.set
         (
             featuredStreams.size() - 1,
@@ -1303,7 +1304,7 @@ public class CommunityVideoStreamIT
                 CommunityService.Featured.RANDOM
             )
         );
-        Instant beforeRandomStreamReassignment2 = Instant.now();
+        Instant beforeRandomStreamReassignment2 = SC2Pulse.instant();
         CommunityStreamResult featuredStreams3 = objectMapper.readValue(mvc.perform
         (
             get("/api/revealed/stream/featured")
@@ -1340,7 +1341,7 @@ public class CommunityVideoStreamIT
         jdbcTemplate.update
         (
             "UPDATE team SET last_played = ? WHERE id = " + (7 - FEATURED_STREAM_SKILLED_SLOT_COUNT),
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
                 .minus(CommunityService.CURRENT_FEATURED_TEAM_MAX_DURATION_OFFSET)
                 .minusSeconds(10)
         );

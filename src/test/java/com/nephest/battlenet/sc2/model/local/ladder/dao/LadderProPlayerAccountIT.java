@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -16,6 +16,7 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerAccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.RevealerStats;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -80,7 +81,7 @@ public class LadderProPlayerAccountIT
         Account[] accounts = seasonGenerator.generateAccounts(Partition.GLOBAL, "btag", 10);
         PlayerCharacter[] characters = seasonGenerator
             .generateCharacters("name", accounts, Region.EU, 1L);
-        OffsetDateTime odt = OffsetDateTime.now();
+        OffsetDateTime odt = SC2Pulse.offsetDateTime();
         proPlayerAccountDAO.merge
         (
             false,

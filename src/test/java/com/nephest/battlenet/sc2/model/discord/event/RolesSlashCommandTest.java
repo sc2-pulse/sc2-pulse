@@ -31,6 +31,7 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
@@ -44,7 +45,6 @@ import discord4j.core.spec.InteractionFollowupCreateMono;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
 import java.math.BigInteger;
-import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.List;
@@ -293,7 +293,7 @@ public class RolesSlashCommandTest
             1,
             10L,
             120, 2, 1, 2,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             List.of(mainMember),
             null
         );

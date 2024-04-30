@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 import javax.validation.constraints.NotNull;
@@ -20,7 +21,7 @@ implements java.io.Serializable
     private Long teamId;
 
     @NotNull
-    private OffsetDateTime dateTime = OffsetDateTime.now();
+    private OffsetDateTime dateTime = SC2Pulse.offsetDateTime();
 
     @NotNull
     private Integer divisionId;
@@ -101,7 +102,7 @@ implements java.io.Serializable
 
     public static TeamState of(Team team)
     {
-        return TeamState.of(team, OffsetDateTime.now());
+        return TeamState.of(team, SC2Pulse.offsetDateTime());
     }
 
     @Override

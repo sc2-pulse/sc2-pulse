@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.local.ProPlayer;
 import com.nephest.battlenet.sc2.model.local.SocialMediaLink;
 import com.nephest.battlenet.sc2.model.local.SocialMediaUserId;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -129,7 +130,7 @@ public class SocialMediaLinkIT
             .merge(new ProPlayer(null, 2L, "nick2", "name2"));
         ProPlayer proPlayer3 = proPlayerDAO
             .merge(new ProPlayer(null, 3L, "nick3", "name3"));
-        OffsetDateTime odt = OffsetDateTime.now();
+        OffsetDateTime odt = SC2Pulse.offsetDateTime();
         SocialMediaLink[] links = socialMediaLinkDAO.merge(new LinkedHashSet<>(List.of(
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.ALIGULAC, "url1", odt, "1", false),
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url2", odt, "1", false),
@@ -165,7 +166,7 @@ public class SocialMediaLinkIT
         ProPlayer proPlayer4 = proPlayerDAO
             .merge(new ProPlayer(null, 4L, "nick4", "name4"));
 
-        OffsetDateTime odt1 = OffsetDateTime.now();
+        OffsetDateTime odt1 = SC2Pulse.offsetDateTime();
         SocialMediaLink[] links = new SocialMediaLink[]
         {
             new SocialMediaLink(proPlayer1.getId(), SocialMedia.TWITCH, "url1"),
@@ -215,7 +216,7 @@ public class SocialMediaLinkIT
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
                 "url1",
-                OffsetDateTime.now(),
+                SC2Pulse.offsetDateTime(),
                 "123",
                 true
             ))
@@ -231,7 +232,7 @@ public class SocialMediaLinkIT
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
                 "url2",
-                OffsetDateTime.now(),
+                SC2Pulse.offsetDateTime(),
                 "123",
                 false
             ))
@@ -252,7 +253,7 @@ public class SocialMediaLinkIT
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
                 "url1",
-                OffsetDateTime.now(),
+                SC2Pulse.offsetDateTime(),
                 "123",
                 false
             ))
@@ -267,7 +268,7 @@ public class SocialMediaLinkIT
                 proPlayer1.getId(),
                 SocialMedia.TWITCH,
                 "url2",
-                OffsetDateTime.now(),
+                SC2Pulse.offsetDateTime(),
                 "123",
                 false
             ))
@@ -285,7 +286,7 @@ public class SocialMediaLinkIT
         ProPlayer proPlayer1 = proPlayerDAO
             .merge(new ProPlayer(null, 1L, "nick", "name"));
         assertEquals(1,  proPlayerDAO.findAll().get(0).getVersion());
-        OffsetDateTime odt1 = OffsetDateTime.now();
+        OffsetDateTime odt1 = SC2Pulse.offsetDateTime();
         socialMediaLinkDAO.merge
         (
             true,
@@ -329,7 +330,7 @@ public class SocialMediaLinkIT
         ProPlayer proPlayer2 = proPlayerDAO
             .merge(new ProPlayer(null, 2L, "nick2", "name2"));
         assertEquals(1, proPlayerDAO.find(Set.of(proPlayer1.getId())).get(0).getVersion());
-        OffsetDateTime odt1 = OffsetDateTime.now();
+        OffsetDateTime odt1 = SC2Pulse.offsetDateTime();
         socialMediaLinkDAO.merge
         (
             true,

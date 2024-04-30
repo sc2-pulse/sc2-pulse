@@ -47,6 +47,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import java.math.BigInteger;
@@ -216,7 +217,7 @@ public class BlizzardPrivacyServiceTest
             .toSeconds();
 
         //rewind update timestamp to simulate the time flow
-        privacyService.getLastUpdatedSeasonInstantVar().setValue(Instant.now().minusSeconds(updateTimeFrame));
+        privacyService.getLastUpdatedSeasonInstantVar().setValue(SC2Pulse.instant().minusSeconds(updateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON, privacyService.getSeasonToUpdate());
         privacyService.updateOldSeasons();
         privacyService.getUpdateOldDataTask().get();
@@ -232,7 +233,7 @@ public class BlizzardPrivacyServiceTest
         privacyService.getUpdateOldDataTask().get();
 
         //current season update is prioritized
-        privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(Instant.now().minusSeconds(currentUpdateTimeFrame));
+        privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(SC2Pulse.instant().minusSeconds(currentUpdateTimeFrame));
         assertEquals(BlizzardSC2API.FIRST_SEASON + 2, privacyService.getSeasonToUpdate());
         privacyService.updateOldSeasons();
         privacyService.getUpdateOldDataTask().get();
@@ -243,7 +244,7 @@ public class BlizzardPrivacyServiceTest
     {
         privacyService.update();
 
-        OffsetDateTime anonymizeOffset = OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
+        OffsetDateTime anonymizeOffset = OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, SC2Pulse.offsetDateTime().getOffset());
         InOrder order = inOrder(accountDAO, playerCharacterDAO);
         order.verify(accountDAO).removeEmptyAccounts();
         order.verify(accountDAO, times(2)).anonymizeExpiredAccounts(offsetDateTimeArgumentCaptor.capture());
@@ -265,7 +266,7 @@ public class BlizzardPrivacyServiceTest
 
         //rewind
         privacyService.getLastUpdatedCharacterInstant()
-            .setValue(Instant.now().minus(BlizzardPrivacyService.CHARACTER_UPDATE_TIME_FRAME).minusSeconds(1));
+            .setValue(SC2Pulse.instant().minus(BlizzardPrivacyService.CHARACTER_UPDATE_TIME_FRAME).minusSeconds(1));
 
         when(playerCharacterDAO.countByUpdatedMax(any(), any())).thenReturn(9999);
         privacyService.getLastUpdatedCharacterId().setValue(100L);
@@ -420,7 +421,7 @@ public class BlizzardPrivacyServiceTest
         when(sc2WebServiceUtil.getExternalOrExistingSeason(any(), anyInt())).thenReturn(new BlizzardSeason());
 
         //update previous season
-        privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(Instant.now());
+        privacyService.getLastUpdatedCurrentSeasonInstantVar().setValue(SC2Pulse.instant());
         stubLadderApi();
 
         privacyService.updateOldSeasons();
@@ -453,7 +454,7 @@ public class BlizzardPrivacyServiceTest
                 return Set.of(character);
             });
 
-        Instant begin = Instant.now();
+        Instant begin = SC2Pulse.instant();
         stubLadderApi();
         //update current season
         privacyService.updateOldSeasons();
@@ -541,7 +542,7 @@ public class BlizzardPrivacyServiceTest
                         (
                             BigInteger.ONE,
                             new BlizzardTeamMember[]{member},
-                            Instant.now(), 1L, 1, 1, 1, 1
+                            SC2Pulse.instant(), 1L, 1, 1, 1, 1
                         )
                     },
                     new BlizzardLadderLeague()

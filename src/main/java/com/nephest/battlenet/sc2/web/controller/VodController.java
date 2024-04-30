@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -9,6 +9,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMatch;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -60,7 +61,7 @@ public class VodController
             minDuration, maxDuration,
             includeSubOnly,
             map,
-            OffsetDateTime.parse(dateAnchor),
+            SC2Pulse.offsetDateTime(OffsetDateTime.parse(dateAnchor)),
             typeAnchor,
             mapAnchor,
             regionAnchor == null ? Region.US : regionAnchor,

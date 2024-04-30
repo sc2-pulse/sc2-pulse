@@ -12,6 +12,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.PostgreSQLUtils;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.SingleRunnable;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
@@ -179,8 +180,8 @@ public class Cron
 
     public static OffsetDateTime getNextCharacterReportUpdateTime()
     {
-        OffsetDateTime dt = OffsetDateTime.now().withHour(5).withMinute(0).withSecond(0).withNano(0);
-        if(dt.isBefore(OffsetDateTime.now())) dt = dt.plusDays(1);
+        OffsetDateTime dt = SC2Pulse.offsetDateTime().withHour(5).withMinute(0).withSecond(0).withNano(0);
+        if(dt.isBefore(SC2Pulse.offsetDateTime())) dt = dt.plusDays(1);
         return dt;
     }
 
@@ -211,7 +212,7 @@ public class Cron
     @Scheduled(cron="0 59 * * * *")
     public void updateSeasonState()
     {
-        seasonStateDAO.merge(OffsetDateTime.now(), seasonDAO.getMaxBattlenetId());
+        seasonStateDAO.merge(SC2Pulse.offsetDateTime(), seasonDAO.getMaxBattlenetId());
     }
 
     @Scheduled(cron="0 0/10 * * * *")
@@ -241,7 +242,7 @@ public class Cron
 
         try
         {
-            Instant begin = Instant.now();
+            Instant begin = SC2Pulse.instant();
 
             statusService.update();
             doUpdateSeasons();
@@ -263,7 +264,7 @@ public class Cron
     {
         Instant defaultInstant = calculateHeavyStatsTask.getValue() != null
             ? calculateHeavyStatsTask.getValue()
-            : Instant.now().minusSeconds(24 * 60 * 60 * 1000);
+            : SC2Pulse.instant().minusSeconds(24 * 60 * 60 * 1000);
         OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
         for(Integer season : seasonDAO.getLastInAllRegions())
             queueStatsDAO.mergeCalculateForSeason(season);
@@ -276,7 +277,7 @@ public class Cron
     private boolean doUpdateSeasons(Region... regions)
     {
         boolean result = true;
-        Instant begin = Instant.now();
+        Instant begin = SC2Pulse.instant();
         for(Region region : regions)
         {
             try

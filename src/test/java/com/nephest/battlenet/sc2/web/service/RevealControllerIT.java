@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -42,6 +42,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.twitch.TwitchTest;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -300,7 +301,7 @@ public class RevealControllerIT
     {
         //new
         LocalDate bd1 = LocalDate.now().minusYears(10);
-        OffsetDateTime minUpdated = OffsetDateTime.now();
+        OffsetDateTime minUpdated = SC2Pulse.offsetDateTime();
         String strResp1 = mvc.perform
         (
             post("/api/reveal/player/edit")
@@ -366,7 +367,7 @@ public class RevealControllerIT
 
         //edit
         LocalDate bd2 = bd1.minusYears(10);
-        OffsetDateTime minUpdated2 = OffsetDateTime.now();
+        OffsetDateTime minUpdated2 = SC2Pulse.offsetDateTime();
         socialMediaLinkDAO.merge
         (
             false,
@@ -520,7 +521,7 @@ public class RevealControllerIT
                         "tag2", "name2", "KR",
                         LocalDate.now(),
                         23456,
-                        OffsetDateTime.now(),
+                        SC2Pulse.offsetDateTime(),
                         4
                     ),
                     List.of
@@ -559,7 +560,7 @@ public class RevealControllerIT
                         "tag2", "name2", "KR",
                         LocalDate.now(),
                         23456,
-                        OffsetDateTime.now(),
+                        SC2Pulse.offsetDateTime(),
                         4
                     ),
                     List.of

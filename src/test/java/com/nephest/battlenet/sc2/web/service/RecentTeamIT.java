@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -20,10 +20,10 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.TeamController;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
@@ -119,7 +119,7 @@ public class RecentTeamIT
         jdbc.update
         (
             "UPDATE team SET last_played = ?",
-            OffsetDateTime.now().minus(TeamController.RECENT_TEAMS_OFFSET).plusSeconds(10)
+            SC2Pulse.offsetDateTime().minus(TeamController.RECENT_TEAMS_OFFSET).plusSeconds(10)
         );
         String head1v1rr = urlStart1v1 + "&region=" + cs.convert(Region.EU, String.class)
             + "&race=" + cs.convert(Race.PROTOSS, String.class);
@@ -223,7 +223,7 @@ public class RecentTeamIT
         jdbc.update
         (
             "UPDATE team SET last_played = ?",
-            OffsetDateTime.now().minus(TeamController.RECENT_TEAMS_OFFSET).minusSeconds(1)
+            SC2Pulse.offsetDateTime().minus(TeamController.RECENT_TEAMS_OFFSET).minusSeconds(1)
         );
         mvc.perform
         (
@@ -241,7 +241,7 @@ public class RecentTeamIT
         jdbc.update
         (
             "UPDATE team SET last_played = ?",
-            OffsetDateTime.now().minus(TeamController.RECENT_TEAMS_OFFSET).plusSeconds(10)
+            SC2Pulse.offsetDateTime().minus(TeamController.RECENT_TEAMS_OFFSET).plusSeconds(10)
         );
 
         LadderTeam[] teams = objectMapper.readValue(mvc.perform

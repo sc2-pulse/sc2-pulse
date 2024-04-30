@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -14,11 +14,11 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Evidence;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
 import java.util.List;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
@@ -81,15 +81,15 @@ public class PlayerCharacterReportDBIT
         PlayerCharacterReport report1 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         PlayerCharacterReport report2 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 2L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         PlayerCharacterReport report3 = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 3L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
 
         List<PlayerCharacterReport> reports = playerCharacterReportDAO.findByIdCursor(1, 2);
         assertEquals(2, reports.size());
@@ -105,16 +105,16 @@ public class PlayerCharacterReportDBIT
         PlayerCharacterReport report = playerCharacterReportDAO.merge(new PlayerCharacterReport(
             null, 1L, null, PlayerCharacterReport.PlayerCharacterReportType.CHEATER,
             false, false,
-            OffsetDateTime.now().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
+            SC2Pulse.offsetDateTime().minusDays(PlayerCharacterReportDAO.DENIED_REPORT_TTL_DAYS)));
         Evidence evidence1 = evidenceDAO.create(new Evidence(
             null, report.getId(), null, localhost, "description asda",false,
-            OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,OffsetDateTime.now()));
+            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));
         Evidence evidence2 = evidenceDAO.create(new Evidence(
             null, report.getId(), null, localhost, "description asda",false,
-            OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,OffsetDateTime.now()));
+            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));
         Evidence evidence3 = evidenceDAO.create(new Evidence(
             null, report.getId(), null, localhost, "description asda",false,
-            OffsetDateTime.now().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,OffsetDateTime.now()));
+            SC2Pulse.offsetDateTime().minusDays(EvidenceDAO.DENIED_EVIDENCE_TTL_DAYS) ,SC2Pulse.offsetDateTime()));
 
         List<Evidence> evidences = evidenceDAO.findByIdCursor(1, 2);
         assertEquals(2, evidences.size());

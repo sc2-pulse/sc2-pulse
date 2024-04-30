@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.twitch;
@@ -11,6 +11,7 @@ import com.nephest.battlenet.sc2.model.local.dao.ProPlayerDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SocialMediaLinkDAO;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchUserDAO;
 import com.nephest.battlenet.sc2.model.twitch.dao.TwitchVideoDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
@@ -98,7 +99,7 @@ public class TwitchIT
         assertTrue(users2.contains(user2));
         assertTrue(users2.contains(user3));
 
-        OffsetDateTime begin = OffsetDateTime.now();
+        OffsetDateTime begin = SC2Pulse.offsetDateTime();
         OffsetDateTime end = begin.plusMinutes(1);
         TwitchVideo video1 = new TwitchVideo(1L, 1L, "url1", begin, end);
         TwitchVideo video2 = new TwitchVideo(2L, 2L, "url2", begin, end);

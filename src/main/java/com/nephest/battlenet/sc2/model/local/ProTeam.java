@@ -1,4 +1,4 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -7,10 +7,10 @@ import com.nephest.battlenet.sc2.model.BaseProTeam;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProTeam;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
-
-import javax.validation.constraints.NotNull;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 
 public class ProTeam
 extends BaseProTeam
@@ -24,7 +24,7 @@ implements java.io.Serializable
     private Long aligulacId;
 
     @NotNull
-    private OffsetDateTime updated = OffsetDateTime.now();
+    private OffsetDateTime updated = SC2Pulse.offsetDateTime();
 
     public ProTeam()
     {

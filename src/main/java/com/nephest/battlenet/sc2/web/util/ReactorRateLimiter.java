@@ -1,10 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.util;
 
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -178,7 +178,7 @@ public class ReactorRateLimiter
         if(!isResetActive.compareAndSet(false, true)) return false;
 
         boolean refreshed = false;
-        if(lastData == null || lastData.getReset().isBefore(Instant.now().minus(threshold)))
+        if(lastData == null || lastData.getReset().isBefore(SC2Pulse.instant().minus(threshold)))
         {
             refreshSlots(lastData != null ? lastData.getLimit() : suggestedSlotCount);
             refreshed = true;

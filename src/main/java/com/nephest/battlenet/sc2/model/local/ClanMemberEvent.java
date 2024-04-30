@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.Identifiable;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Objects;
@@ -94,7 +95,7 @@ public class ClanMemberEvent
             character.getId(),
             clan == null ? null : clan.getId(),
             clan == null ? ClanMemberEvent.EventType.LEAVE : ClanMemberEvent.EventType.JOIN,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
     }
 

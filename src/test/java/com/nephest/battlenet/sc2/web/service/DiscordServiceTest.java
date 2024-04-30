@@ -46,6 +46,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderSearchDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.web.util.MonoUtil;
 import discord4j.common.util.Snowflake;
@@ -56,7 +57,6 @@ import discord4j.core.object.entity.Role;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
 import java.math.BigInteger;
-import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
@@ -343,7 +343,7 @@ public class DiscordServiceTest
             BigInteger.ONE,
             1,
             1234L, 1, 1, 1, 1,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             List.of
             (
                 new LadderTeamMember

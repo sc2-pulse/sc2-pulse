@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -21,9 +21,9 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SC2MapDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
@@ -308,8 +308,8 @@ public class MatchService
                 ? new UpdateContext(updateMatchesTask.getValue(), updateMatchesTask.getValue())
                 : new UpdateContext
                 (
-                    Instant.now().minus(updateMatchesTask.getDurationBetweenRuns()),
-                    Instant.now().minus(updateMatchesTask.getDurationBetweenRuns())
+                    SC2Pulse.instant().minus(updateMatchesTask.getDurationBetweenRuns()),
+                    SC2Pulse.instant().minus(updateMatchesTask.getDurationBetweenRuns())
                 );
     }
 

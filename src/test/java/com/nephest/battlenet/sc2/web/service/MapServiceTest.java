@@ -20,9 +20,9 @@ import com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmSpecDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsFilmDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Duration;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
@@ -107,7 +107,7 @@ public class MapServiceTest
         MatchUpdateContext ctx = new MatchUpdateContext
         (
             Map.of(),
-            new UpdateContext(Instant.now(), Instant.now())
+            new UpdateContext(SC2Pulse.instant(), SC2Pulse.instant())
         );
         Sinks.Many<MatchUpdateContext> matchUpdateEvent = Sinks.unsafe()
             .many().multicast().onBackpressureBuffer(2);

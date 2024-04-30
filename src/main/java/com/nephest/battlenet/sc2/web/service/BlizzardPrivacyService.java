@@ -30,6 +30,7 @@ import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.inner.AccountCharacterData;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.util.SingleRunnable;
 import java.time.Duration;
@@ -82,7 +83,7 @@ public class BlizzardPrivacyService
     public static final int ACCOUNT_AND_CHARACTER_BATCH_SIZE = 250;
     public static final int CHARACTER_UPDATES_PER_TTL = (int) (CHARACTER_UPDATE_EXPIRATION_THRESHOLD.toSeconds() / CHARACTER_UPDATE_TIME_FRAME.toSeconds());
     public static final OffsetDateTime DEFAULT_ANONYMIZE_START =
-        OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, OffsetDateTime.now().getOffset());
+        OffsetDateTime.of(2015, 1, 1, 0, 0, 0, 0, SC2Pulse.offsetDateTime().getOffset());
     private static final Map<QueueType, Set<BaseLeague.LeagueType>> UPDATE_DATA
         = LadderUpdateContext.ALL;
     public static final String REQUEST_LIMIT_PRIORITY_NAME = "privacy";
@@ -186,10 +187,10 @@ public class BlizzardPrivacyService
                 lastUpdatedCharacterId.setValueAndSave(Long.MAX_VALUE);
             lastUpdatedSeasonInstant.load();
             if(lastUpdatedSeasonInstant.getValue() == null)
-                lastUpdatedSeasonInstant.setValueAndSave(Instant.now().minusSeconds(DATA_TTL.toSeconds()));
+                lastUpdatedSeasonInstant.setValueAndSave(SC2Pulse.instant().minusSeconds(DATA_TTL.toSeconds()));
             lastUpdatedCurrentSeasonInstant.load();
             if(lastUpdatedCurrentSeasonInstant.getValue() == null)
-                lastUpdatedCurrentSeasonInstant.setValueAndSave(Instant.now().minusSeconds(DATA_TTL.toSeconds()));
+                lastUpdatedCurrentSeasonInstant.setValueAndSave(SC2Pulse.instant().minusSeconds(DATA_TTL.toSeconds()));
             lastAnonymizeInstant.load();
             if(lastAnonymizeInstant.getValue() == null)
                 lastAnonymizeInstant.setValueAndSave(DEFAULT_ANONYMIZE_START.toInstant());
@@ -269,10 +270,10 @@ public class BlizzardPrivacyService
             }
         }
         MiscUtil.awaitAndLogExceptions(dbTasks, true);
-        lastUpdatedSeasonInstant.setValueAndSave(Instant.now());
+        lastUpdatedSeasonInstant.setValueAndSave(SC2Pulse.instant());
         if(current)
         {
-            lastUpdatedCurrentSeasonInstant.setValueAndSave(Instant.now());
+            lastUpdatedCurrentSeasonInstant.setValueAndSave(SC2Pulse.instant());
         }
         else
         {
@@ -285,7 +286,7 @@ public class BlizzardPrivacyService
     private boolean shouldHandleExpiredData()
     {
         return lastAnonymizeInstant.getValue().plusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds())
-            .isBefore(Instant.now().minusSeconds(ANONYMIZATION_DATA_TIME_FRAME.toSeconds()));
+            .isBefore(SC2Pulse.instant().minusSeconds(ANONYMIZATION_DATA_TIME_FRAME.toSeconds()));
     }
 
     private void handleExpiredData()
@@ -300,7 +301,7 @@ public class BlizzardPrivacyService
     private void anonymizeExpiredData()
     {
         fullAnonymizeTask.runIfAvailable().block();
-        Instant anonymizeInstant = OffsetDateTime.now().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).toInstant();
+        Instant anonymizeInstant = SC2Pulse.offsetDateTime().minusSeconds(BlizzardPrivacyService.DATA_TTL.toSeconds()).toInstant();
         OffsetDateTime from = OffsetDateTime.ofInstant(lastAnonymizeInstant.getValue(), ZoneId.systemDefault());
         int accounts = accountDAO.anonymizeExpiredAccounts(from);
         int characters = playerCharacterDAO.anonymizeExpiredCharacters(from);
@@ -434,7 +435,7 @@ public class BlizzardPrivacyService
         if(lastSeason == null || lastSeason < BlizzardSC2API.FIRST_SEASON) return null;
 
         long secondsBetweenCurrentSeasonUpdates = OLD_LADDER_DATA_TTL.toSeconds() / CURRENT_SEASON_UPDATES_PER_PERIOD;
-        return Instant.now().getEpochSecond() - lastUpdatedCurrentSeasonInstant.getValue().getEpochSecond() >= secondsBetweenCurrentSeasonUpdates
+        return SC2Pulse.instant().getEpochSecond() - lastUpdatedCurrentSeasonInstant.getValue().getEpochSecond() >= secondsBetweenCurrentSeasonUpdates
             ? lastSeason
             : (int) (lastUpdatedSeason.getValue() + 1 >= lastSeason
                 ? Math.max(lastSeason - OLD_SEASON_COUNT, BlizzardSC2API.FIRST_SEASON)
@@ -449,13 +450,13 @@ public class BlizzardPrivacyService
     private boolean shouldUpdateCharacters()
     {
         return getUpdateCharactersFlag()
-            && lastUpdatedCharacterInstant.getValue().isBefore(Instant.now().minus(CHARACTER_UPDATE_TIME_FRAME));
+            && lastUpdatedCharacterInstant.getValue().isBefore(SC2Pulse.instant().minus(CHARACTER_UPDATE_TIME_FRAME));
     }
 
     private int getCharacterBatchSize()
     {
         int characterCount = playerCharacterDAO
-            .countByUpdatedMax(OffsetDateTime.now().minus(CHARACTER_UPDATED_MAX), globalContext.getActiveRegions());
+            .countByUpdatedMax(SC2Pulse.offsetDateTime().minus(CHARACTER_UPDATED_MAX), globalContext.getActiveRegions());
         return (int) Math.ceil((double) characterCount / CHARACTER_UPDATES_PER_TTL);
     }
 
@@ -470,7 +471,7 @@ public class BlizzardPrivacyService
 
         List<PlayerCharacter> batch = playerCharacterDAO.find
         (
-            OffsetDateTime.now().minus(CHARACTER_UPDATED_MAX),
+            SC2Pulse.offsetDateTime().minus(CHARACTER_UPDATED_MAX),
             lastUpdatedCharacterId.getValue(),
             globalContext.getActiveRegions(),
             batchSize
@@ -503,13 +504,13 @@ public class BlizzardPrivacyService
                     LOG.info("Updated {} characters that are about to expire",
                         playerCharacterDAO.updateCharacters(Set.copyOf(l)).size())));
             });
-        lastUpdatedCharacterInstant.setValueAndSave(Instant.now());
+        lastUpdatedCharacterInstant.setValueAndSave(SC2Pulse.instant());
         lastUpdatedCharacterId.setValueAndSave(batch.get(batch.size() - 1).getId());
     }
 
     private void resetCharacterUpdateVars()
     {
-        lastUpdatedCharacterInstant.setValueAndSave(Instant.now());
+        lastUpdatedCharacterInstant.setValueAndSave(SC2Pulse.instant());
         lastUpdatedCharacterId.setValueAndSave(Long.MAX_VALUE);
     }
 

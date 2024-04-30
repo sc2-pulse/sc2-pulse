@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -37,11 +37,11 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.MergedLadderSearchStatsResult;
 import com.nephest.battlenet.sc2.model.local.ladder.PagedSearchResult;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -181,7 +181,7 @@ public class LadderSearchDAOIT
             null, emptySeasons.get(0).getBattlenetId(), Region.EU, bronzeLeague, TIER_TYPE,
             BigInteger.valueOf(9999L), bronzeDivision.getId(),
             1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team team = teamDAO.create(newTeam);
         //old player
@@ -336,7 +336,7 @@ public class LadderSearchDAOIT
             for(int mIx = 0; mIx < team.getMembers().size(); mIx++)
             {
                 LadderTeamMember member = team.getMembers().get(mIx);
-                int accId = Integer.parseInt(teamId + "" + mIx);
+                int accId = Integer.parseInt(teamId + String.valueOf(mIx));
                 assertEquals("battletag#" + accId, member.getAccount().getBattleTag());
                 assertEquals("character#" + accId, member.getCharacter().getName());
                 assertEquals(1, member.getTerranGamesPlayed());
@@ -425,7 +425,7 @@ public class LadderSearchDAOIT
             for(int mIx = 0; mIx < team.getMembers().size(); mIx++)
             {
                 LadderTeamMember member = team.getMembers().get(mIx);
-                int accId = Integer.parseInt(teamId + "" + mIx);
+                int accId = Integer.parseInt(teamId + String.valueOf(mIx));
                 assertEquals("battletag#" + accId, member.getAccount().getBattleTag());
                 assertEquals("character#" + accId, member.getCharacter().getName());
                 assertEquals(1, member.getTerranGamesPlayed());

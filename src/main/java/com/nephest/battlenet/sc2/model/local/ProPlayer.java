@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -7,6 +7,7 @@ import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import com.nephest.battlenet.sc2.model.util.ModelUtil;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.model.validation.CountryAlpha2;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import java.time.LocalDate;
@@ -51,7 +52,7 @@ implements java.io.Serializable
     private Integer earnings;
 
     @NotNull
-    private OffsetDateTime updated = OffsetDateTime.now();
+    private OffsetDateTime updated = SC2Pulse.offsetDateTime();
 
     private Integer version;
 

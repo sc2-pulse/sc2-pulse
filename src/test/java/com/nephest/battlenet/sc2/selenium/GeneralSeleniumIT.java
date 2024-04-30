@@ -37,6 +37,7 @@ import com.nephest.battlenet.sc2.model.local.dao.QueueStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.sql.Connection;
@@ -693,7 +694,7 @@ public class GeneralSeleniumIT
             ),
             clan2
         );
-        OffsetDateTime startDateTime = OffsetDateTime.now();
+        OffsetDateTime startDateTime = SC2Pulse.offsetDateTime();
         int matchCount = (int) Math.round(ladderMatchDAO.getResultsPerPage() * 2.5);
         seasonGenerator.createMatches
         (
@@ -723,7 +724,7 @@ public class GeneralSeleniumIT
         clanMemberDAO.merge(cm);
         Set<ClanMemberEvent> cme = charIds.stream()
             .map(id->new ClanMemberEvent(
-                id, clan.getId(), ClanMemberEvent.EventType.JOIN, OffsetDateTime.now()))
+                id, clan.getId(), ClanMemberEvent.EventType.JOIN, SC2Pulse.offsetDateTime()))
             .collect(Collectors.toSet());
         clanMemberEventDAO.merge(cme);
     }

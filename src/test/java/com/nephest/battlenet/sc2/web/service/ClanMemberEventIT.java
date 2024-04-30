@@ -28,6 +28,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
@@ -130,7 +131,7 @@ public class ClanMemberEventIT
     @Test
     public void testChain() throws Exception
     {
-        OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1)
+        OffsetDateTime odt1 = SC2Pulse.offsetDateTime().minusDays(1)
             .withOffsetSameInstant(ZoneOffset.UTC);
         assertEquals(6, clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1),
@@ -349,7 +350,7 @@ public class ClanMemberEventIT
     @Test
     public void whenLeavingClanWithoutBeingInClanButWasInClanPreviously_thenIgnoreEvent() throws Exception
     {
-        OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
+        OffsetDateTime odt1 = SC2Pulse.offsetDateTime().minusDays(1);
         assertEquals(1, clanMemberEventDAO.merge(Set.of(
             new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1)
         )));
@@ -415,7 +416,7 @@ public class ClanMemberEventIT
     public void whenSeveralEventsWithSameCharacter_thenUseFirstAndIgnoreRest()
     throws Exception
     {
-        OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
+        OffsetDateTime odt1 = SC2Pulse.offsetDateTime().minusDays(1);
         assertEquals(1, clanMemberEventDAO.merge(new LinkedHashSet<>(List.of(
             new ClanMemberEvent(characters[0].getId(), clans[0].getId(), JOIN, odt1),
             new ClanMemberEvent(characters[0].getId(), clans[1].getId(), JOIN, odt1.plusSeconds(1))
@@ -461,7 +462,7 @@ public class ClanMemberEventIT
     public void whenSearchingByClanIds_thenDontExpandToCharacterIdsAndSearchByClanIdsInstead()
     throws Exception
     {
-        OffsetDateTime odt1 = OffsetDateTime.now().minusDays(1);
+        OffsetDateTime odt1 = SC2Pulse.offsetDateTime().minusDays(1);
         OffsetDateTime odt2 = odt1.plusSeconds(20);
         OffsetDateTime odt3 = odt2.plusSeconds(30);
         assertEquals(1, clanMemberEventDAO.merge(Set.of(

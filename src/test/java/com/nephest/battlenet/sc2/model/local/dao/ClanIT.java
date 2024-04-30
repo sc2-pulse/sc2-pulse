@@ -27,6 +27,7 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderClanMemberEvents;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.ClanService;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -271,7 +272,7 @@ public class ClanIT
         seasonGenerator.generateDefaultSeason(10);
         playerCharacterStatsDAO.mergeCalculate();
         Clan clan = new Clan(1, "tag123", Region.EU, "name");
-        Instant now = Instant.now();
+        Instant now = SC2Pulse.instant();
         clanService.saveClans(List.of(
             new ClanMemberEventData(new PlayerCharacter(1L, 1L, Region.EU, 1L, 1, "name"), clan, now),
             new ClanMemberEventData(new PlayerCharacter(2L, 2L, Region.EU, 2L, 2, "name"), clan, now),
@@ -355,7 +356,7 @@ public class ClanIT
         PlayerCharacter pChar = new PlayerCharacter(1L, 1L, Region.EU, 1L, 1, "name");
         seasonGenerator.generateDefaultSeason(1);
         playerCharacterStatsDAO.mergeCalculate();
-        Instant start = Instant.now().minusSeconds(60);
+        Instant start = SC2Pulse.instant().minusSeconds(60);
         clanService.removeClanUpdates();
         clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan1, start)));
         clanService.saveClans(List.of(new ClanMemberEventData(pChar, clan2, start.minusSeconds(1))));
@@ -439,7 +440,7 @@ public class ClanIT
             .map(i->i + 1)
             .map(i->new Clan(i, "tag" + i, Region.EU, "name"))
             .toArray(Clan[]::new);
-        Instant now = Instant.now();
+        Instant now = SC2Pulse.instant();
         List<ClanMemberEventData> clanData = IntStream.range(0, chars.length)
             .boxed()
             .map(i->new ClanMemberEventData(chars[i], clans[i], now))

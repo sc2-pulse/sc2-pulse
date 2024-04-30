@@ -1,13 +1,13 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProTeamRoot;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.TestUtil;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -39,7 +39,7 @@ public class ProPlayerTest
             "US",
             LocalDate.now(),
             23456,
-            OffsetDateTime.now(),
+            SC2Pulse.offsetDateTime(),
             1
         );
         AligulacProPlayer aligulacProPlayer = new AligulacProPlayer
@@ -65,7 +65,7 @@ public class ProPlayerTest
                 "GB",
                 bd,
                 12345,
-                OffsetDateTime.now(),
+                SC2Pulse.offsetDateTime(),
                 1
             ));
     }

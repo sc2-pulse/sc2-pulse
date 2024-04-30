@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -33,10 +33,10 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.Patch;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
-import java.time.Instant;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -523,7 +523,7 @@ public class BlizzardSC2APIIT
         assertEquals(Region.KR, api.getRegion(Region.US)); //redirect to KR
 
         //the force region duration has ended
-        api.setForceRegionInstant(Region.US, Instant.now().minusSeconds(BlizzardSC2API.AUTO_FORCE_REGION_MAX_DURATION.toSeconds() + 1));
+        api.setForceRegionInstant(Region.US, SC2Pulse.instant().minusSeconds(BlizzardSC2API.AUTO_FORCE_REGION_MAX_DURATION.toSeconds() + 1));
         api.autoForceRegion();
 
         //no redirect

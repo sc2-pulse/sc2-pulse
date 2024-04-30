@@ -28,12 +28,12 @@ import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.inner.PlayerCharacterSummary;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -153,7 +153,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.PROTOSS),
             division1v1_2.getId(), 9L, 3, 3, 3, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
         Team team1v1_z_s3 = teamDAO.merge(Set.of(new Team(
@@ -164,7 +164,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.ZERG),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
         Team team1v1_t_s1 = teamDAO.merge(Set.of(new Team(
@@ -175,7 +175,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.TERRAN),
             division1v1_1.getId(), 10L, 3, 3, 3, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
         Team team1v1_t_s2 = teamDAO.merge(Set.of(new Team(
@@ -186,7 +186,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.TERRAN),
             division1v1_2.getId(), 10L, 3, 3, 3, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
         Team team1v1_t_s3 = teamDAO.merge(Set.of(new Team(
@@ -197,7 +197,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.TERRAN),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
         Team team1v1_2_z_s3 = teamDAO.merge(Set.of(new Team(
@@ -208,7 +208,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu2.getBattlenetId(), charEu2.getRealm(), charEu2.getName())
             }, Race.ZERG),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         ))).iterator().next();
 
         teamMemberDAO.merge(Set.of(
@@ -221,12 +221,12 @@ public class PlayerCharacterSummaryIT
         ));
 
         teamStateDAO.saveState(Set.of(
-            new TeamState(team1v1_t_s1.getId(), OffsetDateTime.now().minusDays(61), team1v1_t_s1.getDivisionId(), 8, 7),
-            new TeamState(team1v1_p_s2.getId(), OffsetDateTime.now().minusDays(32), team1v1_p_s2.getDivisionId(), 8, 7),
-            new TeamState(team1v1_t_s2.getId(), OffsetDateTime.now().minusDays(40), team1v1_t_s2.getDivisionId(), 3, 4),
-            new TeamState(team1v1_t_s2.getId(), OffsetDateTime.now().minusDays(39), team1v1_t_s2.getDivisionId(), 4, 3),
-            new TeamState(team1v1_t_s2.getId(), OffsetDateTime.now().minusDays(38), team1v1_t_s2.getDivisionId(), 3, 5),
-            new TeamState(team1v1_t_s3.getId(), OffsetDateTime.now().minusDays(31), team1v1_t_s3.getDivisionId(), 3, 5)
+            new TeamState(team1v1_t_s1.getId(), SC2Pulse.offsetDateTime().minusDays(61), team1v1_t_s1.getDivisionId(), 8, 7),
+            new TeamState(team1v1_p_s2.getId(), SC2Pulse.offsetDateTime().minusDays(32), team1v1_p_s2.getDivisionId(), 8, 7),
+            new TeamState(team1v1_t_s2.getId(), SC2Pulse.offsetDateTime().minusDays(40), team1v1_t_s2.getDivisionId(), 3, 4),
+            new TeamState(team1v1_t_s2.getId(), SC2Pulse.offsetDateTime().minusDays(39), team1v1_t_s2.getDivisionId(), 4, 3),
+            new TeamState(team1v1_t_s2.getId(), SC2Pulse.offsetDateTime().minusDays(38), team1v1_t_s2.getDivisionId(), 3, 5),
+            new TeamState(team1v1_t_s3.getId(), SC2Pulse.offsetDateTime().minusDays(31), team1v1_t_s3.getDivisionId(), 3, 5)
         ));
         teamDAO.updateRanks(1);
         teamDAO.updateRanks(2);

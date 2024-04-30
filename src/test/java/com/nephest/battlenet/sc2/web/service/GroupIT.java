@@ -33,6 +33,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderProPlayer;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderProPlayerDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.GroupController;
 import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import java.sql.Connection;
@@ -269,7 +270,7 @@ public class GroupIT
         ));
 
         LocalDate bd1 = LocalDate.now().minusYears(20);
-        OffsetDateTime odt = OffsetDateTime.now();
+        OffsetDateTime odt = SC2Pulse.offsetDateTime();
         ProPlayer[] proPlayers = new ProPlayer[]
         {
             new ProPlayer(null, 1L, "tag1", "name1", "US", bd1, 1, odt, 1),

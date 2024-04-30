@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.convert.jackson;
@@ -19,6 +19,7 @@ import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamState;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.time.OffsetDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -40,7 +41,7 @@ public class JacksonSerializationIT
     throws JsonProcessingException
     {
         LadderTeamStateContainer src = new LadderTeamStateContainer();
-        OffsetDateTime odtBase = OffsetDateTime.now();
+        OffsetDateTime odtBase = SC2Pulse.offsetDateTime();
         List<LadderTeamState> srcList = List.of
         (
             create(1, odtBase),

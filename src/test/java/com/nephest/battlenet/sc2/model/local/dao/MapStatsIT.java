@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -28,6 +28,7 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderMapStats;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -169,7 +170,7 @@ public class MapStatsIT
         for(int i = 0; i < 7; i++)
             maps.add(mapDAO.merge(Set.of(new SC2Map(null, "map" + i))).iterator().next());
         List<SC2Map> statsMaps =  List.of(maps.get(1), maps.get(2));
-        OffsetDateTime start = OffsetDateTime.now().minusHours(10);
+        OffsetDateTime start = SC2Pulse.offsetDateTime().minusHours(10);
         generateMatches(regions, start, leagueTypes.size(), teamsPerLeague, 2);
         generateMatches(regions, start.plusHours(1), leagueTypes.size(), teamsPerLeague, 2);
         generateMatches(regions, start.plusHours(2), leagueTypes.size(), teamsPerLeague, 3);

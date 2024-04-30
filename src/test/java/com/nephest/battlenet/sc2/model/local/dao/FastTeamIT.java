@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -15,10 +15,10 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.OffsetDateTime;
 import java.util.LinkedHashSet;
 import java.util.List;
 import javax.sql.DataSource;
@@ -130,7 +130,7 @@ public class FastTeamIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
             1L, 1, 1, 1, 1,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team team2 = new Team
         (
@@ -139,7 +139,7 @@ public class FastTeamIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(2), 1,
             2L, 2, 2, 2, 2,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         Team[] merge1 = fastTeamDAO.merge(new LinkedHashSet<>(List.of(team1, team2)))
             .stream()
@@ -156,7 +156,7 @@ public class FastTeamIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 3,
             3L, 4, 5, 6, 3,
-            OffsetDateTime.now()
+            SC2Pulse.offsetDateTime()
         );
         //no changes in team2
         Team[] merge2 = fastTeamDAO.merge(new LinkedHashSet<>(List.of(team1_1, team2)))

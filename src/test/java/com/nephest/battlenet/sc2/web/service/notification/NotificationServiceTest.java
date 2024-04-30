@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.notification;
@@ -15,7 +15,7 @@ import static org.mockito.Mockito.when;
 
 import com.nephest.battlenet.sc2.model.local.Notification;
 import com.nephest.battlenet.sc2.model.local.dao.NotificationDAO;
-import java.time.OffsetDateTime;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
@@ -50,8 +50,8 @@ public class NotificationServiceTest
         ArgumentCaptor<Notification> notificationCaptor = ArgumentCaptor.forClass(Notification.class);
         List<Notification> notifications = List.of
         (
-            new Notification(1L, 1L, "msg1", OffsetDateTime.now()),
-            new Notification(2L, 1L, "msg2", OffsetDateTime.now())
+            new Notification(1L, 1L, "msg1", SC2Pulse.offsetDateTime()),
+            new Notification(2L, 1L, "msg2", SC2Pulse.offsetDateTime())
         );
         when(notificationDAO.findAll()).thenReturn(notifications);
         //1 notification is successfully sent, other throw an exception

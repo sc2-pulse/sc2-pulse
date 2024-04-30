@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.util;
@@ -8,6 +8,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.text.DecimalFormat;
 import java.time.Duration;
 import java.time.Instant;
@@ -40,7 +41,7 @@ public class ReactorRateLimiterTest
     public void testUpdateByRateLimitData()
     {
         assertEquals(0, limiter.getAvailableSlots());
-        Instant initialReset = Instant.now();
+        Instant initialReset = SC2Pulse.instant();
         limiter.update(new RateLimitData(10, 5, initialReset)).block();
         assertEquals(10, limiter.getAvailableSlots());
 
@@ -53,7 +54,7 @@ public class ReactorRateLimiterTest
         assertEquals(10, limiter.getAvailableSlots());
 
         Mono<Void> update = limiter
-            .update(new RateLimitData(20, 15, Instant.now().plusMillis(500)));
+            .update(new RateLimitData(20, 15, SC2Pulse.instant().plusMillis(500)));
         //not updated yet
         assertEquals(10, limiter.getAvailableSlots());
         update.block();
@@ -71,7 +72,7 @@ public class ReactorRateLimiterTest
     @Test
     public void whenRefreshIsActive_thenDontRefreshUndeterminedSlots()
     {
-        limiter.update(new RateLimitData(10, 5, Instant.now().plusSeconds(10)));
+        limiter.update(new RateLimitData(10, 5, SC2Pulse.instant().plusSeconds(10)));
         assertFalse(limiter.refreshUndeterminedSlots(Duration.ofSeconds(-100), 50));
         assertEquals(0, limiter.getAvailableSlots());
     }
@@ -81,7 +82,7 @@ public class ReactorRateLimiterTest
     public void testRefreshUndeterminedSlots(boolean thresholdReached)
     {
         Duration threshold = Duration.ofMinutes(1);
-        Instant initialReset = Instant.now().minus(threshold);
+        Instant initialReset = SC2Pulse.instant().minus(threshold);
         limiter.update(new RateLimitData(10, 5, initialReset)).block();
         limiter.requestSlot();
         assertEquals(9, limiter.getAvailableSlots());
@@ -98,9 +99,9 @@ public class ReactorRateLimiterTest
         RateLimitRefreshConfig config = new RateLimitRefreshConfig(period, 1);
         ReactorRateLimiter limiter = new ReactorRateLimiter(config);
         limiter.requestSlot().block();
-        Instant begin = Instant.now();
+        Instant begin = SC2Pulse.instant();
         limiter.requestSlot().block();
-        Duration realPeriod = Duration.between(begin, Instant.now());
+        Duration realPeriod = Duration.between(begin, SC2Pulse.instant());
         assertTrue(realPeriod.compareTo(period.multipliedBy(2)) <= 0);
     }
 

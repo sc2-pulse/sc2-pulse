@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Types;
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -187,7 +188,7 @@ public class PlayerCharacterReportDAO
     public int removeExpired()
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
-            .addValue("from", OffsetDateTime.now().minusDays(DENIED_REPORT_TTL_DAYS));
+            .addValue("from", SC2Pulse.offsetDateTime().minusDays(DENIED_REPORT_TTL_DAYS));
         return template.update(REMOVE_EXPIRED_QUERY, params);
     }
 
