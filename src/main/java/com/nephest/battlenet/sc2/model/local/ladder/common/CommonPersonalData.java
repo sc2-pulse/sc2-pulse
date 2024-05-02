@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.common;
@@ -8,9 +8,9 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.AccountFollowing;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDiscordUser;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import jakarta.validation.constraints.NotNull;
 import java.util.Collection;
 import java.util.List;
-import javax.validation.constraints.NotNull;
 
 public class CommonPersonalData
 {

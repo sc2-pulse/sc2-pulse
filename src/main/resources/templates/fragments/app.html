@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2024 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -112,7 +112,7 @@
                         <div>
                             The reports are public, <strong class="text-danger">your BattleTag and description will be visible to all users</strong>.
                             Moderators will review the report and vote on it, the majority wins. Moderators:
-                            <span th:text="${@userController.getModTags().stream().collect(T(java.util.stream.Collectors).joining(', '))}"></span>
+                            <span th:text="${#strings.listJoin(@userController.getModTags(), ', ')}"></span>
                         </div>
                         <form id="report-character-form" class="px-4 py-3" method="post">
                             <div class="form-group">

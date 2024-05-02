@@ -1,8 +1,9 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
 
+import com.nephest.battlenet.sc2.config.filter.CsrfCookieFilter;
 import java.time.Duration;
 import java.util.Set;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +22,7 @@ import org.springframework.security.oauth2.client.endpoint.OAuth2AuthorizationCo
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
@@ -64,52 +66,56 @@ public class SecurityConfig
             = new ResetSessionStrategy(sessionCookieName, "/", "/api/");
         checkConfig();
         return http
-            .mvcMatcher("/**")
-            .sessionManagement()
+            .securityMatcher("/**")
+            .sessionManagement(sessionManagement->sessionManagement
                 .sessionConcurrency
                 (
                     c->c.maximumSessions(-1)
                         .sessionRegistry(sessionRegistry)
                         .expiredSessionStrategy(resetSessionStrategy)
                 )
-            .invalidSessionStrategy(resetSessionStrategy)
-            .and().csrf()
+                .invalidSessionStrategy(resetSessionStrategy))
+            .csrf(csrf->csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
-            .and().exceptionHandling()
+                .csrfTokenRequestHandler(new SpaCsrfTokenRequestHandler()))
+            .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class)
+            .exceptionHandling(exceptionHandling->exceptionHandling
                 .defaultAuthenticationEntryPointFor
                 (
                     new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED),
                     new AntPathRequestMatcher("/api/my/**")
-                )
-            .and().authorizeRequests()
-                .mvcMatchers("/admin/**").hasRole(SC2PulseAuthority.ADMIN.getName())
-                .mvcMatchers("/api/character/report/vote/**").hasRole(SC2PulseAuthority.MODERATOR.getName())
-                .mvcMatchers("/api/reveal/**").hasRole(SC2PulseAuthority.REVEALER.getName())
-                .mvcMatchers
+                ))
+            .authorizeHttpRequests(authorizeHttpRequests->authorizeHttpRequests
+                .requestMatchers("/admin/**").hasRole(SC2PulseAuthority.ADMIN.getName())
+                .requestMatchers("/api/character/report/vote/**").hasRole(SC2PulseAuthority.MODERATOR.getName())
+                .requestMatchers("/api/reveal/**").hasRole(SC2PulseAuthority.REVEALER.getName())
+                .requestMatchers
                 (
                     "/api/my/**",
                     "/verify/*"
                 ).authenticated()
-                .mvcMatchers
+                .requestMatchers
                 (
                     "/data/battle-net",
                     "/settings/**"
                 ).fullyAuthenticated()
-            .and().logout()
-                .logoutSuccessUrl("/?#stats")
-            .and().oauth2Login()
+                .anyRequest().permitAll())
+            .logout(logout->logout.logoutSuccessUrl("/?#stats"))
+            .oauth2Login(oauth2Login->oauth2Login
                 .loginPage("/login")
                 .successHandler(authenticationSuccessHandler)
                 .failureUrl("/login?oauthError=1")
-                .userInfoEndpoint().userService(registrationDelegatingOauth2UserService)
-                .and().tokenEndpoint().accessTokenResponseClient(oAuth2AuthorizationCodeClient)
-            .and().and().rememberMe()
+                .userInfoEndpoint(userInfoEndpoint->
+                    userInfoEndpoint.userService(registrationDelegatingOauth2UserService))
+                .tokenEndpoint(tokenEndpoint->
+                    tokenEndpoint.accessTokenResponseClient(oAuth2AuthorizationCodeClient)))
+            .rememberMe(rememberMe->rememberMe
                 .key(rememberMeKey)
                 .alwaysRemember(true)
                 .rememberMeCookieName(REMEMBER_ME_COOKIE_NAME)
                 .tokenValiditySeconds((int) rememberMeDuration.toSeconds())
-                .useSecureCookie(true)
-            .and().build();
+                .useSecureCookie(true))
+            .build();
     }
 
     private void checkConfig()

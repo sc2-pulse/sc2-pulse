@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.util;
@@ -133,7 +133,7 @@ public final class MiscUtil
         if(!includingTo) to = subtractor.apply(to);
         if(from.compareTo(to) > 0)
             throw new IllegalArgumentException("Min value must be <= than max value");
-        return Range.between(from, to);
+        return Range.of(from, to);
     }
 
     public static <T extends MultiAliasName> List<T> findByAnyName

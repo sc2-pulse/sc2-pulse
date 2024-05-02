@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.bilibili;
@@ -27,6 +27,8 @@ public class BilibiliStream
 
     private BilibiliStreamWatchedShow watchedShow;
 
+    public BilibiliStream(){}
+
     public BilibiliStream
     (
         Long roomId, Long uId, Long parentId, Long areaId, Long groupId,
@@ -54,8 +56,7 @@ public class BilibiliStream
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof BilibiliStream)) {return false;}
-        BilibiliStream that = (BilibiliStream) o;
+        if (!(o instanceof BilibiliStream that)) {return false;}
         return Objects.equals(getuId(), that.getuId());
     }
 

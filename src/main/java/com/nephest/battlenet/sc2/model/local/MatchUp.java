@@ -4,12 +4,12 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.Race;
+import jakarta.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
-import javax.validation.constraints.NotNull;
 
 public class MatchUp
 {
@@ -42,8 +42,7 @@ public class MatchUp
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof MatchUp)) {return false;}
-        MatchUp matchUp = (MatchUp) o;
+        if (!(o instanceof MatchUp matchUp)) {return false;}
         return Objects.equals(getRaces(), matchUp.getRaces())
             && Objects.equals(getVersusRaces(), matchUp.getVersusRaces());
     }

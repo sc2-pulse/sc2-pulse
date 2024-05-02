@@ -3,9 +3,9 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.time.OffsetDateTime;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 public class Evidence
 implements java.io.Serializable

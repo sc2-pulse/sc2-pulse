@@ -303,4 +303,13 @@ class FormUtil
         }
     }
 
+    static updateCsrfForm(form)
+    {
+        return Session.getCsrf()
+            .then(csrf=>{
+                form.querySelector(':scope [name="' + csrf.parameterName + '"]').value = csrf.token;
+                return form;
+            });
+    }
+
 }

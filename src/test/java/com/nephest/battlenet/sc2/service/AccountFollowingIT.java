@@ -213,7 +213,7 @@ public class AccountFollowingIT
         (
             post("/api/my/following/10")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -223,7 +223,7 @@ public class AccountFollowingIT
         (
             post("/api/my/following/" + account.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -274,7 +274,7 @@ public class AccountFollowingIT
         (
             post("/api/my/following/" + 10)
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().is4xxClientError())
             .andReturn();
@@ -284,7 +284,7 @@ public class AccountFollowingIT
         (
             delete("/api/my/following/" + account.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();

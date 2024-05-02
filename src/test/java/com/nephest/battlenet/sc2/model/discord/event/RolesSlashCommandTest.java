@@ -160,13 +160,13 @@ public class RolesSlashCommandTest
             new TreeMap<>(Comparator.comparing(Range::getMaximum));
         ratingMap.putAll((Map.of
         (
-            Range.between(0, 10),
+            Range.of(0, 10),
             List.of(new Role(client, GuildRoleStoreTest.roleData(7L, "1-11 MMR"), guildId)),
 
-            Range.between(0, 99),
+            Range.of(0, 99),
             List.of(new Role(client, GuildRoleStoreTest.roleData(8L, "1-100 MMR"), guildId)),
 
-            Range.between(100, 999),
+            Range.of(100, 999),
             List.of(new Role(client, GuildRoleStoreTest.roleData(9L, "100-1000 MMR"), guildId))
         )));
         //enum map for predictable order

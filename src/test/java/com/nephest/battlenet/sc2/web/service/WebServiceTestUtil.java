@@ -127,7 +127,7 @@ public class WebServiceTestUtil
         (
             get(uriTemplate, uriArgs)
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), clazz);
@@ -147,7 +147,7 @@ public class WebServiceTestUtil
         (
             get(uriTemplate, uriArgs)
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), clazz);

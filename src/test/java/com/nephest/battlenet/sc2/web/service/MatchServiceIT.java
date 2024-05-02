@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -111,7 +111,7 @@ public class MatchServiceIT
         (
             post("/admin/blizzard/api/match/web/region/EU")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -122,7 +122,7 @@ public class MatchServiceIT
         (
             post("/admin/blizzard/api/match/web/region/KR")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -133,7 +133,7 @@ public class MatchServiceIT
         (
             delete("/admin/blizzard/api/match/web/region/KR")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord;
@@ -30,7 +30,7 @@ public class PulseMappingsTest
             Map.of(Region.EU, List.of(1, 2, 3)),
             Map.of(BaseLeague.LeagueType.BRONZE, List.of(4, 5)),
             Map.of(Race.TERRAN, List.of(5, 5, 6)),
-            Map.of(Range.between(1, 2), List.of(7)),
+            Map.of(Range.of(1, 2), List.of(7)),
             String::valueOf,
             ", "
         );

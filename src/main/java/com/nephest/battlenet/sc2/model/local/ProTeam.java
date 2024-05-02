@@ -8,9 +8,9 @@ import com.nephest.battlenet.sc2.model.aligulac.AligulacProPlayer;
 import com.nephest.battlenet.sc2.model.aligulac.AligulacProTeam;
 import com.nephest.battlenet.sc2.model.revealed.RevealedProPlayer;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class ProTeam
 extends BaseProTeam
@@ -60,8 +60,7 @@ implements java.io.Serializable
     {
         if(o == null) return false;
         if(o == this) return true;
-        if ( !(o instanceof ProTeam) ) return false;
-        ProTeam otherTeam = (ProTeam) o;
+        if ( !(o instanceof ProTeam otherTeam) ) return false;
         return getUniqueName().equals(otherTeam.getUniqueName());
     }
 

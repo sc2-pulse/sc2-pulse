@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -35,21 +35,21 @@ public class AdminSecurityConfig
     throws Exception
     {
         return http
-            .mvcMatcher("/sba/**")
-            .csrf()
+            .securityMatcher("/sba/**")
+            .csrf(csrf->csrf
                 .csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())
                 .ignoringRequestMatchers
                 (
                     new AntPathRequestMatcher("/sba/instances", HttpMethod.POST.toString()),
                     new AntPathRequestMatcher("/sba/instances/*", HttpMethod.DELETE.toString()),
                     new AntPathRequestMatcher("/sba/actuator/**")
-                )
-            .and().authorizeRequests()
-                .mvcMatchers("/sba/instances/*/actuator/loggers").hasRole(SC2PulseAuthority.ADMIN.getName())
-                .mvcMatchers("/sba/actuator/**").hasRole(SC2PulseAuthority.ACTUATOR.getName())
-                .mvcMatchers("/sba/**").hasRole(SC2PulseAuthority.SERVER_WATCHER.getName())
-                .anyRequest().denyAll()
-            .and().httpBasic(withDefaults())
+                ))
+            .authorizeHttpRequests(authorizeHttpRequests->authorizeHttpRequests
+                .requestMatchers("/sba/instances/*/actuator/loggers").hasRole(SC2PulseAuthority.ADMIN.getName())
+                .requestMatchers("/sba/actuator/**").hasRole(SC2PulseAuthority.ACTUATOR.getName())
+                .requestMatchers("/sba/**").hasRole(SC2PulseAuthority.SERVER_WATCHER.getName())
+                .anyRequest().denyAll())
+            .httpBasic(withDefaults())
             .build();
     }
 

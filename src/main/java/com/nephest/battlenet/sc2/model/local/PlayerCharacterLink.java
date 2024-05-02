@@ -1,16 +1,16 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.nephest.battlenet.sc2.model.SocialMedia;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import java.util.Comparator;
 import java.util.Objects;
 import java.util.Optional;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 public class PlayerCharacterLink
 {
@@ -45,8 +45,7 @@ public class PlayerCharacterLink
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof PlayerCharacterLink)) {return false;}
-        PlayerCharacterLink that = (PlayerCharacterLink) o;
+        if (!(o instanceof PlayerCharacterLink that)) {return false;}
         return playerCharacterId.equals(that.playerCharacterId) && type == that.type;
     }
 

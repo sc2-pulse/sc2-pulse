@@ -241,7 +241,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text")
@@ -266,7 +266,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("additionalPlayerCharacterId", "2")
                 .param("type", "LINK")
@@ -294,7 +294,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "2")
                 .param("additionalPlayerCharacterId", "3")
                 .param("type", "LINK")
@@ -307,7 +307,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text 2")
@@ -329,7 +329,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/vote/" + reports[0].getEvidence().get(0).getEvidence().getId() + "/true")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -338,7 +338,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/vote/" + reports[1].getEvidence().get(0).getEvidence().getId() + "/true")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -347,7 +347,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/vote/" + reports[2].getEvidence().get(0).getEvidence().getId() + "/true")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -369,7 +369,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/vote/" + reports[0].getEvidence().get(0).getEvidence().getId() + "/true")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString(), LadderEvidenceVote[].class);
@@ -601,7 +601,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text " + i)
@@ -639,7 +639,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "5")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text ")
@@ -655,7 +655,7 @@ public class PlayerCharacterReportIT
             (
                 post("/api/character/report/new")
                     .contentType(MediaType.APPLICATION_JSON)
-                    .with(csrf().asHeader())
+                    .with(csrf())
                     .param("playerCharacterId", "1")
                     .param("type", "CHEATER")
                     .param("evidence", "evidence text " + i)
@@ -668,7 +668,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text 999")
@@ -919,7 +919,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/vote/1/true")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("evidenceId", "1")
                 .param("vote", "true")
         )
@@ -930,7 +930,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/vote/1/true/")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isForbidden())
         .andReturn();
@@ -971,7 +971,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "5")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence text")
@@ -1008,7 +1008,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence1")
@@ -1020,7 +1020,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "2")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence2")
@@ -1068,7 +1068,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence1")
@@ -1079,7 +1079,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "2")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence2")
@@ -1150,7 +1150,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", evidence)
@@ -1168,7 +1168,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence1")
@@ -1195,7 +1195,7 @@ public class PlayerCharacterReportIT
         (
             post("/api/character/report/new")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
                 .param("playerCharacterId", "1")
                 .param("type", "CHEATER")
                 .param("evidence", "evidence2")

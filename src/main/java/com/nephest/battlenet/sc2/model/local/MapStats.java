@@ -1,11 +1,10 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.Race;
-
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
 public class MapStats
@@ -79,8 +78,7 @@ implements java.io.Serializable
     public boolean equals(Object o)
     {
         if (this == o) return true;
-        if (!(o instanceof MapStats)) return false;
-        MapStats stats = (MapStats) o;
+        if (!(o instanceof MapStats stats)) return false;
         return getLeagueId().equals(stats.getLeagueId())
             && Objects.equals(getMapId(), stats.getMapId())
             && getRace() == stats.getRace()

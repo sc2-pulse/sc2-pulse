@@ -1,11 +1,11 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.blizzard.cache.BlizzardCachePatch;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class Patch
 implements java.io.Serializable
@@ -46,8 +46,7 @@ implements java.io.Serializable
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof Patch)) {return false;}
-        Patch patch = (Patch) o;
+        if (!(o instanceof Patch patch)) {return false;}
         return Objects.equals(getBuild(), patch.getBuild())
             && Objects.equals(getVersion(), patch.getVersion());
     }

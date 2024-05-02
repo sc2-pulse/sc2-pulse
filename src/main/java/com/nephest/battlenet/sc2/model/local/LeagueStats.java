@@ -1,10 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class LeagueStats
 extends BaseLocalTeamMember
@@ -80,9 +80,8 @@ implements java.io.Serializable
     {
         if (other == null) return false;
         if (other == this) return true;
-        if ( !(other instanceof LeagueStats) ) return false;
+        if ( !(other instanceof LeagueStats otherStats) ) return false;
 
-        LeagueStats otherStats = (LeagueStats) other;
         return getLeagueId() != null
             && getLeagueId().equals(otherStats.getLeagueId());
     }

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -7,8 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeague;
-
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
 public class League
@@ -59,9 +58,8 @@ implements java.io.Serializable
     {
         if (other == null) return false;
         if (other == this) return true;
-        if ( !(other instanceof League) ) return false;
+        if ( !(other instanceof League otherLeague) ) return false;
 
-        League otherLeague = (League) other;
         return getSeasonId().equals(otherLeague.getSeasonId())
             && getType() == otherLeague.getType()
             && getQueueType() == otherLeague.getQueueType()

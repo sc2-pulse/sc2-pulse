@@ -6,10 +6,10 @@ package com.nephest.battlenet.sc2.model.local;
 import com.nephest.battlenet.sc2.model.Identifiable;
 import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class ClanMemberEvent
 {
@@ -114,8 +114,7 @@ public class ClanMemberEvent
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof ClanMemberEvent)) {return false;}
-        ClanMemberEvent that = (ClanMemberEvent) o;
+        if (!(o instanceof ClanMemberEvent that)) {return false;}
         return getPlayerCharacterId().equals(that.getPlayerCharacterId())
             && getCreated().isEqual(that.getCreated());
     }

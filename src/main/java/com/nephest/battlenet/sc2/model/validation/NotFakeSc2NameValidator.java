@@ -4,8 +4,8 @@
 package com.nephest.battlenet.sc2.model.validation;
 
 import com.nephest.battlenet.sc2.model.local.Account;
-import javax.validation.ConstraintValidator;
-import javax.validation.ConstraintValidatorContext;
+import jakarta.validation.ConstraintValidator;
+import jakarta.validation.ConstraintValidatorContext;
 
 public class NotFakeSc2NameValidator
 implements ConstraintValidator<NotFakeSc2Name, String>

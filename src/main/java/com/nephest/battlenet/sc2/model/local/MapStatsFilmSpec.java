@@ -4,12 +4,12 @@
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.Race;
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalUnit;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class MapStatsFilmSpec
 implements Serializable
@@ -46,8 +46,7 @@ implements Serializable
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof MapStatsFilmSpec)) {return false;}
-        MapStatsFilmSpec that = (MapStatsFilmSpec) o;
+        if (!(o instanceof MapStatsFilmSpec that)) {return false;}
         return getRace() == that.getRace()
             && getVersusRace() == that.getVersusRace()
             && Objects.equals(getFrameDuration(), that.getFrameDuration());

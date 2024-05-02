@@ -47,6 +47,8 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.util.LogUtil;
 import com.nephest.battlenet.sc2.util.MiscUtil;
 import com.nephest.battlenet.sc2.web.util.ReactorRateLimiter;
+import jakarta.annotation.PostConstruct;
+import jakarta.validation.ValidationException;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDateTime;
@@ -63,8 +65,6 @@ import java.util.function.Function;
 import java.util.stream.DoubleStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
-import javax.annotation.PostConstruct;
-import javax.validation.ValidationException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -845,9 +845,8 @@ extends BaseAPI
         (
             (t)->
             {
-                if(t.getCause() != null && t.getCause() instanceof WebClientResponseException.NotFound)
+                if(t.getCause() != null && t.getCause() instanceof WebClientResponseException.NotFound nfe)
                 {
-                    WebClientResponseException.NotFound nfe = (WebClientResponseException.NotFound) t.getCause();
                     LOG.debug("Current league not found. New season started recently? ({})", nfe.getRequest().getURI());
                     return true;
                 }

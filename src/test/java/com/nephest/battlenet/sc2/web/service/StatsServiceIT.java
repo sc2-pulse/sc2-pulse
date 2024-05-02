@@ -172,7 +172,7 @@ public class StatsServiceIT
         (
             post("/admin/update/partial/EU")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -183,7 +183,7 @@ public class StatsServiceIT
         (
             delete("/admin/update/partial/EU")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -201,7 +201,7 @@ public class StatsServiceIT
         (
             post("/admin/update/partial/2/EU")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -212,7 +212,7 @@ public class StatsServiceIT
         (
             delete("/admin/update/partial/2/EU")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();

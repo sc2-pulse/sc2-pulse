@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -249,7 +249,7 @@ public class DiscordIT
         (
             post("/api/my/discord/unlink")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk());
         verifyLinkedDiscordUser(1L, null);
@@ -323,7 +323,7 @@ public class DiscordIT
         (
             post("/api/my/discord/public/true")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk());
 

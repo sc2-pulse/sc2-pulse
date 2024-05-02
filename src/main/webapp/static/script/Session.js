@@ -182,13 +182,20 @@ class Session
         }
     }
 
+    static getCsrf()
+    {
+        return Session.beforeRequest()
+           .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/security/csrf`))
+           .then(Session.verifyJsonResponse);
+    }
+
     static enhanceCsrfForms()
     {
         document.querySelectorAll(".form-csrf").forEach(f=>{
             f.addEventListener("submit", e=>{
                 e.preventDefault();
-                Util.updateCsrfForm(e.target);
-                e.target.submit();
+                FormUtil.updateCsrfForm(e.target)
+                    .then(updatedForm=>e.target.submit());
             });
         });
     }
@@ -383,7 +390,7 @@ class PersonalUtil
             ElementUtil.removeChildren(additionalInfo);
             if(data.roles.includes("SERVER_WATCHER")) {
                 const adminLink = document.createElement("a");
-                adminLink.setAttribute("href", ROOT_CONTEXT_PATH + "sba/");
+                adminLink.setAttribute("href", ROOT_CONTEXT_PATH + "sba");
                 adminLink.setAttribute("id", "server-info-panel-link");
                 adminLink.setAttribute("target", "_blank");
                 adminLink.textContent = "Server info panel";

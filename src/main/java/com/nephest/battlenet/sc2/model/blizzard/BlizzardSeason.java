@@ -7,8 +7,8 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.nephest.battlenet.sc2.config.convert.jackson.EpochSecondToLocalDateConverter;
 import com.nephest.battlenet.sc2.model.BaseSeason;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
-import javax.validation.constraints.NotNull;
 
 public class BlizzardSeason
 extends BaseSeason

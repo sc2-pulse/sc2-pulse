@@ -3,8 +3,8 @@
 
 package com.nephest.battlenet.sc2.model;
 
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
-import javax.validation.constraints.NotNull;
 
 public class BaseSeason
 {

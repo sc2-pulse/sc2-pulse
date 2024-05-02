@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -15,7 +15,6 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.service.UpdateService;
-import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import discord4j.common.util.Snowflake;
 import discord4j.core.GatewayDiscordClient;
@@ -52,7 +51,6 @@ import discord4j.rest.service.ApplicationService;
 import discord4j.rest.util.Color;
 import discord4j.rest.util.Permission;
 import discord4j.rest.util.PermissionSet;
-import java.time.Duration;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
@@ -79,7 +77,6 @@ public class DiscordBootstrap
 
     public static final int DEFAULT_LINES = 5;
     public static final int MESSAGE_LENGTH_MAX = 2000;
-    public static final Duration CACHE_DURATION = WebServiceUtil.DEFAULT_API_CACHE_DURATION;
     public static final String SC2_GAME_NAME = "StarCraft II";
     public static final String SC2_REVEALED_TAG = "revealed";
     public static final String UNEXPECTED_ERROR_MESSAGE =

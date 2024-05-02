@@ -182,7 +182,7 @@ public class GeneralSeleniumIT
     throws Exception
     {
         FirefoxOptions options = new FirefoxOptions();
-        options.setHeadless(headless);
+        if(headless) options.addArguments("--headless");
         return (WebDriver) Class
             .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
             .getDeclaredConstructor(FirefoxOptions.class)
@@ -193,7 +193,7 @@ public class GeneralSeleniumIT
     throws Exception
     {
         ChromeOptions options = new ChromeOptions();
-        options.setHeadless(headless);
+        if(headless) options.addArguments("--headless=new");
         return (WebDriver) Class
             .forName("org.openqa.selenium." + getDriverPackage(seleniumDriver) + "." + seleniumDriver + "Driver")
             .getDeclaredConstructor(ChromeOptions.class)

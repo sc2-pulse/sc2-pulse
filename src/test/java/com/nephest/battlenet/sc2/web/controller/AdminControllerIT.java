@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller;
@@ -75,7 +75,7 @@ public class AdminControllerIT
         (
             post("/admin/update/match/frame/{lowDuration}", lowDuration)
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isBadRequest())
             .andExpect(content().string("Duration can't be negative"));
@@ -91,7 +91,7 @@ public class AdminControllerIT
         (
             post("/admin/update/match/frame/{newDuration}", newDuration.toMillis())
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk());
         assertEquals(newDuration, matchService.getMatchUpdateFrame());

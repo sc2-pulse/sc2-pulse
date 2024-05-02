@@ -3,9 +3,9 @@
 
 package com.nephest.battlenet.sc2.model.local;
 
+import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class MapStatsFilm
 implements Serializable
@@ -39,8 +39,7 @@ implements Serializable
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof MapStatsFilm)) {return false;}
-        MapStatsFilm that = (MapStatsFilm) o;
+        if (!(o instanceof MapStatsFilm that)) {return false;}
         return Objects.equals(getMapId(), that.getMapId())
             && Objects.equals(getLeagueTierId(), that.getLeagueTierId())
             && Objects.equals(getMapStatsFilmSpecId(), that.getMapStatsFilmSpecId());

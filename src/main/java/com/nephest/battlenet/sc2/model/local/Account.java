@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -9,9 +9,9 @@ import com.nephest.battlenet.sc2.model.BasePlayerCharacter;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardAccount;
+import jakarta.validation.constraints.NotNull;
 import java.util.Comparator;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class Account
 extends BaseAccount
@@ -69,9 +69,8 @@ implements java.io.Serializable
     {
         if (other == null) return false;
         if (other == this) return true;
-        if( !(other instanceof Account) ) return false;
+        if( !(other instanceof Account otherAccount) ) return false;
 
-        Account otherAccount = (Account) other;
         return getBattleTag().equals(otherAccount.getBattleTag()) && getPartition() == otherAccount.getPartition();
     }
 

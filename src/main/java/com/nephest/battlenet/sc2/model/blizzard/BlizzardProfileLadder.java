@@ -5,8 +5,8 @@ package com.nephest.battlenet.sc2.model.blizzard;
 
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.util.TimestampedObject;
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
+import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 public class BlizzardProfileLadder
 extends TimestampedObject

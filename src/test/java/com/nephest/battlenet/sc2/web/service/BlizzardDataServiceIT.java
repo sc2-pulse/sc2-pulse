@@ -154,7 +154,7 @@ public class BlizzardDataServiceIT
             (
                 post("/data/battle-net")
                     .param("action", BlizzardDataController.Action.IMPORT.toString())
-                    .with(csrf().asHeader())
+                    .with(csrf())
             )
                 .andExpect(status().isOk());
         }
@@ -190,7 +190,7 @@ public class BlizzardDataServiceIT
             (
                 post("/data/battle-net")
                     .param("action", BlizzardDataController.Action.DELETE.toString())
-                    .with(csrf().asHeader())
+                    .with(csrf())
             )
                 .andExpect(status().isOk());
         }

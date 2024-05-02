@@ -5,9 +5,9 @@ package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class TeamState
 implements java.io.Serializable

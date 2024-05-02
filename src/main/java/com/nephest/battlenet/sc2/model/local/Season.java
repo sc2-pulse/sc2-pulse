@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -6,8 +6,7 @@ package com.nephest.battlenet.sc2.model.local;
 import com.nephest.battlenet.sc2.model.BaseSeason;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
-
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.time.LocalDate;
 import java.util.Objects;
 
@@ -70,9 +69,8 @@ implements java.io.Serializable
     {
         if (other == null) return false;
         if (this == other) return true;
-        if (!(other instanceof Season)) return false;
+        if (!(other instanceof Season otherSeason)) return false;
 
-        Season otherSeason = (Season) other;
         return getBattlenetId().equals(otherSeason.getBattlenetId())
             && getRegion() == otherSeason.getRegion();
     }

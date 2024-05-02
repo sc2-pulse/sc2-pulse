@@ -1,11 +1,11 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.twitch;
 
 import com.github.twitch4j.helix.domain.User;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class TwitchUser
 {
@@ -37,8 +37,7 @@ public class TwitchUser
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof TwitchUser)) {return false;}
-        TwitchUser that = (TwitchUser) o;
+        if (!(o instanceof TwitchUser that)) {return false;}
         return getId().equals(that.getId());
     }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -74,13 +74,7 @@ extends BaseAPI
             .retrieve()
             .bodyToMono(ReplayStatsPlayerCharacter.class)
             .retryWhen(rateLimiter.retryWhen(getRetry(WebServiceUtil.RETRY)))
-            .delaySubscription(rateLimiter.requestSlot())
-            .cache
-            (
-                (m)->WebServiceUtil.DEFAULT_API_CACHE_DURATION,
-                (t)->Duration.ZERO,
-                ()->WebServiceUtil.DEFAULT_API_CACHE_DURATION
-            );
+            .delaySubscription(rateLimiter.requestSlot());
     }
 
 }

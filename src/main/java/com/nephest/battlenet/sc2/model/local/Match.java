@@ -7,10 +7,10 @@ import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardMatch;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class Match
 extends BaseMatch

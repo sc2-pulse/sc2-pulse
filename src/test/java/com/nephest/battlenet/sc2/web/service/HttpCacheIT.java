@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -8,27 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.filter.NoCacheFilter;
-import com.nephest.battlenet.sc2.model.BaseLeague;
-import com.nephest.battlenet.sc2.model.BaseLeagueTier;
-import com.nephest.battlenet.sc2.model.QueueType;
-import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.TeamType;
-import com.nephest.battlenet.sc2.model.local.Season;
-import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
-import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
-import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.web.util.StatefulRestTemplateInterceptor;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import javax.sql.DataSource;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -36,14 +19,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.boot.test.web.server.LocalServerPort;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
-import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.web.context.WebApplicationContext;
 
 @SpringBootTest
 (
@@ -65,40 +45,6 @@ public class HttpCacheIT
 
     private TestRestTemplate restTemplate;
 
-    @BeforeAll
-    public static void init
-    (
-        @Autowired DataSource dataSource,
-        @Autowired WebApplicationContext webApplicationContext,
-        @Autowired SeasonGenerator generator,
-        @Autowired LeagueStatsDAO leagueStatsDAO,
-        @Autowired PopulationStateDAO populationStateDAO
-    )
-    throws SQLException
-    {
-        try(Connection connection = dataSource.getConnection())
-        {
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
-            ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-        }
-
-        LocalDate start = LocalDate.now().minusMonths(1);
-        LocalDate end = start.plusMonths(2);
-        generator.generateSeason
-        (
-            Arrays.stream(Region.values())
-                .map(r-> new Season(null, 1, r, 2020, 1, start, end))
-                .collect(Collectors.toList()),
-            List.of(BaseLeague.LeagueType.values()),
-            new ArrayList<>(QueueType.getTypes(StatsService.VERSION)),
-            TeamType.ARRANGED,
-            BaseLeagueTier.LeagueTierType.FIRST,
-            1
-        );
-        leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
-        populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
-    }
-
     @BeforeEach
     public void beforeEach()
     {
@@ -107,34 +53,37 @@ public class HttpCacheIT
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {
-        "/api/season/list/all",
-        "/api/ladder/stats/bundle"
-    })
-    public void testCacheSecurity(String path)
+    @ValueSource(booleans = {true, false})
+    public void testCacheSecurity(boolean cookie)
     {
-        //csrf cookie is expected here, don't cache it
-        ResponseEntity<String> responseNoCache = restTemplate.exchange
+        String url = "http://localhost:" + port + "/api/test/cache" + (cookie ? "/cookie" : "");
+        //get cookie csrf token in case cookie csrf storage is enabled
+        restTemplate.exchange
         (
-            "http://localhost:" + port + path,
+            url,
             HttpMethod.GET,
             new HttpEntity<>(null, null),
             String.class
         );
-        verifyNoCacheHeaders(responseNoCache.getHeaders());
-
-        //secure response, cache it
-        ResponseEntity<String> responseCache = restTemplate.exchange
+        //the qctual request without the csrf cookie
+        ResponseEntity<String> response = restTemplate.exchange
         (
-            "http://localhost:" + port + path,
+            url,
             HttpMethod.GET,
             new HttpEntity<>(null, null),
             String.class
         );
-        assertTrue(NON_ZERO_CACHE_PATTERN
-            .matcher(responseCache.getHeaders().get(HttpHeaders.CACHE_CONTROL).get(0))
-            .matches()
-        );
+        if(cookie)
+        {
+            verifyNoCacheHeaders(response.getHeaders());
+        }
+        else
+        {
+            assertTrue(NON_ZERO_CACHE_PATTERN
+                .matcher(response.getHeaders().get(HttpHeaders.CACHE_CONTROL).get(0))
+                .matches()
+            );
+        }
     }
 
     public static void verifyNoCacheHeaders(HttpHeaders headers)

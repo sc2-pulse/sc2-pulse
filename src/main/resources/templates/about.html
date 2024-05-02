@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2024 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -32,7 +32,7 @@
             <h3>Player reports</h3>
             <aside><p>Moderators review player reports and vote on them, the majority wins. All moderators are approved by team league admins</p></aside>
             Current mods:
-            <p th:text="${mods.stream().collect(T(java.util.stream.Collectors).joining(', '))}"></p>
+            <p th:text="${#strings.listJoin(mods, ', ')}"></p>
         </section>
         <th:block th:with="revealerStats=${@ladderProPlayerAccountDAO.findRevealerStats(5)}">
             <section id="reveal" th:if="${!revealerStats.isEmpty()}">
@@ -80,15 +80,15 @@
             </section>
             <section th:if="${@supporterService.getSponsorsT2().size() > 0}" >
                 <h4>T2 Sponsors</h4>
-                <p th:utext="${@supporterService.getSponsorsT2().stream().collect(@formatUtil.joining(', '))}"></p>
+                <p th:utext="${#strings.listJoin(@supporterService.getSponsorsT2(), ', ')}"></p>
             </section>
             <section th:if="${@supporterService.getSupporters().size() > 0}">
                 <h4>Supporters</h4>
-                <p th:utext="${@supporterService.getSupporters().stream().collect(@formatUtil.joining(', '))}"></p>
+                <p th:utext="${#strings.listJoin(@supporterService.getSupporters(), ', ')}"></p>
             </section>
             <section th:if="${@supporterService.getDonors().size() > 0}">
                 <h4>Donors/former patrons</h4>
-                <p th:utext="${@supporterService.getDonors().stream().collect(@formatUtil.joining(', '))}"></p>
+                <p th:utext="${#strings.listJoin(@supporterService.getDonors(), ', ')}"></p>
             </section>
             <aside><p>Thank you for the support!</p></aside>
         </section>

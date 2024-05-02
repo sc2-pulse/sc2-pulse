@@ -31,7 +31,7 @@ import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.client.reactive.ClientHttpConnector;
@@ -215,9 +215,8 @@ public class WebServiceUtil
 
     private static void logException(Throwable t, LogUtil.LogLevel logLevel)
     {
-        if(t instanceof TemplatedException)
+        if(t instanceof TemplatedException te)
         {
-            TemplatedException te = (TemplatedException) t;
             LogUtil.log(LOG, logLevel, te.getLogTemplate(), te.getLogArgs());
         }
         else if(t instanceof WebClientResponseException)
@@ -444,7 +443,7 @@ public class WebServiceUtil
             SecurityContextHolder.getContext().getAuthentication()));
     }
 
-    public static boolean isRestricted(HttpStatus status)
+    public static boolean isRestricted(HttpStatusCode status)
     {
         return status.value() == 401 || status.value() == 403;
     }

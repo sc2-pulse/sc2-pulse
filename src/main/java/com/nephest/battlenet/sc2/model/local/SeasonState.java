@@ -1,9 +1,9 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -48,8 +48,7 @@ public class SeasonState
     public boolean equals(Object o)
     {
         if (this == o) return true;
-        if (!(o instanceof SeasonState)) return false;
-        SeasonState that = (SeasonState) o;
+        if (!(o instanceof SeasonState that)) return false;
         return seasonId.equals(that.seasonId) && periodStart.equals(that.periodStart);
     }
 

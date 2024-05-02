@@ -5,10 +5,10 @@ package com.nephest.battlenet.sc2.model.twitch;
 
 import com.github.twitch4j.helix.domain.Video;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import jakarta.validation.constraints.NotNull;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class TwitchVideo
 {
@@ -43,8 +43,7 @@ public class TwitchVideo
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof TwitchVideo)) {return false;}
-        TwitchVideo that = (TwitchVideo) o;
+        if (!(o instanceof TwitchVideo that)) {return false;}
         return id.equals(that.id);
     }
 

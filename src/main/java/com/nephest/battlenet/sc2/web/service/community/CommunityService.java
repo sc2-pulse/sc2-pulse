@@ -357,8 +357,7 @@ public class CommunityService
             .sort(STREAM_COMPARATOR)
             .collectList()
             .flatMap(streams->WebServiceUtil.blockingCallable(()->enrich(streams)))
-            .map(streams->new CommunityStreamResult(streams, errors))
-            .cache((m)->STREAM_CACHE_EXPIRE_AFTER, (t)->Duration.ZERO, ()->STREAM_CACHE_EXPIRE_AFTER);
+            .map(streams->new CommunityStreamResult(streams, errors));
     }
 
     private List<LadderVideoStream> enrich(List<VideoStream> streams)
@@ -417,12 +416,7 @@ public class CommunityService
     {
         return communityService.getStreams()
             .map(result->new CommunityStreamResult(
-                getFeaturedStreams(result.getStreams()), result.getErrors()))
-            .cache((m)->
-                FEATURED_STREAM_CACHE_EXPIRE_AFTER,
-                (t)->Duration.ZERO,
-                ()->FEATURED_STREAM_CACHE_EXPIRE_AFTER
-            );
+                getFeaturedStreams(result.getStreams()), result.getErrors()));
     }
 
     public Mono<CommunityStreamResult> getFeaturedStreams(Set<SocialMedia> services)

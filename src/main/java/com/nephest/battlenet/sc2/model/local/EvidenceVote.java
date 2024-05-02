@@ -1,9 +1,9 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
 import java.util.Objects;
 
@@ -44,8 +44,7 @@ implements java.io.Serializable
     public boolean equals(Object o)
     {
         if (this == o) return true;
-        if (!(o instanceof EvidenceVote)) return false;
-        EvidenceVote that = (EvidenceVote) o;
+        if (!(o instanceof EvidenceVote that)) return false;
         return evidenceId.equals(that.evidenceId) && voterAccountId.equals(that.voterAccountId);
     }
 

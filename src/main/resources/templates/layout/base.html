@@ -5,7 +5,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="https://www.thymeleaf.org"
       th:fragment="layout (title, description, content, script, showAds)" lang="en"
-      th:with="uiTheme=${#strings.equals(T(org.springframework.web.util.WebUtils).getCookie(#request, 'theme')?.getValue(), 'dark')} ? 'dark' : 'light'">
+>
 <head>
     <script>window.addEventListener("error", e=>{document.body.classList.add('js-error-detected');});</script>
     <th:block th:if="${not #arrays.contains(@environment.getActiveProfiles(), 'dev')}">
@@ -36,15 +36,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
     <meta th:replace="${description}" name="description" content="Flexible StarCraft&reg;2 stats aggregator for any team format"/>
     <link id="bootstrap-theme-light" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
-    <link th:if="${uiTheme == 'dark'}" id="bootstrap-theme-dark" rel="stylesheet" th:href="@{/static/bootstrap-dark.min.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
+    <link th:if="${theme == 'dark'}" id="bootstrap-theme-dark" rel="stylesheet" th:href="@{/static/bootstrap-dark.min.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link id="bootstrap-theme-override" rel="stylesheet" th:href="@{/static/sc2.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"/>
     <link rel="icon" type="image/png" sizes="128x128" th:href="@{/static/icon/misc/favicon-128.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/png" sizes="32x32" th:href="@{/static/icon/misc/favicon-32.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/png" sizes="16x16" th:href="@{/static/icon/misc/favicon-16.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/svg+xml" th:href="@{/static/icon/misc/pulse.svg(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
 </head>
-<body th:with="urlBuilder=${T(org.springframework.web.servlet.support.ServletUriComponentsBuilder)}"
-      th:class="|theme-${uiTheme}|">
+<body th:class="|theme-${theme}|">
     <div class="d-flex">
     <div id="section-side-left" class="section-side">
         <div class="sponsor-desktop-side-container" th:if="${showAds == true}">

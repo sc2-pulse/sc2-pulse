@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.discord;
@@ -15,7 +15,6 @@ import discord4j.core.event.domain.role.RoleUpdateEvent;
 import discord4j.core.object.entity.Guild;
 import discord4j.core.object.entity.Role;
 import discord4j.rest.util.Permission;
-import java.time.Duration;
 import java.util.Collection;
 import java.util.EnumMap;
 import java.util.LinkedHashMap;
@@ -69,8 +68,7 @@ public class GuildRoleStore
             .getRoles()
             .filter(r->!r.isManaged())
             .collectList()
-            .map(GuildRoleStore::getRoleMappings)
-            .cache((m)->DiscordBootstrap.CACHE_DURATION, (t)->Duration.ZERO, ()->DiscordBootstrap.CACHE_DURATION);
+            .map(GuildRoleStore::getRoleMappings);
     }
 
     @Cacheable(cacheNames = "discord-guild-managed-roles", key="#evt.getInteraction().getGuildId().get()?.asLong()")
@@ -95,8 +93,7 @@ public class GuildRoleStore
             )
             .collectList()
             .map(GuildRoleStore::getRoleMappings)
-            .defaultIfEmpty(PulseMappings.empty())
-            .cache((m)->DiscordBootstrap.CACHE_DURATION, (t)->Duration.ZERO, ()->DiscordBootstrap.CACHE_DURATION);
+            .defaultIfEmpty(PulseMappings.empty());
     }
 
     @CacheEvict

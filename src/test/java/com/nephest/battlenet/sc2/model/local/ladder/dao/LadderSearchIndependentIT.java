@@ -320,7 +320,7 @@ public class LadderSearchIndependentIT
         (
             get("/api/my/following/characters")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isOk())
         .andExpect(content().json("[]"))
@@ -330,7 +330,7 @@ public class LadderSearchIndependentIT
         (
             post("/api/my/following/" + acc.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -339,7 +339,7 @@ public class LadderSearchIndependentIT
         (
             post("/api/my/following/" + acc2.getId())
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isOk())
         .andReturn();

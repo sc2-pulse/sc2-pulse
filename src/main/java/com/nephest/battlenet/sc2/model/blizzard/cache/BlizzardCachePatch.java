@@ -1,12 +1,12 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard.cache;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.nephest.battlenet.sc2.config.convert.jackson.EpochMilliToOffsetDateTimeConverter;
+import jakarta.validation.constraints.NotNull;
 import java.time.OffsetDateTime;
-import javax.validation.constraints.NotNull;
 
 public class BlizzardCachePatch
 {

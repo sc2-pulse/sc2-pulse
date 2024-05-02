@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service;
@@ -81,7 +81,7 @@ public class SupportersServiceIT
         (
             post("/admin/supporters/supporter/{name}", "sup1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         ).andExpect(status().isOk());
         assertTrue(supporterService.getSupporters().contains("sup1"));
 
@@ -89,7 +89,7 @@ public class SupportersServiceIT
         (
             delete("/admin/supporters/supporter/{name}", "sup1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         ).andExpect(status().isOk());
         assertFalse(supporterService.getSupporters().contains("sup1"));
     }
@@ -102,7 +102,7 @@ public class SupportersServiceIT
         (
             post("/admin/supporters/donor/{name}", "don1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         ).andExpect(status().isOk());
         assertTrue(supporterService.getDonors().contains("don1"));
 
@@ -110,7 +110,7 @@ public class SupportersServiceIT
         (
             delete("/admin/supporters/donor/{name}", "don1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         ).andExpect(status().isOk());
         assertFalse(supporterService.getDonors().contains("don1"));
     }
@@ -123,7 +123,7 @@ public class SupportersServiceIT
         (
             post("/admin/supporters/donor/{name}", "don1")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         ).andExpect(status().isForbidden());
     }
 

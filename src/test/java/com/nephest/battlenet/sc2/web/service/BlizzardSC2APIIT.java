@@ -302,7 +302,7 @@ public class BlizzardSC2APIIT
         (
             post("/admin/blizzard/api/region/US/force/EU")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -314,7 +314,7 @@ public class BlizzardSC2APIIT
         (
             delete("/admin/blizzard/api/region/US/force")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
         .andExpect(status().isOk())
         .andReturn();
@@ -331,7 +331,7 @@ public class BlizzardSC2APIIT
         (
             post("/admin/blizzard/api/region/US/force/EU/profile")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -343,7 +343,7 @@ public class BlizzardSC2APIIT
         (
             delete("/admin/blizzard/api/region/US/force/profile")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -362,7 +362,7 @@ public class BlizzardSC2APIIT
         (
             post("/admin/blizzard/api/ssl/error/ignore/EU")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -373,7 +373,7 @@ public class BlizzardSC2APIIT
         (
             delete("/admin/blizzard/api/ssl/error/ignore/EU")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -392,7 +392,7 @@ public class BlizzardSC2APIIT
         (
             post("/admin/blizzard/api/timeout/EU/1000")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -403,7 +403,7 @@ public class BlizzardSC2APIIT
         (
             delete("/admin/blizzard/api/timeout/EU")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -428,7 +428,7 @@ public class BlizzardSC2APIIT
         (
             post("/admin/blizzard/api/rps/{region}/5", targetRegion.name())
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -444,7 +444,7 @@ public class BlizzardSC2APIIT
         (
             delete("/admin/blizzard/api/rps/{region}", targetRegion.name())
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -473,7 +473,7 @@ public class BlizzardSC2APIIT
         (
             post("/admin/blizzard/api/rph/{region}/1000", targetRegion.name())
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -489,7 +489,7 @@ public class BlizzardSC2APIIT
         (
             delete("/admin/blizzard/api/rph/{region}", targetRegion.name())
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();

@@ -11,11 +11,11 @@ import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeam;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
+import jakarta.validation.constraints.NotNull;
 import java.math.BigInteger;
 import java.time.OffsetDateTime;
 import java.util.Comparator;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class Team
 extends BaseTeam
@@ -150,8 +150,7 @@ implements java.io.Serializable
     public boolean equals(Object o)
     {
         if (this == o) return true;
-        if (!(o instanceof Team)) return false;
-        Team team = (Team) o;
+        if (!(o instanceof Team team)) return false;
         return getSeason().equals(team.getSeason())
             && getRegion() == team.getRegion()
             && getQueueType() == team.getQueueType()

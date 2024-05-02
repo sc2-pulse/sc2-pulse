@@ -185,7 +185,7 @@ public class RevealControllerIT
         (
             post("/api/reveal/5/2")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -197,7 +197,7 @@ public class RevealControllerIT
         (
             delete("/api/reveal/5/2")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn();
@@ -244,7 +244,7 @@ public class RevealControllerIT
             post("/api/reveal/import")
                 .param("url", "http://aligulac.com/players/10-Serral/")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), ProPlayer.class);
@@ -324,7 +324,7 @@ public class RevealControllerIT
                         "https://twitter.com/Serral_SC2"
                     )
                 )))
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
@@ -393,7 +393,7 @@ public class RevealControllerIT
                         "https://www.twitch.tv/nephest0x"
                     )
                 )))
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString();
@@ -452,7 +452,7 @@ public class RevealControllerIT
             post("/api/reveal/player/edit")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(new ProPlayerForm(player, List.of())))
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isConflict());
     }
@@ -466,14 +466,14 @@ public class RevealControllerIT
         (
             post("/api/reveal/5/2")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isForbidden());
         mvc.perform
         (
             delete("/api/reveal/5/2")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isForbidden());
         mvc.perform
@@ -481,7 +481,7 @@ public class RevealControllerIT
             post("/api/reveal/import")
                 .param("url", "http://aligulac.com/players/485-Serral/")
                 .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isForbidden());
         mvc.perform
@@ -489,7 +489,7 @@ public class RevealControllerIT
             post("/api/reveal/player/edit")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}")
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isForbidden());
     }
@@ -529,7 +529,7 @@ public class RevealControllerIT
                         "https://www.twitch.tv/serral2nonex"
                     )
                 )))
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isBadRequest());
     }
@@ -568,7 +568,7 @@ public class RevealControllerIT
                         "https://space.bilibili.com/invalidId/"
                     )
                 )))
-                .with(csrf().asHeader())
+                .with(csrf())
         )
             .andExpect(status().isBadRequest());
     }

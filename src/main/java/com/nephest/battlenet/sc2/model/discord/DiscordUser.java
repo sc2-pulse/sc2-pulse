@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.discord;
@@ -6,8 +6,8 @@ package com.nephest.battlenet.sc2.model.discord;
 import com.fasterxml.jackson.annotation.JsonAlias;
 import discord4j.common.util.Snowflake;
 import discord4j.core.object.entity.User;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
-import javax.validation.constraints.NotNull;
 
 public class DiscordUser
 implements DiscordIdentity
@@ -37,8 +37,7 @@ implements DiscordIdentity
     public boolean equals(Object o)
     {
         if (this == o) {return true;}
-        if (!(o instanceof DiscordUser)) {return false;}
-        DiscordUser that = (DiscordUser) o;
+        if (!(o instanceof DiscordUser that)) {return false;}
         return getId().equals(that.getId());
     }
 

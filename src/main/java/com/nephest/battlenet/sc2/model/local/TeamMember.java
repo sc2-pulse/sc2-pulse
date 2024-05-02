@@ -1,11 +1,10 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
 
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTeamMemberRace;
-
-import javax.validation.constraints.NotNull;
+import jakarta.validation.constraints.NotNull;
 import java.util.Objects;
 
 public class TeamMember
@@ -67,9 +66,8 @@ implements java.io.Serializable
     {
         if(other == null) return false;
         if(other == this) return true;
-        if( !(other instanceof TeamMember) ) return false;
+        if( !(other instanceof TeamMember otherMember) ) return false;
 
-        TeamMember otherMember = (TeamMember) other;
         return getTeamId().equals(otherMember.getTeamId())
             && getCharacterId().equals(otherMember.getCharacterId());
     }

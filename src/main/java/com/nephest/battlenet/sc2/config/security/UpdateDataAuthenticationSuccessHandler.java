@@ -1,14 +1,14 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
 
 import com.nephest.battlenet.sc2.discord.Discord;
 import com.nephest.battlenet.sc2.web.service.DiscordService;
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import javax.servlet.ServletException;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
@@ -50,10 +50,8 @@ extends SavedRequestAwareAuthenticationSuccessHandler
 
     private void updateOauth2Data(OAuth2AuthenticationToken token)
     {
-        if(!(token.getPrincipal() instanceof AccountOauth2User)) return;
+        if(!(token.getPrincipal() instanceof AccountOauth2User<? extends OAuth2User> user)) return;
 
-        AccountOauth2User<? extends OAuth2User> user =
-            (AccountOauth2User<? extends OAuth2User>) token.getPrincipal();
         if(token.getAuthorizedClientRegistrationId().equals("discord-lg"))
             updateDiscordOauth2Data(user);
     }
