@@ -53,21 +53,21 @@
     <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter</artifactId>
-        <version>5.9.2</version>
+        <version>5.9.3</version>
         <scope>test</scope>
     </dependency>
 
     <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-core</artifactId>
-        <version>4.11.0</version>
+        <version>5.11.0</version>
         <scope>test</scope>
     </dependency>
 
     <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-junit-jupiter</artifactId>
-        <version>4.11.0</version>
+        <version>5.11.0</version>
         <scope>test</scope>
     </dependency>
 
@@ -81,7 +81,7 @@
     <dependency>
         <groupId>io.projectreactor</groupId>
         <artifactId>reactor-test</artifactId>
-        <version>3.5.4</version>
+        <version>3.5.16</version>
         <scope>test</scope>
     </dependency>
 
@@ -190,7 +190,7 @@
     <dependency>
         <groupId>com.github.twitch4j</groupId>
         <artifactId>twitch4j</artifactId>
-        <version>1.17.0</version>
+        <version>1.20.0</version>
     </dependency>
 
       <dependency>
@@ -202,19 +202,19 @@
     <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>42.5.4</version>
+        <version>42.7.3</version>
     </dependency>
 
     <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>webjars-locator</artifactId>
-        <version>0.48</version>
+        <version>0.52</version>
     </dependency>
 
     <dependency>
         <groupId>org.webjars</groupId>
         <artifactId>jquery</artifactId>
-        <version>3.6.4</version>
+        <version>3.7.1</version>
     </dependency>
 
     <dependency>
