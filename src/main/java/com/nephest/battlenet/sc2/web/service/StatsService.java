@@ -594,7 +594,8 @@ public class StatsService
         takePopulationSnapshot(pending.getStatsUpdates());
         process(pending);
         process(altPending);
-        eventService.createLadderUpdateEvent(allStats);
+        eventService.createLadderUpdateEvent(new LadderUpdateData(
+            allStats, List.of(pending, altPending)));
     }
 
     private void process(PendingLadderData pending)

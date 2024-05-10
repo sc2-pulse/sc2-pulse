@@ -157,7 +157,7 @@ public class ClanService
     private void subscribeToEvents(EventService eventService)
     {
         eventService.getLadderUpdateEvent()
-            .flatMap(allStats->WebServiceUtil.getOnErrorLogAndSkipMono(Mono.fromRunnable(this::update)))
+            .flatMap(data->WebServiceUtil.getOnErrorLogAndSkipMono(Mono.fromRunnable(this::update)))
             .subscribe();
     }
 

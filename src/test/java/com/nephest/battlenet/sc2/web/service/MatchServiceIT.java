@@ -85,7 +85,7 @@ public class MatchServiceIT
         try
         {
             //no matches found
-            eventService.createLadderUpdateEvent(true);
+            eventService.createLadderUpdateEvent(LadderUpdateData.EMPTY);
             update.get();
             assertEquals(Region.KR, api.getForceRegion(Region.EU));
         }

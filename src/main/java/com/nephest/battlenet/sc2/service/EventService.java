@@ -1,9 +1,10 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.service;
 
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.web.service.LadderUpdateData;
 import com.nephest.battlenet.sc2.web.service.MatchUpdateContext;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -19,7 +20,7 @@ public class EventService
         Sinks.EmitFailureHandler.FAIL_FAST;
 
     private final Sinks.Many<PlayerCharacter> ladderCharacterActivityEvent;
-    private final Sinks.Many<Boolean> ladderUpdateEvent;
+    private final Sinks.Many<LadderUpdateData> ladderUpdateEvent;
     private final Sinks.Many<MatchUpdateContext> matchUpdateEvent;
 
     @Autowired
@@ -54,9 +55,9 @@ public class EventService
         return ladderCharacterActivityEvent.asFlux();
     }
 
-    public synchronized void createLadderUpdateEvent(Boolean allStats)
+    public synchronized void createLadderUpdateEvent(LadderUpdateData data)
     {
-        ladderUpdateEvent.emitNext(allStats, DEFAULT_FAILURE_HANDLER);
+        ladderUpdateEvent.emitNext(data, DEFAULT_FAILURE_HANDLER);
     }
 
     /**
@@ -65,7 +66,7 @@ public class EventService
      * @return endless {@link Flux} of ladder updates. Consumers are expected to
      * {@link Flux#subscribe()}.
      */
-    public Flux<Boolean> getLadderUpdateEvent()
+    public Flux<LadderUpdateData> getLadderUpdateEvent()
     {
         return ladderUpdateEvent.asFlux();
     }

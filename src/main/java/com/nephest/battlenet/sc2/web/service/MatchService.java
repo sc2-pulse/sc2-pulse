@@ -176,7 +176,7 @@ public class MatchService
         eventService.getLadderCharacterActivityEvent()
             .subscribe(character->pendingCharacters.get(character.getRegion()).getValue().add(character));
         eventService.getLadderUpdateEvent()
-            .flatMap(allStats->WebServiceUtil.getOnErrorLogAndSkipMono(savePendingCharacters()))
+            .flatMap(data->WebServiceUtil.getOnErrorLogAndSkipMono(savePendingCharacters()))
             .doOnNext(characters->LOG.debug("Pending characters: {}", characters))
             .flatMap
             (

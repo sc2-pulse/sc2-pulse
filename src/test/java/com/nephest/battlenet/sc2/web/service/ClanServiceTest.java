@@ -81,7 +81,7 @@ public class ClanServiceTest
 
     private ClanService clanService;
     private ClanService nestedClanService;
-    private Sinks.Many<Boolean> ladderUpdateEvent;
+    private Sinks.Many<LadderUpdateData> ladderUpdateEvent;
 
     @BeforeEach
     public void beforeEach()
@@ -118,7 +118,7 @@ public class ClanServiceTest
     
     private void update()
     {
-        ladderUpdateEvent.emitNext(true, Sinks.EmitFailureHandler.FAIL_FAST);
+        ladderUpdateEvent.emitNext(LadderUpdateData.EMPTY, Sinks.EmitFailureHandler.FAIL_FAST);
     }
 
     @Test
