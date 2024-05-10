@@ -251,6 +251,12 @@ public class GeneralSeleniumIT
     }
 
     @Test
+    public void testDiscordBotUI()
+    {
+        getAndWaitAndCheckJsErrors(driver, wait, root + "/discord/bot", "#faq");
+    }
+
+    @Test
     public void testLadderUI()
     {
         loadMainPage(driver, wait);
