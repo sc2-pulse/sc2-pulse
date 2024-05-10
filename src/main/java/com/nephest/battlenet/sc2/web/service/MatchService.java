@@ -173,10 +173,8 @@ public class MatchService
 
     private void subToEvents(EventService eventService)
     {
-        eventService.getLadderCharacterActivityEvent()
-            .subscribe(character->pendingCharacters.get(character.getRegion()).getValue().add(character));
         eventService.getLadderUpdateEvent()
-            .flatMap(data->WebServiceUtil.getOnErrorLogAndSkipMono(savePendingCharacters()))
+            .flatMap(data->WebServiceUtil.getOnErrorLogAndSkipMono(savePendingCharacters(data)))
             .doOnNext(characters->LOG.debug("Pending characters: {}", characters))
             .flatMap
             (
@@ -263,6 +261,18 @@ public class MatchService
         );
         return Math.min(Math.max(limit, 1),
             (int) (api.getRequestsPerSecondCap(globalContext.getActiveRegions().iterator().next()) / 2));
+    }
+
+    private Mono<Integer> savePendingCharacters(LadderUpdateData data)
+    {
+        return Flux.fromIterable(data.getData())
+            .flatMapIterable(PendingLadderData::getCharacters)
+            .map(character->pendingCharacters.get(character.getRegion()).getValue().add(character))
+            .filter(Boolean::booleanValue)
+            .collectList()
+            .map(List::size)
+            .doOnNext(characterCount->LOG.debug("Added {} pending characters", characterCount))
+            .flatMap(characterCount->savePendingCharacters());
     }
 
     private Mono<Integer> savePendingCharacters()
