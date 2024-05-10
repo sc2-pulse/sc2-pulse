@@ -569,7 +569,7 @@ public class StatsService
 
     private PendingLadderData copyAndClearPendingData()
     {
-        PendingLadderData pending = new PendingLadderData(pendingLadderData);
+        PendingLadderData pending = PendingLadderData.immutableCopy(pendingLadderData);
         pendingLadderData.clear();
         return pending;
     }
@@ -607,7 +607,7 @@ public class StatsService
         processPendingCharacters(pending.getCharacters());
     }
 
-    public void processPendingCharacters(Set<PlayerCharacter> pendingCharacters)
+    private void processPendingCharacters(Set<PlayerCharacter> pendingCharacters)
     {
         if(pendingCharacters.isEmpty()) return;
 
@@ -617,7 +617,6 @@ public class StatsService
         playerCharacterStatsDAO.mergeCalculate(pendingCharacterIds);
         PlayerCharacter[] characters = pendingCharacters.toArray(PlayerCharacter[]::new);
         eventService.createLadderCharacterActivityEvent(characters);
-        pendingCharacters.clear();
         LOG.info("Created {} character ladder activity events", characters.length);
     }
 

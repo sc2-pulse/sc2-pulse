@@ -751,7 +751,7 @@ public class AlternativeLadderService
 
     protected PendingLadderData copyAndClearPendingData()
     {
-        PendingLadderData pending = new PendingLadderData(pendingLadderData);
+        PendingLadderData pending = PendingLadderData.immutableCopy(pendingLadderData);
         pendingLadderData.clear();
         return pending;
     }
