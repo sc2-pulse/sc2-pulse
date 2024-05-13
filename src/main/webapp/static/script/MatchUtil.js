@@ -55,6 +55,15 @@ class MatchUtil
         return {teams: allTeams, validMatches: validMatches};
     }
 
+    static getDecisionClass(decision)
+    {
+        return decision == "WIN"
+            ? "bg-success-fade-1"
+            : decision == "LOSS"
+                ? "bg-danger-fade-1"
+                : "bg-secondary-fade-1";
+    }
+
     static decorateTeams(participantsGrouped, teams, tBody, rowNum, isMainParticipant, historical, versusLinkPrefix)
     {
         const mainTeam = versusLinkPrefix ? null : MatchUtil.findMainTeam(teams, isMainParticipant);
@@ -64,7 +73,7 @@ class MatchUtil
             const tr = tBody.childNodes[rowNum];
             const teamId = tr.getAttribute("data-team-id");
             const decisionElem = document.createElement("td");
-            decisionElem.classList.add("text-capitalize");
+            decisionElem.classList.add("text-capitalize-first");
 
             if(!teamId) {
                 MatchUtil.appendUnknownMatchParticipant(tr, decisionElem, isMainParticipant);
@@ -83,13 +92,15 @@ class MatchUtil
 
             if(historical && participant) MatchUtil.addMmrChange(tr, participant);
 
-            const decision = participantsGrouped.get("WIN") ?
-               (participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId) ? "Win" : "Loss")
-               : "Loss";
+            const decision = participant
+                ? participant.participant.decision
+                : participantsGrouped.get("WIN") ?
+                    (participantsGrouped.get("WIN").find(p=>p.team && p.team.id == teamId) ? "WIN" : "LOSS")
+                    : "LOSS";
 
             const team = teams.find(t=>t.id == teamId);
             const teamElem = tr.querySelector(":scope .team");
-            const decisionClass = decision == "Win" ? "bg-success-fade-1" : "bg-danger-fade-1";
+            const decisionClass = MatchUtil.getDecisionClass(decision);
             teamElem.classList.add(decisionClass);
             if((mainTeam && teamId == mainTeam.id) || (versusLinkPrefix && team.members.find(m=>isMainParticipant({team: team, member: m})))) {
                 teamElem.classList.add("font-weight-bold");
@@ -180,9 +191,9 @@ class MatchUtil
     {
         const split = tr.getAttribute("data-team-alternative-data").split(",");
         const charId = parseInt(split[0]);
-        decisionElem.textContent = split[1].toLowerCase();
+        decisionElem.textContent = split[1];
         const mainParticipant = isMainParticipant(charId);
-        const decisionClass = split[1] == "WIN" ? "bg-success-fade-1" : "bg-danger-fade-1";
+        const decisionClass = MatchUtil.getDecisionClass(split[1]);
         tr.prepend(decisionElem);
         tr.insertCell(); tr.insertCell(); tr.insertCell(); tr.insertCell();
         const teamCell = tr.insertCell();

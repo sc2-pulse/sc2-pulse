@@ -1206,6 +1206,11 @@ body.theme-dark .page-item.disabled:not(.active) .page-link
     background-color: rgba(255, 0, 0, 0.06);
 }
 
+.bg-secondary-fade-1
+{
+    background-color: rgba(108, 117, 125, 0.06);
+}
+
 .bg-bronze
 {
     background-color: rgba(185, 113, 45, 1);
