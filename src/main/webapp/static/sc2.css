@@ -348,6 +348,16 @@ body.theme-dark img[loading="lazy"]:not(.loaded)
     word-break: break-all;
 }
 
+.text-capitalize-first
+{
+    text-transform: lowercase;
+}
+
+.text-capitalize-first::first-letter
+{
+    text-transform: uppercase;
+}
+
 #status-generating-fullscreen
 {
     left: 0;
