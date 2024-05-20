@@ -73,9 +73,7 @@ class SC2Restful
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
                 StatsUtil.enhanceRaceControls();
-                StatsUtil.enhanceMatchUpControls();
                 StatsUtil.enhanceSettings();
-                StatsUtil.addMatchUpLegend();
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");
                 BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");
                 BootstrapUtil.enhanceEmbedBackdropCloseControls();
@@ -223,10 +221,12 @@ SC2Restful.IMAGES = new Map
     ["cn", ElementUtil.createImage("flag/", "cn", "icon-chart table-image table-image-long", SC2Restful.REM)]
 ]);
 
-if(localStorage.getItem("s-local-storage-version") !== "2") {
+if(localStorage.getItem("s-local-storage-version") !== "3") {
     if(localStorage.getItem("stream-sort-by") === "mmr") localStorage.setItem("stream-sort-by", "RATING");
     if(localStorage.getItem("stream-sort-by") === "viewers") localStorage.setItem("stream-sort-by", "VIEWERS");
     if(localStorage.getItem("stream-sort-by") === "RANK_REGION") localStorage.setItem("stream-sort-by", "TOP_PERCENT_REGION");
     if(localStorage.getItem("stream-sort-by-featured") === "RANK_REGION") localStorage.setItem("stream-sort-by-featured", "TOP_PERCENT_REGION");
-    localStorage.setItem("s-local-storage-version", "2");
+    localStorage.removeItem("stats-match-up-type");
+    localStorage.removeItem("stats-match-up-map");
+    localStorage.setItem("s-local-storage-version", "3");
 }

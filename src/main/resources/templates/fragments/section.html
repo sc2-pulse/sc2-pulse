@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2024 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -38,10 +38,6 @@
 <section class="col-lg-6 mb-3"
          th:fragment="stats-race-league-region (region)"
          th:replace="~{fragments/section :: stats-league-region(${region}, 'Games played by race', 'games-played-race-league', 'true', 'true', 1, null)}">
-</section>
-<section class="col-lg-6 mb-3"
-         th:fragment="stats-match-up (region)"
-         th:replace="~{fragments/section :: stats-league-region(${region}, 'Match-up stats', 'stats-match-up', 'false', 'false', 2, 'xy')}">
 </section>
 <section th:id="${id}"
          th:class="|col-lg-${autoHeight == 'true' ? '6' : '12'} mb-3|"
