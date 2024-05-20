@@ -28,6 +28,13 @@ const LEAGUE = Object.freeze
     GRANDMASTER: {code:6, name: "grandmaster", shortName: "gra", fullName: "GRANDMASTER", order: 7}
 });
 
+const LEAGUE_TIER = Object.freeze
+({
+    FIRST: {code: 0, name: "1", fullName: "FIRST", order: 1},
+    SECOND: {code: 1, name: "2", fullName: "SECOND", order: 2},
+    THIRD: {code: 2, name: "3", fullName: "THIRD", order: 3}
+});
+
 const TEAM_FORMAT = Object.freeze
 ({
     _1V1: {code:201, name: "1V1", fullName: "LOTV_1V1", formatName: "_1V1", memberCount: 1, order: 1},
