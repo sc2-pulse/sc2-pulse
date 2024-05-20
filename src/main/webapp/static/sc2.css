@@ -236,6 +236,18 @@ h4, h5, h6
     background-color: white;
 }
 
+table.sticky thead th
+{
+    background-color: white;
+    position: sticky;
+    top:0;
+}
+
+body.theme-dark table.sticky thead th
+{
+    background-color: #191d21;
+}
+
 body.theme-dark #stats h4
 {
     background-color: #191d21;
