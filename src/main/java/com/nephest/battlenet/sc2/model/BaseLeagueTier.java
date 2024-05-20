@@ -14,13 +14,15 @@ public class BaseLeagueTier
     implements Identifiable
     {
 
-        FIRST(0), SECOND(1), THIRD(2);
+        FIRST(0, "1"), SECOND(1, "2"), THIRD(2, "3");
 
         private final int id;
+        private final String name;
 
-        LeagueTierType(int id)
+        LeagueTierType(int id, String name)
         {
             this.id = id;
+            this.name = name;
         }
 
         @JsonCreator
@@ -39,6 +41,11 @@ public class BaseLeagueTier
         public int getId()
         {
             return id;
+        }
+
+        public String getName()
+        {
+            return name;
         }
 
     }
