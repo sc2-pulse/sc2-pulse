@@ -206,6 +206,7 @@ class Session
 
         Session.setDocumentTheme(theme);
         Session.setChartTheme(theme);
+        Session.setMatrixTheme(theme);
         Session.theme = theme;
 
         document.cookie = "theme=" + theme.name
@@ -246,6 +247,14 @@ class Session
             chart.config.options.scales.y.grid.color = color;
             chart.config.options.scales.y.grid.zeroLineColor = color;
             chart.update();
+        }
+    }
+
+    static setMatrixTheme(theme)
+    {
+        for(const matrix of MatrixUI.OBJECTS.values()) {
+            matrix.setTheme(theme);
+            if(matrix.getNode()) matrix.highlight();
         }
     }
 

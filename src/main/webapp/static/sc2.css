@@ -1865,6 +1865,34 @@ body.theme-dark .new.new-color:not(.btn):not(.nav-link):not(.page-link):not(.dis
     color: #28a745;
 }
 
+.matrix
+{
+  text-align: center;
+}
+
+.matrix th,
+.matrix td
+{
+  padding: 0.5rem;
+}
+
+.matrix thead th
+{
+    max-width: 0;
+    word-break: break-word;
+    vertical-align: bottom;
+}
+
+.matrix .parameter.main
+{
+    font-weight: bold;
+}
+
+.matrix .parameter:not(.main)
+{
+    font-size: 0.9em;
+}
+
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;
