@@ -399,6 +399,81 @@
             </section>
             <section id="stats-match-up" class="tab-pane fade c-height-linked" data-view-title="Match-up statistics">
                 <h3>Match-up stats</h3>
+                <form class="form-inline d-flex form-flex flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
+                    <div class="d-flex flex-wrap-gap">
+                        <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
+                             th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
+                        >
+                            <input th:id="|stats-match-up-race-${race.name()}|"
+                                   class="stats-match-up-reload serializable"
+                                   type="checkbox"
+                                   name="race"
+                                   th:value="${race.name()}"
+                                   th:attrappend="checked=${race.name() != 'RANDOM'}?@{checked}"
+                            />
+                            <label class="form-check-label" th:for="|stats-match-up-race-${race.name()}|">
+                                <div th:class="|icofont icofont-${race.name().toLowerCase} form-font|" th:title="${race.name()}"></div>
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group d-flex flex-wrap-gap-05">
+                        <label for="stats-match-up-league">League</label>
+                        <select id="stats-match-up-league" class="form-control serializable stats-match-up-reload">
+                            <th:block th:each="league : ${T(com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmFrameDAO).LEAGUES}">
+                                <th:block th:each="tier : ${T(com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType).values()}">
+                                    <option
+                                            th:value="|${league.getId()},${tier.getId()}|"
+                                            th:text="|${league.getName()} ${tier.getName()}${league.name() == 'MASTER' and tier.name() == 'FIRST' ? ' +GM' : ''}|"
+                                            th:attrappend="selected=${league.name() == 'MASTER' and tier.name() == 'FIRST'}?@{selected}"
+                                    >
+                                    </option>
+                                </th:block>
+                            </th:block>
+                        </select>
+                    </div>
+                </form>
+                <div>
+                    <div id="stats-match-up-container" class="container-loading loading-none">
+                        <div th:replace="~{fragments/section :: loading-indicator}"></div>
+                    </div>
+                    <aside>
+                        <p>
+                            These stats are calculated using the following rules:
+                        <dl>
+                            <dt>Top% based leagues are used</dt>
+                            <dd>
+                                There are no demotions(excluding GM) in SC2, and league borders are often broken,
+                                so I use real top% leagues to mitigate these issues.
+                            </dd>
+
+                            <dt>Filtered matches</dt>
+                            <dd>
+                                Only marches where both players match the criteria are used. For example, in m1 stats,
+                                both players were in top 1.333% or higher at the time of the match.
+                            </dd>
+
+                            <dt>Only valid matches are used</dt>
+                            <dd>
+                                Match history reconstruction is not an easy process, some matches may be missing or
+                                contain invalid data. Only valid data is used, so the game numbers will be much lower than the
+                                actual global game count, but the data set should be large enough to derive the stats from it.
+                            </dd>
+
+                            <dt>First week of the season is skipped</dt>
+                            <dd>
+                                The ladder is very volatile at the beginning of new season and it is hard to determine
+                                players' leagues.
+                            </dd>
+
+                            <dt>Match duration uses approximate values</dt>
+                            <dd>
+                                There is no way to get the exact match duration via the API, so I use match and MMR history
+                                of all match participants to calculate approximate duration.
+                            </dd>
+                        </dl>
+                        </p>
+                    </aside>
+                </div>
             </section>
             <section id="stats-league" class="tab-pane fade c-height-linked" data-view-title="League distribution">
                 <h3>League distribution</h3>

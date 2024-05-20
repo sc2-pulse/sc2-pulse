@@ -73,6 +73,7 @@ class SC2Restful
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
                 StatsUtil.enhanceRaceControls();
+                StatsUtil.enhanceMapStatsFilm();
                 StatsUtil.enhanceSettings();
                 BootstrapUtil.setFormCollapsibleScroll("form-ladder");
                 BootstrapUtil.setFormCollapsibleScroll("form-following-ladder");

@@ -106,6 +106,8 @@ class StatsUtil
     {
 
         const urlParams = new URLSearchParams("?" + formParams);
+        StatsUtil.resetMapStatsFilm();
+        Model.DATA.get(VIEW.GLOBAL).set(VIEW_DATA.LADDER_STATS, {urlParams: urlParams});
         return Promise.all
         ([
             StatsUtil.updateLadderStatsGlobalModel(formParams),
@@ -521,6 +523,292 @@ class StatsUtil
         return dailyStats;
     }
 
+    static getMapStatsFilm(season, regions, queue, teamType, league, tier, races)
+    {
+        const urlParams = new URLSearchParams();
+        urlParams.set("season", season);
+        regions.forEach(region=>urlParams.append("region", region.fullName));
+        urlParams.set("queue", queue.fullName);
+        urlParams.set("teamType", teamType.fullName);
+        urlParams.set("league", league.fullName);
+        urlParams.set("tier", tier.fullName);
+        urlParams.set("frameNumberMax", StatsUtil.MAP_STATS_FILM_MAX_FRAME);
+        races.forEach(race=>urlParams.append("race", race.fullName));
+        const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/map/film?${urlParams.toString()}`;
+        return Session.beforeRequest()
+            .then(n=>fetch(request))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static deriveMapFilmSummary(specMapFilmsResolved, propertyNames)
+    {
+        const mapSummaryEntries = Array.from(Object.entries(specMapFilmsResolved));
+        const mapSummary = new Array(mapSummaryEntries.length);
+        for(let mapSummaryIx = 0; mapSummaryIx < mapSummary.length; mapSummaryIx++) {
+            const [matchUp, matchUpValue] = mapSummaryEntries[mapSummaryIx];
+            const parsedMatchUp = Util.parseMatchUp(matchUp);
+            mapSummary[mapSummaryIx] = {
+                race: parsedMatchUp[0],
+                versusRace: parsedMatchUp[1],
+                name: matchUp,
+                values: Array.from(Object.entries(matchUpValue))
+                    .map(([map, mapValue])=>{return {
+                        category: map,
+                        value: StatsUtil.calculateMapFrame(Util.addObjects(mapValue, propertyNames))}})
+            };
+        }
+        mapSummary.sort((a, b)=>a.race.order - b.race.order || a.versusRace.order - b.versusRace.order);
+        return mapSummary;
+    }
+    
+    static copyFrameSeries(series, propertyName)
+    {
+        return {
+            race: series.race,
+            versusRace: series.versusRace,
+            label: series.label,
+            data: series.data.map(frame=>frame[propertyName])
+        }
+    }
+
+    static deriveMapFilmDuration(specMapFilmsResolved, propertyNames, mergeFactor = 2)
+    {
+        const data = Object.entries(specMapFilmsResolved)
+            .map(entry=>{
+                const matchUp = entry[0];
+                const parsedMatchUp = Util.parseMatchUp(matchUp);
+                const value = Util.mergeObjects(Util.addObjectColumns(
+                    Object.values(entry[1]), propertyNames), propertyNames, mergeFactor)
+                        .map(StatsUtil.calculateMapFrame);
+                return {
+                    race: parsedMatchUp[0],
+                    versusRace: parsedMatchUp[1],
+                    label: matchUp,
+                    data: value
+                }
+            });
+        data.sort((a, b)=>a.race.order - b.race.order || a.versusRace.order - b.versusRace.order);
+        const winRateDataSets = new Array(data.length);
+        const gamesRateDataSets = new Array(data.length);
+        for(let i = 0; i < data.length; i++) {
+            winRateDataSets[i] = StatsUtil.copyFrameSeries(data[i], "winRate");
+            gamesRateDataSets[i] = StatsUtil.copyFrameSeries(data[i], "games");
+        }
+        return {winRate: winRateDataSets, games: gamesRateDataSets};
+    }
+
+    static transformMapStatsFilm(film)
+    {
+        Object.values(film.films).forEach(film=>{
+            film.frames = new Array(StatsUtil.MAP_STATS_FILM_MAX_FRAME + 1);
+        });
+        film.frames.forEach(frame=>film.films[frame.mapStatsFilmId].frames[frame.number] = frame);
+        const specMapFilms = Util.groupByObject(Object.values(film.films), film=>[film.mapStatsFilmSpecId, film.mapId]);
+        const specMapFilmsResolved = {};
+        const propertyNames = ["wins", "games"];
+        for(const [specId, matchUpValue] of Object.entries(specMapFilms)) {
+            const spec = film.specs[specId];
+            const matchUp = spec.race.charAt(0) + "v" + spec.versusRace.charAt(0);
+            const matchUpObject = {};
+            specMapFilmsResolved[matchUp] = matchUpObject;
+            for(const [mapId, mapValue] of  Object.entries(matchUpValue)) {
+                const allFrames = Util.addObjectColumns(mapValue.values.map(film=>film.frames), propertyNames);
+                matchUpObject[film.maps[mapId].name] = allFrames;
+            }
+        }
+        return {
+            summary: StatsUtil.deriveMapFilmSummary(specMapFilmsResolved, propertyNames),
+            duration: StatsUtil.deriveMapFilmDuration(specMapFilmsResolved, propertyNames)
+        };
+    }
+
+    static calculateMapFrame(frame)
+    {
+        if(frame.games == 0 || frame.games == null) {
+            frame.games = null;
+            frame.wins = null;
+            frame.winRate = null;
+        } else {
+            frame.winRate = (frame.wins / frame.games) * 100;
+        }
+        return frame;
+    }
+
+    static mapFrameStringConverter(name, value)
+    {
+        return value == null
+            ? null
+            : name == "winRate"
+                ? (Util.DECIMAL_FORMAT.format(value) + "%")
+                : value;
+    }
+
+    static loadMapStatsFilmModel(season, regions, queue, teamType, league, tier, races)
+    {
+        if(queue != TEAM_FORMAT._1V1) return Promise.resolve();
+
+        return StatsUtil.getMapStatsFilm(season, regions, queue, teamType, league, tier, races)
+            .then(film=>{
+                Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilm = film;
+                return film;
+            });
+    }
+
+    static updateMapStatsFilmModel(film)
+    {
+        const statsData = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
+        if(!film) film = statsData.mapFilm;
+        if(!film) return null;
+
+        statsData.mapFilmModel = StatsUtil.transformMapStatsFilm(film);
+        return statsData.mapFilmModel;
+    }
+
+    static updateMapStatsFilmView()
+    {
+        const container = document.querySelector("#stats-match-up-container");
+        const model = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
+        if(!model.mapFilmModel) {
+            container.appendChild(ElementUtil.createElement("p", null, "text-danger", "Stats not found"));
+            return;
+        }
+
+        const mapSummaryMatrix = new MatrixUI(
+            "stats-map-film-summary-table",
+            model.mapFilmModel.summary,
+            "winRate",
+            ["winRate", "games"],
+            Session.theme,
+            StatsUtil.calculateMapFrame,
+            StatsUtil.mapFrameStringConverter);
+        mapSummaryMatrix.setHighlightRange(45, 50, 55);
+        const summaryElement = mapSummaryMatrix.render();
+        summaryElement.classList.add("mx-auto", "mb-3");
+        container.appendChild(summaryElement);
+        model.mapFilmSummaryMatrix = mapSummaryMatrix;
+
+        const durationColors = model.mapFilmModel.duration.winRate
+            .map(dataSet=>{
+                if(dataSet.race == RACE.RANDOM)
+                    return StatsUtil.MATCH_UP_RANDOM_COLORS.get(dataSet.versusRace);
+                return dataSet.race.name;
+            });
+        const chartRow = ElementUtil.createElement("div", null, "row no-gutters");
+        const winRateSection = ElementUtil.createElement("section", null, "col-lg-6 mb-3");
+        winRateSection.appendChild(ElementUtil.createElement(
+            "h4", null, null, "Win rate, distribution by game duration"));
+        const gamesSection = ElementUtil.createElement("section", null, "col-lg-6 mb-3");
+        gamesSection.appendChild(ElementUtil.createElement(
+            "h4", null, null, "Game count, distribution by game duration"));
+        chartRow.appendChild(winRateSection);
+        chartRow.appendChild(gamesSection);
+
+        model.charts = new Array(2);
+        winRateSection.appendChild(ChartUtil.createChartContainer("stats-map-film-duration-win-rate"));
+        const mergeFactor = (StatsUtil.MAP_STATS_FILM_MAX_FRAME + 1)
+            / model.mapFilmModel.duration.winRate[0].data.length;
+        const winRateConfig = {
+            type: "line",
+            chartable: "stats-map-film-duration-win-rate",
+            ctx: winRateSection.querySelector(":scope #stats-map-film-duration-win-rate").getContext("2d"),
+            xTitle: "Match duration, minutes",
+            yTitle: "Win rate",
+            customAnnotations: "50",
+            data: {
+                labels: [...Array(model.mapFilmModel.duration.winRate[0].data.length).keys()]
+                    .map(e=>(e * mergeFactor) + ""),
+                datasets: model.mapFilmModel.duration.winRate,
+                customColors: durationColors,
+                customMeta: {type: "line"},
+            }
+        }
+        model.charts[0] = ChartUtil.createGenericChart(winRateConfig);
+
+        gamesSection.appendChild(ChartUtil.createChartContainer("stats-map-film-duration-games"));
+        const gamesConfig = {
+            type: "line",
+            chartable: "stats-map-film-duration-games",
+            ctx: gamesSection.querySelector(":scope #stats-map-film-duration-games").getContext("2d"),
+            xTitle: "Match duration, minutes",
+            yTitle: "Games",
+            data: {
+                labels: [...Array(model.mapFilmModel.duration.games[0].data.length).keys()]
+                    .map(e=>(e * mergeFactor) + ""),
+                datasets: model.mapFilmModel.duration.games,
+                customColors: durationColors,
+                customMeta: {type: "line"},
+            }
+        }
+        model.charts[1] = ChartUtil.createGenericChart(gamesConfig);
+
+        container.appendChild(chartRow);
+
+        return model;
+    }
+
+    static updateMapStatsFilm()
+    {
+        const leagueAndTier = (localStorage.getItem("stats-match-up-league") || "5,0").split(",");
+        const league = EnumUtil.enumOfId(leagueAndTier[0], LEAGUE);
+        const tier = EnumUtil.enumOfId(leagueAndTier[1], LEAGUE_TIER);
+        const urlParams = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).urlParams;
+        const regions = Array.from(Object.values(REGION))
+            .map(region=>urlParams.get(region.name) == "true" ? region : null)
+            .filter(region=>region != null);
+        const races = Array.from(Object.values(RACE))
+            .filter(race=>(localStorage.getItem("stats-match-up-race-" + race.fullName) || (race == RACE.RANDOM ? "false" : "true"))
+                == "true");
+        return StatsUtil.loadMapStatsFilmModel(
+            urlParams.get("season"),
+            regions,
+            EnumUtil.enumOfFullName(urlParams.get("queue"), TEAM_FORMAT),
+            EnumUtil.enumOfFullName(urlParams.get("team-type"), TEAM_TYPE),
+            league,
+            tier,
+            races
+        )
+            .then(StatsUtil.updateMapStatsFilmModel)
+            .then(StatsUtil.updateMapStatsFilmView)
+            .then(view=>{return {data: view, status: LOADING_STATUS.COMPLETE}})
+    }
+
+    static updateMapStatsFilmAsync()
+    {
+        return Util.load(document.querySelector("#stats-match-up-container"), StatsUtil.updateMapStatsFilm);
+    }
+
+    static resetAndUpdateMapStatsFilmAsync()
+    {
+        return ElementUtil.executeTask("stats-match-up-container", ()=>{
+            StatsUtil.resetMapStatsFilm();
+            return StatsUtil.updateMapStatsFilmAsync();
+        });
+    }
+
+    static resetMapStatsFilm()
+    {
+        const container = document.querySelector("#stats-match-up-container");
+        ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE);
+        ElementUtil.removeChildren(container);
+        const model = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
+        if(model) {
+            if(model.mapFilmSummaryMatrix) model.mapFilmSummaryMatrix.remove();
+            model.mapFilmSummaryMatrix = null;
+            model.mapFilmModel = null;
+            if(model.charts) {
+                for(const chart of model.charts) ChartUtil.CHARTS.delete(chart.customConfig.chartable);
+                model.charts = null;
+            }
+        }
+    }
+
+    static enhanceMapStatsFilm()
+    {
+        ElementUtil.ELEMENT_TASKS.set("stats-match-up-tab", StatsUtil.updateMapStatsFilmAsync);
+        document.querySelectorAll(".stats-match-up-reload")
+            .forEach(ctl=>ctl.addEventListener("change", e=>window.setTimeout(StatsUtil.resetAndUpdateMapStatsFilmAsync, 1)));
+    }
+
     static enhanceSettings()
     {
         document.querySelector("#settings-games-played-number").addEventListener("change", e=>window.setTimeout(t=>{
@@ -540,3 +828,7 @@ class StatsUtil
     }
 
 }
+
+StatsUtil.MAP_STATS_FILM_MAX_FRAME = 29;
+StatsUtil.MAP_STATS_FILM_MAIN_FRAME = 8;
+StatsUtil.MATCH_UP_RANDOM_COLORS = new Map([[RACE.TERRAN, "neutral"], [RACE.PROTOSS, "new"], [RACE.ZERG, "old"]]);
