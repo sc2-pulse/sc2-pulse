@@ -268,6 +268,66 @@ class Util
         return map;
     }
 
+    static groupByObject(list, pathGetter)
+    {
+        const result = {};
+        list.forEach((item) =>
+        {
+            const path = pathGetter(item);
+            let root = result;
+            path.forEach(pathPart=>{
+                let nextNode = root[pathPart];
+                if(!nextNode) {
+                    nextNode = {};
+                    root[pathPart] = nextNode;
+                }
+                root = nextNode;
+            });
+            if(root.values == null) root.values = [];
+            root.values.push(item);
+        });
+        return result;
+    }
+
+    static emptyClone(src)
+    {
+        const clone = {};
+        for(const key of Object.keys(src)) clone[key] = null;
+        return clone;
+    }
+
+    static addObjects(objects, propertyNames = null)
+    {
+        if(propertyNames == null) propertyNames = Array.from(Object.keys(objects[0]));
+        const sum = {};
+        propertyNames.forEach(name=>sum[name] = null);
+        objects.forEach(obj=>propertyNames.forEach(name=>sum[name] += obj[name]));
+        return sum;
+    }
+
+    static addObjectColumns(objects2DArray, propertyNames = null)
+    {
+        if(objects2DArray.length == 0) return [];
+
+        if(propertyNames == null) propertyNames = Array.from(Object.keys(objects2DArray[0][0]));
+        const emptyObject = {};
+        propertyNames.forEach(name=>emptyObject[name] = null);
+        const result = new Array(objects2DArray[0].length);
+        for(let i = 0; i < result.length; i++) {
+            const objectGroup = objects2DArray.map(row=>row[i] ? row[i] : emptyObject);
+            result[i] = Util.addObjects(objectGroup, propertyNames)
+        }
+        return result;
+    }
+
+    static mergeObjects(objects, propertyNames, factor)
+    {
+        const merged = new Array(objects.length / factor);
+        for(let i = 0; i < merged.length; i++)
+            merged[i] = Util.addObjects(objects.slice(i * factor, i * factor + factor), propertyNames);
+        return merged;
+    }
+
     static toMap(items, keyMapper, valueMapper=(item)=>item)
     {
         const map = new Map();
