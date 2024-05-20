@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import static com.nephest.battlenet.sc2.model.local.MapStatsFilmSpec.FRAME_DURATION_UNIT;
 
+import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseMatch;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.TeamType;
@@ -29,6 +30,16 @@ public class MapStatsFilmFrameDAO
 
     public static final QueueType QUEUE = QueueType.LOTV_1V1;
     public static final TeamType TEAM_TYPE = TeamType.ARRANGED;
+    public static final List<BaseLeague.LeagueType> LEAGUES = List.of
+    (
+        BaseLeague.LeagueType.MASTER,
+        BaseLeague.LeagueType.DIAMOND,
+        BaseLeague.LeagueType.PLATINUM,
+        BaseLeague.LeagueType.GOLD,
+        BaseLeague.LeagueType.SILVER,
+        BaseLeague.LeagueType.BRONZE
+    );
+
 
     public static final String STD_SELECT =
         "map_stats_film_frame.map_stats_film_id AS \"map_stats_film_frame.map_stats_film_id\", "
