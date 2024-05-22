@@ -120,6 +120,7 @@ public class MapStatsFilmIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
         mapService.getMapStatsInstant().setValue(SC2Pulse.instant());
+        mapService.setDbInitialized(false);
     }
 
     @AfterAll
@@ -131,6 +132,7 @@ public class MapStatsFilmIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
         }
         mapService.getMapStatsInstant().setValue(SC2Pulse.instant());
+        mapService.setDbInitialized(false);
     }
 
     private void takeTeamSnapshot(List<Long> teamIds, OffsetDateTime odt, long duration, int ix)

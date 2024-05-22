@@ -187,6 +187,11 @@ public class MapService
         dbInitialized = true;
     }
 
+    protected void setDbInitialized(boolean dbInitialized)
+    {
+        this.dbInitialized = dbInitialized;
+    }
+
     private void createMapStatsFilmSpecs()
     {
         Set<MapStatsFilmSpec> specs
