@@ -458,6 +458,15 @@ public class SeasonGenerator
         );
     }
 
+    public void takeTeamSnapshot(List<Long> teamIds, OffsetDateTime odt, long duration, int ix)
+    {
+        teamStateDAO.takeSnapshot
+        (
+            teamIds,
+            odt.plusSeconds((long) MatchDAO.DURATION_OFFSET * ix + duration * ix)
+        );
+    }
+
     public static Season defaultSeason()
     {
         return new Season

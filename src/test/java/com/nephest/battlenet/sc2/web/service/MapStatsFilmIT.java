@@ -135,15 +135,6 @@ public class MapStatsFilmIT
         mapService.setDbInitialized(false);
     }
 
-    private void takeTeamSnapshot(List<Long> teamIds, OffsetDateTime odt, long duration, int ix)
-    {
-        teamStateDAO.takeSnapshot
-        (
-            teamIds,
-            odt.plusSeconds((long) MatchDAO.DURATION_OFFSET * ix + duration * ix)
-        );
-    }
-
     private ResultActions getStandardFilm()
     throws Exception
     {
@@ -219,8 +210,8 @@ public class MapStatsFilmIT
         List<Long> teamIds = List.of(38L, 39L);
 
         teamStateDAO.takeSnapshot(teamIds, startFrom);
-        takeTeamSnapshot(teamIds, startFrom, frameOffset, 1);
-        takeTeamSnapshot(teamIds, startFrom, frameOffset, 2);
+        seasonGenerator.takeTeamSnapshot(teamIds, startFrom, frameOffset, 1);
+        seasonGenerator.takeTeamSnapshot(teamIds, startFrom, frameOffset, 2);
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startFrom);
         matchDAO.updateDuration(startFrom);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(
@@ -295,7 +286,7 @@ public class MapStatsFilmIT
         );
         jdbcTemplate.update("DELETE FROM team_state WHERE timestamp >= ? ", startFrom2);
         teamStateDAO.takeSnapshot(teamIds, startFrom2);
-        takeTeamSnapshot(teamIds, startFrom2, frameOffset, 1);
+        seasonGenerator.takeTeamSnapshot(teamIds, startFrom2, frameOffset, 1);
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startFrom2);
         matchDAO.updateDuration(startFrom2);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(
@@ -363,7 +354,7 @@ public class MapStatsFilmIT
         List<Long> teamIds = List.of(9L, 10L);
         jdbcTemplate.update("DELETE FROM team_state WHERE timestamp >= ? ", startFrom);
         teamStateDAO.takeSnapshot(teamIds, startFrom);
-        takeTeamSnapshot(teamIds, startFrom, frameOffset, 1);
+        seasonGenerator.takeTeamSnapshot(teamIds, startFrom, frameOffset, 1);
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startFrom);
         matchDAO.updateDuration(startFrom);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(
