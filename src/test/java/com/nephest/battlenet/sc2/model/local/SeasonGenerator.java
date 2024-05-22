@@ -430,6 +430,34 @@ public class SeasonGenerator
             matchParticipantDAO.merge(Set.of(new MatchParticipant(match.getId(), charId, BaseMatch.Decision.LOSS)));
     }
 
+    @Transactional
+    public void createMatch
+    (
+        long id1, long id2,
+        OffsetDateTime odt,
+        long offset
+    )
+    {
+        createMatches
+        (
+            BaseMatch.MatchType._1V1,
+            id1, id2,
+            new long[]{id1}, new long[]{id2},
+            odt,
+            Region.EU,
+            1, 1, 1, 1, 1
+        );
+        createMatches
+        (
+            BaseMatch.MatchType._1V1,
+            id1, id2,
+            new long[]{id1}, new long[]{id2},
+            odt.plusSeconds(MatchDAO.DURATION_OFFSET + offset),
+            Region.EU,
+            1, 1, 1, 1, 1
+        );
+    }
+
     public static Season defaultSeason()
     {
         return new Season
