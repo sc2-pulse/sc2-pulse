@@ -7,6 +7,7 @@ package com.nephest.battlenet.sc2.selenium;
     This test does all UI interactions and searches for any js errors
  */
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.openqa.selenium.support.ui.ExpectedConditions.elementToBeClickable;
 import static org.openqa.selenium.support.ui.ExpectedConditions.invisibilityOf;
@@ -39,6 +40,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.StatsService;
+import com.nephest.battlenet.sc2.web.util.WebContextUtil;
 import io.github.bonigarcia.wdm.WebDriverManager;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -122,6 +124,9 @@ public class GeneralSeleniumIT
 
     @Autowired
     private PopulationStateDAO populationStateDAO;
+
+    @Autowired
+    private WebContextUtil webContextUtil;
 
     @Autowired
     private JdbcTemplate template;
@@ -254,6 +259,22 @@ public class GeneralSeleniumIT
     public void testDiscordBotUI()
     {
         getAndWaitAndCheckJsErrors(driver, wait, root + "/discord/bot", "#faq");
+    }
+
+    @Test
+    public void testSitemap()
+    {
+        String url = webContextUtil.getPublicUrl()
+            + "?season=" + SeasonGenerator.DEFAULT_SEASON_ID
+            + "&queue=LOTV_1V1"
+            + "&team-type=ARRANGED"
+            + "&us=true&eu=true&kr=true&cn=true"
+            + "&bro=true&sil=true&gol=true&pla=true&dia=true&mas=true&gra=true"
+            + "&page=0&type=ladder&ratingAnchor=99999&idAnchor=0&count=1";
+        url = url.replaceAll("&", "&amp;");
+        driver.get(root + "/sitemap.xml");
+        //xml document with XPath locator doesn't work, using text match instead
+        assertTrue(driver.getPageSource().contains("<loc>" + url + "</loc>"));
     }
 
     @Test
