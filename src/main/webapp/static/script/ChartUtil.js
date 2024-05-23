@@ -225,7 +225,7 @@ class ChartUtil
                         ...(config.customAnnotations) && {
                             annotation: {
                                 clip: true,
-                                annotations: ChartUtil.createCustomAnnotationsCallback
+                                annotations: ChartUtil.createCustomAnnotations(config)
                             }
                         }
                     },
@@ -1128,11 +1128,6 @@ class ChartUtil
     static isTierThresholdApplicable(yAxis)
     {
         return yAxis == "percent-global" || yAxis == "percent-region";
-    }
-
-    static createCustomAnnotationsCallback(context)
-    {
-        return context.chart.customConfig ? ChartUtil.createCustomAnnotations(context.chart.customConfig) : {};
     }
 
     static createCustomAnnotations(config)
