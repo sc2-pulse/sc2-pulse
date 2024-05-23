@@ -496,6 +496,12 @@ class Util
         return window.navigator.languages || [window.navigator.language || window.navigator.userLanguage];
     }
 
+    static parseMatchUp(matchUp)
+    {
+        const prefixes = matchUp.split("v");
+        return [EnumUtil.enumOfNamePrefix(prefixes[0], RACE), EnumUtil.enumOfNamePrefix(prefixes[1], RACE)];
+    }
+
 }
 
 Util.HTML_ENTITY_MAP =
