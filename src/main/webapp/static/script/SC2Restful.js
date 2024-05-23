@@ -151,6 +151,7 @@ SC2Restful.COLORS = new Map
     ["low", "#28a745"],
     ["medium", "#ffc107"],
     ["high", "#dc3545"],
+    ["neutral", "#6c757d"],
     ["terran", "rgba(1, 90, 145, 1)"],
     ["protoss", "rgba(222, 201, 62, 1)"],
     ["zerg", "rgba(136, 41, 145, 1)"],
