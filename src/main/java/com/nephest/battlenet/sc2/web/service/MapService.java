@@ -211,7 +211,7 @@ public class MapService
             .filter
             (
                 matchUp->races.containsAll(matchUp.getRaces())
-                    || races.containsAll(matchUp.getVersusRaces())
+                    && races.containsAll(matchUp.getVersusRaces())
             )
             .collect(Collectors.toSet());
     }
