@@ -188,7 +188,8 @@ class ChartUtil
                         legend:
                         {
                             onClick:ChartUtil.onLegendClick,
-                            display: config.legendDisplay == "false" ? false : true
+                            display: config.legendDisplay == "false" ? false : true,
+                           ...(config.generateLegendLabels) && {labels: {generateLabels: config.generateLegendLabels}}
                         },
                         title:
                         {
