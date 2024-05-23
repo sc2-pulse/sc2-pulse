@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.web.service;
 import static com.nephest.battlenet.sc2.model.Race.PROTOSS;
 import static com.nephest.battlenet.sc2.model.Race.ZERG;
 import static com.nephest.battlenet.sc2.web.service.MapService.FILM_FRAME_DURATION;
+import static com.nephest.battlenet.sc2.web.service.MapStatsFilmTestService.FRAME_NUMBER;
+import static com.nephest.battlenet.sc2.web.service.MapStatsFilmTestService.FRAME_OFFSET;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -97,6 +99,9 @@ public class MapStatsFilmIT
 
     @Autowired
     private MapService mapService;
+    
+    @Autowired
+    private MapStatsFilmTestService mapStatsFilmTestService;
 
     @Autowired
     private MockMvc mvc;
@@ -170,60 +175,42 @@ public class MapStatsFilmIT
     public void testMapFilmStats()
     throws Exception
     {
-        int frameNumber = 2;
-        long frameOffset = FILM_FRAME_DURATION.toSeconds() * frameNumber;
-        OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
-        Instant mucInstant = startFrom.plusDays(1).toInstant();
-        seasonGenerator.generateDefaultSeason(1000, true);
-        leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
-        populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
-        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
-        seasonGenerator.createMatches
-        (
-            BaseMatch.MatchType._1V1,
-            38L, 39L,
-            new long[]{38L}, new long[]{39L},
-            startFrom,
-            Region.EU,
-            1, 1, 1, 1, 1
-        );
-        seasonGenerator.createMatches
-        (
-            BaseMatch.MatchType._1V1,
-            //switch ids to change a winner
-            39L, 38L,
-            new long[]{39L}, new long[]{38L},
-            startFrom.plusSeconds(MatchDAO.DURATION_OFFSET + frameOffset),
-            Region.EU,
-            1, 1, 1, 1, 1
-        );
-        seasonGenerator.createMatches
-        (
-            BaseMatch.MatchType._1V1,
-            38L, 39L,
-            new long[]{38L}, new long[]{39L},
-            startFrom.plusSeconds(MatchDAO.DURATION_OFFSET * 2 + frameOffset * 2),
-            Region.EU,
-            1, 1, 1, 1, 1
-        );
-        jdbcTemplate.update("DELETE FROM team_state");
-        List<Long> teamIds = List.of(38L, 39L);
 
-        teamStateDAO.takeSnapshot(teamIds, startFrom);
-        seasonGenerator.takeTeamSnapshot(teamIds, startFrom, frameOffset, 1);
-        seasonGenerator.takeTeamSnapshot(teamIds, startFrom, frameOffset, 2);
-        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startFrom);
-        matchDAO.updateDuration(startFrom);
-        eventService.createMatchUpdateEvent(new MatchUpdateContext(
-            Map.of(), new UpdateContext(mucInstant, mucInstant)));
-        List<UpdateContext> updateContexts = new ArrayList<>(1);
-        mapService.getUpdateEvent().subscribe(updateContexts::add);
-        try
-        {
-            if(updateContexts.isEmpty())
-                mapService.getUpdateEvent().blockFirst(Duration.ofMillis(5000));
-        } catch(Exception ignored) {}
-        updateContexts.clear();
+        OffsetDateTime[] odts = new OffsetDateTime[1];
+        List<Long> teamIds = List.of(38L, 39L);
+        List<UpdateContext> updateContexts = mapStatsFilmTestService.generateFilms(startFrom->{
+            odts[0] = startFrom;
+            seasonGenerator.createMatches
+            (
+                BaseMatch.MatchType._1V1,
+                38L, 39L,
+                new long[]{38L}, new long[]{39L},
+                startFrom,
+                Region.EU,
+                1, 1, 1, 1, 1
+            );
+            seasonGenerator.createMatches
+            (
+                BaseMatch.MatchType._1V1,
+                //switch ids to change a winner
+                39L, 38L,
+                new long[]{39L}, new long[]{38L},
+                startFrom.plusSeconds(MatchDAO.DURATION_OFFSET + FRAME_OFFSET),
+                Region.EU,
+                1, 1, 1, 1, 1
+            );
+            seasonGenerator.createMatches
+            (
+                BaseMatch.MatchType._1V1,
+                38L, 39L,
+                new long[]{38L}, new long[]{39L},
+                startFrom.plusSeconds(MatchDAO.DURATION_OFFSET * 2 + FRAME_OFFSET * 2),
+                Region.EU,
+                1, 1, 1, 1, 1
+            );
+            return teamIds;
+        });
+        OffsetDateTime startFrom = odts[0];
 
         List<MapStatsFilmSpec> specs = mapStatsFilmSpecDAO
             .find(MapService.MATCH_UPS, FILM_FRAME_DURATION);
@@ -259,7 +246,7 @@ public class MapStatsFilmIT
                 )),
                 List.of
                 (
-                    new MapStatsFrame(1, frameNumber, 1, 2)
+                    new MapStatsFrame(1, FRAME_NUMBER, 1, 2)
                 )
             ));
 
@@ -280,13 +267,13 @@ public class MapStatsFilmIT
             BaseMatch.MatchType._1V1,
             39L, 38L,
             new long[]{39L}, new long[]{38L},
-            startFrom2.plusSeconds(MatchDAO.DURATION_OFFSET + frameOffset),
+            startFrom2.plusSeconds(MatchDAO.DURATION_OFFSET + FRAME_OFFSET),
             Region.EU,
             1, 1, 1, 1, 1
         );
         jdbcTemplate.update("DELETE FROM team_state WHERE timestamp >= ? ", startFrom2);
         teamStateDAO.takeSnapshot(teamIds, startFrom2);
-        seasonGenerator.takeTeamSnapshot(teamIds, startFrom2, frameOffset, 1);
+        seasonGenerator.takeTeamSnapshot(teamIds, startFrom2, FRAME_OFFSET, 1);
         matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startFrom2);
         matchDAO.updateDuration(startFrom2);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(
@@ -317,7 +304,7 @@ public class MapStatsFilmIT
                 )),
                 List.of
                 (
-                    new MapStatsFrame(1, frameNumber, 2, 3)
+                    new MapStatsFrame(1, FRAME_NUMBER, 2, 3)
                 )
             ));
     }
