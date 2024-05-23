@@ -1300,6 +1300,13 @@ class ChartUtil
         }
     }
 
+    static createChartContainer(id)
+    {
+        const container = ElementUtil.createElement("div", id + "-container", "container-chart");
+        container.appendChild(ElementUtil.createElement("canvas", id, "c-chart"));
+        return container;
+    }
+
 }
 
 ChartUtil.CHARTS = new Map();
