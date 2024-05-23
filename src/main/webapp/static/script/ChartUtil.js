@@ -655,10 +655,18 @@ class ChartUtil
     {
         for (let i = 0; i < data.datasets.length; i++)
         {
-            const multiColor = SC2Restful.MULTI_COLORS.get(data.customColors[i].toLowerCase());
-            const color = multiColor
-                ? multiColor
-                : SC2Restful.getPredefinedOrRandomColor(data.customColors[i], i);
+            let color;
+            let multiColor;
+            if(typeof data.customColors[i] !== "string")
+            {
+                color = data.customColors[i];
+            } else
+            {
+                multiColor = SC2Restful.MULTI_COLORS.get(data.customColors[i].toLowerCase());
+                color = multiColor
+                    ? multiColor
+                    : SC2Restful.getPredefinedOrRandomColor(data.customColors[i], i);
+            }
             let primaryColor;
             let secondaryColor;
             if(color instanceof Array)
