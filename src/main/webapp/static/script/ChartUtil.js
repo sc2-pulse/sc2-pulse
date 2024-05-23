@@ -1136,6 +1136,8 @@ class ChartUtil
         {
             case "mmr-meta":
                 return ChartUtil.createMmrMetaAnnotations(config);
+            case "50":
+                return ChartUtil.create50Annotation(config);
         }
         return {};
     }
@@ -1187,6 +1189,20 @@ class ChartUtil
             Object.entries(patchAnnotations).forEach(e=>annotations[e[0]] = e[1]);
         }
         return annotations;
+    }
+
+    static create50Annotation(config)
+    {
+        return {
+            fifty: {
+                type: "line",
+                yMin: 50,
+                yMax: 50,
+                borderColor: "rgba(220, 53, 69, 0.4)",
+                borderWidth: ChartUtil.getAnnotationLineBorderWidth(config),
+                adjustScaleRange: false
+            }
+        }
     }
 
     static addTierAnnotations(annotations)
