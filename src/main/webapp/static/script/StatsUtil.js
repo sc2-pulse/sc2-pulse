@@ -704,6 +704,7 @@ class StatsUtil
             StatsUtil.calculateMapFrame,
             StatsUtil.mapFrameStringConverter);
         mapSummaryMatrix.setHighlightRange(45, 50, 55);
+        mapSummaryMatrix.setAfterDataProcessing(()=>mapSummaryMatrix.getSummaryRow().forEach(col=>col.winRate = 50));
         mapSummaryMatrix.setUseDataColors((localStorage.getItem("stats-match-up-color") || "race") == "race");
         const summaryElement = mapSummaryMatrix.render();
         summaryElement.classList.add("mx-auto", "mb-3");
