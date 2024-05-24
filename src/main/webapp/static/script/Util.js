@@ -382,6 +382,14 @@ class Util
         return color.startsWith("rgba") ? color.replace("1)", alpha + ")") : color;
     }
 
+    static divideColor(color, divisor)
+    {
+        const colors = color.substring(color.indexOf("(") + 1, color.length - 1).split(",");
+        for(let i = 0; i < 3; i++)
+            colors[i] = Math.round(colors[i].trim() / divisor)
+        return (colors.length == 4 ? "rgba(" : "rgb(") + colors.join() + ")";
+    }
+
     static addCsrfHeader(options)
     {
         if(!options.headers) options.headers = {};
