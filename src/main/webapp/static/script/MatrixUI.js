@@ -77,6 +77,16 @@ class MatrixUI {
         return series;
     }
 
+    getSummaryRow()
+    {
+        return this.cells ? this.cells[0] : null;
+    }
+
+    getSummaryColumns()
+    {
+        return this.cells ? this.cells.map(row=>row[0]) : null;
+    }
+
     processCells()
     {
         const series = this.getSeries();
