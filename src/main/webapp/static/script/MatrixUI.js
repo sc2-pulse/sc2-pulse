@@ -21,6 +21,7 @@ class MatrixUI {
             this.toStringConverter = toStringConverter;
             this.highlightMidPoint = 0;
             this.theme = theme;
+            this.useDataColors = true;
             this.series = null;
             this.categories == null;
             this.cells = null;
@@ -36,6 +37,11 @@ class MatrixUI {
     setSeriesComparator(comparator)
     {
         this.seriesComparator = comparator;
+    }
+    
+    setUseDataColors(useDataColors)
+    {
+        this.useDataColors = useDataColors;
     }
 
     getCategories()
@@ -221,34 +227,35 @@ class MatrixUI {
         const tbody = this.node.querySelector(":scope tbody");
         for(let rowIx = 0; rowIx < this.cells.length; rowIx++) {
             const tr = tbody.children[rowIx];
+            const data = rowIx != 0 ? this.data[rowIx - 1] : null;
+            const backgroundColors = this.useDataColors && data
+                ? data.backgroundColors || MatrixUI.HIGHLIGHT_BACKGROUND_COLORS
+                : MatrixUI.HIGHLIGHT_BACKGROUND_COLORS;
+            const colors = this.useDataColors && data
+                ? data.colors || MatrixUI.HIGHLIGHT_COLORS
+                : MatrixUI.HIGHLIGHT_COLORS;
             for(let colIx = 0; colIx < this.cells[rowIx].length; colIx++) {
                 const value = this.cells[rowIx][colIx][this.mainParameter];
                 if(value == null) continue;
                 const diff = value - this.highlightMidPoint;
                 const highlightSize = diff < 0 ? this.highlightMinSize : this.highlightMaxSize;
                 const opacity = Math.min((Math.abs(diff) / highlightSize) * MatrixUI.HIGHLIGHT_MAX_OPACITY, MatrixUI.HIGHLIGHT_MAX_OPACITY);
-                const highlightColor = this.getBackgroundHighlightColor(diff, opacity);
+                const highlightColor = this.getBackgroundHighlightColor(backgroundColors, diff, opacity);
                 const color = diff == 0
-                    ? MatrixUI.HIGHLIGHT_NEUTRAL_COLOR
+                    ? colors.neutral
                     : diff < 0
-                        ? MatrixUI.HIGHLIGHT_NEGATIVE_COLOR
-                        : MatrixUI.HIGHLIGHT_POSITIVE_COLOR;
+                        ? colors.negative
+                        : colors.positive;
                 const td = tr.children[colIx + 1];
                 td.setAttribute("style", "background-color: " + highlightColor + "; color: " + color + ";");
             }
         }
     }
 
-    getBackgroundHighlightColor(diff, opacity)
+    getBackgroundHighlightColor(colors, diff, opacity)
     {
-        const prefix = diff < 0
-            ? this.theme == THEME.DARK
-                ? MatrixUI.HIGHLIGHT_NEGATIVE_BACKGROUND_COLOR_DARK_PREFIX
-                : MatrixUI.HIGHLIGHT_NEGATIVE_BACKGROUND_COLOR_LIGHT_PREFIX
-            : this.theme == THEME.DARK
-                ? MatrixUI.HIGHLIGHT_POSITIVE_BACKGROUND_COLOR_DARK_PREFIX
-                : MatrixUI.HIGHLIGHT_POSITIVE_BACKGROUND_COLOR_LIGHT_PREFIX;
-        return prefix + opacity + ")";
+        const color = colors[this.theme.name][diff < 0 ? "negative" : "positive"];
+        return Util.changeFullRgbaAlpha(color, opacity);
     }
 
 }
@@ -259,8 +266,23 @@ MatrixUI.HIGHLIGHT_MAX_OPACITY = 0.4;
 MatrixUI.HIGHLIGHT_NEGATIVE_COLOR = "rgba(220, 53, 69)";
 MatrixUI.HIGHLIGHT_NEUTRAL_COLOR = "rgba(128, 128, 128)";
 MatrixUI.HIGHLIGHT_POSITIVE_COLOR = "rgba(40, 167, 69)";
+MatrixUI.HIGHLIGHT_COLORS = {
+    negative: MatrixUI.HIGHLIGHT_NEGATIVE_COLOR,
+    neutral: MatrixUI.HIGHLIGHT_NEUTRAL_COLOR,
+    positive: MatrixUI.HIGHLIGHT_POSITIVE_COLOR
+}
 
-MatrixUI.HIGHLIGHT_NEGATIVE_BACKGROUND_COLOR_DARK_PREFIX = "rgba(110, 26, 35, ";
-MatrixUI.HIGHLIGHT_POSITIVE_BACKGROUND_COLOR_DARK_PREFIX = "rgba(20, 83, 35, ";
-MatrixUI.HIGHLIGHT_NEGATIVE_BACKGROUND_COLOR_LIGHT_PREFIX = "rgba(220, 53, 69, ";
-MatrixUI.HIGHLIGHT_POSITIVE_BACKGROUND_COLOR_LIGHT_PREFIX = "rgba(40, 167, 69, ";
+MatrixUI.HIGHLIGHT_NEGATIVE_BACKGROUND_COLOR_DARK = "rgba(110, 26, 35, 1)";
+MatrixUI.HIGHLIGHT_POSITIVE_BACKGROUND_COLOR_DARK = "rgba(20, 83, 35, 1)";
+MatrixUI.HIGHLIGHT_NEGATIVE_BACKGROUND_COLOR_LIGHT = "rgba(220, 53, 69, 1) ";
+MatrixUI.HIGHLIGHT_POSITIVE_BACKGROUND_COLOR_LIGHT = "rgba(40, 167, 69, 1) ";
+MatrixUI.HIGHLIGHT_BACKGROUND_COLORS = {
+    dark: {
+        negative: MatrixUI.HIGHLIGHT_NEGATIVE_BACKGROUND_COLOR_DARK,
+        positive: MatrixUI.HIGHLIGHT_POSITIVE_BACKGROUND_COLOR_DARK
+    },
+    light: {
+        negative: MatrixUI.HIGHLIGHT_NEGATIVE_BACKGROUND_COLOR_LIGHT,
+        positive: MatrixUI.HIGHLIGHT_POSITIVE_BACKGROUND_COLOR_LIGHT
+    }
+}
