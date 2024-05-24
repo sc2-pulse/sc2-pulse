@@ -664,6 +664,27 @@ class StatsUtil
         return statsData.mapFilmModel;
     }
 
+    static addMapFilmSummaryRaceColors(summary)
+    {
+        for(const summarySeries of summary) {
+            summarySeries.backgroundColors = {
+                light: {
+                    negative: StatsUtil.MATCH_UP_MATRIX_LIGHT_BACKGROUND_COLORS.get(summarySeries.versusRace),
+                    positive: StatsUtil.MATCH_UP_MATRIX_LIGHT_BACKGROUND_COLORS.get(summarySeries.race)
+                },
+                dark: {
+                    negative: StatsUtil.MATCH_UP_MATRIX_DARK_BACKGROUND_COLORS.get(summarySeries.versusRace),
+                    positive: StatsUtil.MATCH_UP_MATRIX_DARK_BACKGROUND_COLORS.get(summarySeries.race)
+                }
+            };
+            summarySeries.colors = {
+                negative: StatsUtil.MATCH_UP_MATRIX_COLORS.get(summarySeries.versusRace),
+                neutral: MatrixUI.HIGHLIGHT_NEUTRAL_COLOR,
+                positive: StatsUtil.MATCH_UP_MATRIX_COLORS.get(summarySeries.race)
+            }
+        }
+    }
+
     static updateMapStatsFilmView()
     {
         const container = document.querySelector("#stats-match-up-container");
@@ -673,6 +694,7 @@ class StatsUtil
             return;
         }
 
+        StatsUtil.addMapFilmSummaryRaceColors(model.mapFilmModel.summary);
         const mapSummaryMatrix = new MatrixUI(
             "stats-map-film-summary-table",
             model.mapFilmModel.summary,
@@ -682,6 +704,7 @@ class StatsUtil
             StatsUtil.calculateMapFrame,
             StatsUtil.mapFrameStringConverter);
         mapSummaryMatrix.setHighlightRange(45, 50, 55);
+        mapSummaryMatrix.setUseDataColors((localStorage.getItem("stats-match-up-color") || "race") == "race");
         const summaryElement = mapSummaryMatrix.render();
         summaryElement.classList.add("mx-auto", "mb-3");
         container.appendChild(summaryElement);
@@ -802,11 +825,22 @@ class StatsUtil
         }
     }
 
+    static onMapFilmSummaryHighlightChange()
+    {
+        const model = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
+        if(model.mapFilmSummaryMatrix && model.mapFilmSummaryMatrix.getNode()) {
+            model.mapFilmSummaryMatrix.setUseDataColors((localStorage.getItem("stats-match-up-color") || "race") == "race");
+            model.mapFilmSummaryMatrix.highlight();
+        }
+    }
+
     static enhanceMapStatsFilm()
     {
         ElementUtil.ELEMENT_TASKS.set("stats-match-up-tab", StatsUtil.updateMapStatsFilmAsync);
         document.querySelectorAll(".stats-match-up-reload")
             .forEach(ctl=>ctl.addEventListener("change", e=>window.setTimeout(StatsUtil.resetAndUpdateMapStatsFilmAsync, 1)));
+        const colorCtl = document.querySelector("#stats-match-up-color");
+        if(colorCtl) colorCtl.addEventListener("change", e=>window.setTimeout(StatsUtil.onMapFilmSummaryHighlightChange, 1));
     }
 
     static enhanceSettings()
@@ -832,3 +866,19 @@ class StatsUtil
 StatsUtil.MAP_STATS_FILM_MAX_FRAME = 29;
 StatsUtil.MAP_STATS_FILM_MAIN_FRAME = 8;
 StatsUtil.MATCH_UP_RANDOM_COLORS = new Map([[RACE.TERRAN, "neutral"], [RACE.PROTOSS, "new"], [RACE.ZERG, "old"]]);
+StatsUtil.MATCH_UP_MATRIX_COLORS = new Map([
+    [RACE.TERRAN, "rgba(53, 123, 167, 1)"],
+    [RACE.PROTOSS, "rgba(167, 150, 2, 1)"],
+    [RACE.ZERG, "rgba(167, 40, 167, 1)"],
+    [RACE.RANDOM, "rgba(128, 128, 128, 1)"]
+]);
+StatsUtil.MATCH_UP_MATRIX_LIGHT_BACKGROUND_COLORS = new Map([
+    [RACE.TERRAN, "rgba(53, 123, 255, 1)"],
+    [RACE.PROTOSS, "rgba(255, 192, 0, 1)"],
+    [RACE.ZERG, "rgba(255, 40, 255, 1)"],
+    [RACE.RANDOM, "rgba(128, 128, 128, 1)"]
+]);
+StatsUtil.MATCH_UP_MATRIX_DARK_BACKGROUND_COLORS = new Map(
+    Array.from(StatsUtil.MATCH_UP_MATRIX_LIGHT_BACKGROUND_COLORS.entries())
+        .map(([race, color])=>[race, Util.divideColor(color, race == RACE.RANDOM ? 1.1 : 2)])
+);
