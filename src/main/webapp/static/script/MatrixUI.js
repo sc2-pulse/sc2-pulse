@@ -26,6 +26,7 @@ class MatrixUI {
             this.categories == null;
             this.cells = null;
             this.node = null;
+            this.afterDataProcessing = null;
             MatrixUI.OBJECTS.set(id, this);
     }
     
@@ -42,6 +43,11 @@ class MatrixUI {
     setUseDataColors(useDataColors)
     {
         this.useDataColors = useDataColors;
+    }
+
+    setAfterDataProcessing(afterDataProcessing)
+    {
+        this.afterDataProcessing = afterDataProcessing;
     }
 
     getCategories()
@@ -128,7 +134,10 @@ class MatrixUI {
 
     processData()
     {
-        if(this.cells == null) this.cells = this.processCells();
+        if(this.cells == null) {
+            this.cells = this.processCells();
+            if(this.afterDataProcessing) this.afterDataProcessing();
+        }
     }
 
     clear()
