@@ -399,7 +399,7 @@
             </section>
             <section id="stats-match-up" class="tab-pane fade c-height-linked" data-view-title="Match-up statistics">
                 <h3>Match-up stats</h3>
-                <form class="form-inline d-flex form-flex flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
+                <form id="stats-match-up-form" class="form-inline d-flex form-flex flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
                     <div class="d-flex flex-wrap-gap">
                         <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
                              th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
@@ -431,6 +431,22 @@
                             </th:block>
                         </select>
                     </div>
+                    <fieldset class="form-group d-flex flex-wrap-gap-05">
+                        <label for="stats-match-up-group-duration" class="d-flex gap-tiny">
+                            Group duration
+                            <img
+                                th:src="@{/static/icon/misc/info.svg}"
+                                alt="Duration of chart groups(points), minutes. Low duration provides fine grained stats, but
+                                    smaller sample size. High duration provides generalized stats and larger sample size."
+                                title="Duration of chart groups(points), minutes. Low duration provides fine grained stats, but
+                                    smaller sample size. High duration provides generalized stats and larger sample size."
+                                data-toggle="tooltip"
+                            />
+                        </label>
+                        <input id="stats-match-up-group-duration" class="form-control input-short serializable"
+                               type="number" min="1" max="10"
+                               required="required"/>
+                    </fieldset>
                     <div class="form-group d-flex flex-wrap-gap-05">
                         <label for="stats-match-up-color">Color</label>
                         <select id="stats-match-up-color" class="form-control serializable">

@@ -618,7 +618,11 @@ class StatsUtil
         }
         return {
             summary: StatsUtil.deriveMapFilmSummary(specMapFilmsResolved, propertyNames),
-            duration: StatsUtil.deriveMapFilmDuration(specMapFilmsResolved, propertyNames)
+            duration: StatsUtil.deriveMapFilmDuration(
+                specMapFilmsResolved,
+                propertyNames,
+                parseInt(localStorage.getItem("stats-match-up-group-duration"))
+                    || StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION)
         };
     }
 
@@ -770,8 +774,21 @@ class StatsUtil
         return model;
     }
 
+    static initMapStatsFilm()
+    {
+        if(StatsUtil.mapStatsFilmInitialized) return;
+
+        if(!localStorage.getItem("stats-match-up-group-duration"))
+            document.querySelector("#stats-match-up-group-duration").value
+                = StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION;
+        StatsUtil.mapStatsFilmInitialized = true;
+    }
+
     static updateMapStatsFilm()
     {
+        StatsUtil.initMapStatsFilm();
+        if(!document.querySelector("#stats-match-up-form").reportValidity())
+            return Promise.resolve({data: null, status: LOADING_STATUS.ERROR});
         const leagueAndTier = (localStorage.getItem("stats-match-up-league") || "5,0").split(",");
         const league = EnumUtil.enumOfId(leagueAndTier[0], LEAGUE);
         const tier = EnumUtil.enumOfId(leagueAndTier[1], LEAGUE_TIER);
@@ -809,16 +826,16 @@ class StatsUtil
         });
     }
 
-    static resetMapStatsFilm()
+    static resetMapStatsFilm(fullClear = true)
     {
         const container = document.querySelector("#stats-match-up-container");
-        ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE);
+        if(fullClear) ElementUtil.setLoadingIndicator(container, LOADING_STATUS.NONE);
         ElementUtil.removeChildren(container);
         const model = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
         if(model) {
             if(model.mapFilmSummaryMatrix) model.mapFilmSummaryMatrix.remove();
             model.mapFilmSummaryMatrix = null;
-            model.mapFilmModel = null;
+            if(fullClear) model.mapFilmModel = null;
             if(model.charts) {
                 for(const chart of model.charts) ChartUtil.CHARTS.delete(chart.customConfig.chartable);
                 model.charts = null;
@@ -835,6 +852,19 @@ class StatsUtil
         }
     }
 
+    static onMapFilmGroupDurationChange()
+    {
+        const form = document.querySelector("#stats-match-up-form");
+        if(!form.reportValidity()) return;
+
+        if(!Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilmModel)
+            return StatsUtil.resetAndUpdateMapStatsFilmAsync();
+
+        StatsUtil.resetMapStatsFilm(false);
+        StatsUtil.updateMapStatsFilmModel();
+        return StatsUtil.updateMapStatsFilmView();
+    }
+
     static enhanceMapStatsFilm()
     {
         ElementUtil.ELEMENT_TASKS.set("stats-match-up-tab", StatsUtil.updateMapStatsFilmAsync);
@@ -842,6 +872,10 @@ class StatsUtil
             .forEach(ctl=>ctl.addEventListener("change", e=>window.setTimeout(StatsUtil.resetAndUpdateMapStatsFilmAsync, 1)));
         const colorCtl = document.querySelector("#stats-match-up-color");
         if(colorCtl) colorCtl.addEventListener("change", e=>window.setTimeout(StatsUtil.onMapFilmSummaryHighlightChange, 1));
+        const form = document.querySelector("#stats-match-up-form");
+        if(form) form.addEventListener("submit", e=>e.preventDefault());
+        const groupCtl = document.querySelector("#stats-match-up-group-duration");
+        if(groupCtl) groupCtl.addEventListener("input", e=>window.setTimeout(StatsUtil.onMapFilmGroupDurationChange, 1));
     }
 
     static enhanceSettings()
@@ -866,6 +900,7 @@ class StatsUtil
 
 StatsUtil.MAP_STATS_FILM_MAX_FRAME = 29;
 StatsUtil.MAP_STATS_FILM_MAIN_FRAME = 8;
+StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION = 2;
 StatsUtil.MATCH_UP_RANDOM_COLORS = new Map([[RACE.TERRAN, "neutral"], [RACE.PROTOSS, "new"], [RACE.ZERG, "old"]]);
 StatsUtil.MATCH_UP_MATRIX_COLORS = new Map([
     [RACE.TERRAN, "rgba(53, 123, 167, 1)"],
