@@ -445,6 +445,12 @@ body.theme-dark img[loading="lazy"]:not(.loaded)
     max-width: 6em !important;
 }
 
+*:invalid:not(form),
+*:invalid:focus:not(form)
+{
+    color: #dc3545;
+}
+
 label.required::after
 {
     content: "*";
