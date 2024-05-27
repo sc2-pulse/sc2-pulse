@@ -707,7 +707,9 @@ class StatsUtil
             Session.theme,
             StatsUtil.calculateMapFrame,
             StatsUtil.mapFrameStringConverter);
-        mapSummaryMatrix.setHighlightRange(45, 50, 55);
+        const winRateThreshold = parseFloat(localStorage.getItem("stats-match-up-win-rate-highlight-threshold"))
+            || StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD;
+        mapSummaryMatrix.setHighlightRange(50 - winRateThreshold, 50, 50 + winRateThreshold);
         mapSummaryMatrix.setAfterDataProcessing(()=>mapSummaryMatrix.getSummaryRow().forEach(col=>col.winRate = 50));
         mapSummaryMatrix.setUseDataColors((localStorage.getItem("stats-match-up-color") || "race") == "race");
         const summaryElement = mapSummaryMatrix.render();
@@ -779,6 +781,9 @@ class StatsUtil
         if(!localStorage.getItem("stats-match-up-group-duration"))
             document.querySelector("#stats-match-up-group-duration").value
                 = StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION;
+        if(!localStorage.getItem("stats-match-up-win-rate-highlight-threshold"))
+            document.querySelector("#stats-match-up-win-rate-highlight-threshold").value
+                = StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD;
         StatsUtil.mapStatsFilmInitialized = true;
     }
 
@@ -863,6 +868,17 @@ class StatsUtil
         return StatsUtil.updateMapStatsFilmView();
     }
 
+    static onMapFilmGroupWinRateHighlightThresholdChange()
+    {
+        const matrix = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilmSummaryMatrix;
+        if(!matrix) return;
+
+        const threshold = parseFloat(localStorage.getItem("stats-match-up-win-rate-highlight-threshold"))
+            || StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD;
+        matrix.setHighlightRange(50 - threshold, 50, 50 + threshold);
+        if(matrix.getNode()) matrix.highlight();
+    }
+
     static enhanceMapStatsFilm()
     {
         ElementUtil.ELEMENT_TASKS.set("stats-match-up-tab", StatsUtil.updateMapStatsFilmAsync);
@@ -874,6 +890,9 @@ class StatsUtil
         if(form) form.addEventListener("submit", e=>e.preventDefault());
         const groupCtl = document.querySelector("#stats-match-up-group-duration");
         if(groupCtl) groupCtl.addEventListener("input", e=>window.setTimeout(StatsUtil.onMapFilmGroupDurationChange, 1));
+        const winRateThresholdCtl = document.querySelector("#stats-match-up-win-rate-highlight-threshold");
+        if(winRateThresholdCtl) winRateThresholdCtl
+            .addEventListener("input", e=>window.setTimeout(StatsUtil.onMapFilmGroupWinRateHighlightThresholdChange, 1));
     }
 
     static enhanceSettings()
@@ -899,6 +918,7 @@ class StatsUtil
 StatsUtil.MAP_STATS_FILM_MAX_FRAME = 29;
 StatsUtil.MAP_STATS_FILM_MAIN_FRAME = 8;
 StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION = 2;
+StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD = 5;
 StatsUtil.MATCH_UP_RANDOM_COLORS = new Map([[RACE.TERRAN, "neutral"], [RACE.PROTOSS, "new"], [RACE.ZERG, "old"]]);
 StatsUtil.MATCH_UP_MATRIX_COLORS = new Map([
     [RACE.TERRAN, "rgba(53, 123, 167, 1)"],

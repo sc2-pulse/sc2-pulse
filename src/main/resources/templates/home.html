@@ -447,6 +447,24 @@
                                type="number" min="1" max="10"
                                required="required"/>
                     </fieldset>
+                    <fieldset class="form-group d-flex flex-wrap-gap-05">
+                        <label for="stats-match-up-win-rate-highlight-threshold" class="d-flex gap-tiny">
+                            Win% threshold
+                            <img
+                                    th:src="@{/static/icon/misc/info.svg}"
+                                    alt="Deviation from 50 at which the highlight is set to 100% intensity. For example
+                                    5 threshold means that win rates of 45% and below and 55% and above will be
+                                    highlighted with max intensity."
+                                    title="Deviation from 50 at which the highlight is set to 100% intensity. For example
+                                    5 threshold means that win rates of 45% and below and 55% and above will be
+                                    highlighted with max intensity."
+                                    data-toggle="tooltip"
+                            />
+                        </label>
+                        <input id="stats-match-up-win-rate-highlight-threshold" class="form-control input-short serializable"
+                               type="number" min="0.5" max="50" step="0.5"
+                               required="required"/>
+                    </fieldset>
                     <div class="form-group d-flex flex-wrap-gap-05">
                         <label for="stats-match-up-color">Color</label>
                         <select id="stats-match-up-color" class="form-control serializable">
