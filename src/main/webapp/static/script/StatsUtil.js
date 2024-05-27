@@ -729,8 +729,8 @@ class StatsUtil
 
         model.charts = new Array(2);
         winRateSection.appendChild(ChartUtil.createChartContainer("stats-map-film-duration-win-rate"));
-        const mergeFactor = (StatsUtil.MAP_STATS_FILM_MAX_FRAME + 1)
-            / model.mapFilmModel.duration.winRate[0].data.length;
+        const mergeFactor = Math.ceil((StatsUtil.MAP_STATS_FILM_MAX_FRAME + 1)
+            / model.mapFilmModel.duration.winRate[0].data.length);
         const winRateConfig = {
             type: "line",
             chartable: "stats-map-film-duration-win-rate",

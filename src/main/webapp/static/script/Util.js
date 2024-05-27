@@ -322,7 +322,7 @@ class Util
 
     static mergeObjects(objects, propertyNames, factor)
     {
-        const merged = new Array(objects.length / factor);
+        const merged = new Array(Math.ceil(objects.length / factor));
         for(let i = 0; i < merged.length; i++)
             merged[i] = Util.addObjects(objects.slice(i * factor, i * factor + factor), propertyNames);
         return merged;
