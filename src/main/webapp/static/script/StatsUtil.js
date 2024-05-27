@@ -594,7 +594,7 @@ class StatsUtil
             winRateDataSets[i] = StatsUtil.copyFrameSeries(data[i], "winRate");
             gamesRateDataSets[i] = StatsUtil.copyFrameSeries(data[i], "games");
         }
-        return {winRate: winRateDataSets, games: gamesRateDataSets};
+        return {winRate: winRateDataSets, games: gamesRateDataSets, mergeFactor: mergeFactor};
     }
 
     static transformMapStatsFilm(film)
@@ -733,8 +733,6 @@ class StatsUtil
 
         model.charts = new Array(2);
         winRateSection.appendChild(ChartUtil.createChartContainer("stats-map-film-duration-win-rate"));
-        const mergeFactor = Math.ceil((StatsUtil.MAP_STATS_FILM_MAX_FRAME + 1)
-            / model.mapFilmModel.duration.winRate[0].data.length);
         const winRateConfig = {
             type: "line",
             chartable: "stats-map-film-duration-win-rate",
@@ -744,7 +742,7 @@ class StatsUtil
             customAnnotations: "50",
             data: {
                 labels: [...Array(model.mapFilmModel.duration.winRate[0].data.length).keys()]
-                    .map(e=>(e * mergeFactor) + ""),
+                    .map(e=>(e * model.mapFilmModel.duration.mergeFactor) + ""),
                 datasets: model.mapFilmModel.duration.winRate,
                 customColors: durationColors,
                 customMeta: {type: "line"},
@@ -761,7 +759,7 @@ class StatsUtil
             yTitle: "Games",
             data: {
                 labels: [...Array(model.mapFilmModel.duration.games[0].data.length).keys()]
-                    .map(e=>(e * mergeFactor) + ""),
+                    .map(e=>(e * model.mapFilmModel.duration.mergeFactor) + ""),
                 datasets: model.mapFilmModel.duration.games,
                 customColors: durationColors,
                 customMeta: {type: "line"},
