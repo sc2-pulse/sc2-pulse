@@ -324,7 +324,7 @@ class Util
     {
         const merged = new Array(Math.ceil(objects.length / factor));
         for(let i = 0; i < merged.length; i++)
-            merged[i] = Util.addObjects(objects.slice(i * factor, i * factor + factor), propertyNames);
+            merged[i] = Util.addObjects(objects.slice(i * factor, Math.min(i * factor + factor, objects.length)), propertyNames);
         return merged;
     }
 
