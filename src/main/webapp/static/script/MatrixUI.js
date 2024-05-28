@@ -40,6 +40,19 @@ class MatrixUI {
         return CELL_TYPE.DATA;
     }
     
+    static calculateHighlightRange(min, mid, max, cells, mainParameter)
+    {
+        const values = cells.map(cell=>cell[mainParameter]);
+        const range = {
+            min: min != null ? min : Math.min(...values),
+            mid: mid,
+            max: max != null ? max : Math.max(...values),
+        };
+        range.minSize = range.mid - range.min;
+        range.maxSize = range.max - range.mid;
+        return range;
+    }
+    
     setTheme(theme)
     {
         this.theme = theme;
@@ -251,23 +264,23 @@ class MatrixUI {
 
     setHighlightRange(min, mid, max)
     {
+        if(mid == null) throw new Error("Highlight mid is required");
         if(min > max) throw new Error("Invalid boundaries, min should be less than max");
         if(mid < min || mid > max) throw new Error("Highlight mid is out of boundaries");
 
-        this.highlightMin = min;
-        this.highlightMax = max;
-        this.highlightMidPoint = mid;
-        this.highlightMinSize = mid - min;
-        this.highlightMaxSize = max - mid;
+        this.processData();
+        const highlightRanges = new Map();
+        for(const cellType of Object.values(CELL_TYPE))
+            highlightRanges.set(
+                cellType,
+                MatrixUI.calculateHighlightRange(min, mid, max, this.getCells(cellType), this.mainParameter));
+        highlightRanges.get(CELL_TYPE.SUMMARY_CELL).mid = this.getCells(CELL_TYPE.SUMMARY_CELL)[0][this.mainParameter];
+        this.highlightRanges = highlightRanges;
     }
 
     highlight()
     {
-        if(this.highlightMin != null) {
-            this.highlightMinMax();
-        } else {
-            throw new Error("Unsupported operation");
-        }
+        this.highlightMinMax();
     }
 
     highlightMinMax()
@@ -285,8 +298,9 @@ class MatrixUI {
             for(let colIx = 0; colIx < this.cells[rowIx].length; colIx++) {
                 const value = this.cells[rowIx][colIx][this.mainParameter];
                 if(value == null) continue;
-                const diff = value - this.highlightMidPoint;
-                const highlightSize = diff < 0 ? this.highlightMinSize : this.highlightMaxSize;
+                const highlightRange = this.highlightRanges.get(MatrixUI.getCellType(rowIx, colIx));
+                const diff = value - highlightRange.mid;
+                const highlightSize = diff < 0 ? highlightRange.minSize : highlightRange.maxSize;
                 const opacity = Math.min((Math.abs(diff) / highlightSize) * MatrixUI.HIGHLIGHT_MAX_OPACITY, MatrixUI.HIGHLIGHT_MAX_OPACITY);
                 const highlightColor = this.getBackgroundHighlightColor(backgroundColors, diff, opacity);
                 const color = diff == 0
