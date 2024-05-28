@@ -689,6 +689,13 @@ class StatsUtil
         }
     }
 
+    static setMapFilmWinRateThreshold(matrix)
+    {
+        const threshold = parseFloat(localStorage.getItem("stats-match-up-win-rate-highlight-threshold"))
+            || StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD;
+        matrix.setHighlightRange(50 - threshold, 50, 50 + threshold);
+    }
+
     static updateMapStatsFilmView()
     {
         const container = document.querySelector("#stats-match-up-container");
@@ -707,9 +714,7 @@ class StatsUtil
             Session.theme,
             StatsUtil.calculateMapFrame,
             StatsUtil.mapFrameStringConverter);
-        const winRateThreshold = parseFloat(localStorage.getItem("stats-match-up-win-rate-highlight-threshold"))
-            || StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD;
-        mapSummaryMatrix.setHighlightRange(50 - winRateThreshold, 50, 50 + winRateThreshold);
+        StatsUtil.setMapFilmWinRateThreshold(mapSummaryMatrix);
         mapSummaryMatrix.setAfterDataProcessing(()=>mapSummaryMatrix.getSummaryRow().forEach(col=>col.winRate = 50));
         mapSummaryMatrix.setUseDataColors((localStorage.getItem("stats-match-up-color") || "race") == "race");
         const summaryElement = mapSummaryMatrix.render();
@@ -873,9 +878,7 @@ class StatsUtil
         const matrix = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilmSummaryMatrix;
         if(!matrix) return;
 
-        const threshold = parseFloat(localStorage.getItem("stats-match-up-win-rate-highlight-threshold"))
-            || StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD;
-        matrix.setHighlightRange(50 - threshold, 50, 50 + threshold);
+        StatsUtil.setMapFilmWinRateThreshold(matrix);
         if(matrix.getNode()) matrix.highlight();
     }
 
