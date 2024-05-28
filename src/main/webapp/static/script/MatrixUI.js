@@ -98,6 +98,15 @@ class MatrixUI {
         return this.cells ? this.cells.slice(1, this.cells.length).map(row=>row[0]) : null;
     }
 
+    getDataCells()
+    {
+        return this.cells
+            ? this.cells.slice(1, this.cells.length)
+                .map(row=>row.slice(1, row.length))
+                .flat(1)
+            : null;
+    }
+
     processCells()
     {
         const series = this.getSeries();
