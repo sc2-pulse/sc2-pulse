@@ -709,7 +709,7 @@ class TeamUtil
         return params;
     }
 
-    static updateTeamSearchModel(params)
+    static loadTeamSearchModel(params)
     {
         return TeamUtil.getTeams(TeamUtil.fuzzyTeamSearchParams(params))
             .then(teams=>{
@@ -731,7 +731,7 @@ class TeamUtil
     static updateTeams(params)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
-        return TeamUtil.updateTeamSearchModel(params)
+        return TeamUtil.loadTeamSearchModel(params)
             .then(e=>{
                 TeamUtil.updateTeamSearchView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
