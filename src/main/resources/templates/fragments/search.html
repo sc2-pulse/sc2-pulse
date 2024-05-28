@@ -249,6 +249,16 @@
                            max="9999"
                     />
                 </div>
+                <div class="form-group">
+                    <label for="search-team-sort">Sort</label>
+                    <select class="form-control serializable"
+                            id="search-team-sort"
+                            name="wins"
+                    >
+                        <option value="lastPlayedTimestamp" selected="selected">Last played</option>
+                        <option value="rating">MMR</option>
+                    </select>
+                </div>
                 <button class="btn btn-primary" type="submit">Find</button>
             </form>
         </header>

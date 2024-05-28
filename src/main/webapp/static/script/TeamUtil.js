@@ -720,6 +720,26 @@ class TeamUtil
             });
     }
 
+    static updateTeamSearchModel()
+    {
+        const model = Model.DATA.get(VIEW.TEAM_SEARCH);
+        if(!model) return;
+
+        TeamUtil.sortTeamSearchModel(model);
+    }
+
+    static sortTeamSearchModel(model)
+    {
+        const teams = model.get(VIEW_DATA.VAR);
+        if(teams.length == 0) return;
+
+        const sorting = localStorage.getItem("search-team-sort") || "lastPlayedTimestamp";
+        if(sorting == "lastPlayedTimestamp" && !teams[0].lastPlayedTimestamp)
+            for(const team of teams)
+                team.lastPlayedTimestamp = Util.parseIsoDateTime(team.lastPlayed).getTime();
+        teams.sort((a, b)=>b[sorting] - a[sorting]);
+    }
+
     static updateTeamSearchView()
     {
         const searchResult = Model.DATA.get(VIEW.TEAM_SEARCH).get(VIEW_DATA.SEARCH);
@@ -733,6 +753,7 @@ class TeamUtil
         Util.setGeneratingStatus(STATUS.BEGIN);
         return TeamUtil.loadTeamSearchModel(params)
             .then(e=>{
+                TeamUtil.updateTeamSearchModel();
                 TeamUtil.updateTeamSearchView();
                 Util.setGeneratingStatus(STATUS.SUCCESS);
 
@@ -754,10 +775,20 @@ class TeamUtil
         return TeamUtil.updateTeams(params);
     }
 
+    static onTeamSort(evt)
+    {
+        if(!Model.DATA.get(VIEW.TEAM_SEARCH).get(VIEW_DATA.VAR)) return;
+
+        TeamUtil.updateTeamSearchModel();
+        TeamUtil.updateTeamSearchView();
+    }
+
     static enhanceTeamSearch()
     {
         const form = document.querySelector("#form-search-team");
         if(form) form.addEventListener("submit", TeamUtil.onTeamSearch);
+        const sortCtl = document.querySelector("#search-team-sort");
+        if(sortCtl) sortCtl.addEventListener("change", ()=>window.setTimeout(TeamUtil.onTeamSort, 1));
     }
 
 }
