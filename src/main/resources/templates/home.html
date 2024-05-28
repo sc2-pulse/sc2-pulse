@@ -398,8 +398,21 @@
                 <p class="msg-info"></p>
             </section>
             <section id="stats-match-up" class="tab-pane fade c-height-linked" data-view-title="Match-up statistics">
-                <h3>Match-up stats</h3>
-                <form id="stats-match-up-form" class="form-inline d-flex form-flex form-group-column flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
+                <h3>
+                    <a class="c-dropdown"
+                       href="#stats-match-up-form"
+                       data-toggle="collapse"
+                       role="button"
+                       aria-expanded="true"
+                       aria-controls="stats-match-up-form"
+                    >
+                        Match-up stats
+                    </a>
+                </h3>
+                <form id="stats-match-up-form"
+                      class="collapse show form-inline d-flex form-flex form-group-column flex-wrap-gap row-gap-1-5 justify-content-center mb-3"
+                      data-collapse-on="mobile"
+                >
                     <div class="d-flex flex-wrap-gap form-group-container">
                         <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
                              th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
