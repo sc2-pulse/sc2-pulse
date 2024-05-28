@@ -29,6 +29,16 @@ class MatrixUI {
             this.afterDataProcessing = null;
             MatrixUI.OBJECTS.set(id, this);
     }
+
+    static getCellType(rowIx, colIx)
+    {
+        if(rowIx == 0) {
+            if(colIx == 0) return CELL_TYPE.SUMMARY_CELL;
+            return CELL_TYPE.SUMMARY_ROW;
+        }
+        if(colIx == 0) return CELL_TYPE.SUMMARY_COLUMN;
+        return CELL_TYPE.DATA;
+    }
     
     setTheme(theme)
     {
@@ -105,6 +115,11 @@ class MatrixUI {
                 .map(row=>row.slice(1, row.length))
                 .flat(1)
             : null;
+    }
+
+    getCells(type)
+    {
+        return type == null ? this.cells : type.getCells(this);
     }
 
     processCells()
@@ -319,3 +334,11 @@ MatrixUI.HIGHLIGHT_BACKGROUND_COLORS = {
         positive: MatrixUI.HIGHLIGHT_POSITIVE_BACKGROUND_COLOR_LIGHT
     }
 }
+
+const CELL_TYPE = Object.freeze
+({
+    SUMMARY_CELL: {name: "summaryCell", order: 1, getCells: (matrix)=>matrix.getSummaryCell()},
+    SUMMARY_ROW: {name: "summaryRow", order: 2, getCells: (matrix)=>matrix.getSummaryRow()},
+    SUMMARY_COLUMN: {name: "summaryColumn", order: 3, getCells: (matrix)=>matrix.getSummaryColumns()},
+    DATA: {name: "data", order: 4, getCells: (matrix)=>matrix.getDataCells()}
+});
