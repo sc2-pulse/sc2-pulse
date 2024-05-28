@@ -83,14 +83,19 @@ class MatrixUI {
         return series;
     }
 
+    getSummaryCell()
+    {
+        return this.cells ? [this.cells[0][0]] : null;
+    }
+
     getSummaryRow()
     {
-        return this.cells ? this.cells[0] : null;
+        return this.cells ? this.cells[0].slice(1, this.cells[0].length) : null;
     }
 
     getSummaryColumns()
     {
-        return this.cells ? this.cells.map(row=>row[0]) : null;
+        return this.cells ? this.cells.slice(1, this.cells.length).map(row=>row[0]) : null;
     }
 
     processCells()

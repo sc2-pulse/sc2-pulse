@@ -696,6 +696,12 @@ class StatsUtil
         matrix.setHighlightRange(50 - threshold, 50, 50 + threshold);
     }
 
+    static setMapSummaryWinRate(matrix, winRate)
+    {
+        matrix.getSummaryRow().forEach(col=>col.winRate = winRate);
+        matrix.getSummaryCell()[0].winRate = winRate;
+    }
+
     static updateMapStatsFilmView()
     {
         const container = document.querySelector("#stats-match-up-container");
@@ -715,7 +721,7 @@ class StatsUtil
             StatsUtil.calculateMapFrame,
             StatsUtil.mapFrameStringConverter);
         StatsUtil.setMapFilmWinRateThreshold(mapSummaryMatrix);
-        mapSummaryMatrix.setAfterDataProcessing(()=>mapSummaryMatrix.getSummaryRow().forEach(col=>col.winRate = 50));
+        mapSummaryMatrix.setAfterDataProcessing(()=>StatsUtil.setMapSummaryWinRate(mapSummaryMatrix, 50));
         mapSummaryMatrix.setUseDataColors((localStorage.getItem("stats-match-up-color") || "race") == "race");
         const summaryElement = mapSummaryMatrix.render();
         summaryElement.classList.add("mx-auto", "mb-3");
