@@ -399,8 +399,8 @@
             </section>
             <section id="stats-match-up" class="tab-pane fade c-height-linked" data-view-title="Match-up statistics">
                 <h3>Match-up stats</h3>
-                <form id="stats-match-up-form" class="form-inline d-flex form-flex flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
-                    <div class="d-flex flex-wrap-gap">
+                <form id="stats-match-up-form" class="form-inline d-flex form-flex form-group-column flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
+                    <div class="d-flex flex-wrap-gap form-group-container">
                         <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
                              th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
                         >
@@ -431,7 +431,7 @@
                             </th:block>
                         </select>
                     </div>
-                    <fieldset class="form-group d-flex flex-wrap-gap-05">
+                    <fieldset class="form-group short d-flex flex-wrap-gap-05">
                         <label for="stats-match-up-group-duration" class="d-flex gap-tiny">
                             Step duration
                             <img
@@ -443,11 +443,11 @@
                                 data-toggle="tooltip"
                             />
                         </label>
-                        <input id="stats-match-up-group-duration" class="form-control input-short serializable"
+                        <input id="stats-match-up-group-duration" class="form-control serializable"
                                type="number" min="1" max="10"
                                required="required"/>
                     </fieldset>
-                    <div class="d-flex flex-wrap-gap">
+                    <div class="d-flex flex-wrap-gap form-group-container">
                         <div class="form-group d-flex flex-wrap-gap-05">
                             <label for="stats-match-up-highlight">Highlight</label>
                             <select id="stats-match-up-highlight" class="form-control serializable">
@@ -455,7 +455,7 @@
                                 <option value="games">Games</option>
                             </select>
                         </div>
-                        <fieldset class="form-group d-flex flex-wrap-gap-05">
+                        <fieldset class="form-group short d-flex flex-wrap-gap-05">
                             <label for="stats-match-up-win-rate-highlight-threshold" class="d-flex gap-tiny">
                                 Win% threshold
                                 <img
@@ -469,7 +469,7 @@
                                         data-toggle="tooltip"
                                 />
                             </label>
-                            <input id="stats-match-up-win-rate-highlight-threshold" class="form-control input-short serializable"
+                            <input id="stats-match-up-win-rate-highlight-threshold" class="form-control serializable"
                                    type="number" min="0.5" max="50" step="0.5"
                                    required="required"
                                    data-state-link-id="stats-match-up-highlight"
