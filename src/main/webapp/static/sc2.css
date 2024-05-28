@@ -958,6 +958,22 @@ th.hoverable span
     margin-right: 0;
 }
 
+.form-group-column .form-group:not(.checkbox)
+{
+    flex-direction: column;
+}
+
+.form-group-column label
+{
+    text-align: left;
+    align-self: start;
+}
+
+.form-group-column .form-group-container
+{
+    align-self: end;
+}
+
 .c-dropdown:after
 {
     display: inline-block;
