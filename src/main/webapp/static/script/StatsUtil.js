@@ -890,6 +890,7 @@ class StatsUtil
     static setMapFilmHighlight(matrix)
     {
         if(!matrix) matrix = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilmSummaryMatrix;
+        if(!matrix) return;
 
         const highlight = localStorage.getItem("stats-match-up-highlight") || "win-rate";
         if(highlight == "win-rate") {
