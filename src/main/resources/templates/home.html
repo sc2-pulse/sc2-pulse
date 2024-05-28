@@ -447,6 +447,13 @@
                                type="number" min="1" max="10"
                                required="required"/>
                     </fieldset>
+                    <div class="form-group d-flex flex-wrap-gap-05">
+                        <label for="stats-match-up-highlight">Highlight</label>
+                        <select id="stats-match-up-highlight" class="form-control serializable">
+                            <option value="win-rate" selected="selected">Win rate</option>
+                            <option value="games">Games</option>
+                        </select>
+                    </div>
                     <fieldset class="form-group d-flex flex-wrap-gap-05">
                         <label for="stats-match-up-win-rate-highlight-threshold" class="d-flex gap-tiny">
                             Win% threshold
@@ -463,11 +470,17 @@
                         </label>
                         <input id="stats-match-up-win-rate-highlight-threshold" class="form-control input-short serializable"
                                type="number" min="0.5" max="50" step="0.5"
-                               required="required"/>
+                               required="required"
+                               data-state-link-id="stats-match-up-highlight"
+                               data-state-link-values="win-rate"/>
                     </fieldset>
                     <div class="form-group d-flex flex-wrap-gap-05">
                         <label for="stats-match-up-color">Color</label>
-                        <select id="stats-match-up-color" class="form-control serializable">
+                        <select id="stats-match-up-color"
+                                class="form-control serializable"
+                                data-state-link-id="stats-match-up-highlight"
+                                data-state-link-values="win-rate"
+                        >
                             <option value="red-green">Red/Green</option>
                             <option value="race" selected="selected">Race</option>
                         </select>

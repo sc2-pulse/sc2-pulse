@@ -720,9 +720,8 @@ class StatsUtil
             Session.theme,
             StatsUtil.calculateMapFrame,
             StatsUtil.mapFrameStringConverter);
-        StatsUtil.setMapFilmWinRateThreshold(mapSummaryMatrix);
         mapSummaryMatrix.setAfterDataProcessing(()=>StatsUtil.setMapSummaryWinRate(mapSummaryMatrix, 50));
-        mapSummaryMatrix.setUseDataColors((localStorage.getItem("stats-match-up-color") || "race") == "race");
+        StatsUtil.setMapFilmHighlight(mapSummaryMatrix);
         const summaryElement = mapSummaryMatrix.render();
         summaryElement.classList.add("mx-auto", "mb-3");
         container.appendChild(summaryElement);
@@ -888,6 +887,26 @@ class StatsUtil
         if(matrix.getNode()) matrix.highlight();
     }
 
+    static setMapFilmHighlight(matrix)
+    {
+        if(!matrix) matrix = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilmSummaryMatrix;
+
+        const highlight = localStorage.getItem("stats-match-up-highlight") || "win-rate";
+        if(highlight == "win-rate") {
+            matrix.setMainParameter("winRate");
+            StatsUtil.setMapFilmWinRateThreshold(matrix);
+            matrix.setUseDataColors((localStorage.getItem("stats-match-up-color") || "race") == "race");
+        } else {
+            matrix.setMainParameter("games");
+            matrix.setHighlightRange(0, 0, null);
+            matrix.setUseDataColors(false);
+        }
+        if(matrix.getNode()) {
+            matrix.applyMainParameter();
+            matrix.highlight();
+        }
+    }
+
     static enhanceMapStatsFilm()
     {
         ElementUtil.ELEMENT_TASKS.set("stats-match-up-tab", StatsUtil.updateMapStatsFilmAsync);
@@ -902,6 +921,9 @@ class StatsUtil
         const winRateThresholdCtl = document.querySelector("#stats-match-up-win-rate-highlight-threshold");
         if(winRateThresholdCtl) winRateThresholdCtl
             .addEventListener("input", e=>window.setTimeout(StatsUtil.onMapFilmGroupWinRateHighlightThresholdChange, 1));
+        const highlightCtl = document.querySelector("#stats-match-up-highlight");
+        if(highlightCtl) highlightCtl
+            .addEventListener("change", e=>window.setTimeout(StatsUtil.setMapFilmHighlight, 1));
     }
 
     static enhanceSettings()
