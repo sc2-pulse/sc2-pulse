@@ -707,7 +707,7 @@ class ElementUtil
     {
         Array.from(document.querySelectorAll("[data-feature-timestamp]"))
             .filter(element=>Date.now() - element.getAttribute("data-feature-timestamp") <= ElementUtil.NEW_FLAG_DURATION)
-            .forEach(element=>element.classList.add("new"));
+            .forEach(element=>element.classList.add("new", element.getAttribute("data-feature-timestamp-class")));
     }
 
     static updateGenericContainer(container, elements, clear = true)
