@@ -23,7 +23,7 @@ class MatrixUI {
             this.theme = theme;
             this.useDataColors = true;
             this.series = null;
-            this.categories == null;
+            this.categories = null;
             this.cells = null;
             this.node = null;
             this.afterDataProcessing = null;
