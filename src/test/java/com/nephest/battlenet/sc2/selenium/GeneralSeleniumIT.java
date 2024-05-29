@@ -492,6 +492,7 @@ public class GeneralSeleniumIT
                         "#search-team button[type=\"submit\"]",
                         "#team-search-teams *[data-team-id]"
                     );
+                    toggleSelects(driver.findElements(By.cssSelector("#search-team-sort")));
                     js.executeScript("document.querySelector(\"#team-search-teams\").classList.add(\"d-none\");");
                 }
             }
@@ -513,6 +514,7 @@ public class GeneralSeleniumIT
             "#search-team button[type=\"submit\"]",
             "#team-search-teams *[data-team-id]"
         );
+        toggleSelects(driver.findElements(By.cssSelector("#search-team-sort")));
         js.executeScript("document.querySelector(\"#team-search-teams\").classList.add(\"d-none\");");
         checkJsErrors();
     }
@@ -528,6 +530,7 @@ public class GeneralSeleniumIT
             "#search-team button[type=\"submit\"]",
             "#team-search-teams *[data-team-id]"
         );
+        toggleSelects(driver.findElements(By.cssSelector("#search-team-sort")));
         js.executeScript("document.querySelector(\"#team-search-teams\").classList.add(\"d-none\");");
         checkJsErrors();
     }
