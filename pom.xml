@@ -359,7 +359,45 @@
                                     <classpath>
                                         <path refid="maven.plugin.classpath"/>
                                     </classpath>
-                                    <arg line="--compilation_level SIMPLE_OPTIMIZATIONS --language_in ECMASCRIPT_2020 --language_out ECMASCRIPT_2015 --js ${basedir}/src/main/webapp/static/script/*.js --js_output_file ${basedir}/target/sc2-webapp/static/script/sc2-restful.min.js"/>
+                                    <!-- JS files have no dependency info. Including them in the same order as in base.html-->
+                                    <arg line="--compilation_level SIMPLE_OPTIMIZATIONS
+                                        --language_in ECMASCRIPT_2020
+                                        --language_out ECMASCRIPT_2015
+                                        --js ${basedir}/src/main/webapp/static/script/LuxonConfig.js
+                                        --js ${basedir}/src/main/webapp/static/script/IntervalExecutor.js
+                                        --js ${basedir}/src/main/webapp/static/script/Util.js
+                                        --js ${basedir}/src/main/webapp/static/script/BootstrapUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/CharacterUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/ChartUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/ElementUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/enum.js
+                                        --js ${basedir}/src/main/webapp/static/script/EnumUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/FollowUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/HistoryUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/LadderUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/Model.js
+                                        --js ${basedir}/src/main/webapp/static/script/Pagination.js
+                                        --js ${basedir}/src/main/webapp/static/script/PaginationUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/SC2Restful.js
+                                        --js ${basedir}/src/main/webapp/static/script/SeasonUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/MetaUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/Session.js
+                                        --js ${basedir}/src/main/webapp/static/script/StatsUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/TableUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/TeamUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/ViewUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/FormUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/ClanUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/Buffer.js
+                                        --js ${basedir}/src/main/webapp/static/script/BufferUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/MatchUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/VersusUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/VODUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/RevealUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/GroupUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/CommunityUtil.js
+                                        --js ${basedir}/src/main/webapp/static/script/MatrixUI.js
+                                        --js_output_file ${basedir}/target/sc2-webapp/static/script/sc2-restful.min.js"/>
                                 </java>
                             </target>
                         </configuration>
