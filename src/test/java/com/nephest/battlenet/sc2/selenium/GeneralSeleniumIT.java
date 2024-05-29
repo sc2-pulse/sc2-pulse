@@ -47,6 +47,7 @@ import java.sql.SQLException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -602,17 +603,24 @@ public class GeneralSeleniumIT
         toggleRadios(driver, containerSelector);
     }
 
-    public static void toggleCheckboxes(WebDriver driver, String containerSelector)
+    public static void toggleCheckboxes(Collection<? extends WebElement> checkboxes)
     {
-        driver.findElements(By.cssSelector(containerSelector + " input[type=\"checkbox\"]")).forEach(c->{
-            c.click();
-            c.click();
-        });
+        for(WebElement checkbox : checkboxes)
+        {
+            checkbox.click();
+            checkbox.click();
+        }
     }
 
-    public static void toggleSelects(WebDriver driver, String containerSelector)
+    public static void toggleCheckboxes(WebDriver driver, String containerSelector)
     {
-        driver.findElements(By.cssSelector(containerSelector + " select")).stream()
+        toggleCheckboxes(driver.findElements(By.cssSelector(
+            containerSelector + " input[type=\"checkbox\"]")));
+    }
+
+    public static void toggleSelects(Collection<? extends WebElement> selects)
+    {
+        selects.stream()
             .map(Select::new)
             .forEach(s->{
                 for(int i = 0; i < s.getOptions().size(); i++) s.selectByIndex(i);
@@ -620,11 +628,20 @@ public class GeneralSeleniumIT
             });
     }
 
-    public static void toggleRadios(WebDriver driver, String containerSelector)
+    public static void toggleSelects(WebDriver driver, String containerSelector)
     {
-        List<WebElement> radios = driver.findElements(By.cssSelector(containerSelector + " input[type=\"radio\"]"));
+        toggleSelects(driver.findElements(By.cssSelector(containerSelector + " select")));
+    }
+
+    public static void toggleRadios(List<? extends WebElement> radios)
+    {
         radios.forEach(WebElement::click);
         for(int i = radios.size() - 1; i >= 0; i--) radios.get(i).click();
+    }
+
+    public static void toggleRadios(WebDriver driver, String containerSelector)
+    {
+        toggleRadios(driver.findElements(By.cssSelector(containerSelector + " input[type=\"radio\"]")));
     }
 
     public static void clickCanvases(WebDriver driver, String containerSelector)
