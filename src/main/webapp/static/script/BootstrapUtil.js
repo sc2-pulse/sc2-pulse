@@ -439,4 +439,10 @@ class BootstrapUtil
         HistoryUtil.showAnchoredTabs(false, hash);
     }
 
+    static appendDefaultInputValueTooltip(id, value)
+    {
+        const tooltip = document.querySelector('label[for="' + id + '"] img[data-toggle="tooltip"]');
+        tooltip.setAttribute("title", tooltip.getAttribute("title") + " Default: " + value);
+    }
+
 }
