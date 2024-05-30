@@ -532,7 +532,6 @@ class StatsUtil
         urlParams.set("teamType", teamType.fullName);
         urlParams.set("league", league.fullName);
         urlParams.set("tier", tier.fullName);
-        urlParams.set("frameNumberMax", StatsUtil.MAP_STATS_FILM_MAX_FRAME);
         races.forEach(race=>urlParams.append("race", race.fullName));
         const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/map/film?${urlParams.toString()}`;
         return Session.beforeRequest()
