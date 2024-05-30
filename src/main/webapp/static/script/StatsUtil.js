@@ -814,6 +814,13 @@ class StatsUtil
     {
         if(StatsUtil.mapStatsFilmInitialized) return;
 
+        BootstrapUtil.appendDefaultInputValueTooltip(
+            "stats-match-up-group-duration",
+            StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION);
+        BootstrapUtil.appendDefaultInputValueTooltip(
+            "stats-match-up-win-rate-highlight-threshold",
+            StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD);
+
         if(!localStorage.getItem("stats-match-up-group-duration"))
             document.querySelector("#stats-match-up-group-duration").value
                 = StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION;
