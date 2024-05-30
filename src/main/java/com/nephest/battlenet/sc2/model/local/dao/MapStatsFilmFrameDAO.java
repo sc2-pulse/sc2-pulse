@@ -75,7 +75,6 @@ public class MapStatsFilmFrameDAO
                 + "AND team_member.player_character_id = match_participant.player_character_id\n"
             + "WHERE date >= :from AND date < :to\n"
             + "AND type = :matchType\n"
-            + "AND duration IS NOT NULL\n"
             + "GROUP BY match_id\n"
             + "HAVING COUNT(*) = :matchParticipantCount\n"
             + "AND SUM(decision) = :decisionSum\n"
@@ -169,7 +168,7 @@ public class MapStatsFilmFrameDAO
             + "wins = map_stats_film_frame.wins + all_film_group.wins\n"
             + "FROM all_film_group\n"
             + "WHERE map_stats_film_frame.map_stats_film_id = all_film_group.map_stats_film_id\n"
-            + "AND map_stats_film_frame.number = all_film_group.duration_ix\n"
+            + "AND map_stats_film_frame.number IS NOT DISTINCT FROM all_film_group.duration_ix\n"
             + "RETURNING map_stats_film_frame.map_stats_film_id, number\n"
         + ")\n"
         + "INSERT INTO map_stats_film_frame(map_stats_film_id, number, wins, games)\n"
@@ -180,19 +179,23 @@ public class MapStatsFilmFrameDAO
             + "SELECT 1\n"
             + "FROM updated_frame\n"
             + "WHERE updated_frame.map_stats_film_id = all_film_group.map_stats_film_id\n"
-            + "AND updated_frame.number = all_film_group.duration_ix\n"
+            + "AND updated_frame.number IS NOT DISTINCT FROM all_film_group.duration_ix\n"
         + ")";
 
     private static final String FIND_BY_FILM_IDS =
         "SELECT " + STD_SELECT
         + "FROM map_stats_film_frame "
         + "WHERE map_stats_film_id IN (:mapStatsFilmIds) "
-        + "AND (:numberMax::integer IS NULL OR number <= :numberMax::integer)";
+        + "AND "
+        + "("
+            + ":numberMax::integer IS NULL "
+            + "OR (number is NULL OR number <= :numberMax::integer) "
+        + ")";
 
     public static final RowMapper<MapStatsFrame> STD_MAPPER = (rs, i)->new MapStatsFrame
     (
         rs.getInt("map_stats_film_frame.map_stats_film_id"),
-        rs.getInt("map_stats_film_frame.number"),
+        DAOUtils.getInteger(rs, "map_stats_film_frame.number"),
         rs.getInt("map_stats_film_frame.wins"),
         rs.getInt("map_stats_film_frame.games")
     );

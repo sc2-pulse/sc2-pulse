@@ -94,3 +94,9 @@ CREATE TABLE "map_stats_film_frame"
 
 ALTER TABLE "team" SET (fillfactor = 100);
 VACUUM FULL "team";
+
+CREATE UNIQUE INDEX "uq_map_stats_film_frame_map_stats_film_id_number"
+    ON "map_stats_film_frame"("map_stats_film_id", COALESCE("number", -1));
+ALTER TABLE "map_stats_film_frame"
+    DROP CONSTRAINT "map_stats_film_frame_pkey",
+    ALTER COLUMN "number" DROP NOT NULL;

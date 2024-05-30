@@ -1079,17 +1079,18 @@ CREATE TABLE "map_stats_film"
 CREATE TABLE "map_stats_film_frame"
 (
     "map_stats_film_id" INTEGER NOT NULL,
-    "number" SMALLINT NOT NULL,
+    "number" SMALLINT,
     "games" SMALLINT NOT NULL,
     "wins" SMALLINT NOT NULL,
-
-    PRIMARY KEY("map_stats_film_id", "number"),
 
     CONSTRAINT "fk_map_stats_film_frame_map_stats_film_id"
         FOREIGN KEY ("map_stats_film_id")
         REFERENCES "map_stats_film"("id")
         ON DELETE CASCADE ON UPDATE CASCADE
 );
+
+CREATE UNIQUE INDEX "uq_map_stats_film_frame_map_stats_film_id_number"
+    ON "map_stats_film_frame"("map_stats_film_id", COALESCE("number", -1));
 
 CREATE TABLE "match"
 (

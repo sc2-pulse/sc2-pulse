@@ -40,6 +40,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -233,6 +234,8 @@ public class MapStatsFilmIT
                 .andReturn().getResponse().getContentAsString(),
             LadderMapStatsFilm.class
         );
+        ladderMapStatsFilm1.getFrames().sort(Comparator.comparing(
+            MapStatsFrame::getNumber, Comparator.nullsLast(Comparator.naturalOrder())));
         Assertions.assertThat(ladderMapStatsFilm1)
             .usingRecursiveComparison()
             .isEqualTo(new LadderMapStatsFilm(
@@ -246,7 +249,8 @@ public class MapStatsFilmIT
                 )),
                 List.of
                 (
-                    new MapStatsFrame(1, FRAME_NUMBER, 1, 2)
+                    new MapStatsFrame(1, FRAME_NUMBER, 1, 2),
+                    new MapStatsFrame(1, null, 0, 1)
                 )
             ));
 
@@ -291,6 +295,8 @@ public class MapStatsFilmIT
                 .andReturn().getResponse().getContentAsString(),
             LadderMapStatsFilm.class
         );
+        ladderMapStatsFilm2.getFrames().sort(Comparator.comparing(
+            MapStatsFrame::getNumber, Comparator.nullsLast(Comparator.naturalOrder())));
         Assertions.assertThat(ladderMapStatsFilm2)
             .usingRecursiveComparison()
             .isEqualTo(new LadderMapStatsFilm(
@@ -304,7 +310,8 @@ public class MapStatsFilmIT
                 )),
                 List.of
                 (
-                    new MapStatsFrame(1, FRAME_NUMBER, 2, 3)
+                    new MapStatsFrame(1, FRAME_NUMBER, 2, 3),
+                    new MapStatsFrame(1, null, 0, 2)
                 )
             ));
     }

@@ -540,9 +540,22 @@ class StatsUtil
             .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
     }
 
-    static deriveMapFilmSummary(specMapFilmsResolved, propertyNames)
+    static concatMapStatsResolvedFilm(a, b)
     {
-        const mapSummaryEntries = Array.from(Object.entries(specMapFilmsResolved));
+        const conceited = {};
+        for(const matchUp of Object.keys(a)) {
+            conceited[matchUp] = {};
+            for(const map of Object.keys(a[matchUp])) {
+                conceited[matchUp][map] = a[matchUp][map].concat(b[matchUp][map]);
+            }
+        }
+        return conceited;
+    }
+
+    static deriveMapFilmSummary(specMapFilmsResolved, specMapFilmsResolvedFiltered, propertyNames)
+    {
+        const conceited = StatsUtil.concatMapStatsResolvedFilm(specMapFilmsResolved, specMapFilmsResolvedFiltered);
+        const mapSummaryEntries = Array.from(Object.entries(conceited));
         const mapSummary = new Array(mapSummaryEntries.length);
         for(let mapSummaryIx = 0; mapSummaryIx < mapSummary.length; mapSummaryIx++) {
             const [matchUp, matchUpValue] = mapSummaryEntries[mapSummaryIx];
@@ -601,23 +614,37 @@ class StatsUtil
     {
         Object.values(film.films).forEach(film=>{
             film.frames = new Array(StatsUtil.MAP_STATS_FILM_MAX_FRAME + 1);
+            film.filteredFrames = [];
         });
-        film.frames.forEach(frame=>film.films[frame.mapStatsFilmId].frames[frame.number] = frame);
+        film.frames.forEach(frame=>{
+            const curFilm = film.films[frame.mapStatsFilmId];
+            if(frame.number != null && frame.number < curFilm.frames.length) {
+                curFilm.frames[frame.number] = frame;
+            } else {
+                curFilm.filteredFrames.push(frame);
+            }
+        });
         const specMapFilms = Util.groupByObject(Object.values(film.films), film=>[film.mapStatsFilmSpecId, film.mapId]);
         const specMapFilmsResolved = {};
+        const specMapFilmsResolvedFiltered = {};
         const propertyNames = ["wins", "games"];
         for(const [specId, matchUpValue] of Object.entries(specMapFilms)) {
             const spec = film.specs[specId];
             const matchUp = spec.race.charAt(0) + "v" + spec.versusRace.charAt(0);
-            const matchUpObject = {};
-            specMapFilmsResolved[matchUp] = matchUpObject;
+            specMapFilmsResolved[matchUp] = {};
+            specMapFilmsResolvedFiltered[matchUp] = {};
             for(const [mapId, mapValue] of  Object.entries(matchUpValue)) {
-                const allFrames = Util.addObjectColumns(mapValue.values.map(film=>film.frames), propertyNames);
-                matchUpObject[film.maps[mapId].name] = allFrames;
+                specMapFilmsResolved[matchUp][film.maps[mapId].name]
+                    = Util.addObjectColumns(mapValue.values.map(film=>film.frames), propertyNames);
+                specMapFilmsResolvedFiltered[matchUp][film.maps[mapId].name]
+                    = Util.addObjects(mapValue.values.flatMap(film=>film.filteredFrames), propertyNames);
             }
         }
         return {
-            summary: StatsUtil.deriveMapFilmSummary(specMapFilmsResolved, propertyNames),
+            summary: StatsUtil.deriveMapFilmSummary(
+                specMapFilmsResolved,
+                specMapFilmsResolvedFiltered,
+                propertyNames),
             duration: StatsUtil.deriveMapFilmDuration(
                 specMapFilmsResolved,
                 propertyNames,
