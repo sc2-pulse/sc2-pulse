@@ -446,22 +446,38 @@
                             </th:block>
                         </select>
                     </div>
-                    <fieldset class="form-group short d-flex flex-wrap-gap-05">
-                        <label for="stats-match-up-group-duration" class="d-flex gap-tiny">
-                            Step duration
-                            <img
-                                th:src="@{/static/icon/misc/info.svg}"
-                                alt="Duration of chart groups(points), minutes. Low duration provides fine grained stats, but
-                                    smaller sample size. High duration provides generalized stats and larger sample size."
-                                title="Duration of chart groups(points), minutes. Low duration provides fine grained stats, but
-                                    smaller sample size. High duration provides generalized stats and larger sample size."
-                                data-toggle="tooltip"
-                            />
-                        </label>
-                        <input id="stats-match-up-group-duration" class="form-control serializable"
-                               type="number" min="1" max="10"
-                               required="required"/>
-                    </fieldset>
+                    <div class="d-flex flex-wrap-gap form-group-container">
+                        <fieldset class="form-group short d-flex flex-wrap-gap-05">
+                            <label for="stats-match-up-win-rate-fov" class="d-flex gap-tiny">
+                                Win% FoV
+                                <img
+                                        th:src="@{/static/icon/misc/info.svg}"
+                                        alt="Y scales length of the win rate/duration chart, starting from 50 in both directions. 0 is auto FoV based on data."
+                                        title="Y scales length of the win rate/duration chart, starting from 50 in both directions. 0 is auto FoV based on data."
+                                        data-toggle="tooltip"
+                                />
+                            </label>
+                            <input id="stats-match-up-win-rate-fov" class="form-control serializable"
+                                   type="number" min="0" max="50"
+                                   required="required"/>
+                        </fieldset>
+                        <fieldset class="form-group short d-flex flex-wrap-gap-05">
+                            <label for="stats-match-up-group-duration" class="d-flex gap-tiny">
+                                Step duration
+                                <img
+                                    th:src="@{/static/icon/misc/info.svg}"
+                                    alt="Duration of chart groups(points), minutes. Low duration provides fine grained stats, but
+                                        smaller sample size. High duration provides generalized stats and larger sample size."
+                                    title="Duration of chart groups(points), minutes. Low duration provides fine grained stats, but
+                                        smaller sample size. High duration provides generalized stats and larger sample size."
+                                    data-toggle="tooltip"
+                                />
+                            </label>
+                            <input id="stats-match-up-group-duration" class="form-control serializable"
+                                   type="number" min="1" max="10"
+                                   required="required"/>
+                        </fieldset>
+                    </div>
                     <div class="d-flex flex-wrap-gap form-group-container">
                         <div class="form-group d-flex flex-wrap-gap-05">
                             <label for="stats-match-up-highlight">Highlight</label>

@@ -728,6 +728,37 @@ class StatsUtil
         matrix.getSummaryCell()[0].winRate = winRate;
     }
 
+    static getWinRateDataFoV()
+    {
+        const durationModel = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilmModel.duration;
+        if(durationModel.winRateDataFoV != null) return durationModel.winRateDataFoV;
+
+        const fov = Math.ceil(Math.max(...durationModel.winRate
+            .flatMap(series=>series.data)
+            .map(val=>Math.abs(val - 50))))
+            + StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_DURATION_FOV_OFFSET;
+        durationModel.winRateDataFoV = fov;
+        return fov;
+    }
+
+    static getWinRateFoV()
+    {
+        const fov = parseInt(localStorage.getItem("stats-match-up-win-rate-fov")
+            || StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_DURATION_FOV);
+        return fov > 0 ? fov : StatsUtil.getWinRateDataFoV();
+    }
+
+    static updateWinRateFoV(chart)
+    {
+        if(!chart) chart = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).charts[0];
+        if(!chart) return;
+
+        const fov = StatsUtil.getWinRateFoV();
+        chart.config.options.scales.y.min = 50 - fov;
+        chart.config.options.scales.y.max = 50 + fov;
+        chart.update();
+    }
+
     static updateMapStatsFilmView()
     {
         const container = document.querySelector("#stats-match-up-container");
@@ -787,6 +818,7 @@ class StatsUtil
             }
         }
         model.charts[0] = ChartUtil.createGenericChart(winRateConfig);
+        StatsUtil.updateWinRateFoV(model.charts[0]);
 
         gamesSection.appendChild(ChartUtil.createChartContainer("stats-map-film-duration-games"));
         const gamesConfig = {
@@ -820,6 +852,9 @@ class StatsUtil
         BootstrapUtil.appendDefaultInputValueTooltip(
             "stats-match-up-win-rate-highlight-threshold",
             StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD);
+        BootstrapUtil.appendDefaultInputValueTooltip(
+            "stats-match-up-win-rate-fov",
+            StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_DURATION_FOV);
 
         if(!localStorage.getItem("stats-match-up-group-duration"))
             document.querySelector("#stats-match-up-group-duration").value
@@ -827,6 +862,9 @@ class StatsUtil
         if(!localStorage.getItem("stats-match-up-win-rate-highlight-threshold"))
             document.querySelector("#stats-match-up-win-rate-highlight-threshold").value
                 = StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD;
+        if(!localStorage.getItem("stats-match-up-win-rate-fov"))
+            document.querySelector("#stats-match-up-win-rate-fov").value
+                = StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_DURATION_FOV;
         StatsUtil.mapStatsFilmInitialized = true;
     }
 
@@ -941,6 +979,14 @@ class StatsUtil
         }
     }
 
+    static onUpdateWinRateFoV()
+    {
+        const form = document.querySelector("#stats-match-up-form");
+        if(!form.reportValidity()) return;
+
+        StatsUtil.updateWinRateFoV();
+    }
+
     static enhanceMapStatsFilm()
     {
         ElementUtil.ELEMENT_TASKS.set("stats-match-up-tab", StatsUtil.updateMapStatsFilmAsync);
@@ -958,6 +1004,9 @@ class StatsUtil
         const highlightCtl = document.querySelector("#stats-match-up-highlight");
         if(highlightCtl) highlightCtl
             .addEventListener("change", e=>window.setTimeout(StatsUtil.setMapFilmHighlight, 1));
+        const winRateFoVCtl = document.querySelector("#stats-match-up-win-rate-fov");
+            if(winRateFoVCtl) winRateFoVCtl
+                .addEventListener("input", e=>window.setTimeout(StatsUtil.onUpdateWinRateFoV, 1));
     }
 
     static enhanceSettings()
@@ -984,6 +1033,8 @@ StatsUtil.MAP_STATS_FILM_MAX_FRAME = 29;
 StatsUtil.MAP_STATS_FILM_MAIN_FRAME = 8;
 StatsUtil.MAP_STATS_FILM_DEFAULT_GROUP_DURATION = 2;
 StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_HIGHLIGHT_THRESHOLD = 5;
+StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_DURATION_FOV = 15;
+StatsUtil.MAP_STATS_FILM_DEFAULT_WIN_RATE_DURATION_FOV_OFFSET = 2;
 StatsUtil.MATCH_UP_RANDOM_COLORS = new Map([[RACE.TERRAN, "neutral"], [RACE.PROTOSS, "new"], [RACE.ZERG, "old"]]);
 StatsUtil.MATCH_UP_MATRIX_COLORS = new Map([
     [RACE.TERRAN, "rgba(53, 123, 167, 1)"],
