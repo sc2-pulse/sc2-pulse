@@ -431,20 +431,40 @@
                             </label>
                         </div>
                     </div>
-                    <div class="form-group d-flex flex-wrap-gap-05">
-                        <label for="stats-match-up-league">League</label>
-                        <select id="stats-match-up-league" class="form-control serializable stats-match-up-reload">
-                            <th:block th:each="league : ${T(com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmFrameDAO).LEAGUES}">
-                                <th:block th:each="tier : ${T(com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType).values()}">
-                                    <option
-                                            th:value="|${league.getId()},${tier.getId()}|"
-                                            th:text="|${league.getName()} ${tier.getName()}${league.name() == 'MASTER' and tier.name() == 'FIRST' ? ' +GM' : ''}|"
-                                            th:attrappend="selected=${league.name() == 'MASTER' and tier.name() == 'FIRST'}?@{selected}"
-                                    >
-                                    </option>
+                    <div class="d-flex flex-wrap-gap form-group-container">
+                        <div class="form-group d-flex flex-wrap-gap-05">
+                            <label for="stats-match-up-league">League</label>
+                            <select id="stats-match-up-league" class="form-control serializable stats-match-up-reload">
+                                <th:block th:each="league : ${T(com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmFrameDAO).LEAGUES}">
+                                    <th:block th:each="tier : ${T(com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType).values()}">
+                                        <option
+                                                th:value="|${league.getId()},${tier.getId()}|"
+                                                th:text="|${league.getName()} ${tier.getName()}${league.name() == 'MASTER' and tier.name() == 'FIRST' ? ' +GM' : ''}|"
+                                                th:attrappend="selected=${league.name() == 'MASTER' and tier.name() == 'FIRST'}?@{selected}"
+                                        >
+                                        </option>
+                                    </th:block>
                                 </th:block>
-                            </th:block>
-                        </select>
+                            </select>
+                        </div>
+                        <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
+                            <input id="stats-match-up-cross-tier"
+                                   class="stats-match-up-reload serializable"
+                                   type="checkbox"
+                                   name="cross-tier"
+                            />
+                            <label class="form-check-label d-flex gap-tiny" for="stats-match-up-cross-tier">
+                                Cross-tier
+                                <img
+                                        th:src="@{/static/icon/misc/info.svg}"
+                                        alt="Disabled: all match participants were in the target tier.
+                                            Enabled: at least one match participant was in the target tier."
+                                        title="Disabled: all match participants were in the target tier.
+                                            Enabled: at least one match participant was in the target tier."
+                                        data-toggle="tooltip"
+                                />
+                            </label>
+                        </div>
                     </div>
                     <div class="d-flex flex-wrap-gap form-group-container">
                         <fieldset class="form-group short d-flex flex-wrap-gap-05">

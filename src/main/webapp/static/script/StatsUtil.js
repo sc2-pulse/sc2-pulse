@@ -523,7 +523,7 @@ class StatsUtil
         return dailyStats;
     }
 
-    static getMapStatsFilm(season, regions, queue, teamType, league, tier, races)
+    static getMapStatsFilm(season, regions, queue, teamType, league, tier, crossTier, races)
     {
         const urlParams = new URLSearchParams();
         urlParams.set("season", season);
@@ -532,6 +532,7 @@ class StatsUtil
         urlParams.set("teamType", teamType.fullName);
         urlParams.set("league", league.fullName);
         urlParams.set("tier", tier.fullName);
+        crossTier.forEach(ct=>urlParams.append("crossTier", ct));
         races.forEach(race=>urlParams.append("race", race.fullName));
         const request = `${ROOT_CONTEXT_PATH}api/ladder/stats/map/film?${urlParams.toString()}`;
         return Session.beforeRequest()
@@ -673,11 +674,11 @@ class StatsUtil
                 : value;
     }
 
-    static loadMapStatsFilmModel(season, regions, queue, teamType, league, tier, races)
+    static loadMapStatsFilmModel(season, regions, queue, teamType, league, tier, crossTier, races)
     {
         if(queue != TEAM_FORMAT._1V1) return Promise.resolve();
 
-        return StatsUtil.getMapStatsFilm(season, regions, queue, teamType, league, tier, races)
+        return StatsUtil.getMapStatsFilm(season, regions, queue, teamType, league, tier, crossTier, races)
             .then(film=>{
                 Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilm = film;
                 return film;
@@ -876,6 +877,9 @@ class StatsUtil
         const leagueAndTier = (localStorage.getItem("stats-match-up-league") || "5,0").split(",");
         const league = EnumUtil.enumOfId(leagueAndTier[0], LEAGUE);
         const tier = EnumUtil.enumOfId(leagueAndTier[1], LEAGUE_TIER);
+        const crossTier = (localStorage.getItem("stats-match-up-cross-tier") || "false") === "false"
+            ? [false]
+            : [false, true];
         const urlParams = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).urlParams;
         const regions = Array.from(Object.values(REGION))
             .map(region=>urlParams.get(region.name) == "true" ? region : null)
@@ -890,6 +894,7 @@ class StatsUtil
             EnumUtil.enumOfFullName(urlParams.get("team-type"), TEAM_TYPE),
             league,
             tier,
+            crossTier,
             races
         )
             .then(StatsUtil.updateMapStatsFilmModel)
