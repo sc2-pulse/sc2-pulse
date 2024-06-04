@@ -5,11 +5,16 @@ package com.nephest.battlenet.sc2.model.local;
 
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class MapStatsFrame
-implements Serializable
+implements Serializable, Comparable<MapStatsFrame>
 {
+
+    public static final Comparator<MapStatsFrame> NATURAL_ID_COMPARATOR =
+        Comparator.comparing(MapStatsFrame::getMapStatsFilmId)
+            .thenComparing(MapStatsFrame::getNumber, Comparator.nullsLast(Comparator.naturalOrder()));
 
     private static final long serialVersionUID = 1L;
 
@@ -54,6 +59,12 @@ implements Serializable
     public int hashCode()
     {
         return Objects.hash(getMapStatsFilmId(), getNumber());
+    }
+
+    @Override
+    public int compareTo(@NotNull MapStatsFrame mapStatsFrame)
+    {
+        return NATURAL_ID_COMPARATOR.compare(this, mapStatsFrame);
     }
 
     public Integer getMapStatsFilmId()
