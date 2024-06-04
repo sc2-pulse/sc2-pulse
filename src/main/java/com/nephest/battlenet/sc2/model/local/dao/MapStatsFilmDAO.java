@@ -22,21 +22,28 @@ public class MapStatsFilmDAO
         "map_stats_film.id AS \"map_stats_film.id\", "
         + "map_stats_film.map_id AS \"map_stats_film.map_id\", "
         + "map_stats_film.league_tier_id AS \"map_stats_film.league_tier_id\", "
-        + "map_stats_film.map_stats_film_spec_id AS \"map_stats_film.map_stats_film_spec_id\" ";
+        + "map_stats_film.map_stats_film_spec_id AS \"map_stats_film.map_stats_film_spec_id\", "
+        + "map_stats_film.cross_tier AS \"map_stats_film.cross_tier\" ";
 
     private static final String FIND_BY_UNIQUE_IDS =
         "SELECT " + STD_SELECT
         + "FROM map_stats_film "
         + "WHERE map_stats_film_spec_id IN(:mapStatsFilmSpecIds) "
         + "AND league_tier_id IN(:leagueTierIds) "
-        + "AND (array_length(:mapIds::integer[], 1) IS NULL OR map_id = ANY(:mapIds::integer[]))";
+        + "AND (array_length(:mapIds::integer[], 1) IS NULL OR map_id = ANY(:mapIds::integer[])) "
+        + "AND "
+        + "("
+            + "array_length(:crossTier::boolean[], 1) IS NULL "
+            + "OR cross_tier = ANY(:crossTier::boolean[]) "
+        + ")";
 
     public static final RowMapper<MapStatsFilm> STD_MAPPER = (rs, i)->new MapStatsFilm
     (
         rs.getInt("map_stats_film.id"),
         rs.getInt("map_stats_film.map_id"),
         rs.getInt("map_stats_film.league_tier_id"),
-        rs.getInt("map_stats_film.map_stats_film_spec_id")
+        rs.getInt("map_stats_film.map_stats_film_spec_id"),
+        rs.getBoolean("map_stats_film.cross_tier")
     );
 
     public static final ResultSetExtractor<MapStatsFilm> STD_EXTRACTOR
@@ -57,7 +64,8 @@ public class MapStatsFilmDAO
     (
         Set<Integer> specIds,
         Set<Integer> tierIds,
-        Set<Integer> mapIds
+        Set<Integer> mapIds,
+        Set<Boolean> crossTier
     )
     {
         if(specIds.isEmpty() || tierIds.isEmpty())
@@ -66,7 +74,8 @@ public class MapStatsFilmDAO
         MapSqlParameterSource params = new MapSqlParameterSource()
             .addValue("mapStatsFilmSpecIds", specIds)
             .addValue("leagueTierIds", tierIds)
-            .addValue("mapIds", mapIds.isEmpty() ? null : mapIds);
+            .addValue("mapIds", mapIds.isEmpty() ? null : mapIds)
+            .addValue("crossTier", crossTier.isEmpty() ? null : crossTier.toArray(Boolean[]::new));
         return template.query(FIND_BY_UNIQUE_IDS, params, STD_MAPPER);
     }
 

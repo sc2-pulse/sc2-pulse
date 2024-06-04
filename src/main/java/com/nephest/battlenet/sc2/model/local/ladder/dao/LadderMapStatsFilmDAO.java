@@ -78,7 +78,8 @@ public class LadderMapStatsFilmDAO
         QueueType queue,
         TeamType teamType,
         BaseLeague.LeagueType league,
-        BaseLeagueTier.LeagueTierType tier
+        BaseLeagueTier.LeagueTierType tier,
+        Set<Boolean> crossTier
     )
     {
         Objects.requireNonNull(frameDuration);
@@ -108,7 +109,7 @@ public class LadderMapStatsFilmDAO
             .stream()
             .collect(Collectors.toMap(LeagueTier::getId, Function.identity()));
         Map<Integer, MapStatsFilm> films = mapStatsFilmDAO
-            .find(specs.keySet(), tiers.keySet(), Set.of())
+            .find(specs.keySet(), tiers.keySet(), Set.of(), crossTier)
             .stream()
             .collect(Collectors.toMap(MapStatsFilm::getId, Function.identity()));
         if(films.isEmpty()) return null;

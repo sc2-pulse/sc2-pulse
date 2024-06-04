@@ -1056,11 +1056,12 @@ CREATE TABLE "map_stats_film"
     "map_id" INTEGER NOT NULL,
     "league_tier_id" INTEGER NOT NULL,
     "map_stats_film_spec_id" SMALLINT NOT NULL,
+    "cross_tier" BOOLEAN NOT NULL,
 
     PRIMARY KEY("id"),
 
     CONSTRAINT "uq_map_stats_film"
-        UNIQUE("league_tier_id", "map_id", "map_stats_film_spec_id"),
+        UNIQUE("league_tier_id", "map_id", "map_stats_film_spec_id", "cross_tier"),
 
     CONSTRAINT "fk_map_stats_film_map_id"
         FOREIGN KEY ("map_id")

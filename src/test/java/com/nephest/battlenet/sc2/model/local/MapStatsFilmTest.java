@@ -14,12 +14,13 @@ public class MapStatsFilmTest
     {
         TestUtil.testUniqueness
         (
-            new MapStatsFilm(1, 2, 3, 4),
-            new MapStatsFilm(2, 2, 3, 4),
+            new MapStatsFilm(1, 2, 3, 4, true),
+            new MapStatsFilm(2, 2, 3, 4, true),
 
-            new MapStatsFilm(1, 20, 3, 4),
-            new MapStatsFilm(1, 2, 30, 4),
-            new MapStatsFilm(1, 2, 3, 40)
+            new MapStatsFilm(1, 20, 3, 4, true),
+            new MapStatsFilm(1, 2, 30, 4, true),
+            new MapStatsFilm(1, 2, 3, 40, true),
+            new MapStatsFilm(1, 2, 3, 4, false)
         );
     }
 

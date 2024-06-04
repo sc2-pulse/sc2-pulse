@@ -205,6 +205,7 @@ public class LadderController
         @RequestParam("teamType") TeamType teamType,
         @RequestParam("league") LeagueType league,
         @RequestParam("tier") LeagueTierType tier,
+        @RequestParam(value = "crossTier", defaultValue = "") Set<Boolean> crossTier,
         @RequestParam(value = "frameNumberMax", required = false) Integer frameNumberMax,
         @RequestParam(value = "race", defaultValue = "") Set<Race> races
     )
@@ -221,7 +222,8 @@ public class LadderController
             queue,
             teamType,
             league,
-            tier
+            tier,
+            crossTier
         ));
     }
 

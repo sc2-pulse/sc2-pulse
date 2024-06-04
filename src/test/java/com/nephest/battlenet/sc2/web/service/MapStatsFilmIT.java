@@ -245,7 +245,7 @@ public class MapStatsFilmIT
                 Map.of(1, SeasonGenerator.defaultTier()),
                 specsMap,
                 Map.of(1, new MapStatsFilm(
-                    1, 1, 1, matchUpSpec.getId()
+                    1, 1, 1, matchUpSpec.getId(), false
                 )),
                 List.of
                 (
@@ -306,7 +306,7 @@ public class MapStatsFilmIT
                 Map.of(1, SeasonGenerator.defaultTier()),
                 specsMap,
                 Map.of(1, new MapStatsFilm(
-                    1, 1, 1, matchUpSpec.getId()
+                    1, 1, 1, matchUpSpec.getId(), false
                 )),
                 List.of
                 (

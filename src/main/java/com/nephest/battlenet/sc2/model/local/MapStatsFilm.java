@@ -16,23 +16,38 @@ implements Serializable
     @NotNull
     private Integer id, mapId, leagueTierId, mapStatsFilmSpecId;
 
+    @NotNull
+    private Boolean crossTier;
+
     public MapStatsFilm()
     {
     }
 
-    public MapStatsFilm(Integer mapId, Integer leagueTierId, Integer mapStatsFilmSpecId)
+    public MapStatsFilm
+    (
+        Integer mapId,
+        Integer leagueTierId,
+        Integer mapStatsFilmSpecId,
+        @NotNull Boolean crossTier
+    )
     {
         this.mapId = mapId;
         this.leagueTierId = leagueTierId;
         this.mapStatsFilmSpecId = mapStatsFilmSpecId;
+        this.crossTier = crossTier;
     }
 
-    public MapStatsFilm(Integer id, Integer mapId, Integer leagueTierId, Integer mapStatsFilmSpecId)
+    public MapStatsFilm
+    (
+        Integer id,
+        Integer mapId,
+        Integer leagueTierId,
+        Integer mapStatsFilmSpecId,
+        @NotNull Boolean crossTier
+    )
     {
+        this(mapId, leagueTierId, mapStatsFilmSpecId, crossTier);
         this.id = id;
-        this.mapId = mapId;
-        this.leagueTierId = leagueTierId;
-        this.mapStatsFilmSpecId = mapStatsFilmSpecId;
     }
 
     @Override
@@ -42,20 +57,21 @@ implements Serializable
         if (!(o instanceof MapStatsFilm that)) {return false;}
         return Objects.equals(getMapId(), that.getMapId())
             && Objects.equals(getLeagueTierId(), that.getLeagueTierId())
-            && Objects.equals(getMapStatsFilmSpecId(), that.getMapStatsFilmSpecId());
+            && Objects.equals(getMapStatsFilmSpecId(), that.getMapStatsFilmSpecId())
+            && Objects.equals(isCrossTier(), that.isCrossTier());
     }
 
     @Override
     public int hashCode()
     {
-        return Objects.hash(getMapId(), getLeagueTierId(), getMapStatsFilmSpecId());
+        return Objects.hash(getMapId(), getLeagueTierId(), getMapStatsFilmSpecId(), isCrossTier());
     }
 
     @Override
     public String toString()
     {
         return "MapStatsFilm{" + "mapId=" + mapId + ", leagueTierId=" + leagueTierId
-            + ", mapStatsFilmSpecId=" + mapStatsFilmSpecId + '}';
+            + ", mapStatsFilmSpecId=" + mapStatsFilmSpecId + ", crossTier=" + crossTier + '}';
     }
 
     public Integer getId()
@@ -96,6 +112,16 @@ implements Serializable
     public void setMapStatsFilmSpecId(Integer mapStatsFilmSpecId)
     {
         this.mapStatsFilmSpecId = mapStatsFilmSpecId;
+    }
+
+    public Boolean isCrossTier()
+    {
+        return crossTier;
+    }
+
+    public void setCrossTier(@NotNull Boolean crossTier)
+    {
+        this.crossTier = crossTier;
     }
 
 }

@@ -100,3 +100,11 @@ CREATE UNIQUE INDEX "uq_map_stats_film_frame_map_stats_film_id_number"
 ALTER TABLE "map_stats_film_frame"
     DROP CONSTRAINT "map_stats_film_frame_pkey",
     ALTER COLUMN "number" DROP NOT NULL;
+
+ALTER TABLE "map_stats_film"
+    ADD COLUMN "cross_tier" BOOLEAN NOT NULL DEFAULT false,
+    DROP CONSTRAINT "uq_map_stats_film",
+    ADD CONSTRAINT "uq_map_stats_film"
+        UNIQUE("league_tier_id", "map_id", "map_stats_film_spec_id", "cross_tier");
+ALTER TABLE "map_stats_film"
+    ALTER COLUMN "cross_tier" DROP DEFAULT;

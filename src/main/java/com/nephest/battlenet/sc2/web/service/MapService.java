@@ -227,7 +227,8 @@ public class MapService
         QueueType queue,
         TeamType teamType,
         BaseLeague.LeagueType league,
-        BaseLeagueTier.LeagueTierType tier
+        BaseLeagueTier.LeagueTierType tier,
+        Set<Boolean> crossTier
     )
     {
         if(queue != QueueType.LOTV_1V1)
@@ -247,7 +248,8 @@ public class MapService
             queue,
             teamType,
             league,
-            tier
+            tier,
+            crossTier
         );
     }
 
