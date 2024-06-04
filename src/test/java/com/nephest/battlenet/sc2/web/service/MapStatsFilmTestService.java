@@ -42,6 +42,7 @@ public class MapStatsFilmTestService
     private final SeasonGenerator seasonGenerator;
     private final EventService eventService;
     private final MapService mapService;
+    private final StatsService statsService;
     private final JdbcTemplate jdbcTemplate;
 
     @Autowired
@@ -56,6 +57,7 @@ public class MapStatsFilmTestService
         SeasonGenerator seasonGenerator,
         EventService eventService,
         MapService mapService,
+        StatsService statsService,
         JdbcTemplate jdbcTemplate
     )
     {
@@ -68,6 +70,7 @@ public class MapStatsFilmTestService
         this.seasonGenerator = seasonGenerator;
         this.eventService = eventService;
         this.mapService = mapService;
+        this.statsService = statsService;
         this.jdbcTemplate = jdbcTemplate;
     }
 
@@ -76,6 +79,7 @@ public class MapStatsFilmTestService
         OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
         Instant mucInstant = startFrom.plusDays(1).toInstant();
         seasonGenerator.generateDefaultSeason(1000, true);
+        statsService.createLeaguesAndTiers(SeasonGenerator.defaultSeason());
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);

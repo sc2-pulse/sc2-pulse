@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config;
@@ -18,6 +18,7 @@ import com.nephest.battlenet.sc2.web.service.AlternativeLadderService;
 import com.nephest.battlenet.sc2.web.service.BlizzardPrivacyService;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.ClanService;
+import com.nephest.battlenet.sc2.web.service.MapStatsFilmTestService;
 import com.nephest.battlenet.sc2.web.service.MatchService;
 import com.nephest.battlenet.sc2.web.service.PersonalService;
 import com.nephest.battlenet.sc2.web.service.PlayerCharacterReportService;
@@ -66,6 +67,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = MatchService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = NotificationService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = PlayerCharacterReportService.class),
+        @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = MapStatsFilmTestService.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Cron.class),
         @ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = Startup.class),
         @ComponentScan.Filter(type = FilterType.ANNOTATION, value = Discord.class),
