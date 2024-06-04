@@ -1181,7 +1181,7 @@ public class StatsService
         Many things rely on league and tier existence, but some leagues could be absent on the ladder
         for various reasons. Precreate leagues and tiers for such occasions
      */
-    private void createLeaguesAndTiers(Season season)
+    public void createLeaguesAndTiers(Season season)
     {
         for(QueueType queueType : QueueType.values())
         {
