@@ -963,7 +963,7 @@ th.hoverable span
     flex-direction: column;
 }
 
-.form-group-column label
+.form-group-column label:not(.form-check-label)
 {
     text-align: left;
     align-self: start;
