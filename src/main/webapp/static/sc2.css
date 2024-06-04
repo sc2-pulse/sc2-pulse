@@ -936,6 +936,11 @@ th.hoverable span
     align-self: end;
 }
 
+.form-flex label
+{
+    line-height: normal;
+}
+
 .form-inline-flex
 {
     display: inline-flex;
