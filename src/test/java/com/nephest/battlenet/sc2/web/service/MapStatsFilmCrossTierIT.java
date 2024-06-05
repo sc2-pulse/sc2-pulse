@@ -115,10 +115,13 @@ public class MapStatsFilmCrossTierIT
             //tvp, b1, s3
             seasonGenerator.createMatch(29L, 46L, startFrom,
                 MapStatsFilmTestService.FRAME_OFFSET);
+            //tvp, s2, s3, protoss wins
+            seasonGenerator.createMatch(50L, 161L, startFrom.plusSeconds(2),
+                MapStatsFilmTestService.FRAME_OFFSET);
             //tvz, b1
             seasonGenerator.createMatch(33L, 31L, startFrom.plusSeconds(1),
                 MapStatsFilmTestService.FRAME_OFFSET);
-            return List.of(29L, 46L, 33L, 31L);
+            return List.of(29L, 46L, 33L, 31L, 161L, 50L);
         });
         List<MapStatsFilmSpec> specs = mapStatsFilmSpecDAO
             .find(MapService.MATCH_UPS, FILM_FRAME_DURATION);
@@ -272,8 +275,8 @@ public class MapStatsFilmCrossTierIT
                         ),
                         Stream.of
                         (
-                            new MapStatsFrame(pvtId, FRAME_NUMBER, 0, 1),
-                            new MapStatsFrame(pvtId, null, 0, 1)
+                            new MapStatsFrame(pvtId, FRAME_NUMBER, 1, 2),
+                            new MapStatsFrame(pvtId, null, 1, 2)
                         )
                             .sorted(MapStatsFrame.NATURAL_ID_COMPARATOR)
                             .toList()
