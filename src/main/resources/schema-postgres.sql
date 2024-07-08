@@ -1486,10 +1486,19 @@ AS
 '
 DECLARE percentage DOUBLE PRECISION;
 BEGIN
+IF gm = true
+THEN
+    IF rank <= 200
+    THEN
+        RETURN row(0, 6, 0)::league_tier_type;
+    ELSE
+        rank = rank - 200;
+        teamCount = teamCount - 200;
+    END IF;
+END IF;
 percentage = (rank / teamCount) * 100;
 RETURN
 CASE
-    WHEN gm = true AND rank <= 200 THEN row(0, 6, 0)::league_tier_type
     WHEN percentage <= 1.333 THEN row(1, 5, 0)::league_tier_type
     WHEN percentage <= 2.666 THEN row(2, 5, 1)::league_tier_type
     WHEN percentage <= 4 THEN row(3, 5, 2)::league_tier_type

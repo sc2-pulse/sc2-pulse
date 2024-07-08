@@ -58,34 +58,35 @@ public class PostgreSQLFunctionIT
 
     @CsvSource
     ({
-        "200, 100000, true, 0, GRANDMASTER, FIRST",
-        "200, 100000, false, 1, MASTER, FIRST",
-        
-        "1332, 100000, false, 1, MASTER, FIRST",
-        "2665, 100000, true, 2, MASTER, SECOND",
-        "4000, 100000, true, 3, MASTER, THIRD",
+        "200, 100200, true, 0, GRANDMASTER, FIRST",
+        "200, 100200, false, 1, MASTER, FIRST",
+        "1532, 100200, false, 2, MASTER, SECOND",
 
-        "11665, 100000, true, 4, DIAMOND, FIRST",
-        "19332, 100000, true, 5, DIAMOND, SECOND",
-        "27000, 100000, true, 6, DIAMOND, THIRD",
+        "1532, 100200, true, 1, MASTER, FIRST",
+        "2865, 100200, true, 2, MASTER, SECOND",
+        "4200, 100200, true, 3, MASTER, THIRD",
 
-        "34665, 100000, true, 7, PLATINUM, FIRST",
-        "42332, 100000, true, 8, PLATINUM, SECOND",
-        "50000, 100000, true, 9, PLATINUM, THIRD",
+        "11865, 100200, true, 4, DIAMOND, FIRST",
+        "19532, 100200, true, 5, DIAMOND, SECOND",
+        "27200, 100200, true, 6, DIAMOND, THIRD",
 
-        "57665, 100000, true, 10, GOLD, FIRST",
-        "65332, 100000, true, 11, GOLD, SECOND",
-        "73000, 100000, true, 12, GOLD, THIRD",
+        "34865, 100200, true, 7, PLATINUM, FIRST",
+        "42532, 100200, true, 8, PLATINUM, SECOND",
+        "50200, 100200, true, 9, PLATINUM, THIRD",
 
-        "80665, 100000, true, 13, SILVER, FIRST",
-        "88332, 100000, true, 14, SILVER, SECOND",
-        "96000, 100000, true, 15, SILVER, THIRD",
+        "57865, 100200, true, 10, GOLD, FIRST",
+        "65532, 100200, true, 11, GOLD, SECOND",
+        "73200, 100200, true, 12, GOLD, THIRD",
 
-        "97332, 100000, true, 16, BRONZE, FIRST",
-        "98665, 100000, true, 17, BRONZE, SECOND",
-        "100000, 100000, true, 18, BRONZE, THIRD",
+        "80865, 100200, true, 13, SILVER, FIRST",
+        "88532, 100200, true, 14, SILVER, SECOND",
+        "96200, 100200, true, 15, SILVER, THIRD",
 
-        "100010, 100000, true, 18, BRONZE, THIRD",
+        "97532, 100200, true, 16, BRONZE, FIRST",
+        "98865, 100200, true, 17, BRONZE, SECOND",
+        "100200, 100200, true, 18, BRONZE, THIRD",
+
+        "100210, 100200, true, 18, BRONZE, THIRD",
     })
     @ParameterizedTest
     public void test_get_top_percentage_league_tier_lotv
