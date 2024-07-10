@@ -435,11 +435,12 @@
                         <div class="form-group d-flex flex-wrap-gap-05">
                             <label for="stats-match-up-league">League</label>
                             <select id="stats-match-up-league" class="form-control serializable stats-match-up-reload">
-                                <th:block th:each="league : ${T(com.nephest.battlenet.sc2.model.local.dao.MapStatsFilmFrameDAO).LEAGUES}">
+                                <th:block th:each="league : ${@serverSideRenderService.reverseOrder(T(com.nephest.battlenet.sc2.model.BaseLeague.LeagueType).values())}">
                                     <th:block th:each="tier : ${T(com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType).values()}">
                                         <option
+                                                th:unless="${league.name() == 'GRANDMASTER' and tier.name() != 'FIRST'}"
                                                 th:value="|${league.getId()},${tier.getId()}|"
-                                                th:text="|${league.getName()} ${tier.getName()}${league.name() == 'MASTER' and tier.name() == 'FIRST' ? ' +GM' : ''}|"
+                                                th:text="|${league.getName()} ${league.name() != 'GRANDMASTER' ? tier.getName() : ''}|"
                                                 th:attrappend="selected=${league.name() == 'MASTER' and tier.name() == 'FIRST'}?@{selected}"
                                         >
                                         </option>

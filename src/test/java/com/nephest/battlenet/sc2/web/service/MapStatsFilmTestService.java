@@ -78,7 +78,7 @@ public class MapStatsFilmTestService
     {
         OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
         Instant mucInstant = startFrom.plusDays(1).toInstant();
-        seasonGenerator.generateDefaultSeason(1000, true);
+        seasonGenerator.generateDefaultSeason(1200, true);
         statsService.createLeaguesAndTiers(SeasonGenerator.defaultSeason());
         leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
