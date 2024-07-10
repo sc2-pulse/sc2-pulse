@@ -38,6 +38,7 @@
     <link id="bootstrap-theme-light" rel="stylesheet" th:href="@{/webjars/bootstrap/css/bootstrap.min.css}" />
     <link th:if="${theme == 'dark'}" id="bootstrap-theme-dark" rel="stylesheet" th:href="@{/static/bootstrap-dark.min.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link id="bootstrap-theme-override" rel="stylesheet" th:href="@{/static/sc2.css(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}"/>
+    <link rel="stylesheet" th:href="@{/webjars/select2/css/select2.min.css}"/>
     <link rel="icon" type="image/png" sizes="128x128" th:href="@{/static/icon/misc/favicon-128.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/png" sizes="32x32" th:href="@{/static/icon/misc/favicon-32.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
     <link rel="icon" type="image/png" sizes="16x16" th:href="@{/static/icon/misc/favicon-16.png(v=${T(com.nephest.battlenet.sc2.Application).VERSION})}" />
@@ -164,6 +165,7 @@
     <script th:src="@{/webjars/chartjs-adapter-luxon/dist/chartjs-adapter-luxon.min.js}"></script>
     <script th:src="@{/webjars/chartjs-plugin-zoom/dist/chartjs-plugin-zoom.min.js}"></script>
     <script th:src="@{/webjars/chartjs-plugin-annotation/dist/chartjs-plugin-annotation.min.js}"></script>
+    <script th:src="@{/webjars/select2/js/select2.min.js}"></script>
     <script th:inline="javascript">
         const ROOT_CONTEXT_PATH = /*[[@{/}]]*/ '';
         const RESOURCE_PATH = ROOT_CONTEXT_PATH + "static/";
