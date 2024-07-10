@@ -153,6 +153,8 @@ class Session
                 } else {
                     elem.removeAttribute("checked");
                 }
+            } else if(elem.hasAttribute("multiple")) {
+                FormUtil.setMultiSelectState(elem, savedState.split(Session.multiValueInputSeparator));
             } else {
                 elem.value = savedState;
             }
@@ -164,6 +166,12 @@ class Session
     {
         for(const elem of document.querySelectorAll(".serializable"))
         {
+            if(elem.hasAttribute("multiple")) {
+                elem.addEventListener("change", e=>localStorage.setItem(elem.id,
+                    Array.from(elem.querySelectorAll("option:checked"), option=>option.value)
+                        .join(Session.multiValueInputSeparator)));
+                continue;
+            }
             switch(elem.getAttribute("type"))
             {
                 case "checkbox":
@@ -361,6 +369,7 @@ Session.sessionStartTimestamp = null;
 Session.INVALID_API_VERSION_CODE = 112233;
 Session.confirmActionText = null;
 Session.confirmAction = null;
+Session.multiValueInputSeparator = "\t";
 
 Session.sectionParams = new Map();
 

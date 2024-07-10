@@ -55,6 +55,17 @@ class FormUtil
 
     }
 
+    static setMultiSelectState(select, values)
+    {
+        select.querySelectorAll("option").forEach(option=>{
+            if(values.includes(option.value)) {
+                option.setAttribute("selected", "selected");
+            } else {
+                option.removeAttribute("selected");
+            }
+        });
+    }
+
     static formDataToObject(formData, prefix, trim = false)
     {
         const result = {};
