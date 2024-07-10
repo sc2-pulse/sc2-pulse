@@ -165,8 +165,15 @@ class FormUtil
 
     static setInputLinkState(input, linkedInput)
     {
-        const linkedValue = linkedInput.checked || linkedInput.value;
-        input.disabled = !input.getAttribute("data-state-link-values").split(",").some(v=>v == linkedValue);
+        const values = input.getAttribute("data-state-link-values");
+        if(values.startsWith("c-multiple")) {
+            const targetCount = values == "c-multiple-single" ? 1 : 2;
+            const valueCount = Math.min(linkedInput.querySelectorAll("option:checked").length, 2);
+            input.disabled = valueCount != targetCount;
+        } else {
+            const linkedValue = linkedInput.checked || linkedInput.value;
+            input.disabled = !values.split(",").some(v=>v == linkedValue);
+        }
     }
 
     static initInputStateLinks()
