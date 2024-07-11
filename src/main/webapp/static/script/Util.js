@@ -328,6 +328,22 @@ class Util
         return merged;
     }
 
+    static concatObject(src, dest)
+    {
+        for(const [name, val] of Object.entries(src)) {
+            if(Array.isArray(val)) {
+                if(dest[name] == null) dest[name] = [];
+                dest[name] = dest[name].concat(val);
+            } else if(typeof val === "object") {
+                if(dest[name] == null) dest[name] = {};
+                for(const [valName, valVal] of Object.entries(val))
+                    dest[name][valName] = valVal;
+            } else {
+                dest[name] = val;
+            }
+        }
+    }
+
     static toMap(items, keyMapper, valueMapper=(item)=>item)
     {
         const map = new Map();
