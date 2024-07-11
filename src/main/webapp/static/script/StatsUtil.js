@@ -674,15 +674,19 @@ class StatsUtil
                 : value;
     }
 
-    static loadMapStatsFilmModel(season, regions, queue, teamType, league, tier, crossTier, races)
+    static loadMapStatsFilmModel(season, regions, queue, teamType, leagueAndTiers, crossTier, races)
     {
         if(queue != TEAM_FORMAT._1V1) return Promise.resolve();
 
-        return StatsUtil.getMapStatsFilm(season, regions, queue, teamType, league, tier, crossTier, races)
-            .then(film=>{
-                Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilm = film;
-                return film;
-            });
+        return Promise.all(leagueAndTiers.map(lt=>
+            StatsUtil.getMapStatsFilm(season, regions, queue, teamType, lt[0], lt[1], crossTier, races)))
+                .then(films=>{
+                    let film = {};
+                    films.filter(f=>f != null).forEach(f=>Util.concatObject(f, film));
+                    if(!film.frames) film = null;
+                    Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).mapFilm = film;
+                    return film;
+                });
     }
 
     static updateMapStatsFilmModel(film)
@@ -874,10 +878,11 @@ class StatsUtil
         StatsUtil.initMapStatsFilm();
         if(!document.querySelector("#stats-match-up-form").reportValidity())
             return Promise.resolve({data: null, status: LOADING_STATUS.ERROR});
-        const leagueAndTier = (localStorage.getItem("stats-match-up-league") || "5,0").split(",");
-        const league = EnumUtil.enumOfId(leagueAndTier[0], LEAGUE);
-        const tier = EnumUtil.enumOfId(leagueAndTier[1], LEAGUE_TIER);
-        const crossTier = (localStorage.getItem("stats-match-up-cross-tier") || "false") === "false"
+        const leagueAndTierText = (localStorage.getItem("stats-match-up-league") || ("5,0" + Session.multiValueInputSeparator + "6,0"));
+        const leagueAndTiers = leagueAndTierText.split(Session.multiValueInputSeparator)
+            .map(leagueAndTier=>leagueAndTier.split(","))
+            .map(leagueAndTier=>[EnumUtil.enumOfId(leagueAndTier[0], LEAGUE), EnumUtil.enumOfId(leagueAndTier[1], LEAGUE_TIER)]);
+        const crossTier = leagueAndTiers.length > 1 || (localStorage.getItem("stats-match-up-cross-tier") || "false") === "false"
             ? [false]
             : [false, true];
         const urlParams = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS).urlParams;
@@ -892,8 +897,7 @@ class StatsUtil
             regions,
             EnumUtil.enumOfFullName(urlParams.get("queue"), TEAM_FORMAT),
             EnumUtil.enumOfFullName(urlParams.get("team-type"), TEAM_TYPE),
-            league,
-            tier,
+            leagueAndTiers,
             crossTier,
             races
         )
