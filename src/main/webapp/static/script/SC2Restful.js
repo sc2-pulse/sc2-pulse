@@ -112,6 +112,7 @@ class SC2Restful
                 FormUtil.linkInputStateBindings();
                 FormUtil.enhanceFormConfirmations();
                 BootstrapUtil.enhanceTooltips();
+                EnhancementUtil.enhance();
                 ElementUtil.enhanceFullscreenToggles();
                 ElementUtil.enhanceCopyToClipboard();
                 ElementUtil.enhanceCloneCtl();
