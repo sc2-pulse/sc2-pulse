@@ -415,6 +415,24 @@
                       class="collapse show form-inline d-flex form-flex form-group-column flex-wrap-gap row-gap-1-5 justify-content-center mb-3"
                       data-collapse-on="mobile"
                 >
+                    <div class="form-group d-flex flex-wrap-gap-05 w-100">
+                        <fieldset class="form-group d-flex flex-wrap-gap-05 w-100">
+                            <label for="stats-match-up-league">League</label>
+                            <select id="stats-match-up-league" class="form-control serializable stats-match-up-reload enhanced" multiple="multiple" required="required">
+                                <th:block th:each="league : ${@serverSideRenderService.reverseOrder(T(com.nephest.battlenet.sc2.model.BaseLeague.LeagueType).values())}">
+                                    <th:block th:each="tier : ${T(com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType).values()}">
+                                        <option
+                                                th:unless="${league.name() == 'GRANDMASTER' and tier.name() != 'FIRST'}"
+                                                th:value="|${league.getId()},${tier.getId()}|"
+                                                th:text="|${league.getName()} ${league.name() != 'GRANDMASTER' ? tier.getName() : ''}|"
+                                                th:attrappend="selected=${(league.name() == 'MASTER' or league.name() == 'GRANDMASTER') and tier.name() == 'FIRST'}?@{selected}"
+                                        >
+                                        </option>
+                                    </th:block>
+                                </th:block>
+                            </select>
+                        </fieldset>
+                    </div>
                     <div class="d-flex flex-wrap-gap form-group-container">
                         <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05"
                              th:each="race : ${T(com.nephest.battlenet.sc2.model.Race).values()}"
@@ -432,22 +450,6 @@
                         </div>
                     </div>
                     <div class="d-flex flex-wrap-gap form-group-container">
-                        <div class="form-group d-flex flex-wrap-gap-05">
-                            <label for="stats-match-up-league">League</label>
-                            <select id="stats-match-up-league" class="form-control serializable stats-match-up-reload" multiple="multiple" required="required">
-                                <th:block th:each="league : ${@serverSideRenderService.reverseOrder(T(com.nephest.battlenet.sc2.model.BaseLeague.LeagueType).values())}">
-                                    <th:block th:each="tier : ${T(com.nephest.battlenet.sc2.model.BaseLeagueTier.LeagueTierType).values()}">
-                                        <option
-                                                th:unless="${league.name() == 'GRANDMASTER' and tier.name() != 'FIRST'}"
-                                                th:value="|${league.getId()},${tier.getId()}|"
-                                                th:text="|${league.getName()} ${league.name() != 'GRANDMASTER' ? tier.getName() : ''}|"
-                                                th:attrappend="selected=${(league.name() == 'MASTER' or league.name() == 'GRANDMASTER') and tier.name() == 'FIRST'}?@{selected}"
-                                        >
-                                        </option>
-                                    </th:block>
-                                </th:block>
-                            </select>
-                        </div>
                         <div class="form-group checkbox d-flex align-items-center flex-wrap-gap-05">
                             <input id="stats-match-up-cross-tier"
                                    class="stats-match-up-reload serializable"
