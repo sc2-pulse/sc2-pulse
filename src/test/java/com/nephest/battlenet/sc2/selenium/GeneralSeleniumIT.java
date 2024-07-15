@@ -600,8 +600,15 @@ public class GeneralSeleniumIT
         element.sendKeys("");
     }
 
+    public static void makeEnhancedInputsVisible(WebDriver driver, String containerSelector)
+    {
+        driver.findElements(By.cssSelector(containerSelector + " .enhanced"))
+            .forEach(e->js.executeScript("arguments[0].classList.add('enhanced-ctl-visible')", e));
+    }
+
     public static void toggleInputs(WebDriver driver, String containerSelector)
     {
+        makeEnhancedInputsVisible(driver, containerSelector);
         toggleCheckboxes(driver, containerSelector);
         toggleSelects(driver, containerSelector);
         toggleRadios(driver, containerSelector);

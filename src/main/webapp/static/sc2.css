@@ -1927,6 +1927,16 @@ body.theme-dark .new.new-color:not(.btn):not(.nav-link):not(.page-link):not(.dis
     font-size: 0.9em;
 }
 
+body .enhanced-ctl-visible
+{
+    display: initial !important;
+    clip-path: initial !important;
+    clip: initial !important;
+    height: initial !important;
+    width: initial !important;
+    position: initial !important;
+}
+
 @media (min-width: 576px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 540px;
