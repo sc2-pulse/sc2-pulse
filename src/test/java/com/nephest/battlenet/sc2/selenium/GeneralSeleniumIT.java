@@ -63,6 +63,7 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxOptions;
+import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.ui.ExpectedCondition;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.Select;
@@ -626,8 +627,27 @@ public class GeneralSeleniumIT
         selects.stream()
             .map(Select::new)
             .forEach(s->{
-                for(int i = 0; i < s.getOptions().size(); i++) s.selectByIndex(i);
-                for(int i = s.getOptions().size() - 1; i >= 0; i--) s.selectByIndex(i);
+                if(s.isMultiple())
+                {
+                    for(int i = 0; i < 2; i++)
+                        s.getOptions().forEach(option->
+                        {
+                            scrollTo(driver, option);
+                            boolean wasSelected = option.isSelected();
+                            new Actions(driver)
+                                .keyDown(Keys.CONTROL)
+                                .click(option)
+                                .keyUp(Keys.CONTROL)
+                                .build()
+                                .perform();
+                            wait.until(d->option.isSelected() != wasSelected);
+                        });
+                }
+                else
+                {
+                    for(int i = 0; i < s.getOptions().size(); i++) s.selectByIndex(i);
+                    for(int i = s.getOptions().size() - 1; i >= 0; i--) s.selectByIndex(i);
+                }
             });
     }
 
