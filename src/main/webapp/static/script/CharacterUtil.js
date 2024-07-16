@@ -1174,6 +1174,7 @@ class CharacterUtil
     static updateCharacterSearch(name)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
+        name = name.trim();
         name = CharacterUtil.autoCompleteIfClanSearch(name);
         const searchParams = new URLSearchParams();
         searchParams.append("type", "search");

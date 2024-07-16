@@ -28,7 +28,7 @@ class ClanUtil
                 params.cursor.getter
             );
 
-        const tagOrName = searchParams.get("tagOrName");
+        const tagOrName = searchParams.get("tagOrName").trim();
         const byTagOrName = tagOrName && tagOrName.length > 0;
         const request = byTagOrName
             ? `${ROOT_CONTEXT_PATH}api/clan/tag-or-name?term=${encodeURIComponent(tagOrName)}`
