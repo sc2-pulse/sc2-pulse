@@ -80,12 +80,10 @@ public class PlayerCharacterLink
     {
         if(absoluteUrl == null) return Optional.empty();
 
-        SocialMedia type = SocialMedia.fromBaseUserUrlPrefix(absoluteUrl);
+        SocialMedia type = SocialMedia.fromLaxUserUrl(absoluteUrl);
         if(type == SocialMedia.UNKNOWN) return Optional.of(absoluteUrl);
-        if(absoluteUrl.length() < type.getBaseUserUrl().length() + 2) //slash + at least 1 char
-            return Optional.empty();
 
-        return Optional.of(absoluteUrl.substring(type.getBaseUserUrl().length() + 1));
+        return type.getRelativeLaxUserUrl(absoluteUrl);
     }
 
     public SocialMedia getType()

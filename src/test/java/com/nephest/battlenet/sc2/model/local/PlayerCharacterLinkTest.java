@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local;
@@ -47,7 +47,10 @@ public class PlayerCharacterLinkTest
         "/123, /123",
         "123, 123",
         ",",
-        "http://aligulac.com/players/,"
+        "http://aligulac.com/players/,",
+        "battlenet:://starcraft/profile/1/2, 1/2",
+        "battlenet://starcraft/profile/1/2, 1/2",
+        "starcraft://profile/2/3, 2/3"
     })
     @ParameterizedTest
     public void testGetRelativeUrl(String absoluteUrl, String expectedResult)
