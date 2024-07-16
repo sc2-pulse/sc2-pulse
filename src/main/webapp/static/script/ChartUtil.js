@@ -51,6 +51,7 @@ class ChartUtil
         (
             config.ctx,
             {
+                customConfig: config,
                 type: config.type,
                 data: config.data,
                 options:
@@ -226,7 +227,7 @@ class ChartUtil
                         ...(config.customAnnotations) && {
                             annotation: {
                                 clip: true,
-                                annotations: ChartUtil.createCustomAnnotations(config)
+                                annotations: ChartUtil.createCustomAnnotationsCallback
                             }
                         }
                     },
@@ -1137,6 +1138,13 @@ class ChartUtil
     static isTierThresholdApplicable(yAxis)
     {
         return yAxis == "percent-global" || yAxis == "percent-region";
+    }
+
+    static createCustomAnnotationsCallback(context)
+    {
+        return context.chart.config._config.customConfig
+            ? ChartUtil.createCustomAnnotations(context.chart.config._config.customConfig)
+            : {};
     }
 
     static createCustomAnnotations(config)
