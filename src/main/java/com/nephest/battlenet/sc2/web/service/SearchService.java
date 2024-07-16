@@ -171,7 +171,7 @@ public class SearchService
                 .map(List::of)
                 .orElse(List.of());
 
-        SocialMedia type = SocialMedia.fromBaseUserUrlPrefix(term);
+        SocialMedia type = SocialMedia.fromLaxUserUrl(term);
         if(!externalSearch.containsKey(type)) return List.of();
 
         String relativeUrl = PlayerCharacterLink.getRelativeUrl(term).orElse(null);

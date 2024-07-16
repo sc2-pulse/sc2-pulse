@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.external;
@@ -52,6 +52,8 @@ import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -72,6 +74,8 @@ import reactor.core.publisher.Mono;
 @TestPropertySource("classpath:application-private.properties")
 public class ExternalServiceIT
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(ExternalServiceIT.class);
 
     public static final TeamType TEAM_TYPE = TeamType.ARRANGED;
     public static final BaseLeagueTier.LeagueTierType TIER_TYPE =
@@ -271,10 +275,29 @@ public class ExternalServiceIT
     private void verifyExternalCharacterSearchByBattleNetProfile()
     throws Exception
     {
+        String[] prefixes = new String[]
+        {
+            "battlenet:://starcraft/",
+            "battlenet://starcraft/",
+            "battlenet://",
+            "starcraft:://",
+            "starcraft://",
+            "starcraft-whatever://"
+        };
+        for(String prefix : prefixes)
+        {
+            LOG.info("Testing {} prefix", prefix);
+            verifyExternalCharacterSearchByBattleNetProfile(prefix);
+        }
+    }
+
+    private void verifyExternalCharacterSearchByBattleNetProfile(String prefix)
+    throws Exception
+    {
         LadderDistinctCharacter[] characterFound = objectMapper.readValue(mvc.perform
         (
             get("/api/character/search")
-                .queryParam("term", "battlenet:://starcraft/profile/2/4771787010354446336")
+                .queryParam("term", prefix + "profile/2/4771787010354446336")
                 .contentType(MediaType.APPLICATION_JSON)
         )
             .andExpect(status().isOk())
