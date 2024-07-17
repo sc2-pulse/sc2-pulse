@@ -239,7 +239,6 @@ class ChartUtil
                 }
             }
         );
-        chart.customConfig = config;
         if(config.zoom)
         {
             ChartUtil.createZoomControls(chart);
@@ -255,7 +254,7 @@ class ChartUtil
     {
         for(let scale of Object.values(chart.options.scales))
         {
-            if(scale.type == "time" && chart.customConfig.zoom)
+            if(scale.type == "time" && chart.config._config.customConfig.zoom)
             {
                 scale.beforeFit = ChartUtil.trimTicks;
                 scale.ticks.align = "start";
@@ -273,10 +272,10 @@ class ChartUtil
     static createZoomControls(chart)
     {
         const zoomCtl = document.createElement("button");
-        zoomCtl.id = "chart-zoom-ctl-" + chart.customConfig.chartable;
+        zoomCtl.id = "chart-zoom-ctl-" + chart.config._config.customConfig.chartable;
         zoomCtl.setAttribute("type", "button");
         zoomCtl.classList.add("btn", "btn-outline-info", "chart-zoom-ctl");
-        zoomCtl.setAttribute("data-chartable-id", chart.customConfig.chartable);
+        zoomCtl.setAttribute("data-chartable-id", chart.config._config.customConfig.chartable);
         zoomCtl.textContent = `${CHART_ZOOM_MOD_KEY}+mouse wheel/${CHART_ZOOM_MOD_KEY}+mouse drag to zoom, mouse drag to pan`;;
         zoomCtl.addEventListener("click", ChartUtil.resetZoom);
         chart.canvas.closest(".container-chart").prepend(zoomCtl);
@@ -287,13 +286,13 @@ class ChartUtil
         const chartable = document.querySelector('[data-chart-id="' + evt.target.id +  '"]').id;
         const active = evt[CHART_ZOOM_EVENT_MOD_KEY];
         if(active) document.querySelector('#chartjs-tooltip-' + chartable).style.opacity = 0;
-        ChartUtil.CHARTS.get(chartable).customConfig.zoomModKeyDown = active;
+        ChartUtil.CHARTS.get(chartable).config._config.customConfig.zoomModKeyDown = active;
     }
 
     static onCanvasMouseOut(evt)
     {
         const chartable = document.querySelector('[data-chart-id="' + evt.target.id +  '"]').id;
-        ChartUtil.CHARTS.get(chartable).customConfig.zoomModKeyDown = false;
+        ChartUtil.CHARTS.get(chartable).config._config.customConfig.zoomModKeyDown = false;
     }
 
     static resetZoom(evt)
@@ -305,16 +304,16 @@ class ChartUtil
         chart.resetZoom('zoom');
         ctl.textContent = `${CHART_ZOOM_MOD_KEY}+mouse wheel/${CHART_ZOOM_MOD_KEY}+mouse drag to zoom, mouse drag to pan`;
         ctl.classList.remove("active");
-        chart.customConfig.isZoomed = false;
+        chart.config._config.customConfig.isZoomed = false;
     }
 
     static onZoom(chart)
     {
-        document.getElementById("chartjs-tooltip-" + chart.chart.customConfig.chartable).style.opacity = 0;
-        const ctl = document.getElementById("chart-zoom-ctl-" + chart.chart.customConfig.chartable);
+        document.getElementById("chartjs-tooltip-" + chart.chart.config._config.customConfig.chartable).style.opacity = 0;
+        const ctl = document.getElementById("chart-zoom-ctl-" + chart.chart.config._config.customConfig.chartable);
         ctl.classList.add("active");
         ctl.textContent = "Reset zoom/pan";
-        chart.chart.customConfig.isZoomed = true;
+        chart.chart.config._config.customConfig.isZoomed = true;
     }
 
     static onLegendClick(e, legendItem)
@@ -330,14 +329,14 @@ class ChartUtil
 
     static beforeBody(chart)
     {
-        return chart[0].chart.customConfig.data.customMeta.headers;
+        return chart[0].chart.config._config.customConfig.data.customMeta.headers;
     }
 
     static formatTooltip(chart)
     {
         let label;
         let labels;
-        const data = chart.chart.customConfig.data;
+        const data = chart.chart.config._config.customConfig.data;
         if(data.customMeta.type === "pie" || data.customMeta === "doughnut")
         {
             labels = data.labels;
@@ -401,7 +400,7 @@ class ChartUtil
     {
         const tooltipModel = context.tooltip;
         const tooltipEl = ChartUtil.getOrCreateTooltipElement(this._chart);
-        if (tooltipModel.opacity === 0 || this._chart.customConfig.zoomModKeyDown == true) {
+        if (tooltipModel.opacity === 0 || this._chart.config._config.customConfig.zoomModKeyDown == true) {
             tooltipEl.style.opacity = 0;
             return;
         }
@@ -419,14 +418,14 @@ class ChartUtil
 
     static getOrCreateTooltipElement(chart)
     {
-        let tooltipEl = document.getElementById('chartjs-tooltip-' + chart.customConfig.chartable);
+        let tooltipEl = document.getElementById('chartjs-tooltip-' + chart.config._config.customConfig.chartable);
         if(!tooltipEl)
         {
             tooltipEl = document.createElement('div');
-            tooltipEl.id = 'chartjs-tooltip-' + chart.customConfig.chartable;
+            tooltipEl.id = 'chartjs-tooltip-' + chart.config._config.customConfig.chartable;
             tooltipEl.classList.add("chartjs-tooltip");
             let content = ['<h2></h2><div class="d-flex">'];
-            const tableCount = chart.customConfig.tooltipTableCount ? chart.customConfig.tooltipTableCount : 1;
+            const tableCount = chart.config._config.customConfig.tooltipTableCount ? chart.config._config.customConfig.tooltipTableCount : 1;
             for(let i = 0; i < tableCount; i++)
             {
                 content.push(`<div class="d-inline-block flex-grow-1 ${i != 0 ? 'ml-2' : ''}"><table class="table table-sm tooltip-table-${i}"><thead></thead><tbody></tbody></table></div>`);
@@ -500,7 +499,7 @@ class ChartUtil
 
     static getTooltipLayout(context)
     {
-        const group = context.chart.customConfig.group;
+        const group = context.chart.config._config.customConfig.group;
         const defaultConfig = ChartUtil.DEFAULT_GROUP_CONFIG.get(group);
         const defaultValue = defaultConfig ? defaultConfig.tooltipLayout : "horizontal";
         return localStorage.getItem("chart-" + group +"-tooltip-layout") || defaultValue;
@@ -830,16 +829,16 @@ class ChartUtil
 
         data.labels.forEach(l=>chart.data.labels.push(l));
         data.datasets.forEach(d=>chart.data.datasets.push(d));
-        ChartUtil.decorateChartData(data, chart.customConfig);
-        if(chart.customConfig.isZoomed)
-            ChartUtil.resetZoom({target: document.querySelector("#chart-zoom-ctl-" + chart.customConfig.chartable)});
+        ChartUtil.decorateChartData(data, chart.config._config.customConfig);
+        if(chart.config._config.customConfig.isZoomed)
+            ChartUtil.resetZoom({target: document.querySelector("#chart-zoom-ctl-" + chart.config._config.customConfig.chartable)});
         chart.update();
         ChartUtil.updateChartZoomLimits(chart);
     }
 
     static updateChartZoomLimits(chart)
     {
-        if(!chart.customConfig.zoom) return;
+        if(!chart.config._config.customConfig.zoom) return;
 
         chart.options.plugins.zoom.limits.x.min = chart.scales.x.min;
         chart.options.plugins.zoom.limits.x.max = chart.scales.x.max;
@@ -865,7 +864,7 @@ class ChartUtil
 
     static refresh(chart)
     {
-        ElementUtil.executeTask(chart.config.chartable, ()=>ChartUtil.loadAdditionalChartData(chart.customConfig)
+        ElementUtil.executeTask(chart.config.chartable, ()=>ChartUtil.loadAdditionalChartData(chart.config._config.customConfig)
             .then(e=>chart.update()));
     }
 
@@ -962,8 +961,8 @@ class ChartUtil
         if(!zoom) {
             if(chart) {
                 chart.options.scales.y.beginAtZero = true;
-                chart.options.scales.y.suggestedMin = chart.customConfig.yMin;
-                chart.options.scales.y.suggestedMax = chart.customConfig.yMax;
+                chart.options.scales.y.suggestedMin = chart.config._config.customConfig.yMin;
+                chart.options.scales.y.suggestedMax = chart.config._config.customConfig.yMax;
             } else {
                 chartable.setAttribute("data-chart-begin-at-zero", "true");
             }
@@ -1078,8 +1077,8 @@ class ChartUtil
                     chart.options.scales.y.suggestedMin = 0;
                     chart.options.scales.y.suggestedMax = 100;
                 case false:
-                    chart.customConfig.yMin = 0;
-                    chart.customConfig.yMax = 100;
+                    chart.config._config.customConfig.yMin = 0;
+                    chart.config._config.customConfig.yMax = 100;
                     chart.options.scales.y.reverse = true;
                     break;
             }
@@ -1320,7 +1319,7 @@ class ChartUtil
         const chart = ChartUtil.CHARTS.get(chartable);
         if(chart)
         {
-            chart.customConfig[name] = value;
+            chart.config._config.customConfig[name] = value;
         }
         else
         {

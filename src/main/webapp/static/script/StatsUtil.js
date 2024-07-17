@@ -930,7 +930,7 @@ class StatsUtil
             model.mapFilmSummaryMatrix = null;
             if(fullClear) model.mapFilmModel = null;
             if(model.charts) {
-                for(const chart of model.charts) ChartUtil.CHARTS.delete(chart.customConfig.chartable);
+                for(const chart of model.charts) ChartUtil.CHARTS.delete(chart.config._config.customConfig.chartable);
                 model.charts = null;
             }
         }
