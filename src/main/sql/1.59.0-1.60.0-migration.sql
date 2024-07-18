@@ -117,3 +117,15 @@ ALTER TABLE "map_stats_film"
         UNIQUE("league_tier_id", "map_id", "map_stats_film_spec_id", "cross_tier");
 ALTER TABLE "map_stats_film"
     ALTER COLUMN "cross_tier" DROP DEFAULT;
+
+CREATE TABLE "ladder_update"
+(
+    "region" SMALLINT NOT NULL,
+    "queue_type" SMALLINT NOT NULL,
+    "league_type" SMALLINT NOT NULL,
+    "created" TIMESTAMP WITH TIME ZONE NOT NULL,
+    "duration" SMALLINT NOT NULL,
+
+    CONSTRAINT "uq_ladder_update_natural_id"
+            UNIQUE ("created", "region", "queue_type", "league_type")
+);

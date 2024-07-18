@@ -330,6 +330,18 @@ AS
 '
 LANGUAGE plpgsql;
 
+CREATE TABLE "ladder_update"
+(
+    "region" SMALLINT NOT NULL,
+    "queue_type" SMALLINT NOT NULL,
+    "league_type" SMALLINT NOT NULL,
+    "created" TIMESTAMP WITH TIME ZONE NOT NULL,
+    "duration" SMALLINT NOT NULL,
+
+    CONSTRAINT "uq_ladder_update_natural_id"
+            UNIQUE ("created", "region", "queue_type", "league_type")
+);
+
 CREATE TABLE "clan"
 (
     "id" SERIAL,
