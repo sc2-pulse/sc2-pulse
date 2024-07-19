@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -72,7 +72,16 @@ public class MatchParticipantDAO
         + "SELECT COUNT(*) FROM updated, inserted";
 
     private static final String IDENTIFY_MATCH_FILTER_TEMPLATE =
-        "match_filter AS "
+        "max_ladder_update AS "
+        + "("
+            + "SELECT region, queue_type, league_type, "
+            + "MAKE_INTERVAL(secs=>(MAX(duration) * 2)::double precision) as duration "
+            + "FROM ladder_update "
+            + "WHERE created >= :point "
+            + "and queue_type = %2$s "
+            + "GROUP BY region, queue_type, league_type "
+        + "), "
+        + "match_filter AS "
         + "("
             + "SELECT match.id "
             + "FROM match "
@@ -100,10 +109,21 @@ public class MatchParticipantDAO
              */
                 + "AND team_state.timestamp >= match.date "
                 + "AND team_state.timestamp <= match.date + INTERVAL '" + IDENTIFICATION_FRAME_MINUTES + " minutes' "
+            + "INNER JOIN division ON team_state.division_id = division.id "
+            + "INNER JOIN league_tier ON division.league_tier_id = league_tier.id "
+            + "INNER JOIN league ON league_tier.league_id = league.id "
+            + "LEFT JOIN max_ladder_update ON team.region = max_ladder_update.region "
+                + "AND team.queue_type = max_ladder_update.queue_type "
+                + "AND league.type = max_ladder_update.league_type "
             + "WHERE team.season = :season "
             + "AND team.queue_type = %2$s "
             + "AND team.team_type = %3$s "
             + "AND match_participant.team_id IS NULL "
+            + "AND "
+            + "( "
+                + "max_ladder_update.duration IS NULL "
+                + "OR team_state.timestamp - match.date <= max_ladder_update.duration "
+            +") "
         + ") ";
     
     private static final String IDENTIFY_SOLO_PARTICIPANTS_TEMPLATE =

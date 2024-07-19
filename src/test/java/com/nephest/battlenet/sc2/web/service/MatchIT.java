@@ -26,6 +26,7 @@ import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.Clan;
 import com.nephest.battlenet.sc2.model.local.ClanMember;
 import com.nephest.battlenet.sc2.model.local.Division;
+import com.nephest.battlenet.sc2.model.local.LadderUpdate;
 import com.nephest.battlenet.sc2.model.local.Match;
 import com.nephest.battlenet.sc2.model.local.MatchParticipant;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
@@ -41,6 +42,7 @@ import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanDAO;
 import com.nephest.battlenet.sc2.model.local.dao.ClanMemberDAO;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.LadderUpdateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchDAO;
 import com.nephest.battlenet.sc2.model.local.dao.MatchParticipantDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
@@ -58,6 +60,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMatchDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.LinkedHashSet;
@@ -70,6 +73,8 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -134,6 +139,9 @@ public class MatchIT
 
     @Autowired
     private SC2MapDAO mapDAO;
+
+    @Autowired
+    private LadderUpdateDAO ladderUpdateDAO;
 
     @Autowired
     private SeasonGenerator seasonGenerator;
@@ -905,6 +913,87 @@ public class MatchIT
                 .allMatch(p->p.getParticipant().getRatingChange() ==
                     (p.getParticipant().getDecision() == BaseMatch.Decision.WIN ? ratingDifference : -ratingDifference)));
         }
+    }
+
+    @ValueSource(booleans = {true, false})
+    @ParameterizedTest
+    public void whenLadderUpdateIsPresent_thenUseItsDurationAsMaxIdentificationOffset(boolean inRange)
+    {
+        OffsetDateTime odt = SC2Pulse.offsetDateTime();
+        seasonGenerator.generateDefaultSeason
+        (
+            List.of(Region.EU),
+            List.of(BaseLeague.LeagueType.BRONZE, BaseLeague.LeagueType.SILVER),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            1
+        );
+        template.update("DELETE FROM team_state");
+        seasonGenerator.createMatches
+        (
+            BaseMatch.MatchType._1V1,
+            1L, 2L,
+            new long[]{1L}, new long[]{2L},
+            odt,
+            Region.EU,
+            1, 1, 1, 1, 1
+        );
+        ladderUpdateDAO.create(Set.of(
+            new LadderUpdate
+            (
+                Region.EU,
+                QueueType.LOTV_1V1,
+                BaseLeague.LeagueType.BRONZE,
+                odt.plusMinutes(1),
+                Duration.ofMinutes(1)
+            ),
+            new LadderUpdate
+            (
+                Region.EU,
+                QueueType.LOTV_1V1,
+                BaseLeague.LeagueType.BRONZE,
+                odt.plusMinutes(2),
+                Duration.ofMinutes(2)
+            ),
+            new LadderUpdate
+            (
+                Region.EU,
+                QueueType.LOTV_1V1,
+                BaseLeague.LeagueType.BRONZE,
+                odt.plusMinutes(3),
+                Duration.ofMinutes(1)
+            ),
+            new LadderUpdate
+            (
+                Region.EU,
+                QueueType.LOTV_1V1,
+                BaseLeague.LeagueType.SILVER,
+                odt.plusMinutes(1),
+                Duration.ofSeconds(59)
+            )
+        ));
+        OffsetDateTime maxOdt = odt.plusMinutes(4);
+        OffsetDateTime targetOdt = inRange ? maxOdt.minusSeconds(1) : maxOdt.plusSeconds(1);
+        template.update("UPDATE team_state SET timestamp = ?", targetOdt);
+        //move team2 to silver
+        template.update("UPDATE team_state SET division_id = 2 WHERE team_id = 2");
+        assertEquals
+        (
+            inRange ? 1 : 0,
+            matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, odt)
+        );
+        LadderMatch match = ladderMatchDAO.findMatchesByCharacterIds
+        (
+            Set.of(1L),
+            odt.plusSeconds(1),
+            BaseMatch.MatchType._1V1, 1, Region.EU,
+            0, 1, 10
+        ).getResult().get(0);
+        match.getParticipants().forEach(p->assertEquals(
+            p.getParticipant().getPlayerCharacterId() == 1L && inRange ? targetOdt : null,
+            p.getParticipant().getTeamStateDateTime()
+        ));
     }
 
 }
