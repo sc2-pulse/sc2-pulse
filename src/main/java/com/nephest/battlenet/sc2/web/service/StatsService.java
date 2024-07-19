@@ -349,6 +349,8 @@ public class StatsService
     private final Map<Region, LongVar> partialUpdateIndexes = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> partialUpdateIndexes2 = new EnumMap<>(Region.class);
     private final PendingLadderData pendingLadderData = new PendingLadderData();
+    private final List<Map<Region, LadderUpdateTaskContext<Void>>> pendingContexts =
+        new ArrayList<>();
 
     private AlternativeLadderService alternativeLadderService;
     private BlizzardSC2API api;
@@ -525,6 +527,7 @@ public class StatsService
         checkStaleData(seasons);
         Map<Region, LadderUpdateTaskContext<Void>> ctx
             = updateCurrentSeason(data, seasons, allStats);
+        pendingContexts.add(ctx);
 
         long seconds = (System.currentTimeMillis() - start.toEpochMilli()) / 1000;
         LOG.info("Updated current for {} after {} seconds", ctx, seconds);
@@ -578,15 +581,18 @@ public class StatsService
     {
         PendingLadderData pending = copyAndClearPendingData();
         PendingLadderData altPending = alternativeLadderService.copyAndClearPendingData();
+        List<Map<Region, LadderUpdateTaskContext<Void>>> contexts = List.copyOf(pendingContexts);
+        pendingContexts.clear();
         return dbExecutorService.submit(()->
-            statsService.afterCurrentSeasonUpdate(allStats, pending, altPending), null);
+            statsService.afterCurrentSeasonUpdate(allStats, pending, altPending, contexts), null);
     }
 
     public void afterCurrentSeasonUpdate
     (
         boolean allStats,
         PendingLadderData pending,
-        PendingLadderData altPending
+        PendingLadderData altPending,
+        List<Map<Region, LadderUpdateTaskContext<Void>>> contexts
     )
     {
         teamStateDAO.removeExpired();
@@ -595,7 +601,7 @@ public class StatsService
         process(pending);
         process(altPending);
         eventService.createLadderUpdateEvent(new LadderUpdateData(
-            allStats, List.of(pending, altPending)));
+            allStats, List.of(pending, altPending), contexts));
     }
 
     private void process(PendingLadderData pending)

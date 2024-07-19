@@ -3,21 +3,30 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import com.nephest.battlenet.sc2.model.Region;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 public class LadderUpdateData
 {
 
-    public static final LadderUpdateData EMPTY = new LadderUpdateData(true, List.of());
+    public static final LadderUpdateData EMPTY = new LadderUpdateData(true, List.of(), List.of());
 
     private final boolean allStats;
     private final List<PendingLadderData> data;
+    private final List<Map<Region, LadderUpdateTaskContext<Void>>> contexts;
 
-    public LadderUpdateData(boolean allStats, List<PendingLadderData> data)
+    public LadderUpdateData
+    (
+        boolean allStats,
+        List<PendingLadderData> data,
+        List<Map<Region, LadderUpdateTaskContext<Void>>> contexts
+    )
     {
         this.allStats = allStats;
         this.data = Collections.unmodifiableList(data);
+        this.contexts = Collections.unmodifiableList(contexts);
     }
 
     public boolean isAllStats()
@@ -28,6 +37,11 @@ public class LadderUpdateData
     public List<PendingLadderData> getData()
     {
         return data;
+    }
+
+    public List<Map<Region, LadderUpdateTaskContext<Void>>> getContexts()
+    {
+        return contexts;
     }
 
 }
