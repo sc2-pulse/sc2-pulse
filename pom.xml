@@ -403,6 +403,7 @@
                                         --js ${basedir}/src/main/webapp/static/script/GroupUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/CommunityUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/MatrixUI.js
+                                        --js ${basedir}/src/main/webapp/static/script/EnhancementUtil.js
                                         --js_output_file ${basedir}/target/sc2-webapp/static/script/sc2-restful.min.js"/>
                                 </java>
                             </target>
