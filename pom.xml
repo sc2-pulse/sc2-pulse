@@ -384,10 +384,10 @@
                                         --js ${basedir}/src/main/webapp/static/script/Model.js
                                         --js ${basedir}/src/main/webapp/static/script/Pagination.js
                                         --js ${basedir}/src/main/webapp/static/script/PaginationUtil.js
-                                        --js ${basedir}/src/main/webapp/static/script/SC2Restful.js
                                         --js ${basedir}/src/main/webapp/static/script/SeasonUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/MetaUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/Session.js
+                                        --js ${basedir}/src/main/webapp/static/script/SC2Restful.js
                                         --js ${basedir}/src/main/webapp/static/script/StatsUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/TableUtil.js
                                         --js ${basedir}/src/main/webapp/static/script/TeamUtil.js
