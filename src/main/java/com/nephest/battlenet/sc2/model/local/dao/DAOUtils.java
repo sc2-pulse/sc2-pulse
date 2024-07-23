@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -6,6 +6,8 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -205,6 +207,23 @@ public final class DAOUtils
     {
         int i = rs.getInt(param);
         return rs.wasNull() ? null : conversionService.convert(i, clazz);
+    }
+
+    /**
+     * This method is useful when converting arbitrary collections to {@link java.util.Set}
+     * before passing it to DAO layer. It covers a typical scenario where collisions are
+     * considered error.
+     *
+     * @param list Source list that should not contain any duplicates
+     * @return {@link java.util.Set} that contains all items from the supplied {@code list}
+     * @throws IllegalArgumentException if supplied {@code list} contains duplicates
+     */
+    public static <T> Set<T> toCollisionFreeSet(Collection<T> list)
+    {
+        Set<T> set = new HashSet<>(list);
+        if(list.size() != set.size())
+            throw new IllegalArgumentException("Collision detected");
+        return set;
     }
 
 }
