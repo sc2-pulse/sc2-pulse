@@ -7,6 +7,7 @@ import static com.nephest.battlenet.sc2.service.EventService.DEFAULT_FAILURE_HAN
 
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.LadderUpdate;
+import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.LadderUpdateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -15,10 +16,11 @@ import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.util.Collection;
 import java.util.EnumMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -165,7 +167,7 @@ public class UpdateService
             : Duration.between(previousGlobalContext.getExternalUpdate(), globalContext.getExternalUpdate());
     }
     
-    private Set<LadderUpdate> saveLadderUpdates(LadderUpdateData data)
+    protected Set<LadderUpdate> saveLadderUpdates(LadderUpdateData data)
     {
         OffsetDateTime afterUpdate = SC2Pulse.offsetDateTime();
         if(previousLadderUpdateOdt == null)
@@ -176,23 +178,24 @@ public class UpdateService
 
         
         Duration duration = Duration.between(previousLadderUpdateOdt, afterUpdate);
-        Set<LadderUpdate> updates = ladderUpdateDAO.create(transform(data, afterUpdate, duration));
+        Set<LadderUpdate> updates = ladderUpdateDAO
+            .create(DAOUtils.toCollisionFreeSet(transform(data, afterUpdate, duration)));
         previousLadderUpdateOdt = afterUpdate;
         return updates;
     }
     
-    private static Set<LadderUpdate> transform
+    private static List<LadderUpdate> transform
     (
         LadderUpdateData data,
         OffsetDateTime created,
         Duration duration
     )
     {
-        if(data.getContexts().isEmpty()) return Set.of();
-        if(data.getContexts().size() > 1)
-            throw new IllegalArgumentException("Multiple contexts are not supported");
+        if(data.getContexts().isEmpty()) return List.of();
 
-        return data.getContexts().get(0).entrySet().stream()
+        return data.getContexts().stream()
+            .map(Map::entrySet)
+            .flatMap(Collection::stream)
             .flatMap(ctxEntry->ctxEntry.getValue().getData().entrySet().stream()
                 .flatMap(dataEntry->dataEntry.getValue().stream()
                     .map(league->new LadderUpdate(
@@ -202,7 +205,7 @@ public class UpdateService
                         created,
                         duration
                     ))))
-            .collect(Collectors.toSet());
+            .toList();
     }
 
 }

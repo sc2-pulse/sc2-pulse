@@ -78,27 +78,58 @@ public class LadderUpdateIT
     public void whenLadderUpdateEventIsTriggered_thenItShouldBePersisted()
     throws InterruptedException
     {
-        BlockingQueue<LadderUpdate> evts = new ArrayBlockingQueue<>(4);
+        BlockingQueue<LadderUpdate> evts = new ArrayBlockingQueue<>(5);
         Disposable sub = updateService.getSaveLadderUpdateEvent().subscribe(evts::add);
         
         try
         {
             eventService.createLadderUpdateEvent(LadderUpdateData.EMPTY);
             OffsetDateTime before = SC2Pulse.offsetDateTime();
-            eventService.createLadderUpdateEvent(new LadderUpdateData(false, List.of(), List.of(
-                Map.of(
-                    Region.EU, new LadderUpdateTaskContext<>(new Season(),
-                        Map.of(QueueType.LOTV_1V1, Set.of(BaseLeague.LeagueType.BRONZE)), List.of()
+            eventService.createLadderUpdateEvent(new LadderUpdateData(false, List.of(),
+                List.of
+                (
+                    Map.of
+                    (
+                        Region.EU,
+                        new LadderUpdateTaskContext<>
+                        (
+                            new Season(),
+                            Map.of(QueueType.LOTV_1V1, Set.of(BaseLeague.LeagueType.BRONZE)),
+                            List.of()
+                        )
                     ),
-                    Region.US, new LadderUpdateTaskContext<>(new Season(),
-                        Map.of(QueueType.LOTV_1V1,
-                            Set.of(BaseLeague.LeagueType.BRONZE, BaseLeague.LeagueType.SILVER),
+                    Map.of
+                    (
+                        Region.US, new LadderUpdateTaskContext<>
+                        (
+                            new Season(),
+                            Map.of
+                            (
+                                QueueType.LOTV_1V1,
+                                Set.of(BaseLeague.LeagueType.BRONZE, BaseLeague.LeagueType.SILVER),
 
-                            QueueType.LOTV_2V2, Set.of(BaseLeague.LeagueType.BRONZE)
-                        ), List.of()
+                                QueueType.LOTV_2V2,
+                                Set.of(BaseLeague.LeagueType.BRONZE)
+                            ),
+                            List.of()
+                        )
+                    ),
+                    Map.of
+                    (
+                        Region.US, new LadderUpdateTaskContext<>
+                        (
+                            new Season(),
+                            Map.of
+                            (
+                                QueueType.LOTV_1V1,
+                                Set.of(BaseLeague.LeagueType.GOLD)
+                            ),
+                            List.of()
+                        )
                     )
-                ))));
-            for(int i = 0; i < 4; i++) evts.poll(5, TimeUnit.SECONDS);
+                )
+            ));
+            for(int i = 0; i < 5; i++) evts.poll(5, TimeUnit.SECONDS);
             OffsetDateTime after = SC2Pulse.offsetDateTime();
 
             List<LadderUpdate> updates = ladderUpdateDAO.getAll();
@@ -111,6 +142,9 @@ public class LadderUpdateIT
                     null,  null
                 ),
                 new LadderUpdate(Region.US, QueueType.LOTV_1V1, BaseLeague.LeagueType.SILVER,
+                    null, null
+                ),
+                new LadderUpdate(Region.US, QueueType.LOTV_1V1, BaseLeague.LeagueType.GOLD,
                     null, null
                 ),
                 new LadderUpdate(Region.US, QueueType.LOTV_2V2, BaseLeague.LeagueType.BRONZE,
