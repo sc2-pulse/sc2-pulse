@@ -192,6 +192,11 @@ public class MatchService
             .subscribe();
     }
 
+    protected TimerVar getUpdateMatchesTask()
+    {
+        return updateMatchesTask;
+    }
+
     public Duration getMatchUpdateFrame()
     {
         return updateMatchesTask.getDurationBetweenRuns();

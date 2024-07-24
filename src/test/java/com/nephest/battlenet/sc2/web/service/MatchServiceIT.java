@@ -16,6 +16,7 @@ import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
 import com.nephest.battlenet.sc2.model.Partition;
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -25,6 +26,7 @@ import java.util.concurrent.ExecutionException;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -63,6 +65,13 @@ public class MatchServiceIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
+    }
+
+    @BeforeEach
+    public void beforeEach()
+    {
+        matchService.getUpdateMatchesTask()
+            .setValue(SC2Pulse.instant().minus(MatchService.MATCH_UPDATE_FRAME));
     }
 
     @AfterAll

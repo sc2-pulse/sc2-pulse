@@ -116,6 +116,16 @@ public class UpdateService
         }
     }
 
+    public OffsetDateTime getPreviousLadderUpdateOffsetDateTime()
+    {
+        return previousLadderUpdateOdt;
+    }
+
+    protected void setPreviousLadderUpdateOffsetDateTime(OffsetDateTime previousLadderUpdateOdt)
+    {
+        this.previousLadderUpdateOdt = previousLadderUpdateOdt;
+    }
+
     public Flux<LadderUpdate> getSaveLadderUpdateEvent()
     {
         return saveLadderUpdateEvent.asFlux();
