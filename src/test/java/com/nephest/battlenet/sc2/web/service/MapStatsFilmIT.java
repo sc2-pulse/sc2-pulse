@@ -36,14 +36,15 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
@@ -63,6 +64,7 @@ import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultActions;
+import reactor.core.Disposable;
 
 @SpringBootTest(classes = AllTestConfig.class)
 @AutoConfigureMockMvc
@@ -179,7 +181,8 @@ public class MapStatsFilmIT
 
         OffsetDateTime[] odts = new OffsetDateTime[1];
         List<Long> teamIds = List.of(38L, 39L);
-        List<UpdateContext> updateContexts = mapStatsFilmTestService.generateFilms(startFrom->{
+        BlockingQueue<UpdateContext> updateContexts
+            = mapStatsFilmTestService.generateFilms(startFrom->{
             odts[0] = startFrom;
             seasonGenerator.createMatches
             (
@@ -282,11 +285,7 @@ public class MapStatsFilmIT
         matchDAO.updateDuration(startFrom2);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(
             Map.of(), new UpdateContext(mucInstant2, mucInstant2)));
-        try
-        {
-            if(updateContexts.isEmpty())
-                mapService.getUpdateEvent().blockFirst(Duration.ofMillis(5000));
-        } catch(Exception ignored) {}
+        updateContexts.poll(5, TimeUnit.SECONDS);
         updateContexts.clear();
         LadderMapStatsFilm ladderMapStatsFilm2 = objectMapper.readValue
         (
@@ -320,47 +319,50 @@ public class MapStatsFilmIT
     public void whenNoClearWinnerAndLoser_thenSkipMatch()
     throws Exception
     {
-        long frameOffset = FILM_FRAME_DURATION.toSeconds() * 5;
-        seasonGenerator.generateDefaultSeason(10, true);
-        leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
-        populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
-        teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
-        OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
-        Instant mucInstant = startFrom.plusDays(1).toInstant();
-        seasonGenerator.createMatches
-        (
-            BaseMatch.MatchType._1V1,
-            9L, 10L,
-            new long[]{8L, 9L}, new long[]{10L},
-            startFrom,
-            Region.EU,
-            1, 1, 1, 1, 1
-        );
-        seasonGenerator.createMatches
-        (
-            BaseMatch.MatchType._1V1,
-            9L, 10L,
-            new long[]{8L, 9L}, new long[]{10L},
-            startFrom.plusSeconds(MatchDAO.DURATION_OFFSET + frameOffset),
-            Region.EU,
-            1, 1, 1, 1, 1
-        );
-        List<Long> teamIds = List.of(9L, 10L);
-        jdbcTemplate.update("DELETE FROM team_state WHERE timestamp >= ? ", startFrom);
-        teamStateDAO.takeSnapshot(teamIds, startFrom);
-        seasonGenerator.takeTeamSnapshot(teamIds, startFrom, frameOffset, 1);
-        matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startFrom);
-        matchDAO.updateDuration(startFrom);
-        eventService.createMatchUpdateEvent(new MatchUpdateContext(
-            Map.of(), new UpdateContext(mucInstant, mucInstant)));
-        List<UpdateContext> updateContexts = new ArrayList<>(1);
-        mapService.getUpdateEvent().subscribe(updateContexts::add);
+        BlockingQueue<UpdateContext> updateContexts = new ArrayBlockingQueue<>(1);
+        Disposable sub = mapService.getUpdateEvent().subscribe(updateContexts::add);
         try
         {
-            if(updateContexts.isEmpty())
-                mapService.getUpdateEvent().blockFirst(Duration.ofMillis(5000));
-        } catch(Exception ignored) {}
-        getStandardFilm().andExpect(status().isNotFound());
+            long frameOffset = FILM_FRAME_DURATION.toSeconds() * 5;
+            seasonGenerator.generateDefaultSeason(10, true);
+            leagueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
+            populationStateDAO.takeSnapshot(Set.of(SeasonGenerator.DEFAULT_SEASON_ID));
+            teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
+            OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
+            Instant mucInstant = startFrom.plusDays(1).toInstant();
+            seasonGenerator.createMatches
+            (
+                BaseMatch.MatchType._1V1,
+                9L, 10L,
+                new long[]{8L, 9L}, new long[]{10L},
+                startFrom,
+                Region.EU,
+                1, 1, 1, 1, 1
+            );
+            seasonGenerator.createMatches
+            (
+                BaseMatch.MatchType._1V1,
+                9L, 10L,
+                new long[]{8L, 9L}, new long[]{10L},
+                startFrom.plusSeconds(MatchDAO.DURATION_OFFSET + frameOffset),
+                Region.EU,
+                1, 1, 1, 1, 1
+            );
+            List<Long> teamIds = List.of(9L, 10L);
+            jdbcTemplate.update("DELETE FROM team_state WHERE timestamp >= ? ", startFrom);
+            teamStateDAO.takeSnapshot(teamIds, startFrom);
+            seasonGenerator.takeTeamSnapshot(teamIds, startFrom, frameOffset, 1);
+            matchParticipantDAO.identify(SeasonGenerator.DEFAULT_SEASON_ID, startFrom);
+            matchDAO.updateDuration(startFrom);
+            eventService.createMatchUpdateEvent(
+                new MatchUpdateContext(Map.of(), new UpdateContext(mucInstant, mucInstant)));
+            updateContexts.poll(5, TimeUnit.SECONDS);
+            getStandardFilm().andExpect(status().isNotFound());
+        }
+        finally
+        {
+            sub.dispose();
+        }
     }
 
 }

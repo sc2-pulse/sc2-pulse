@@ -14,13 +14,14 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
-import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -74,7 +75,8 @@ public class MapStatsFilmTestService
         this.jdbcTemplate = jdbcTemplate;
     }
 
-    public List<UpdateContext> generateFilms(Function<OffsetDateTime, List<Long>> matchGenerator)
+    public BlockingQueue<UpdateContext> generateFilms(Function<OffsetDateTime, List<Long>> matchGenerator)
+    throws InterruptedException
     {
         OffsetDateTime startFrom = SC2Pulse.offsetDateTime().plusMonths(1);
         Instant mucInstant = startFrom.plusDays(1).toInstant();
@@ -86,6 +88,8 @@ public class MapStatsFilmTestService
         List<Long> teamIds = matchGenerator.apply(startFrom);
         jdbcTemplate.update("DELETE FROM team_state");
 
+        BlockingQueue<UpdateContext> updateContexts = new ArrayBlockingQueue<>(1);
+        mapService.getUpdateEvent().subscribe(updateContexts::add);
         teamStateDAO.takeSnapshot(teamIds, startFrom);
         seasonGenerator.takeTeamSnapshot(teamIds, startFrom, FRAME_OFFSET, 1);
         seasonGenerator.takeTeamSnapshot(teamIds, startFrom, FRAME_OFFSET, 2);
@@ -93,14 +97,7 @@ public class MapStatsFilmTestService
         matchDAO.updateDuration(startFrom);
         eventService.createMatchUpdateEvent(new MatchUpdateContext(
             Map.of(), new UpdateContext(mucInstant, mucInstant)));
-        List<UpdateContext> updateContexts = new ArrayList<>(1);
-        mapService.getUpdateEvent().subscribe(updateContexts::add);
-        try
-        {
-            if(updateContexts.isEmpty())
-                mapService.getUpdateEvent().blockFirst(Duration.ofMillis(5000));
-        } catch(Exception ignored) {}
-        updateContexts.clear();
+        updateContexts.poll(5, TimeUnit.SECONDS);
         return updateContexts;
     }
 

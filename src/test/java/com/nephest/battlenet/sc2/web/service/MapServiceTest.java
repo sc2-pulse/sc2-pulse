@@ -22,15 +22,18 @@ import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsFilmDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.Disposable;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Sinks;
 
@@ -99,6 +102,7 @@ public class MapServiceTest
 
     @Test
     public void whenCreatingBean_thenUpdateOnMatchUpdateEvent()
+    throws InterruptedException
     {
         LocalDate oldDate = LocalDate.now().minusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays());
         when(seasonDAO.findLast())
@@ -123,16 +127,19 @@ public class MapServiceTest
             eventService
         );
         mapService.setMapService(mapService);
-        matchUpdateEvent.emitNext(ctx, DEFAULT_FAILURE_HANDLER);
-        matchUpdateEvent.emitNext(ctx, DEFAULT_FAILURE_HANDLER);
-
-        //subscription may miss already emitted events, ignore such cases
+        BlockingQueue<UpdateContext> contexts = new ArrayBlockingQueue<>(2);
+        Disposable sub = mapService.getUpdateEvent().subscribe(contexts::add);
         try
         {
-            mapService.getUpdateEvent().blockFirst(Duration.ofMillis(1000));
-            mapService.getUpdateEvent().blockFirst(Duration.ofMillis(1000));
-        } catch(Exception ignored) {}
-        verify(mapStatsDAO, times(2)).add(any(), any());
+            matchUpdateEvent.emitNext(ctx, DEFAULT_FAILURE_HANDLER);
+            matchUpdateEvent.emitNext(ctx, DEFAULT_FAILURE_HANDLER);
+            for (int i = 0; i < 2; i++) contexts.poll(5, TimeUnit.SECONDS);
+            verify(mapStatsDAO, times(2)).add(any(), any());
+        }
+        finally
+        {
+            sub.dispose();
+        }
     }
 
 }

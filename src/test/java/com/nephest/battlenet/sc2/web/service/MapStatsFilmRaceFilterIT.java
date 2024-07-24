@@ -84,7 +84,7 @@ public class MapStatsFilmRaceFilterIT
         @Autowired EventService eventService,
         @Autowired MapStatsFilmTestService mapStatsFilmTestService
     )
-    throws SQLException
+    throws SQLException, InterruptedException
     {
         try(Connection connection = dataSource.getConnection())
         {

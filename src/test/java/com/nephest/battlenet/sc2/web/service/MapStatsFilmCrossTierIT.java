@@ -102,7 +102,7 @@ public class MapStatsFilmCrossTierIT
         @Autowired MapStatsFilmSpecDAO mapStatsFilmSpecDAO,
         @Autowired MapStatsFilmTestService mapStatsFilmTestService
     )
-    throws SQLException
+    throws SQLException, InterruptedException
     {
         try(Connection connection = dataSource.getConnection())
         {
