@@ -315,6 +315,11 @@ public class MatchService
         );
     }
 
+    protected void setUpdateContext(UpdateContext updateContext)
+    {
+        this.updateContext = updateContext;
+    }
+
     private UpdateContext getUpdateContext()
     {
         return updateContext != null

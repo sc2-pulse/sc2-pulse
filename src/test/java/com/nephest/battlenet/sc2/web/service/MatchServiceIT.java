@@ -72,6 +72,7 @@ public class MatchServiceIT
     {
         matchService.getUpdateMatchesTask()
             .setValue(SC2Pulse.instant().minus(MatchService.MATCH_UPDATE_FRAME));
+        matchService.setUpdateContext(null);
     }
 
     @AfterAll
