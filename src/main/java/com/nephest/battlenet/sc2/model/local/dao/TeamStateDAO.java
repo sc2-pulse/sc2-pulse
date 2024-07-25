@@ -96,7 +96,13 @@ public class TeamStateDAO
             + "OR team_state.rating < all_filter.rating_min)";
 
     public static final String CLEAR_ARCHIVE_QUERY =
-        "WITH "
+        "CREATE TEMPORARY TABLE tmp_old_archive "
+        + "( "
+            + "team_id BIGINT NOT NULL, "
+            + "timestamp TIMESTAMP WITH TIME ZONE NOT NULL "
+        + ") ON COMMIT DROP; "
+
+        + "WITH "
         + "team_filter AS "
         + "( "
             + "SELECT DISTINCT(team_state.team_id) "
@@ -120,15 +126,31 @@ public class TeamStateDAO
             + "INNER JOIN team_state USING(team_id) "
             + "WHERE archived = true "
             + "ORDER BY team_state.team_id DESC, team_state.rating DESC, team_state.timestamp DESC "
+        + "), "
+        + "archive_filter AS "
+        + "( "
+            + "SELECT team_id, timestamp "
+            + "FROM team_filter "
+            + "INNER JOIN team_state USING(team_id) " 
+            + "WHERE archived = true "
+        + "), "
+        + "old_archive_filter AS " 
+        + "( "
+            + "SELECT team_id, archive_filter.timestamp "
+            + "FROM archive_filter " 
+            + "LEFT JOIN min_filter USING(team_id, timestamp) "
+            + "LEFT JOIN max_filter USING(team_id, timestamp) "
+            + "WHERE min_filter.timestamp IS NULL "
+            + "AND max_filter.timestamp IS NULL "
         + ") "
+        + "INSERT INTO tmp_old_archive(team_id, timestamp) "
+        + "SELECT team_id, timestamp FROM old_archive_filter; "
+
         + "UPDATE team_state "
         + "SET archived = null "
-        + "FROM min_filter "
-        + "INNER JOIN max_filter USING(team_id) "
-        + "WHERE team_state.team_id = min_filter.team_id "
-        + "AND team_state.timestamp != min_filter.timestamp "
-        + "AND team_state.timestamp != max_filter.timestamp "
-        + "AND team_state.archived = true";
+        + "FROM tmp_old_archive "
+        + "WHERE team_state.team_id = tmp_old_archive.team_id "
+        + "AND team_state.timestamp = tmp_old_archive.timestamp ";
 
     private static final String TAKE_TEAM_SNAPSHOT =
         "INSERT INTO team_state "
