@@ -296,7 +296,10 @@ class MatrixUI {
                 ? data.colors || MatrixUI.HIGHLIGHT_COLORS
                 : MatrixUI.HIGHLIGHT_COLORS;
             for(let colIx = 0; colIx < this.cells[rowIx].length; colIx++) {
-                const value = this.cells[rowIx][colIx][this.mainParameter];
+                const cell = this.cells[rowIx][colIx];
+                if(!cell) continue;
+
+                const value = cell[this.mainParameter];
                 if(value == null) continue;
                 const highlightRange = this.highlightRanges.get(MatrixUI.getCellType(rowIx, colIx));
                 const diff = value - highlightRange.mid;
