@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -167,6 +168,46 @@ public class LadderUpdateIT
         {
             sub.dispose();
         }
+    }
+
+    @Test
+    public void testRemoveExpired()
+    {
+        OffsetDateTime expired = SC2Pulse.offsetDateTime().minusDays(30);
+        List<LadderUpdate> updates = List.of
+        (
+            new LadderUpdate
+            (
+                Region.EU,
+                QueueType.LOTV_1V1,
+                BaseLeague.LeagueType.BRONZE,
+                expired,
+                Duration.ofSeconds(1)
+            ),
+            new LadderUpdate
+            (
+                Region.EU,
+                QueueType.LOTV_1V1,
+                BaseLeague.LeagueType.BRONZE,
+                expired.minusSeconds(1),
+                Duration.ofSeconds(1)
+            ),
+            new LadderUpdate
+            (
+                Region.EU,
+                QueueType.LOTV_1V1,
+                BaseLeague.LeagueType.BRONZE,
+                expired.plusMinutes(1),
+                Duration.ofSeconds(1)
+            )
+        );
+        ladderUpdateDAO.create(Set.copyOf(updates));
+
+        assertEquals(2, updateService.removeExpiredLadderUpdates());
+        Assertions.assertThat(ladderUpdateDAO.getAll())
+            .usingRecursiveComparison()
+            .withEqualsForType(OffsetDateTime::isEqual, OffsetDateTime.class)
+            .isEqualTo(List.of(updates.get(2)));
     }
 
 }
