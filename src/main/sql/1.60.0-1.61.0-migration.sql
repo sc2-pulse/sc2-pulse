@@ -101,3 +101,9 @@ of the audit trigger its self.
 ';
 
 ALTER TABLE audit.logged_actions RENAME COLUMN session_user_name TO session_user_id;
+
+CREATE INDEX ix_logged_actions_row_data_account_id
+    ON audit.logged_actions (((row_data ->> 'account_id')::bigint))
+    WHERE row_data ->> 'account_id' IS NOT NULL;
+CREATE INDEX ix_logged_actions_search
+    ON audit.logged_actions(action_tstamp_tx, event_id, action, session_user_id);

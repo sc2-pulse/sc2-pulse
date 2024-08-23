@@ -71,7 +71,11 @@ COMMENT ON COLUMN audit.logged_actions.row_data IS 'Record value. Null for state
 COMMENT ON COLUMN audit.logged_actions.changed_fields IS 'New values of fields changed by UPDATE. Null except for row-level UPDATE events.';
 COMMENT ON COLUMN audit.logged_actions.statement_only IS '''t'' if audit event is from an FOR EACH STATEMENT trigger, ''f'' for FOR EACH ROW';
 
-CREATE INDEX "ix_logged_actions_tstamp_tx_stm" ON "audit"."logged_actions"("action_tstamp_stm");
+CREATE INDEX ix_logged_actions_row_data_account_id
+    ON audit.logged_actions (((row_data ->> 'account_id')::bigint))
+    WHERE row_data ->> 'account_id' IS NOT NULL;
+CREATE INDEX ix_logged_actions_search
+    ON audit.logged_actions(action_tstamp_tx, event_id, action, session_user_id);
 
 CREATE OR REPLACE FUNCTION audit.if_modified_func() RETURNS TRIGGER AS '
 DECLARE

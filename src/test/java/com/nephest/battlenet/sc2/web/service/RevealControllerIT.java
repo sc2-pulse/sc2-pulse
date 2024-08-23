@@ -492,6 +492,13 @@ public class RevealControllerIT
                 .with(csrf())
         )
             .andExpect(status().isForbidden());
+        mvc.perform
+        (
+            get("/api/reveal/log")
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+        )
+            .andExpect(status().isForbidden());
     }
 
     @Test

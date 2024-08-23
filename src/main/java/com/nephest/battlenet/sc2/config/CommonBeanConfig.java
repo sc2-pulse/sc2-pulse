@@ -3,6 +3,7 @@
 
 package com.nephest.battlenet.sc2.config;
 
+import com.nephest.battlenet.sc2.config.convert.AuditLogEntryActionToStringConverter;
 import com.nephest.battlenet.sc2.config.convert.IdentifiableToIntegerConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToAccountPropertyTypeConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToClanMemberEventTypeConverter;
@@ -17,6 +18,7 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToRegionConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
+import com.nephest.battlenet.sc2.config.convert.StringToAuditLogEntryActionConverter;
 import com.nephest.battlenet.sc2.model.Region;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -66,6 +68,15 @@ public class CommonBeanConfig
         service.addConverter(new IntegerToPlayerCharacterReportTypeConverter());
         service.addConverter(new IntegerToClanMemberEventTypeConverter());
         service.addConverter(new IntegerToAccountPropertyTypeConverter());
+        return service;
+    }
+
+    @Bean
+    public ConversionService auditLogConversionService()
+    {
+        DefaultFormattingConversionService service = new DefaultFormattingConversionService();
+        service.addConverter(new StringToAuditLogEntryActionConverter());
+        service.addConverter(new AuditLogEntryActionToStringConverter());
         return service;
     }
 
