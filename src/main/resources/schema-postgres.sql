@@ -43,7 +43,7 @@ CREATE TABLE audit.logged_actions (
     schema_name text not null,
     table_name text not null,
     relid oid not null,
-    session_user_name text,
+    session_user_name BIGINT,
     action_tstamp_tx TIMESTAMP WITH TIME ZONE NOT NULL,
     action_tstamp_stm TIMESTAMP WITH TIME ZONE NOT NULL,
     action_tstamp_clk TIMESTAMP WITH TIME ZONE NOT NULL,
@@ -91,7 +91,7 @@ BEGIN
         TG_TABLE_SCHEMA::text,                        -- schema_name
         TG_TABLE_NAME::text,                          -- table_name
         TG_RELID,                                     -- relation OID for much quicker searches
-        current_setting(''sc2pulse.user_id'', true),    -- session_user_name
+        NULLIF(current_setting(''sc2pulse.user_id'', true), '''')::bigint,    -- session_user_name
         current_timestamp,                            -- action_tstamp_tx
         statement_timestamp(),                        -- action_tstamp_stm
         clock_timestamp(),                            -- action_tstamp_clk
