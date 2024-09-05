@@ -18,7 +18,7 @@ BEGIN
         TG_TABLE_SCHEMA::text,                        -- schema_name
         TG_TABLE_NAME::text,                          -- table_name
         TG_RELID,                                     -- relation OID for much quicker searches
-        NULLIF(current_setting(''sc2pulse.user_id'', true), '''')::bigint,    -- session_user_name
+        NULLIF(current_setting(''sc2pulse.user_id'', true), '''')::bigint,    -- session_user_id
         current_timestamp,                            -- action_tstamp_tx
         statement_timestamp(),                        -- action_tstamp_stm
         clock_timestamp(),                            -- action_tstamp_clk
@@ -99,3 +99,5 @@ Note that the user name logged is the login role for the session. The audit trig
 cannot obtain the active role because it is reset by the SECURITY DEFINER invocation
 of the audit trigger its self.
 ';
+
+ALTER TABLE audit.logged_actions RENAME COLUMN session_user_name TO session_user_id;
