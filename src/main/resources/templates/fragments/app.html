@@ -363,6 +363,52 @@
                     </form>
                     <div class="text-center"><div th:replace="~{fragments/section :: loading-indicator}"></div></div>
                     </section>
+                    <div class="c-divider-hr"></div>
+                    <section class="log">
+                        <section class="blame text-info"></section>
+                        <section>
+                            <header>
+                                <form id="form-reveal-log" class="form-inline d-flex form-flex form-group-column flex-wrap-gap row-gap-1-5 justify-content-center mb-3">
+                                    <div class="form-group d-flex flex-wrap-gap-05">
+                                        <label for="reveal-log-revealer" class="d-flex gap-tiny">
+                                            Revealer
+                                        </label>
+                                        <select
+                                                class="form-control serializable ctl-reload"
+                                                id="reveal-log-revealer"
+                                                name="revealer"
+                                                required="required"
+                                        >
+                                            <option value="ALL">All</option>
+                                            <option value="EXCLUDE_SYSTEM" selected="selected">Non-system</option>
+                                        </select>
+                                    </div>
+                                    <div class="form-group d-flex flex-wrap-gap-05">
+                                        <label for="reveal-log-action" class="d-flex gap-tiny">
+                                            Action
+                                        </label>
+                                        <select
+                                                class="form-control serializable ctl-reload"
+                                                id="reveal-log-action"
+                                                name="action"
+                                                required="required"
+                                        >
+                                            <option value="ALL" selected="selected">ALL</option>
+                                            <option th:each="action : ${T(com.nephest.battlenet.sc2.model.local.AuditLogEntry.Action).values()}"
+                                                    th:text="${action.name()}"
+                                                    th:value="${action.name()}"
+                                            >
+                                            </option>
+                                        </select>
+                                    </div>
+                                </form>
+                            </header>
+                            <div id="reveal-log-entries-container" class="container-loading loading-none">
+                                <div id="reveal-log-entries" class="log-entries"></div>
+                                <div th:replace="~{fragments/section :: loading-indicator}"></div>
+                            </div>
+                        </section>
+                    </section>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>

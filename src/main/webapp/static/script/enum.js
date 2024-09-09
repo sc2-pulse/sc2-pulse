@@ -226,3 +226,10 @@ const CLAN_MEMBER_EVENT_TYPE = Object.freeze
     LEAVE: {name: "leave", description: "Left", element: ElementUtil.createIcoFontElement("arrow-left", "Left", "text-danger"), order: 2}
 });
 
+const AUDIT_LOG_ACTION = Object.freeze
+ ({
+     INSERT: {name: "I", fullName: "INSERT", order: 1},
+     UPDATE: {name: "U", fullName: "UPDATE", order: 2},
+     DELETE: {name: "D", fullName: "DELETE", order: 3},
+     TRUNCATE: {name: "T", fullName: "TRUNCATE", order: 4}
+ });

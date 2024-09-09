@@ -1875,6 +1875,28 @@ body.modal-open.modal-open-no-popup
     grid-column: 5/5;
 }
 
+.log-entries header > *
+{
+    margin: 0 !important;
+}
+
+.log-entries .table
+{
+    width: fit-content;
+    margin-bottom: 0;
+}
+
+.log-entries .table td
+{
+    text-align: left;
+}
+
+.log-entries .table th
+{
+    text-align: right;
+    padding-left: 0;
+}
+
 .new.new-content:after
 {
     content: 'NEW';
@@ -1978,6 +2000,12 @@ a.unstyled, a.unstyled:hover
 @media (min-width: 992px) {
     .tab-pane.c-height-linked:not(.active) {
         max-width: 960px;
+    }
+}
+
+@media (max-width: 991px) {
+    .log-entries time {
+        width: 100%;
     }
 }
 

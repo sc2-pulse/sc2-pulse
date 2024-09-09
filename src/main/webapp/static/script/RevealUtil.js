@@ -15,11 +15,21 @@ class RevealUtil
             document.querySelector("#pro-player-edit").addEventListener("click", RevealUtil.onEditProPlayer);
             document.querySelector("#pro-player-new").addEventListener("click", RevealUtil.onNewProPlayer);
             document.querySelector("#reveal-player-edit-form").addEventListener("submit", RevealUtil.onSaveProPlayer);
+            document.querySelectorAll("#modal-reveal-player .log .ctl-reload")
+                .forEach(e=>e.addEventListener("change", e=>window.setTimeout(RevealUtil.reloadLogEntries, 1)));
+            ElementUtil.infiniteScroll(document.querySelector("#modal-reveal-player .log .container-indicator-loading-default"),
+                RevealUtil.updateLogEntriesContainer);
         }
+    }
+
+    static resetModel()
+    {
+        Model.DATA.set(RevealUtil.MODEL_NAME, {log: {accounts: new Map(), proPlayers: new Map(), entries: []}});
     }
 
     static onModalShow()
     {
+        RevealUtil.resetModel();
         const currentCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
         const form = document.querySelector("#modal-reveal-player-form");
         const submitCtl = document.querySelector('#modal-reveal-player button[form="modal-reveal-player-form"][type="submit"]');
@@ -41,7 +51,7 @@ class RevealUtil
             submitCtl.classList.remove("btn-success");
             submitCtl.classList.add("btn-danger");
         }
-
+        return RevealUtil.updateLog();
     }
 
     static onFilterChange()
@@ -193,4 +203,292 @@ class RevealUtil
             .then(Session.verifyJsonResponse);
     }
 
+    static getLog
+    (
+        cursor,
+        accountId,
+        authorAccountId,
+        action,
+        excludeSystemAuthor,
+        limit = 30
+    )
+    {
+        const params = new URLSearchParams();
+        params.append("limit", limit);
+        if(cursor) {
+            params.append("idCursor", cursor.id);
+            params.append("createdCursor", cursor.created);
+        }
+        if(accountId) params.append("accountId", accountId);
+        if(authorAccountId) params.append("authorAccountId", authorAccountId);
+        if(action) params.append("action", action.fullName);
+        if(excludeSystemAuthor != null) params.append("excludeSystemAuthor", excludeSystemAuthor);
+
+        return Session.beforeRequest()
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/reveal/log?${params.toString()}`))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static blame(linkedCharacter, character, container)
+    {
+        if(!linkedCharacter.proPlayer) {
+            container.textContent = '';
+            return Promise.resolve();
+        }
+        return RevealUtil.getLog(null, character.accountId, null, AUDIT_LOG_ACTION.INSERT)
+            .then(log=>{
+                if(!log) return null;
+                const entry = log.find(l=>l.table == "pro_player_account");
+                if(!entry) return null;
+                if(!entry.authorAccountId) return [entry, null];
+
+                const params = new URLSearchParams();
+                params.append("accountId", entry.authorAccountId);
+                return Promise.all([Promise.resolve(entry), GroupUtil.getGroup(params, true)]);
+            })
+            .then(all=>{
+                if(!all) {
+                    container.textContent = "";
+                } else {
+                    container.textContent =
+                        "Revealed by " + (all[1] ? all[1].accounts[0].battleTag : RevealUtil.LOG_SYSTEM_USER_NAME)
+                        + " on " + Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(all[0].created));
+                    container.appendChild(ElementUtil.createElement("div", null, "c-divider-hr"));
+                }
+            });
+    }
+
+    static getRevealers()
+    {
+         return Session.beforeRequest()
+            .then(n=>fetch(`${ROOT_CONTEXT_PATH}api/user/role/REVEALER`))
+            .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+    }
+
+    static updateLogRevealers()
+    {
+        const select = document.querySelector("#reveal-log-revealer");
+        if(select.querySelectorAll(":scope option").length > 2) return Promise.resolve();
+
+        return RevealUtil.getRevealers()
+            .then(revealers=>{
+                if(revealers){
+                    revealers.sort((a, b)=>a.id - b.id)
+                        .map(r=>ElementUtil.createElement("option", null, null, CharacterUtil.renderAccount(r), [["value", r.id]]))
+                        .forEach(option=>select.appendChild(option));
+                    Session.restoreState(select.parentElement);
+                }
+            });
+    }
+
+    static fillLogModel(entries) {
+        const ids = {};
+        for(const key of GroupUtil.PARAMETER_KEYS) ids[key] = new Set();
+        for(const entry of entries) {
+            entry.dataJson = JSON.parse(entry.data);
+            if(entry.changedData) entry.changedDataJson = JSON.parse(entry.changedData);
+            for(const [key, val] of Object.entries(entry.dataJson)) {
+                if(!key.endsWith("_id")) continue;
+
+                const pascalCaseKey = Util.snakeCaseToCamelCase(key);
+                if(ids[pascalCaseKey]) ids[pascalCaseKey].add(val);
+            }
+            if(entry.authorAccountId) ids.accountId.add(entry.authorAccountId);
+        }
+        const groupParams = new URLSearchParams();
+        for(const [key, idArray] of Object.entries(ids))
+            for(const id of idArray)
+                groupParams.append(key, id);
+        const model = Model.DATA.get(RevealUtil.MODEL_NAME).log;
+        return GroupUtil.getGroup(groupParams, true)
+            .then(group=>{
+                for(const[groupKey, groupVals] of Object.entries(group))
+                    if(groupVals) groupVals.forEach(val=>model[groupKey].set(val.id || val[groupKey.substring(0, groupKey.length - 1)].id, val));
+                return entries;
+            });
+    }
+
+    static renderLogEntry(entry, model)
+    {
+        const container = ElementUtil.createElement("article", null, "entry d-flex flex-column gap-1 mb-4");
+        container.appendChild(RevealUtil.renderLogEntryHeader(entry, model));
+        container.appendChild(RevealUtil.renderLogEntryContent(entry, model));
+        return container;
+    }
+
+    static renderLogEntryContent(entry, model)
+    {
+        const container = ElementUtil.createElement("div", null, "content d-flex flex-column gap-1 px-2");
+        container.appendChild(RevealUtil.renderLogEntryEntities(entry, model));
+        container.appendChild(RevealUtil.renderLogEntryData(entry));
+        return container;
+    }
+
+    static renderLogEntryEntities(entry, model)
+    {
+        const container = ElementUtil.createElement("div", null, "entities d-flex flex-wrap-gap");
+
+        for(const [key, val] of Object.entries(entry.dataJson)) {
+            if(!key.endsWith("_id")) continue;
+
+            const pascalCaseKey = Util.snakeCaseToCamelCase(key);
+            const modelKey = RevealUtil.logDataKeyToModelKey(pascalCaseKey);
+            if(!model[modelKey]) continue;
+
+            const entity = model[modelKey].get(val);
+            if(!entity) continue;
+
+            const renderer = RevealUtil.LOG_ENTITY_RENDERERS.get(pascalCaseKey);
+            if(!renderer) continue;
+
+            const params = new URLSearchParams();
+            params.append(pascalCaseKey, val);
+            container.appendChild(GroupUtil.createGroupLink(params, renderer(entity), false));
+        }
+        if(container.children.length == 0) container.classList.add("d-none");
+        return container;
+    }
+
+    static logDataKeyToModelKey(logDataKey)
+    {
+        return logDataKey.substring(0, logDataKey.length - 2) + "s";
+    }
+
+    static renderLogEntryData(entry)
+    {
+        const keys = RevealUtil.getLogEntryDataRenderKeys(entry);
+        if(keys.length == 0) return ElementUtil.createElement("div", null, "d-none");
+
+        const table = TableUtil.createTable([], true);
+        const tbody = table.querySelector(":scope tbody");
+        for(const key of keys) {
+            const row = TableUtil.createSimpleRow(entry.dataJson, key);
+            const diff = entry.changedDataJson && (typeof entry.changedDataJson[key] !== 'undefined');
+            if(diff) row.children.item(1).classList.add("text-danger");
+            TableUtil.insertCell(row, "text-success").textContent = diff ? String(entry.changedDataJson[key]) : "";
+            tbody.appendChild(row);
+        }
+        return table;
+    }
+
+    static getLogEntryDataRenderKeys(entry)
+    {
+        switch(entry.table) {
+            case "pro_player_account": {
+                const action = EnumUtil.enumOfFullName(entry.action, AUDIT_LOG_ACTION);
+                if(action == AUDIT_LOG_ACTION.INSERT || action == AUDIT_LOG_ACTION.DELETE)
+                    return [];
+                break;
+            }
+            case "social_media_link": {
+                const action = EnumUtil.enumOfFullName(entry.action, AUDIT_LOG_ACTION);
+                if(action == AUDIT_LOG_ACTION.INSERT || action == AUDIT_LOG_ACTION.DELETE)
+                    return ["url"];
+            }
+            default: return Object.keys(entry.dataJson);
+        }
+    }
+
+    static renderLogEntryHeader(entry, model)
+    {
+        const header = ElementUtil.createElement("header", null, "bg-transparent-05 d-flex flex-wrap-gap p-2");
+        header.appendChild(ElementUtil.createElement("address", null, "author",
+            entry.authorAccountId
+                ? CharacterUtil.renderAccount(model.accounts.get(entry.authorAccountId) || {id: entry.authorAccountId})
+                : RevealUtil.LOG_SYSTEM_USER_NAME));
+        header.appendChild(RevealUtil.renderLogEntryAction(entry.action));
+        header.appendChild(ElementUtil.createElement("span", null, "table-name text-info", entry.table))
+        header.appendChild(ElementUtil.createElement("time", null, "text-secondary",
+            Util.DATE_TIME_FORMAT.format(Util.parseIsoDateTime(entry.created))), [["datetime", entry.created]]);
+        return header;
+    }
+
+    static renderLogEntryAction(actionText)
+    {
+        const action = EnumUtil.enumOfFullName(actionText, AUDIT_LOG_ACTION);
+        return ElementUtil.createElement("span", null, "action " + RevealUtil.getLogActionClass(action), action.fullName);
+    }
+
+    static getLogActionClass(action)
+    {
+        switch(action) {
+            case AUDIT_LOG_ACTION.INSERT:
+                return "text-success";
+            case AUDIT_LOG_ACTION.DELETE:
+                return "text-danger";
+            case AUDIT_LOG_ACTION.UPDATE:
+                return "text-warning";
+            default: return "";
+        }
+    }
+
+    static updateLogEntries()
+    {
+        let cursor;
+        const model = Model.DATA.get(RevealUtil.MODEL_NAME).log;
+        if(model && model.entries && model.entries.length > 0) cursor = model.entries[model.entries.length - 1];
+
+        const revealer = localStorage.getItem("reveal-log-revealer" || "EXCLUDE_SYSTEM");
+        const revealerId = parseInt(revealer);
+        const action = localStorage.getItem("reveal-log-action" || "ALL");
+
+        return RevealUtil.getLog(
+            cursor,
+            null,
+            revealerId != NaN ? revealerId : null,
+            action != "ALL" ? EnumUtil.enumOfFullName(action, AUDIT_LOG_ACTION) : null,
+            revealer == "EXCLUDE_SYSTEM"
+        )
+            .then(entries=>{
+                if(!entries) return {data: null, status: LOADING_STATUS.COMPLETE};
+
+                const container = document.querySelector("#reveal-log-entries");
+                return RevealUtil.fillLogModel(entries)
+                    .then(ets=>{
+                        ets.map(entry=>RevealUtil.renderLogEntry(entry, model))
+                            .forEach(l=>container.appendChild(l));
+                        model.entries = model.entries.concat(ets);
+                        return {data: ets, status: LOADING_STATUS.NONE};
+                    });
+            });
+    }
+
+    static resetLogEntries()
+    {
+        ElementUtil.removeChildren(document.querySelector('#reveal-log-entries'));
+        Util.resetLoadingIndicator(document.querySelector('#reveal-log-entries-container'));
+        Model.DATA.get(RevealUtil.MODEL_NAME).log.entries = [];
+    }
+
+    static reloadLogEntries()
+    {
+        RevealUtil.resetLogEntries();
+        return RevealUtil.updateLogEntriesContainer();
+    }
+
+    static updateLogEntriesContainer()
+    {
+        const container = document.querySelector('#reveal-log-entries-container');
+        return Util.load(container, RevealUtil.updateLogEntries);
+    }
+
+    static updateLog()
+    {
+        const linkedCharacter = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.SEARCH);
+        const character = Model.DATA.get(VIEW.CHARACTER).get(VIEW_DATA.VAR);
+        const logContainer = document.querySelector('#modal-reveal-player .log');
+        ElementUtil.executeTask('#modal-reveal-player', ()=>
+            RevealUtil.blame(linkedCharacter, character, logContainer.querySelector(":scope .blame"))
+        );
+        return RevealUtil.updateLogRevealers()
+            .then(RevealUtil.reloadLogEntries);
+    }
+
 }
+
+RevealUtil.LOG_SYSTEM_USER_NAME = "System";
+RevealUtil.MODEL_NAME = "reveal";
+RevealUtil.LOG_ENTITY_RENDERERS = new Map([
+    ["accountId", CharacterUtil.renderAccount],
+    ["proPlayerId", proPlayer=>RevealUtil.renderProPlayer(proPlayer.proPlayer)]
+]);
