@@ -4,12 +4,60 @@
 class GroupUtil
 {
 
-    static getGroup(groupParams)
+    static getGroup(groupParams, cache = false)
     {
+        let cachedResult = {};
+        if(cache) {
+           const cached = GroupUtil.getGroupCache(groupParams);
+           groupParams = cached.missedParams;
+           cachedResult = cached.cached;
+           if(groupParams.size == 0) return Promise.resolve(cachedResult);
+        }
         const request = `${ROOT_CONTEXT_PATH}api/group?${groupParams.toString()}`;
         return Session.beforeRequest()
            .then(n=>fetch(request))
-           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]));
+           .then(resp=>Session.verifyJsonResponse(resp, [200, 404]))
+           .then(json=>{
+                if(cache) {
+                    GroupUtil.cacheGroup(json);
+                    Util.concatObject(cachedResult, json);
+                    return json;
+                } else {
+                    return json;
+                }
+           });
+    }
+
+    static getGroupCache(groupParams)
+    {
+        const missedParams = new URLSearchParams(groupParams);
+        const result = {cached: {}, missedParams: missedParams, params: groupParams};
+        for(const key of new Set(missedParams.keys())) {
+            const cacheKey = GroupUtil.mapGroupCacheKey(key);
+            result.cached[cacheKey] = [];
+            if(!GroupUtil.CACHE[cacheKey]) GroupUtil.CACHE[cacheKey] = new Map();
+            for(const value of missedParams.getAll(key)) {
+                const cachedObj = GroupUtil.CACHE[cacheKey].get(parseInt(value));
+                if(cachedObj) {
+                    result.cached[cacheKey].push(cachedObj);
+                    missedParams.delete(key, value);
+                }
+            }
+        }
+        return result;
+    }
+
+    static mapGroupCacheKey(key)
+    {
+        return key.substring(0, key.length - 2) + "s";
+    }
+
+    static cacheGroup(group)
+    {
+        for(const [key, values] of Object.entries(group)) {
+            if(!GroupUtil.CACHE[key]) GroupUtil.CACHE[key] = new Map();
+            values.forEach(val=>GroupUtil.CACHE[key].set(val.id, val));
+        }
     }
 
     static loadGroupModel(groupParams)
@@ -418,3 +466,5 @@ class GroupUtil
     }
 
 }
+
+GroupUtil.CACHE = {};
