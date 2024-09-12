@@ -597,6 +597,11 @@ class ElementUtil
             && rect.right <= (window.innerWidth || document.documentElement.clientWidth)
     }
 
+    static isElementVisible(el)
+    {
+        return el.offsetParent !== null;
+    }
+
     static onCloneElement(evt)
     {
         ElementUtil.cloneElement(evt.target);

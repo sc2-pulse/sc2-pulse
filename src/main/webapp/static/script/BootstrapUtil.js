@@ -56,7 +56,7 @@ class BootstrapUtil
     {
         const tab = document.getElementById(id);
         if(tab.classList.contains("active")) return Promise.resolve();
-        if(tab.offsetParent == null)
+        if(!ElementUtil.isElementVisible(tab))
         {
             $(tab).tab('show');
             return Promise.resolve();
@@ -90,7 +90,7 @@ class BootstrapUtil
         const modal = e.target.closest(".modal");
         const root = modal != null ? ("#" + modal.id) : "body";
         for(const tab of document.querySelectorAll(root + " .nav-pills a.active"))
-            if(tab.getAttribute("data-ignore-visibility") || tab.offsetParent != null)
+            if(tab.getAttribute("data-ignore-visibility") || ElementUtil.isElementVisible(tab))
                 params.append("t", tab.getAttribute("data-target").substring(1));
         const newTabs = params.getAll("t");
         //this can happen only when hiding tabs
@@ -124,7 +124,7 @@ class BootstrapUtil
     {
         return new Promise((res, rej)=>{
             const elem = document.getElementById(id);
-            if(elem.offsetParent == null)
+            if(!ElementUtil.isElementVisible(elem))
             {
                 $(elem).collapse("hide");
                 res();

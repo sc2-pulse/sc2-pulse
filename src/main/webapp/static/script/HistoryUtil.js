@@ -102,7 +102,7 @@ class HistoryUtil
         for(let i = tabs.length - 1; i > -1; i--)
         {
             const tab = tabs[i];
-            if(tab.offsetParent != null)
+            if(ElementUtil.isElementVisible(tab))
             {
                 hash = tab.getAttribute("data-target").substring(1);
                 break;
@@ -179,7 +179,7 @@ class HistoryUtil
         if(activateOnly) {
             tabEl.classList.add("active")
         } else {
-            if(tabEl.offsetParent != null) promises.push(new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(tab.id, res)));
+            if(ElementUtil.isElementVisible(tabEl)) promises.push(new Promise((res, rej)=>ElementUtil.ELEMENT_RESOLVERS.set(tab.id, res)));
             $(tabEl).tab('show');
         }
     }
