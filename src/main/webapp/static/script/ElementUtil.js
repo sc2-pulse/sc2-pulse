@@ -722,6 +722,14 @@ class ElementUtil
         elements.forEach(e=>container.appendChild(e));
     }
 
+    static infiniteScroll(element, task)
+    {
+        const observer = new IntersectionObserver((intersection)=>{if (intersection.some(i=>i.isIntersecting)) task();},
+            ElementUtil.INFINITE_SCROLL_OPTIONS);
+        observer.observe(element);
+        return observer;
+    }
+
 }
 
 ElementUtil.ELEMENT_RESOLVERS = new Map();

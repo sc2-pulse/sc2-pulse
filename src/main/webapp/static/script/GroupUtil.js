@@ -433,13 +433,10 @@ class GroupUtil
     {
         const groupSection = document.querySelector("#group");
         const matchContainer = groupSection.querySelector(":scope .group-matches");
-        const observer = new IntersectionObserver((intersection)=>{
-            if (intersection.some(i=>i.isIntersecting))
-                Util.load(matchContainer,
-                    e=>GroupUtil.updateMatches(document.querySelector("#group"),
-                        localStorage.getItem("matches-type-group") || "all"));
-        }, ElementUtil.INFINITE_SCROLL_OPTIONS);
-        observer.observe(document.querySelector("#group .group-matches .container-indicator-loading-default"));
+        ElementUtil.infiniteScroll(document.querySelector("#group .group-matches .container-indicator-loading-default"),
+            ()=>Util.load(matchContainer, e=>GroupUtil.updateMatches(
+                document.querySelector("#group"),
+                localStorage.getItem("matches-type-group") || "all")));
 
         document.querySelector("#matches-historical-mmr-group").addEventListener("change",
             e=>window.setTimeout(e=>GroupUtil.updateMatchesView(
@@ -461,12 +458,9 @@ class GroupUtil
 
     static enhanceClanHistory()
     {
-        const observer = new IntersectionObserver((intersection)=>{
-            if (intersection.some(i=>i.isIntersecting))
-                Util.load(document.querySelector("#group .group-clan"),
-                    e=>GroupUtil.updateClanHistory(document.querySelector("#group")));
-        }, ElementUtil.INFINITE_SCROLL_OPTIONS);
-        observer.observe(document.querySelector("#group .group-clan .container-indicator-loading-default"));
+        ElementUtil.infiniteScroll(document.querySelector("#group .group-clan .container-indicator-loading-default"),
+            ()=>Util.load(document.querySelector("#group .group-clan"),
+                e=>GroupUtil.updateClanHistory(document.querySelector("#group"))));
     }
 
 }
