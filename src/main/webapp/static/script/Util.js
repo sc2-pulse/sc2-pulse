@@ -147,6 +147,11 @@ class Util
         return str.replace(/[A-Z]+(?![a-z])|[A-Z]/g, ($, ofs)=>(ofs ? "-" : "") + $.toLowerCase());
     }
 
+    static snakeCaseToCamelCase(str)
+    {
+        return str.toLowerCase().replace(/[-_][a-z]/g, (group) => group.slice(-1).toUpperCase());
+    }
+
     static calculateRank(searchResult, i)
     {
         return (searchResult.meta.page - 1) * searchResult.meta.perPage + i + 1;
