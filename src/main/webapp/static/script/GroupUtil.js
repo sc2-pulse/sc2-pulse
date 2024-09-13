@@ -381,13 +381,17 @@ class GroupUtil
         return GroupUtil.loadAndShowGroup(Util.deleteSearchParams(Util.getHrefUrlSearchParams(evt.target.closest("a"))));
     }
 
-    static createGroupLink(params, text = "")
+    static createGroupLink(params, text = "", eventListener = true)
     {
         const a = document.createElement("a");
         a.textContent = text;
         const fullParams = GroupUtil.fullUrlSearchParams(params);
         a.setAttribute("href", `${ROOT_CONTEXT_PATH}?${fullParams.toString()}#group-group`);
-        a.addEventListener("click", GroupUtil.onGroupLinkClick);
+        if(eventListener) {
+            a.addEventListener("click", GroupUtil.onGroupLinkClick);
+        } else {
+            a.setAttribute("target", "_blank");
+        }
         return a;
     }
 
