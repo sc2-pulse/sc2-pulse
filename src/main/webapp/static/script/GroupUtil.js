@@ -472,3 +472,4 @@ class GroupUtil
 }
 
 GroupUtil.CACHE = {};
+GroupUtil.PARAMETER_KEYS = new Set(["characterId", "accountId", "proPlayerId", "clanId"]);
