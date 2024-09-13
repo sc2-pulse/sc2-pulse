@@ -140,9 +140,9 @@ class Session
         return Session.isHistorical ? Session.currentRestorationHash : window.location.hash;
     }
 
-    static restoreState()
+    static restoreState(container = document)
     {
-        for(const elem of document.querySelectorAll(".serializable"))
+        for(const elem of container.querySelectorAll(".serializable"))
         {
             const savedState = localStorage.getItem(elem.id);
             if(savedState == null) continue;
@@ -159,7 +159,7 @@ class Session
                 elem.value = savedState;
             }
         }
-        document.querySelectorAll(".class-ctl").forEach(ElementUtil.applyClassCtl);
+        container.querySelectorAll(".class-ctl").forEach(ElementUtil.applyClassCtl);
     }
 
     static enhanceSerializable()
