@@ -488,8 +488,10 @@ class Util
                 ElementUtil.setLoadingIndicator(container, result.status);
                 if(result.status != LOADING_STATUS.COMPLETE) {
                     const infiniteScrollElem = container.querySelector(":scope .indicator-loading-scroll-infinite");
-                    if(infiniteScrollElem && ElementUtil.isElementInViewport(infiniteScrollElem))
-                        return Util.load(container, lazyPromise);
+                    if(infiniteScrollElem
+                        && ElementUtil.isElementVisible(infiniteScrollElem)
+                        && ElementUtil.isElementInViewport(infiniteScrollElem))
+                            return Util.load(container, lazyPromise);
                 }
             })
             .catch(error=>{
