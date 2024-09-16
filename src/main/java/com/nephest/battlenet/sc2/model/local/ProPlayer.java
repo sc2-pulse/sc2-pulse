@@ -27,7 +27,7 @@ implements java.io.Serializable
     private static final long serialVersionUID = 1L;
 
     public static final int NAME_LENGTH_MAX = 100;
-    public static final long EARNINGS_MIN = 1;
+    public static final long EARNINGS_MIN = 0;
     public static final long EARNINGS_MAX = 1_000_000_000;
 
     private Long id;
