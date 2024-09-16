@@ -207,11 +207,11 @@ class TableUtil
         BootstrapUtil.addTooltip(thead, "Hover over this column values to get a more detailed view");
     }
 
-    static createSimpleRow(object, property)
+    static createSimpleRow(object, property, toString = false)
     {
         const row = document.createElement("tr");
         TableUtil.createRowTh(row).textContent = property;
-        row.insertCell().textContent = object[property];
+        row.insertCell().textContent = toString ? String(object[property]) : object[property];
         return row;
     }
 
