@@ -411,7 +411,7 @@ class ElementUtil
                 }
                 break;
             default:
-                if(input.value != val) {
+                if(String(input.value) !== String(val)) {
                     input.value = val;
                     changed = true;
                 }
