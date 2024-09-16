@@ -362,7 +362,7 @@ class RevealUtil
         const table = TableUtil.createTable([], true);
         const tbody = table.querySelector(":scope tbody");
         for(const key of keys) {
-            const row = TableUtil.createSimpleRow(entry.dataJson, key);
+            const row = TableUtil.createSimpleRow(entry.dataJson, key, true);
             const diff = entry.changedDataJson && (typeof entry.changedDataJson[key] !== 'undefined');
             if(diff) row.children.item(1).classList.add("text-danger");
             TableUtil.insertCell(row, "text-success").textContent = diff ? String(entry.changedDataJson[key]) : "";
