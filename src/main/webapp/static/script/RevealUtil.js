@@ -428,14 +428,14 @@ class RevealUtil
         const model = Model.DATA.get(RevealUtil.MODEL_NAME).log;
         if(model && model.entries && model.entries.length > 0) cursor = model.entries[model.entries.length - 1];
 
-        const revealer = localStorage.getItem("reveal-log-revealer" || "EXCLUDE_SYSTEM");
+        const revealer = localStorage.getItem("reveal-log-revealer") || "EXCLUDE_SYSTEM";
         const revealerId = parseInt(revealer);
-        const action = localStorage.getItem("reveal-log-action" || "ALL");
+        const action = localStorage.getItem("reveal-log-action") || "ALL";
 
         return RevealUtil.getLog(
             cursor,
             null,
-            revealerId != NaN ? revealerId : null,
+            !isNaN(revealerId) ? revealerId : null,
             action != "ALL" ? EnumUtil.enumOfFullName(action, AUDIT_LOG_ACTION) : null,
             revealer == "EXCLUDE_SYSTEM"
         )
