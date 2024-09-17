@@ -23,6 +23,7 @@ import java.time.OffsetDateTime;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -83,8 +84,8 @@ public class TwitchService
     private Mono<Void> updateTwitchData(MatchUpdateContext updateContext)
     {
         return getTwitchIds(updateContext)
-            .buffer(USER_BATCH_SIZE, HashSet::new)
-            .flatMap(twitchAPI::getUsersByIds, CONCURRENCY)
+            .collect(Collectors.toSet())
+            .flatMapMany(twitchAPI::getUsersByIds)
             .map(TwitchUser::of)
             .buffer(USER_BATCH_SIZE, HashSet::new)
             .flatMap(users->WebServiceUtil.blockingCallable(()->twitchUserDAO.merge(users)))
