@@ -10,7 +10,7 @@
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.2.5</version>
+        <version>3.2.10</version>
     </parent>
   <groupId>com.nephest.battlenet.sc2</groupId>
   <artifactId>sc2-webapp</artifactId>
@@ -53,7 +53,7 @@
     <dependency>
         <groupId>org.junit.jupiter</groupId>
         <artifactId>junit-jupiter</artifactId>
-        <version>5.9.3</version>
+        <version>5.10.3</version>
         <scope>test</scope>
     </dependency>
 
@@ -67,7 +67,7 @@
     <dependency>
         <groupId>org.mockito</groupId>
         <artifactId>mockito-junit-jupiter</artifactId>
-        <version>5.11.0</version>
+        <version>5.12.0</version>
         <scope>test</scope>
     </dependency>
 
@@ -81,7 +81,7 @@
     <dependency>
         <groupId>io.projectreactor</groupId>
         <artifactId>reactor-test</artifactId>
-        <version>3.5.16</version>
+        <version>3.5.19</version>
         <scope>test</scope>
     </dependency>
 
@@ -114,7 +114,7 @@
     <dependency>
         <groupId>commons-io</groupId>
         <artifactId>commons-io</artifactId>
-        <version>2.15.1</version>
+        <version>2.17.0</version>
         <scope>test</scope>
     </dependency>
 
@@ -190,19 +190,19 @@
     <dependency>
         <groupId>com.github.twitch4j</groupId>
         <artifactId>twitch4j</artifactId>
-        <version>1.20.0</version>
+        <version>1.21.0</version>
     </dependency>
 
       <dependency>
           <groupId>org.springdoc</groupId>
           <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
-          <version>2.1.0</version>
+          <version>2.3.0</version>
       </dependency>
 
     <dependency>
         <groupId>org.postgresql</groupId>
         <artifactId>postgresql</artifactId>
-        <version>42.7.3</version>
+        <version>42.7.4</version>
     </dependency>
 
     <dependency>
