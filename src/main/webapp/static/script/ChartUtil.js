@@ -840,10 +840,10 @@ class ChartUtil
     {
         if(!chart.config._config.customConfig.zoom) return;
 
-        chart.options.plugins.zoom.limits.x.min = chart.scales.x.min;
-        chart.options.plugins.zoom.limits.x.max = chart.scales.x.max;
-        chart.options.plugins.zoom.limits.y.min = chart.scales.y.min;
-        chart.options.plugins.zoom.limits.y.max = chart.scales.y.max;
+        chart.options.plugins.zoom.limits.x.min = 'original';
+        chart.options.plugins.zoom.limits.x.max = 'original';
+        chart.options.plugins.zoom.limits.y.min = 'original';
+        chart.options.plugins.zoom.limits.y.max = 'original';
     }
 
     static updateChartable(chartable)
