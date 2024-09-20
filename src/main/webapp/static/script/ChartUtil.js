@@ -118,8 +118,8 @@ class ChartUtil
                             grid:
                             {
                                 color: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)",
-                                borderColor: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)"
                              },
+                            border: {color: Session.theme == THEME.DARK ? "#242a30" : "rgba(0,0,0,0.1)"},
                             ticks:
                             {
                                 callback: (val, valIx, vals)=>Util.NUMBER_FORMAT.format(val),
@@ -399,13 +399,13 @@ class ChartUtil
     static createHtmlTooltip(context)
     {
         const tooltipModel = context.tooltip;
-        const tooltipEl = ChartUtil.getOrCreateTooltipElement(this._chart);
-        if (tooltipModel.opacity === 0 || this._chart.config._config.customConfig.zoomModKeyDown == true) {
+        const tooltipEl = ChartUtil.getOrCreateTooltipElement(context.chart);
+        if (tooltipModel.opacity === 0 || context.chart.config._config.customConfig.zoomModKeyDown == true) {
             tooltipEl.style.opacity = 0;
             return;
         }
         // `this` will be the overall tooltip
-        const position = this._chart.canvas.getBoundingClientRect();
+        const position = context.chart.canvas.getBoundingClientRect();
         if(tooltipModel.caretX < 0 || tooltipModel.caretX > position.width
             || tooltipModel.caretY < 0 || tooltipModel.caretY > position.height) {
             tooltipEl.style.opacity = 0;

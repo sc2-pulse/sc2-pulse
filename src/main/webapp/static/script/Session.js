@@ -254,6 +254,7 @@ class Session
         for(const chart of ChartUtil.CHARTS.values()) {
             chart.config.options.scales.y.grid.color = color;
             chart.config.options.scales.y.grid.zeroLineColor = color;
+            chart.config.options.scales.y.border.color = color;
             chart.update();
         }
     }
