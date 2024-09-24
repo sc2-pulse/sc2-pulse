@@ -84,32 +84,15 @@ class ChartUtil
                                 ...(config.zoom && config.xType == "time") && {align: "start"},
                                 minRotation: 0,
                                 maxRotation: 0,
-                                autoSkipPadding: config.type === "bar" && config.xType !== "time"
-                                    ? 3
-                                    : config.xType !== "time" ? 20 : 40,
+                                autoSkipPadding: ChartUtil.xAutoSkipPadding(config),
                                 ...(config.performance === "fast") && {sampleSize: 50}
                             },
                             stacked: config.stacked === "true" ? true : false,
                             offset: config.type === "bar" ? true : false,
-                            ...(config.xType === "time") && {
-                                type: "time",
-                                time:
-                                {
-                                    unit: config.xTimeUnit == "false" ? false : config.xTimeUnit,
-                                    displayFormats:
-                                    {
-                                      datetime: luxon.DateTime.DATETIME_SHORT,
-                                      millisecond: luxon.DateTime.DATETIME_SHORT,
-                                      second: luxon.DateTime.DATETIME_SHORT,
-                                      minute: luxon.DateTime.DATETIME_SHORT,
-                                      hour: luxon.DateTime.DATETIME_SHORT,
-                                      day: luxon.DateTime.DATETIME_SHORT,
-                                      week: luxon.DateTime.DATETIME_SHORT,
-                                      month: luxon.DateTime.DATETIME_SHORT,
-                                      quarter: luxon.DateTime.DATETIME_SHORT,
-                                      year: luxon.DateTime.DATETIME_SHORT
-                                    }
-                                }
+                            ...(config.xType === "time") &&
+                            {
+                                type: "timestack",
+                                timestack: {left_floating_tick_thres: false}
                             }
                         },
                         y:
@@ -250,11 +233,25 @@ class ChartUtil
         return chart;
     }
 
+    static xAutoSkipPadding(config)
+    {
+        return config.type === "bar" && config.xType !== "time"
+           ? 3
+           : config.xType !== "time" ? 20 : 40;
+    }
+
     static applyFixes(chart)
     {
         for(let scale of Object.values(chart.options.scales))
         {
-            if(scale.type == "time" && chart.config._config.customConfig.zoom)
+            //timestack fixes
+            if(scale.id == "x") chart.options.scales[scale.id].ticks.autoSkipPadding =
+                scale.type == "timestack"
+                    ? null
+                    : ChartUtil.xAutoSkipPadding(chart.config._config.customConfig);
+            if(scale.type != "time") chart.options.scales[scale.id].ticks.autoSkip = true;
+            //time zoom fixes
+            if(scale.type == (ChartUtil.SCALE_TYPE_OVERRIDES.get("time") || "time") && chart.config._config.customConfig.zoom)
             {
                 scale.beforeFit = ChartUtil.trimTicks;
                 scale.ticks.align = "start";
@@ -999,7 +996,7 @@ class ChartUtil
     {
         const chart = ChartUtil.CHARTS.get(chartable.id);
         if(chart) {
-            chart.options.scales[axis].type = type;
+            chart.options.scales[axis].type = ChartUtil.SCALE_TYPE_OVERRIDES.get(type) || type;
             ChartUtil.applyFixes(chart);
             /*
                 Changing axis type may lead to an exception being thrown due to incompatible data type/format. There is no
@@ -1259,8 +1256,8 @@ class ChartUtil
             const name = "s" + season.battlenetId;
             annotations[name] = {
                 type: "line",
-                xMin: season.start,
-                xMax: season.start,
+                xMin: season.start.valueOf(),
+                xMax: season.start.valueOf(),
                 borderColor: "rgba(127, 127, 127, 0.5)",
                 borderWidth: 1,
                 adjustScaleRange: false,
@@ -1366,6 +1363,9 @@ ChartUtil.LINE_BORDER_WIDTH = 2;
 ChartUtil.THIN_LINE_BORDER_WIDTH = 1.25;
 ChartUtil.DEFAULT_GROUP_CONFIG = new Map([
     ["mmr", {tooltipLayout: "vertical"}]
+]);
+ChartUtil.SCALE_TYPE_OVERRIDES = new Map([
+    ["time", "timestack"]
 ]);
 ChartUtil.TIER_ANNOTATIONS = null;
 ChartUtil.SEASON_ANNOTATIONS = new Map();
