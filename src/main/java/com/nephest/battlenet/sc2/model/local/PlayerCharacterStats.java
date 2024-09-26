@@ -9,13 +9,20 @@ import com.nephest.battlenet.sc2.model.Race;
 import com.nephest.battlenet.sc2.model.TeamType;
 import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
+import java.util.Comparator;
 import java.util.Objects;
 
 public class PlayerCharacterStats
-implements Serializable
+implements Serializable, Comparable<PlayerCharacterStats>
 {
 
-    private static final long serialVersionUID = 6L;
+    private static final long serialVersionUID = 7L;
+
+    public static final Comparator<PlayerCharacterStats> NATURAL_ID_COMPARATOR
+        = Comparator.comparing(PlayerCharacterStats::getPlayerCharacterId)
+        .thenComparing(PlayerCharacterStats::getQueueType)
+        .thenComparing(PlayerCharacterStats::getTeamType)
+        .thenComparing(PlayerCharacterStats::getRace);
 
     private Long id;
 
@@ -93,6 +100,12 @@ implements Serializable
             getTeamType(),
             getRace()
         );
+    }
+
+    @Override
+    public int compareTo(PlayerCharacterStats playerCharacterStats)
+    {
+        return NATURAL_ID_COMPARATOR.compare(this, playerCharacterStats);
     }
 
     public Long getId()
