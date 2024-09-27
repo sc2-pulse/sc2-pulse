@@ -1,12 +1,14 @@
 // Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
-package com.nephest.battlenet.sc2.model.local.dao;
+package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
-import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import com.nephest.battlenet.sc2.model.Partition;
@@ -22,6 +24,13 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
 import com.nephest.battlenet.sc2.model.local.TeamState;
+import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
+import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -37,15 +46,18 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.TestPropertySource;
-import org.springframework.test.context.junit.jupiter.SpringJUnitConfig;
+import org.springframework.test.web.servlet.MockMvc;
 
-@SpringJUnitConfig(classes = DatabaseTestConfig.class)
+@SpringBootTest(classes = AllTestConfig.class)
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
-public class PlayerCharacterStatsDAOIT
+@AutoConfigureMockMvc
+public class PlayerCharacterStatsIT
 {
 
     public static final QueueType QUEUE_TYPE = QueueType.LOTV_4V4;
@@ -79,6 +91,12 @@ public class PlayerCharacterStatsDAOIT
     @Autowired
     private TeamStateDAO teamStateDAO;
 
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @BeforeEach
     public void beforeEach(@Autowired DataSource dataSource)
     throws SQLException
@@ -102,34 +120,55 @@ public class PlayerCharacterStatsDAOIT
 
     @Test
     public void testGlobalStatsCalculation()
+    throws Exception
     {
         PlayerCharacter character = setupStats();
         playerCharacterStatsDAO.calculate();
         playerCharacterStatsDAO.mergeCalculate(); //just for testing, not actually required
-        Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> stats =
-            ladderPlayerCharacterStatsDAO.findGlobalMap(character.getId());
-        verifyStats(character, stats);
+        List<LadderPlayerCharacterStats> stats = WebServiceTestUtil.getObject
+        (
+            mvc,
+            objectMapper,
+            new TypeReference<>(){},
+            "/api/character/{id}/stats/full",
+            character.getId()
+        );
+        verifyStats(character, LadderPlayerCharacterStatsDAO.transform(stats));
     }
 
     @Test
     public void testRecentStatsCalculation()
+    throws Exception
     {
         PlayerCharacter character = setupStats();
         playerCharacterStatsDAO.calculate(SC2Pulse.offsetDateTime().minusHours(1));
         playerCharacterStatsDAO.mergeCalculate(SC2Pulse.offsetDateTime().minusHours(1)); //just for testing, not actually required
-        Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> stats =
-            ladderPlayerCharacterStatsDAO.findGlobalMap(character.getId());
-        verifyStats(character, stats);
+        List<LadderPlayerCharacterStats> stats = WebServiceTestUtil.getObject
+        (
+            mvc,
+            objectMapper,
+            new TypeReference<>(){},
+            "/api/character/{id}/stats/full",
+            character.getId()
+        );
+        verifyStats(character, LadderPlayerCharacterStatsDAO.transform(stats));
     }
 
     @Test
     public void testStatsCalculationById()
+    throws Exception
     {
         PlayerCharacter character = setupStats();
         playerCharacterStatsDAO.mergeCalculate(Set.of(character.getId(), 99912345L));
-        Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> stats =
-            ladderPlayerCharacterStatsDAO.findGlobalMap(character.getId());
-        verifyStats(character, stats);
+        List<LadderPlayerCharacterStats> stats = WebServiceTestUtil.getObject
+        (
+            mvc,
+            objectMapper,
+            new TypeReference<>(){},
+            "/api/character/{id}/stats/full",
+            character.getId()
+        );
+        verifyStats(character, LadderPlayerCharacterStatsDAO.transform(stats));
     }
 
     public PlayerCharacter setupStats()

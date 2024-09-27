@@ -293,6 +293,12 @@ public class CharacterController
         return playerCharacterStatsDAO.findGlobalList(id);
     }
 
+    @GetMapping("/{id}/stats/full")
+    public ResponseEntity<?> getLadderCharacterStats(@PathVariable("id") long id)
+    {
+        return WebServiceUtil.notFoundIfEmpty(ladderPlayerCharacterStatsDAO.findGlobalList(id));
+    }
+
     @Operation
     (
         description = "Max depth is " + SUMMARY_DEPTH_MAX + ", unlimited for single character"
