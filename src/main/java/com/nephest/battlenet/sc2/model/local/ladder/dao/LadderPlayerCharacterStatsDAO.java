@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -177,8 +177,13 @@ public class LadderPlayerCharacterStatsDAO
 
     public Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> findGlobalMap(Long playerCharacterId)
     {
+        return transform(findGlobalList(playerCharacterId));
+    }
+
+    public static Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> transform(List<LadderPlayerCharacterStats> list)
+    {
         Map<QueueType, Map<TeamType, Map<Race, LadderPlayerCharacterStats>>> result = new EnumMap<>(QueueType.class);
-        for(LadderPlayerCharacterStats stats : findGlobalList(playerCharacterId))
+        for(LadderPlayerCharacterStats stats : list)
         {
             Map<TeamType, Map<Race, LadderPlayerCharacterStats>> teams = result
                 .computeIfAbsent(stats.getStats().getQueueType(),r->new EnumMap<>(TeamType.class));
