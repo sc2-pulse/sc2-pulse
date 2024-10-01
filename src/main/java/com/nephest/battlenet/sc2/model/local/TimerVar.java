@@ -138,7 +138,16 @@ extends InstantVar
     {
         if(!isAvailable() || !active.compareAndSet(false, true))
         {
-            LOG.trace("Wanted to execute {} timer but there is no need to do it yet", getKey());
+            LOG.trace
+            (
+                """
+                    Wanted to execute {} timer but there is no need to do it yet. \
+                    At log time; value: {}, betweenRuns: {}, active: {}.""",
+                getKey(),
+                getValue(),
+                getDurationBetweenRuns(),
+                isActive()
+            );
             return Mono.just(false);
         }
 
