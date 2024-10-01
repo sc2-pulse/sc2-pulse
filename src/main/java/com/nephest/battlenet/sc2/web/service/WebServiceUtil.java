@@ -20,6 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.Callable;
@@ -463,6 +464,13 @@ public class WebServiceUtil
         return collection.isEmpty()
             ? ResponseEntity.notFound().build()
             : ResponseEntity.ok(collection);
+    }
+
+    public static <T extends Map<?, ?>> ResponseEntity<T> notFoundIfEmpty(T map)
+    {
+        return map.isEmpty()
+            ? ResponseEntity.notFound().build()
+            : ResponseEntity.ok(map);
     }
 
     public static <T> ResponseEntity<T> notFoundIfNull(T t)
