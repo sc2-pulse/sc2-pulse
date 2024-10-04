@@ -3,7 +3,6 @@
 
 package com.nephest.battlenet.sc2.config.mvc;
 
-import com.nephest.battlenet.sc2.web.controller.group.CharacterGroupArgumentResolver;
 import java.util.List;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,12 +16,12 @@ implements WebMvcConfigurer
 {
 
     @Autowired
-    private CharacterGroupArgumentResolver characterGroupArgumentResolver;
+    private List<HandlerMethodArgumentResolver> customArgumentResolvers;
 
     @Override
     public void addArgumentResolvers(@NotNull List<HandlerMethodArgumentResolver> argumentResolvers)
     {
-        argumentResolvers.add(characterGroupArgumentResolver);
+        argumentResolvers.addAll(customArgumentResolvers);
     }
 
 }
