@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -21,9 +21,11 @@ import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacterReport;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.sql.Types;
 import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.AbstractMap;
@@ -223,6 +225,24 @@ implements BasicEntityOperations<Team>
         + "UNION "
         + "SELECT * FROM inserted";
     private static final String FIND_BY_ID_QUERY = "SELECT " + STD_SELECT + "FROM team WHERE id = :id";
+
+    private static final String FIND_IDS_BY_IDS =
+        """
+            SELECT id
+            FROM team
+            WHERE team.id IN(:ids)
+            AND (:from::smallint IS NULL OR season >= :from::smallint)
+            AND (:to::smallint IS NULL OR season < :to::smallint)
+        """;
+
+    private static final String FIND_IDS_BY_LEGACY_UIDS =
+        """
+            SELECT id
+            FROM team
+            WHERE (team.queue_type, team.region, team.legacy_id) IN (:legacyUids)
+            AND (:from::smallint IS NULL OR season >= :from::smallint)
+            AND (:to::smallint IS NULL OR season < :to::smallint)
+        """;
 
     private static final String FIND_BY_REGION_AND_SEASON =
         "SELECT " + STD_SELECT
@@ -494,6 +514,40 @@ implements BasicEntityOperations<Team>
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("id", id);
         return Optional.ofNullable(template.query(FIND_BY_ID_QUERY, params, getStdExtractor()));
+    }
+
+    public List<Long> findIdsByIds(Set<Long> ids, Integer fromSeason, Integer toSeason)
+    {
+        if(ids.isEmpty()) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("ids", ids)
+            .addValue("from", fromSeason, Types.SMALLINT)
+            .addValue("to", toSeason, Types.SMALLINT);
+        return template.query(FIND_IDS_BY_IDS, params, DAOUtils.LONG_MAPPER);
+    }
+
+    public List<Long> findIdsByLegacyUids
+    (
+        Set<TeamLegacyUid> ids,
+        Integer fromSeason,
+        Integer toSeason
+    )
+    {
+        if(ids.isEmpty()) return List.of();
+
+        List<Object[]> legacyUids = ids.stream()
+            .map(id->new Object[]{
+                conversionService.convert(id.getQueueType(), Integer.class),
+                conversionService.convert(id.getRegion(), Integer.class),
+                id.getId()
+            })
+            .collect(Collectors.toList());
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("legacyUids", legacyUids)
+            .addValue("from", fromSeason, Types.SMALLINT)
+            .addValue("to", toSeason, Types.SMALLINT);
+        return template.query(FIND_IDS_BY_LEGACY_UIDS, params, DAOUtils.LONG_MAPPER);
     }
 
     public Stream<Team> find(Region region, int season)
