@@ -96,7 +96,7 @@ public class TeamGroupIT
         LocalDate end = start.plusYears(100);
         List<Season> seasons = IntStream.range(0, TeamGroupArgumentResolver.TEAMS_MAX + 1)
             .boxed()
-            .map(i->new Season(null, i, Region.EU, 2020, i, start.plusDays(i), end.plusDays(i)))
+            .map(i->new Season(null, i + 1, Region.EU, 2020, i, start.plusDays(i), end.plusDays(i)))
             .toList();
         seasonGenerator.generateSeason
         (
