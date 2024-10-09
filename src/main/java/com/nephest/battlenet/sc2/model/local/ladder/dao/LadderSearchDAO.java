@@ -259,6 +259,14 @@ public class LadderSearchDAO
         + LADDER_SEARCH_TEAM_FROM_FULL_BODY
         + "ORDER BY team.last_played DESC, team.id DESC";
 
+    private static final String FIND_TEAMS_BY_IDS =
+        "SELECT "
+        + FIND_TEAM_MEMBERS_BASE
+        + "FROM team_member "
+        + LADDER_SEARCH_TEAM_FROM_HEAD
+        + LADDER_SEARCH_TEAM_FROM_FULL_BODY
+        + "WHERE team_member.team_id IN(:ids)";
+
     private NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
     private SeasonDAO seasonDAO;
@@ -586,6 +594,17 @@ public class LadderSearchDAO
             .addValue("cheaterReportType", conversionService
                 .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
         return template.query(FIND_RECENTLY_ACTIVE_TEAMS, params, LADDER_TEAMS_EXTRACTOR);
+    }
+
+    public List<LadderTeam> findTeamsByIds(Set<Long> ids)
+    {
+        if(ids.isEmpty()) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("ids", ids)
+            .addValue("cheaterReportType", conversionService
+                .convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class));
+        return template.query(FIND_TEAMS_BY_IDS, params, LADDER_TEAMS_EXTRACTOR);
     }
 
 }

@@ -17,19 +17,26 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Account;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import com.nephest.battlenet.sc2.model.local.PopulationState;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamMember;
+import com.nephest.battlenet.sc2.model.local.dao.LeagueStatsDAO;
+import com.nephest.battlenet.sc2.model.local.dao.PopulationStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -37,6 +44,7 @@ import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -67,12 +75,16 @@ public class TeamGroupIT
     @Qualifier("mvcConversionService")
     private ConversionService conversionService;
 
+    private static final List<LadderTeam> LADDER_TEAMS = new ArrayList<>();
+
     @BeforeAll
     public static void beforeAll
     (
         @Autowired DataSource dataSource,
         @Autowired TeamDAO teamDAO,
         @Autowired TeamMemberDAO teamMemberDAO,
+        @Autowired PopulationStateDAO populationStateDAO,
+        @Autowired LeagueStatsDAO leagueStatsDAO,
         @Autowired SeasonGenerator seasonGenerator
     )
     throws SQLException
@@ -81,7 +93,7 @@ public class TeamGroupIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            init(teamDAO, teamMemberDAO, seasonGenerator);
+            init(teamDAO, teamMemberDAO, populationStateDAO, leagueStatsDAO, seasonGenerator);
         }
     }
 
@@ -89,6 +101,8 @@ public class TeamGroupIT
     (
         TeamDAO teamDAO,
         TeamMemberDAO teamMemberDAO,
+        PopulationStateDAO populationStateDAO,
+        LeagueStatsDAO leagueStatsDAO,
         SeasonGenerator seasonGenerator
     )
     {
@@ -118,9 +132,26 @@ public class TeamGroupIT
             QueueType.LOTV_1V1,
             TeamType.ARRANGED
         );
+        List<LadderTeamMember> ladderTeamMembers = List.of(new LadderTeamMember(
+            accs[0],
+            character,
+            null, null, null, null,
+            null,
+            1, 0, 0, 0
+        ));
+        PopulationState emptyPopulationState = new PopulationState(null, null, null);
+
+        /*
+            Calculate stats for single season because TEAMS_MAX can be very large, so there can be
+            many seasons which considerably slows down the test. Calculate stats for single season
+            and ensure that the data is returned.
+         */
+        int statsSeason = 2;
+        int statsSeasonIx = statsSeason - 1;
+
         for(int i = 0; i < teams.length; i++)
         {
-            teams[i] = new Team
+            LadderTeam ladderTeam = new LadderTeam
             (
                 null,
                 i + 1,
@@ -138,8 +169,18 @@ public class TeamGroupIT
                                 : BigInteger.valueOf(4L),
                 i + 1,
                 1L, 1, 1, 1, 1,
-                null
+                null,
+                ladderTeamMembers,
+                i == statsSeasonIx
+                    ? new PopulationState(null, null, 1, 1, 1)
+                    : emptyPopulationState
             );
+            int rank = i == statsSeasonIx ? 1 : 0;
+            ladderTeam.setRegionRank(rank);
+            ladderTeam.setGlobalRank(rank);
+            ladderTeam.setLeagueRank(rank);
+            LADDER_TEAMS.add(ladderTeam);
+            teams[i] = ladderTeam;
             members[i] = new TeamMember(i + 1L, character.getId(), 1, 0, 0, 0);
         }
 
@@ -153,6 +194,10 @@ public class TeamGroupIT
             teamMemberDAO.merge(new HashSet<>(
                 memberList.subList(i * batchSize, Math.min(memberList.size(), (i + 1) * batchSize))));
         }
+        teamList.forEach(t->t.setPoints(null));
+        leagueStatsDAO.mergeCalculateForSeason(statsSeason);
+        populationStateDAO.takeSnapshot(List.of(statsSeason));
+        teamDAO.updateRanks(statsSeason);
     }
 
     @AfterAll
@@ -211,6 +256,44 @@ public class TeamGroupIT
         )
             .toArray(Long[]::new);
         assertArrayEquals(expectedResult, ids);
+    }
+
+    @Test
+    public void testGetLadderTeams()
+    throws Exception
+    {
+        LadderTeam[] teams = objectMapper.readValue(mvc.perform(get("/api/team/group/teams/full")
+            .queryParam
+            (
+                "legacyUid",
+                conversionService.convert
+                (
+                    new TeamLegacyUid
+                    (
+                        QueueType.LOTV_1V1,
+                        Region.EU,
+                        BigInteger.ZERO
+                    ),
+                    String.class
+                )
+            )
+            .queryParam
+            (
+                "teamId",
+                String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX),
+                String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)
+            )
+            .queryParam("fromSeason", "2")
+            .queryParam("toSeason", String.valueOf(TeamGroupArgumentResolver.TEAMS_MAX + 1)))
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), LadderTeam[].class);
+        Arrays.sort(teams, Comparator.comparing(LadderTeam::getId));
+        Assertions.assertThat(teams)
+            .usingRecursiveComparison()
+            .isEqualTo(new LadderTeam[]{
+                LADDER_TEAMS.get(1),
+                LADDER_TEAMS.get(TeamGroupArgumentResolver.TEAMS_MAX - 1)
+            });
     }
 
     @Test
