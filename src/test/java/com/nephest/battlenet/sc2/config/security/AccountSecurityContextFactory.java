@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.config.security;
@@ -43,7 +43,12 @@ implements WithSecurityContextFactory<WithBlizzardMockUser>
             "password",
             List.of()
         );
-        Authentication auth = new OAuth2AuthenticationToken(principal, List.of(withMockUser.roles()), withMockUser.username());
+        Authentication auth = new OAuth2AuthenticationToken
+        (
+            principal,
+            List.of(withMockUser.roles()),
+            withMockUser.authorizedClientRegistrationId()
+        );
         SecurityContext ctxt = SecurityContextHolder.createEmptyContext();
         ctxt.setAuthentication(auth);
         return ctxt;

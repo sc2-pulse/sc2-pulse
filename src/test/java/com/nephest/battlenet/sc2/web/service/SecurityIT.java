@@ -92,6 +92,27 @@ public class SecurityIT
     @ParameterizedTest
     @CsvSource
     ({
+        "GET, /settings/advanced, 401",
+        "DELETE, /settings/advanced, 401",
+        "GET, /data/battle-net, 401",
+        "POST, /data/battle-net, 401"
+    })
+    @WithBlizzardMockUser
+    (
+        partition =  Partition.GLOBAL,
+        username = "user",
+        roles = {SC2PulseAuthority.USER},
+        authorizedClientRegistrationId = WithBlizzardMockUser.NON_BLIZZARD_OAUTH_REGISTRATION_ID
+    )
+    public void testFullyAuthorizedNonBlizzardSecurity(String method, String path, int status)
+    throws Exception
+    {
+        WebServiceTestUtil.executeAndExpect(mvc, method, path, status);
+    }
+
+    @ParameterizedTest
+    @CsvSource
+    ({
         "GET, /admin, 403",
         "GET, /sba/instances/1/actuator/loggers, 403",
         "GET, /sba/actuator/info, 403",
