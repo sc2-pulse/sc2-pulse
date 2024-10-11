@@ -3,10 +3,6 @@
 
 package com.nephest.battlenet.sc2.web.service;
 
-import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
-
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.config.security.SC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.security.WithBlizzardMockUser;
@@ -24,7 +20,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
-import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
 import org.springframework.test.context.ActiveProfiles;
@@ -77,11 +72,7 @@ public class SecurityIT
     public void testNotAuthenticatedSecurity(String method, String path, int status)
     throws Exception
     {
-        mvc.perform
-        (
-            request(HttpMethod.valueOf(method), path)
-                .with(csrf())
-        ).andExpect(status().is(status));
+        WebServiceTestUtil.executeAndExpect(mvc, method, path, status);
     }
 
     @ParameterizedTest
@@ -95,12 +86,7 @@ public class SecurityIT
     public void testUserSecurity(String method, String path, int status)
     throws Exception
     {
-        mvc.perform
-        (
-            request(HttpMethod.valueOf(method), path)
-                .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf())
-        ).andExpect(status().is(status));
+        WebServiceTestUtil.executeAndExpect(mvc, method, path, MediaType.APPLICATION_JSON, status);
     }
 
     @ParameterizedTest
@@ -120,12 +106,7 @@ public class SecurityIT
     public void testServerWatcherSecurity(String method, String path, int status)
     throws Exception
     {
-        mvc.perform
-        (
-            request(HttpMethod.valueOf(method), path)
-                .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf())
-        ).andExpect(status().is(status));
+        WebServiceTestUtil.executeAndExpect(mvc, method, path, MediaType.APPLICATION_JSON, status);
     }
 
     @ParameterizedTest
@@ -139,12 +120,7 @@ public class SecurityIT
     public void testAdminSecurity(String method, String path, int status)
     throws Exception
     {
-        mvc.perform
-        (
-            request(HttpMethod.valueOf(method), path)
-                .contentType(MediaType.APPLICATION_JSON)
-                .with(csrf())
-        ).andExpect(status().is(status));
+        WebServiceTestUtil.executeAndExpect(mvc, method, path, MediaType.APPLICATION_JSON, status);
     }
 
 }

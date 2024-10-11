@@ -5,6 +5,7 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.request;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.fasterxml.jackson.core.type.TypeReference;
@@ -19,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import okhttp3.mockwebserver.MockResponse;
 import okhttp3.mockwebserver.MockWebServer;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.reactive.ReactorClientHttpConnector;
 import org.springframework.security.oauth2.client.OAuth2AuthorizedClient;
@@ -27,6 +29,7 @@ import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.OAuth2RefreshToken;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 import reactor.netty.http.client.HttpClient;
@@ -151,6 +154,34 @@ public class WebServiceTestUtil
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), clazz);
+    }
+
+    public static void executeAndExpect
+    (
+        MockMvc mvc,
+        String method,
+        String path,
+        MediaType contentType,
+        int status
+    )
+    throws Exception
+    {
+        MockHttpServletRequestBuilder builder = request(HttpMethod.valueOf(method), path)
+            .with(csrf());
+        if(contentType != null) builder = builder.contentType(contentType);
+        mvc.perform(builder).andExpect(status().is(status));
+    }
+
+    public static void executeAndExpect
+    (
+        MockMvc mvc,
+        String method,
+        String path,
+        int status
+    )
+    throws Exception
+    {
+        executeAndExpect(mvc, method, path, null, status);
     }
 
     public static OAuth2AuthorizedClient createOAuth2AuthorizedClient
