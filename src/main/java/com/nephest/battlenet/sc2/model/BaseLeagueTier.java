@@ -5,7 +5,6 @@ package com.nephest.battlenet.sc2.model;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonValue;
-import jakarta.validation.constraints.NotNull;
 
 public class BaseLeagueTier
 {
@@ -50,7 +49,6 @@ public class BaseLeagueTier
 
     }
 
-    @NotNull
     private LeagueTierType type;
 
     private Integer minRating;

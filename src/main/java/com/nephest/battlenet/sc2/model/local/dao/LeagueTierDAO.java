@@ -67,7 +67,7 @@ public class LeagueTierDAO
             + "INSERT INTO league_tier(league_id, type, min_rating, max_rating) "
             + "SELECT * FROM vals "
             + "WHERE NOT EXISTS(SELECT 1 FROM selected) "
-            + "ON CONFLICT(league_id, type) DO UPDATE SET "
+            + "ON CONFLICT(league_id, COALESCE(type, -1)) DO UPDATE SET "
             + "min_rating=excluded.min_rating, "
             + "max_rating=excluded.max_rating "
             + "RETURNING id "
@@ -85,7 +85,7 @@ public class LeagueTierDAO
         + "AND league.type = :leagueType "
         + "AND league.queue_type = :queueType "
         + "AND league.team_type = :teamType "
-        + "AND league_tier.type = :tierType";
+        + "AND COALESCE(league_tier.type, -1) = COALESCE(:tierType::smallint, -1)";
 
     private static final String FIND_BY_LEAGUE_IDS_AND_TYPES =
         "SELECT " + STD_SELECT
@@ -117,7 +117,11 @@ public class LeagueTierDAO
         (
             rs.getInt("league_tier.id"),
             rs.getInt("league_tier.league_id"),
-            conversionService.convert(rs.getInt("league_tier.type"), BaseLeagueTier.LeagueTierType.class),
+            conversionService.convert
+            (
+                DAOUtils.getInteger(rs, "league_tier.type"),
+                BaseLeagueTier.LeagueTierType.class
+            ),
             rs.getInt("league_tier.min_rating"),
             rs.getInt("league_tier.max_rating")
         );

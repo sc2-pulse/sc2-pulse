@@ -1,11 +1,23 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
 
-import com.nephest.battlenet.sc2.model.*;
+import com.nephest.battlenet.sc2.model.BaseLeague;
+import com.nephest.battlenet.sc2.model.BaseLeagueTier;
+import com.nephest.battlenet.sc2.model.QueueType;
+import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.Division;
 import com.nephest.battlenet.sc2.model.local.PlayerCharacter;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -16,9 +28,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
 import org.springframework.stereotype.Repository;
-
-import java.util.*;
-import java.util.stream.Collectors;
 
 @Repository
 public class DivisionDAO
@@ -55,7 +64,7 @@ public class DivisionDAO
         + "INNER JOIN season ON league.season_id=season.id "
         + "WHERE season.battlenet_id=:seasonBattlenetId AND season.region=:region "
         + "AND league.type=:leagueType AND league.queue_type=:queueType AND league.team_type=:teamType "
-        + "AND league_tier.type=:tierType";
+        + "AND COALESCE(league_tier.type, -1)=COALESCE(:tierType::smallint, -1)";
 
     private static final String FIND_PROFILE_IDS =
         "WITH team_filter AS "

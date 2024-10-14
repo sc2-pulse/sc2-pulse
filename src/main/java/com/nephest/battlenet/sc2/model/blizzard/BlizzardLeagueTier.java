@@ -8,6 +8,7 @@ import com.fasterxml.jackson.databind.PropertyNamingStrategies;
 import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotNull;
 
 @JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class BlizzardLeagueTier
@@ -29,6 +30,7 @@ extends BaseLeagueTier
         super(type, minRating, maxRating);
     }
 
+    @NotNull
     @JsonProperty("id")
     @Override
     public void setType(LeagueTierType type)
@@ -36,6 +38,7 @@ extends BaseLeagueTier
         super.setType(type);
     }
 
+    @NotNull
     @JsonProperty("id")
     @Override
     public LeagueTierType getType()

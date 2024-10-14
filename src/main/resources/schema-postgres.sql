@@ -607,7 +607,7 @@ CREATE TABLE "league_tier"
 
     "id" SERIAL,
     "league_id" INTEGER NOT NULL,
-    "type" SMALLINT NOT NULL,
+    "type" SMALLINT,
     "min_rating" SMALLINT,
     "max_rating" SMALLINT,
 
@@ -616,12 +616,11 @@ CREATE TABLE "league_tier"
     CONSTRAINT "fk_league_tier_league_id"
         FOREIGN KEY ("league_id")
         REFERENCES "league"("id")
-        ON DELETE CASCADE ON UPDATE CASCADE,
-
-    CONSTRAINT "uq_league_tier_league_id_type"
-        UNIQUE ("league_id", "type")
+        ON DELETE CASCADE ON UPDATE CASCADE
 
 );
+
+CREATE UNIQUE INDEX "uq_league_tier_league_id_type" ON "league_tier"("league_id", COALESCE("type", -1));
 
 CREATE TABLE "division"
 (

@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -73,7 +73,8 @@ public class LadderStatsDAO
         + "AND season.region IN (:regions) "
         + "AND league.type IN (:leagueTypes) "
         + "AND league.queue_type=:queueType "
-        + "AND league.team_type=:teamType ";
+        + "AND league.team_type=:teamType "
+        + "AND COALESCE(league_tier.type, -1) != -1 ";
 
     private final NamedParameterJdbcTemplate template;
     private ConversionService conversionService;
