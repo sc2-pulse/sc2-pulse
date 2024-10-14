@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.ladder.dao;
@@ -33,11 +33,10 @@ public class LadderTeamStateDAO
         "SELECT team_filter.race, "
         + TeamStateDAO.SHORT_SELECT + ", "
         + PopulationStateDAO.TEAM_DATA_SELECT + ", "
-        + "team.tier_type AS \"team.tier_type\", "
+        + "league_tier.type AS \"league_tier.type\", "
         + LeagueDAO.SHORT_SELECT + ", "
         + "season.battlenet_id as \"season.battlenet_id\" "
         + "FROM team_filter "
-        + "INNER JOIN team USING(id) "
         + "INNER JOIN team_state ON team_filter.id = team_state.team_id "
         + "LEFT JOIN population_state "
             + "ON team_state.population_state_id = population_state.id "
@@ -126,7 +125,11 @@ public class LadderTeamStateDAO
         (
             TeamStateDAO.SHORT_ROW_MAPPER.mapRow(rs, 0),
             DAOUtils.getConvertedObjectFromInteger(rs, "race", conversionService, Race.class),
-            conversionService.convert(DAOUtils.getInteger(rs, "team.tier_type"), BaseLeagueTier.LeagueTierType.class),
+            conversionService.convert
+            (
+                DAOUtils.getInteger(rs, "league_tier.type"),
+                BaseLeagueTier.LeagueTierType.class
+            ),
             LeagueDAO.getShortRowMapper().mapRow(rs, 0),
             rs.getInt("season.battlenet_id"),
             PopulationStateDAO.TEAM_DATA_ROW_MAPPER.mapRow(rs, 0)
