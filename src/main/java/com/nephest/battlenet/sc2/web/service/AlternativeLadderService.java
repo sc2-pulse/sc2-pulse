@@ -178,7 +178,7 @@ public class AlternativeLadderService
     public static final int LEGACY_LADDER_WEB_BATCH_SIZE = 200;
     public static final int CONTINUE_SEASON_DISCOVERY_BATCH_SIZE = 25;
     public static final int CONTINUE_SEASON_DISCOVERY_LADDER_OFFSET = 3;
-    public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = BaseLeagueTier.LeagueTierType.FIRST;
+    public static final BaseLeagueTier.LeagueTierType ALTERNATIVE_TIER = null;
 
     @PostConstruct
     public void init()
