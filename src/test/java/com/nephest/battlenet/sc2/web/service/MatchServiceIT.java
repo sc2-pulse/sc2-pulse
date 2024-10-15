@@ -92,6 +92,8 @@ public class MatchServiceIT
         api.setAutoForceRegion(true);
         CompletableFuture<MatchUpdateContext> update = new CompletableFuture<>();
         eventService.getMatchUpdateEvent().subscribe(update::complete);
+        if(matchService.getUpdateMatchesTask().isActive())
+            matchService.getUpdateMatchesTask().getLastTask().block();
         try
         {
             //no matches found
