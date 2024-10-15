@@ -5,10 +5,12 @@ package com.nephest.battlenet.sc2.model.local;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -46,8 +48,7 @@ public class TimerVarTest
         timerVar = new TimerVar(varDAO, KEY, false, DEFAULT_DURATION_BETWEEN_TASKS, task);
     }
 
-    @Test
-    public void whenShouldRun_thenRunAndResetTimer()
+    private void defaultLoad()
     {
         //should run when instant is null
         assertTrue(timerVar.isAvailable());
@@ -58,6 +59,12 @@ public class TimerVarTest
         when(varDAO.find(KEY + TimerVar.DURATION_BETWEEN_TASKS_SUFFIX))
             .thenReturn(Optional.of(DEFAULT_DURATION_BETWEEN_TASKS.toString()));
         timerVar.load();
+    }
+
+    @Test
+    public void whenShouldRun_thenRunAndResetTimer()
+    {
+        defaultLoad();
 
         assertTrue(timerVar.availableOn().isBefore(SC2Pulse.instant()));
         assertTrue(timerVar.isAvailable());
@@ -67,6 +74,23 @@ public class TimerVarTest
         assertTrue(timerVar.getValue().isAfter(SC2Pulse.instant().minusSeconds(TEST_LAG_SECONDS)));
         verify(varDAO).merge(eq(KEY), any());
         assertTrue(timerVar.availableOn().isAfter(SC2Pulse.instant()));
+    }
+
+    @Test
+    public void whenTaskThrowsException_thenResetActiveFlag_AndDoNotResetTimer()
+    {
+        doThrow(new RuntimeException("test")).when(task).run();
+        defaultLoad();
+
+        assertTrue(timerVar.availableOn().isBefore(SC2Pulse.instant()));
+        assertTrue(timerVar.isAvailable());
+        assertThrows(RuntimeException.class, ()->timerVar.runIfAvailable().block(), "test");
+        verify(task).run();
+
+        assertFalse(timerVar.getValue().isAfter(SC2Pulse.instant().minusSeconds(TEST_LAG_SECONDS)));
+        verify(varDAO, never()).merge(eq(KEY), any());
+        assertFalse(timerVar.availableOn().isAfter(SC2Pulse.instant()));
+        assertFalse(timerVar.isActive());
     }
 
     @Test
