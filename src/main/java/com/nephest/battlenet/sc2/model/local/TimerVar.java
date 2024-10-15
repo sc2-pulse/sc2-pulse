@@ -160,7 +160,8 @@ extends InstantVar
                 LOG.debug("Executed {} timer", getKey());
                 active.compareAndSet(true, false);
             }))
-            .thenReturn(true);
+            .thenReturn(true)
+            .cache();
     }
 
 }

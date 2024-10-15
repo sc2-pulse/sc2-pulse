@@ -12,6 +12,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -25,6 +26,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import reactor.core.publisher.Mono;
 
 @ExtendWith(MockitoExtension.class)
 public class TimerVarTest
@@ -68,8 +70,11 @@ public class TimerVarTest
 
         assertTrue(timerVar.availableOn().isBefore(SC2Pulse.instant()));
         assertTrue(timerVar.isAvailable());
-        assertTrue(timerVar.runIfAvailable().block());
-        verify(task).run();
+        //should be hot mono to prevent side effects
+        Mono<Boolean> taskMono = timerVar.runIfAvailable();
+        assertTrue(taskMono.block());
+        assertTrue(taskMono.block());
+        verify(task, times(1)).run();
         //timer is updated
         assertTrue(timerVar.getValue().isAfter(SC2Pulse.instant().minusSeconds(TEST_LAG_SECONDS)));
         verify(varDAO).merge(eq(KEY), any());
