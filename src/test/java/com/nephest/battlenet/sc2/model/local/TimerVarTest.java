@@ -72,6 +72,7 @@ public class TimerVarTest
         assertTrue(timerVar.isAvailable());
         //should be hot mono to prevent side effects
         Mono<Boolean> taskMono = timerVar.runIfAvailable();
+        assertEquals(taskMono, timerVar.getLastTask());
         assertTrue(taskMono.block());
         assertTrue(taskMono.block());
         verify(task, times(1)).run();

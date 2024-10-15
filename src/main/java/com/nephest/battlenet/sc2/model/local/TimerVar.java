@@ -30,6 +30,8 @@ extends InstantVar
     private final AtomicBoolean active = new AtomicBoolean(false);
     private final boolean valueBeforeTask;
 
+    private Mono<Boolean> lastTask = Mono.empty();
+
     public TimerVar
     (
         VarDAO varDAO,
@@ -102,6 +104,11 @@ extends InstantVar
         super.save();
     }
 
+    public Mono<Boolean> getLastTask()
+    {
+        return lastTask;
+    }
+
     public Duration getDurationBetweenRuns()
     {
         return durationBetweenRuns.getValue() != null
@@ -152,7 +159,7 @@ extends InstantVar
         }
 
         Instant beforeTask = SC2Pulse.instant();
-        return task
+        Mono<Boolean> newTask = task
             .get()
             .doOnError(e->active.compareAndSet(true, false))
             .then(Mono.fromRunnable(()->{
@@ -162,6 +169,8 @@ extends InstantVar
             }))
             .thenReturn(true)
             .cache();
+        lastTask = newTask;
+        return newTask;
     }
 
 }
