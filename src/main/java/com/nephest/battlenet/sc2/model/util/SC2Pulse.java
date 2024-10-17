@@ -7,6 +7,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 
@@ -32,6 +33,11 @@ public final class SC2Pulse
     public static OffsetDateTime offsetDateTime(OffsetDateTime original)
     {
         return original.truncatedTo(CHRONO_UNIT_MIN);
+    }
+
+    public static OffsetDateTime offsetDateTime(int year, int month, int day)
+    {
+        return offsetDateTime(OffsetDateTime.of(year, month, day, 0, 0, 0, 0, ZoneOffset.UTC));
     }
 
     public static ZonedDateTime zonedDateTime()
