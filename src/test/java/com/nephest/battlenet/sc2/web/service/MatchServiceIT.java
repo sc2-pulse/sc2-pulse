@@ -28,6 +28,8 @@ import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
@@ -43,6 +45,8 @@ import org.springframework.web.context.WebApplicationContext;
 @TestPropertySource("classpath:application-private.properties")
 public class MatchServiceIT
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(MatchServiceIT.class);
 
     @Autowired
     private MatchService matchService;
@@ -93,7 +97,10 @@ public class MatchServiceIT
         CompletableFuture<MatchUpdateContext> update = new CompletableFuture<>();
         eventService.getMatchUpdateEvent().subscribe(update::complete);
         if(matchService.getUpdateMatchesTask().isActive())
-            matchService.getUpdateMatchesTask().getLastTask().block();
+            matchService.getUpdateMatchesTask().getLastTask()
+                .doOnError(t->LOG.warn(t.getMessage(), t))
+                .onErrorComplete()
+                .block();
         try
         {
             //no matches found
