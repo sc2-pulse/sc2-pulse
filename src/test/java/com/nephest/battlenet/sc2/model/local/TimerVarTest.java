@@ -78,7 +78,7 @@ public class TimerVarTest
         verify(task, times(1)).run();
         //timer is updated
         assertTrue(timerVar.getValue().isAfter(SC2Pulse.instant().minusSeconds(TEST_LAG_SECONDS)));
-        verify(varDAO).merge(eq(KEY), any());
+        verify(varDAO, times(1)).merge(eq(KEY), any());
         assertTrue(timerVar.availableOn().isAfter(SC2Pulse.instant()));
     }
 
