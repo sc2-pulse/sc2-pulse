@@ -7,7 +7,7 @@ import com.nephest.battlenet.sc2.model.BaseSeason;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Objects;
 
 public class Season
@@ -34,8 +34,8 @@ implements java.io.Serializable
         Region region,
         Integer year,
         Integer number,
-        LocalDate start,
-        LocalDate end
+        OffsetDateTime start,
+        OffsetDateTime end
     )
     {
         super(year, number, start, end);

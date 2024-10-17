@@ -1,13 +1,12 @@
-// Copyright (C) 2020 Oleksandr Masniuk and contributors
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.blizzard;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.nephest.battlenet.sc2.config.convert.jackson.EpochSecondToLocalDateConverter;
-
-import java.time.LocalDate;
+import com.nephest.battlenet.sc2.config.convert.jackson.EpochSecondToOffsetDateTimeConverter;
+import java.time.OffsetDateTime;
 
 public class BlizzardDataSeason
 extends BlizzardSeason
@@ -20,8 +19,8 @@ extends BlizzardSeason
         Integer id,
         Integer year,
         Integer number,
-        LocalDate start,
-        LocalDate end
+        OffsetDateTime start,
+        OffsetDateTime end
     )
     {
         super(id, year, number, start, end);
@@ -34,15 +33,15 @@ extends BlizzardSeason
     }
 
     @JsonProperty("start_timestamp")
-    @JsonDeserialize(converter = EpochSecondToLocalDateConverter.class)
-    public void setStart(LocalDate start)
+    @JsonDeserialize(converter = EpochSecondToOffsetDateTimeConverter.class)
+    public void setStart(OffsetDateTime start)
     {
         super.setStart(start);
     }
 
     @JsonProperty("end_timestamp")
-    @JsonDeserialize(converter = EpochSecondToLocalDateConverter.class)
-    public void setEnd(LocalDate end)
+    @JsonDeserialize(converter = EpochSecondToOffsetDateTimeConverter.class)
+    public void setEnd(OffsetDateTime end)
     {
         super.setEnd(end);
     }

@@ -32,7 +32,7 @@ import com.nephest.battlenet.sc2.web.service.ClanService;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Instant;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -114,7 +114,7 @@ public class ClanIT
     @Test
     public void testStatsCalculation()
     {
-        LocalDate now = LocalDate.now();
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
         seasonGenerator.generateSeason
         (
             List.of

@@ -13,7 +13,7 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
-import java.time.LocalDate;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.util.List;
 import java.util.NoSuchElementException;
 import org.junit.jupiter.api.BeforeEach;
@@ -40,7 +40,8 @@ public class SC2WebServiceUtilTest
     public void getExternalOrExistingSeason()
     {
         BlizzardSeason apiSeason = new BlizzardSeason();
-        Season dbSeason = new Season(1, 1, Region.EU, 4, 5, LocalDate.now(), LocalDate.now());
+        Season dbSeason = new Season(1, 1, Region.EU, 4, 5,
+            SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime());
         when(api.getSeason(Region.EU, 1))
             .thenReturn(Mono.just(apiSeason))
             .thenThrow(new WebClientResponseException(500, "", null, null, null))

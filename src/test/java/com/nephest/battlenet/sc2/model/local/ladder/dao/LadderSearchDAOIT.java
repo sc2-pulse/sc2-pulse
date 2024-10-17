@@ -41,7 +41,7 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -499,9 +499,12 @@ public class LadderSearchDAOIT
         assertEquals(28, queueStats.get(0).getMediumActivityPlayerCount());
         assertEquals(PLAYERS_TOTAL - 28 - 12, queueStats.get(0).getHighActivityPlayerCount());
 
+        OffsetDateTime start = SC2Pulse.offsetDateTime().minusDays(15);
+        OffsetDateTime end = start.plusDays(30);
         for(Region region : REGIONS) seasonDAO.merge(new Season(
             null, DEFAULT_SEASON_ID, region,
-            DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER, LocalDate.now().minusDays(15), LocalDate.now().plusDays(15)
+            DEFAULT_SEASON_YEAR, DEFAULT_SEASON_NUMBER,
+            start, end
         ));
 
         queueStatsDAO.mergeCalculateForSeason(DEFAULT_SEASON_ID);

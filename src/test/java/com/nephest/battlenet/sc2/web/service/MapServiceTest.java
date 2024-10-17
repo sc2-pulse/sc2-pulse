@@ -22,7 +22,7 @@ import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderMapStatsFilmDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -84,7 +84,8 @@ public class MapServiceTest
     @Test
     public void whenSeasonIsOlderThanSkipDuration_thenSeasonIsOld()
     {
-        LocalDate oldDate = LocalDate.now().minusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays());
+        OffsetDateTime oldDate = SC2Pulse.offsetDateTime()
+            .minusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays());
         when(seasonDAO.findLast())
             .thenReturn(Optional.of(new Season(1, 1, Region.EU, 2020, 1, oldDate, oldDate.plusDays(1))));
         assertFalse(mapService.seasonIsTooYoung());
@@ -93,7 +94,7 @@ public class MapServiceTest
     @Test
     public void whenSeasonIsYoungerThanSkipDuration_thenSeasonIsYoung()
     {
-        LocalDate youngDate = LocalDate.now()
+        OffsetDateTime youngDate = SC2Pulse.offsetDateTime()
             .minusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.minusDays(1).toDays());
         when(seasonDAO.findLast())
             .thenReturn(Optional.of(new Season(1, 1, Region.EU, 2020, 1, youngDate, youngDate.plusDays(1))));
@@ -104,7 +105,8 @@ public class MapServiceTest
     public void whenCreatingBean_thenUpdateOnMatchUpdateEvent()
     throws InterruptedException
     {
-        LocalDate oldDate = LocalDate.now().minusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays());
+        OffsetDateTime oldDate = SC2Pulse.offsetDateTime()
+            .minusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays());
         when(seasonDAO.findLast())
             .thenReturn(Optional.of(new Season(1, 1, Region.EU, 2020, 1, oldDate, oldDate.plusDays(1))));
 

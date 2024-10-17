@@ -5,10 +5,10 @@ package com.nephest.battlenet.sc2.model.blizzard;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.nephest.battlenet.sc2.config.convert.jackson.EpochSecondToLocalDateConverter;
+import com.nephest.battlenet.sc2.config.convert.jackson.EpochSecondToOffsetDateTimeConverter;
 import com.nephest.battlenet.sc2.model.BaseSeason;
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 public class BlizzardSeason
 extends BaseSeason
@@ -24,8 +24,8 @@ extends BaseSeason
         Integer id,
         Integer year,
         Integer number,
-        LocalDate start,
-        LocalDate end
+        OffsetDateTime start,
+        OffsetDateTime end
     )
     {
         super(year, number, start, end);
@@ -45,16 +45,16 @@ extends BaseSeason
 
     @Override
     @JsonProperty("startDate")
-    @JsonDeserialize(converter = EpochSecondToLocalDateConverter.class)
-    public void setStart(LocalDate start)
+    @JsonDeserialize(converter = EpochSecondToOffsetDateTimeConverter.class)
+    public void setStart(OffsetDateTime start)
     {
         super.setStart(start);
     }
 
     @Override
     @JsonProperty("endDate")
-    @JsonDeserialize(converter = EpochSecondToLocalDateConverter.class)
-    public void setEnd(LocalDate end)
+    @JsonDeserialize(converter = EpochSecondToOffsetDateTimeConverter.class)
+    public void setEnd(OffsetDateTime end)
     {
         super.setEnd(end);
     }

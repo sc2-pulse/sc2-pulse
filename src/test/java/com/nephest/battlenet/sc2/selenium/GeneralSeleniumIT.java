@@ -46,7 +46,6 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.Duration;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
@@ -322,7 +321,8 @@ public class GeneralSeleniumIT
     {
         loadMainPage(driver, wait);
         clickAndWait(driver, wait, "#online-tab", "#online.show.active");
-        driver.findElement(By.cssSelector("#online-to")).sendKeys(SeasonGenerator.DEFAULT_SEASON_START.plusDays(1).toString());
+        driver.findElement(By.cssSelector("#online-to"))
+            .sendKeys(SeasonGenerator.DEFAULT_SEASON_START.toLocalDate().plusDays(1).toString());
         clickAndWait(driver, wait, "#form-online button[type=\"submit\"]", "#online-data:not(.d-none)");
         clickCanvases(driver, "#online-data");
         checkJsErrors();
@@ -785,7 +785,7 @@ public class GeneralSeleniumIT
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
         queueStatsDAO.calculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         playerCharacterStatsDAO.calculate();
-        seasonStateDAO.merge(SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay().atOffset(ZoneOffset.UTC).plusMinutes(1),
+        seasonStateDAO.merge(SeasonGenerator.DEFAULT_SEASON_START.plusMinutes(1),
             SeasonGenerator.DEFAULT_SEASON_ID);
     }
     

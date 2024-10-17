@@ -12,13 +12,14 @@ import static org.mockito.Mockito.when;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -58,7 +59,8 @@ public class SeasonCacheFilterTest
     throws ServletException, IOException
     {
         List<Season> seasons =
-            List.of(new Season(1, 1, Region.EU, 2020, 11, LocalDate.now(), LocalDate.now().plusMonths(1)));
+            List.of(new Season(1, 1, Region.EU, 2020, 11,
+                SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(1)));
         when(seasonDAO.findListByBattlenetId(any())).thenReturn(seasons);
 
         filter.doFilter(null, response, filterChain);
@@ -71,7 +73,8 @@ public class SeasonCacheFilterTest
     {
         List<Season> seasons = activeRegions.stream()
             .map(r->new Season(null, 1, r, 2020, 1,
-                LocalDate.now().minusMonths(2), LocalDate.now().minusMonths(1)))
+                SC2Pulse.offsetDateTime().minusMonths(2),
+                SC2Pulse.offsetDateTime().minusMonths(1)))
             .collect(Collectors.toList());
         when(seasonDAO.findListByBattlenetId(any())).thenReturn(seasons);
 
@@ -83,8 +86,8 @@ public class SeasonCacheFilterTest
     public void whenCacheDurationIsPositive_thenCache()
     throws ServletException, IOException
     {
-        LocalDate start = LocalDate.now();
-        LocalDate end = start.plusDays(30);
+        OffsetDateTime start = SC2Pulse.offsetDateTime();
+        OffsetDateTime end = start.plusDays(30);
         List<Season> seasons = activeRegions.stream()
             .map(r->new Season(null, 1, r, 2020, 1, start, start.plusMonths(10)))
             .collect(Collectors.toList());
@@ -100,7 +103,7 @@ public class SeasonCacheFilterTest
             .substring(header.indexOf("=") + 1, header.indexOf(",", header.indexOf("=")));
         Duration duration = Duration.ofSeconds(Long.parseLong(durationStr));
         //min end datetime at start of the day is used, -10 to offset test duration
-        assertTrue(duration.compareTo(Duration.between(LocalDateTime.now(), end.atStartOfDay()).minusSeconds(10)) > 0);
+        assertTrue(duration.compareTo(Duration.between(LocalDateTime.now(), end).minusSeconds(10)) > 0);
     }
 
 }

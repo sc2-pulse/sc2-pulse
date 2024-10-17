@@ -49,6 +49,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.common.CommonPersonalData;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.web.util.MonoUtil;
 import discord4j.common.util.Snowflake;
@@ -57,7 +58,7 @@ import discord4j.core.object.entity.User;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
@@ -506,9 +507,9 @@ public class DiscordIT
         int curSeason = 1000;
         int lastValidSeason = curSeason - DiscordService.MAIN_TEAM_SEASON_DEPTH + 1;
         Season season1 = new Season(null, lastValidSeason, region, 2020, 1,
-            LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));
+            SC2Pulse.offsetDateTime(2020, 1, 1), SC2Pulse.offsetDateTime(2020, 2, 1));
         Season season2 = new Season(null, curSeason, region, 2020, 2,
-            LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1));
+            SC2Pulse.offsetDateTime(2020, 2, 1), SC2Pulse.offsetDateTime(2020, 3, 1));
         //generate some useless noise
         seasonGenerator.generateSeason
         (
@@ -564,7 +565,7 @@ public class DiscordIT
         final TeamType TEAM_TYPE = TeamType.ARRANGED;
         final BaseLeagueTier.LeagueTierType TIER_TYPE = BaseLeagueTier.LeagueTierType.FIRST;
         int targetSeasonOffset = DiscordService.MAIN_TEAM_SEASON_DEPTH;
-        LocalDate start = LocalDate.now().minusYears(5);
+        OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(5);
         List<Season> seasons = new ArrayList<>();
         for(int i = 0; i <= targetSeasonOffset; i++)
             seasons.add(new Season(null, i, Region.EU, 2020, i, start.plusMonths(i), start.plusMonths(i + 1)));

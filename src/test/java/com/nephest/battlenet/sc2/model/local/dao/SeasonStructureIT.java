@@ -21,9 +21,10 @@ import com.nephest.battlenet.sc2.model.Version;
 import com.nephest.battlenet.sc2.model.local.League;
 import com.nephest.battlenet.sc2.model.local.LeagueTier;
 import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.EnumSet;
@@ -79,7 +80,7 @@ public class SeasonStructureIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
-        LocalDate seasonStart = LocalDate.now();
+        OffsetDateTime seasonStart = SC2Pulse.offsetDateTime();
         SEASONS = Arrays.stream(Region.values())
             .map(region->new Season(null, 1, region, seasonStart.getYear(), 1,
                 seasonStart.plusMonths(region.ordinal()),

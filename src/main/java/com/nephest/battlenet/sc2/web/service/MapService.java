@@ -29,7 +29,6 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import java.time.Duration;
 import java.time.Instant;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -146,7 +145,7 @@ public class MapService
     public boolean seasonIsTooYoung()
     {
         return seasonDAO.findLast().orElseThrow().getStart()
-            .plusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays()).isAfter(LocalDate.now());
+            .plusDays(MAP_STATS_SKIP_NEW_SEASON_FRAME.toDays()).isAfter(SC2Pulse.offsetDateTime());
     }
 
     @CacheEvict

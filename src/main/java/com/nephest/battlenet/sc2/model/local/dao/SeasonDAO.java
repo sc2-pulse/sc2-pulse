@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -6,7 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Season;
 import java.sql.Types;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -152,8 +152,8 @@ public class SeasonDAO
             conversionService.convert(rs.getInt("season.region"), Region.class),
             rs.getInt("season.year"),
             rs.getInt("season.number"),
-            rs.getObject("season.start", LocalDate.class),
-            rs.getObject("season.end", LocalDate.class)
+            rs.getObject("season.start", OffsetDateTime.class),
+            rs.getObject("season.end", OffsetDateTime.class)
         );
         if(STD_EXTRACTOR == null) STD_EXTRACTOR = DAOUtils.getResultSetExtractor(STD_ROW_MAPPER);
     }

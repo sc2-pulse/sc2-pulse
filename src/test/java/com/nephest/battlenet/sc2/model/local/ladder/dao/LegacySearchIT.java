@@ -29,7 +29,6 @@ import com.nephest.battlenet.sc2.web.service.StatsService;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -92,10 +91,14 @@ public class LegacySearchIT
             (
                 List.of
                 (
-                    new Season(null, 1, Region.EU, 2020, 1, LocalDate.now(), LocalDate.now().plusMonths(1)),
-                    new Season(null, 1, Region.US, 2020, 1, LocalDate.now(), LocalDate.now().plusMonths(1)),
-                    new Season(null, 2, Region.EU, 2020, 2, LocalDate.now(), LocalDate.now().plusMonths(2)),
-                    new Season(null, 2, Region.US, 2020, 2, LocalDate.now(), LocalDate.now().plusMonths(2))
+                    new Season(null, 1, Region.EU, 2020, 1,
+                        SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(1)),
+                    new Season(null, 1, Region.US, 2020, 1, 
+                        SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(1)),
+                    new Season(null, 2, Region.EU, 2020, 2, 
+                        SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(2)),
+                    new Season(null, 2, Region.US, 2020, 2, 
+                        SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(2))
                 ),
                 List.of(BaseLeague.LeagueType.values()),
                 new ArrayList<>(QueueType.getTypes(StatsService.VERSION)),

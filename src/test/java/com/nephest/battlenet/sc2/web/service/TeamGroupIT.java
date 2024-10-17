@@ -29,11 +29,12 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
 import com.nephest.battlenet.sc2.model.local.inner.TeamLegacyUid;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeamMember;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.group.TeamGroupArgumentResolver;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -106,8 +107,8 @@ public class TeamGroupIT
         SeasonGenerator seasonGenerator
     )
     {
-        LocalDate start = LocalDate.now().minusYears(100);
-        LocalDate end = start.plusYears(100);
+        OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(100);
+        OffsetDateTime end = start.plusYears(100);
         List<Season> seasons = IntStream.range(0, TeamGroupArgumentResolver.TEAMS_MAX + 1)
             .boxed()
             .map(i->new Season(null, i + 1, Region.EU, 2020, i, start.plusDays(i), end.plusDays(i)))

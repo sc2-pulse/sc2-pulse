@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -9,9 +9,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.Season;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -43,7 +44,7 @@ public class SeasonIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
-        LocalDate start = LocalDate.of(2020, 1, 1);
+        OffsetDateTime start = SC2Pulse.offsetDateTime(2020, 1, 1);
         for(Region region : Region.values())
             seasonDAO.create(new Season(null, 1, region, 2020, 1, start, start.plusMonths(1)));
         seasonDAO.create(new Season(null, 2, Region.EU, 2020, 2,

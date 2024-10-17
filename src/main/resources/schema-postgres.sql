@@ -556,8 +556,8 @@ CREATE TABLE "season"
     "battlenet_id" SMALLINT NOT NULL,
     "year" SMALLINT NOT NULL,
     "number" SMALLINT NOT NULL,
-    "start" DATE NOT NULL,
-    "end" DATE NOT NULL,
+    "start" TIMESTAMP WITH TIME ZONE NOT NULL,
+    "end" TIMESTAMP WITH TIME ZONE NOT NULL,
 
     PRIMARY KEY ("id"),
 

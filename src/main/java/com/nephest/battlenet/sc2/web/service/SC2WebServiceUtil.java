@@ -7,8 +7,8 @@ import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import jakarta.validation.ValidationException;
-import java.time.LocalDate;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,7 +53,7 @@ public class SC2WebServiceUtil
         Season s = seasonDAO.findListByRegion(region).stream()
             .filter(ss->ss.getBattlenetId().equals(maxSeason))
             .findAny().orElseThrow();
-        if(!LocalDate.now().isBefore(s.getEnd().minusDays(EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD)))
+        if(!SC2Pulse.offsetDateTime().isBefore(s.getEnd().minusDays(EXISTING_SEASON_DAYS_BEFORE_END_THRESHOLD)))
             throw new IllegalStateException("Could not find any season for " + region.name());
         return new BlizzardSeason(s.getBattlenetId(), s.getYear(), s.getNumber(), s.getStart(), s.getEnd());
     }

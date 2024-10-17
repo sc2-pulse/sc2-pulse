@@ -33,7 +33,7 @@ import com.nephest.battlenet.sc2.web.controller.CharacterController;
 import com.nephest.battlenet.sc2.web.service.WebServiceTestUtil;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -115,10 +115,10 @@ public class PlayerCharacterSummaryIT
     public void testCornerCases()
     throws Exception
     {
-        LocalDate now = LocalDate.now();
-        LocalDate s3End = now;
-        LocalDate s2End = now.minusDays(30);
-        LocalDate s1End = s2End.minusDays(30);
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
+        OffsetDateTime s3End = now;
+        OffsetDateTime s2End = now.minusDays(30);
+        OffsetDateTime s1End = s2End.minusDays(30);
         seasonGenerator.generateSeason
         (
             List.of

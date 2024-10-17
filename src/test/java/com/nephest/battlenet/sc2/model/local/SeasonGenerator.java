@@ -29,9 +29,7 @@ import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerSearchStats;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +49,9 @@ public class SeasonGenerator
     public static final Region DEFAULT_SEASON_REGION = Region.EU;
     public static final int DEFAULT_SEASON_YEAR = 2020;
     public static final int DEFAULT_SEASON_NUMBER = 1;
-    public static final LocalDate DEFAULT_SEASON_START = LocalDate.of(2020, 1, 1);
-    public static final LocalDate DEFAULT_SEASON_END = DEFAULT_SEASON_START.plusMonths(1);
+    public static final OffsetDateTime DEFAULT_SEASON_START
+        = SC2Pulse.offsetDateTime(2020, 1, 1);
+    public static final OffsetDateTime DEFAULT_SEASON_END = DEFAULT_SEASON_START.plusMonths(1);
     public static final BaseLeague.LeagueType DEFAULT_LEAGUE_TYPE = BaseLeague.LeagueType.BRONZE;
     public static final QueueType DEFAULT_QUEUE = QueueType.LOTV_1V1;
     public static final BaseLeagueTier.LeagueTierType DEFAULT_TIER =
@@ -230,8 +229,6 @@ public class SeasonGenerator
         boolean spreadRaces
     )
     {
-        ZoneOffset offset = SC2Pulse.offsetDateTime().getOffset();
-        OffsetDateTime seasonStart = season.getStart().atStartOfDay(offset).toOffsetDateTime();
         League league = leagueDAO.create(new League(null, season.getId(), type, queueType, teamType));
         LeagueTier newTier = new LeagueTier
         (
@@ -275,7 +272,7 @@ public class SeasonGenerator
             );
             Team team = teamDAO.create(newTeam);
             TeamState teamState = TeamState.of(team);
-            teamState.setDateTime(seasonStart);
+            teamState.setDateTime(season.getStart());
             teamStateDAO.saveState(Set.of(teamState));
 
             for(int memberIx = 0; memberIx < queueType.getTeamFormat().getMemberCount(teamType); memberIx++)

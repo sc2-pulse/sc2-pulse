@@ -67,8 +67,8 @@ class SeasonUtil
 
     static updateSeasonDates(season)
     {
-        const startDate = Util.parseIsoDate(season.start);
-        let endDate = Util.parseIsoDate(season.end);
+        const startDate = Util.parseIsoDateOrDateTime(season.start);
+        let endDate = Util.parseIsoDateOrDateTime(season.end);
         const now = new Date();
         if(now - endDate < 0) endDate = now;
         season.start = startDate;

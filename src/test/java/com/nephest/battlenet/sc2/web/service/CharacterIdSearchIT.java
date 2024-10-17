@@ -22,9 +22,9 @@ import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.dao.AccountDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.IntStream;
@@ -162,9 +162,9 @@ public class CharacterIdSearchIT
             List.of
             (
                 new Season(null, 1, Region.EU, 2020, 1,
-                    LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1)),
+                    SC2Pulse.offsetDateTime(2020, 1, 1), SC2Pulse.offsetDateTime(2020, 2, 1)),
                 new Season(null, 2, Region.EU, 2020, 2,
-                    LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1))
+                    SC2Pulse.offsetDateTime(2020, 2, 1), SC2Pulse.offsetDateTime(2020, 3, 1))
             ),
             List.of(BaseLeague.LeagueType.BRONZE),
             List.of(QueueType.LOTV_1V1),
@@ -193,9 +193,9 @@ public class CharacterIdSearchIT
             List.of
             (
                 new Season(null, 1, Region.EU, 2020, 1,
-                    LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1)),
+                    SC2Pulse.offsetDateTime(2020, 1, 1), SC2Pulse.offsetDateTime(2020, 2, 1)),
                 new Season(null, 2, Region.EU, 2020, 2,
-                    LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1))
+                    SC2Pulse.offsetDateTime(2020, 2, 1), SC2Pulse.offsetDateTime(2020, 3, 1))
             ),
             List.of(BaseLeague.LeagueType.BRONZE),
             List.of(QueueType.LOTV_1V1, QueueType.LOTV_2V2, QueueType.LOTV_3V3),

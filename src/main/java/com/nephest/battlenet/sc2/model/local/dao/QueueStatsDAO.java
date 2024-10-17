@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2021 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.QueueStats;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +18,6 @@ import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Transactional(propagation = Propagation.NOT_SUPPORTED)
 @Repository
@@ -93,7 +92,11 @@ public class QueueStatsDAO
     private static final String UPDATE_PLAYER_ACTIVITY_QUERY_TEMPLATE =
         "WITH "
         + "day AS (SELECT DISTINCT ON (battlenet_id) "
-        + "CASE WHEN \"end\">current_date THEN GREATEST(current_date - \"start\", 1) ELSE \"end\" - \"start\" END AS count "
+        + "CASE WHEN \"end\">current_timestamp "
+            + "THEN (EXTRACT(epoch FROM GREATEST(current_timestamp - \"start\", INTERVAL '1 day')) "
+                + " / 86400)::int "
+            + "ELSE (EXTRACT(epoch FROM \"end\" - \"start\") / 86400)::int "
+        + "END AS count "
         + "FROM season WHERE battlenet_id = :seasonId "
         + "ORDER BY battlenet_id DESC, region DESC), "
 

@@ -28,7 +28,6 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.BlizzardDataController;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
@@ -111,7 +110,7 @@ public class BlizzardDataServiceIT
                 null, 25,
                 Region.EU,
                 2020, 1,
-                LocalDate.now(), LocalDate.now().plusMonths(3)
+                SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(3)
             )
         );
         acc1 = accountDAO.merge(new Account(null, Partition.GLOBAL, "user#1"));

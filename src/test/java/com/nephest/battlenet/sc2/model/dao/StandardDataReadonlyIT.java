@@ -33,7 +33,6 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -306,9 +305,7 @@ public class StandardDataReadonlyIT
     @Test
     public void testFindTeamState()
     {
-        ZoneOffset offset = SC2Pulse.offsetDateTime().getOffset();
-        OffsetDateTime seasonStart =
-            SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay().atOffset(offset);
+        OffsetDateTime seasonStart = SeasonGenerator.DEFAULT_SEASON_START;
 
         assertEquals(1, ladderTeamStateDAO.find(1L, null).size());
         assertEquals(1, ladderTeamStateDAO.find(1L, seasonStart).size());

@@ -37,3 +37,7 @@ INNER JOIN league_tier_filter USING(league_id)
 WHERE team.tier_type IS NULL
 AND league_tier.type != 0
 AND division.id = team_division.id;
+
+ALTER TABLE "season"
+    ALTER COLUMN "start" TYPE TIMESTAMP WITH TIME ZONE,
+    ALTER COLUMN "end" TYPE TIMESTAMP WITH TIME ZONE;

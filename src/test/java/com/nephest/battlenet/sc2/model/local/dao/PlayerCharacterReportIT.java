@@ -61,7 +61,6 @@ import java.net.UnknownHostException;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
-import java.time.ZoneOffset;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
@@ -217,8 +216,7 @@ public class PlayerCharacterReportIT
     throws Exception
     {
         byte[] localhost = InetAddress.getByName("127.0.0.1").getAddress();
-        ZoneOffset offset = SC2Pulse.offsetDateTime().getOffset();
-        OffsetDateTime matchDateTime = SeasonGenerator.DEFAULT_SEASON_START.atStartOfDay(offset).toOffsetDateTime();
+        OffsetDateTime matchDateTime = SeasonGenerator.DEFAULT_SEASON_START;
         SC2Map map = mapDAO.merge(Set.of(new SC2Map(null, "map"))).iterator().next();
         Match match = matchDAO
             .merge(Set.of(new Match(null, matchDateTime, BaseMatch.MatchType._1V1, map.getId(), Region.EU)))

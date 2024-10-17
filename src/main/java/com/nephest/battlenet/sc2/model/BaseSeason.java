@@ -4,7 +4,7 @@
 package com.nephest.battlenet.sc2.model;
 
 import jakarta.validation.constraints.NotNull;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 
 public class BaseSeason
 {
@@ -15,21 +15,21 @@ public class BaseSeason
     @NotNull
     private Integer year;
 
-    /*
-        The upstream defines these dates as timestamp, but we are using the date because we don`t really need
-        the time portion. Historical season data (on liquipedia) does not have a time portion either. Furthermore,
-        there are multiple upstream seasons(for different regions) and only one historical date for all of them,
-        which makes timestamp type completely useless and misleading.
-     */
     @NotNull
-    protected LocalDate start;
+    protected OffsetDateTime start;
 
     @NotNull
-    protected LocalDate end;
+    protected OffsetDateTime end;
 
     public BaseSeason(){}
 
-    public BaseSeason(@NotNull Integer year, @NotNull Integer number, @NotNull LocalDate start, @NotNull LocalDate end)
+    public BaseSeason
+    (
+        @NotNull Integer year,
+        @NotNull Integer number,
+        @NotNull OffsetDateTime start,
+        @NotNull OffsetDateTime end
+    )
     {
         this.number = number;
         this.year = year;
@@ -57,22 +57,22 @@ public class BaseSeason
         return year;
     }
 
-    public LocalDate getStart()
+    public OffsetDateTime getStart()
     {
         return start;
     }
 
-    public void setStart(LocalDate start)
+    public void setStart(OffsetDateTime start)
     {
         this.start = start;
     }
 
-    public LocalDate getEnd()
+    public OffsetDateTime getEnd()
     {
         return end;
     }
 
-    public void setEnd(LocalDate end)
+    public void setEnd(OffsetDateTime end)
     {
         this.end = end;
     }

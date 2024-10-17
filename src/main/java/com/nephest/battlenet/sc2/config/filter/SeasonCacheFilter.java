@@ -13,7 +13,6 @@ import jakarta.servlet.ServletRequest;
 import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletResponse;
 import java.time.Duration;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Comparator;
 import java.util.List;
@@ -62,7 +61,6 @@ implements Filter
                 LocalDateTime.now(),
                 currentSeasons.stream()
                     .map(Season::getEnd)
-                    .map(LocalDate::atStartOfDay)
                     .min(Comparator.naturalOrder())
                     .orElseThrow()
             );

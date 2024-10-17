@@ -40,12 +40,12 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterLinkDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderDistinctCharacter;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeAPI;
 import com.nephest.battlenet.sc2.web.service.WebServiceUtil;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import javax.sql.DataSource;
@@ -136,7 +136,7 @@ public class ExternalServiceIT
     {
         Region region = Region.EU;
         Season season1 = new Season(null, 2, region, 2020, 2,
-            LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1));
+            SC2Pulse.offsetDateTime(2020, 2, 1), SC2Pulse.offsetDateTime(2020, 3, 1));
         seasonGenerator.generateSeason
         (
             List.of(season1),

@@ -21,9 +21,10 @@ import com.nephest.battlenet.sc2.model.blizzard.BlizzardLeagueTier;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardSeason;
 import com.nephest.battlenet.sc2.model.blizzard.BlizzardTierDivision;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import jakarta.validation.ValidationException;
 import java.text.DecimalFormat;
-import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
@@ -200,8 +201,8 @@ public class BlizzardSC2APITest
     public void testCurrentSeasonValidity(boolean isCurrentSeasonValid)
     {
         BlizzardSC2API spy = spy(api);
-        LocalDate start = LocalDate.now().minusMonths(2);
-        LocalDate end = start.plusMonths(1);
+        OffsetDateTime start = SC2Pulse.offsetDateTime().minusMonths(2);
+        OffsetDateTime end = start.plusMonths(1);
         int lastSeasonId = 15;
         BlizzardSeason currentSeason = new BlizzardSeason
         (
@@ -223,8 +224,8 @@ public class BlizzardSC2APITest
     public void testLastSeasonValidity(boolean isLastSeasonValid)
     {
         BlizzardSC2API spy = spy(api);
-        LocalDate start = LocalDate.now().minusMonths(2);
-        LocalDate end = start.plusMonths(1);
+        OffsetDateTime start = SC2Pulse.offsetDateTime().minusMonths(2);
+        OffsetDateTime end = start.plusMonths(1);
         int lastSeasonId = 15;
         BlizzardSeason currentSeason = new BlizzardSeason
         (

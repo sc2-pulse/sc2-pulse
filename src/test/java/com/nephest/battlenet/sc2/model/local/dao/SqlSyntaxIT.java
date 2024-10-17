@@ -33,7 +33,6 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.LinkedHashSet;
@@ -150,8 +149,10 @@ public class SqlSyntaxIT
     public void testSqlSyntax()
     {
         Region region = Region.EU;
-        Season s1 = seasonDAO.merge(new Season(null, 40, region, 2020, 1, LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1)));
-        Season s2 = seasonDAO.merge(new Season(null, 40, region, 2019, 2, LocalDate.of(2019, 2, 1), LocalDate.of(2019, 3, 1)));
+        Season s1 = seasonDAO.merge(new Season(null, 40, region, 2020, 1,
+            SC2Pulse.offsetDateTime(2020, 1, 1), SC2Pulse.offsetDateTime(2020, 2, 1)));
+        Season s2 = seasonDAO.merge(new Season(null, 40, region, 2019, 2, 
+            SC2Pulse.offsetDateTime(2019, 2, 1), SC2Pulse.offsetDateTime(2019, 3, 1)));
         assertEquals(s1.getId(), s2.getId());
         List<Season> seasons = seasonDAO.findListByRegion(region);
         assertEquals(1, seasons.size());
@@ -159,7 +160,8 @@ public class SqlSyntaxIT
         assertEquals(40, season.getBattlenetId());
         assertEquals(2019, season.getYear());
         assertEquals(2, season.getNumber());
-        Season s3 = seasonDAO.merge(new Season(null, 39, region, 2019, 1, LocalDate.of(2019, 1, 1), LocalDate.of(2019, 2, 1)));
+        Season s3 = seasonDAO.merge(new Season(null, 39, region, 2019, 1,
+            SC2Pulse.offsetDateTime(2019, 1, 1), SC2Pulse.offsetDateTime(2019, 2, 1)));
         assertEquals(s1, seasonDAO.findLast().orElseThrow());
 
         League leagueOrig = leagueDAO.merge(new League(null, season.getId(), League.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED));

@@ -27,11 +27,11 @@ import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.dao.DivisionDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderTeam;
+import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.web.controller.GroupController;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.LongStream;
 import javax.sql.DataSource;
@@ -94,9 +94,9 @@ public class LadderCharacterTeamSearchIT
 
         Region region = Region.EU;
         Season season1 = new Season(null, 1, region, 2020, 1,
-            LocalDate.of(2020, 1, 1), LocalDate.of(2020, 2, 1));
+            SC2Pulse.offsetDateTime(2020, 1, 1), SC2Pulse.offsetDateTime(2020, 2, 1));
         Season season2 = new Season(null, 2, region, 2020, 2,
-            LocalDate.of(2020, 2, 1), LocalDate.of(2020, 3, 1));
+            SC2Pulse.offsetDateTime(2020, 2, 1), SC2Pulse.offsetDateTime(2020, 3, 1));
         //generate some useless noise
         seasonGenerator.generateSeason
         (
