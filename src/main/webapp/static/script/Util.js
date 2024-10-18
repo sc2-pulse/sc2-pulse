@@ -224,6 +224,11 @@ class Util
         return new Date(str);
     }
 
+    static parseIsoDateOrDateTime(str)
+    {
+        return str.length == Util.ISO_DATE_STRING_LENGTH ? Util.parseIsoDate(str) : Util.parseIsoDateTime(str);
+    }
+
     static currentISODateString()
     {
         return new Date().toISOString().substring(0, 10);
@@ -556,6 +561,7 @@ Util.DATE_FORMAT = new Intl.DateTimeFormat(navigator.language, {day: "2-digit", 
 Util.DATE_TIME_FORMAT = new Intl.DateTimeFormat(navigator.language, {day: "2-digit", month: "2-digit", year: "numeric",
     hour: "2-digit", minute: "2-digit", second: "2-digit"});
 Util.DAY_MILLIS = 86400000;
+Util.ISO_DATE_STRING_LENGTH = 10;
 Util.ERROR_MESSAGES = new Map([
     ["409", "409 Conflict. "
         + "The entity has already been modified by someone else. "
