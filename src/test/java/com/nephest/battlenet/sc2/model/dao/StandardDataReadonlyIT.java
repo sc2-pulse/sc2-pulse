@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -165,6 +166,19 @@ public class StandardDataReadonlyIT
             TeamType.ARRANGED
         );
         assertEquals(2, count);
+    }
+
+    @Test
+    public void testFindDivisionsById()
+    {
+        List<Division> divisions = divisionDAO.findByIds(Set.of(1, 3));
+        divisions.sort(Comparator.comparing(Division::getId));
+        Assertions.assertThat(divisions)
+            .usingRecursiveComparison()
+            .isEqualTo(List.of(
+                new Division(1, 1, 0L),
+                new Division(3, 3, 220L)
+            ));
     }
 
     @Test

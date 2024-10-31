@@ -27,6 +27,7 @@ import java.sql.SQLException;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -98,7 +100,9 @@ public class SeasonStructureIT
 
         for(League league : LEAGUES)
             for(BaseLeagueTier.LeagueTierType type : BaseLeagueTier.LeagueTierType.values())
-                TIERS.add(new LeagueTier(null, league.getId(), type, null, null));
+                TIERS.add(new LeagueTier(null, league.getId(), type,
+                    Integer.parseInt("" + league.getId() + type.ordinal()),
+                    Integer.parseInt("" + league.getId() + type.ordinal()) + 1));
         TIERS.forEach(leagueTierDAO::create);
     }
 
@@ -276,6 +280,20 @@ public class SeasonStructureIT
             ()->leagueTierDAO.find(Set.of(), EnumSet.of(FIRST)),
             "Missing leagueIds"
         );
+    }
+
+    @Test
+    public void testFindLeagueTiersByIds()
+    {
+        List<LeagueTier> tiers = leagueTierDAO.findByIds(Set.of(1, 2, 4));
+        tiers.sort(Comparator.comparing(LeagueTier::getId));
+        Assertions.assertThat(tiers)
+            .usingRecursiveComparison()
+            .isEqualTo(List.of(
+                new LeagueTier(1, 1, BaseLeagueTier.LeagueTierType.FIRST, 10, 11),
+                new LeagueTier(2, 1, BaseLeagueTier.LeagueTierType.SECOND, 11, 12),
+                new LeagueTier(4, 2, BaseLeagueTier.LeagueTierType.FIRST, 20, 21)
+            ));
     }
 
 }

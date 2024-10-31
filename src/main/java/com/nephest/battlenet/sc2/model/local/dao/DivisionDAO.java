@@ -56,6 +56,9 @@ public class DivisionDAO
         + "battlenet_id=excluded.battlenet_id,"
         + "league_tier_id=excluded.league_tier_id";
 
+    private static final String FIND_BY_IDS =
+        "SELECT " + STD_SELECT + " FROM division WHERE id IN(:ids)";
+
     private static final String FIND_LIST_BY_LADDER =
         "SELECT " + STD_SELECT
         + "FROM division "
@@ -334,6 +337,14 @@ public class DivisionDAO
             .addValue("queueType", conversionService.convert(queueType, Integer.class))
             .addValue("teamType", conversionService.convert(teamType, Integer.class));
         return template.query(FIND_DIVISION_COUNT, params, DAOUtils.INT_EXTRACTOR);
+    }
+
+    public List<Division> findByIds(Set<Integer> ids)
+    {
+        if(ids.isEmpty()) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource("ids", ids);
+        return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
 }

@@ -93,6 +93,9 @@ public class LeagueTierDAO
         + "WHERE league_id IN(:leagueIds) "
         + "AND (array_length(:types::smallint[], 1) IS NULL OR type = ANY(:types::smallint[]))";
 
+    private static final String FIND_BY_IDS =
+        "SELECT " + STD_SELECT + " FROM league_tier WHERE id IN(:ids)";
+
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
 
@@ -193,6 +196,14 @@ public class LeagueTierDAO
             .addValue("leagueIds", leagueIds)
             .addValue("types", typeIds.length == 0 ? null : typeIds);
         return template.query(FIND_BY_LEAGUE_IDS_AND_TYPES, params, STD_ROW_MAPPER);
+    }
+
+    public List<LeagueTier> findByIds(Set<Integer> ids)
+    {
+        if(ids.isEmpty()) return List.of();
+
+        MapSqlParameterSource params = new MapSqlParameterSource("ids", ids);
+        return template.query(FIND_BY_IDS, params, STD_ROW_MAPPER);
     }
 
 }
