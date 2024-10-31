@@ -19,6 +19,8 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToSC2PulseAuthority;
 import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
 import com.nephest.battlenet.sc2.config.convert.StringToAuditLogEntryActionConverter;
+import com.nephest.battlenet.sc2.config.convert.min.IdentifiableToMinimalObjectConverter;
+import com.nephest.battlenet.sc2.config.convert.min.TimestampToMinimalObjectConverter;
 import com.nephest.battlenet.sc2.model.Region;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -29,6 +31,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.support.DefaultConversionService;
 import org.springframework.format.support.DefaultFormattingConversionService;
 import org.springframework.scheduling.concurrent.CustomizableThreadFactory;
 import reactor.core.scheduler.Scheduler;
@@ -77,6 +80,28 @@ public class CommonBeanConfig
         DefaultFormattingConversionService service = new DefaultFormattingConversionService();
         service.addConverter(new StringToAuditLogEntryActionConverter());
         service.addConverter(new AuditLogEntryActionToStringConverter());
+        return service;
+    }
+
+    /**
+     * minimalConversionService converts objects to their simplest, shortest form, both memory
+     * and
+     * text (JSON) wise. It always converts to {@link Object}, so you have to use the
+     * corresponding class in {@link ConversionService#convert(Object, Class)} and related methods,
+     * including arrays and collections.
+     * </p>
+     * Converted value may not fully represent the original object, some details such as
+     * precision or meta info may be dropped, so reverse conversion may be impossible.
+     * </p>
+     *
+     * @return conversion service
+     */
+    @Bean
+    public ConversionService minimalConversionService()
+    {
+        DefaultConversionService service = new DefaultConversionService();
+        service.addConverter(new TimestampToMinimalObjectConverter());
+        service.addConverter(new IdentifiableToMinimalObjectConverter());
         return service;
     }
 
