@@ -501,6 +501,94 @@ public class BlizzardSC2APIIT
             );
     }
 
+    private void verifyDefaultProfileLadderRetries()
+    {
+        for(Region region : globalContext.getActiveRegions())
+            assertEquals
+            (
+                BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT,
+                api.getProfileLadderRetryCount(region, false)
+            );
+    }
+
+    @Test
+    @WithBlizzardMockUser
+    (
+        partition =  Partition.GLOBAL,
+        username = "user",
+        roles = {SC2PulseAuthority.USER, SC2PulseAuthority.ADMIN}
+    )
+    public void testSetProfileLadderRetryCount()
+    throws Exception
+    {
+        verifyDefaultProfileLadderRetries();
+
+        mvc.perform
+        (
+            post
+            (
+                "/admin/blizzard/api/ladder/profile/retries/{region}/{retries}",
+                Region.EU,
+                BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT_MAX
+            )
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        for(Region region : globalContext.getActiveRegions())
+            assertEquals
+                (
+                    region == Region.EU
+                        ? BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT_MAX
+                        : BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT,
+                    api.getProfileLadderRetryCount(region, false)
+                );
+
+        mvc.perform
+        (
+            delete
+            (
+                "/admin/blizzard/api/ladder/profile/retries/{region}",
+                Region.EU
+            )
+                .contentType(MediaType.APPLICATION_JSON)
+                .with(csrf())
+        )
+            .andExpect(status().isOk())
+            .andReturn();
+
+        verifyDefaultProfileLadderRetries();
+    }
+
+    @Test
+    public void testRetryThreshold()
+    {
+        verifyDefaultProfileLadderRetries();
+
+        APIHealthMonitor monitor = api.getHealthMonitor(Region.US, false);
+        monitor.update();
+        monitor.addRequest();
+        monitor.addError();
+        monitor.update(); //error rate is 100
+
+
+        for(Region region : globalContext.getActiveRegions())
+        {
+            assertEquals
+            (
+                region == Region.US
+                    ? BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT_MIN
+                    : BlizzardSC2API.PROFILE_LADDER_RETRY_COUNT,
+                api.getProfileLadderRetryCount(region, false)
+            );
+        }
+
+        monitor.update(); //error rate is 0
+        verifyDefaultProfileLadderRetries();
+    }
+
     @Test
     public void testAutoForceRegion()
     {
