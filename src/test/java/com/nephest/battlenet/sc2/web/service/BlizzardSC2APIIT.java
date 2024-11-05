@@ -589,6 +589,43 @@ public class BlizzardSC2APIIT
         verifyDefaultProfileLadderRetries();
     }
 
+    private void verifyDefaultMatchRetry()
+    {
+        for(Region region : globalContext.getActiveRegions())
+            assertEquals
+            (
+                WebServiceUtil.RETRY_COUNT,
+                api.getMatchRetry(region, false).maxAttempts
+            );
+    }
+
+    @Test
+    public void testMatchRetryThreshold()
+    {
+        verifyDefaultMatchRetry();
+
+        APIHealthMonitor monitor = api.getMatchHealthMonitor(Region.US);
+        monitor.update();
+        for(int i = 0; i < 100; i++) monitor.addRequest();
+        for(int i = 0; i < 51; i++) monitor.addError();
+        monitor.update(); //error rate is 51
+
+
+        for(Region region : globalContext.getActiveRegions())
+        {
+            assertEquals
+            (
+                region == Region.US
+                    ? 0
+                    : WebServiceUtil.RETRY_COUNT,
+                api.getMatchRetry(region, false).maxAttempts
+            );
+        }
+
+        monitor.update(); //error rate is 0
+        verifyDefaultMatchRetry();
+    }
+
     @Test
     public void testAutoForceRegion()
     {

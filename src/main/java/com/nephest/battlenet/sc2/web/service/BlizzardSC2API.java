@@ -107,6 +107,7 @@ extends BaseAPI
     public static final Duration ERROR_RATE_FRAME = Duration.ofMinutes(60);
     public static final Duration HEALTH_SAVE_FRAME = Duration.ofMinutes(3);
     public static final double RETRY_ERROR_RATE_THRESHOLD = 40.0;
+    public static final double MATCH_RETRY_ERROR_RATE_THRESHOLD = 50.0;
     public static final double FORCE_REGION_ERROR_RATE_THRESHOLD = 40.0;
     public static final Duration AUTO_FORCE_REGION_MAX_DURATION = Duration.ofDays(7);
     public static final Duration IO_TIMEOUT = Duration.ofSeconds(50);
@@ -153,6 +154,7 @@ extends BaseAPI
     private final Map<Region, APIHealthMonitor> healthMonitors = new EnumMap<>(Region.class);
     private final ReactorRateLimiter webRateLimiter = new ReactorRateLimiter();
     private final Map<Region, APIHealthMonitor> webHealthMonitors = new EnumMap<>(Region.class);
+    private final Map<Region, APIHealthMonitor> matchHealthMonitors = new EnumMap<>(Region.class);
     private final VarDAO varDAO;
     private final GlobalContext globalContext;
 
@@ -235,6 +237,7 @@ extends BaseAPI
         {
             healthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api"));
             webHealthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api.web"));
+            matchHealthMonitors.put(r, new APIHealthMonitor(varDAO, r.getId() + ".blizzard.api.match"));
         }
     }
 
@@ -405,6 +408,11 @@ extends BaseAPI
         return web
             ? webHealthMonitors.get(getRegion(region)).getErrorRate()
             : healthMonitors.get(getRegion(region)).getErrorRate();
+    }
+
+    protected APIHealthMonitor getMatchHealthMonitor(Region region)
+    {
+        return matchHealthMonitors.get(region);
     }
 
     public boolean isSeparateRequestLimits()
@@ -671,12 +679,14 @@ extends BaseAPI
     {
         healthMonitors.forEach((region, monitor)->LOG.debug("{} error rate: {}%", region, monitor.update()));
         webHealthMonitors.forEach((region, monitor)->LOG.debug("{} web error rate: {}%", region, monitor.update()));
+        matchHealthMonitors.forEach((region, monitor)->LOG.debug("{} match error rate: {}%", region, monitor.update()));
     }
 
     private void saveHealth()
     {
         healthMonitors.values().forEach(APIHealthMonitor::save);
         webHealthMonitors.values().forEach(APIHealthMonitor::save);
+        matchHealthMonitors.values().forEach(APIHealthMonitor::save);
     }
 
     private void autoTimeout()
@@ -1327,6 +1337,13 @@ extends BaseAPI
         return getProfileLadders(ids, queueTypes, false);
     }
 
+    protected RetrySpec getMatchRetry(Region region, boolean web)
+    {
+        return web || matchHealthMonitors.get(region).getErrorRate() > MATCH_RETRY_ERROR_RATE_THRESHOLD
+            ? WebServiceUtil.RETRY_NEVER
+            : getRetry(WebServiceUtil.RETRY);
+    }
+
     public Mono<Tuple2<BlizzardMatches, PlayerCharacterNaturalId>> getMatches
     (
         PlayerCharacterNaturalId playerCharacter,
@@ -1352,10 +1369,16 @@ extends BaseAPI
             .bodyToMono(BlizzardMatches.class)
             .zipWith(Mono.just(playerCharacter))
             .retryWhen(ReactorRateLimiter.retryWhen(
-                context.getRateLimiters(), getRetry(region, WebServiceUtil.RETRY, web), priorityName))
+                context.getRateLimiters(), getMatchRetry(region, web), priorityName))
             .delaySubscription(ReactorRateLimiter.requestSlot(context.getRateLimiters(), priorityName))
-            .doOnRequest(s->context.getHealthMonitor().addRequest())
-            .doOnError(t->context.getHealthMonitor().addError());
+            .doOnRequest(s->{
+                matchHealthMonitors.get(region).addRequest();
+                context.getHealthMonitor().addRequest();
+            })
+            .doOnError(t->{
+                matchHealthMonitors.get(region).addError();
+                context.getHealthMonitor().addError();
+            });
     }
 
     public Mono<Tuple2<BlizzardMatches, PlayerCharacterNaturalId>> getMatches
