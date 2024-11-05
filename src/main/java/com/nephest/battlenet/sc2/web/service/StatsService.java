@@ -329,7 +329,7 @@ public class StatsService
         )))
     );
     public static final Duration STALE_DATA_TEAM_STATES_DEPTH = Duration.ofMinutes(45);
-    public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofDays(7);
+    public static final Duration FORCED_ALTERNATIVE_UPDATE_DURATION = Duration.ofHours(3);
 
     @Autowired @Lazy
     private StatsService statsService;
