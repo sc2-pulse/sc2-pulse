@@ -223,7 +223,7 @@ SC2Restful.IMAGES = new Map
     ["cn", ElementUtil.createImage("flag/", "cn", "icon-chart table-image table-image-long", SC2Restful.REM)]
 ]);
 
-if(localStorage.getItem("s-local-storage-version") !== "4") {
+if(localStorage.getItem("s-local-storage-version") !== "5") {
     if(localStorage.getItem("stream-sort-by") === "mmr") localStorage.setItem("stream-sort-by", "RATING");
     if(localStorage.getItem("stream-sort-by") === "viewers") localStorage.setItem("stream-sort-by", "VIEWERS");
     if(localStorage.getItem("stream-sort-by") === "RANK_REGION") localStorage.setItem("stream-sort-by", "TOP_PERCENT_REGION");
@@ -231,6 +231,9 @@ if(localStorage.getItem("s-local-storage-version") !== "4") {
     localStorage.removeItem("stats-match-up-type");
     localStorage.removeItem("stats-match-up-map");
     if(localStorage.getItem("stats-match-up-league") === "5,0")
-        localStorage.setItem("stats-match-up-league", "6,0" + Session.multiValueInputSeparator + "5,0")
-    localStorage.setItem("s-local-storage-version", "4");
+        localStorage.setItem("stats-match-up-league", "6,0" + Session.multiValueInputSeparator + "5,0");
+    const matchUpGroupDuration = parseInt(localStorage.getItem("stats-match-up-group-duration"));
+    if(matchUpGroupDuration < 3) localStorage.setItem("stats-match-up-group-duration", (matchUpGroupDuration + 1));
+
+    localStorage.setItem("s-local-storage-version", "5");
 }
