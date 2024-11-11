@@ -229,15 +229,15 @@ public class SeasonGenerator
         boolean spreadRaces
     )
     {
-        League league = leagueDAO.create(new League(null, season.getId(), type, queueType, teamType));
+        League league = leagueDAO.merge(new League(null, season.getId(), type, queueType, teamType));
         LeagueTier newTier = new LeagueTier
         (
             null, league.getId(), tierType,
             season.getRegion().ordinal() + type.ordinal(),
             season.getRegion().ordinal() + type.ordinal() + 1
         );
-        LeagueTier tier = leagueTierDAO.create(newTier);
-        Division division = divisionDAO.create(new Division(null, tier.getId(),
+        LeagueTier tier = leagueTierDAO.merge(newTier);
+        Division division = divisionDAO.merge(new Division(null, tier.getId(),
             Long.valueOf((teamsPerLeague > 0 ? teamCount / teamsPerLeague : 0) + String.valueOf(season.getRegion().ordinal()) + type.ordinal())));
         Race[] races = Race.values();
         for(int teamIx = 0; teamIx < teamsPerLeague; teamIx++)
