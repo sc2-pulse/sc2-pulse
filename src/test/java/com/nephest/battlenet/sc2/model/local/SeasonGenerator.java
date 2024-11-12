@@ -172,7 +172,7 @@ public class SeasonGenerator
         Map<Integer, List<Season>> seasonsGrouped = seasons.stream().collect(Collectors.groupingBy(Season::getBattlenetId));
         int teamCount = 0;
         for(Integer id : seasonsGrouped.keySet().stream().sorted().collect(Collectors.toList()))
-            teamCount += generateGroupedSeasons(seasonsGrouped.get(id), leagues, queueTypes, teamType, tierType, teamsPerLeague, teamCount, spreadRaces);
+            teamCount = generateGroupedSeasons(seasonsGrouped.get(id), leagues, queueTypes, teamType, tierType, teamsPerLeague, teamCount, spreadRaces);
     }
 
     @Transactional
