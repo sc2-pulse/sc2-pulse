@@ -35,6 +35,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.datasource.init.ScriptUtils;
+import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -90,17 +91,13 @@ public class MatchServiceIT
     }
 
     @Test
+    @DirtiesContext(methodMode = DirtiesContext.MethodMode.BEFORE_METHOD)
     public void testAutoRegionRedirect()
     throws ExecutionException, InterruptedException
     {
         api.setAutoForceRegion(true);
         CompletableFuture<MatchUpdateContext> update = new CompletableFuture<>();
         eventService.getMatchUpdateEvent().subscribe(update::complete);
-        if(matchService.getUpdateMatchesTask().isActive())
-            matchService.getUpdateMatchesTask().getLastTask()
-                .doOnError(t->LOG.warn(t.getMessage(), t))
-                .onErrorComplete()
-                .block();
         try
         {
             //no matches found
