@@ -8,6 +8,12 @@ import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
 import com.nephest.battlenet.sc2.model.QueueType;
 import java.sql.Timestamp;
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
+import java.time.temporal.TemporalAccessor;
 import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -40,6 +46,31 @@ public class MinimalConverterServiceIT
             (
                 new Timestamp[]{new Timestamp(12000L), new Timestamp(1L)},
                 new Long[]{12L, 0L}
+            ),
+            Arguments.of
+            (
+                new TemporalAccessor[]
+                {
+                    Instant.ofEpochMilli(1L),
+                    Instant.ofEpochMilli(12000L),
+                    OffsetDateTime.ofInstant
+                    (
+                        Instant.ofEpochMilli(13000L),
+                        ZoneOffset.systemDefault()
+                    ),
+                    ZonedDateTime.ofInstant
+                    (
+                        Instant.ofEpochMilli(14000L),
+                        ZoneOffset.systemDefault()
+                    ),
+                },
+                new Long[]{0L, 12L, 13L, 14L}
+            ),
+            //unsupported temporal accessors, return src objects
+            Arguments.of
+            (
+                new TemporalAccessor[] {LocalDate.of(2020, 1, 1)},
+                new TemporalAccessor[] {LocalDate.of(2020, 1, 1)}
             ),
             Arguments.of
             (

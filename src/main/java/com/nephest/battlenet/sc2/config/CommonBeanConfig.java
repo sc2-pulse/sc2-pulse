@@ -20,6 +20,7 @@ import com.nephest.battlenet.sc2.config.convert.IntegerToSocialMediaConverter;
 import com.nephest.battlenet.sc2.config.convert.IntegerToTeamTypeConverter;
 import com.nephest.battlenet.sc2.config.convert.StringToAuditLogEntryActionConverter;
 import com.nephest.battlenet.sc2.config.convert.min.IdentifiableToMinimalObjectConverter;
+import com.nephest.battlenet.sc2.config.convert.min.TemporalAccessorToMinimalObjectConverter;
 import com.nephest.battlenet.sc2.config.convert.min.TimestampToMinimalObjectConverter;
 import com.nephest.battlenet.sc2.model.Region;
 import java.util.concurrent.ExecutorService;
@@ -101,6 +102,7 @@ public class CommonBeanConfig
     {
         DefaultConversionService service = new DefaultConversionService();
         service.addConverter(new TimestampToMinimalObjectConverter());
+        service.addConverter(new TemporalAccessorToMinimalObjectConverter());
         service.addConverter(new IdentifiableToMinimalObjectConverter());
         return service;
     }
