@@ -319,18 +319,20 @@ class CommunityUtil
 
     static renderStreamProfile(stream)
     {
-        return CommunityUtil.addRegionalCdnAttributes(stream, ElementUtil.addLoadClassWatcher(ElementUtil.createElement
-        (
-            "img",
-             null,
-             "profile",
-             null,
-             [
-                ["loading", "lazy"],
-                ["src", stream.stream.profileImageUrl],
-                ["alt", "Profile img"]
-             ]
-        )));
+        return stream.stream.profileImageUrl
+            ? CommunityUtil.addRegionalCdnAttributes(stream, ElementUtil.addLoadClassWatcher(ElementUtil.createElement
+                (
+                    "img",
+                     null,
+                     "profile",
+                     null,
+                     [
+                        ["loading", "lazy"],
+                        ["src", stream.stream.profileImageUrl ],
+                        ["alt", "Profile img"]
+                     ]
+                )))
+            : ElementUtil.createElement("span", null, "profile c-empty", null, [["title", "No profile image"]]);
     }
 
     static addRegionalCdnAttributes(stream, img)

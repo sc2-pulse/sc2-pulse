@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.service.community;
@@ -8,12 +8,15 @@ import com.github.twitch4j.helix.domain.User;
 import com.nephest.battlenet.sc2.model.SocialMedia;
 import com.nephest.battlenet.sc2.twitch.Twitch;
 import com.nephest.battlenet.sc2.web.service.TwitchAPI;
+import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
@@ -25,6 +28,8 @@ import reactor.util.function.Tuple2;
 public class TwitchVideoStreamSupplier
 implements VideoStreamSupplier
 {
+
+    private static final Logger LOG = LoggerFactory.getLogger(TwitchVideoStreamSupplier.class);
 
     public static final String SC2_GAME_ID = "490422";
     public static final String PROFILE_IMAGE_URL_DIMENSIONS
@@ -64,7 +69,17 @@ implements VideoStreamSupplier
             .collect(Collectors.toSet());
         return Mono.just(streams)
             .zipWith(api.getUsersByIds(ids)
-                .collect(Collectors.toMap(User::getId, Function.identity())));
+                .collect(Collectors.toMap(User::getId, Function.identity())))
+            .doOnNext(TwitchVideoStreamSupplier::logStreamsWithoutUsers);
+    }
+
+    private static void logStreamsWithoutUsers(Tuple2<List<Stream>, Map<String, User>> data)
+    {
+        if(data.getT1().size() == data.getT2().size()) return;
+
+        data.getT1().stream()
+            .filter(s->data.getT2().get(s.getUserId()) == null)
+            .forEach(s->LOG.warn("Couldn't find user {} {}", s.getUserId(), s.getUserLogin()));
     }
 
     private static List<VideoStream> from(Tuple2<List<Stream>, Map<String, User>> data)
@@ -74,7 +89,7 @@ implements VideoStreamSupplier
             .collect(Collectors.toList());
     }
 
-    public static VideoStream from(Stream stream, User user)
+    public static VideoStream from(Stream stream, @Nullable User user)
     {
         return new VideoStreamImpl
         (
@@ -85,7 +100,9 @@ implements VideoStreamSupplier
             stream.getTitle(),
             Locale.forLanguageTag(stream.getLanguage()),
             generateStreamUrl(stream),
-            normalizeStreamProfileImageUrlDimensions(user.getProfileImageUrl()),
+            user != null
+                ? normalizeStreamProfileImageUrlDimensions(user.getProfileImageUrl())
+                : null,
             stream.getThumbnailUrl
             (
                 CommunityService.STREAM_THUMBNAIL_TARGET_WIDTH,
