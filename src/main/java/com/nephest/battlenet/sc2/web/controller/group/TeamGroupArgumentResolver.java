@@ -20,7 +20,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -128,14 +127,18 @@ implements HandlerMethodArgumentResolver
         Integer toSeason = (Integer) paramResolver
             .resolveArgument(TO_SEASON_PARAMETER, mavContainer, webRequest, binderFactory);
         String error = checkIds(teamIds, legacyUids).orElse(null);
-        if(error != null) throw new ServletRequestBindingException(error);
+        if(error != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, error);
 
         Set<Long> result = resolve(teamIds, legacyUids, fromSeason, toSeason);
         TeamGroup annotation = parameter.getParameterAnnotation(TeamGroup.class);
         if(annotation.flatRequired() && result.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Flattened team group is empty");
         if(result.size() > TEAMS_MAX)
-            throw new ServletRequestBindingException("Max size of teams exceeded: " + TEAMS_MAX);
+            throw new ResponseStatusException
+            (
+                HttpStatus.BAD_REQUEST,
+                "Max size of teams exceeded: " + TEAMS_MAX
+            );
         return result;
     }
 

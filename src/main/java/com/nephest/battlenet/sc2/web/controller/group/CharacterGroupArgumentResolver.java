@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2023 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.web.controller.group;
@@ -19,7 +19,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.lang.NonNull;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -152,14 +151,18 @@ implements HandlerMethodArgumentResolver
         Set<Long> accountIds = (Set<Long>) paramResolver
             .resolveArgument(ACCOUNT_PARAMETER, mavContainer, webRequest, binderFactory);
         String error = checkIds(characterIds, clanIds, proPlayerIds, accountIds).orElse(null);
-        if(error != null) throw new ServletRequestBindingException(error);
+        if(error != null) throw new ResponseStatusException(HttpStatus.BAD_REQUEST, error);
 
         Set<Long> result = resolve(characterIds, clanIds, proPlayerIds, accountIds);
         CharacterGroup annotation = parameter.getParameterAnnotation(CharacterGroup.class);
         if(annotation.flatRequired() && result.isEmpty())
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Flattened character group is empty");
         if(result.size() > CHARACTERS_MAX)
-            throw new ServletRequestBindingException("Max size of characters exceeded: " + CHARACTERS_MAX);
+            throw new ResponseStatusException
+            (
+                HttpStatus.BAD_REQUEST,
+                "Max size of characters exceeded: " + CHARACTERS_MAX
+            );
         return result;
     }
 
