@@ -275,13 +275,15 @@ caption
 }
 
 ins.adsbygoogle[data-ad-status="unfilled"],
-img[loading="lazy"]:not(.loaded)
+img[loading="lazy"]:not(.loaded),
+.c-empty
 {
     background-color: #f1f3f4;
 }
 
 body.theme-dark ins.adsbygoogle[data-ad-status="unfilled"],
-body.theme-dark img[loading="lazy"]:not(.loaded)
+body.theme-dark img[loading="lazy"]:not(.loaded),
+body.theme-dark .c-empty
 {
     background-color: #22272a;
 }
