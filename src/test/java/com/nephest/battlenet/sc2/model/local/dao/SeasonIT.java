@@ -18,6 +18,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import javax.sql.DataSource;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -109,6 +110,17 @@ public class SeasonIT
             .map(Region::ordinal)
             .sorted(Comparator.reverseOrder())
             .forEach(i->verifySeason(seasons.get(seasons.size() - i - 1), Region.values()[i], 1));
+    }
+
+    @Test
+    public void testFindByRegionAndBattlenetId()
+    {
+        Season season = seasonDAO.find(Region.EU, 1).orElseThrow();
+        Season expected = seasons.stream()
+            .filter(s->s.getRegion() == Region.EU && season.getBattlenetId() == 1)
+            .findFirst()
+            .orElseThrow();
+        Assertions.assertThat(season).isEqualTo(expected);
     }
 
     private void verifySeason(Season season, Region region, int battlenetId)

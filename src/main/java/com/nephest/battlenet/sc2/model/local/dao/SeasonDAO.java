@@ -88,6 +88,14 @@ public class SeasonDAO
         + "FROM season "
         + "WHERE id IN(:ids)";
 
+    private static final String FIND_BY_REGION_AND_BATTLENET_ID =
+        """
+            SELECT %1$s
+            FROM season
+            WHERE region = :region
+            AND battlenet_id = :battlenetId;
+        """.formatted(STD_SELECT);
+
     private static final String FIND_LIST_BY_REGION = "SELECT "
         + STD_SELECT
         + "FROM season "
@@ -199,6 +207,15 @@ public class SeasonDAO
     {
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("ids", ids);
         return template.query(FIND_LIST_BY_IDS, params, STD_ROW_MAPPER);
+    }
+
+    public Optional<Season> find(Region region, int battlenetId)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("battlenetId", battlenetId);
+        return Optional.ofNullable(template.query(
+            FIND_BY_REGION_AND_BATTLENET_ID, params, STD_EXTRACTOR));
     }
 
     public List<Season> findListByRegion(Region region)
