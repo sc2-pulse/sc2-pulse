@@ -13,6 +13,7 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -35,6 +36,8 @@ public class SeasonIT
     @Autowired
     private SeasonDAO seasonDAO;
 
+    private List<Season> seasons;
+
     @BeforeEach
     public void beforeAll(@Autowired DataSource dataSource, @Autowired SeasonDAO seasonDAO)
     throws SQLException
@@ -45,10 +48,12 @@ public class SeasonIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
         }
         OffsetDateTime start = SC2Pulse.offsetDateTime(2020, 1, 1);
+        seasons = new ArrayList<>();
         for(Region region : Region.values())
-            seasonDAO.create(new Season(null, 1, region, 2020, 1, start, start.plusMonths(1)));
-        seasonDAO.create(new Season(null, 2, Region.EU, 2020, 2,
-            start.plusMonths(1), start.plusMonths(2)));
+            seasons.add(seasonDAO.create(new Season(null, 1, region, 2020, 1,
+                start, start.plusMonths(1))));
+        seasons.add(seasonDAO.create(new Season(null, 2, Region.EU, 2020, 2,
+            start.plusMonths(1), start.plusMonths(2))));
     }
 
     @AfterEach
