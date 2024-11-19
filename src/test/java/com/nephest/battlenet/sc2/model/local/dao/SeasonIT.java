@@ -18,8 +18,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import javax.sql.DataSource;
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ClassPathResource;
@@ -36,10 +36,10 @@ public class SeasonIT
     @Autowired
     private SeasonDAO seasonDAO;
 
-    private List<Season> seasons;
+    private static List<Season> seasons;
 
-    @BeforeEach
-    public void beforeAll(@Autowired DataSource dataSource, @Autowired SeasonDAO seasonDAO)
+    @BeforeAll
+    public static void beforeAll(@Autowired DataSource dataSource, @Autowired SeasonDAO seasonDAO)
     throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
@@ -56,8 +56,8 @@ public class SeasonIT
             start.plusMonths(1), start.plusMonths(2))));
     }
 
-    @AfterEach
-    public void afterAll(@Autowired DataSource dataSource)
+    @AfterAll
+    public static void afterAll(@Autowired DataSource dataSource)
     throws SQLException
     {
         try(Connection connection = dataSource.getConnection())
