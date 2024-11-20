@@ -41,3 +41,17 @@ AND division.id = team_division.id;
 ALTER TABLE "season"
     ALTER COLUMN "start" TYPE TIMESTAMP WITH TIME ZONE,
     ALTER COLUMN "end" TYPE TIMESTAMP WITH TIME ZONE;
+
+WITH next_season_start AS
+(
+    SELECT season.id,
+    season_next."start"
+    FROM season
+    INNER JOIN season season_next ON season.region = season_next.region
+        AND season.battlenet_id + 1 = season_next.battlenet_id
+)
+    UPDATE season
+    SET "end" = next_season_start."start"
+    FROM next_season_start
+    WHERE season.id = next_season_start.id
+    AND season."end" != next_season_start."start";

@@ -50,6 +50,7 @@ import com.nephest.battlenet.sc2.model.local.inner.ClanMemberEventData;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
 import com.nephest.battlenet.sc2.util.LogUtil;
+import com.nephest.battlenet.sc2.web.SeasonService;
 import jakarta.annotation.PostConstruct;
 import java.time.Duration;
 import java.time.Instant;
@@ -369,6 +370,7 @@ public class StatsService
     private PlayerCharacterStatsDAO playerCharacterStatsDAO;
     private PopulationStateDAO populationStateDAO;
     private VarDAO varDAO;
+    private SeasonService seasonService;
     private SC2WebServiceUtil sc2WebServiceUtil;
     private ConversionService conversionService;
     private ExecutorService dbExecutorService;
@@ -398,6 +400,7 @@ public class StatsService
         PlayerCharacterStatsDAO playerCharacterStatsDAO,
         PopulationStateDAO populationStateDAO,
         VarDAO varDAO,
+        SeasonService seasonService,
         SC2WebServiceUtil sc2WebServiceUtil,
         @Qualifier("sc2StatsConversionService") ConversionService conversionService,
         Validator validator,
@@ -423,6 +426,7 @@ public class StatsService
         this.playerCharacterStatsDAO = playerCharacterStatsDAO;
         this.populationStateDAO = populationStateDAO;
         this.varDAO = varDAO;
+        this.seasonService = seasonService;
         this.sc2WebServiceUtil = sc2WebServiceUtil;
         this.conversionService = conversionService;
         this.dbExecutorService = dbExecutorService;
@@ -536,7 +540,7 @@ public class StatsService
 
     public void updateLadders(int seasonId, Region region, Long[] ids)
     {
-        Season season = seasonDao.merge(Season.of(api.getSeason(region, seasonId).block(), region));
+        Season season = seasonService.merge(Season.of(api.getSeason(region, seasonId).block(), region));
         api.getLadders(region, ids)
             .toStream((int) (BlizzardSC2API.REQUESTS_PER_SECOND_CAP * 2))
             .forEach(l->statsService.saveLadder(season, l.getT1(), l.getT2(), alternativeLadderService));
@@ -648,7 +652,7 @@ public class StatsService
     )
     {
         BlizzardSeason bSeason = api.getSeason(region, seasonId).block();
-        Season season = seasonDao.merge(Season.of(bSeason, region));
+        Season season = seasonService.merge(Season.of(bSeason, region));
         updateLeagues(bSeason, season, data, false);
         LOG.debug("Updated leagues: {} {}", seasonId, region);
     }
@@ -667,7 +671,7 @@ public class StatsService
         {
             Region region = entry.getKey();
             BlizzardSeason bSeason = blizzardSeasons.get(region);
-            Season season = seasonDao.merge(Season.of(bSeason, region));
+            Season season = seasonService.merge(Season.of(bSeason, region));
             LOG.debug("Using season {} for current season update for {}", season, entry.getKey());
             createLeaguesAndTiers(season);
             ctx.put

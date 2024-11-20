@@ -113,6 +113,7 @@ public class StatsServiceIT
             null,
             null,
             null,
+            null,
             validator,
             dbExecutorService,
             null,

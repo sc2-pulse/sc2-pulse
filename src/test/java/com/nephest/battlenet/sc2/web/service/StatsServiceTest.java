@@ -41,6 +41,7 @@ import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import com.nephest.battlenet.sc2.service.EventService;
+import com.nephest.battlenet.sc2.web.SeasonService;
 import java.time.Instant;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -117,6 +118,9 @@ public class StatsServiceTest
     private VarDAO varDAO;
 
     @Mock
+    private SeasonService seasonService;
+
+    @Mock
     private SC2WebServiceUtil sc2WebServiceUtil;
 
     @Mock
@@ -155,6 +159,7 @@ public class StatsServiceTest
             playerCharacterStatsDAO,
             populationStateDAO,
             varDAO,
+            seasonService,
             sc2WebServiceUtil,
             conversionService,
             validator,

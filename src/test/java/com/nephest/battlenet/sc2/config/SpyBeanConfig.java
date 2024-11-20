@@ -3,12 +3,16 @@
 
 package com.nephest.battlenet.sc2.config;
 
+import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeAPI;
 import org.springframework.boot.test.mock.mockito.SpyBean;
 
 public class SpyBeanConfig
 {
+
+    @SpyBean
+    private SeasonDAO seasonDAO;
 
     @SpyBean
     private SC2ArcadeAPI arcadeAPI;
