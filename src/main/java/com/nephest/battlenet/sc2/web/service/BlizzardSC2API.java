@@ -1477,8 +1477,7 @@ extends BaseAPI
             .map(APIHealthMonitor::getRequests)
             .anyMatch(l->l > 0)
                 ? getPlayerCharacters(region, profileId, true)
-                : getPlayerCharacters(region, profileId, false)
-                    .onErrorResume(e->getPlayerCharacters(region, profileId, true));
+                : getPlayerCharacters(region, profileId, false);
     }
 
     public Flux<Patch> getPatches(Region region, Long minId, Long maxId, int limit)
