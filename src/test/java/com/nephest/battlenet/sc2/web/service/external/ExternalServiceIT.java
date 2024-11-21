@@ -19,6 +19,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nephest.battlenet.sc2.config.AllTestConfig;
+import com.nephest.battlenet.sc2.config.SpyBeanConfig;
 import com.nephest.battlenet.sc2.config.filter.NoCacheFilter;
 import com.nephest.battlenet.sc2.model.BaseLeague;
 import com.nephest.battlenet.sc2.model.BaseLeagueTier;
@@ -56,7 +57,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.http.HttpHeaders;
@@ -69,7 +69,7 @@ import org.springframework.web.context.WebApplicationContext;
 import org.springframework.web.reactive.function.client.WebClientResponseException;
 import reactor.core.publisher.Mono;
 
-@SpringBootTest(classes = {AllTestConfig.class})
+@SpringBootTest(classes = {AllTestConfig.class, SpyBeanConfig.class})
 @TestPropertySource("classpath:application.properties")
 @TestPropertySource("classpath:application-private.properties")
 public class ExternalServiceIT
@@ -102,7 +102,7 @@ public class ExternalServiceIT
     @Autowired
     private ObjectMapper objectMapper;
 
-    @SpyBean
+    @Autowired
     private SC2ArcadeAPI arcadeAPI;
 
     @Autowired
