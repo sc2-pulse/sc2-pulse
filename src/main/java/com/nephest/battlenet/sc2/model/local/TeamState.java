@@ -13,7 +13,7 @@ public class TeamState
 implements java.io.Serializable
 {
 
-    private static final long serialVersionUID = 3L;
+    private static final long serialVersionUID = 4L;
 
     public static final QueueType MAIN_QUEUE_TYPE = QueueType.LOTV_1V1;
 
@@ -37,8 +37,6 @@ implements java.io.Serializable
     private Integer globalRank;
     private Integer regionRank;
     private Integer leagueRank;
-
-    private Boolean archived;
 
     private Boolean secondary;
 
@@ -71,7 +69,6 @@ implements java.io.Serializable
         Integer globalRank,
         Integer regionRank,
         Integer leagueRank,
-        Boolean archived,
         Boolean secondary
     )
     {
@@ -80,7 +77,6 @@ implements java.io.Serializable
         this.globalRank = globalRank;
         this.regionRank = regionRank;
         this.leagueRank = leagueRank;
-        this.archived = archived;
         this.secondary = secondary;
     }
 
@@ -95,7 +91,6 @@ implements java.io.Serializable
             team.getWins() + team.getLosses() + team.getTies(),
             team.getRating().intValue(),
             null, null, null,
-            null,
             team.getQueueType() != MAIN_QUEUE_TYPE ? true : null
         );
     }
@@ -219,16 +214,6 @@ implements java.io.Serializable
     public void setLeagueRank(Integer leagueRank)
     {
         this.leagueRank = leagueRank;
-    }
-
-    public Boolean getArchived()
-    {
-        return archived;
-    }
-
-    public void setArchived(Boolean archived)
-    {
-        this.archived = archived;
     }
 
     public Boolean getSecondary()

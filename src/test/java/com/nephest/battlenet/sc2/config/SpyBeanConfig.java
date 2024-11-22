@@ -4,6 +4,8 @@
 package com.nephest.battlenet.sc2.config;
 
 import com.nephest.battlenet.sc2.model.local.dao.SeasonDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateArchiveDAO;
+import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
 import com.nephest.battlenet.sc2.web.service.BlizzardSC2API;
 import com.nephest.battlenet.sc2.web.service.SC2ArcadeAPI;
 import org.springframework.boot.test.mock.mockito.SpyBean;
@@ -19,5 +21,11 @@ public class SpyBeanConfig
 
     @SpyBean
     private BlizzardSC2API api;
+
+    @SpyBean
+    private VarDAO varDAO;
+
+    @SpyBean
+    private TeamStateArchiveDAO teamStateArchiveDAO;
 
 }

@@ -91,10 +91,6 @@ public class TeamStateDAOIT
     {
         int targetLengthMain = 1000;
         int targetLengthSecondary = 500;
-        int originalLengthMain = teamStateDAO.getMaxDepthDaysMain();
-        int originalLengthSecondary = teamStateDAO.getMaxDepthDaysSecondary();
-        teamStateDAO.setMaxDepthDaysMain(targetLengthMain);
-        teamStateDAO.setMaxDepthDaysSecondary(targetLengthSecondary);
 
         seasonGenerator.generateSeason
         (
@@ -142,7 +138,9 @@ public class TeamStateDAOIT
         assertEquals(3, ladderTeamStateDAO.find(legacyIds1).size());
         assertEquals(4, ladderTeamStateDAO.find(legacyIds2).size());
 
-        teamStateDAO.removeExpired();
+        OffsetDateTime now = SC2Pulse.offsetDateTime();
+        teamStateDAO.remove(OffsetDateTime.MIN, now.minusDays(targetLengthMain), true);
+        teamStateDAO.remove(OffsetDateTime.MIN, now.minusDays(targetLengthSecondary), false);
 
         List<LadderTeamState> states1 = ladderTeamStateDAO.find(legacyIds1);
         assertEquals(2, states1.size());
@@ -154,9 +152,6 @@ public class TeamStateDAOIT
 
         assertTrue(states2.stream().map(LadderTeamState::getTeamState).anyMatch(s->s.equals(state2Secondary)));
         assertFalse(states2.stream().map(LadderTeamState::getTeamState).anyMatch(s->s.equals(state2Main)));
-
-        teamStateDAO.setMaxDepthDaysMain(originalLengthMain);
-        teamStateDAO.setMaxDepthDaysSecondary(originalLengthSecondary);
     }
 
     @Test

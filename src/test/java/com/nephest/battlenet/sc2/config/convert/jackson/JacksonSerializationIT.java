@@ -70,7 +70,6 @@ public class JacksonSerializationIT
                 base + 7,
                 base + 8,
                 base + 9,
-                null,
                 null
             ),
             Race.values()[Math.min(Race.values().length % base, Race.values().length - 1)],

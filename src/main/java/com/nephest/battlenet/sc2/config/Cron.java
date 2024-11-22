@@ -268,9 +268,6 @@ public class Cron
         OffsetDateTime defaultOdt = OffsetDateTime.ofInstant(defaultInstant, ZoneId.systemDefault());
         for(Integer season : seasonDAO.getLastInAllRegions())
             queueStatsDAO.mergeCalculateForSeason(season);
-        teamStateDAO.archive(defaultOdt);
-        teamStateDAO.cleanArchive(defaultOdt);
-        teamStateDAO.removeExpired();
         evidenceDAO.nullifyReporterIps(defaultOdt);
     }
 
@@ -355,7 +352,6 @@ public class Cron
     private void commenceInfrequentMaintenance()
     {
         secondaryDbExecutorService.submit(()->postgreSQLUtils.reindex(Set.of(
-            "ix_team_state_team_id_archived",
             "uq_match_date_type_map_id_region",
             "match_pkey",
             "ix_match_participant_team_id_team_state_timestamp",

@@ -86,7 +86,7 @@ public class LegacySearchIT
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
-            ODT = SC2Pulse.offsetDateTime().minusDays(teamStateDAO.getMaxDepthDaysMain() + 1);
+            ODT = SC2Pulse.offsetDateTime().minusDays(180);
             seasonGenerator.generateSeason
             (
                 List.of
@@ -120,9 +120,6 @@ public class LegacySearchIT
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
             team3.setRating(0L);
             teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(1))));
-            //should be removed from the archive as not a min/max state
-            team3.setRating(200L);
-            teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(2))));
             team3.setRating(300L);
             teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(3))));
         }
@@ -244,9 +241,6 @@ public class LegacySearchIT
         assertEquals(11, state8.getTeamState().getGames());
         assertEquals(BaseLeague.LeagueType.GOLD, state8.getLeague().getType());
 
-        teamStateDAO.archive(ODT.minusDays(1));
-        teamStateDAO.cleanArchive(ODT.minusDays(1));
-        teamStateDAO.removeExpired();
         Set<TeamLegacyUid> legacyIds3 = Set.of(
             new TeamLegacyUid(QueueType.LOTV_1V1, Region.US, LEGACY_ID_3)
         );

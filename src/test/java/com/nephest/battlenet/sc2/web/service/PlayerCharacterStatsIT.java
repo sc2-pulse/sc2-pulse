@@ -30,6 +30,7 @@ import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterDAO;
 import com.nephest.battlenet.sc2.model.local.dao.PlayerCharacterStatsDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamMemberDAO;
+import com.nephest.battlenet.sc2.model.local.dao.TeamStateArchiveDAO;
 import com.nephest.battlenet.sc2.model.local.dao.TeamStateDAO;
 import com.nephest.battlenet.sc2.model.local.ladder.LadderPlayerCharacterStats;
 import com.nephest.battlenet.sc2.model.local.ladder.dao.LadderPlayerCharacterStatsDAO;
@@ -37,9 +38,12 @@ import com.nephest.battlenet.sc2.model.util.SC2Pulse;
 import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -89,6 +93,9 @@ public class PlayerCharacterStatsIT
 
     @Autowired
     private TeamStateDAO teamStateDAO;
+
+    @Autowired
+    private TeamStateArchiveDAO teamStateArchiveDAO;
 
     @Autowired
     private MockMvc mvc;
@@ -201,10 +208,11 @@ public class PlayerCharacterStatsIT
         createTeam(season1, Race.ZERG, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, BigInteger.valueOf(10002L), 3L, character);
         createTeam(season2, Race.ZERG, region, BaseLeague.LeagueType.GOLD, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, gold2, BigInteger.valueOf(10003L), 2L, character);
         createTeam(season2, null, region, BaseLeague.LeagueType.DIAMOND, QUEUE_TYPE, TEAM_TYPE, TIER_TYPE, diamond1, BigInteger.valueOf(10004L), 2L, character);
-        int depth = QUEUE_TYPE == QueueType.LOTV_1V1 ? teamStateDAO.getMaxDepthDaysMain() : teamStateDAO.getMaxDepthDaysSecondary();
-        teamStateDAO.archive(SC2Pulse.offsetDateTime().minusDays(depth + 2));
-        teamStateDAO.cleanArchive(SC2Pulse.offsetDateTime().minusDays(depth + 2));
-        teamStateDAO.removeExpired();
+        Set<Long> teamIds = Stream.of(teamDAO.findIds(region, 1), teamDAO.findIds(region, 2))
+            .flatMap(Collection::stream)
+            .collect(Collectors.toSet());
+        teamStateArchiveDAO.delete(teamIds);
+        teamStateArchiveDAO.archive(teamIds);
         return character;
     }
 
@@ -253,8 +261,7 @@ public class PlayerCharacterStatsIT
         );
         teamDAO.create(team);
         teamStateDAO.saveState(Set.of(TeamState.of(team)));
-        TeamState maxState = TeamState.of(team, SC2Pulse.offsetDateTime().minusDays(
-            (queueType == QueueType.LOTV_1V1 ? teamStateDAO.getMaxDepthDaysMain() : teamStateDAO.getMaxDepthDaysSecondary()) + 1));
+        TeamState maxState = TeamState.of(team, SC2Pulse.offsetDateTime().minusDays(180));
         maxState.setRating((int) (team.getRating() + 1));
         teamStateDAO.saveState(Set.of(maxState));
         TeamMember member;

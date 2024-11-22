@@ -421,7 +421,6 @@ public class SqlSyntaxIT
         leagueStatsDAO.calculateForSeason(40);
         leagueStatsDAO.mergeCalculateForSeason(40);
 
-        teamStateDAO.removeExpired();
         twitchVideoDAO.removeExpired();
 
         teamMemberDAO.removeByTeamId(zergTeam.getId());

@@ -1,4 +1,4 @@
-<!-- Copyright (C) 2020-2023 Oleksandr Masniuk -->
+<!-- Copyright (C) 2020-2024 Oleksandr Masniuk -->
 <!-- SPDX-License-Identifier: AGPL-3.0-or-later -->
 
 <!DOCTYPE html>
@@ -100,7 +100,7 @@
     </section>
     <section>
         <h2>Misc</h2>
-        <p th:text="|High definition MMR history limits; 1v1: ${@teamStateDAO.getMaxDepthDaysMain()} days, teams: ${@teamStateDAO.getMaxDepthDaysSecondary()} days|"></p>
+        <p th:text="|High definition MMR history limits; 1v1: ${@teamStateService.getMainLengthDays()} days, teams: ${@teamStateService.getSecondaryLengthDays()} days|"></p>
         <p th:text="|Approximate stats:
             ${#numbers.formatInteger(@statusService.getPlayers(), 1, 'DEFAULT')} players,
             ${#numbers.formatInteger(@statusService.getTeamSnapshots(), 1, 'DEFAULT')} team snapshots,

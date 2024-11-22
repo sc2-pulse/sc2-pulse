@@ -505,7 +505,6 @@ public class StatsService
             updateSeason(season, data);
             LOG.info("Updated season {}", season);
         }
-        teamStateDAO.removeExpired();
         playerCharacterStatsDAO.mergeCalculate();
 
         long seconds = (System.currentTimeMillis() - start) / 1000;
@@ -599,7 +598,6 @@ public class StatsService
         List<Map<Region, LadderUpdateTaskContext<Void>>> contexts
     )
     {
-        teamStateDAO.removeExpired();
         for(int season : pending.getStatsUpdates()) updateSeasonStats(season, allStats);
         takePopulationSnapshot(pending.getStatsUpdates());
         process(pending);

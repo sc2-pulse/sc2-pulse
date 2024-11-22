@@ -55,3 +55,43 @@ WITH next_season_start AS
     FROM next_season_start
     WHERE season.id = next_season_start.id
     AND season."end" != next_season_start."start";
+
+CREATE TABLE team_state_archive
+(
+    "team_id" BIGINT NOT NULL,
+    "timestamp" TIMESTAMP WITH TIME ZONE NOT NULL,
+
+    PRIMARY KEY ("team_id", "timestamp"),
+
+    CONSTRAINT "fk_team_state_archive_team_id_timestamp"
+        FOREIGN KEY ("team_id", "timestamp")
+        REFERENCES "team_state"("team_id", "timestamp")
+        ON DELETE CASCADE ON UPDATE CASCADE
+);
+
+INSERT INTO team_state_archive(team_id, timestamp)
+SELECT team_id, timestamp
+FROM team_state
+WHERE archived = true;
+
+WITH max_season AS
+(
+    SELECT region, MAX(battlenet_id) AS season
+    FROM season
+    GROUP BY region
+),
+current_season_team AS
+(
+    SELECT id
+    FROM max_season
+    INNER JOIN team USING(region, season)
+)
+DELETE FROM team_state_archive
+USING current_season_team
+WHERE team_state_archive.team_id = current_season_team.id;
+
+ALTER TABLE team_state
+DROP COLUMN archived;
+
+VACUUM(ANALYZE) team_state, team_state_archive;
+REINDEX "team_state_archive_pkey";
