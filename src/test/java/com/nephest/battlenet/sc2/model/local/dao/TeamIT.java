@@ -151,6 +151,10 @@ public class TeamIT
             assertEquals(teams[0], foundTeams[0]);
             assertEquals(teams[1], foundTeams[1]);
         }
+
+        List<Long> idsFound = teamDAO.findIds(Region.EU, 1);
+        idsFound.sort(Comparator.naturalOrder());
+        assertEquals(List.of(teams[0].getId(), teams[1].getId()), idsFound);
     }
 
     @ValueSource(booleans = {false, true})

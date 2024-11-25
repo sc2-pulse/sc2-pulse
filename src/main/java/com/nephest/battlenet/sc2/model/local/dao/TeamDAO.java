@@ -250,6 +250,14 @@ implements BasicEntityOperations<Team>
         + "WHERE region = :region "
         + "AND season = :season";
 
+    private static final String FIND_IDS_BY_REGION_AND_SEASON =
+        """
+        SELECT id
+        FROM team
+        WHERE region = :region
+        AND season = :season
+        """;
+
     public static final String FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE =
         "SELECT %1$s "
         + "FROM team "
@@ -556,6 +564,14 @@ implements BasicEntityOperations<Team>
             .addValue("region", conversionService.convert(region, Integer.class))
             .addValue("season", season);
         return template.queryForStream(FIND_BY_REGION_AND_SEASON, params, STD_ROW_MAPPER);
+    }
+
+    public List<Long> findIds(Region region, int season)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("season", season);
+        return template.queryForList(FIND_IDS_BY_REGION_AND_SEASON, params, Long.class);
     }
 
     /**
