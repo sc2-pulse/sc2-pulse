@@ -16,6 +16,8 @@ import reactor.core.publisher.Sinks;
 public class EventService
 {
 
+    public static final int BUFFER_SIZE_LADDER_UPDATE = 300;
+
     public static final Sinks.EmitFailureHandler DEFAULT_FAILURE_HANDLER =
         Sinks.EmitFailureHandler.FAIL_FAST;
 
@@ -33,7 +35,7 @@ public class EventService
         ladderCharacterActivityEvent = Sinks.unsafe()
             .many().multicast().onBackpressureBuffer(buffer);
         ladderUpdateEvent = Sinks.unsafe()
-            .many().multicast().onBackpressureBuffer(smallBuffer);
+            .many().multicast().onBackpressureBuffer(BUFFER_SIZE_LADDER_UPDATE);
         matchUpdateEvent = Sinks.unsafe()
             .many().multicast().onBackpressureBuffer(smallBuffer);
     }
