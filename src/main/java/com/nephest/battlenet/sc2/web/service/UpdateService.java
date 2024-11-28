@@ -6,6 +6,7 @@ package com.nephest.battlenet.sc2.web.service;
 import static com.nephest.battlenet.sc2.service.EventService.DEFAULT_FAILURE_HANDLER;
 
 import com.nephest.battlenet.sc2.model.Region;
+import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LadderUpdate;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.LadderUpdateDAO;
@@ -40,6 +41,10 @@ public class UpdateService
     private final LadderUpdateDAO ladderUpdateDAO;
 
     private final Map<Region, UpdateContext> regionalContexts = new EnumMap<>(Region.class);
+    private final Map<Region, InstantVar> externalUpdates = new EnumMap<>(Region.class);
+    private final Map<Region, InstantVar> internalUpdates = new EnumMap<>(Region.class);
+    private InstantVar globalExternalUpdate;
+    private InstantVar globalInternalUpdate;
     private final Sinks.Many<LadderUpdate> saveLadderUpdateEvent = Sinks.unsafe()
         .many().multicast().onBackpressureBuffer(280);
     private UpdateContext globalContext;
@@ -72,6 +77,14 @@ public class UpdateService
     @PostConstruct
     public void init()
     {
+        globalExternalUpdate = new InstantVar(varDAO, "global.updated", false);
+        globalInternalUpdate = new InstantVar(varDAO, "global.updated.internal", false);
+        for(Region region : Region.values())
+        {
+            externalUpdates.put(region, new InstantVar(varDAO, region.getId() + ".updated", false));
+            internalUpdates.put(region, new InstantVar(varDAO, region.getId() + ".updated.internal", false));
+        }
+
         for(Region region : Region.values())
         {
             //catch exceptions to allow service autowiring for tests
@@ -79,8 +92,8 @@ public class UpdateService
             {
                 UpdateContext updateContext = new UpdateContext
                 (
-                    loadLastExternalUpdate(region),
-                    loadLastInternalUpdate(region)
+                    externalUpdates.get(region).load(),
+                    internalUpdates.get(region).load()
                 );
                 LOG.debug
                 (
@@ -100,7 +113,7 @@ public class UpdateService
         //catch exceptions to allow service autowiring for tests
         try
         {
-            globalContext = new UpdateContext(loadLastExternalUpdate(null), loadLastInternalUpdate(null));
+            globalContext = new UpdateContext(globalExternalUpdate.load(), globalInternalUpdate.load());
             previousGlobalContext = new UpdateContext(globalContext.getExternalUpdate(), globalContext.getInternalUpdate());
             if(globalContext.getInternalUpdate() != null) previousLadderUpdateOdt =
                 globalContext.getInternalUpdate().atOffset(SC2Pulse.offsetDateTime().getOffset());
@@ -138,27 +151,11 @@ public class UpdateService
         return saveLadderUpdateEvent.asFlux();
     }
 
-    private Instant loadLastExternalUpdate(Region region)
-    {
-        String updatesVar = varDAO.find((region == null ? "global" : region.getId()) + ".updated").orElse(null);
-        if(updatesVar == null || updatesVar.isEmpty()) return null;
-
-        return Instant.ofEpochMilli(Long.parseLong(updatesVar));
-    }
-
-    private Instant loadLastInternalUpdate(Region region)
-    {
-        String updatesVar = varDAO.find((region == null ? "global" : region.getId()) + ".updated.internal").orElse(null);
-        if(updatesVar == null || updatesVar.isEmpty()) return null;
-
-        return Instant.ofEpochMilli(Long.parseLong(updatesVar));
-    }
-
     public void updated(Instant externalUpdate)
     {
         Instant internalUpdate = SC2Pulse.instant();
-        varDAO.merge("global.updated", String.valueOf(externalUpdate.toEpochMilli()));
-        varDAO.merge("global.updated.internal", String.valueOf(internalUpdate.toEpochMilli()));
+        globalExternalUpdate.setValueAndSave(externalUpdate);
+        globalInternalUpdate.setValueAndSave(internalUpdate);
         previousGlobalContext = globalContext;
         globalContext = new UpdateContext(externalUpdate, internalUpdate);
     }
@@ -166,8 +163,8 @@ public class UpdateService
     public void updated(Region region, Instant externalUpdate)
     {
         Instant internalUpdate = SC2Pulse.instant();
-        varDAO.merge(region.getId() + ".updated", String.valueOf(externalUpdate.toEpochMilli()));
-        varDAO.merge(region.getId() + ".updated.internal", String.valueOf(internalUpdate.toEpochMilli()));
+        externalUpdates.get(region).setValueAndSave(externalUpdate);
+        internalUpdates.get(region).setValueAndSave(internalUpdate);
         regionalContexts.put(region, new UpdateContext(externalUpdate, internalUpdate));
     }
 
@@ -179,7 +176,9 @@ public class UpdateService
     public Duration calculateUpdateDuration(Region region)
     {
         UpdateContext context = getUpdateContext(region);
-        return context == null || (region == null && (previousGlobalContext == null || globalContext.getExternalUpdate() == null))
+        return context == null
+            || (region == null
+                && (previousGlobalContext.getExternalUpdate() == null || globalContext.getExternalUpdate() == null))
             ? Duration.ZERO
             : Duration.between(previousGlobalContext.getExternalUpdate(), globalContext.getExternalUpdate());
     }

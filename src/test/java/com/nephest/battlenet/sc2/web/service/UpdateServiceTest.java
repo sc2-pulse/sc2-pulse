@@ -47,6 +47,7 @@ public class UpdateServiceTest
     {
         when(eventService.getLadderUpdateEvent()).thenReturn(Flux.empty());
         updateService = new UpdateService(varDAO, eventService, ladderUpdateDAO);
+        updateService.init();
     }
 
     @Test
