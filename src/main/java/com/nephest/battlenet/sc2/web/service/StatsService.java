@@ -533,8 +533,8 @@ public class StatsService
             = updateCurrentSeason(data, seasons, allStats);
         pendingContexts.add(ctx);
 
-        long seconds = (System.currentTimeMillis() - start.toEpochMilli()) / 1000;
-        LOG.info("Updated current for {} after {} seconds", ctx, seconds);
+        Duration duration = Duration.between(start, SC2Pulse.instant());
+        LOG.info("Updated current for {} after {}", ctx, duration);
         return ctx;
     }
 

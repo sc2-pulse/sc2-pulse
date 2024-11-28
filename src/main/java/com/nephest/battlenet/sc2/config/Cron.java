@@ -253,7 +253,7 @@ public class Cron
             blizzardPrivacyService.update();
             updateService.updated(begin);
             commenceMaintenance();
-            LOG.info("Update cycle completed. Duration: {} seconds", (System.currentTimeMillis() - begin.toEpochMilli()) / 1000);
+            LOG.info("Update cycle completed. Duration: {}", Duration.between(begin, SC2Pulse.instant()));
         }
         catch(RuntimeException ex) {
             LOG.error(ex.getMessage(), ex);

@@ -146,8 +146,8 @@ public class ReactorRateLimiter
             return Mono.empty();
 
         lastData = rateLimitData;
-        Duration delay =
-            Duration.ofMillis(Math.max(rateLimitData.getReset().toEpochMilli() - System.currentTimeMillis(), 0));
+        Duration delay = Duration.between(SC2Pulse.instant(), rateLimitData.getReset());
+        if(delay.isNegative()) delay = Duration.ZERO;
         LOG.trace("Will grant {} slots in {}", rateLimitData.getLimit(), delay);
         return Mono
             .delay(delay)

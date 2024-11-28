@@ -261,7 +261,7 @@ public class AlternativeLadderService
         LOG.debug("Updating season {}", season);
         Instant discoveryInstant = discoveryInstants.get(season.getRegion()).getValue();
         if(discoveryInstant == null
-            || System.currentTimeMillis() - discoveryInstant.toEpochMilli() >= DISCOVERY_TIME_FRAME.toMillis())
+            || Duration.between(discoveryInstant, SC2Pulse.instant()).compareTo(DISCOVERY_TIME_FRAME) >= 0)
         {
             return discoverSeason(season, isProfileLadderWebRegion(season.getRegion()));
         }
@@ -276,18 +276,19 @@ public class AlternativeLadderService
         Instant discoveryInstant = discoveryInstants.get(region).getValue();
         Instant scanInstant = scanInstants.get(region).getValue();
         Instant additionalScanInstant = additionalWebScanInstants.get(region).getValue();
+        Instant now = SC2Pulse.instant();
         return isProfileLadderWebRegion(region)
             && (discoveryInstant != null
-                && System.currentTimeMillis() - discoveryInstant.toEpochMilli()
-                    >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis())
+                && Duration.between(discoveryInstant, now)
+                    .compareTo(ADDITIONAL_WEB_SCAN_TIME_FRAME) >= 0)
             && (additionalScanInstant == null
-                || System.currentTimeMillis() - additionalScanInstant.toEpochMilli()
-                    >= ADDITIONAL_WEB_SCAN_TIME_FRAME.toMillis())
+                || Duration.between(additionalScanInstant, now)
+                    .compareTo(ADDITIONAL_WEB_SCAN_TIME_FRAME) >= 0)
             && (profileLadderWebRegions.getValue().contains(region)
                 || (
                     scanInstant != null
-                    && System.currentTimeMillis() - scanInstant.toEpochMilli()
-                        < NON_WEB_SCAN_TIME_FRAME.toMillis()
+                    && Duration.between(scanInstant, now)
+                        .compareTo(NON_WEB_SCAN_TIME_FRAME) < 0
                 )
             );
     }
