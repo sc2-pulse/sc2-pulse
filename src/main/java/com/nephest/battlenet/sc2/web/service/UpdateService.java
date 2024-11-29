@@ -8,6 +8,7 @@ import static com.nephest.battlenet.sc2.service.EventService.DEFAULT_FAILURE_HAN
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.local.InstantVar;
 import com.nephest.battlenet.sc2.model.local.LadderUpdate;
+import com.nephest.battlenet.sc2.model.local.Var;
 import com.nephest.battlenet.sc2.model.local.dao.DAOUtils;
 import com.nephest.battlenet.sc2.model.local.dao.LadderUpdateDAO;
 import com.nephest.battlenet.sc2.model.local.dao.VarDAO;
@@ -22,6 +23,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,50 +86,42 @@ public class UpdateService
             externalUpdates.put(region, new InstantVar(varDAO, region.getId() + ".updated", false));
             internalUpdates.put(region, new InstantVar(varDAO, region.getId() + ".updated.internal", false));
         }
+        Stream.of
+        (
+            List.of(globalExternalUpdate, globalInternalUpdate),
+            externalUpdates.values(),
+            internalUpdates.values()
+        )
+            .flatMap(Collection::stream)
+            .forEach(Var::tryLoad);
 
         for(Region region : Region.values())
         {
-            //catch exceptions to allow service autowiring for tests
-            try
-            {
-                UpdateContext updateContext = new UpdateContext
-                (
-                    externalUpdates.get(region).load(),
-                    internalUpdates.get(region).load()
-                );
-                LOG.debug
-                (
-                    "Loaded last update context: {} {} {}",
-                    region,
-                    updateContext.getExternalUpdate(),
-                    updateContext.getInternalUpdate()
-                );
-                regionalContexts.put(region, updateContext);
-            }
-            catch (RuntimeException ex)
-            {
-                LOG.warn(ex.getMessage(), ex);
-            }
-        }
-
-        //catch exceptions to allow service autowiring for tests
-        try
-        {
-            globalContext = new UpdateContext(globalExternalUpdate.load(), globalInternalUpdate.load());
-            previousGlobalContext = new UpdateContext(globalContext.getExternalUpdate(), globalContext.getInternalUpdate());
-            if(globalContext.getInternalUpdate() != null) previousLadderUpdateOdt =
-                globalContext.getInternalUpdate().atOffset(SC2Pulse.offsetDateTime().getOffset());
+            UpdateContext updateContext = new UpdateContext
+            (
+                externalUpdates.get(region).getValue(),
+                internalUpdates.get(region).getValue()
+            );
             LOG.debug
             (
-                "Loaded last update context: {} {}",
-                globalContext.getExternalUpdate(),
-                globalContext.getInternalUpdate()
+                "Loaded last update context: {} {} {}",
+                region,
+                updateContext.getExternalUpdate(),
+                updateContext.getInternalUpdate()
             );
+            regionalContexts.put(region, updateContext);
         }
-        catch (RuntimeException ex)
-        {
-            LOG.warn(ex.getMessage(), ex);
-        }
+
+        globalContext = new UpdateContext(globalExternalUpdate.getValue(), globalInternalUpdate.getValue());
+        previousGlobalContext = new UpdateContext(globalContext.getExternalUpdate(), globalContext.getInternalUpdate());
+        if(globalContext.getInternalUpdate() != null) previousLadderUpdateOdt =
+            globalContext.getInternalUpdate().atOffset(SC2Pulse.offsetDateTime().getOffset());
+        LOG.debug
+        (
+            "Loaded last update context: {} {}",
+            globalContext.getExternalUpdate(),
+            globalContext.getInternalUpdate()
+        );
     }
 
     @Scheduled(cron="0 0 6 * * *")
