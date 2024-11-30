@@ -184,11 +184,10 @@ public class PlayerCharacterReportService
                     String.format(characterUrlTemplate, accusedPlayer2.getId())))
                 .append("\n");
         }
-        sb.append("**Accusations:** ").append(report.getType()).append("\n");
-        sb.append("**Evidence:** ")
-            .append(evidence.getDescription()).append("\n\n");
-        sb.append("*You received this notification because you are a moderator, accused player, "
-            + "or original reporter*\n");
+        sb.append("**Accusations:** ").append(report.getType()).append("\n")
+            .append("\n")
+            .append("*You received this notification because you are a moderator, accused player, "
+                + "or original reporter*\n");
 
         return sb.toString();
     }
