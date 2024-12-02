@@ -886,16 +886,6 @@ public class StatsService
             .collect(Collectors.toList());
         if(validTeams.isEmpty()) return 0;
 
-        /*
-            Use current timestamp in current season to catch all events that may be missed
-            otherwise, such as GM demotions or when switching from profile ladder to legacy ladder.
-         */
-        if(season.getBattlenetId().equals(curSeason))
-        {
-            OffsetDateTime now = SC2Pulse.offsetDateTime();
-            validTeams.forEach(t->t.getT1().setLastPlayed(now));
-        }
-
         Set<Team> mergedTeams = teamDao
             .merge(fastTeamDAO.merge(validTeams.stream().map(Tuple2::getT1).collect(Collectors.toSet())));
         validTeams.stream()
