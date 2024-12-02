@@ -333,7 +333,7 @@ public class TeamIT
 
     @MethodSource("teamOperations")
     @ParameterizedTest
-    public void whenPreviousLastPlayedEqualsCurrentLastPlayed_thenSkip(BasicEntityOperations<Team> operations)
+    public void whenPreviousLastPlayedEqualsCurrentLastPlayed_thenUpdate(BasicEntityOperations<Team> operations)
     {
         OffsetDateTime lastPlayed = SC2Pulse.offsetDateTime().minusDays(1);
         testMerge
@@ -345,7 +345,7 @@ public class TeamIT
                 team.setWins(team.getWins() + 1);
                 team.setLastPlayed(lastPlayed);
             },
-            false
+            true
         );
     }
 

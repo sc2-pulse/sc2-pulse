@@ -167,7 +167,7 @@ implements BasicEntityOperations<Team>
             + "team.id = t.id "
             + "AND "
             + "( "
-                + "team.last_played < v.last_played::timestamp with time zone "
+                + "team.last_played <= v.last_played::timestamp with time zone "
                 + "OR team.last_played IS NULL"
             + ") "
             + "AND "
