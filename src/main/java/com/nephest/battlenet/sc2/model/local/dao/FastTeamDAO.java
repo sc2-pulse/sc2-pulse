@@ -5,7 +5,7 @@ package com.nephest.battlenet.sc2.model.local.dao;
 
 import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
-import com.nephest.battlenet.sc2.model.local.BasicEntityOperations;
+import com.nephest.battlenet.sc2.model.local.StatefulBasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.Team;
 import java.math.BigInteger;
 import java.util.EnumMap;
@@ -28,12 +28,12 @@ import org.springframework.stereotype.Repository;
  * operations(i.e. merge). Run conditional batch operation using this DAO, and then use the
  * returned result in real DAO. It's a separate DAO that is not connected/persisted to the main
  * DataSource/DB. It maintains its state, but there is no persistence. You must
- * {@link #load(Region, int)} the data before using it. {@link #remove(Region)} the data when you
+ * {@link #load(Region, int)} the data before using it. {@link #clear(Region)} the data when you
  * no longer need it because it takes some resources to maintain it.
  */
 @Repository
 public class FastTeamDAO
-implements BasicEntityOperations<Team>
+implements StatefulBasicEntityOperations<Team>
 {
 
     private static final Logger LOG = LoggerFactory.getLogger(FastTeamDAO.class);
@@ -49,6 +49,7 @@ implements BasicEntityOperations<Team>
         for(Region region : Region.values()) teams.put(region, new HashMap<>());
     }
 
+    @Override
     public boolean load(Region region, int season)
     {
         Integer loadedSeason = loadedSeasons.get(region);
@@ -64,7 +65,8 @@ implements BasicEntityOperations<Team>
         return true;
     }
 
-    public void remove(Region region)
+    @Override
+    public void clear(Region region)
     {
         teams.get(region).clear();
         loadedSeasons.remove(region);

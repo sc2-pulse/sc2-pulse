@@ -213,8 +213,8 @@ public class FastTeamIT
             SeasonGenerator.DEFAULT_SEASON_ID).isPresent()
         );
 
-        //remove
-        fastTeamDAO.remove(Region.EU);
+        //clear
+        fastTeamDAO.clear(Region.EU);
         assertFalse(fastTeamDAO.findById(
             QueueType.LOTV_1V1,
             Region.EU,

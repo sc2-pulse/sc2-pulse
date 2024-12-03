@@ -82,10 +82,16 @@ public class TeamIT
     }
 
     @AfterEach
-    public void afterEach(@Autowired DataSource dataSource, @Autowired FastTeamDAO fastTeamDAO)
+    public void afterEach
+    (
+        @Autowired DataSource dataSource,
+        @Autowired List<StatefulBasicEntityOperations<Team>> statefulBasicEntityOperations
+    )
     throws SQLException
     {
-        for(Region region : Region.values()) fastTeamDAO.remove(region);
+        for(StatefulBasicEntityOperations<Team> ops : statefulBasicEntityOperations)
+            for(Region region : Region.values())
+                ops.clear(region);
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
