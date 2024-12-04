@@ -87,19 +87,21 @@ public class LegacySearchIT
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-postgres.sql"));
             ODT = SC2Pulse.offsetDateTime().minusDays(180);
+            OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
+            List<Season> seasons = List.of
+            (
+                new Season(null, 1, Region.EU, 2020, 1,
+                    start, start.plusMonths(1)),
+                new Season(null, 1, Region.US, 2020, 1,
+                    start, start.plusMonths(1)),
+                new Season(null, 2, Region.EU, 2020, 2,
+                    start.plusMonths(1), start.plusMonths(2)),
+                new Season(null, 2, Region.US, 2020, 2,
+                    start.plusMonths(1), start.plusMonths(2))
+            );
             seasonGenerator.generateSeason
             (
-                List.of
-                (
-                    new Season(null, 1, Region.EU, 2020, 1,
-                        SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(1)),
-                    new Season(null, 1, Region.US, 2020, 1, 
-                        SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(1)),
-                    new Season(null, 2, Region.EU, 2020, 2, 
-                        SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(2)),
-                    new Season(null, 2, Region.US, 2020, 2, 
-                        SC2Pulse.offsetDateTime(), SC2Pulse.offsetDateTime().plusMonths(2))
-                ),
+                seasons,
                 List.of(BaseLeague.LeagueType.values()),
                 new ArrayList<>(QueueType.getTypes(StatsService.VERSION)),
                 TeamType.ARRANGED,
@@ -107,16 +109,21 @@ public class LegacySearchIT
                 1
             );
             setupTeam(QueueType.LOTV_4V4, Region.EU, 1, LEGACY_ID_1, BaseLeague.LeagueType.BRONZE, 3,
+                seasons.get(0).getStart(),
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
             setupTeam(QueueType.LOTV_1V1, Region.US, 1, LEGACY_ID_2, BaseLeague.LeagueType.BRONZE, 3,
+                seasons.get(1).getStart(),
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
 
             setupTeam(QueueType.LOTV_4V4,  Region.EU, 2, LEGACY_ID_1, BaseLeague.LeagueType.GOLD, 10,
+                seasons.get(2).getStart(),
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
             setupTeam(QueueType.LOTV_1V1, Region.US, 2, LEGACY_ID_2, BaseLeague.LeagueType.GOLD, 10,
+                seasons.get(3).getStart(),
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
 
             Team team3 = setupTeam(QueueType.LOTV_1V1, Region.US, 1, LEGACY_ID_3, BaseLeague.LeagueType.BRONZE, 3,
+                seasons.get(1).getStart(),
                 divisionDAO, teamDAO, teamMemberDAO, teamStateDAO);
             team3.setRating(0L);
             teamStateDAO.saveState(Set.of(TeamState.of(team3, ODT.minusSeconds(1))));
@@ -131,6 +138,37 @@ public class LegacySearchIT
         DivisionDAO divisionDAO, TeamDAO teamDAO, TeamMemberDAO teamMemberDAO, TeamStateDAO teamStateDAO
     )
     {
+        return setupTeam
+        (
+            queueType,
+            region,
+            season,
+            legacyId,
+            league,
+            wins,
+            SC2Pulse.offsetDateTime(),
+            divisionDAO,
+            teamDAO,
+            teamMemberDAO,
+            teamStateDAO
+        );
+    }
+
+    public static Team setupTeam
+    (
+        QueueType queueType,
+        Region region,
+        int season,
+        BigInteger legacyId,
+        BaseLeague.LeagueType league,
+        int wins,
+        OffsetDateTime lastPlayed,
+        DivisionDAO divisionDAO,
+        TeamDAO teamDAO,
+        TeamMemberDAO teamMemberDAO,
+        TeamStateDAO teamStateDAO
+    )
+    {
         Division division1 = divisionDAO.findListByLadder(season, region,
             league, queueType, TeamType.ARRANGED, BaseLeagueTier.LeagueTierType.FIRST).get(0);
         Team team1 = new Team
@@ -139,7 +177,7 @@ public class LegacySearchIT
             new BaseLeague(league, queueType, TeamType.ARRANGED), BaseLeagueTier.LeagueTierType.FIRST,
             legacyId, division1.getId(),
             1L, wins, 0, 0, 1,
-            SC2Pulse.offsetDateTime()
+            lastPlayed
         );
         teamDAO.merge(Set.of(team1));
         Set<TeamMember> members = IntStream
@@ -150,7 +188,7 @@ public class LegacySearchIT
         teamMemberDAO.merge(members);
         teamStateDAO.saveState(Set.of(TeamState.of(team1)));
         team1.setWins(team1.getWins() + 1);
-        team1.setLastPlayed(SC2Pulse.offsetDateTime());
+        team1.setLastPlayed(lastPlayed.plusSeconds(1));
         teamDAO.merge(Set.of(team1));
         teamStateDAO.saveState(Set.of(TeamState.of(team1)));
         return team1;

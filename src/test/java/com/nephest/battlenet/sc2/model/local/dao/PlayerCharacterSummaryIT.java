@@ -119,14 +119,15 @@ public class PlayerCharacterSummaryIT
         OffsetDateTime s3End = now;
         OffsetDateTime s2End = now.minusDays(30);
         OffsetDateTime s1End = s2End.minusDays(30);
+        List<Season> seasons = List.of
+        (
+            new Season(null, 3, Region.EU, 2021, 2, s3End.minusDays(30), s3End),
+            new Season(null, 2, Region.EU, 2021, 1, s2End.minusDays(30), s2End),
+            new Season(null, 1, Region.EU, 2020, 4, s1End.minusDays(30), s1End)
+        );
         seasonGenerator.generateSeason
         (
-            List.of
-            (
-                new Season(null, 3, Region.EU, 2021, 2, s3End.minusDays(30), s3End),
-                new Season(null, 2, Region.EU, 2021, 1, s2End.minusDays(30), s2End),
-                new Season(null, 1, Region.EU, 2020, 4, s1End.minusDays(30), s1End)
-            ),
+            seasons,
             List.of(BaseLeague.LeagueType.BRONZE, BaseLeague.LeagueType.SILVER),
             List.of(QueueType.LOTV_1V1, QueueType.LOTV_4V4),
             TeamType.ARRANGED,
@@ -153,7 +154,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.PROTOSS),
             division1v1_2.getId(), 9L, 3, 3, 3, 1,
-            SC2Pulse.offsetDateTime()
+            seasons.get(1).getStart()
         ))).iterator().next();
 
         Team team1v1_z_s3 = teamDAO.merge(Set.of(new Team(
@@ -164,7 +165,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.ZERG),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
-            SC2Pulse.offsetDateTime()
+            seasons.get(0).getStart()
         ))).iterator().next();
 
         Team team1v1_t_s1 = teamDAO.merge(Set.of(new Team(
@@ -175,7 +176,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.TERRAN),
             division1v1_1.getId(), 10L, 3, 3, 3, 1,
-            SC2Pulse.offsetDateTime()
+            seasons.get(2).getStart()
         ))).iterator().next();
 
         Team team1v1_t_s2 = teamDAO.merge(Set.of(new Team(
@@ -186,7 +187,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.TERRAN),
             division1v1_2.getId(), 10L, 3, 3, 3, 1,
-            SC2Pulse.offsetDateTime()
+            seasons.get(1).getStart()
         ))).iterator().next();
 
         Team team1v1_t_s3 = teamDAO.merge(Set.of(new Team(
@@ -197,7 +198,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu1.getBattlenetId(), charEu1.getRealm(), charEu1.getName())
             }, Race.TERRAN),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
-            SC2Pulse.offsetDateTime()
+            seasons.get(0).getStart()
         ))).iterator().next();
 
         Team team1v1_2_z_s3 = teamDAO.merge(Set.of(new Team(
@@ -208,7 +209,7 @@ public class PlayerCharacterSummaryIT
                 new BlizzardPlayerCharacter(charEu2.getBattlenetId(), charEu2.getRealm(), charEu2.getName())
             }, Race.ZERG),
             division1v1_3.getId(), 10L, 3, 3, 3, 1,
-            SC2Pulse.offsetDateTime()
+            seasons.get(0).getStart()
         ))).iterator().next();
 
         teamMemberDAO.merge(Set.of(

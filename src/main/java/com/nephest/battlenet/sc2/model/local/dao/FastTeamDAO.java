@@ -39,6 +39,7 @@ implements StatefulBasicEntityOperations<Team>
     private static final Logger LOG = LoggerFactory.getLogger(FastTeamDAO.class);
 
     private final Map<Region, Map<Team, Team>> teams = new EnumMap<>(Region.class);
+    private final Map<Region, Map<Team, Team>> previousSeasonTeams = new EnumMap<>(Region.class);
     private final TeamDAO teamDAO;
     private final Map<Region, Integer> loadedSeasons = new EnumMap<>(Region.class);
 
@@ -46,7 +47,11 @@ implements StatefulBasicEntityOperations<Team>
     public FastTeamDAO(TeamDAO teamDAO)
     {
         this.teamDAO = teamDAO;
-        for(Region region : Region.values()) teams.put(region, new HashMap<>());
+        for(Region region : Region.values())
+        {
+            teams.put(region, new HashMap<>());
+            previousSeasonTeams.put(region, new HashMap<>());
+        }
     }
 
     @Override
@@ -59,6 +64,14 @@ implements StatefulBasicEntityOperations<Team>
         {
             teams.put(region, teamStream.collect(Collectors.toMap(Function.identity(), Function.identity())));
         }
+        try(Stream<Team> teamStream = teamDAO.find(region, season - 1))
+        {
+            previousSeasonTeams.put
+            (
+                region,
+                teamStream.collect(Collectors.toMap(Function.identity(), Function.identity()))
+            );
+        }
 
         loadedSeasons.put(region, season);
         LOG.trace("Loaded teams into fast DAO: {} s{}", region, season);
@@ -69,6 +82,7 @@ implements StatefulBasicEntityOperations<Team>
     public void clear(Region region)
     {
         teams.get(region).clear();
+        previousSeasonTeams.get(region).clear();
         loadedSeasons.remove(region);
     }
 
@@ -98,8 +112,14 @@ implements StatefulBasicEntityOperations<Team>
         for(Team team : teamsToMerge)
         {
             Map<Team, Team> regionTeams = teams.get(team.getRegion());
+            Map<Team, Team> regionPreviousTeams = previousSeasonTeams.get(team.getRegion());
             Team existingTeam = regionTeams.get(team);
-            if(existingTeam == null || mustUpdate(existingTeam, team))
+            Team previousSeasonTeam = regionPreviousTeams.get(toPreviousSeason(team));
+            if
+            (
+                mustInsert(existingTeam, previousSeasonTeam, team)
+                || mustUpdate(existingTeam, previousSeasonTeam, team)
+            )
             {
                 regionTeams.put(team, team);
                 merged.add(team);
@@ -109,9 +129,43 @@ implements StatefulBasicEntityOperations<Team>
         return merged;
     }
 
-    private static boolean mustUpdate(Team existingTeam, Team newTeam)
+    private static Team toPreviousSeason(Team team)
+    {
+        return Team.uid
+        (
+            team.getQueueType(),
+            team.getRegion(),
+            team.getLegacyId(),
+            team.getSeason() - 1
+        );
+    }
+
+    private static boolean mustInsert
+    (
+        Team existingTeam,
+        Team previousSeasonTeam,
+        Team newTeam
+    )
+    {
+        if(existingTeam != null) return false;
+
+        return previousSeasonTeam == null
+            || previousSeasonTeam.getLastPlayed() == null
+            || previousSeasonTeam.getLastPlayed()
+                .plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
+                .isBefore(newTeam.getLastPlayed());
+    }
+
+    private static boolean mustUpdate
+    (
+        Team existingTeam,
+        Team previousSeasonTeam,
+        Team newTeam
+    )
     {
         return
+        existingTeam != null
+        &&
         (
             !Objects.equals(existingTeam.getWins(), newTeam.getWins())
             || !Objects.equals(existingTeam.getLosses(), newTeam.getLosses())
@@ -121,6 +175,14 @@ implements StatefulBasicEntityOperations<Team>
         (
             existingTeam.getLastPlayed() == null
             || !existingTeam.getLastPlayed().isAfter(newTeam.getLastPlayed())
+        )
+        &&
+        (
+            previousSeasonTeam == null
+            || previousSeasonTeam.getLastPlayed() == null
+            || previousSeasonTeam.getLastPlayed()
+                .plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
+                .isBefore(newTeam.getLastPlayed())
         );
     }
 

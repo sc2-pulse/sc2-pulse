@@ -95,3 +95,56 @@ DROP COLUMN archived;
 
 VACUUM(ANALYZE) team_state, team_state_archive;
 REINDEX "team_state_archive_pkey";
+
+DO
+$do$
+DECLARE
+    seasonId INTEGER;
+    teamId BIGINT;
+    removedCurrent INTEGER;
+    removedTotal INTEGER;
+BEGIN
+FOR seasonId IN SELECT DISTINCT(battlenet_id) FROM season ORDER BY battlenet_id LOOP
+removedTotal := 0;
+FOR teamId IN SELECT id FROM team WHERE season = seasonId LOOP
+WITH
+prev_filter AS
+(
+    SELECT team.id AS team_id,
+    previous_season_max_timestamp.timestamp AS previous_season_timestamp
+    FROM team
+    INNER JOIN team previous_season_team ON team.queue_type = previous_season_team.queue_type
+        AND team.region = previous_season_team.region
+        AND team.legacy_id = previous_season_team.legacy_id
+        AND team.season = previous_season_team.season + 1
+    LEFT JOIN LATERAL
+    (
+        SELECT timestamp
+        FROM team_state
+        WHERE team_state.team_id = previous_season_team.id
+        ORDER BY team_state.timestamp DESC
+        LIMIT 1
+    ) previous_season_max_timestamp ON true
+    WHERE team.id = teamId
+),
+overstepped AS
+(
+    SELECT team_id, team_state.timestamp
+    FROM prev_filter
+    INNER JOIN team_state USING(team_id)
+    WHERE team_state.timestamp <= prev_filter.previous_season_timestamp + INTERVAL '1 seconds'
+)
+DELETE FROM team_state
+USING overstepped
+WHERE team_state.team_id = overstepped.team_id
+AND team_state.timestamp = overstepped.timestamp;
+GET DIAGNOSTICS removedCurrent = ROW_COUNT;
+removedTotal := removedTotal + removedCurrent;
+END LOOP;
+
+RAISE NOTICE 'Updated season %, removed %', seasonId, removedTotal;
+END LOOP;
+
+END
+$do$
+LANGUAGE plpgsql;

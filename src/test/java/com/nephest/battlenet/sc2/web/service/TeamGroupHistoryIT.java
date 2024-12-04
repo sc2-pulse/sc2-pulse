@@ -177,7 +177,7 @@ public class TeamGroupHistoryIT
         jdbcTemplate.update("UPDATE team SET legacy_id = 11 WHERE id IN(1, 13, 25)");
         jdbcTemplate.update("UPDATE team SET legacy_id = 12 WHERE id IN(2, 14, 26)");
         jdbcTemplate.update("UPDATE team SET legacy_id = 13 WHERE id IN(3, 15, 27)");
-        jdbcTemplate.update("UPDATE team SET last_played = null WHERE id = 13");
+        jdbcTemplate.update("UPDATE team SET last_played = null WHERE legacy_id = 11");
 
         //take team snapshots
         for(int i = 0; i < seasons.size(); i++)

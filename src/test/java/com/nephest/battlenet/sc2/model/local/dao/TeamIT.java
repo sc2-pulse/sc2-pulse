@@ -4,6 +4,7 @@
 package com.nephest.battlenet.sc2.model.local.dao;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.nephest.battlenet.sc2.config.DatabaseTestConfig;
@@ -13,7 +14,9 @@ import com.nephest.battlenet.sc2.model.QueueType;
 import com.nephest.battlenet.sc2.model.Region;
 import com.nephest.battlenet.sc2.model.TeamType;
 import com.nephest.battlenet.sc2.model.local.BasicEntityOperations;
+import com.nephest.battlenet.sc2.model.local.Season;
 import com.nephest.battlenet.sc2.model.local.SeasonGenerator;
+import com.nephest.battlenet.sc2.model.local.StatefulBasicEntityOperations;
 import com.nephest.battlenet.sc2.model.local.Team;
 import com.nephest.battlenet.sc2.model.local.TeamState;
 import com.nephest.battlenet.sc2.model.util.SC2Pulse;
@@ -21,6 +24,7 @@ import java.math.BigInteger;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -29,6 +33,7 @@ import java.util.function.Consumer;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.apache.commons.lang3.SerializationUtils;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
@@ -353,6 +358,101 @@ public class TeamIT
             },
             true
         );
+    }
+
+    @MethodSource("teamOperations")
+    @ParameterizedTest
+    public void whenLastPlayedIsNotAfterPreviousSeasonLastPlayed_thenSkipIt(BasicEntityOperations<Team> operations)
+    {
+        OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
+        List<Season> allSeasons = new ArrayList<>(2);
+        for(int i = 0; i < 2; i++)
+            for(Region region : new Region[]{Region.EU, Region.US})
+                allSeasons.add(new Season(null, i + 1, region, 2020, i,
+                    start.plusDays(i), start.plusDays(i + 1)));
+        seasonGenerator.generateSeason
+        (
+            allSeasons,
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            0
+        );
+
+        //season1 teams
+        Team team1 = new Team
+        (
+            null, 1, Region.EU,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+            3L, 4, 5, 6, 7,
+            allSeasons.get(2).getStart().plusSeconds(10) //oversteps next season boundaries
+        );
+        Team team2 = new Team
+        (
+            null, 1, Region.US,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 2,
+            3L, 4, 5, 6, 7,
+            allSeasons.get(3).getStart().minusSeconds(2) //normal
+        );
+        teamDAO.merge(Set.of(team1, team2));
+        if(operations instanceof StatefulBasicEntityOperations<Team> statefulBasicEntityOperations)
+        {
+            statefulBasicEntityOperations.load(Region.US, 2);
+            statefulBasicEntityOperations.load(Region.EU, 2);
+        }
+
+        //season2 teams
+        Team team3 = new Team
+        (
+            null, 2, Region.EU,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 3,
+            4L, 5, 6, 7, 8,
+            allSeasons.get(2).getStart()
+        );
+        Team team4 = new Team
+        (
+            null, 2, Region.US,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 4,
+            4L, 5, 6, 7, 8,
+            allSeasons.get(3).getStart()
+        );
+        //team3 is not saved due to overstepped lastPlayed timestamp from team1(prev season)
+        Assertions.assertThat(operations.merge(Set.of(team3, team4)))
+            .usingRecursiveComparison()
+            .isEqualTo(Set.of(team4));
+        //team4 is ok
+        Assertions.assertThat(operations.find(team4).orElseThrow())
+            .usingRecursiveComparison()
+            .isEqualTo(team4);
+
+        //team3 is merged with correct timestamp
+        team3.setLastPlayed
+        (
+            allSeasons.get(2).getStart()
+                .plusSeconds(10)
+                .plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
+                .plusSeconds(1)
+        );
+        Assertions.assertThat(operations.merge(Set.of(team3)))
+            .usingRecursiveComparison()
+            .isEqualTo(Set.of(team3));
+
+        //move team overstepped timestamp further to test update
+        team1.setLastPlayed(team3.getLastPlayed().plusMinutes(1));
+        team1.setWins(team1.getWins() + 1);
+        team1.setRating(team1.getRating() + 1);
+        assertFalse(operations.merge(Set.of(team1)).isEmpty());
+
+        //not updated due to incorrect timestamp
+        team3.setLastPlayed(team1.getLastPlayed().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS));
+        team3.setWins(team3.getWins() + 1);
+        team3.setRating(team3.getRating() + 1);
+        assertTrue(operations.merge(Set.of(team3)).isEmpty());
     }
 
     private void testMerge
