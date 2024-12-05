@@ -43,6 +43,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.jdbc.core.ResultSetExtractor;
 import org.springframework.jdbc.core.RowMapper;
@@ -383,17 +387,31 @@ implements BasicEntityOperations<Team>
     private final NamedParameterJdbcTemplate template;
     private final ConversionService conversionService;
 
+    private TeamDAO teamDAO;
+
     @Autowired
     public TeamDAO
     (
         @Qualifier("sc2StatsNamedTemplate") NamedParameterJdbcTemplate template,
-        @Qualifier("sc2StatsConversionService") ConversionService conversionService
+        @Qualifier("sc2StatsConversionService") ConversionService conversionService,
+        @Lazy TeamDAO teamDAO
     )
     {
         this.template = template;
         this.conversionService = conversionService;
+        this.teamDAO = teamDAO;
         initMappers(conversionService);
         initQueries(conversionService);
+    }
+
+    protected TeamDAO getTeamDAO()
+    {
+        return teamDAO;
+    }
+
+    protected void setTeamDAO(TeamDAO teamDAO)
+    {
+        this.teamDAO = teamDAO;
     }
 
     public BigInteger legacyIdOf(BlizzardPlayerCharacter[] characters, Race... races)
@@ -510,6 +528,7 @@ implements BasicEntityOperations<Team>
         MapSqlParameterSource params = createParameterSource(team);
         template.update(CREATE_QUERY, params, keyHolder, new String[]{"id"});
         team.setId(keyHolder.getKey().longValue());
+        teamDAO.onTeamModification(team);
         return team;
     }
 
@@ -542,6 +561,7 @@ implements BasicEntityOperations<Team>
         return DAOUtils.updateOriginals(teams, mergedTeams, (o, m)->o.setId(m.getId()), o->o.setId(null))
             .stream()
             .filter(t->t.getId() != null)
+            .peek(teamDAO::onTeamModification)
             .collect(Collectors.toSet());
     }
 
@@ -657,6 +677,7 @@ implements BasicEntityOperations<Team>
         return template.query(FIND_CHEATER_TEAM_IDS_BY_SEASON_QUERY, params, DAOUtils.LONG_MAPPER);
     }
 
+    @Cacheable("last-played-max")
     public Optional<OffsetDateTime> findMaxLastPlayed(Region region, int season)
     {
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -665,6 +686,21 @@ implements BasicEntityOperations<Team>
         return Optional.ofNullable(template.queryForObject(
             FIND_MAX_LAST_PLAYED_BY_REGION_AND_SEASON, params, OffsetDateTime.class
         ));
+    }
+
+    @Caching
+    (
+        evict =
+        {
+            @CacheEvict
+            (
+                cacheNames = "last-played-max",
+                key = "new org.springframework.cache.interceptor.SimpleKey(#p0.region, #p0.season)"
+            )
+        }
+    )
+    public void onTeamModification(Team team)
+    {
     }
 
     private MapSqlParameterSource createParameterSource(Team team)
