@@ -297,6 +297,14 @@ implements BasicEntityOperations<Team>
     private static final String FIND_CHEATER_TEAM_IDS_BY_SEASON_QUERY =
         String.format(FIND_CHEATER_TEAMS_BY_SEASONS_TEMPLATE, "DISTINCT(team_id)");
 
+    private static final String FIND_MAX_LAST_PLAYED_BY_REGION_AND_SEASON =
+        """
+        SELECT MAX(last_played)
+        FROM team
+        WHERE region = :region
+        AND season = :season
+        """;
+
     public static final String LAST_POPULATION_SNAPSHOT =
         "last_population_snapshot AS"
         + "("
@@ -647,6 +655,16 @@ implements BasicEntityOperations<Team>
                 conversionService.convert(PlayerCharacterReport.PlayerCharacterReportType.CHEATER, Integer.class)
             );
         return template.query(FIND_CHEATER_TEAM_IDS_BY_SEASON_QUERY, params, DAOUtils.LONG_MAPPER);
+    }
+
+    public Optional<OffsetDateTime> findMaxLastPlayed(Region region, int season)
+    {
+        MapSqlParameterSource params = new MapSqlParameterSource()
+            .addValue("region", conversionService.convert(region, Integer.class))
+            .addValue("season", season);
+        return Optional.ofNullable(template.queryForObject(
+            FIND_MAX_LAST_PLAYED_BY_REGION_AND_SEASON, params, OffsetDateTime.class
+        ));
     }
 
     private MapSqlParameterSource createParameterSource(Team team)

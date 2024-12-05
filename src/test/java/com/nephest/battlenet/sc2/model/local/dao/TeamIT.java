@@ -226,6 +226,69 @@ public class TeamIT
         );
     }
 
+    @Test
+    public void testFindMaxLastPlayedByRegionAndSeason()
+    {
+        OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
+        List<Season> allSeasons = new ArrayList<>(2);
+        for(int i = 0; i < 2; i++)
+            for(Region region : new Region[]{Region.EU, Region.US})
+                allSeasons.add(new Season(null, i + 1, region, 2020, i,
+                    start.plusDays(i), start.plusDays(i + 1)));
+        seasonGenerator.generateSeason
+        (
+            allSeasons,
+            List.of(BaseLeague.LeagueType.BRONZE),
+            List.of(QueueType.LOTV_1V1),
+            TeamType.ARRANGED,
+            BaseLeagueTier.LeagueTierType.FIRST,
+            0
+        );
+        teamDAO.merge(Set.of(
+            new Team
+            (
+                null, 1, Region.EU,
+                new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
+                3L, 4, 5, 6, 7,
+                allSeasons.get(0).getStart()
+            ),
+            //eu season1 max
+            new Team
+            (
+                null, 1, Region.EU,
+                new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(2), 1,
+                3L, 4, 5, 6, 7,
+                allSeasons.get(0).getStart().plusSeconds(10)
+            ),
+            //US team with max last_played to verify region filter
+            new Team
+            (
+                null, 1, Region.US,
+                new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 2,
+                3L, 4, 5, 6, 7,
+                allSeasons.get(1).getStart().plusSeconds(20)
+            ),
+            //EU season2 team with max last_played to verify season filter
+            new Team
+            (
+                null, 2, Region.EU,
+                new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+                BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 3,
+                3L, 4, 5, 6, 7,
+                allSeasons.get(2).getStart().plusSeconds(20)
+            )
+        ));
+        assertTrue
+        (
+            teamDAO.findMaxLastPlayed(Region.EU, 1).orElseThrow()
+                .isEqual(allSeasons.get(0).getStart().plusSeconds(10))
+        );
+        assertFalse(teamDAO.findMaxLastPlayed(Region.EU, 10).isPresent());
+    }
+
     private static Stream<Arguments> teamOperations()
     {
         return operations.stream().map(Arguments::of);
