@@ -749,6 +749,7 @@ public class GeneralSeleniumIT
             BaseLeagueTier.LeagueTierType.FIRST,
             10
         );
+        template.update("UPDATE team SET last_played = NOW()");
         Clan clan1 = clanDAO.merge(Set.of(new Clan(null, "clanTag1", Region.EU, "clanName1")))
             .iterator().next();
         setupClanData

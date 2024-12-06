@@ -268,7 +268,7 @@ public class SeasonGenerator
                 null, season.getBattlenetId(), season.getRegion(), league, tier.getType(),
                 teamDAO.legacyIdOf(league, bTeam), division.getId(),
                 (long) teamCount, teamCount, teamCount + 1, teamCount + 2, teamCount + 3,
-                SC2Pulse.offsetDateTime()
+                season.getStart()
             );
             Team team = teamDAO.create(newTeam);
             TeamState teamState = TeamState.of(team);

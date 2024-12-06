@@ -118,8 +118,11 @@ public class RecentTeamIT
     {
         jdbc.update
         (
-            "UPDATE team SET last_played = ?",
-            SC2Pulse.offsetDateTime().minus(TeamController.RECENT_TEAMS_OFFSET).plusSeconds(10)
+            """
+                UPDATE team SET last_played = NOW()
+                - INTERVAL '%1$s seconds'
+                + make_interval(secs=>team.id / 10000.0)
+            """.formatted(TeamController.RECENT_TEAMS_OFFSET.minusSeconds(10).toSeconds())
         );
         String head1v1rr = urlStart1v1 + "&region=" + cs.convert(Region.EU, String.class)
             + "&race=" + cs.convert(Race.PROTOSS, String.class);

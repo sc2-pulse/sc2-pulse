@@ -1092,7 +1092,11 @@ public class PlayerCharacterReportIT
         leagueStatsDAO.mergeCalculateForSeason(SeasonGenerator.DEFAULT_SEASON_ID);
         populationStateDAO.takeSnapshot(List.of(SeasonGenerator.DEFAULT_SEASON_ID));
         teamDAO.updateRanks(SeasonGenerator.DEFAULT_SEASON_ID);
-        teamStateDAO.takeSnapshot(LongStream.range(1, 12).boxed().collect(Collectors.toList()));
+        teamStateDAO.takeSnapshot
+        (
+            LongStream.range(1, 12).boxed().collect(Collectors.toList()),
+            SeasonGenerator.DEFAULT_SEASON_START.plusSeconds(10)
+        );
 
         //2 confirmed reports, but only one of them is a cheater due to restrictions flag
         List<Long> cheaterTeams = teamDAO.findCheaterTeamIds(SeasonGenerator.DEFAULT_SEASON_ID);
