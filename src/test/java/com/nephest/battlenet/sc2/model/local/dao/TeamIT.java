@@ -425,12 +425,12 @@ public class TeamIT
 
     @MethodSource("teamOperations")
     @ParameterizedTest
-    public void whenLastPlayedIsNotAfterPreviousSeasonLastPlayed_thenSkipIt(BasicEntityOperations<Team> operations)
+    public void whenLastPlayedIsNotAfterPreviousSeasonRegionalLastPlayed_thenSkipIt(BasicEntityOperations<Team> operations)
     {
         OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
         List<Season> allSeasons = new ArrayList<>(2);
         for(int i = 0; i < 2; i++)
-            for(Region region : new Region[]{Region.EU, Region.US})
+            for(Region region : new Region[]{Region.EU, Region.US, Region.KR})
                 allSeasons.add(new Season(null, i + 1, region, 2020, i,
                     start.plusDays(i), start.plusDays(i + 1)));
         seasonGenerator.generateSeason
@@ -450,7 +450,9 @@ public class TeamIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
             3L, 4, 5, 6, 7,
-            allSeasons.get(2).getStart().plusSeconds(10) //oversteps next season boundaries
+            allSeasons.get(3).getStart()
+                .minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
+                .minusSeconds(1) //normal
         );
         Team team2 = new Team
         (
@@ -458,9 +460,28 @@ public class TeamIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 2,
             3L, 4, 5, 6, 7,
-            allSeasons.get(3).getStart().minusSeconds(3) //normal
+            allSeasons.get(4).getStart()
+                .minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
+                .minusSeconds(1) //normal
         );
-        teamDAO.merge(Set.of(team1, team2));
+        Team teamOversteppedEu = new Team
+        (
+            null, 1, Region.EU,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(3), 1,
+            3L, 4, 5, 6, 7,
+            allSeasons.get(3).getStart().plusSeconds(10) //oversteps next season boundaries
+        );
+        //larger KR overstep to ensure that only regional timestamps are taken into account
+        Team teamOversteppedKr = new Team
+        (
+            null, 1, Region.KR,
+            new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 3,
+            3L, 4, 5, 6, 7,
+            allSeasons.get(5).getStart().plusSeconds(20) //oversteps next season boundaries
+        );
+        teamDAO.merge(Set.of(team1, team2, teamOversteppedEu, teamOversteppedKr));
         if(operations instanceof StatefulBasicEntityOperations<Team> statefulBasicEntityOperations)
             for(Region region : Region.values()) statefulBasicEntityOperations.load(region, 2);
 
@@ -469,19 +490,19 @@ public class TeamIT
         (
             null, 2, Region.EU,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 3,
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 4,
             4L, 5, 6, 7, 8,
-            allSeasons.get(2).getStart()
+            allSeasons.get(3).getStart()
         );
         Team team4 = new Team
         (
             null, 2, Region.US,
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
-            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 4,
+            BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 5,
             4L, 5, 6, 7, 8,
-            allSeasons.get(3).getStart()
+            allSeasons.get(4).getStart()
         );
-        //team3 is not saved due to overstepped lastPlayed timestamp from team1(prev season)
+        //team3 is not saved due to overstepped lastPlayed timestamp from teamOversteppedEu(prev season)
         Assertions.assertThat(operations.merge(Set.of(team3, team4)))
             .usingRecursiveComparison()
             .isEqualTo(Set.of(team4));
@@ -494,7 +515,7 @@ public class TeamIT
         Team team3_2 = SerializationUtils.clone(team3);
         team3_2.setLastPlayed
         (
-            allSeasons.get(2).getStart()
+            allSeasons.get(3).getStart()
                 .plusSeconds(10)
                 .plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
                 .plusSeconds(1)
@@ -504,11 +525,11 @@ public class TeamIT
             .isEqualTo(Set.of(team3_2));
 
         //move team overstepped timestamp further to test update
-        Team team1_2 = SerializationUtils.clone(team1);
-        team1_2.setLastPlayed(team3.getLastPlayed().plusMinutes(1));
-        team1_2.setWins(team1.getWins() + 2);
-        team1_2.setRating(team1.getRating() + 2);
-        assertFalse(teamDAO.merge(Set.of(team1_2)).isEmpty());
+        Team teamOversteppedEu_2 = SerializationUtils.clone(teamOversteppedEu);
+        teamOversteppedEu_2.setLastPlayed(team3.getLastPlayed().plusMinutes(1));
+        teamOversteppedEu_2.setWins(teamOversteppedEu.getWins() + 2);
+        teamOversteppedEu_2.setRating(teamOversteppedEu.getRating() + 2);
+        assertFalse(teamDAO.merge(Set.of(teamOversteppedEu_2)).isEmpty());
 
         if(operations instanceof StatefulBasicEntityOperations<Team> statefulBasicEntityOperations)
         {
@@ -522,7 +543,7 @@ public class TeamIT
 
         //not updated due to incorrect timestamp
         Team team3_3 = SerializationUtils.clone(team3);
-        team3_3.setLastPlayed(team1_2.getLastPlayed().plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS));
+        team3_3.setLastPlayed(teamOversteppedEu_2.getLastPlayed().plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS));
         team3_3.setWins(team3.getWins() + 3);
         team3_3.setRating(team3.getRating() + 3);
         assertTrue(operations.merge(Set.of(team3_3)).isEmpty());

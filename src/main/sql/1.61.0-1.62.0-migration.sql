@@ -100,44 +100,42 @@ DO
 $do$
 DECLARE
     seasonId INTEGER;
+    seasonMin SMALLINT;
     teamId BIGINT;
+    teamRegion SMALLINT;
     removedCurrent INTEGER;
     removedTotal INTEGER;
+    minLastPlayedAll JSONB;
+    minLastPlayed TIMESTAMP WITH TIME ZONE;
 BEGIN
-FOR seasonId IN SELECT DISTINCT(battlenet_id) FROM season ORDER BY battlenet_id LOOP
+
+SELECT season INTO seasonMin
+FROM team_state
+INNER JOIN team ON team_state.team_id = team.id
+WHERE timestamp = (SELECT MIN(timestamp) FROM team_state)
+LIMIT 1;
+RAISE NOTICE 'Starting from season %', seasonMin;
+FOR seasonId IN SELECT DISTINCT(battlenet_id) FROM season WHERE battlenet_id >= seasonMin ORDER BY battlenet_id LOOP
+
 removedTotal := 0;
-FOR teamId IN SELECT id FROM team WHERE season = seasonId LOOP
-WITH
-prev_filter AS
+WITH vals AS
 (
-    SELECT team.id AS team_id,
-    previous_season_max_timestamp.timestamp AS previous_season_timestamp
+    SELECT team.region,
+    COALESCE(MAX(timestamp), MAX(last_played), MAX(season."end")) + INTERVAL '2 second' AS last_played
     FROM team
-    INNER JOIN team previous_season_team ON team.queue_type = previous_season_team.queue_type
-        AND team.region = previous_season_team.region
-        AND team.legacy_id = previous_season_team.legacy_id
-        AND team.season = previous_season_team.season + 1
-    LEFT JOIN LATERAL
-    (
-        SELECT timestamp
-        FROM team_state
-        WHERE team_state.team_id = previous_season_team.id
-        ORDER BY team_state.timestamp DESC
-        LIMIT 1
-    ) previous_season_max_timestamp ON true
-    WHERE team.id = teamId
-),
-overstepped AS
-(
-    SELECT team_id, team_state.timestamp
-    FROM prev_filter
-    INNER JOIN team_state USING(team_id)
-    WHERE team_state.timestamp <= prev_filter.previous_season_timestamp + INTERVAL '1 seconds'
+    LEFT JOIN team_state ON team.id = team_state.team_id
+    INNER JOIN season ON team.region = season.region AND team.season = season.battlenet_id
+    WHERE season = seasonId - 1
+    GROUP BY team.region
 )
+SELECT jsonb_object_agg(region, last_played) INTO minLastPlayedAll FROM vals;
+
+FOR teamId, teamRegion IN SELECT id, region FROM team WHERE season = seasonId LOOP
+SELECT (minLastPlayedAll->>teamRegion::text)::TIMESTAMP WITH TIME ZONE INTO minLastPlayed;
+
 DELETE FROM team_state
-USING overstepped
-WHERE team_state.team_id = overstepped.team_id
-AND team_state.timestamp = overstepped.timestamp;
+WHERE team_state.team_id = teamId
+AND team_state.timestamp <= minLastPlayed;
 GET DIAGNOSTICS removedCurrent = ROW_COUNT;
 removedTotal := removedTotal + removedCurrent;
 END LOOP;

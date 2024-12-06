@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -168,24 +169,12 @@ implements BasicEntityOperations<Team>
                 + "ORDER BY team_state.timestamp DESC "
                 + "LIMIT 1 "
             + ") previous_state ON true "
-            + "LEFT JOIN team previous_season_team "
-                + "ON previous_season_team.queue_type = v.queue_type "
-                + "AND previous_season_team.region = v.region "
-                + "AND previous_season_team.legacy_id = v.legacy_id "
-                + "AND previous_season_team.season + 1 = v.season "
             + "WHERE "
             + "team.id = t.id "
             + "AND "
             + "( "
                 + "team.last_played <= v.last_played::timestamp with time zone "
                 + "OR team.last_played IS NULL"
-            + ") "
-            + "AND "
-            + "( "
-                + "previous_season_team.last_played IS NULL "
-                + "OR previous_season_team.last_played + INTERVAL '"
-                        + MIN_DURATION_BETWEEN_SEASONS.toSeconds() + " seconds' "
-                    + " < v.last_played::timestamp with time zone "
             + ") "
             + "AND "
             + "("
@@ -223,19 +212,7 @@ implements BasicEntityOperations<Team>
                 + "AND v.region = existing.region "
                 + "AND v.legacy_id = existing.legacy_id "
                 + "AND v.season = existing.season "
-            + "LEFT JOIN team previous_season_team "
-                + "ON previous_season_team.queue_type = v.queue_type "
-                + "AND previous_season_team.region = v.region "
-                + "AND previous_season_team.legacy_id = v.legacy_id "
-                + "AND previous_season_team.season + 1 = v.season "
             + "WHERE existing.id IS NULL "
-            + "AND "
-            + "( "
-                + "previous_season_team.last_played IS NULL "
-                + "OR previous_season_team.last_played + INTERVAL '"
-                    + MIN_DURATION_BETWEEN_SEASONS.toSeconds() + " seconds' "
-                + " < v.last_played::timestamp with time zone "
-            + ") "
         + "), "
         + "inserted AS "
         + "("
@@ -532,12 +509,44 @@ implements BasicEntityOperations<Team>
         return team;
     }
 
+    private Map<Integer, Map<Region, OffsetDateTime>> getMinLastPlayedMap(Set<Team> teams)
+    {
+        Map<Integer, Map<Region, OffsetDateTime>> map = new HashMap<>(1);
+        for(Team team : teams)
+        {
+            map.computeIfAbsent(team.getSeason(), r->new EnumMap<>(Region.class));
+            map.get(team.getSeason()).putIfAbsent(team.getRegion(), null);
+        }
+
+        for(Map.Entry<Integer, Map<Region, OffsetDateTime>> seasonEntry : map.entrySet())
+            for(Map.Entry<Region, OffsetDateTime> regionEntry : seasonEntry.getValue().entrySet())
+                regionEntry.setValue
+                (
+                    teamDAO.findMaxLastPlayed(regionEntry.getKey(), seasonEntry.getKey() - 1)
+                        .map(odt->odt.plus(MIN_DURATION_BETWEEN_SEASONS))
+                        .orElse(OffsetDateTime.MIN)
+                );
+        return map;
+    }
+
     @Override
     public Set<Team> merge(Set<Team> teams)
     {
         if(teams.isEmpty()) return teams;
 
+        Map<Integer, Map<Region, OffsetDateTime>> minLastPlayedMap =
+            getMinLastPlayedMap(teams);
+
         List<Object[]> data = teams.stream()
+            /*
+                 This part probably belongs to the service layer. This DAO, as many others in this
+                 project, is specialized for consumption of large data streams with minimal I/O.
+                 There is already some business logic embedded in SQL code, so it makes sense to
+                 keep it that way with the filtering part since callers expect it to be there.
+             */
+            .filter(t->t.getLastPlayed() == null
+                || t.getLastPlayed()
+                    .isAfter(minLastPlayedMap.get(t.getSeason()).get(t.getRegion())))
             .map(t->new Object[]{
                 t.getLegacyId(),
                 t.getDivisionId(),
@@ -555,6 +564,8 @@ implements BasicEntityOperations<Team>
                 conversionService.convert(t.getTierType(), Integer.class)
             })
             .collect(Collectors.toList());
+        if(data.isEmpty()) return Set.of();
+
         MapSqlParameterSource params = new MapSqlParameterSource().addValue("teams", data);
         List<Team> mergedTeams = template.query(MERGE_BY_FAVORITE_RACE_QUERY, params, STD_ROW_MAPPER);
 
