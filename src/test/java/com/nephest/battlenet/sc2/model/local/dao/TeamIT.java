@@ -395,7 +395,7 @@ public class TeamIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 2,
             3L, 4, 5, 6, 7,
-            allSeasons.get(3).getStart().minusSeconds(2) //normal
+            allSeasons.get(3).getStart().minusSeconds(3) //normal
         );
         teamDAO.merge(Set.of(team1, team2));
         if(operations instanceof StatefulBasicEntityOperations<Team> statefulBasicEntityOperations)

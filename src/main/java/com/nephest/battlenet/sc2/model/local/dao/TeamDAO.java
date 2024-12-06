@@ -61,7 +61,7 @@ implements BasicEntityOperations<Team>
 
     private  static final Logger LOG = LoggerFactory.getLogger(TeamDAO.class);
     public static final Duration VALID_LADDER_RESET_DURATION = Duration.ofMinutes(9);
-    public static final Duration MIN_DURATION_BETWEEN_SEASONS = Duration.ofSeconds(1);
+    public static final Duration MIN_DURATION_BETWEEN_SEASONS = Duration.ofSeconds(2);
 
     public static final String STD_SELECT =
         "team.id AS \"team.id\", "
