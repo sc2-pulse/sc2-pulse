@@ -130,7 +130,7 @@ implements StatefulBasicEntityOperations<Team>
     {
         OffsetDateTime curMinLastPlayed = minLastPlayed.get(team.getRegion());
 
-        return curMinLastPlayed == null || curMinLastPlayed.isBefore(team.getLastPlayed());
+        return curMinLastPlayed == null || !curMinLastPlayed.isAfter(team.getLastPlayed());
     }
 
     private static boolean mustInsert(Team existingTeam)

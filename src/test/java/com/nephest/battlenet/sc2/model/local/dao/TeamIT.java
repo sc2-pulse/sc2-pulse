@@ -450,9 +450,7 @@ public class TeamIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 1,
             3L, 4, 5, 6, 7,
-            allSeasons.get(3).getStart()
-                .minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
-                .minusSeconds(1) //normal
+            allSeasons.get(3).getStart().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS) //normal
         );
         Team team2 = new Team
         (
@@ -460,9 +458,7 @@ public class TeamIT
             new BaseLeague(BaseLeague.LeagueType.BRONZE, QueueType.LOTV_1V1, TeamType.ARRANGED),
             BaseLeagueTier.LeagueTierType.FIRST, BigInteger.valueOf(1), 2,
             3L, 4, 5, 6, 7,
-            allSeasons.get(4).getStart()
-                .minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
-                .minusSeconds(1) //normal
+            allSeasons.get(4).getStart().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS) //normal
         );
         Team teamOversteppedEu = new Team
         (
@@ -518,7 +514,6 @@ public class TeamIT
             allSeasons.get(3).getStart()
                 .plusSeconds(10)
                 .plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
-                .plusSeconds(1)
         );
         Assertions.assertThat(operations.merge(Set.of(team3_2)))
             .usingRecursiveComparison()
@@ -543,7 +538,12 @@ public class TeamIT
 
         //not updated due to incorrect timestamp
         Team team3_3 = SerializationUtils.clone(team3);
-        team3_3.setLastPlayed(teamOversteppedEu_2.getLastPlayed().plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS));
+        team3_3.setLastPlayed
+        (
+            teamOversteppedEu_2.getLastPlayed()
+                .plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
+                .minusSeconds(1)
+        );
         team3_3.setWins(team3.getWins() + 3);
         team3_3.setRating(team3.getRating() + 3);
         assertTrue(operations.merge(Set.of(team3_3)).isEmpty());

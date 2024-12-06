@@ -135,7 +135,7 @@ SELECT (minLastPlayedAll->>teamRegion::text)::TIMESTAMP WITH TIME ZONE INTO minL
 
 DELETE FROM team_state
 WHERE team_state.team_id = teamId
-AND team_state.timestamp <= minLastPlayed;
+AND team_state.timestamp < minLastPlayed;
 GET DIAGNOSTICS removedCurrent = ROW_COUNT;
 removedTotal := removedTotal + removedCurrent;
 END LOOP;

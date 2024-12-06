@@ -545,8 +545,8 @@ implements BasicEntityOperations<Team>
                  keep it that way with the filtering part since callers expect it to be there.
              */
             .filter(t->t.getLastPlayed() == null
-                || t.getLastPlayed()
-                    .isAfter(minLastPlayedMap.get(t.getSeason()).get(t.getRegion())))
+                || !t.getLastPlayed()
+                    .isBefore(minLastPlayedMap.get(t.getSeason()).get(t.getRegion())))
             .map(t->new Object[]{
                 t.getLegacyId(),
                 t.getDivisionId(),
