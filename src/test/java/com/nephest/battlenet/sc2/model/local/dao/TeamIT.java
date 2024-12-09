@@ -462,10 +462,7 @@ public class TeamIT
         );
         teamDAO.merge(Set.of(team1, team2));
         if(operations instanceof StatefulBasicEntityOperations<Team> statefulBasicEntityOperations)
-        {
-            statefulBasicEntityOperations.load(Region.US, 2);
-            statefulBasicEntityOperations.load(Region.EU, 2);
-        }
+            for(Region region : Region.values()) statefulBasicEntityOperations.load(region, 2);
 
         //season2 teams
         Team team3 = new Team
@@ -494,28 +491,41 @@ public class TeamIT
             .isEqualTo(team4);
 
         //team3 is merged with correct timestamp
-        team3.setLastPlayed
+        Team team3_2 = SerializationUtils.clone(team3);
+        team3_2.setLastPlayed
         (
             allSeasons.get(2).getStart()
                 .plusSeconds(10)
                 .plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS)
                 .plusSeconds(1)
         );
-        Assertions.assertThat(operations.merge(Set.of(team3)))
+        Assertions.assertThat(operations.merge(Set.of(team3_2)))
             .usingRecursiveComparison()
-            .isEqualTo(Set.of(team3));
+            .isEqualTo(Set.of(team3_2));
 
         //move team overstepped timestamp further to test update
-        team1.setLastPlayed(team3.getLastPlayed().plusMinutes(1));
-        team1.setWins(team1.getWins() + 1);
-        team1.setRating(team1.getRating() + 1);
-        assertFalse(operations.merge(Set.of(team1)).isEmpty());
+        Team team1_2 = SerializationUtils.clone(team1);
+        team1_2.setLastPlayed(team3.getLastPlayed().plusMinutes(1));
+        team1_2.setWins(team1.getWins() + 2);
+        team1_2.setRating(team1.getRating() + 2);
+        assertFalse(teamDAO.merge(Set.of(team1_2)).isEmpty());
+
+        if(operations instanceof StatefulBasicEntityOperations<Team> statefulBasicEntityOperations)
+        {
+            teamDAO.merge(Set.of(team3_2));
+            for(Region region : Region.values())
+            {
+                statefulBasicEntityOperations.clear(region);
+                statefulBasicEntityOperations.load(region, 2);
+            }
+        }
 
         //not updated due to incorrect timestamp
-        team3.setLastPlayed(team1.getLastPlayed().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS));
-        team3.setWins(team3.getWins() + 1);
-        team3.setRating(team3.getRating() + 1);
-        assertTrue(operations.merge(Set.of(team3)).isEmpty());
+        Team team3_3 = SerializationUtils.clone(team3);
+        team3_3.setLastPlayed(team1_2.getLastPlayed().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS));
+        team3_3.setWins(team3.getWins() + 3);
+        team3_3.setRating(team3.getRating() + 3);
+        assertTrue(operations.merge(Set.of(team3_3)).isEmpty());
     }
 
     private void testMerge
