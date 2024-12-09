@@ -522,10 +522,17 @@ public class TeamIT
 
         //not updated due to incorrect timestamp
         Team team3_3 = SerializationUtils.clone(team3);
-        team3_3.setLastPlayed(team1_2.getLastPlayed().minus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS));
+        team3_3.setLastPlayed(team1_2.getLastPlayed().plus(TeamDAO.MIN_DURATION_BETWEEN_SEASONS));
         team3_3.setWins(team3.getWins() + 3);
         team3_3.setRating(team3.getRating() + 3);
         assertTrue(operations.merge(Set.of(team3_3)).isEmpty());
+
+        //updated with correct timestamp
+        Team team3_4 = SerializationUtils.clone(team3_3);
+        team3_4.setLastPlayed(team3_4.getLastPlayed().plusSeconds(1));
+        team3_4.setWins(team3_4.getWins() + 4);
+        team3_4.setRating(team3_4.getRating() + 4);
+        assertFalse(operations.merge(Set.of(team3_4)).isEmpty());
     }
 
     private void testMerge
