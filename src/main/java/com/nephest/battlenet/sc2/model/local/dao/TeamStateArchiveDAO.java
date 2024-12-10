@@ -21,13 +21,20 @@ public class TeamStateArchiveDAO
             SELECT DISTINCT ON(team_id)
             team_id,
             first_value(timestamp) OVER team_rating_window as rating_min_ts,
-            last_value(timestamp) OVER team_rating_window as rating_max_ts
+            last_value(timestamp) OVER team_rating_window as rating_max_ts,
+            last_value(timestamp) OVER team_timestamp_window as timestamp_last_ts
             FROM team_state
             WHERE team_id IN(:teamIds)
             WINDOW team_rating_window AS
             (
                 PARTITION BY team_id
                 ORDER BY rating ASC
+                ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
+            ),
+            team_timestamp_window AS
+            (
+                PARTITION BY team_id
+                ORDER BY timestamp ASC
                 ROWS BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING
             )
             ORDER BY team_id
@@ -40,7 +47,8 @@ public class TeamStateArchiveDAO
             CROSS JOIN LATERAL
             (
                 VALUES(archive_group.team_id, archive_group.rating_min_ts),
-                (archive_group.team_id, archive_group.rating_max_ts)
+                (archive_group.team_id, archive_group.rating_max_ts),
+                (archive_group.team_id, archive_group.timestamp_last_ts)
             )
             AS archive(team_id, timestamp)
             ORDER BY archive.team_id, archive.timestamp

@@ -278,6 +278,9 @@ public class TeamStateServiceIT
         createTeamSnapshot(teamId, queueType, legacyId, 100L, 13, odtStart.minusSeconds(1));
         //not expired and not archived
         createTeamSnapshot(teamId, queueType, legacyId, 11L, 14, odtStart.plusMinutes(1));
+        //not expired, archived last
+        createTeamSnapshot(teamId, queueType, legacyId, 12L, 15,
+            odtStart.plusMinutes(1).plusSeconds(1));
 
         BlockingQueue<LadderUpdateData> eventData = new ArrayBlockingQueue<>(1);
         disposables.add(teamStateService.getUpdateEvent().subscribe(eventData::add));
@@ -297,7 +300,7 @@ public class TeamStateServiceIT
         eventData.take();
         assertEquals
         (
-            teamCount + 1,
+            teamCount + 2,
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state_archive")
         );
 
@@ -306,13 +309,13 @@ public class TeamStateServiceIT
         eventData.take();
         assertEquals
         (
-            teamCount + 1,
+            teamCount + 2,
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state_archive")
         );
 
         assertEquals
         (
-            (teamCount + 1) * 2 + 2,
+            (teamCount + 1) * 2 + 3,
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
 
@@ -323,7 +326,7 @@ public class TeamStateServiceIT
         //expired team states have been removed
         assertEquals
         (
-            (teamCount + 2),
+            (teamCount + 3),
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
 
@@ -347,11 +350,52 @@ public class TeamStateServiceIT
                 odtStart.minusSeconds(3),
                 odtStart.minusSeconds(1),
                 odtStart.plusMinutes(1),
-                odtStart.plusMinutes(1).plusSeconds(1)
+                odtStart.plusMinutes(1).plusSeconds(1),
+                odtStart.plusMinutes(1).plusSeconds(2)
             )
                 .map(odt->minConversionService.convert(odt, Object.class))
                 .toList(),
             history.get(0).history().get(TeamHistoryDAO.HistoryColumn.TIMESTAMP)
+        ));
+
+        //remove all expect archive
+        teamStateService.setMainLengthDays(0);
+        teamStateService.setSecondaryLengthDays(0);
+        teamStateService.getLastClearInstantVar().setValueAndSave(start.toInstant());
+        updateService.updated(SC2Pulse.instant());
+        eventService.createLadderUpdateEvent(createUpdateData(12));
+        eventData.take();
+        assertEquals
+        (
+            (teamCount + 2),
+            JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
+        );
+        List<TeamHistory> history2 = objectMapper.readValue(mvc.perform
+        (
+            get("/api/team/group/history")
+                .queryParam("teamId", String.valueOf(teamId))
+                .queryParam
+                (
+                    "history",
+                    mvcConversionService
+                        .convert(TeamHistoryDAO.HistoryColumn.TIMESTAMP, String.class)
+                )
+                .contentType(MediaType.APPLICATION_JSON)
+        )
+            .andExpect(status().isOk())
+            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
+        assertTrue(AssertionUtil.numberListEquals(
+            Stream.of
+            (
+                odtStart.minusSeconds(3), //min rating
+                odtStart.minusSeconds(1), //max rating
+                //odtStart.plusMinutes(1), removed
+                odtStart.plusMinutes(1).plusSeconds(1), //last timestamp
+                odtStart.plusMinutes(1).plusSeconds(2) //team derivative
+            )
+                .map(odt->minConversionService.convert(odt, Object.class))
+                .toList(),
+            history2.get(0).history().get(TeamHistoryDAO.HistoryColumn.TIMESTAMP)
         ));
     }
 
