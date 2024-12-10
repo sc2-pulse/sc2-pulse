@@ -51,7 +51,6 @@ import java.util.stream.Stream;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -132,6 +131,10 @@ public class TeamStateServiceIT
         }
         teamStateService.reset();
         updateService.updated(Instant.MIN);
+        mainLengthBefore = teamStateService.getMainLengthDays();
+        secondaryLengthBefore = teamStateService.getSecondaryLengthDays();
+        teamStateService.setMainLengthDays(360);
+        teamStateService.setSecondaryLengthDays(180);
     }
 
     @AfterEach
@@ -139,15 +142,8 @@ public class TeamStateServiceIT
     {
         disposables.forEach(Disposable::dispose);
         disposables.clear();
-    }
-
-    @BeforeAll
-    public static void beforeAll(@Autowired TeamStateService teamStateService)
-    {
-        mainLengthBefore = teamStateService.getMainLengthDays();
-        secondaryLengthBefore = teamStateService.getSecondaryLengthDays();
-        teamStateService.setMainLengthDays(360);
-        teamStateService.setSecondaryLengthDays(180);
+        teamStateService.setMainLengthDays(mainLengthBefore);
+        teamStateService.setSecondaryLengthDays(secondaryLengthBefore);
     }
 
     @AfterAll
@@ -159,8 +155,6 @@ public class TeamStateServiceIT
     throws SQLException
     {
         teamStateService.reset();
-        teamStateService.setMainLengthDays(mainLengthBefore);
-        teamStateService.setSecondaryLengthDays(secondaryLengthBefore);
         try(Connection connection = dataSource.getConnection())
         {
             ScriptUtils.executeSqlScript(connection, new ClassPathResource("schema-drop-postgres.sql"));
