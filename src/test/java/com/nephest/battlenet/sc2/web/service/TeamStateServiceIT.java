@@ -5,8 +5,11 @@ package com.nephest.battlenet.sc2.web.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anySet;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.atLeastOnce;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.reset;
@@ -46,6 +49,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 import javax.sql.DataSource;
@@ -278,9 +282,11 @@ public class TeamStateServiceIT
         createTeamSnapshot(teamId, queueType, legacyId, 100L, 13, odtStart.minusSeconds(1));
         //not expired and not archived
         createTeamSnapshot(teamId, queueType, legacyId, 11L, 14, odtStart.plusMinutes(1));
-        //not expired, archived last
-        createTeamSnapshot(teamId, queueType, legacyId, 12L, 15,
-            odtStart.plusMinutes(1).plusSeconds(1));
+        jdbcTemplate.update
+        (
+            "UPDATE team SET last_played = ? WHERE id = ? ",
+            odtStart.plusMinutes(1), teamId
+        );
 
         BlockingQueue<LadderUpdateData> eventData = new ArrayBlockingQueue<>(1);
         disposables.add(teamStateService.getUpdateEvent().subscribe(eventData::add));
@@ -300,7 +306,7 @@ public class TeamStateServiceIT
         eventData.take();
         assertEquals
         (
-            teamCount + 2,
+            teamCount * 2 + 1, //+1 final snapshot
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state_archive")
         );
 
@@ -309,13 +315,13 @@ public class TeamStateServiceIT
         eventData.take();
         assertEquals
         (
-            teamCount + 2,
+            teamCount * 2 + 1, //+1 final snapshot
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state_archive")
         );
 
         assertEquals
         (
-            (teamCount + 1) * 2 + 3,
+            teamCount * 3 + 4, //+4 snapshots created earlier
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
 
@@ -326,7 +332,7 @@ public class TeamStateServiceIT
         //expired team states have been removed
         assertEquals
         (
-            (teamCount + 3),
+            (teamCount * 2 + 2), //+ not expired and last
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
 
@@ -347,11 +353,13 @@ public class TeamStateServiceIT
         assertTrue(AssertionUtil.numberListEquals(
             Stream.of
             (
-                odtStart.minusSeconds(3),
-                odtStart.minusSeconds(1),
-                odtStart.plusMinutes(1),
-                odtStart.plusMinutes(1).plusSeconds(1),
-                odtStart.plusMinutes(1).plusSeconds(2)
+                odtStart.minusSeconds(3), //min rating
+                odtStart.minusSeconds(1), //max rating
+                odtStart.plusMinutes(1), //not expired yet
+                //final snapshot
+                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET),
+                //team derivative
+                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET).plusSeconds(1)
             )
                 .map(odt->minConversionService.convert(odt, Object.class))
                 .toList(),
@@ -367,7 +375,7 @@ public class TeamStateServiceIT
         eventData.take();
         assertEquals
         (
-            (teamCount + 2),
+            (teamCount * 2 + 1), // + last timestamp
             JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state")
         );
         List<TeamHistory> history2 = objectMapper.readValue(mvc.perform
@@ -390,8 +398,10 @@ public class TeamStateServiceIT
                 odtStart.minusSeconds(3), //min rating
                 odtStart.minusSeconds(1), //max rating
                 //odtStart.plusMinutes(1), removed
-                odtStart.plusMinutes(1).plusSeconds(1), //last timestamp
-                odtStart.plusMinutes(1).plusSeconds(2) //team derivative
+                //last timestamp
+                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET),
+                //team derivative
+                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET).plusSeconds(1)
             )
                 .map(odt->minConversionService.convert(odt, Object.class))
                 .toList(),
@@ -399,8 +409,11 @@ public class TeamStateServiceIT
         ));
     }
 
-    @Test
-    public void whenExceptionIsThrownMidArchive_thenThereShouldBeNoArchiveLeftoversInDb()
+    private void whenExceptionIsThrownMidProcess_thenThereShouldBeNoLeftoversInDb
+    (
+        Consumer<Region> stub,
+        Consumer<Integer> verifier
+    )
     throws InterruptedException
     {
         OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
@@ -418,21 +431,61 @@ public class TeamStateServiceIT
             BaseLeagueTier.LeagueTierType.FIRST,
             3
         );
-
-        doThrow(new RuntimeException("test")).when(varDAO).merge(anyString(), anyString());
+        stub.accept(Region.EU);
 
         BlockingQueue<LadderUpdateData> eventData = new ArrayBlockingQueue<>(1);
         disposables.add(teamStateService.getUpdateEvent().subscribe(eventData::add));
 
         eventService.createLadderUpdateEvent(createUpdateData(11));
 
+        //generate a successful event to get past the blocking queue call
         reset(varDAO);
         eventService.createLadderUpdateEvent(createUpdateData(9));
         eventData.take();
-        //archive was created at some point
-        verify(teamStateArchiveDAO, atLeastOnce()).archive(anySet());
-        //no traces left
-        assertEquals(0, JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state_archive"));
+        verifier.accept(6);
+    }
+
+    @Test
+    public void whenExceptionIsThrownMidArchive_thenThereShouldBeNoArchiveLeftoversInDb()
+    throws InterruptedException
+    {
+        whenExceptionIsThrownMidProcess_thenThereShouldBeNoLeftoversInDb
+        (
+            region->doThrow(new RuntimeException("test"))
+                .when(varDAO)
+                .merge
+                (
+                    eq(teamStateService.getLastArchiveSeasonVars().get(region).getKey()),
+                    anyString()
+                ),
+            teamCount->
+            {
+                //archive was created at some point
+                verify(teamStateArchiveDAO, atLeastOnce()).archive(anySet());
+                //no traces left
+                assertEquals(0, JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state_archive"));
+            }
+        );
+    }
+
+    @Test
+    public void whenExceptionIsThrownMidFinalization_thenThereShouldBeNoFinalTeamStateLeftoversInDb()
+    throws InterruptedException
+    {
+        whenExceptionIsThrownMidProcess_thenThereShouldBeNoLeftoversInDb
+        (
+            region->doThrow(new RuntimeException("test"))
+                .when(varDAO)
+                .merge(eq(teamStateService.getLastFinalizedSeasonVars().get(region).getKey()),
+                    anyString()),
+            teamCount->
+            {
+                //season was finalized at some point
+                verify(teamStateDAO, atLeastOnce()).takeSnapshot(anyList(), any());
+                //no traces left except for the original 6 snapshots from season generation
+                assertEquals(teamCount, JdbcTestUtils.countRowsInTable(jdbcTemplate, "team_state"));
+            }
+        );
     }
 
 

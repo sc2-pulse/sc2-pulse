@@ -146,3 +146,75 @@ END LOOP;
 END
 $do$
 LANGUAGE plpgsql;
+
+DO
+$do$
+DECLARE
+    seasonId INTEGER;
+    createdCurrent INTEGER;
+BEGIN
+FOR seasonId IN SELECT DISTINCT(battlenet_id) FROM season ORDER BY battlenet_id LOOP
+
+createdCurrent := 0;
+WITH snapshot_timestamp AS
+(
+    SELECT team.region,
+    COALESCE(MAX(timestamp), MAX(last_played), MAX(season."end")) + INTERVAL '1 second' AS timestamp
+    FROM team
+    LEFT JOIN team_state ON team.id = team_state.team_id
+    INNER JOIN season ON team.region = season.region AND team.season = season.battlenet_id
+    WHERE season = seasonId
+    GROUP BY team.region
+),
+current_season AS
+(
+    SELECT region, MAX(battlenet_id) AS battlenet_id
+    FROM season
+    GROUP BY region
+),
+last_snapshots AS
+(
+    INSERT INTO team_state
+    (
+        "team_id",
+        "timestamp",
+        "division_id",
+        "population_state_id",
+        "wins",
+        "games",
+        "rating",
+        "global_rank",
+        "region_rank",
+        "league_rank",
+        "secondary"
+    )
+        SELECT
+        "id",
+        "timestamp",
+        "division_id",
+        "population_state_id",
+        "wins",
+        "wins" + "losses" + "ties",
+        "rating",
+        "global_rank",
+        "region_rank",
+        "league_rank",
+        CASE WHEN queue_type != 201 THEN true ELSE NULL END
+        FROM team
+        INNER JOIN snapshot_timestamp USING(region)
+        INNER JOIN current_season USING(region)
+        WHERE season = seasonId
+        AND season != current_season.battlenet_id
+        RETURNING team_id, timestamp
+)
+    INSERT INTO team_state_archive(team_id, timestamp)
+    SELECT team_id, timestamp
+    FROM last_snapshots;
+
+GET DIAGNOSTICS createdCurrent = ROW_COUNT;
+RAISE NOTICE 'Updated season %, created %', seasonId, createdCurrent;
+END LOOP;
+
+END
+$do$
+LANGUAGE plpgsql;

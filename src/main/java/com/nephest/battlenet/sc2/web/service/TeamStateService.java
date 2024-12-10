@@ -21,7 +21,10 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -40,6 +43,9 @@ public class TeamStateService
     private static final Logger LOG = LoggerFactory.getLogger(TeamStateService.class);
 
     public static final int TEAM_ARCHIVE_BATCH_SIZE = 500;
+    public static final int FINAL_TEAM_STATE_BATCH_SIZE = TEAM_ARCHIVE_BATCH_SIZE;
+    public static final Duration FINAL_TEAM_SNAPSHOT_OFFSET
+        = TeamDAO.MIN_DURATION_BETWEEN_SEASONS.dividedBy(2);
 
     private final SeasonDAO seasonDAO;
     private final TeamDAO teamDAO;
@@ -49,6 +55,7 @@ public class TeamStateService
     private TeamStateService service;
     private int mainLengthDays, secondaryLengthDays;
 
+    private final Map<Region, LongVar> lastFinalizedSeason = new EnumMap<>(Region.class);
     private final Map<Region, LongVar> lastArchiveSeason = new EnumMap<>(Region.class);
     private InstantVar lastClearInstant;
     private final Sinks.Many<LadderUpdateData> updateEvent = Sinks
@@ -85,6 +92,16 @@ public class TeamStateService
     {
         for(Region region : Region.values())
         {
+            lastFinalizedSeason.put
+            (
+                region,
+                new LongVar
+                (
+                    varDAO,
+                    region.getId() + ".mmr.history.finalized.season",
+                    false
+                )
+            );
             lastArchiveSeason.put
             (
                 region,
@@ -103,9 +120,12 @@ public class TeamStateService
             false
         );
 
-        lastArchiveSeason.values().forEach(var->{
-            var.tryLoad();
-            if(var.getValue() == null) var.setValue(0L);
+        Stream.of(lastFinalizedSeason, lastArchiveSeason)
+            .map(Map::values)
+            .flatMap(Collection::stream)
+            .forEach(var->{
+                var.tryLoad();
+                if(var.getValue() == null) var.setValue(0L);
         });
 
         lastClearInstant.tryLoad();
@@ -133,8 +153,21 @@ public class TeamStateService
 
     protected void reset()
     {
-        lastArchiveSeason.values().forEach(v->v.setValueAndSave(Long.MIN_VALUE));
+        Stream.of(lastFinalizedSeason, lastArchiveSeason)
+            .map(Map::values)
+            .flatMap(Collection::stream)
+            .forEach(v->v.setValueAndSave(Long.MIN_VALUE));
         lastClearInstant.setValueAndSave(Instant.MIN);
+    }
+
+    protected Map<Region, LongVar> getLastFinalizedSeasonVars()
+    {
+        return lastFinalizedSeason;
+    }
+
+    protected Map<Region, LongVar> getLastArchiveSeasonVars()
+    {
+        return lastArchiveSeason;
     }
 
     protected InstantVar getLastClearInstantVar()
@@ -169,12 +202,6 @@ public class TeamStateService
 
     private void update(LadderUpdateData data)
     {
-        updateArchive(data);
-        removeExpired();
-    }
-
-    private void updateArchive(LadderUpdateData data)
-    {
         Map<Region, Set<Integer>> updates = data.getContexts().stream()
             .map(Map::entrySet)
             .flatMap(Collection::stream)
@@ -183,9 +210,21 @@ public class TeamStateService
                 ()->new EnumMap<>(Region.class),
                 Collectors.mapping(entry->entry.getValue().getSeason().getBattlenetId(), Collectors.toSet())
             ));
+        takeFinalTeamSnapshots(updates);
+        updateArchive(updates);
+        removeExpired();
+    }
+
+    private void processUpdates
+    (
+        Map<Region, Set<Integer>> updates,
+        Function<Region, Integer> minSeasonFunction,
+        BiConsumer<Region, Integer> updateTask
+    )
+    {
         updates.forEach((region, seasons) -> {
             //next after previous archive
-            long minSeason = this.lastArchiveSeason.get(region).getValue() + 1;
+            long minSeason = minSeasonFunction.apply(region);
             //not current season
             int maxSeason = seasonDAO.getMaxBattlenetId(region) - 1;
             seasons.stream()
@@ -193,8 +232,52 @@ public class TeamStateService
                 .map(season->season - 1)
                 .filter(season->season >= minSeason && season <= maxSeason)
                 .sorted()
-                .forEach(season->service.updateArchive(region, season));
+                .forEach(season->updateTask.accept(region, season));
         });
+    }
+
+    private void takeFinalTeamSnapshots(Map<Region, Set<Integer>> updates)
+    {
+        processUpdates
+        (
+            updates,
+            r->lastFinalizedSeason.get(r).getValue().intValue() + 1,
+            (region, season)->service.takeFinalTeamSnapshots(region, season)
+        );
+    }
+
+    @Transactional
+    public void takeFinalTeamSnapshots(Region region, int season)
+    {
+        List<Long> teamIds = teamDAO.findIds(region, season);
+        if(teamIds.isEmpty())
+        {
+            lastFinalizedSeason.get(region).setValueAndSave((long) season);
+            return;
+        }
+
+        OffsetDateTime odt = teamDAO.findMaxLastPlayed(region, season)
+            .orElseThrow()
+            .plus(FINAL_TEAM_SNAPSHOT_OFFSET);
+        for(int i = 0; i < teamIds.size(); )
+        {
+            LOG.trace("Final team states {} {} progress: {}/{}", region, season, i, teamIds.size());
+            int nextIx = Math.min((i + 1) * FINAL_TEAM_STATE_BATCH_SIZE, teamIds.size());
+            teamStateDAO.takeSnapshot(teamIds.subList(i, nextIx), odt);
+            i = nextIx;
+        }
+        lastFinalizedSeason.get(region).setValueAndSave((long) season);
+        LOG.info("Created final team states: {} {}", region, season);
+    }
+
+    private void updateArchive(Map<Region, Set<Integer>> updates)
+    {
+        processUpdates
+        (
+            updates,
+            r->lastArchiveSeason.get(r).getValue().intValue() + 1,
+            (region, season)->service.updateArchive(region, season)
+        );
     }
 
     @Transactional
