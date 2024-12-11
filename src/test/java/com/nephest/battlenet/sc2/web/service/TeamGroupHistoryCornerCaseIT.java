@@ -95,67 +95,6 @@ public class TeamGroupHistoryCornerCaseIT
     }
 
     @Test
-    public void whenSnapshotTimestampOverstepsSeasonBoundaries_thenDerivedTeamSnapshotShouldUseItInsteadOfSeasonEnd()
-    throws Exception
-    {
-        OffsetDateTime start = SC2Pulse.offsetDateTime().minusYears(1);
-
-        List<Season> seasons = new ArrayList<>();
-        for(int i = 0; i < 2; i++)
-            seasons.add(new Season(null, i + 1, Region.EU, 2020, i,
-                start.plusDays(i), start.plusDays(i + 1)));
-        seasonGenerator.generateSeason
-        (
-            seasons,
-            List.of(BaseLeague.LeagueType.BRONZE),
-            List.of(QueueType.LOTV_1V1),
-            TeamType.ARRANGED,
-            BaseLeagueTier.LeagueTierType.FIRST,
-            1
-        );
-
-        jdbcTemplate.update("DELETE FROM team_state");
-        OffsetDateTime oversteppedOdt = seasons.get(1).getStart().plusMinutes(1);
-        teamStateDAO.takeSnapshot(List.of(1L), oversteppedOdt);
-
-        List<TeamHistory> found = objectMapper.readValue(mvc.perform
-        (
-            get("/api/team/group/history")
-                .queryParam("teamId", "1")
-                .queryParam
-                (
-                    "history",
-                    mvcConversionService.convert(HistoryColumn.TIMESTAMP, String.class)
-                )
-                .contentType(MediaType.APPLICATION_JSON)
-        )
-            .andExpect(status().isOk())
-            .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        Assertions.assertThat(found)
-            .usingRecursiveComparison()
-            .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
-            .isEqualTo(List.of(
-                new TeamHistory
-                (
-                    1L,
-                    Map.of(),
-                    Map.ofEntries
-                    (
-                        entry
-                        (
-                            HistoryColumn.TIMESTAMP,
-                            List.of
-                            (
-                                oversteppedOdt.toEpochSecond(),
-                                oversteppedOdt.plusSeconds(1).toEpochSecond()
-                            )
-                        )
-                    )
-                )
-            ));
-    }
-
-    @Test
     public void whenTeamSnapshotsOverstepCurrentSeasonBoundaries_thenIgnoreBoundaries()
     throws Exception
     {

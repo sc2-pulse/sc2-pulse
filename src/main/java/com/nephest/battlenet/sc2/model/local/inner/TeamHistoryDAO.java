@@ -48,19 +48,9 @@ public class TeamHistoryDAO
 
     public enum HistoryColumn
     {
-        TIMESTAMP
-        (
-            "timestamp",
-            "season.end",
-            "team_state.timestamp"
-        ),
+        TIMESTAMP("timestamp", "team_state.timestamp"),
         RATING("rating"),
-        GAMES
-        (
-            "games",
-            "wins + losses",
-            "games"
-        ),
+        GAMES("games"),
         WINS("wins"),
         LEAGUE("league", true),
         TIER("tier", true),
@@ -70,14 +60,7 @@ public class TeamHistoryDAO
         RANK_LEAGUE("league_rank"),
         COUNT_GLOBAL
         (
-            "global_team_count", "global_team_count", "global_team_count",
-            List.of
-            (
-                """
-                LEFT JOIN population_state
-                    ON team.population_state_id = population_state.id
-                """
-            ),
+            "global_team_count", "global_team_count",
             List.of
             (
                 """
@@ -86,22 +69,11 @@ public class TeamHistoryDAO
                 """
             )
         ),
-        COUNT_REGION
-        (
-            "region_team_count", "region_team_count", "region_team_count",
-            COUNT_GLOBAL.teamJoins, COUNT_GLOBAL.stateJoins
-        ),
-        COUNT_LEAGUE
-        (
-            "league_team_count", "league_team_count", "league_team_count",
-            COUNT_GLOBAL.teamJoins, COUNT_GLOBAL.stateJoins
-        );
+        COUNT_REGION("region_team_count", "region_team_count", COUNT_GLOBAL.joins),
+        COUNT_LEAGUE("league_team_count", "league_team_count", COUNT_GLOBAL.joins);
 
-        private final String name,
-            teamColumnName, stateColumName,
-            teamColumnAliasedName, stateColumnAliasedName,
-            aggregationFunction;
-        private final List<String> teamJoins, stateJoins;
+        private final String name, columName, columnAliasedName, aggregationFunction;
+        private final List<String> joins;
         private final Map<String, Class<?>> typeMapping;
         private final Class<?> valueConversionClass;
         private final boolean expanded;
@@ -109,22 +81,17 @@ public class TeamHistoryDAO
         HistoryColumn
         (
             String name,
-            String teamColumnName,
-            String stateColumName,
-            List<String> teamJoins,
-            List<String> stateJoins,
+            String columName,
+            List<String> joins,
             Map<String, Class<?>> typeMapping,
             Class<?> valueConversionClass,
             boolean expanded
         )
         {
             this.name = name;
-            this.teamColumnName = teamColumnName;
-            this.teamColumnAliasedName = teamColumnName + " AS " + name;
-            this.stateColumName = stateColumName;
-            this.stateColumnAliasedName = stateColumName + " AS " + name;
-            this.teamJoins = teamJoins;
-            this.stateJoins = stateJoins;
+            this.columName = columName;
+            this.columnAliasedName = columName + " AS " + name;
+            this.joins = joins;
             this.aggregationFunction = "array_agg(" + name + ") AS " + name;
             this.typeMapping = typeMapping;
             this.valueConversionClass = valueConversionClass;
@@ -134,35 +101,28 @@ public class TeamHistoryDAO
         HistoryColumn
         (
             String name,
-            String teamColumnName,
-            String stateColumName,
-            List<String> teamJoins,
-            List<String> stateJoins
+            String columName,
+            List<String> joins
         )
         {
             this
             (
                 name,
-                teamColumnName, stateColumName,
-                teamJoins, stateJoins,
+                columName,
+                joins,
                 Map.of(),
                 null,
                 false
             );
         }
 
-        HistoryColumn
-        (
-            String name,
-            String teamColumnName,
-            String stateColumName
-        )
+        HistoryColumn(String name, String columName)
         {
             this
             (
                 name,
-                teamColumnName, stateColumName,
-                List.of(), List.of(),
+                columName,
+                List.of(),
                 Map.of(),
                 null,
                 false
@@ -171,12 +131,12 @@ public class TeamHistoryDAO
 
         HistoryColumn(String name)
         {
-            this(name, name, name);
+            this(name, name);
         }
 
         HistoryColumn(String name, boolean expanded)
         {
-            this(name, name, name, List.of(), List.of(), Map.of(), null, expanded);
+            this(name, name, List.of(), Map.of(), null, expanded);
         }
 
         public static HistoryColumn fromName(String name)
@@ -192,24 +152,14 @@ public class TeamHistoryDAO
             return name;
         }
 
-        public String getTeamColumnName()
+        public String getColumName()
         {
-            return teamColumnName;
+            return columName;
         }
 
-        public String getTeamColumnAliasedName()
+        public String getColumnAliasedName()
         {
-            return teamColumnAliasedName;
-        }
-
-        public String getStateColumName()
-        {
-            return stateColumName;
-        }
-
-        public String getStateColumnAliasedName()
-        {
-            return stateColumnAliasedName;
+            return columnAliasedName;
         }
 
         public String getAggregationFunction()
@@ -217,14 +167,9 @@ public class TeamHistoryDAO
             return aggregationFunction;
         }
 
-        public List<String> getTeamJoins()
+        public List<String> getJoins()
         {
-            return teamJoins;
-        }
-
-        public List<String> getStateJoins()
-        {
-            return stateJoins;
+            return joins;
         }
 
         public Map<String, Class<?>> getTypeMapping()
@@ -253,7 +198,7 @@ public class TeamHistoryDAO
         SEASON("season");
 
         public static final String COLUMN_NAME_PREFIX = "team.";
-        public static final String JOIN = "INNER JOIN team_filter team USING(team_id)";
+        public static final String JOIN = "INNER JOIN team ON data_group.team_id = team.id";
 
         private final String name;
         private final String aliasedName;
@@ -287,36 +232,6 @@ public class TeamHistoryDAO
     private static final String FIND_COLUMNS_TEMPLATE =
         """
         WITH
-        current_season AS
-        (
-            SELECT region, MAX(battlenet_id) as battlenet_id
-            FROM season
-            GROUP by region
-        ),
-        team_filter AS
-        (
-            SELECT team.id AS team_id
-            %6$s
-            FROM team
-            INNER JOIN season ON team.region = season.region
-                AND team.season = season.battlenet_id
-            INNER JOIN current_season ON season.region = current_season.region
-            WHERE team.id IN(:teamIds)
-            AND
-            (
-                :from::timestamp with time zone IS NULL
-                OR season.battlenet_id = current_season.battlenet_id
-                OR season.start >= :from::timestamp with time zone
-                OR season.end >= :from::timestamp with time zone
-            )
-            AND
-            (
-                :to::timestamp with time zone IS NULL
-                OR season.battlenet_id = current_season.battlenet_id
-                OR season.start < :to::timestamp with time zone
-                OR season.end < :to::timestamp with time zone
-            )
-        ),
         data_group AS
         (
             SELECT
@@ -328,10 +243,10 @@ public class TeamHistoryDAO
                 (
                     SELECT team_id, timestamp
                     %2$s
-                    FROM team_filter
-                    INNER JOIN team_state USING(team_id)
+                    FROM team_state
                     %3$s
-                    WHERE
+                    WHERE team_id IN(:teamIds)
+                    AND
                     (
                         :from::timestamp with time zone IS NULL
                         OR timestamp >= :from::timestamp with time zone
@@ -341,40 +256,14 @@ public class TeamHistoryDAO
                         :to::timestamp with time zone IS NULL
                         OR timestamp < :to::timestamp with time zone
                     )
-        
-                    UNION ALL
-        
-                    SELECT team_id,
-                    GREATEST(season.end, prev_timestamp.timestamp + INTERVAL '1 second') AS timestamp
-                    %4$s
-                    FROM team_filter
-                    INNER JOIN team ON team.id = team_filter.team_id
-                    INNER JOIN season ON team.region = season.region
-                        AND team.season = season.battlenet_id
-                    INNER JOIN current_season ON season.region = current_season.region
-                    LEFT JOIN LATERAL
-                    (
-                        SELECT timestamp
-                        FROM team_state
-                        WHERE team_state.team_id = team_filter.team_id
-                        ORDER BY team_state.timestamp DESC
-                        LIMIT 1
-                    ) prev_timestamp ON true
-                    %5$s
-                    WHERE season.battlenet_id != current_season.battlenet_id
-                    AND
-                    (
-                        :to::timestamp with time zone IS NULL
-                        OR GREATEST(season.end, prev_timestamp.timestamp + INTERVAL '1 second')
-                            < :to::timestamp with time zone
-                    )
                 ) data ORDER BY team_id, timestamp
             ) team_state_ordered
             GROUP BY team_state_ordered.team_id
         )
-            SELECT *
+            SELECT data_group.*
+            %4$s
             FROM data_group
-            %7$s
+            %5$s
         """;
 
     private static ResultSetExtractor<List<TeamHistory>> COLUMN_TEAM_HISTORY_EXTRACTOR;
@@ -546,18 +435,10 @@ public class TeamHistoryDAO
                 .collect(Collectors.joining(",\n")),
 
             dynamicPrefix + dynamicHistoryColumns.stream()
-                    .map(HistoryColumn::getStateColumnAliasedName)
+                    .map(HistoryColumn::getColumnAliasedName)
                     .collect(Collectors.joining(",\n")),
             dynamicHistoryColumns.stream()
-                .flatMap(historyColumn -> historyColumn.getStateJoins().stream())
-                .distinct()
-                .collect(Collectors.joining("\n")),
-
-            dynamicPrefix + dynamicHistoryColumns.stream()
-                .map(HistoryColumn::getTeamColumnAliasedName)
-                .collect(Collectors.joining(",\n")),
-            dynamicHistoryColumns.stream()
-                .flatMap(historyColumn -> historyColumn.getTeamJoins().stream())
+                .flatMap(historyColumn -> historyColumn.getJoins().stream())
                 .distinct()
                 .collect(Collectors.joining("\n")),
 

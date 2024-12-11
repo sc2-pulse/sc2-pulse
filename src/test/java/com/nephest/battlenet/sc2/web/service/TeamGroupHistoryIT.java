@@ -251,13 +251,18 @@ public class TeamGroupHistoryIT
             114L, 14, 15, 16, 0,
             null
         )));
-        //update ranks for final teams, no snapshots
+        //take final team snapshots with ranks to verify them
         for(int i = 0; i < seasons.size(); i++)
         {
             int seasonId = i + 1;
             leagueStatsDAO.mergeCalculateForSeason(seasonId);
             populationStateDAO.takeSnapshot(List.of(seasonId));
             teamDAO.updateRanks(seasonId);
+            if(i + 1 < seasons.size()) //exclude last season
+            {
+                List<Long> seasonTeamIds = LongStream.range(12L * i, 12L * i + 12).boxed().toList();
+                teamStateDAO.takeSnapshot(seasonTeamIds, seasons.get(i).getEnd());
+            }
         }
         FULL_HISTORY = getFullTeamHistory();
     }

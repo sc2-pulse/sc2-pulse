@@ -357,9 +357,7 @@ public class TeamStateServiceIT
                 odtStart.minusSeconds(1), //max rating
                 odtStart.plusMinutes(1), //not expired yet
                 //final snapshot
-                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET),
-                //team derivative
-                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET).plusSeconds(1)
+                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET)
             )
                 .map(odt->minConversionService.convert(odt, Object.class))
                 .toList(),
@@ -399,9 +397,7 @@ public class TeamStateServiceIT
                 odtStart.minusSeconds(1), //max rating
                 //odtStart.plusMinutes(1), removed
                 //last timestamp
-                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET),
-                //team derivative
-                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET).plusSeconds(1)
+                odtStart.plusMinutes(1).plus(TeamStateService.FINAL_TEAM_SNAPSHOT_OFFSET)
             )
                 .map(odt->minConversionService.convert(odt, Object.class))
                 .toList(),
