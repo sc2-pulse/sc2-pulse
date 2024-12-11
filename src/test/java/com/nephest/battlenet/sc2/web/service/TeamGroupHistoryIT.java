@@ -299,7 +299,7 @@ public class TeamGroupHistoryIT
                     entry(TeamHistoryDAO.HistoryColumn.DIVISION_ID, List.of(1, 1, 1)),
                     entry(HistoryColumn.RATING, List.of(0, 0, 0)),
                     entry(HistoryColumn.WINS, Stream.of(0, 0, 0).toList()),
-                    entry(HistoryColumn.GAMES, List.of(1, 1, 1)),
+                    entry(HistoryColumn.GAMES, List.of(3, 3, 3)),
                     entry(HistoryColumn.LEAGUE, List.of(0, 0, 0)),
                     entry(HistoryColumn.TIER, List.of(0, 0, 0)),
 
@@ -339,7 +339,7 @@ public class TeamGroupHistoryIT
                     entry(HistoryColumn.DIVISION_ID, List.of(5, 15, 7)),
                     entry(HistoryColumn.RATING, List.of(12, 112, 113)),
                     entry(HistoryColumn.WINS, List.of(12, 13, 14)),
-                    entry(HistoryColumn.GAMES, List.of(25, 27, 29)),
+                    entry(HistoryColumn.GAMES, List.of(39, 42, 45)),
                     entry(HistoryColumn.LEAGUE, List.of(0, 5, 1)),
                     entry(HistoryColumn.TIER, List.of(0, 1, 0)),
 
@@ -379,7 +379,7 @@ public class TeamGroupHistoryIT
                     entry(TeamHistoryDAO.HistoryColumn.DIVISION_ID, List.of(9, 9)),
                     entry(HistoryColumn.RATING, List.of(24, 24)),
                     entry(HistoryColumn.WINS, Stream.of(24, 24).toList()),
-                    entry(HistoryColumn.GAMES, List.of(49, 49)),
+                    entry(HistoryColumn.GAMES, List.of(75, 75)),
                     entry(HistoryColumn.LEAGUE, List.of(0, 0)),
                     entry(HistoryColumn.TIER, List.of(0, 0)),
 

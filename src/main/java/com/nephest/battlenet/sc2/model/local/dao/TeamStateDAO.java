@@ -64,7 +64,7 @@ public class TeamStateDAO
         + "CASE WHEN :timestamp::timestamp with time zone IS NULL "
             + "THEN last_played "
             + "ELSE :timestamp::timestamp with time zone END, "
-        + "division_id, wins, wins + losses, rating, "
+        + "division_id, wins, wins + losses + ties, rating, "
         + "CASE WHEN team.queue_type != :mainQueueType THEN true ELSE null::boolean END, "
         + "global_rank, region_rank, league_rank, "
         + "team.population_state_id "
