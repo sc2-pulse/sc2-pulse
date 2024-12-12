@@ -35,7 +35,7 @@
             Current mods:
             <p th:text="${#strings.listJoin(mods, ', ')}"></p>
         </section>
-        <th:block th:with="revealerStats=${@ladderProPlayerAccountDAO.findRevealerStats(5)}">
+        <th:block th:with="revealerStats=${@ladderProPlayerAccountDAO.findRevealerStats(10)}">
             <section id="reveal" th:if="${!revealerStats.isEmpty()}">
                 <h3>Profile identification</h3>
                 <p>
