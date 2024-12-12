@@ -69,7 +69,7 @@ public class TeamHistoryDAO
                 """
             )
         ),
-        COUNT_REGION("region_team_count", "region_team_count", COUNT_GLOBAL.joins),
+        COUNT_REGION("region_team_count", "team_state.region_team_count"),
         COUNT_LEAGUE("league_team_count", "league_team_count", COUNT_GLOBAL.joins);
 
         private final String name, columName, columnAliasedName, aggregationFunction;

@@ -58,7 +58,7 @@ public class TeamStateDAO
         "INSERT INTO team_state "
         + "("
             + "team_id, \"timestamp\", division_id, wins, games, rating, secondary, "
-            + "global_rank, region_rank, league_rank, population_state_id"
+            + "global_rank, region_rank, league_rank, region_team_count, population_state_id"
         + ") "
         + "SELECT team.id, "
         + "CASE WHEN :timestamp::timestamp with time zone IS NULL "
@@ -67,8 +67,10 @@ public class TeamStateDAO
         + "division_id, wins, wins + losses + ties, rating, "
         + "CASE WHEN team.queue_type != :mainQueueType THEN true ELSE null::boolean END, "
         + "global_rank, region_rank, league_rank, "
+        + "population_state.region_team_count, "
         + "team.population_state_id "
         + "FROM team "
+        + "LEFT JOIN population_state ON team.population_state_id = population_state.id "
         + "WHERE team.id IN(:teamIds)";
 
     public static final String REMOVE_EXPIRED_TEMPLATE = """

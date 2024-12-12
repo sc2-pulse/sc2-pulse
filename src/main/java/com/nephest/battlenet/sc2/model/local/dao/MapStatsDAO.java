@@ -1,4 +1,4 @@
-// Copyright (C) 2020-2022 Oleksandr Masniuk
+// Copyright (C) 2020-2024 Oleksandr Masniuk
 // SPDX-License-Identifier: AGPL-3.0-or-later
 
 package com.nephest.battlenet.sc2.model.local.dao;
@@ -67,7 +67,7 @@ public class MapStatsDAO
         + "get_top_percentage_league_lotv"
         + "("
             + "team_state.region_rank, "
-            + "population_state.region_team_count::DOUBLE PRECISION, "
+            + "team_state.region_team_count::DOUBLE PRECISION, "
             + "true"
         + ") AS league_type "
         + "FROM versus_race_filter "
@@ -76,9 +76,7 @@ public class MapStatsDAO
         + "INNER JOIN team ON match_participant.team_id = team.id "
         + "INNER JOIN team_member ON team.id = team_member.team_id "
         + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id "
-            + "AND match_participant.team_state_timestamp = team_state.timestamp "
-        + "LEFT JOIN population_state "
-            + "ON team_state.population_state_id = population_state.id ";
+            + "AND match_participant.team_state_timestamp = team_state.timestamp ";
 
     private static final String UPDATE_STATS_TEMPLATE_END =
         "matchup_filter AS "

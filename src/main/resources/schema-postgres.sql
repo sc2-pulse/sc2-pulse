@@ -725,6 +725,7 @@ CREATE TABLE "team_state"
     "global_rank" INTEGER,
     "region_rank" INTEGER,
     "league_rank" INTEGER,
+    "region_team_count" INTEGER,
     "secondary" BOOLEAN,
 
     PRIMARY KEY ("team_id", "timestamp"),

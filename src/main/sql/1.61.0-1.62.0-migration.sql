@@ -218,3 +218,35 @@ END LOOP;
 END
 $do$
 LANGUAGE plpgsql;
+
+ALTER TABLE team_state
+ADD COLUMN "region_team_count" INTEGER;
+
+DO
+$do$
+DECLARE
+    seasonId INTEGER;
+    seasonMin SMALLINT;
+    teamId BIGINT;
+BEGIN
+SELECT season INTO seasonMin
+FROM team_state
+INNER JOIN team ON team_state.team_id = team.id
+WHERE timestamp = (SELECT MIN(timestamp) FROM team_state)
+LIMIT 1;
+RAISE NOTICE 'Starting from season %', seasonMin;
+FOR seasonId IN SELECT DISTINCT(battlenet_id) FROM season WHERE battlenet_id >= seasonMin ORDER BY battlenet_id LOOP
+FOR teamId IN SELECT id FROM team WHERE season = seasonId LOOP
+
+UPDATE team_state
+SET region_team_count = population_state.region_team_count
+FROM population_state
+WHERE team_state.team_id = teamId
+AND team_state.population_state_id = population_state.id;
+END LOOP;
+RAISE NOTICE 'Updated season % region_team_count, ', seasonId;
+END LOOP;
+
+END
+$do$
+LANGUAGE plpgsql;

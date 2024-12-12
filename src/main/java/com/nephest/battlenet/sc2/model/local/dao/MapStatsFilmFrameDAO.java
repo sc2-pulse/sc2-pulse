@@ -60,7 +60,6 @@ public class MapStatsFilmFrameDAO
             + "INNER JOIN match_participant ON match.id = match_participant.match_id\n"
             + "INNER JOIN team_state ON match_participant.team_id = team_state.team_id\n"
                 + "AND match_participant.team_state_timestamp = team_state.timestamp\n"
-            + "INNER JOIN population_state ON team_state.population_state_id = population_state.id\n"
             + "INNER JOIN team_member ON team_member.team_id = match_participant.team_id\n"
                 + "AND team_member.player_character_id = match_participant.player_character_id\n"
             + "WHERE date >= :from AND date < :to\n"
