@@ -42,6 +42,44 @@ ALTER TABLE "season"
     ALTER COLUMN "start" TYPE TIMESTAMP WITH TIME ZONE,
     ALTER COLUMN "end" TYPE TIMESTAMP WITH TIME ZONE;
 
+WITH nonapa_season AS
+(
+    VALUES
+    (5, 28, to_timestamp(1468303201), to_timestamp(1476770400)),
+    (5, 29, to_timestamp(1476770401), to_timestamp(1479794400)),
+    (5, 30, to_timestamp(1479794401), to_timestamp(1485237600)),
+    (5, 31, to_timestamp(1485237601), to_timestamp(1493704800)),
+    (5, 32, to_timestamp(1493704801), to_timestamp(1500444000)),
+    (5, 33, to_timestamp(1500444001), to_timestamp(1508392800)),
+    (5, 34, to_timestamp(1508392801), to_timestamp(1516687200)),
+    (5, 35, to_timestamp(1516687201), to_timestamp(1526364000)),
+    (5, 36, to_timestamp(1526364001), to_timestamp(1534226400)),
+    (5, 37, to_timestamp(1534226401), to_timestamp(1542693600)),
+    (5, 38, to_timestamp(1542693601), to_timestamp(1548136800)),
+    (5, 39, to_timestamp(1548136801), to_timestamp(1558504800)),
+    (5, 40, to_timestamp(1558504801), to_timestamp(1566453600)),
+    (5, 41, to_timestamp(1566453601), to_timestamp(1574661600)),
+    (5, 42, to_timestamp(1574661601), to_timestamp(1584424800)),
+    (5, 43, to_timestamp(1584424801), to_timestamp(1591768800)),
+    (5, 44, to_timestamp(1591728971), to_timestamp(1601532000)),
+    (5, 45, to_timestamp(1601498865), to_timestamp(1611640800)),
+    (5, 46, to_timestamp(1611615600), to_timestamp(1617206400)),
+    (5, 47, to_timestamp(1617667200), to_timestamp(1626760800)),
+    (5, 48, to_timestamp(1626760800), to_timestamp(1636473600)),
+    (5, 49, to_timestamp(1636473600), to_timestamp(1641312000)),
+    (5, 50, to_timestamp(1641312000), to_timestamp(1648742400)),
+    (5, 51, to_timestamp(1648742400), to_timestamp(1658296800)),
+    (5, 52, to_timestamp(1658296800), to_timestamp(1668009600)),
+    (5, 53, to_timestamp(1668009600), to_timestamp(1672848000)),
+    (5, 54, to_timestamp(1672848000), to_timestamp(1680278400))
+)
+    UPDATE season
+    SET "start" = s."start",
+    "end" = s."end"
+    FROM nonapa_season s(region, battlenet_id, "start", "end")
+    WHERE season.region = s.region
+    AND season.battlenet_id = s.battlenet_id;
+
 WITH next_season_start AS
 (
     SELECT season.id,

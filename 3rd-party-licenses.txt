@@ -92,3 +92,10 @@ SOFTWARE.
 # sc2arcade.com data
 
 This API is provided free of charge for non-profit use.
+
+# nonapa.com data
+
+nonapa API can be used for non-commercial purposes only. Currently the quota for each client is 4 requests per second
+(this can be changed at any time).
+In case you like it and use it please credit my website (https://nonapa.com).
+Also check out BLIZZARD DEVELOPER API TERMS OF USE
