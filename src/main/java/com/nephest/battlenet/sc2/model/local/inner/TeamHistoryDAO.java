@@ -201,18 +201,20 @@ public class TeamHistoryDAO
         public static final String JOIN = "INNER JOIN team ON data_group.team_id = team.id";
 
         private final String name;
+        private final String alias;
         private final String aliasedName;
 
         StaticColumn(String name)
         {
-            this.name = COLUMN_NAME_PREFIX + name;
-            this.aliasedName = this.name + " AS \"" + this.name + "\"";
+            this.name = name;
+            this.alias = COLUMN_NAME_PREFIX + name;
+            this.aliasedName = name + " AS \"" + this.alias + "\"";
         }
 
-        public static StaticColumn fromName(String name)
+        public static StaticColumn fromAlias(String alias)
         {
             return Arrays.stream(StaticColumn.values())
-                .filter(c->c.getName().equals(name))
+                .filter(c->c.getAlias().equals(alias))
                 .findFirst()
                 .orElseThrow();
         }
@@ -220,6 +222,11 @@ public class TeamHistoryDAO
         public String getName()
         {
             return name;
+        }
+
+        public String getAlias()
+        {
+            return alias;
         }
 
         public String getAliasedName()
@@ -305,7 +312,7 @@ public class TeamHistoryDAO
                 {
                     try
                     {
-                        return minConversionService.convert(rs.getObject(column.name), Object.class);
+                        return minConversionService.convert(rs.getObject(column.alias), Object.class);
                     }
                     catch (SQLException e)
                     {
@@ -399,7 +406,7 @@ public class TeamHistoryDAO
                 .forEach(columnName->{
                     if(columnName.startsWith(StaticColumn.COLUMN_NAME_PREFIX))
                     {
-                        staticColumns.add(StaticColumn.fromName(columnName));
+                        staticColumns.add(StaticColumn.fromAlias(columnName));
                     }
                     else
                     {
