@@ -192,23 +192,25 @@ public class TeamHistoryDAO
     public enum StaticColumn
     {
 
-        REGION("region"),
-        QUEUE("queue_type"),
-        LEGACY_ID("legacy_id"),
-        SEASON("season");
+        REGION("region", List.of(StaticColumn.TEAM_JOIN)),
+        QUEUE("queue_type", REGION.joins),
+        LEGACY_ID("legacy_id", REGION.joins),
+        SEASON("season", REGION.joins);
 
         public static final String COLUMN_NAME_PREFIX = "team.";
-        public static final String JOIN = "INNER JOIN team ON data_group.team_id = team.id";
+        public static final String TEAM_JOIN = "INNER JOIN team ON data_group.team_id = team.id";
 
         private final String name;
         private final String alias;
         private final String aliasedName;
+        private final List<String> joins;
 
-        StaticColumn(String name)
+        StaticColumn(String name, List<String> joins)
         {
             this.name = name;
             this.alias = COLUMN_NAME_PREFIX + name;
             this.aliasedName = name + " AS \"" + this.alias + "\"";
+            this.joins = joins;
         }
 
         public static StaticColumn fromAlias(String alias)
@@ -232,6 +234,11 @@ public class TeamHistoryDAO
         public String getAliasedName()
         {
             return aliasedName;
+        }
+
+        public List<String> getJoins()
+        {
+            return joins;
         }
 
     }
@@ -452,7 +459,11 @@ public class TeamHistoryDAO
             staticColumns.isEmpty() ? "" : "," + staticColumns.stream()
                 .map(StaticColumn::getAliasedName)
                 .collect(Collectors.joining(",\n")),
-            staticColumns.isEmpty() ? "" : StaticColumn.JOIN
+            staticColumns.stream()
+                .map(StaticColumn::getJoins)
+                .flatMap(Collection::stream)
+                .distinct()
+                .collect(Collectors.joining(",\n"))
         );
     }
 
