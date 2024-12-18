@@ -29,4 +29,13 @@ public final class AssertionUtil
         return lLong.equals(rLong);
     }
 
+    public static boolean numberEquals(Object l, Object r)
+    {
+        if(l == null && r != null) return false;
+        if(l != null && r == null) return false;
+        if(l == null) return true;
+        return ((Number) l).longValue() == ((Number) r).longValue();
+    }
+
+
 }
