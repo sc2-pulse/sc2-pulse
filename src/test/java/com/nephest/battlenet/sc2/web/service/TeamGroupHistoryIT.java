@@ -74,6 +74,18 @@ import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilde
 public class TeamGroupHistoryIT
 {
 
+    public static final Comparator<TeamHistory> ID_COMPARATOR = Comparator.comparing(h->{
+        Object obj = h.staticData().get(StaticColumn.ID);
+        return obj == null ? null : ((Number) obj).longValue();
+    });
+    public static final Comparator<TeamHistory> TIMESTAMP_COMPARATOR = Comparator.comparing(h->{
+        List<?> objList = h.history().get(HistoryColumn.TIMESTAMP);
+        if(objList == null || objList.isEmpty()) return null;
+
+        Object obj = objList.get(0);
+        return obj == null ? null : ((Number) obj).longValue();
+    });
+
     @Autowired
     private MockMvc mvc;
 
@@ -273,9 +285,9 @@ public class TeamGroupHistoryIT
         (
             new TeamHistory
             (
-                1L,
                 Map.of
                 (
+                    StaticColumn.ID, 1L,
                     StaticColumn.SEASON, 1,
                     StaticColumn.LEGACY_ID, 11,
 
@@ -313,9 +325,9 @@ public class TeamGroupHistoryIT
             ),
             new TeamHistory
             (
-                13L,
                 Map.of
                 (
+                    StaticColumn.ID, 13L,
                     StaticColumn.SEASON, 2,
                     StaticColumn.LEGACY_ID, 11,
 
@@ -353,9 +365,9 @@ public class TeamGroupHistoryIT
             ),
             new TeamHistory
             (
-                25L,
                 Map.of
                 (
+                    StaticColumn.ID, 25L,
                     StaticColumn.SEASON, 3,
                     StaticColumn.LEGACY_ID, 11,
 
@@ -433,11 +445,12 @@ public class TeamGroupHistoryIT
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        found.sort(Comparator.comparing(TeamHistory::id));
+        found.sort(ID_COMPARATOR);
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
             .isEqualTo(FULL_HISTORY);
     }
 
@@ -526,7 +539,6 @@ public class TeamGroupHistoryIT
     {
         return new TeamHistory
         (
-            history.id(),
             history.staticData(),
             subList(history.history(), from, to)
         );
@@ -579,10 +591,11 @@ public class TeamGroupHistoryIT
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        found.sort(Comparator.comparing(TeamHistory::id));
+        found.sort(ID_COMPARATOR);
         Assertions.assertThat(found)
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
             .isEqualTo(expected);
     }
 
@@ -610,6 +623,11 @@ public class TeamGroupHistoryIT
                 )
                 .queryParam
                 (
+                    "static",
+                    mvcConversionService.convert(StaticColumn.ID, String.class)
+                )
+                .queryParam
+                (
                     "history",
                     mvcConversionService.convert(column, String.class)
                 )
@@ -617,13 +635,16 @@ public class TeamGroupHistoryIT
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        found.sort(Comparator.comparing(TeamHistory::id));
+        found.sort(ID_COMPARATOR);
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
             .isEqualTo(FULL_HISTORY.stream()
-                .map(h->new TeamHistory(h.id(), Map.of(), Map.of(column, h.history().get(column))))
+                .map(h->new TeamHistory(
+                    Map.of(StaticColumn.ID, h.staticData().get(StaticColumn.ID)),
+                    Map.of(column, h.history().get(column))))
                 .toList()
             );
     }
@@ -664,14 +685,14 @@ public class TeamGroupHistoryIT
         )
             .andExpect(status().isOk())
             .andReturn().getResponse().getContentAsString(), new TypeReference<>(){});
-        found.sort(Comparator.comparing(TeamHistory::id));
+        found.sort(TIMESTAMP_COMPARATOR);
 
         Assertions.assertThat(found)
             .usingRecursiveComparison()
             .withEqualsForFields(AssertionUtil::numberListEquals,"history.TIMESTAMP")
+            .withEqualsForFields(AssertionUtil::numberEquals, "staticData.ID")
             .isEqualTo(FULL_HISTORY.stream()
                 .map(h->new TeamHistory(
-                    h.id(),
                     Map.of(column, h.staticData().get(column)),
                     Map.of(HistoryColumn.TIMESTAMP, h.history().get(HistoryColumn.TIMESTAMP))))
                 .toList()

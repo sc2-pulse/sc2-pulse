@@ -142,7 +142,6 @@ public class TeamGroupHistoryCornerCaseIT
             .isEqualTo(List.of(
                 new TeamHistory
                 (
-                    2L,
                     Map.of(),
                     Map.ofEntries
                     (

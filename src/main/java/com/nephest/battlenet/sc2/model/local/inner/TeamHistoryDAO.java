@@ -21,6 +21,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.convert.ConversionService;
@@ -43,8 +45,16 @@ public class TeamHistoryDAO
 
     private static final Set<HistoryColumn> FIND_COLUMN_HARDCODED_COLUMNS
         = EnumSet.of(HistoryColumn.TIMESTAMP);
-    private static final Set<String> FIND_COLUMN_STATIC_COLUMN_NAMES =
-        Set.of("team_id");
+    private static final String FINAL_HISTORY_TABLE = "data_group";
+    private static final Map<HistoryColumn, String> FINAL_HISTORY_FQDN_NAMES =
+        Arrays.stream(HistoryColumn.values())
+            .filter(historyColumn ->!historyColumn.isExpanded())
+            .collect(Collectors.toMap(
+                Function.identity(),
+                c->FINAL_HISTORY_TABLE + "." + c.getName(),
+                (l,r)->{throw new IllegalArgumentException("Unexpected merge");},
+                ()->new EnumMap<>(HistoryColumn.class)
+            ));
 
     public enum HistoryColumn
     {
@@ -192,6 +202,7 @@ public class TeamHistoryDAO
     public enum StaticColumn
     {
 
+        ID("team_id", List.of()),
         REGION("region", List.of(StaticColumn.TEAM_JOIN)),
         QUEUE("queue_type", REGION.joins),
         LEGACY_ID("legacy_id", REGION.joins),
@@ -274,7 +285,7 @@ public class TeamHistoryDAO
             ) team_state_ordered
             GROUP BY team_state_ordered.team_id
         )
-            SELECT data_group.*
+            SELECT
             %4$s
             FROM data_group
             %5$s
@@ -373,11 +384,9 @@ public class TeamHistoryDAO
         ConversionService sc2StatsConversionService,
         ConversionService minConversionService
     )
-    throws SQLException
     {
         return new TeamHistory
         (
-            rs.getLong("team_id"),
             mapTeamColumns(rs, staticColumns, minConversionService),
             mapColumns(rs, historyColumns, sc2StatsConversionService, minConversionService)
         );
@@ -409,7 +418,6 @@ public class TeamHistoryDAO
                         throw new RuntimeException(e);
                     }
                 })
-                .filter(columnName -> !FIND_COLUMN_STATIC_COLUMN_NAMES.contains(columnName))
                 .forEach(columnName->{
                     if(columnName.startsWith(StaticColumn.COLUMN_NAME_PREFIX))
                     {
@@ -456,8 +464,11 @@ public class TeamHistoryDAO
                 .distinct()
                 .collect(Collectors.joining("\n")),
 
-            staticColumns.isEmpty() ? "" : "," + staticColumns.stream()
-                .map(StaticColumn::getAliasedName)
+            Stream.concat
+            (
+                directHistoryColumns.stream().map(FINAL_HISTORY_FQDN_NAMES::get),
+                staticColumns.stream().map(StaticColumn::getAliasedName)
+            )
                 .collect(Collectors.joining(",\n")),
             staticColumns.stream()
                 .map(StaticColumn::getJoins)

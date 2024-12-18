@@ -9,7 +9,6 @@ import java.util.Map;
 
 public record TeamHistory
 (
-    @NotNull Long id,
     @NotNull Map<TeamHistoryDAO.StaticColumn, ?> staticData,
     @NotNull Map<TeamHistoryDAO.HistoryColumn, List<?>> history
 )
@@ -17,12 +16,10 @@ public record TeamHistory
 
     public TeamHistory
     (
-        @NotNull Long id,
         @NotNull Map<TeamHistoryDAO.StaticColumn, ?> staticData,
         @NotNull Map<TeamHistoryDAO.HistoryColumn, List<?>> history
     )
     {
-        this.id = id;
         this.staticData = staticData;
         this.history = history;
     }
