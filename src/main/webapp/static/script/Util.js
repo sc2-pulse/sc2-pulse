@@ -238,6 +238,8 @@ class Util
     {
         for(const [key, val] of Object.entries(obj))
         {
+            if(val == null) continue;
+
             if(typeof val !== "object")
             {
                 obj[key] = func(val);

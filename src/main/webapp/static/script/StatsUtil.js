@@ -299,7 +299,9 @@ class StatsUtil
         if(!gamesOption || gamesOption == "match") {
             const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.LADDER_STATS);
             const matchParticipants = EnumUtil.enumOfFullName(searchResult.urlParams.get("queue"), TEAM_FORMAT).memberCount * 2;
-            Object.values(globalResult.gamesPlayed).forEach(g=>g.global = Math.round(g.global / matchParticipants));
+            Object.values(globalResult.gamesPlayed)
+                .filter(g=>g.global != null)
+                .forEach(g=>g.global = Math.round(g.global / matchParticipants));
         }
     }
 
@@ -559,7 +561,7 @@ class StatsUtil
             const season = Session.currentSeasons.filter(s=>s.battlenetId == seasonId)[0];
             for(const [key, val] of Object.entries(seasonStats))
             {
-                dailyStats[seasonId][key] = val / season.days;
+                dailyStats[seasonId][key] = val == null ? null : val / season.days;
             }
         }
         return dailyStats;
