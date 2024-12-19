@@ -24,6 +24,21 @@ class StatsUtil
         StatsUtil.updateGlobalStatsMode();
     }
 
+    static filterStats(stats, nullify, removeCurrentSeason)
+    {
+        if(removeCurrentSeason == null) removeCurrentSeason
+            = localStorage.getItem("stats-global-remove-current-season") !== "false";
+        if(removeCurrentSeason) StatsUtil.removeCurrentSeason(stats, nullify);
+    }
+
+    static removeCurrentSeason(stats, nullify)
+    {
+        const maxSeason = Math.max.apply(Math, Array.from(Session.currentSeasonsIdMap.keys()));
+        Object.entries(stats)
+            .filter(entry=>entry[0] == maxSeason)
+            .forEach(entry=>nullify(entry[1]));
+    }
+
     static updateQueueStatsModel(formParams)
     {
         const params = new URLSearchParams(formParams);
@@ -65,6 +80,11 @@ class StatsUtil
             playerCount[seasonStats.season]["old"] = seasonStats.playerCount - playerCount[seasonStats.season]["new"];
             playerCount[seasonStats.season]["global"] = seasonStats.playerCount;
         }
+        StatsUtil.filterStats(playerCount, s=>{
+            s.global = null;
+            s.new = null;
+            s.old = null;
+        });
         TableUtil.updateColRowTable
         (
             document.getElementById("player-count-global-table"),
@@ -94,6 +114,11 @@ class StatsUtil
             activity[seasonStats.season]["medium"] = seasonStats.mediumActivityPlayerCount;
             activity[seasonStats.season]["high"] = seasonStats.highActivityPlayerCount;
         }
+        StatsUtil.filterStats(activity, s=>{
+            s.low = null;
+            s.medium = null;
+            s.high = null;
+        });
         TableUtil.updateColRowTable
         (
             document.getElementById("player-count-daily-activity-tier-table"),
@@ -123,10 +148,19 @@ class StatsUtil
             .catch(error => Session.onPersonalException(error));
     }
 
+    static updateGlobalStatsView()
+    {
+        StatsUtil.updateLadderStatsView();
+        StatsUtil.updateQueueStatsView();
+    }
+
     static enhanceGlobalStatsCtl()
     {
         const modeCtl = document.querySelector("#stats-global-mode");
         if(modeCtl) modeCtl.addEventListener("change", e=>window.setTimeout(t=>StatsUtil.updateGlobalStatsMode(), 0));
+
+        document.querySelectorAll(".stats-global-reload")
+            .forEach(ctl=>ctl.addEventListener("change", e=>window.setTimeout(t=>StatsUtil.updateGlobalStatsView(), 0)));
     }
 
     static updateGlobalStatsMode(mode)
@@ -199,6 +233,7 @@ class StatsUtil
                     percentageResult[param][seasonId][header] = Util.calculatePercentage(value, sum);
             }
         }
+        StatsUtil.filterStats(globalResult.teamCount, s=>s.global = null);
         StatsUtil.applyUserSettings(globalResult);
         TableUtil.updateColRowTable
             (document.getElementById("games-played-global-table"), globalResult.gamesPlayed, null, null, SeasonUtil.seasonIdTranslator);
