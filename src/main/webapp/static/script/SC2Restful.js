@@ -72,6 +72,7 @@ class SC2Restful
                 CharacterUtil.enhanceAllCharacterReportsControls();
                 LadderUtil.enhanceMyLadderForm();
                 SeasonUtil.enhanceSeasonStateForm();
+                StatsUtil.enhanceGlobalStatsCtl();
                 StatsUtil.enhanceRaceControls();
                 StatsUtil.enhanceMapStatsFilm();
                 StatsUtil.enhanceSettings();

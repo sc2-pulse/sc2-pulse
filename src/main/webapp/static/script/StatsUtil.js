@@ -4,6 +4,26 @@
 class StatsUtil
 {
 
+    static init()
+    {
+        if(StatsUtil.initialized) return;
+
+        StatsUtil.initGlobalStats();
+        StatsUtil.initialized = true;
+    }
+
+    static initGlobalStats()
+    {
+        const modeSelect = document.querySelector("#stats-global-mode");
+        for(const enumVal of Object.values(LADDER_STATS_GLOBAL_VIEW_MODE))
+            modeSelect.appendChild(ElementUtil.createElement("option", null, null, enumVal.name, [["value", enumVal.fullName]]));
+        modeSelect.value = EnumUtil.enumOfStoredFullName(
+            "stats-global-mode", LADDER_STATS_GLOBAL_VIEW_MODE, LADDER_STATS_GLOBAL_VIEW_MODE.MIXED)
+                .fullName;
+
+        StatsUtil.updateGlobalStatsMode();
+    }
+
     static updateQueueStatsModel(formParams)
     {
         const params = new URLSearchParams(formParams);
@@ -21,6 +41,7 @@ class StatsUtil
 
     static updateQueueStatsView()
     {
+        StatsUtil.init();
         const searchResult = Model.DATA.get(VIEW.GLOBAL).get(VIEW_DATA.QUEUE_STATS);
         StatsUtil.updateQueueStatsPlayerCount(searchResult);
         StatsUtil.updateQueueStatsActivity(searchResult);
@@ -100,6 +121,26 @@ class StatsUtil
                 Util.setGeneratingStatus(STATUS.SUCCESS);
             })
             .catch(error => Session.onPersonalException(error));
+    }
+
+    static enhanceGlobalStatsCtl()
+    {
+        const modeCtl = document.querySelector("#stats-global-mode");
+        if(modeCtl) modeCtl.addEventListener("change", e=>window.setTimeout(t=>StatsUtil.updateGlobalStatsMode(), 0));
+    }
+
+    static updateGlobalStatsMode(mode)
+    {
+        if(mode == null) mode = EnumUtil.enumOfStoredFullName(
+            "stats-global-mode", LADDER_STATS_GLOBAL_VIEW_MODE, LADDER_STATS_GLOBAL_VIEW_MODE.MIXED);
+        document.querySelectorAll("#stats-global .stats-section")
+            .forEach(section=>{
+                if(mode.sectionIds.has(section.id)) {
+                    section.classList.remove("d-none");
+                } else {
+                    section.classList.add("d-none");
+                }
+            });
     }
 
     static updateLadderStatsModel(formParams)
@@ -410,6 +451,7 @@ class StatsUtil
     static updateLadderStats(formParams)
     {
         Util.setGeneratingStatus(STATUS.BEGIN);
+        StatsUtil.init();
         return StatsUtil.updateLadderStatsModel(formParams)
             .then(json => {
                 StatsUtil.updateLadderStatsView();

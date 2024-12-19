@@ -233,3 +233,63 @@ const AUDIT_LOG_ACTION = Object.freeze
      DELETE: {name: "D", fullName: "DELETE", order: 3},
      TRUNCATE: {name: "T", fullName: "TRUNCATE", order: 4}
  });
+
+const LADDER_STATS_GLOBAL_VIEW_MODE = Object.freeze
+({
+    MIXED:
+    {
+        code: 1,
+        name: "mixed",
+        fullName: "MIXED",
+        sectionIds: new Set([
+            "games-played-day",
+            "team-count-global",
+            "player-count-global",
+            "player-count-daily-activity-tier"
+        ]),
+        order: 1
+    },
+    NORMALIZED:
+    {
+        code: 2,
+        name: "normalized",
+        fullName: "NORMALIZED",
+        sectionIds: new Set([
+            "games-played-day",
+            "team-count-day",
+            "player-count-day",
+            "player-count-daily-activity-tier-day"
+        ]),
+        order: 2
+    },
+    RAW:
+    {
+        code: 3,
+        name: "raw",
+        fullName: "RAW",
+        sectionIds: new Set([
+            "games-played-global",
+            "team-count-global",
+            "player-count-global",
+            "player-count-daily-activity-tier"
+        ]),
+        order: 3
+    },
+    MAX:
+    {
+        code: 4,
+        name: "all",
+        fullName: "MAX",
+        sectionIds: new Set([
+            "games-played-global",
+            "team-count-global",
+            "player-count-global",
+            "player-count-daily-activity-tier",
+            "games-played-day",
+            "team-count-day",
+            "player-count-day",
+            "player-count-daily-activity-tier-day"
+        ]),
+        order: 4
+    },
+});
